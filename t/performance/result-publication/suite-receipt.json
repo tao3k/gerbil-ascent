@@ -1,0 +1,393 @@
+{
+  "configured_jobs": 12,
+  "requested": [
+    "t/qualification/ascent-aggregate-program-test.ss",
+    "t/qualification/ascent-binary-program-test.ss",
+    "t/qualification/ascent-binding-program-test.ss",
+    "t/qualification/ascent-binding-test.ss",
+    "t/qualification/ascent-byods-index-test.ss",
+    "t/qualification/ascent-byods-invariants-test.ss",
+    "t/qualification/ascent-closure-candidates-test.ss",
+    "t/qualification/ascent-contract-union-test.ss",
+    "t/qualification/ascent-eqrel-program-test.ss",
+    "t/qualification/ascent-finite-evidence-test.ss",
+    "t/qualification/ascent-index-lifecycle-test.ss",
+    "t/qualification/ascent-index-program-test.ss",
+    "t/qualification/ascent-invalid-program-test.ss",
+    "t/qualification/ascent-lattice-program-test.ss",
+    "t/qualification/ascent-materialization-test.ss",
+    "t/qualification/ascent-module-program-test.ss",
+    "t/qualification/ascent-multi-frontier-test.ss",
+    "t/qualification/ascent-mutual-program-test.ss",
+    "t/qualification/ascent-observability-test.ss",
+    "t/qualification/ascent-poo-primitives-test.ss",
+    "t/qualification/ascent-positive-nonmembership-test.ss",
+    "t/qualification/ascent-positive-plan-test.ss",
+    "t/qualification/ascent-positive-provenance-test.ss",
+    "t/qualification/ascent-reasoning-library-test.ss",
+    "t/qualification/ascent-request-projection-test.ss",
+    "t/qualification/ascent-result-publication-test.ss",
+    "t/qualification/ascent-rule-program-test.ss",
+    "t/qualification/ascent-scc-summary-test.ss",
+    "t/qualification/ascent-set-batch-test.ss",
+    "t/qualification/ascent-set-emit-test.ss",
+    "t/qualification/ascent-set-size-test.ss",
+    "t/qualification/ascent-set-source-test.ss",
+    "t/qualification/ascent-size-test.ss",
+    "t/qualification/ascent-source-admission-test.ss",
+    "t/qualification/ascent-strata-test.ss",
+    "t/qualification/ascent-stratified-proof-test.ss",
+    "t/qualification/ascent-syntax-test.ss",
+    "t/qualification/ascent-table-expression-test.ss",
+    "t/qualification/ascent-timeout-test.ss",
+    "t/qualification/ascent-timing-test.ss",
+    "t/qualification/ascent-workspace-test.ss",
+    "t/qualification/scheme-library-contract-test.ss",
+    "t/qualification/scheme-native-integration-test.ss",
+    "t/qualification/scheme-native-language-test.ss",
+    "t/qualification/scheme-native-reduction-test.ss",
+    "t/qualification/scheme-operator-retained-test.ss",
+    "t/qualification/scheme-operator-test.ss",
+    "t/qualification/scheme-relational-test.ss"
+  ],
+  "failed": false,
+  "seconds": 174.31774491699616,
+  "results": [
+    {
+      "module": "t/qualification/ascent-aggregate-program-test.ss",
+      "exit": 0,
+      "seconds": 12.508273042003566,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-aggregate-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-binary-program-test.ss",
+      "exit": 0,
+      "seconds": 9.412756709003588,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-binary-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-binding-program-test.ss",
+      "exit": 0,
+      "seconds": 14.410150458999851,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-binding-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-binding-test.ss",
+      "exit": 0,
+      "seconds": 12.485843708993343,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-binding-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-byods-index-test.ss",
+      "exit": 0,
+      "seconds": 15.324144500002149,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-byods-index-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-byods-invariants-test.ss",
+      "exit": 0,
+      "seconds": 25.901946750003844,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-byods-invariants-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-closure-candidates-test.ss",
+      "exit": 0,
+      "seconds": 8.139587875004509,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-closure-candidates-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-contract-union-test.ss",
+      "exit": 0,
+      "seconds": 13.48739083300461,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-contract-union-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-eqrel-program-test.ss",
+      "exit": 0,
+      "seconds": 5.77590370800317,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-eqrel-program-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-finite-evidence-test.ss",
+      "exit": 0,
+      "seconds": 30.511788499999966,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-finite-evidence-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-index-lifecycle-test.ss",
+      "exit": 0,
+      "seconds": 4.63356691700028,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-index-lifecycle-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-index-program-test.ss",
+      "exit": 0,
+      "seconds": 16.57322983299673,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-index-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-invalid-program-test.ss",
+      "exit": 0,
+      "seconds": 21.280671874999825,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-invalid-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-lattice-program-test.ss",
+      "exit": 0,
+      "seconds": 20.694976749997295,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-lattice-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-materialization-test.ss",
+      "exit": 0,
+      "seconds": 4.769589999996242,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-materialization-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-module-program-test.ss",
+      "exit": 0,
+      "seconds": 12.325188082999375,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-module-program-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-multi-frontier-test.ss",
+      "exit": 0,
+      "seconds": 15.436197959003039,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-multi-frontier-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-mutual-program-test.ss",
+      "exit": 0,
+      "seconds": 5.8038449169980595,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-mutual-program-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-observability-test.ss",
+      "exit": 0,
+      "seconds": 4.513322500002687,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-observability-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-poo-primitives-test.ss",
+      "exit": 0,
+      "seconds": 10.74901900000259,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-poo-primitives-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-positive-nonmembership-test.ss",
+      "exit": 0,
+      "seconds": 13.927327416997286,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-positive-nonmembership-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-positive-plan-test.ss",
+      "exit": 0,
+      "seconds": 10.945615832999465,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-positive-plan-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-positive-provenance-test.ss",
+      "exit": 0,
+      "seconds": 13.737689749999845,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-positive-provenance-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-reasoning-library-test.ss",
+      "exit": 0,
+      "seconds": 7.914364666001347,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-reasoning-library-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-request-projection-test.ss",
+      "exit": 0,
+      "seconds": 5.017847000002803,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-request-projection-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-result-publication-test.ss",
+      "exit": 0,
+      "seconds": 5.394942416998674,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-result-publication-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-rule-program-test.ss",
+      "exit": 0,
+      "seconds": 12.145760583000083,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-rule-program-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-scc-summary-test.ss",
+      "exit": 0,
+      "seconds": 15.085848374998022,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-scc-summary-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-set-batch-test.ss",
+      "exit": 0,
+      "seconds": 14.586171416005527,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-set-batch-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-set-emit-test.ss",
+      "exit": 0,
+      "seconds": 16.685994375002338,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-set-emit-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-set-size-test.ss",
+      "exit": 0,
+      "seconds": 15.520603166994988,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-set-size-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-set-source-test.ss",
+      "exit": 0,
+      "seconds": 14.054667584001436,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-set-source-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-size-test.ss",
+      "exit": 0,
+      "seconds": 15.367325125000207,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-size-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-source-admission-test.ss",
+      "exit": 0,
+      "seconds": 13.284731542000372,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-source-admission-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-strata-test.ss",
+      "exit": 0,
+      "seconds": 12.136390499996196,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-strata-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-stratified-proof-test.ss",
+      "exit": 0,
+      "seconds": 19.74443041699851,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-stratified-proof-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-syntax-test.ss",
+      "exit": 0,
+      "seconds": 16.374367582997365,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-syntax-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-table-expression-test.ss",
+      "exit": 0,
+      "seconds": 11.457075040998461,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/ascent-table-expression-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/ascent-timeout-test.ss",
+      "exit": 0,
+      "seconds": 6.86769841700152,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-timeout-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-timing-test.ss",
+      "exit": 0,
+      "seconds": 6.099630125005206,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-timing-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/ascent-workspace-test.ss",
+      "exit": 0,
+      "seconds": 6.692255207999551,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/ascent-workspace-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/scheme-library-contract-test.ss",
+      "exit": 0,
+      "seconds": 8.249375790997874,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/scheme-library-contract-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/scheme-native-integration-test.ss",
+      "exit": 0,
+      "seconds": 12.489674584001477,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/scheme-native-integration-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/scheme-native-language-test.ss",
+      "exit": 0,
+      "seconds": 12.52363529199647,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/scheme-native-language-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/scheme-native-reduction-test.ss",
+      "exit": 0,
+      "seconds": 12.065507624996826,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/scheme-native-reduction-test.log",
+      "lane": "parallel"
+    },
+    {
+      "module": "t/qualification/scheme-operator-retained-test.ss",
+      "exit": 0,
+      "seconds": 21.044468334002886,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/scheme-operator-retained-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/scheme-operator-test.ss",
+      "exit": 0,
+      "seconds": 14.07943379200151,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791006888003422000/scheme-operator-test.log",
+      "lane": "exclusive"
+    },
+    {
+      "module": "t/qualification/scheme-relational-test.ss",
+      "exit": 0,
+      "seconds": 14.621493667000323,
+      "log": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791006838620265000/scheme-relational-test.log",
+      "lane": "parallel"
+    }
+  ]
+}

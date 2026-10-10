@@ -1,0 +1,726 @@
+#+title: Scheme Coding Style: Indexes and storage
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Row projection, indexed keys, equivalence classes and lattice binding. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Study: retained provenance indexes belong to the verified graph owner
+
+Gerbil =2591dcd= =compiler/optimize-base.ss:24-29= allocates private optimizer
+lookup tables; =runtime/hash.ss:633-635= copies through the table's native
+operation. Provenance enumeration/verification now stays in its graph owner,
+while a separate maintenance module owns copied support edges, row/source
+indexes and tentative deletion memberships. Existing facade exports remain.
+
+Root order and exact edge probe counts are preserved across overdeletion and
+founded rederivation. Failed phases publish nothing. Retained withdrawal labels
+copy caller pairs; result reads return separate row spines. [[file:../../t/performance/provenance-maintenance/README.org][Matched native A/B]]
+freezes the prior graph owner: wide/duplicate withdrawals save about 94%/91%
+CPU but add 27%/69% temporary allocation. Small adds 2 us/6096 bytes; those
+costs remain explicit. Verification/opening and retained-index memory are
+outside these intervals, so no whole-pipeline or allocation-reduction claim
+is made. Budget parity and matrix-closure corpus controls qualify semantics.
+
+* Study: restore order in owned buckets instead of copying input rows
+
+Installed Gerbil =2591dcd=, =std/list/list.ss:363-376=, implements
+=group-same= by consing items into per-key buckets and applying =reverse!=
+to those newly constructed bucket lists. Its compiler's
+=optimize-top.ss:704-711= likewise reverses an invocation-owned accumulator
+in place. The transferable rule is to distinguish private list headers from
+borrowed elements before choosing mutation.
+
+ASCENT previously reversed the entire source list before building either a
+scalar or composite physical index. That temporary copy merely compensated
+for prepending rows to buckets. Both construction paths now traverse the
+original source and call =table/funs.ss='s common =gerbil-ascent-index-order!=
+on the freshly constructed index. Only buckets with multiple rows are
+reversed; singleton buckets already have source order. The index's private
+bucket headers may be mutated. Caller-owned source/batch headers, row objects
+and keys remain unchanged. Existing published indexes and incremental
+extensions never pass through this operation. Extension continues to prepend
+new rows in the original batch order. Custom providers retain their exact
+build, extend and lookup arguments and dispatch.
+
+=just performance-index-build= freezes =table/funs=, =table/access=,
+=program/index= and =program/evaluate= at
+=3eb66283edd50f25d0ce74c6743fb17d131302b6=, changing only module paths and
+redirects between those owners. Both graphs share the other current modules
+and compile to native code with exact resolution checks. Each of seven
+scenarios uses 50 alternating pairs. Initial collection and warmup are
+outside timing; natural collection stays inside. Gates declared before
+sampling require 20% less allocation for scalar lifecycles and 10% for
+composite lifecycles; controls allow at most 1 KiB extra. All CPU overhead
+is bounded by 5% + 20 us. Independent ordered-row oracles run outside timing.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Scalar, 64 dense buckets | 397.250 | 402.500 | 401860 | 205300 | 10/50 |
+| Scalar, unique keys | 505.250 | 524.000 | 922388 | 725828 | 3/50 |
+| Composite, 64 dense buckets | 767.500 | 800.000 | 798148 | 601588 | 4/50 |
+| Composite, unique keys | 1815.500 | 1860.500 | 1318676 | 1122116 | 4/50 |
+| Empty lifecycle control | 0.180 | 0.211 | 945.625 | 993.625 | 2/50 |
+| Four-row lifecycle control | 0.711 | 0.766 | 1521.625 | 1377.625 | 1/50 |
+| Complete native solve control | 2747.750 | 2750.250 | 1828644 | 1779540 | 23/50 |
+
+All 350 pairs passed parity and gates. Large lifecycles build 4096 source
+rows, extend 32 rows, then query eight keys. They include construction,
+extension and lookup, with allocation reductions of 48.9%, 21.3%, 24.6%
+and 14.9%. Their CPU cost increases 1.3%-4.2%; this is an allocation
+optimization, not a CPU speedup. Empty construction adds 48 bytes for the
+ordering closure. The complete solve uses 1024 four-column rows and four
+compiled self-join rules; declaration construction and analysis warmup are
+outside timing, while engine creation, row initialization, index construction,
+closure, publication and output-row forcing are measured. It saves 49104
+bytes (2.7%) and has essentially unchanged CPU. This control does not justify
+a general solver performance claim. Raw pairs and failed fixture attempts
+remain under ignored =.cache/ascent/index-build/=.
+
+Native qualification passed nine modules / 74 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-8 seconds. The new Suite
+checks ordered, arbitrary and repeated columns against direct filtering,
+row identity and detached bucket headers, custom receiver argument identity,
+dense/unique/empty/small lifecycles and complete compiled self joins. Existing
+index lifecycle, stable entries, BYODS index/invariants, positive plans,
+source logs, deletion and actor-round Suites passed. Selected production
+policy reported zero findings/errors. Frozen source normalization and final
+production/benchmark source hashes were checked separately from test exits.
+
+* Study: stable engine-owned physical index entries
+
+The installed Gerbil compiler's =optimize-base.ss:24-29= names its private
+optimizer state and owns identity-keyed tables for types, classes, signatures
+and methods. Identity lookup is appropriate after a stable object has been
+resolved; it does not replace semantic equality at the initial resolution.
+
+=program/index.ss= now applies that distinction to admitted immutable atoms.
+Each engine retains separate all/delta structural column tables and lazy
+identity tables. An atom's first indexed lookup resolves a shared column entry;
+subsequent lookups reuse that same entry by atom identity. Different atoms with
+equal columns still share the physical index. No row, expression value or
+lookup result is memoized. Small relations and empty column sets retain their
+existing bypass, so they allocate no identity table.
+
+A private =physical-index-entry= record names its version and physical value.
+Its stable identity survives incremental extension and replacement. The new
+physical value is installed only after build/extend returns successfully;
+=version=#f= means a failed cold build has no ready index and cannot be extended.
+Delta version changes rebuild normally. The column-table traversal updates
+owned fields instead of replacing table values and allocating version pairs.
+Custom providers may return a new index object; every atom sharing the entry
+then observes it. Entries and identity tables never cross engine boundaries.
+
+The exact =a890b9919504f1daadb9990aa501797777a00856= index owner is frozen in
+=t/performance/index-entry/reference.ss=. The complete baseline evaluator
+changes only import routing to that owner. Both graphs share all other current
+runtime modules. Source comparison verifies that boundary; native compilation
+and exact prefix/.o1 checks qualify both sides before timing.
+
+=just performance-index-entry= uses explicit scenario/library/receipt arguments,
+50 alternating pairs in each of seven scenarios (350 total), native CPU
+user+system and allocation counters. Initial GC and four warm-up comparisons
+are outside timing; natural GC is included. Checks preserve ordered rows and
+independent expected projections outside each timed batch. Warm lookup kernels
+batch 512 calls; other kernels and full warm-declaration solves batch ten.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| 64-column warm all lookup | 1.1602 | 0.8438 | 3072.4 | 3072.4 | 49/50 |
+| 64-column warm delta lookup | 1.2188 | 0.9004 | 3072.4 | 3072.4 | 47/50 |
+| 64-column extension plus lookup | 2.9 | 2.3 | 6500.8 | 6436.8 | 48/50 |
+| Scalar warm control | 0.3008 | 0.2598 | 0.4 | 0.4 | 46/50 |
+| Cold 128-row index control | 164.7 | 171.4 | 421268.8 | 424148.8 | 18/50 |
+| Complete 128-row / 64-column control | 1469.0 | 1223.5 | 2091508.8 | 2094388.8 | 36/50 |
+| Complete 128-row / one-column control | 225.2 | 201.1 | 121396.8 | 124276.8 | 33/50 |
+
+Gates were fixed before sampling: the three wide index kernels require 15%
+median CPU savings, 35/50 wins and at most 256 additional bytes per call.
+Scalar, cold and complete-solve controls allow at most 8 KiB and 5%+20 us
+absolute overhead. Every gate passed. Qualified kernel CPU reductions are
+27.3%, 26.1% and 20.7%; warm allocation is unchanged. Cold/full construction
+adds 2880 bytes when an identity table is needed; cold CPU increased 4.1%.
+The complete solves are nonregression controls, not a qualified universal
+solver improvement. Their lower observed medians are retained without changing
+the gate after seeing measurements.
+
+Native qualification passed six modules / 29 Cases in the existing actor pool
+with =test-pool auto= resolving to 12. Module execution took 0-3 seconds.
+The new Suite covers shared atoms, all/delta isolation, provider replacement
+objects, failed build/extend retries, threshold transitions, repeated/reordered
+columns, key-expression order, full solves and independent concurrent engines.
+Existing lifecycle, index, BYODS, workspace and observability modules passed.
+Production policy reported =findings=0 errors=0=. Logs and raw pair receipts
+remain in ignored =.cache/ascent/index-entry/=.
+
+Prior exact-head CI exposed the cold native zero-budget observation probe:
+=a890b99= returned =unexpected-admission= without a collected heap sample.
+The adopted remote commits =81f3e33= and =df42dc2= use the existing Core
+=collect-before-sample?= option and print actual pre-/post-collection counters.
+Gambit's official =lib/_kernel.scm= (blob =e37bc7508f542793b93dd8572d75dabeb309bf7e=)
+projects statistics slot 15 from =latest_gc_heap_size_= and slot 17 from
+=latest_gc_live_=. A fresh native child must establish that measurement before
+asserting a zero-byte rejection. Neither the budget nor watchdog was relaxed.
+The remote proof/registry changes were preserved; the measured index sources
+remained byte-identical after integration. Native index/observation tests were
+rerun on the integrated tree.
+
+* Feature: prepared general index key terms
+
+=gerbil/compiler/optimize-call.ss:88= checks mutable bindings before substituting
+lambda arguments. The relevant principle is to move only work whose inputs
+are stable, while preserving observable evaluation. ASCENT's physical index
+columns and admitted term descriptors belong to immutable declaration plans;
+expression results and environment bindings do not.
+
+=program/objects.ss= now records ordered key terms in the same traversal that
+selects indexed columns and prepares binding terms. The private atom vector
+contains relation position, raw terms, columns, binding terms and key terms.
+The first four fields retain their meanings. Key terms refer to the same term
+descriptors; they never retain computed expression values or engine buffers.
+Selection still uses bindings from earlier clauses, rather than names first
+bound within this atom. This costs one additional list spine per atom key in
+the declaration cache, proportional to the number of selected columns.
+
+After index construction, the general evaluator calls
+=gerbil-ascent-index-key/terms= with that prepared list. It visits only the key
+terms instead of repeatedly walking the full term list with =list-ref=.
+Expression callbacks still run in column order on every lookup. Dynamic column
+key construction and prepared key construction share one value operation for
+literals, expressions and variables; missing bindings retain the same error.
+The positive slot-based path continues to use its existing prepared slot terms.
+
+The real index qualification module compares results and the complete
+build/expression/lookup trace against the frozen evaluator. It also verifies
+that declaration planning does not evaluate expressions, fresh variables are
+excluded from key columns, and false values and missing-variable errors retain
+their semantics. No provider callback is bypassed.
+
+#+begin_src sh
+just test-file t/qualification/ascent-index-program-test.ss
+just test-file t/performance/ascent-prepared-key-performance-test.ss
+#+end_src
+
+The additional native kernel Case freezes the general key function from
+=0ac40f8=. Each shape uses 1000 alternating old/new pairs of 32 lookups, with
+preparation and physical index construction outside measurement. The narrow
+control requires median nonregression; wide targets also require 900 strict
+wins. No original SS scenario or its 1000-sample contract is replaced.
+
+Two local paired runs qualify all shapes. Sparse 64-column, sparse 128-column
+and full 64-column keys win =1000/1000/999= pairs initially and =997/1000/1000=
+on repeat. Their reference/candidate median batch jiffies are =5/1, 8/1, 66/9=
+initially and =4/1, 8/1, 66/9= on repeat. The narrow two-column control has median
+=1/1= in both runs, near the timer resolution; no narrow-key speedup is claimed.
+This measures key construction only, excluding declaration costs, row binding,
+physical index work and complete solve performance. It does not establish an
+individual-call tail latency improvement. Logs remain under ignored =.cache/=.
+
+Local qualification with the pinned cache SDK and =GERBIL_BUILD_CORES=12=
+passes standard build, policy over 42 modules (findings=0, errors=0), all 50
+semantic modules and 402 Cases, and all 17 original SS performance scenarios.
+All commands exit 0; original module deadlines, Case budgets, fixture
+thresholds and SS sample counts remain unchanged. These receipts qualify
+the local implementation and do not establish remote CI closure.
+
+* Feature: linear selection for full ordered wide slot keys
+
+The preceding vector experiment is historical. Rechecking the installed
+=optimize-call.ss:43-80= explains a measurement seam: known procedures in
+another module can receive a different call transform from procedures in the
+current module. This does not prove the earlier regression's cause; its GC
+protocol also changed. A valid comparison must keep both call boundaries
+identical before evaluating the selection algorithm.
+
+Two full copies of =program/positive.ss= at =0958e03= were compiled as separate
+exported modules with =:std/make=, its default optimization enabled and the
+same canonical =program/funs= import. The probe imports both exports and
+asserts that both resolve to native =.ssi= files. =std/make.ss:239-287= builds
+explicitly declared modules; both copies and the probe are declared together,
+so a helper's mere presence in the source tree is not treated as native proof.
+An unchanged/unchanged calibration gave reference/control medians (jiffies)
+=5/5=, =466/464=, =164/164=, =1290/1284= and =647/642= for narrow,
+single-column width 512, full width 128, full width 512 and 64-of-512 keys.
+
+All runs retain 1000 alternating pairs per shape, eight complete positive-plan
+compilations per sample and collection every 20 pairs outside the intervals.
+Each sample checks its full plan against the frozen reference outside timing.
+The original wide-target gate remains at least 900 strict wins and a
+nonregressing median; controls require a nonregressing median. The probe's
+semantic assertions are separate from this acceptance decision.
+
+The calibrated general vector candidate still failed: the single-column
+control was =472/474= and the 64-of-512 target had only 874 strict wins.
+Restricting vector selection to at least 128 columns restored the controls,
+but the 512-column target won only 895 times. Neither candidate was accepted.
+Their source, native artifacts and logs are ignored under
+=.cache/ascent/slot-calibration/=; no fixture-specific build interface is added.
+
+The accepted specialization verifies that a key with at least 128 columns
+selects exactly every lowered action once, in source order. A named tail loop
+checks the column/term suffixes and numeric position without allocating an
+index list. It then copies the term-list spine with an explicit one-argument identity function; the action
+objects stay shared, but the two list spines remain distinct as before.
+Full-key selection is =O(W)= instead of repeated =list-ref='s =O(W^2)=.
+Short, partial, reverse and duplicated selections retain the generic selector.
+The conservative 128-column boundary is the measured target boundary, not
+an assumed universal crossover. No temporary vector or new scratch state is
+retained in the cached plan, and all callback-bearing clauses retain their
+existing fallback.
+
+An earlier sequential-copy candidate used =map values=. It passed one run
+(128 columns =159/107=, 951 wins; 512 columns =1233/468=, 911 wins),
+but its repeat failed (512 columns =1233/446=, 863 wins; the single-column
+control =423/424=). It was rejected. Generated Scheme distinguishes the
+=##map values= call from an explicit one-argument identity lambda; this is a
+concrete compiler seam, not proof that =values= caused the observed jitter.
+
+The next copy variant used an explicit identity lambda. Its first run met
+the gates (128 columns =163/111=, 906 wins; 512 columns =1276/480=,
+900 wins), but its repeat's single-column control failed =465/469= before
+any subsequent build began. It was also rejected. Results from the tail of
+that failed run are not acceptance evidence, because preparation of the next
+candidate overlapped its remaining shapes.
+
+The final variant uses native =match= for empty and singleton keys. An empty
+key returns its empty action list directly; a singleton performs one
+=list-ref= and creates its one-element list directly. This removes captured
+selector closures visible in the original generated Scheme. It still lowers
+all body terms, including nonindexed terms, before key selection. Larger keys
+use the checked full-ordered specialization or the unchanged generic selector.
+
+The cardinality-specialized native module's first run gave reference/candidate
+medians =165/112= at width 128 with 929 strict wins and =1282/488= at width
+512 with 909. Control medians were =5/5=, =471/466= and =651/645=.
+These measure complete positive slot-plan compilation, including applicability,
+body actions, key selection and head actions, not complete engine construction
+or solve time. Concurrent Rust/Clang work was observed on the host; timing
+variation is recorded rather than attributed solely to any Scheme expression.
+
+The confirmation imports the actual =:gerbil-ascent/program/positive= export,
+resolved explicitly to =.cache/ascent/native-library/lib/.../positive.ssi=.
+Generated Scheme names the reference export and that production export as the
+two call targets. The confirmation gives =161/108= at width 128 with 937
+strict wins and =1237/465= at width 512 with 904. Controls remain
+=5/5=, =453/448= and =615/609=. Both cardinality-specialized runs meet
+the unchanged gates. Across them, complete compilation medians decrease about
+32-33% at width 128 and 62% at width 512. These bounded measurements do not
+establish an engine or full-solve speedup.
+
+The existing 13-Case qualification module now covers 127/128/129 and 512-column
+boundaries, forward/reverse/duplicated selections, exact action identity and
+separate list spines. A 384-term mixed key covers repeated variables, =#f=
+literals, wildcards and a 128-column partial selection; a full mixed key checks
+copy semantics. Real Joins at 127/128/129 columns preserve custom provider key
+traces and ordered rows against the independent evaluator. Callback rejection,
+512-graph enumeration, session updates and concurrent-frame checks remain.
+
+With the pinned cache SDK and =GERBIL_BUILD_CORES=12=, =just check-policy=
+passes all 42 selected modules with =findings=0=, =errors=0= and exit 0.
+=just test= passes 52 modules and 418 Cases, scheduled as 49 parallel modules
+and three exclusive modules. All 52 logs contain =NATIVE-MODULES-OK=,
+=MODULE-OK=, =HARNESS-OK=, final =OK=; the whole invocation exits 0.
+
+#+begin_src sh
+just check-policy
+just test
+just performance
+#+end_src
+
+All original 17 SS scenarios were attempted with their original fixtures,
+1000-sample counts, Case budgets and module deadlines. Fourteen pass, including
+all semantic assertions. Three local gates remain open:
+- =ascent-product-session=: original 2ms limit; current p95 =4.524ms=,
+  isolated repeat =8.264ms= (medians =245us= and =239us=). A separate native
+  library copied the same qualified modules and replaced only =positive= with
+  the frozen original implementation, under its actual canonical module id.
+  Its native resolution check passes, but this reference also fails: p95
+  =12.809ms=, median =236us=, 1000 samples. This comparison does not establish
+  a stable full-solve regression or improvement, nor close the time gate.
+- =ascent-byods-eqrel=: p95 =1.013ms= exceeds the original 1ms limit;
+  median =105us=, 1000 samples. No passing receipt is claimed.
+- =ascent-table-expression=: the original 180-second module deadline expires
+  while the 1000-sample persistent-trie reference is still running, before
+  candidate timing starts. That frozen reference imports only POO object,
+  number and trie libraries and never calls ASCENT's slot compiler.
+
+The first suite stops on the product failure; remaining scenarios are inspected
+through the existing native =_performance-scenario= entrypoint, retaining each
+original module timeout. Failures propagate as nonzero exits. There is no
+claim that =just performance= or the complete local performance gate passes.
+Raw failures and the reference-library source remain in ignored
+=.cache/ascent/slot-calibration/=. New commits contain source, Unit Tests and
+this research note, not raw logs. =build.ss=, scheduling, original performance
+limits and original sample counts are not changed by this optimization.
+
+After preserving concurrent support-graph commits through =bc7ade5=, all
+=program/*= bytes, SS fixtures and the positive-plan qualification module
+match the measured optimization commit =db2651f=. The integrated native
+=just test= invocation passes 53 modules and 424 Cases with 50 parallel
+modules, three exclusive modules and 12 workers. All 53 logs contain native
+resolution, module, harness and final success markers; the invocation exits 0.
+The integrated 43-module policy audit identified one missing full public doc
+block on =candidate-provenance-withdraw!=. Its no-source-change example and
+the grounding helper's binding precondition are now documented without
+changing either function body. Final =just check-policy= has
+=findings=0=, =errors=0= and exit 0. The three SS gaps above remain open;
+these local receipts do not establish current-head remote CI or AOT closure.
+
+* Feature: one eqrel component resolution across admission and commit
+
+The installed =gerbil/runtime/hash.ss:25-26,574-575= defines a HashTable
+=ref= interface and implements =hash-get= by calling it. The eqrel provider
+previously built and queried both endpoint keys during budget preflight,
+then built and queried them again in =component-of=. The provider owns its
+evaluation-local table and invokes no user callback between these phases.
+Reusing the resolved components therefore removes duplicate work without
+changing the table representation or depending on unsafe compiler settings.
+
+=table/eqrel.ss= now resolves each distinct endpoint once. Equal endpoints
+share one key and lookup. Budget admission still precedes all mutation;
+already connected endpoints skip the commit phase after admission. New
+components, reflexive rows, cross-component rows and union-by-size retain
+their previous emission order. The historical member lists remain persistent,
+and the smaller component alone is relabeled during a merge. No state escapes
+to a global cache, and no public interface changes.
+
+The existing BYODS invariants test compares closure against independent
+reachability goldens for all three-node edge subsets, four-node subsets,
+eight-node cycles and bridges, insertion orders, producer partitions and
+interleaved groups. A new Case checks exact emission order, exact budget
+boundaries, untouched state after rejection, retries, zero-budget connected
+and reflexive edges, negative-budget rejection and structurally equal list
+endpoints. The existing eqrel program module also exercises retained-session
+recovery, concurrency, source and derived closure, and output budgets.
+
+The ignored =.cache/ascent/eqrel-resolution/= experiment compiles the frozen
+=5ed765d= provider and the production provider as separate exported native
+modules with =:std/make= optimization enabled. The probe checks both =.ssi=
+resolution paths; generated code names both exported callees. Each shape
+uses 1000 alternating old/new sample pairs, 16 complete calls per sample and
+GC every 20 pairs outside timing. Full ordered result equality is checked
+outside each interval. Shapes are a cold twenty-edge chain, 441 already
+connected edges and 441 self edges on the completed 21-node component.
+This measures the Provider boundary, not complete engine latency.
+
+The native probe exits 0 with ordered parity and reports old/new medians in
+jiffies of =196/157=, =2041/1084= and =2028/612= for these three shapes,
+respectively (about 20%, 47% and 70% lower in this run). Strict new-faster
+counts are =880/1000=, =817/1000= and =907/1000=. These counts expose timing
+variation; this experiment does not establish a universal speedup or satisfy
+the whole-engine SS admission gate. No raw logs or temporary benchmark
+sources are added to Git, and no test work is added to =build.ss=.
+
+The first integrated full-suite attempt exposed a separate retained-session
+regression in the incoming native deletion work. Single-source replacement
+delegated to batch replacement and immediately marked the session clean,
+so its following zero-budget run returned a completed validation result.
+After a failed partial resume, recovery also kept the partial =last-result=
+despite rebuilding the committed source to completion. The existing timeout
+module failed both contracts; a focused run reproduced them. Runtime loader
+records confirmed the intended native session and engine objects were loaded.
+
+The session now keeps successful single-source validation provisional until
+the next run. An unrestricted run uses the already-completed update engine;
+a timed run replays the accepted source through normal round boundaries.
+An engine adoption clears that replay state, so later partial runs resume
+the same engine. Recovery preserves an existing completed result's identity;
+it replaces a partial observation with the completed checkpoint when its source
+snapshot equals the committed snapshot. Native affected-relation reuse for
+batch updates remains in place. The existing timeout Case additionally
+checks that batch reuse succeeds after recovery and a single replacement.
+This applies the same boundary principle as the Provider optimization:
+reuse resolved private state only while its admission preconditions hold.
+
+Source and completed result now form one retained commit checkpoint. A
+single replacement keeps the preceding checkpoint until a run completes,
+even though its prospective engine has already passed validation. Partial
+runs never replace the completed checkpoint. Recovery of accepted pending
+input marks its completed validation for replay on the next timed run.
+Two further native Cases cover replacement-plus-append failure returning
+the original source/result identity and provider failure on pending input
+retaining zero-budget round boundaries. Batch reuse consumes the completed
+checkpoint directly, rather than the most recent partial observation.
+
+The first full-suite attempt is not a pass: the timeout module exits 42,
+and the retained-operator module exceeds its original 120-second process
+deadline after printing success markers. A success marker alone is not a
+qualified receipt. Neither deadlines nor Case expectations are relaxed.
+
+The incoming remote Scheme build also fails its hard source-module limit:
+=program/evaluate.ss= has 1069 effective lines. Completed-closure reuse
+admission, dependency propagation, prefix metadata and rule activation now
+belong to =program/reuse.ss=. The evaluator retains the execution loop and
+its existing exported constructors, and shrinks to 987 physical lines.
+The activation algorithm is transferred intact: retain the complete rule
+activation for later appends, filter only affected heads for the reuse run,
+and create engine-local frames for partial heads. No activation speedup is
+claimed. =build.ss= adds only the new production module declaration.
+The new module and the incoming stratified graph helpers receive adjacent
+generic/domain signatures and examples at their admission boundaries.
+
+A later integrated attempt passes 53 parallel modules but the retained
+operator stress Case reaches only 56 of its original 64 nested source cuts
+before the 120-second process deadline. That module is removed from the
+parallel admission list and uses the existing exclusive lane; the remaining
+53 admitted modules still use =GERBIL_BUILD_CORES=12=. No deadline, Case
+budget, graph sample count or comparison threshold is changed. The latest
+eqrel SS still fails its original 1000-sample 1 ms p95 gate: p50=99 us,
+p95=7.914 ms and max=227.114 ms. This whole-engine failure remains separate
+from the Provider-boundary A/B improvement above.
+
+Final checkpoint validation uses the original native module inventory and
+budgets. Selected production policy audit completes with zero findings and
+zero errors. The full run admits 53 parallel and four exclusive modules:
+55 modules exit successfully before the arbitrary-column rule module fails
+its original 2-second Case duration budget during POO object admission.
+The full coordinator exits 70; it is not a green full-suite receipt.
+That rule module subsequently passes all 14 Cases in a focused native run
+and exits 0 (26-second module duration). The retained operator module then
+passes all six Cases, including all 64 graph and nested source cuts, and
+exits 0 in 108 seconds under the unchanged 120-second process deadline.
+The failed integrated duration gate remains open despite the focused pass.
+The checkpoint timeout module passes all 12 Cases both in its focused run
+and in the integrated run. These receipts cover every module individually;
+they do not replace a successful uninterrupted full run or the SS p95 gate.
+
+Before publication the remote advances to =6c5c6e3= with source-snapshot
+updates and =program/update-selection.ss=. The normal rebase retains that
+implementation: =program/reuse.ss= delegates dependency selection and
+partial-head activation to it, owns the completed reuse capsule and full
+activation, and removes the duplicate selection/prefix/filter algorithms.
+The evaluator now has 975 physical lines. The remote's replacement shape
+checks and native/opaque selection are preserved; single replacement still
+keeps the coupled committed checkpoint until a completed run. Rebased native
+validation passes 12 timeout Cases, 24 eqrel program Cases and the deletion
+module, including its 64 graphs and 192 successive withdrawals. Each module
+has MODULE-OK, HARNESS-OK, final OK and successful coordinator exit. The
+47-module production policy audit exits 0 with zero findings and errors.
+The full-suite and SS failures above remain pre-rebase evidence and are not
+converted into exact-head green claims.
+
+* Feature: lattice rows and term binding
+
+=program/funs.ss= extracted a lattice key with two reversals and a
+lattice value with another reversal. It now uses =butlast= and =last=,
+with an explicit nonempty check for the private key helper. The
+evaluator also calls key and value separately in some paths, so a
+single extraction at the caller is a possible later measurement target
+without adding a new public helper.
+
+=gerbil-ascent-bind-row= is a compact state machine. Its invariants are
+repeated-variable equality, pattern result arity, and shadowing order
+of newly bound variables. A =match= rewrite is desirable only if those
+invariants become easier to see and the errors stay stable.
+
+Relevant qualification: repeated-variable, lattice, pattern, rule,
+and invalid-program fixtures. Record values, row order, and errors.
+
+** Checked binding and identity storage
+
+=program/objects.ss= now retains raw atom terms for admission and
+index-key planning, and prepares a separate binding-term list. A
+=fresh-variable= term is permitted only when the name is absent from
+earlier clauses and earlier terms of this atom. At row time that term
+conses its binding directly. Repeated variables, pattern outputs,
+expressions, and externally bound names retain the original checks.
+This removes environment searches for first variable occurrences;
+it does not change the public term grammar.
+
+A separate experiment bypassed identity storage wrapping for the exact
+built-in Set Provider without field callbacks. It was reverted because
+matched whole-solve measurements did not qualify a stable gain. The
+retained evaluator changes only the three atom-binding calls to use
+prepared terms. Storage admission, duplicate accounting, budgets,
+custom Providers, and field callbacks keep their original paths.
+
+The frozen binder and evaluator in =t/qualification/= come from
+=74f0046bb6137b4fce22db5ae398b9812734c137=. The evaluator oracle
+uses original raw binding terms, while both evaluators share current
+declaration metadata. The finite binder comparison covers 99,999
+combinations of term shape, binary rows, and prior environments,
+plus pattern, expression, false-value, and error goldens. Source
+admission qualification covers duplicate order/counts, row mutation,
+nullary facts, budgets, custom Providers, and stateful callbacks.
+
+Performance qualification uses =just binding-benchmark= with identical
+optimizing compilation and 1000 alternating old/new pairs per case.
+It excludes cold declaration construction. Wide binding kernels
+require at least 900 paired wins and median nonregression;
+individual solves are median nonregression controls.
+The initial individual projection measurements failed the experimental
+900-win gate (854/1000 and 882/1000 in the last initial run). An
+eight-evaluation batching experiment also failed at 705/1000 wins for
+width 16 and timed out before completing width 32. Neither experiment
+supports a retained whole-solve optimization. No stable
+individual-solve speedup or tail-latency improvement is claimed.
+The original SS 1000-sample, 2 ms p95 gate remains unchanged.
+
+* Feature: indexed relations
+
+=table/funs.ss= builds bucket order by reversing the current relation
+snapshot once and then prepending each row. This is intentional.
+=hash-update!= with an empty-list default passed the index qualification
+but was reverted after a broader test hit a time budget. The same
+time budget failed after the revert, so that test does not attribute
+the anomaly to either hash implementation. The existing standard
+=hash-ensure-modify!= remains the clearer bounded choice here.
+=gerbil-ascent-index-key= uses =list-ref= for each selected column;
+its cost grows with both row width and selected columns. A single
+pass over the row could help wide composite keys, but arbitrary
+column order must be preserved. Use the existing index-program and
+BYODS cases plus a matched wide-row probe before choosing an algorithm.
+
+** Canonical single-column physical index lifecycle
+
+The installed Gerbil compiler's =compiler/base.ss:150-174,198-235=
+uses admitted binding shapes and native identifiers directly. Its
+=runtime/hash.ss:475-505= selects hash implementations from equality
+semantics. Applying these ideas here means removing a redundant
+one-element key list throughout construction, extension and lookup.
+It does not justify an =eq?= table: strings, lists, false and empty-list
+values remain valid keys with structural equality.
+
+=table/access.ss= now uses a plain native hash table for the canonical
+one-column index. Composite and empty keys retain the existing path;
+custom Providers still receive list keys through their original hooks.
+Bucket order remains reverse-on-build and prepend-on-extension.
+=core/positive-plan.ss= evaluates a single key value through the same
+slot or expression helper used by the previous list-key producer.
+Physical construction still precedes expression evaluation.
+
+=program/index.ss= owns one engine's lazy all/delta caches and cache
+versions. The evaluator owns admitted rows and publishes row/size/version
+vectors. Extension reverses an admitted batch only when a cache exists
+and the caller supplies reverse order. The 32-row threshold and retained
+snapshot behavior are unchanged. =build.ss= adds one production module.
+
+The native =just performance-scalar-index= probe compiles the frozen
+pre-change access module and the candidate in the same library. It checks
+both resolution paths and native objects, then compares exact ordered
+results before warmup and in every one of 100 alternating sample pairs.
+Large samples batch five full build/extend/lookup lifecycles over 4096
+initial rows, 1024 appended rows and 5120 lookups. The eight-row fixture
+is only an allocation control; the engine skips physical indexing there.
+
+Each scenario and library path is an explicit =main= argument. Gerbil's
+native =add-load-path!= loads the library. There are no new scenario or
+library environment variables. Existing compiler parallelism remains
+configured through the toolchain's =GERBIL_BUILD_CORES= interface.
+
+Allocation and CPU counters use Gambit's native =##process-statistics=
+slots 7 and 0+1, respectively, as defined in
+[[https://raw.githubusercontent.com/gambit/gambit/master/lib/_kernel.scm][Gambit's kernel source]].
+One collection precedes warmup; natural collections remain in measured
+batches. Singleton admission requires at least 10% lower median allocation,
+CPU and wall time, with at least 75/100 CPU wins. Composite controls require
+equal allocation and no more than 5% median CPU/wall regression.
+
+The initial mixed interpreted/native comparison is invalid. Earlier
+record-wrapper and plain-table trials failed the experimental 75/100 wall
+win requirement; forced collection per sample did not fix it. The current
+CPU gate qualifies computational cost, not stable individual-call latency.
+An aggregate four-scenario process also exceeded its 90-second deadline;
+each scenario now runs in its own process with that same deadline. Neither
+unit test budgets nor the existing whole-engine SS gates are relaxed.
+Local raw logs remain under ignored =.cache/ascent/scalar-index/=.
+
+The first complete explicit-argument run is rejected. Both singleton cases
+allocate 1,461,238 rather than 1,952,758 bytes per lifecycle (25.17% less),
+with median CPU reductions of 27.65% and 27.78% and 86/100 and 83/100 CPU
+wins. The composite control allocates 2,444,278 bytes in both variants,
+but its wall median rises from 36,107 to 43,981 microseconds (21.81%).
+Its CPU medians are 3445.8/3458.2 microseconds. The process exits 70 at
+the unchanged control gate and never reaches the tiny scenario. This
+is not a complete passing performance receipt.
+
+The unchanged four-scenario rerun completes all 100 pairs per scenario:
+
+| Scenario          | Bytes old/new     | CPU us old/new | CPU wins | Wall us old/new | Wall wins |
+|-------------------+-------------------+----------------+----------+-----------------+-----------|
+| First column      | 1952758 / 1461238 | 1408.2 / 996.2 |   86/100 | 22700 / 5252    |    70/100 |
+| Later column      | 1952758 / 1461238 | 1452.8 / 1015.4 |  86/100 | 13868 / 5175    |    64/100 |
+| Composite control | 2444278 / 2444278 | 3443.4 / 3292.0 |  58/100 | 39815 / 34845   |    57/100 |
+| Tiny control      | 5008 / 4144       | 2.926 / 2.242  |   81/100 | 12 / 6          |    61/100 |
+
+The two singleton CPU medians improve by 29.26% and 30.11%; allocation
+improves by 25.17%. These results qualify the physical lifecycle kernel.
+The earlier control failure and wall variation remain material limits:
+no whole-engine speedup or stable individual-call latency is established.
+
+Focused native semantic qualification passes five lifecycle Cases, nine
+index-program Cases and two BYODS index composition Cases. Every module
+reports native resolution, MODULE-OK, HARNESS-OK, final OK and coordinator
+exit 0. The BYODS module is rerun after integrating remote Scheme changes;
+the candidate's index implementation, benchmark and earlier two test sources
+are byte-identical across that integration. The four changed production
+modules pass the policy audit with zero findings and zero errors.
+This focused receipt does not establish full-suite, whole-engine SS or
+current-head remote CI closure.
+
+* Study: version-owned member admission and detached provider packets
+
+Gerbil =1cfb032= =core/match.ss:626-672= exposes structural shape clauses;
+=runtime/hash.ss:460-483= chooses physical tables by equality contract. Apply
+these mechanisms at a protocol boundary: declaration admission, physical index
+construction, source extension, returned packet admission and callback consumption.
+Public provider behavior remains POO-extensible; private member records belong
+to one physical index version and are not a new public object model.
+
+=table/funs.ss:gerbil-ascent-index-row-snapshot/arity= validates and detaches
+row spines together, with traversal bounded by declared width. The whole packet
+passes before membership/coverage checks. Field values remain borrowed; prior
+valid rows may allocate temporary detached spines before a later malformed row
+raises. No partial packet is published. Shape errors still precede a foreign-row
+error elsewhere in the same packet; no term callback runs on rejection.
+
+=program/index.ss= replaces separate row-key and occurrence tables with one
+value-keyed table of =provider-row-member= records. The record holds a version-local
+integer ordinal, projected key and allowed occurrence count. Source extension
+updates existing equal-value classes and assigns ordinals to new classes.
+Returned packets do one full-row member lookup, then count ordinals in a fresh
+packet-local table. Duplicate occurrences, overselecting packets, required-key
+coverage, alias revocation and all/delta publication retain the existing owner.
+There is no mutable enumeration stamp in a retained member.
+
+The abstraction reduces repeated row hashing across the complete lookup flow.
+A shape/copy fusion alone failed the 10% CPU gate. Default eq tables, eqv
+record-key tables and immediate ordinal tables failed narrow allocation or CPU
+controls; retain these negative receipts. The existing generic table with integer
+ordinals passes all gates with unchanged allocation. Specialized table names
+and fewer source expressions do not prove lower runtime cost.
+
+=t/performance/provider-packet/= freezes the complete prior index owner and
+uses ASP Scheme's benchmark API for 50 alternating pairs. Complete warm Provider
+lookup, shape/detachment, membership, coverage and field consumption lower median
+CPU 4327 ->3011 us at width 256 and 1750 ->1029 us at width 64, with equal
+allocation. Build and witness construction are outside timing; these figures
+make no cold-build or whole-evaluator performance claim. Narrow, small and empty
+controls retain the predeclared regression gates. Root =build.ss= stays a
+production roster; native qualification and benchmarks live under =t/=.
+
+* Study: prepare native identity layout and publish through the constructor contract
+
+Gerbil =1cfb032= =compiler/compile.ss:1115-1125= binds resolved identities to
+one traversal; =optimize-base.ss:24-29= names private metadata with native records.
+For binary paths, external unsigned node identity needs generic value equality.
+After admission the local membership owner becomes an offset map. Private vectors
+carry adjacency and visitation; result order follows sorted external pair keys.
+Visitation stamps and frontier operations belong to one analysis invocation.
+
+Private complete path data uses a final record, while public extensible POO
+expressions own their projection demands. Native provenance and unchanged neighbor
+identity authorize sharing. Callback packets and independently bounded traversals
+retain their operation boundaries. Each published row list has its own spine.
+Sharing an internal analysis never authorizes sharing caller-editable publication.
+
+The POO Trie source supplies =.make-leaf=, =.branch= and =.make-skip= through its
+Table constructor contract. Ordered Set publication composes those methods once
+per Patricia branch, replacing repeated persistent path insertion. The bit
+partition driver narrows an owned index interval; generic key arithmetic retains
+large unsigned identities. Unadmitted ordering/shapes use the original Set flow.
+
+[[file:../../t/performance/sparse-view/README.org][Complete native binary qualification]] records failed adjacency-only, private-POO and
+allocation experiments before the combined admission/analysis/publication revision.
+All seven gates pass; small and closure-only allocation costs remain explicit.
+Native validation and independent path truths qualify the representation changes.

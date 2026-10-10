@@ -1,0 +1,111 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: relational kernel reading: µKanren's Scheme core and its search boundary
+#+STATUS: research note; not an execution-equivalence claim
+#+DATE: 2026-09-30
+#+FILETAGS: :research:microkanren:scheme-dsl:
+
+* Bibliography
+:PROPERTIES:
+:CUSTOM_ID: relational-kernel
+:SOURCE_PDF: https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf
+:ACCESSED: 2026-09-30
+:END:
+
+Jason Hemann and Daniel P. Friedman, [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren: A Minimal Functional Core
+for Relational Programming]], Scheme Workshop 2013.  PDF page numbers
+below count from one.
+
+* Evidence ledger
+
+#+NAME: microkanren-evidence
+| Locator | Paper claim | Design use | Non-transfer |
+|---------+-------------+------------+--------------|
+| §2, PDF pp. 1–2 | A goal maps state to a stream | Small functional core under a Scheme surface | Stream states are not Datalog facts |
+| §3, PDF pp. 2–3 | Unification and fresh variables form core goals | Separate core semantics from interface macros | No direct replacement for indexed joins |
+| §4.1–4.3, PDF pp. 3–5 | Delayed streams and interleaving control search | Treat evaluation strategy as semantic evidence | Bottom-up semi-naive iteration has different scheduling |
+| §5, PDF pp. 5–7 | User-level operators recover convenient syntax | Scheme can own a rich surface over a small core | Macros do not prove parity with Ascent |
+| §4.2–4.3, PDF pp. 4–5 | Recursion needs delayed goals and interleaving for search progress | Execution strategy is observable | Delay does not prove finite closure |
+| §5.1, PDF pp. 5–6 | =Zzz=, =fresh=, and =conde= are user-level macros | Put sugar above a small semantic kernel | A macro can also hide cost and scheduling |
+
+* Reading for gerbil-ascent
+
+The paper's reusable idea is its small core and user-extensible Scheme
+interface.  Its goal constructors (=call/fresh=, equality, disjunction,
+conjunction) operate on substitutions and streams.  The interleaving
+strategy gives recursive goals a chance to yield results.  Ascent instead
+derives a least fixed point over named relations; join planning and delta
+evaluation are visible concerns.  Thus a =relation-view= should retain
+named atoms and explicit modes rather than replacing rule bodies with
+µKanren goals.
+
+* Discriminating experiment
+
+Describe the same finite reachability relation once with the arrow and
+once as µKanren goals.  Compare answer *sets* on a finite graph, then
+vary a cyclic graph and ask for a bounded prefix.  Equal finite sets do
+not imply equal order, termination behavior, or operational cost.
+
+#+begin_src scheme
+;; Proposed public rule core; examples are design notation.
+((path x z) <-- (path x y) (edge y z))
+#+end_src
+
+The rule keeps the recursive dependency visible to the Ascent engine.
+Scheme functions can build fragments around it.  A macro may shorten
+surface syntax only after scope and binding diagnostics are preserved.
+
+* Deeper result: the kernel/interface division has a semantic cost
+:PROPERTIES:
+:CUSTOM_ID: microkanren-kernel-boundary
+:END:
+
+The paper deliberately moves interface machinery outside its
+39-line, macro-free kernel (§3 and §7, PDF pp. 2, 7).  The four basic
+goal constructors are equality, =call/fresh=, disjunction, and
+conjunction.  A goal consumes a substitution/counter state and
+returns a stream of possible states.  This is a genuinely different
+relational core from the named sets of tuples and immediate-consequence
+operator used by Ascent.  A shared Scheme host language does not make
+their execution contracts interchangeable.
+
+The paper derives its search behavior by changing =mplus= and =bind=
+from eager lists to delayed streams and then interleaving branches
+(§4.1–4.3, PDF pp. 3–5).  It also makes the user responsible for
+delaying serious recursive goals.  The =Zzz= macro in §5.1 can hide
+that scheduling detail behind a friendlier form, but its placement
+does not remove the underlying obligation.  Thus our proposed Scheme
+surface needs to specify what it hides: lexical sugar may hide syntax;
+it may not hide whether a rule uses bottom-up saturation, a finite
+view call, or a separate stream search.
+
+#+NAME: microkanren-non-equivalence
+| Property | µKanren | gerbil-ascent design gate |
+|----------+---------+---------------------------|
+| Primary state | Substitution and fresh-variable counter | Named relation/lattice state |
+| Result | Possibly lazy stream of answers | Materialized fact snapshot or explicit partial timeout |
+| Recursion | Delayed goal invocation with interleaving | SCC and semi-naive fixed-point rounds |
+| Equality | Unification of logic terms | Value equality and bound-column joins |
+| User abstraction | Functions and macros over goals | Functions/fragments over admitted rules and views |
+
+The promising transfer is architectural: keep a small, inspectable
+relational kernel and let Scheme functions/macros construct its
+programs.  Do not adopt =call/fresh= or =conde= as aliases for atoms,
+and do not claim that answer-set equality on a finite example proves
+search equivalence.
+
+* Stronger experiment
+
+Use a cyclic finite graph and compare the complete reachability set
+with an independent graph model.  Then put an infinite recursive goal
+beside a finite-answer branch in µKanren and compare *answer
+availability* with gerbil-ascent's bounded timeout result.  Record
+sets, order, partial results, and completion status separately.  If
+a proposed Scheme sugar changes the Ascent fixed-point scheduling or
+causes a previously diagnosed unbound variable to escape admission,
+the kernel/interface boundary has been crossed.
+
+* Related notes
+
+[[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].

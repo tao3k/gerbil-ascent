@@ -1,0 +1,26 @@
+{
+  "scope": "test oracle process launch; no semantic row admission changes",
+  "historical_ci": {
+    "revision": "9cd4897d06132b39d78ee117077454f1f6f088a4",
+    "run": 37572457930,
+    "job": 112633905694,
+    "passed": 58,
+    "failed": 8,
+    "cause_boundary": "CI omits original panic diagnostics. Controlled actual Gerbil/Rust backpressure reproduces incomplete logging without usable panic text; exact historical syscall remains unobserved."
+  },
+  "controls": [
+    {
+      "path": "/private/tmp/ascent-next-rust-stdio.log",
+      "sha256": "7dac1030f856b67315002bca54fbf9e5643c3e2ad95d07ab24aebb408a535609",
+      "raw": "{\"adapted\": false, \"exit\": 70, \"complete\": false, \"logging_bytes\": 65520, \"diagnostic_tail\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\n*** WARNING module std/net/request is DEPRECATED and will be removed in the future\\n\"}\n{\"adapted\": true, \"exit\": 0, \"complete\": true, \"logging_bytes\": 1048320, \"diagnostic_tail\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\n*** WARNING module std/net/request is DEPRECATED and will be removed in the future\\n\"}\n"
+    },
+    {
+      "path": "/private/tmp/ascent-next-stdio-real.log",
+      "sha256": "afe9b9d54bf35cfde8bd5d8143f92b87e4986ffde96383de25f8536cf0db74dc",
+      "raw": "{\"actual_gerbil_env\": true, \"blocking_standard_streams\": true, \"backpressured_bytes\": 1048659, \"exit\": 0}\n"
+    }
+  ],
+  "python_controls": 4,
+  "launch": "restore blocking inherited fd 0/1/2, then exec unchanged argv; EOF/process/request success gates unchanged",
+  "limits": "not a universal OS syscall refinement; no timeout changes or fabricated progress"
+}

@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "sourceBase": "60955afe8a91118058efa565e084bac1ba84184f",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "d52a6b4d8986ee86f0c3793faee90ac64622c612b142faf6c4392bae9340b4cb"
+  },
+  "native": {
+    "artifactSHA256": "83e6cd04602d304233ec9dc29c7ebc92925a164668afb2e6231372aefe8a0501",
+    "sourceCount": 354,
+    "sourceMapSHA256": "3c8a4fb8f72ae5741d50698349101ae71b08f7a05b1a002438b12a7d0ca849b3",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 245.9535949230194,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-higher-order"
+    ],
+    "counts": {
+      "cases": 58,
+      "suites": 4,
+      "modules": 4,
+      "harnesses": 4,
+      "finalOK": 4
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "newRegressions": [
+      "Malformed source rows rejected by compile/reference",
+      "Opaque selection procedure rejected by compile/reference",
+      "Incompatible replacement child rejected by compile/reference",
+      "Descriptor pointer cycle rejected by compile/reference/fragment",
+      "Compiled source and mapping rows unaffected by later descriptor row mutation; fresh reference observes later valid values"
+    ]
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "5f95e899e66d75b440d0d0c5c56d0572b939f79257f09c8aa8157120a33734ea",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 7,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "implementation": {
+    "owner": "program/operator.ss",
+    "preflight": "Complete acyclic graph shape/signature validation before free analysis and emission",
+    "scope": "Root free-parameter set must be empty",
+    "rowOwnership": "Validated source/mapping row spines copied into a compilation-owned snapshot; reference acquires a fresh snapshot per call",
+    "claims": [
+      "Identity free closure iff recursive lexical scope validity for finite descriptor unfoldings",
+      "Malformed mutable descriptors rejected before emission or reference evaluation",
+      "Published generated row payloads do not alias descriptor row spines"
+    ],
+    "remaining": [
+      "Native graph-to-tree identity mapping and complete typed descriptor translation",
+      "Mechanized DFS shape/cycle and row typing validation",
+      "Atomic acquisition under concurrent descriptor mutation is not claimed",
+      "Generated rule, memo and native delta execution refinement",
+      "Semantic height sufficiency and new authorized model experiment"
+    ]
+  },
+  "supersededBuild": {
+    "artifactSHA256": "69bf1685468123e7d21426cdcafb3d7e5932b4b9aa3e74b7c8315d413dc14a65",
+    "compilerExit": 0,
+    "reason": "Preflight prototype superseded before native qualification by owned-row snapshot implementation"
+  },
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "rebasedVerification": {
+    "sourceCommit": "4412371f682d39aeed54c9e8b0fd12b6fccb2d57",
+    "upstreamCommit": "a09383826339da053567f61394ed06f6bd5e45e8",
+    "artifactSHA256": "9d6860c8ea741b6940d0aedba2603ef434cd021c49410077cba7932a3311b74e",
+    "sourceCount": 355,
+    "sourceMapSHA256": "ac56b420e8e7a9b0c4fea0900a4c0f85035fe0a1e545ce14b2d9a22c63533b80",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 332.02969908714294,
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "counts": {
+      "cases": 58,
+      "suites": 4,
+      "modules": 4,
+      "harnesses": 4,
+      "finalOK": 4
+    },
+    "qualifiedModules": [
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-higher-order"
+    ],
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "formalFilesUnchanged": true
+  }
+}

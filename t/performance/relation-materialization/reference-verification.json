@@ -1,0 +1,5 @@
+{
+  "baseline_head": "dacdc890aedbb02c3d04bea918094549c293ee8f",
+  "transformation": "only exported prototype and bounded closure function alpha renames",
+  "reference_sha256": "31e5f53737c9a9a99ea6c2b7c013e0cdbd8496177a2f2880f3fa88726432ee4a"
+}

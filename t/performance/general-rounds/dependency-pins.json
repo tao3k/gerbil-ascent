@@ -1,0 +1,9 @@
+{
+  "asp_tag": "v0.1.2.2",
+  "asp_tag_object": "0b59cb7d6d29d545ae735741057452bdb5e77aea",
+  "commits": {
+    "asp-gerbil-scheme": "f5b7c009d2cab61144a8af18008a0bfba3056584",
+    "poo-flow-core": "e85fd45303b208b23e5957fd316e7004994109a4",
+    "gerbil-poo": "099b381588360a8a49fd772f666a1a00351366f5"
+  }
+}

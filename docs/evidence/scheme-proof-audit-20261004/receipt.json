@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "baseHead": "bb4f58a826ac37e85974c66ce504ba1a7c7b57da",
+  "checkedFileSHA256": {
+    "packages/proofs/check.sh": "a0761c8b1129503eb22ea74eb450ab9a39a9294a9cc49cfbc228f3a14d0bab1e",
+    "packages/proofs/lean/FiniteHeight.lean": "5f95e899e66d75b440d0d0c5c56d0572b939f79257f09c8aa8157120a33734ea",
+    "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+    "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+    "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a",
+    "packages/proofs/tla/PositiveNonmembershipSession.cfg": "0b6788a5a7514564eda6587b45016901bc8b8e9e5be937f3808807dc1be53408",
+    "packages/proofs/tla/PositiveNonmembershipSession.tla": "8a5327d8788dacbe9ad944f3c2972905a1c60d4c1a05578d34f51e47cd47a2a8",
+    "packages/proofs/tla/SessionTransaction.cfg": "e812dc6a3a5fb3320eb681e2e40d717d2376cdcca258cf473b97b7edb1052490",
+    "packages/proofs/tla/SessionTransaction.tla": "986027c07c3657f51556cb1965e9af54ff18a5b87a028118308b0c59d0a9f7fe",
+    ".github/workflows/ci.yml": "e40ad1582573719fdf355b0175bcf4be3341af6974c27bb768838987231012c2",
+    "justfile": "d72f7e6bceb4cde12fc46a56ae04196e31e9b427432f14014c620a757391736a"
+  },
+  "lean": "leanprover/lean4:v4.34.1",
+  "leanFiles": 4,
+  "tlc": {
+    "release": "1.7.4",
+    "jarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "java": "Homebrew OpenJDK 25.0.2"
+  },
+  "runs": [
+    {
+      "log": "formal.log",
+      "exit": 0,
+      "explorationDepth": 4,
+      "models": {
+        "PositiveNonmembershipSession": {
+          "generated": 953,
+          "distinct": 200
+        },
+        "SessionTransaction": {
+          "generated": 5433,
+          "distinct": 813
+        }
+      },
+      "counterexamples": {
+        "early": {
+          "exit": 12,
+          "property": "AtomicSnapshot"
+        },
+        "stale": {
+          "exit": 13,
+          "property": "NoStaleCommit"
+        }
+      },
+      "sha256": "5d3186bd3cf13f8f387011e88f9c75cdfe33e9889486587dedf2ad43f4ffe3f5"
+    },
+    {
+      "log": "formal-default.log",
+      "exit": 0,
+      "explorationDepth": 2,
+      "models": {
+        "PositiveNonmembershipSession": {
+          "generated": 337,
+          "distinct": 72
+        },
+        "SessionTransaction": {
+          "generated": 1897,
+          "distinct": 285
+        }
+      },
+      "counterexamples": {
+        "early": {
+          "exit": 12,
+          "property": "AtomicSnapshot"
+        },
+        "stale": {
+          "exit": 13,
+          "property": "NoStaleCommit"
+        }
+      },
+      "sha256": "08e7217f67425ab1d785c22e05bafc89d519faac10f03f64260ff4cd44cb0119"
+    }
+  ],
+  "protocolGeneration": "unbounded Nat; no guard against a maximum generation",
+  "scope": "Abstract Lean contracts and bounded TLC exploration; no Gerbil compiler or Session refinement proof; no native semantic rerun or paid model calls",
+  "developmentRun": {
+    "log": "development-exit-code-control.log",
+    "exit": 1,
+    "reason": "TLC found the expected stale action violation with exit 13; the first wrapper incorrectly required invariant exit 12. Rejected as gate receipt."
+  }
+}

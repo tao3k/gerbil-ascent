@@ -1,0 +1,159 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+;;; Frozen c131042 UF kernel: matched ordered frontier control for local routing.
+;;; Private union-find SCCs and reachability between component roots.
+;;; Concrete frontier rows are returned, never retained in this provider.
+(import :gerbil-ascent/core/relation-view)
+(export gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze
+        gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
+        gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
+        gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
+        gerbil-ascent-trrel-uf-view-lookup
+        gerbil-ascent-trrel-uf-observation)
+(defstruct uf-node (parent members size reach))
+(defstruct uf-group (nodes roots))
+(def (gerbil-ascent-trrel-uf-state) (make-hash-table))
+;; Preflight reads parent links without compression, preserving rejected state.
+(def (root node)
+  (if (uf-node-parent node) (root (uf-node-parent node)) node))
+(def (reachable? from to)
+  (or (eq? from to) (hash-get (uf-node-reach from) to)))
+(def (fresh node) (make-uf-node #f (list node) 1 (make-hash-table-eq)))
+;; Complete closure already gives the winner every outgoing cycle edge.
+;; Keep its owned reach table; only absorbed keys need removal.
+(def (merge-cycle! group roots cycle)
+  (let* ((winner (foldl (lambda (n best)
+                         (if (> (uf-node-size n) (uf-node-size best)) n best))
+                       (car cycle) (cdr cycle)))
+         (merged (uf-node-members winner))
+         (size (uf-node-size winner)))
+    (for-each (lambda (n)
+      (unless (eq? n winner)
+        (set! merged (append (uf-node-members n) merged))
+        (set! size (+ size (uf-node-size n)))
+        (set! (uf-node-parent n) winner)
+        (set! (uf-node-members n) [])
+        (set! (uf-node-size n) 0)
+        (set! (uf-node-reach n) (make-hash-table-eq)))) cycle)
+    (set! (uf-node-members winner) merged)
+    (set! (uf-node-size winner) size)
+    (set! roots (filter (lambda (n) (not (uf-node-parent n))) roots))
+    (set! (uf-group-roots group) roots)
+    ;; Canonical pre-merge keys plus complete closure mean any external
+    ;; predecessor of an absorbed root already reaches the winner. Other DAG
+    ;; keys need no rewrite. Iterate a stable list, never the changed table.
+    (for-each (lambda (n)
+      (if (and (eq? n winner)
+               (or (null? (cdr roots))
+                   (= (hash-length (uf-node-reach n)) (- (length cycle) 1))))
+        ;; No external target: release the old backing array as well as keys.
+        (set! (uf-node-reach n) (make-hash-table-eq))
+        (when (or (eq? n winner) (hash-get (uf-node-reach n) winner))
+          (for-each (lambda (target)
+            (when (or (not (eq? target winner)) (eq? n winner))
+              (hash-remove! (uf-node-reach n) target))) cycle)))) roots)))
+
+(def (gerbil-ascent-trrel-uf-insert! groups row budget)
+  (let* ((width (length row))
+         (_ (unless (memq width '(2 3))
+              (error "ASCENT trrel requires two or three columns" row)))
+         (group-key (list width (if (= width 3) (car row) #f)))
+         (pair (if (= width 3) (cdr row) row))
+         (left (car pair)) (right (cadr pair))
+         (stored (hash-get groups group-key))
+         (group (or stored (make-uf-group (make-hash-table) [])))
+         (nodes (uf-group-nodes group))
+         (left-node (hash-get nodes left)) (right-node (hash-get nodes right))
+         (a (if left-node (root left-node) (fresh left)))
+         (b (if (equal? left right) a (if right-node (root right-node) (fresh right))))
+         (new (append (if left-node [] (list a))
+                      (if (or right-node (eq? a b)) [] (list b))))
+         (roots (append new (uf-group-roots group)))
+         (preds (filter (lambda (p) (reachable? p a)) roots))
+         (succs (filter (lambda (s) (reachable? b s)) roots))
+         ;; Capture the intersection in root order before adjacency mutation.
+         ;; Succ(b) membership is already represented by b's reach table.
+         (cycle (and (not (eq? a b)) (reachable? b a)
+                     (filter (lambda (p) (reachable? b p)) preds)))
+         (changes []) (needed (length new)) (added []))
+    ;; Count each missing component rectangle before rows or graph mutation.
+    (for-each (lambda (p)
+      (for-each (lambda (s)
+        (unless (reachable? p s)
+          (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
+          (set! changes (cons (cons p s) changes)))) succs)) preds)
+    (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
+    (let (prefix (if (= width 3) (list (car row)) []))
+      (for-each (lambda (n)
+        (let (members (uf-node-members n))
+          (set! added (cons (make-rectangle prefix members members) added)))) new)
+      (for-each (lambda (change)
+        (set! added (cons (make-rectangle prefix
+                           (uf-node-members (car change))
+                           (uf-node-members (cdr change))) added))) changes))
+    ;; No callback occurs between preflight and commit. Budget rejection has
+    ;; not installed new nodes, rewritten parents or altered adjacency.
+    (unless (null? new)
+      (hash-put! groups group-key group)
+      (unless left-node (hash-put! nodes left a))
+      (unless right-node (hash-put! nodes right b))
+      (set! (uf-group-roots group) roots))
+    ;; If every root collapses, all changed arcs would immediately disappear.
+    ;; Concrete rectangles were emitted above; no external reach key survives.
+    (unless (and cycle (= (length cycle) (length roots)))
+      (for-each (lambda (change) (hash-put! (uf-node-reach (car change)) (cdr change) #t)) changes))
+    ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
+    ;; Merge toward the largest component, bounding union parent depth.
+    (when cycle
+      (merge-cycle! group roots cycle))
+    (gerbil-ascent-rectangle-view (reverse added) needed (length added))))
+;; Physical structure counts, not whole-engine memory or allocator receipts.
+(def (gerbil-ascent-trrel-uf-observation groups)
+  (let ((nodes 0) (components 0) (arcs 0))
+    (hash-for-each (lambda (_ g)
+      (set! nodes (+ nodes (hash-length (uf-group-nodes g))))
+      (set! components (+ components (length (uf-group-roots g))))
+      (for-each (lambda (n) (set! arcs (+ arcs (hash-length (uf-node-reach n)))))
+                (uf-group-roots g))) groups)
+    (vector nodes components arcs)))
+
+;; Explicit public frontier export preserves the original kernel API/order.
+(def (gerbil-ascent-trrel-uf-extension groups _all _pending row budget)
+  (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-insert! groups row budget)))
+;; Freeze root membership and reach into disjoint component rectangles. No
+;; parent link or mutable reach table survives in the published representation.
+(def (gerbil-ascent-trrel-uf-freeze groups)
+  (let ((blocks []) (count 0) (units 0))
+    (hash-for-each (lambda (key group)
+      (let ((members (make-hash-table-eq))
+            (prefix (if (= (car key) 3) (list (cadr key)) [])))
+        (for-each (lambda (node)
+          (let (owned (map values (uf-node-members node)))
+            (set! units (+ units (length owned)))
+            (hash-put! members node owned))) (uf-group-roots group))
+        (for-each (lambda (node)
+          (def (capture target)
+            (let ((left (hash-get members node)) (right (hash-get members target)))
+              (set! count (+ count (* (length left) (length right))))
+              (set! units (+ units 1))
+              (set! blocks (cons (make-rectangle prefix left right) blocks))))
+          (capture node)
+          (hash-for-each (lambda (target _) (capture target)) (uf-node-reach node)))
+          (uf-group-roots group)))) groups)
+    (gerbil-ascent-rectangle-view (reverse blocks) count units #t)))
+
+;; The proved Provider API and engine adapter share one frozen carrier/kernel.
+(def gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-insert!)
+(def gerbil-ascent-trrel-uf-snapshot gerbil-ascent-trrel-uf-freeze)
+(def gerbil-ascent-trrel-uf-view-count relation-view-count)
+(def (gerbil-ascent-trrel-uf-view-for-each view consume)
+  (gerbil-ascent-for-each-row consume view))
+(def (gerbil-ascent-trrel-uf-view-lookup view columns key)
+  (unless (and (list? columns) (list? key) (= (length columns) (length key))
+               (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
+    (error "invalid ASCENT UF view key"))
+  (let (rows [])
+    (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows)))
+                              (gerbil-ascent-view-select view columns key))
+    (reverse rows)))

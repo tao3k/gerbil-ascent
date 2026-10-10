@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Transitive: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Operational SCC representation correspondence (2026-10-07)
+
+The previous root-frontier proof did not establish native parent/member storage
+or the optimized adjacency update. This unit addresses those obligations with
+separate algebra, operational exploration and concrete Scheme audits.
+
+Lean =predecessor_representative= and =successor_representative= derive
+representative independence from mutual reach and transitivity.
+=absorbed_key_cleanup= proves an external predecessor of an absorbed root
+already reaches the winner; =winner_inherits_successors= proves the winner
+already owns each absorbed root's outgoing reach. These are laws of the complete
+post-insertion closure. A negative test supplies a non-transitive adjacency table
+where deleting an absorbed key loses reach. =largest_merge_doubles= derives the
+size doubling of a losing component; it is not a complete native depth theorem.
+The four reach laws have no axioms; size arithmetic uses only the standard
+=propext= and =Quot.sound= axioms. All tests and reports are in =Tests=.
+
+Quint now selects a component of maximum stored size, adds predecessor/successor
+arcs, retains survivor tables and conditionally removes absorbed target keys.
+It no longer verifies only canonical remapping through a minimum representative.
+A separate =link= retains direct parent chains; =parent= is the abstract root
+projection. Member sets are unioned into the winner and cleared at absorbed
+roots; stored sizes are summed and cleared independently. =ParentChains=,
+=MemberPartition= and =SizeExact= check these updates, and refusal preserves
+all three new fields. Four new seeded defects corrupt a parent link, omit
+member migration, omit size migration or retain absorbed adjacency keys.
+
+Inactive model nodes remain latent singleton components until activation. This
+is an abstraction of native lazy allocation, not a claim that Scheme allocates
+inactive nodes. The three-node exploration does not exercise arbitrary parent
+depths or every maximum-size tie order. Set-valued members do not prove native
+list ordering or uniqueness. Scheme's all-roots-collapse shortcut and backing
+array release are checked extensionally rather than modeled as allocator steps.
+
+=gerbil-ascent-trrel-uf-validate= is an explicit internal qualification audit;
+it is absent from insertion and query hot paths. It traverses actual parent
+chains with cycle detection, checks root uniqueness, full member coverage,
+member ownership and uniqueness, stored sizes, cleared absorbed storage,
+canonical adjacency keys and transitive root closure. The 512-graph corpus
+runs this audit after both accepted insertions and rejected preflights.
+A ten-node case merges four pairs, two size-four SCCs and a size-eight SCC while
+retaining an external predecessor and successor. It exercises multiple parent
+levels and expects three components, three arcs and 83 visible rows.
+
+This closes the tested operational correspondence for SCC ownership and key
+cleanup, with explicit finite-model and concrete-test boundaries. A universal
+machine-checked refinement of mutable Scheme storage, arbitrary parent depth,
+grouped prefix decoding and ordered journal replay remains separate work.
+The new audit does not establish an end-to-end speedup. See
+[[file:../../evidence/scheme-provider-views-20261007/operational-scc-refinement.json][the operational receipt]].
+

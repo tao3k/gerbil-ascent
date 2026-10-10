@@ -1,0 +1,76 @@
+diff --git a/packages/proofs/lean/LexicalLowering.lean b/packages/proofs/lean/LexicalLowering.lean
+index d2febbf..5915f0b 100644
+--- a/packages/proofs/lean/LexicalLowering.lean
++++ b/packages/proofs/lean/LexicalLowering.lean
+@@ -324,0 +325,71 @@ theorem join_tuple_encoding {m n atoms : Nat}
++namespace ProjectionRule
++
++/-- Finite variable identities model the distinct variables emitted by
++    fresh-variables. Decoding Gerbil symbols to these identities is separate. -/
++def bindRow {α : Type} {arity : Nat} (row : List α) (length : row.length = arity) :
++    Fin arity → α := fun column => row.get ⟨column.val, by omega⟩
++
++def evaluatePattern {α : Type} {arity : Nat}
++    (variables : List (Fin arity)) (assignment : Fin arity → α) : List α :=
++  variables.map assignment
++
++def bodyVariables (arity : Nat) : List (Fin arity) := List.finRange arity
++
++theorem complete_body_length {α : Type} {arity : Nat} (assignment : Fin arity → α) :
++    (evaluatePattern (bodyVariables arity) assignment).length = arity := by
++  simp [evaluatePattern, bodyVariables]
++
++theorem complete_body_lookup {α : Type} {arity : Nat}
++    (assignment : Fin arity → α) (column : Fin arity) :
++    (evaluatePattern (bodyVariables arity) assignment).get
++      ⟨column.val, by simp [evaluatePattern, bodyVariables]⟩ = assignment column := by
++  simp [evaluatePattern, bodyVariables, List.get_eq_getElem]
++
++theorem bind_complete_row {α : Type} {arity : Nat}
++    (row : List α) (length : row.length = arity) :
++    evaluatePattern (bodyVariables arity) (bindRow row length) = row := by
++  apply List.ext_getElem
++  · simp [evaluatePattern, bodyVariables, length]
++  · intro i h₁ h₂
++    simp [evaluatePattern, bodyVariables, bindRow, List.get_eq_getElem]
++
++/-- Exactly one positive body atom, with an arbitrary checked head pattern.
++    This is the variable-only projection branch of lower-operator-graph. -/
++def emitted (rows : List (List α)) (columns : List (Fin arity)) (output : List α) : Prop :=
++  ∃ assignment : Fin arity → α,
++    evaluatePattern (bodyVariables arity) assignment ∈ rows ∧
++    evaluatePattern columns assignment = output
++
++def descriptor (rows : List (List α)) (columns : List (Fin arity)) (output : List α) : Prop :=
++  ∃ row, ∃ length : row.length = arity,
++    row ∈ rows ∧ evaluatePattern columns (bindRow row length) = output
++
++theorem emitted_projection_sound {α : Type} {arity : Nat}
++    (rows : List (List α)) (columns : List (Fin arity)) (output : List α) :
++    emitted rows columns output → descriptor rows columns output := by
++  rintro ⟨assignment, member, result⟩
++  refine ⟨evaluatePattern (bodyVariables arity) assignment,
++    complete_body_length assignment, member, ?_⟩
++  have same : bindRow (evaluatePattern (bodyVariables arity) assignment)
++      (complete_body_length assignment) = assignment := by
++    funext column
++    exact complete_body_lookup assignment column
++  rw [same]
++  exact result
++
++theorem emitted_projection_complete {α : Type} {arity : Nat}
++    (rows : List (List α)) (columns : List (Fin arity)) (output : List α) :
++    descriptor rows columns output → emitted rows columns output := by
++  rintro ⟨row, length, member, result⟩
++  refine ⟨bindRow row length, ?_, result⟩
++  rw [bind_complete_row]
++  exact member
++
++theorem emitted_projection_iff_descriptor {α : Type} {arity : Nat}
++    (rows : List (List α)) (columns : List (Fin arity)) (output : List α) :
++    emitted rows columns output ↔ descriptor rows columns output :=
++  ⟨emitted_projection_sound rows columns output,
++   emitted_projection_complete rows columns output⟩
++
++end ProjectionRule
++

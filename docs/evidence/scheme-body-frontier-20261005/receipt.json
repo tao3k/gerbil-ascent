@@ -1,0 +1,101 @@
+{
+  "qualifiedSourceHead": "58c096873eec677e38a9c5b2d6f43e5a81b45eee",
+  "rebasedOver": "0f2fb517fa4b67b4f252880ab6e7c829defb16af",
+  "scope": "Concrete positive-body step semantics, staged Provider consumer protocol, native delayed producers",
+  "sources": {
+    "packages/proofs/lean/ProviderFrontier.lean": "4433f63c7f80f675f9cc15675f65169270f11bf19df0661279e792e4dc2a2794",
+    "packages/proofs/lean/AscentProofTests.lean": "71c7879a26786859c23256e47225a9e28194b99bfd91dc824f22dc752e8b0013",
+    "packages/proofs/tla/ProviderFrontier.tla": "379466e3be2b503d45f02d8d2d37945db8d7a731a6b2595efacac5e57fd758cc",
+    "packages/proofs/tla/ProviderFrontier.cfg": "4412bdccd1e27fc72154e138463633c4cb65fe36f66585f7cade7aafc767443c",
+    "t/qualification/ascent-byods-invariants-test.ss": "ac2b17a1ecdea6456c5dcd11c1f046f05c7979af2dc601bc8b09213b344e7538",
+    "justfile": "60bc95aa9ac449286a6a2111303a3f498ac8afc8eea9810930a6ac3e96d6a1de"
+  },
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "section": "3.2, Lemmas 3.2–3.4 and Theorem 3.5, printed pages 8–9",
+    "reopened": "2026-10-05"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 64,
+    "theorems": [
+      "body_partition",
+      "projected_partition",
+      "projected_frontier",
+      "new_consequence_pivot"
+    ],
+    "axioms": {
+      "body_partition": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "projected_partition": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "projected_frontier": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "new_consequence_pivot": "depends on axioms: [propext, Classical.choice, Quot.sound]"
+    },
+    "premises": [
+      "Monotone concrete environment transitions",
+      "Fixed pure head projection",
+      "All-old heads covered by known database for new_consequence_pivot only"
+    ],
+    "compileControls": [
+      "Repeated keys and multiple fresh occurrences",
+      "Fresh witness projecting to old head is not output delta",
+      "Empty body has no pivot"
+    ]
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-provider-frontier-formal",
+    "exitCode": 0,
+    "nodes": [
+      1,
+      2,
+      3
+    ],
+    "generatedStates": 3169,
+    "distinctStates": 1376,
+    "depth": 19,
+    "invariants": [
+      "FrontierComplete",
+      "DeliveredExact",
+      "ConsumerSnapshot"
+    ],
+    "expectedNegativeControls": [
+      "provider-frontier-raw FrontierComplete",
+      "provider-frontier-omit DeliveredExact",
+      "provider-frontier-early ConsumerSnapshot",
+      "provider-frontier-old ConsumerSnapshot"
+    ],
+    "proofKind": "Finite TLC exploration; no unbounded temporal theorem"
+  },
+  "native": {
+    "command": "just test-native t/qualification/ascent-byods-invariants-test.ss",
+    "exitCode": 0,
+    "suiteCases": 12,
+    "newCase": "three repeated Provider atoms consume delayed frontiers exactly",
+    "newCasePrograms": 81,
+    "producerPartitions": 27,
+    "providers": [
+      "eqrel",
+      "trrel",
+      "trrel-uf"
+    ],
+    "oracle": "Independent graph closure plus three-edge witness enumeration; complete head sets checked by size and membership",
+    "supervision": {
+      "buildStartupSeconds": 60,
+      "buildIdleSeconds": 60,
+      "nativeStartupSeconds": 5,
+      "nativeIdleSeconds": 5,
+      "nativeModuleSeconds": 120,
+      "nativeHeap": "1GiB"
+    },
+    "runtimeSourceChangesInThisPatch": false
+  },
+  "remaining": [
+    "Abstract gamma contract and whole-iteration history induction",
+    "Native binder/index/pivot/row equality refinement",
+    "General lattice, negation and aggregation delta semantics",
+    "Unbounded TLA proof and native trace refinement"
+  ],
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "rustRuntimeChanges": false
+}

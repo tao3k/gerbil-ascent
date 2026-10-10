@@ -1,0 +1,59 @@
+{
+  "changes": {
+    "t/performance/selected-activation/fixture.ss": "3924913c2013aaf814f3a4440c775238d523fcdc46e277bbb6ceebccab922788",
+    "t/qualification/ascent-selected-activation-test.ss": "04c6dbd6ebca325c662daf4d1e57c28b12cd4248f64ad2ba69bb63d320dc63d0"
+  },
+  "controls": [
+    "64 activation masks for both positive and generic plans",
+    "Ordered duplicate outputs agree with the frozen reference",
+    "Selected plans retain purity and empty-body atom extent",
+    "Private frames, completed updates, later appends and zero-deadline resume"
+  ],
+  "failedRun": {
+    "failed": "scheme",
+    "head": "4ac16d4dbc3e133a7760da63a23254e036ce3074",
+    "passed": [
+      "formal",
+      "oracle (byods)",
+      "oracle (byods-scale)",
+      "oracle (other)"
+    ],
+    "rootCause": "Selected activation fixture used four plan fields; current projection requires compiled atom extent at field four. Corrected fixture qualified separately. Full CI must run again on the correction.",
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37472308312"
+  },
+  "failureLogSha256": "47b22237356412d3ae1ca59a9852d692dc21b15c3aafc01dfd9c9161b3b9f732",
+  "modelCalls": 0,
+  "nativeOwners": {
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "program/update-selection.ss": "68d9ebfa7ec6bbdaf8a1f416a34b6dd79d2beefbf8cb20f14d46b6e869d6445a"
+  },
+  "postQualificationIntegration": {
+    "change": "Unrelated physical-index build fixture now expects isolated provider argument headers. Qualified selected-activation/BYODS runtime, fixture and proof owners are unchanged.",
+    "head": "4e52ad26dd469743c254019b08bc75e565df94f3"
+  },
+  "qualifiedBaseHead": "6458ec36d0d86ad3126850172572747654bae55a",
+  "rootCause": "Out-of-range vector-ref index 4 on a four-field synthetic positive-plan metadata fixture. Empty-body atom extent was omitted.",
+  "schema": "ascent.selected-activation-layout-qualification",
+  "scope": "Test metadata correction; production runtime and proof statements are unchanged. Existing deadlines and heap constraints are retained.",
+  "verification": {
+    "byods": {
+      "cases": 13,
+      "executionSeconds": 3,
+      "exitStatus": 0,
+      "explicitOK": true,
+      "logSha256": "d3a953201f6bb8993476b1d61449f060faa2ccbe4de24550e195deaeaa4562a2"
+    },
+    "lean": {
+      "exitStatus": 0,
+      "logSha256": "910f23378b7af3f9008c78882a28985236f1c5f53155fe014cdd6293733a792e"
+    },
+    "selected": {
+      "cases": 4,
+      "executionSeconds": 2,
+      "exitStatus": 0,
+      "explicitOK": true,
+      "logSha256": "f3b084285accb4fff189373ccf8d3e00ca871cd8fc6b7bf17c6ae19c326a53dc"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,3 @@
+(import :std/test :gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object)
+(define result (let* ((program (relational-program (relation input (key value) '((1 2) (1 5))) (lattice best (key value) '() max) (rule (best ?k ?v) (input ?k ?v)) (limits 32 256 512))) (session (gerbil-ascent-open-session program)) (old (gerbil-ascent-session-run session))) (gerbil-ascent-session-replace-source! session 'input '((1 2))) (let (new (gerbil-ascent-session-run session)) (list (cadar ((.ref old 'rows-of) 'best)) (cadar ((.ref new 'rows-of) 'best))))))
+(check-equal? result '?)

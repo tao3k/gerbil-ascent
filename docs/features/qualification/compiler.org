@@ -1,0 +1,598 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Standard test entry and native source inventory (2026-10-08)
+
+Current commands are =just test= and =just test-performance-contracts=.
+Ordinary semantic Suites execute once through upstream GxTest. The current
+source dispatch is described in the 2026-10-10 entry below.
+The duplicate full =test-compiled= pass was removed on 2026-10-09. Performance
+contracts retain compiled consumers, and DSL closure keeps its native executable
+and source-binding checks. The semantic roster and assertions are unchanged.
+
+=just prepare-test-library= prepares only native performance consumer Suites,
+reference/support modules and production dependencies using upstream =std/make=.
+It no longer precompiles the entire semantic Suite roster. Compiler capacity
+comes from ASP's machine-capacity projection.
+CI still requires =production-rebuilt=0= after the production build. Existing
+source, performance and AOT deadlines remain unchanged.
+
+Local Darwin whole-directory probes retain two rejected 180-second outcomes:
+the source-only environment completed 87 modules / 804 Cases before timeout;
+the CI library-path environment completed 51 modules before timeout. A one-second
+sample of the latter found approximately 1.8 GiB footprint and garbage collection
+in =scan_movable_objs_to_scan= during eager imports. This is not a successful
+local whole-roster receipt or evidence of a faster end-to-end run. Linux CI must
+independently satisfy the unchanged source-test deadline on the final revision.
+
+** Darwin timeout recovery through standard tool dispatch
+
+The ordinary source branch now invokes =gerbil -:max-heap=2G,debug=q test=,
+instead of importing the test tool into Gxi's interactive top context and
+looking up =main= there. Gerbil's standard tool dispatcher imports the tool and
+invokes its exported runtime binding directly. Discovery, Case execution and
+the existing verdict checks remain unchanged. The 180-second deadline and
+2 GiB heap remain fixed; no pool, module eviction or additional build is added.
+
+The direct standard entry completed all 101 committed modules / 921 Cases with
+final =OK= and exit zero on Darwin. A subsequent =just test= completed the same
+921 Cases but rejected a newly appearing, uncommitted =ascent-delta-sets-test.ss=
+with a reader error at line 42. That concurrent-worktree failure is not a full
+PASS, even though it no longer timed out. An intentional failing-Case control
+also returned nonzero through the Just entry. Direct AOT =gxtest= was rejected
+because it emitted =illegal import= errors despite exit zero; it is not used.
+These observations establish a bounded entry correction, not a universal GC
+or cold-build speedup. Final-revision CI must qualify the committed roster.
+
+Before the parallel eqrel rebase, the semantic roster contained 89 Suites and 844 Cases. Seven performance Suites
+retain 10 Cases, including the original lifecycle benchmark moved unchanged to
+its performance namespace. Native compiled semantics and performance contracts
+both passed with a 2 GiB heap and the original 120-second deadline. Standard
+source directory discovery passed 89 Suites and 844 Cases in 92.48 seconds.
+The performance-contract command, including incremental preparation, completed
+in 79.30 seconds. These are prepared-dependency receipts, not cold-build gains.
+The rejected combined 96-Suite invocation exceeded 120 seconds while executing
+repeated benchmarks; that experiment is not counted as a pass.
+
+Artifact inventory and fixture directory operations now use native Scheme,
+with no =std/misc/process= import. Every Scheme source and =justfile= is hashed.
+Declared build/dependency directories and the root Gerbil-generated
+=manifest.ss= are excluded. Hidden source directories are included using
+=directory-files= with =ignore-hidden: 'dot-and-dot-dot=; see the
+[[https://gambitscheme.org/4.9.8/manual/][Gambit directory-files reference]].
+Eight artifact Cases verify publication admission and rejection, including
+added, removed and hidden source membership. Git inventory comparison remains
+an independent acceptance check, not a runtime dependency of the inventory.
+
+CI caches the immutable release archive only behind its pinned checksum,
+dependency outputs behind dependency/toolchain identity, and native artifacts
+behind complete source, recipe, workflow and toolchain content. Restored
+application package outputs are removed before building this checkout.
+=ASP_GERBIL_SCHEME_POLICY=1= remains the policy trigger; build core capacity is
+independent. Capacity discovery checks Linux =_NPROCESSORS_ONLN= before the
+Darwin =NPROCESSORS_ONLN= spelling. The first submitted Ubuntu run exposed the
+nonportable spelling before any tests ran; it is retained as a failed CI
+experiment. Test verdicts are never cached.
+
+Ubuntu then exposed upstream GxTest local-package setup prepending =.gerbil/lib=
+when =GERBIL_PATH= was unset, shadowing the prepared native library. All seven
+performance modules rejected that unqualified source. Test recipes now select
+=GERBIL_PATH= before tool initialization and retain the prepared-library-first
+load order. The source-origin rejection check remains unchanged.
+
+The native DSL executable passed its complete 15-Suite, 204-Case roster in one invocation.
+Model-source roots are inferred from the actual Scheme study Cases. A discovered AOT
+compiler-import failure was traced to Gambit resolving =~~= relative to the
+standalone executable. The compiler interface path is bound at module build time
+from the active Gerbil installation; the standalone probe passed all eight
+actual study roots without an extra Gxi or provider call. SS scenarios
+are discovered as Cases in one upstream GxTest invocation, retaining their
+original benchmark bodies and independent truth checks. All three performance
+Suites and 17 Cases passed within the unchanged 180-second command bound. No paid model calls
+are part of this change.
+
+The dated sections below retain earlier experiments. References to
+=test-native=, =test-native-suite=, process pools, registry or entry cache describe
+retired revisions and are not current execution instructions.
+
+The later Ubuntu source-directory run completed 80 Suites without a Case error
+before the inherited 120-second single-Suite limit expired. This is a rejected
+run. A 3 GiB complete-directory control passed in 100.63 seconds, providing no
+speed gain over the earlier 2 GiB receipt. Increasing heap size was therefore
+not selected as the fix. The full directory command now uses the explicitly
+approved 180-second aggregate bound; focused file tests retain 120 seconds.
+The heap remains 2 GiB and all Cases and verdict checks remain intact.
+
+The source command directly invokes =gxi :gerbil/tools/gxtest=, the upstream
+module entry, with no new runner file. An independent AOT =gxtest= probe exposed
+an evaluator/bootstrap defect: without an explicit installation root it rejected
+source import syntax; with the root selected it reported =__eval-import= as
+unbound. The direct Gxi focused source probe passed all eight artifact Cases. The final\nfull-directory recipe passed 89 Suites and 844 Cases in 103.94 seconds\n(90.84 user, 2.55 system); false-assertion and empty-Suite controls both rejected.
+These failures were sent to the authorized SDK workstream as real source-input
+controls. They are not accepted test results or compiler speed gains.
+
+The subsequent rebase preserves the parallel eqrel publication and Steensgaard
+integration commits through =02051e5=. Automatic discovery now admits 90 semantic
+Suites and 849 Cases plus seven performance Suites and 10 Cases, all passing.
+The complete Gxi directory recipe passed 90 Suites and 849 Cases in 130.36 seconds
+(94.56 user, 2.74 system). These are correctness receipts; contention and changed
+production code preclude a matched performance claim against earlier receipts.
+
+The finite library/DSL build CLI exits explicitly only after upstream make's
+pending compiler barrier, source checks, artifact binding where applicable, and
+lane closure. The prior import diagnostic completed every interface import but
+did not terminate within its bound. No successful artifact is inferred from a
+stalled invocation; build exceptions continue to bypass the success exit.
+
+The post-rebase SS scenario invocation is rejected: table-expression semantic
+checks passed, but candidate p95 was 5.96 ms against the unchanged 2 ms bound.
+The 1,000-sample baseline phase took 51.23 seconds. Concurrent host observations
+showed load averages 42.69/51.59/43.76 and a Rust compiler using about five cores.
+This receipt neither proves a production regression nor establishes performance
+closure. The fixed budget remains unchanged; the independent Ubuntu run must
+qualify the submitted source. Earlier 17-Case passes belong to earlier snapshots.
+
+* Ordinary directory tests and memory policy (2026-10-08)
+
+Ordinary qualification Cases use upstream =std/test= directly. Thirty-seven
+Suite source files previously wrapped semantic checks in POO Flow's testing
+Case policy. Its default =heap-limit-bytes= is 1 GiB and measures the entire
+process heap, including every module imported by directory discovery. Merely
+setting Gambit's heap cap to 2 GiB therefore leaves a contradictory Case
+policy. The unaligned 2 GiB probe produced =PooFlowDebugMemoryAnomaly= errors
+and did not finish within its 120-second bound.
+
+Two ordinary Suite profiles also enabled =collect-before-sample?= while
+inheriting a 10-millisecond sampling interval. The watchdog calls =##gc= before
+such samples. A directory process retaining all expanded modules makes these
+whole-heap collections materially different from a focused module test.
+The separate 1 GiB =gxi= GC diagnostic observed approximately 716 MiB live and
+repeated collections of approximately 190--230 milliseconds; that diagnostic
+is not a matched timing estimate for the stock =gerbil test= entry.
+
+The generic policy wrappers and local semantic Case profiles have been removed.
+Case descriptions, bodies, fixtures and assertions remain intact. The dedicated
+observability Suite still verifies policy rejection and bounded execution.
+Ordinary Cases no longer claim those removed per-Case heap or duration quotas;
+the process heap cap, command deadline, failed-Case detection and final verdict
+checks remain. Runtime resource rejection is tested explicitly rather than
+injected into unrelated application code by a Case sampler.
+
+=just test [heap]= now invokes the standard Gerbil directory entry once.
+=just test-file <path> [heap]= retains focused execution. The heap parameter
+controls the source-test process; native entry and compiler qualification keep
+their separate existing limits. No additional test runner or supervisor is used.
+
+The source recipe also honors the caller's existing dependency load-path order
+before appending the checkout. A resolver probe confirmed that source-first
+ordering selects =program/evaluate.ss=, while the prepared-library-first order
+selects =gerbil-ascent/program/evaluate.ssi=. CI prepares the content-bound
+native library before supplying that path. Explicit Suite file paths continue
+to exercise Suite source. Supplying an arbitrary stale library is not source
+qualification; the prepared dependency snapshot remains part of the evidence.
+
+Three relation-view cost Cases have moved intact from the semantic Suite to
+=t/performance/ascent-relation-view-performance-test.ss=. Their 12 matched
+pairs, explicit GC boundaries, allocation/live sampling and truth checks are
+preserved. Shared construction and row-order helpers now reside in the existing
+qualification fixture namespace. Complete native qualification includes the new
+performance module and prepares its common fixture/reference dependencies before
+consumer compilation. Its roster is now 95 modules and 852 Cases; the ordinary
+source directory contains 89 modules and 843 Cases. This separation changes the
+ordinary workload and cannot support a same-workload percentage speedup claim.
+
+The source-first experiments after removing the generic policy wrappers still
+failed to finish within 120 seconds at 2 GiB or 180 seconds at 3 GiB, despite
+reporting no policy errors. Correcting load-path order alone also failed to
+finish the benchmark-bearing directory within 120 seconds. Capacity, dependency
+loading and benchmark placement are separate issues; none of these failed
+experiments is counted as a qualification pass.
+
+With prepared dependencies first, the complete standard directory invocation
+passed all 89 modules and 843 Cases in one process at 2 GiB: exit 0,
+=HARNESS-OK=, final =OK=, 106.61 seconds (102.86 user, 2.37 system). The original
+120-second deadline remained unchanged. Dedicated memory/duration rejection
+Cases were included. This is a prepared-dependency correctness receipt, not a
+cold-build result or proof of optimal memory capacity.
+
+Complete native qualification also passed all 95 modules and 852 Cases. The
+formal command was =just test-native-suite= with its unchanged =auto= default.
+ASP's existing capacity projection selected 12, matching the current host CPU
+count and configured capacity. The real lifecycle trace reached 12 active
+workers, completed all 95 modules and drained to zero active workers. Exit was
+0, with no failed Cases. This prepared-library/entry-cache run took 89.23 seconds
+(127.97 user, 8.00 system). The preceding fixed-four-worker preparation run was
+an experimental control, not the formal capacity selection or a hard limit.
+These different preparation workloads do not establish a concurrency speedup.
+
+The earlier process-pool measurements below are historical observations from
+the preceding revision. They do not describe the current ordinary recipe and
+must not be combined with compiler-source changes as a Gambit speedup claim.
+
+* Complete test preparation and bounded execution (2026-10-08)
+
+The installed Gerbil =gxtest= implementation and
+[[https://cons.io/reference/dev/test.html][official testing documentation]] support one invocation over files or a
+directory. They do not require one operating-system process per source module.
+The previous =just test= recipe nevertheless launched 89 module invocations
+serially. A directory-wide source probe under the unchanged 1 GiB heap failed
+with heap overflow after 20.89 seconds; it also reported a failed Check before
+the overflow. This probe is rejected, not a qualification pass.
+
+The preceding ordinary recipe accepted a worker capacity, used the existing native
+capacity projection for =auto=, and overlapped standard =gerbil test= module
+invocations through =xargs=. Module expansion remains isolated; each invocation
+retains its own Case/output/exit gates and the original 120-second deadline.
+The full source inventory passed: 89 modules, 846 Cases, exit 0, 113.93 seconds
+with four workers. This is an observed complete run, not a matched claim of a
+specific speedup over the user's ten-minute report. CI runs this complete source
+inventory after native preparation supplies its compiled reference dependencies.
+
+Native preparation previously allowed its executable-backed library cache hit
+only for one requested module. It now also admits complete pools, binding the
+ordered entire roster in the existing receipt key. Reordering, adding, removing
+or replacing requested modules rejects admission. Each entry mode retains its
+last admitted executable; switching rosters deliberately misses rather than
+providing an artifact store for every prior roster. An empty roster raises a typed
+Error. Source, compiled dependency, environment, toolchain, generated entry and
+binary content checks remain in force. Test verdicts are never cached.
+
+On a preparation miss, production and reference dependency layers finish before
+Suite consumers start. Existing actors schedule bounded independent compiler
+processes. Each child has a private =mktemp= specification removed on success or
+failure, a 1 GiB heap and one compiler core; this avoids shared-specification
+races and nested core oversubscription. Failed consumers stop pending admission
+and active workers drain through the existing actor lifecycle.
+
+The complete native inventory comprises 89 qualification and five performance
+modules. Its first qualification passed all 94 modules and 852 Cases in 411.62
+seconds. Compiler lifecycle output verified 94 consumer completions, a maximum
+of four active consumers and zero consumers left active. The identical repeat
+passed all 94 modules and 852 Cases in 67.18 seconds, reporting both library and
+entry cache hits with zero compilation/link invocations. Cold and hot runs are
+different workloads; these numbers do not establish a cold-build speedup.
+Subsequent recipe changes intentionally invalidate the old content-bound entry;
+CI must qualify the submitted complete source snapshot independently.
+
+The frozen compiler comparison in gerbil-bazel retains responsibility for the
+Darwin C/object regeneration hypothesis. Its baseline must not incorporate
+these ASCENT orchestration changes or attribute their benefit to Gambit.
+
+* Test preparation and CLI startup (2026-10-08)
+
+A warm =just test-native t/qualification/ascent-positive-plan-test.ss= run
+completed all 30 Cases with exit 0 in 101.16 seconds; its Case invocation
+reported 31 seconds. Preparation and final content verification are part of
+the total, rather than Case execution. A previous entry rebuild also included
+three compiler layers (85 production modules, 87 support modules, one Suite)
+and native linkage. Cold and warm timings must be reported separately.
+
+In the same captured environment, an empty direct =gxi= invocation took 1.04
+seconds, while =gerbil env gxi= took 14.95 seconds. Inspection of the installed
+=gxpkg= implementation confirmed that =env-exec= selects the package prefix,
+prepends its =bin= directory to =PATH=, and invokes the command. The Justfile
+now applies those settings directly for interpreter recipes, preserving an
+explicit =GERBIL_PATH= or selecting the repository's =.gerbil= prefix. Ordinary
+Suite discovery and verdicts remain owned by =gerbil test=.
+
+The existing content inventory covered 10,035 inputs in 8.53 seconds. This
+measurement does not justify replacing content admission with timestamps or
+caching test verdicts. Binary, generated entry, source, dependency and
+compiler content checks remain in force. The launch change introduces no
+additional runner, Python process, receipt format, timeout or concurrency
+variable. Final comparison uses the same Suite after the changed Justfile has
+been admitted through a fresh compilation.
+
+The first direct-entry cold qualification passed all 30 Cases in 320.39
+seconds total (26 seconds for Cases). Following an interrupted invocation,
+receipt recovery required another cold build: 55.69 seconds total, all 30
+Cases passing in 4 seconds. The immediate subsequent run reported both
+=NATIVE-LIBRARY-CACHE-HIT= and =NATIVE-ENTRY-CACHE-HIT=, completed in 7.84
+seconds total and passed the same 30 Cases in 3 seconds. These observations
+show substantial timing variation even without a source change; they must
+not be interpreted as a controlled 101.16-to-7.84-second launcher speedup.
+The paired empty-launch measurement isolates CLI startup; the complete
+runs establish functioning content admission and uncached Case execution.
+Cold AOT preparation remains a separate optimization responsibility.
+
+* Single-module native carrier qualification (2026-10-05)
+
+The [[file:../../evidence/scheme-native-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the
+diagnostic's omitted =ASCENT_PERFORMANCE_MODULES= variable still reproduced
+the five-second failure. Separate import probes completed the native library
+preflight and located substantial startup work in the gxtest CLI dependency
+graph, including =std/cli/getopt= and =std/format=. A narrower interpreted
+adapter still failed the output gate while discovering the target module;
+those attempts remain excluded.
+
+The supported single-module commands now move export discovery and binding
+to native compilation. The generated entry uses the original =std/test=
+objects and callbacks, and returns 42 on a failed native verdict. The outer
+recipe additionally rejects a successful empty Suite by requiring actual
+Cases. Independent setup, Case, cleanup and empty-Suite controls exercise
+these boundaries. The index Suite retains its five independent reference
+Cases. This carrier work closes the qualified single-module execution path;
+the general gxtest/module-pool startup path has its own remaining gate.
+
+The recorded synchronized proof check included the former Lean Session
+publication replica. That historical receipt remains bound to its original
+sources; the replica is now removed and its unbounded protocol claims retired.
+Current Session protocol checks belong to Quint, where =GenerationCutoff=
+configures finite enumeration only. Native carrier qualification does not
+establish an unbounded protocol theorem.
+
+The [[file:../../evidence/scheme-native-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
+the newly added replacement-ownership Case lacked two closing parentheses,
+so the full Scheme and native differential preparations could not read that
+module. The repair preserves every assertion and closes the =check-fresh=
+call and its enclosing Case. After integrating the immutable dependency-graph
+update, the full Session Suite passed all 15 Cases with exit 0 in 41 seconds
+of execution under the original five-second output and 120-second deadline
+gates. It includes caller row-spine isolation, a 4096-node graph, all 64
+three-node graphs and 192 successive withdrawals compared with fresh closure.
+The earlier receipt keeps its original snapshot and scope. The follow-up binds
+373 Scheme files plus three controls, and confirms the earlier proof source
+hashes remain unchanged. Final GitHub CI must independently qualify the
+submitted descendant of this repair snapshot.
+
+The [[file:../../evidence/scheme-native-entry-20261005/integrated.json][merged qualification]] retains the incoming append row-spine Case and
+LeanPoo-backed source-certificate package. All 16 Session Cases pass with exit
+0 in 38 seconds of execution under the same bounds. =just
+check-nonmembership-formal= builds =AscentProof= and =AscentProofTests=
+successfully (34 Lake jobs; 13 ASCENT proof/test modules), then checks three
+TLA models and seven required counterexamples. The package's toolchain and
+LeanPoo revision are fixed by its checked-in Lake metadata. This supersedes
+the earlier shell proof runner for current qualification; historical receipts
+keep their original toolchain, source hashes and result counts.
+
+
+* LeanPoo usage and API synchronization（2026-10-06）
+
+The consumer now pins published LeanPoo main
+=247d1d6094b6af1bb873f69564b271bc978730ed= in both Lake files,
+using Lean =v4.34.0=. The producer's local feature branch is not the
+consumer release identity. Historical qualification receipts retain their
+original dependency revisions.
+
+** Use case to consumer mapping
+
+Read the pinned [[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/use-case.md][PO use case]],
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/usage.org][usage guide]] and
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/reusable-contracts.org][reusable contracts]] together.
+The primary PO path declares typed behavior, composes declarations through
+C4, then evaluates slots through a shared lazy instance. Proof objects are
+an additional capability for consumers carrying obligations across changes.
+ASCENT currently consumes that proof capability for source/result cuts.
+
+| Workflow | LeanPoo API | ASCENT responsibility |
+|----------+-------------+-----------------------|
+| Declare correctness once | =Obligation=, =ProofObject=, =Certificate= | =resultObligation= states derive/observed equality; RuleBodyFrame supplies semantic locality |
+| Apply ordered source edits | =Patch.setMany=, =Patch.composeAll= | Admit the actual source cut and preserve last-write order |
+| Carry an unaffected proof | =reuse=, =unaffected_setMany_iff= | Prove dependency/touched-key disjointness from the compiled rule closure |
+| Select affected obligations | =pending=, =mem_pending_iff= | Revalidate touched positive, negative and aggregate dependencies |
+| Publish a complete certificate | =closePending= | Discharge every selected old or newly added obligation |
+| Relate staged and batched edits | =append_composeAll=, =unaffected_composeAll_iff= | Check every constituent footprint, including repeated writes |
+
+The compiled =stagedReuse= use case in AscentProofTests applies two edits
+to an unrelated source and carries the original certificate into the exact
+stepwise result through the producer's composition laws. A control writes a
+dependency and then restores its original value: it remains pending. Final
+value equality alone cannot authorize proof reuse.
+
+** New capability boundary
+
+The updated reusable-contract modules also expose typed capability families,
+prepared consumer caches, indexed registry transactions, narrow/public views
+and certified solver transport. =applyTransactionCached= publishes the full
+registry transaction and distinguishes =reused= from =fresh=; fresh data still
+requires an analytic certificate. =CertifiedTransformation= requires supplied
+forward validity and reverse witness soundness; =pullSolver= transports an
+already admitted solver's data and proof. These are concrete public APIs,
+not automatic dependency discovery or a solver generator.
+
+ASCENT's current source state is a dependent key/value function, not a C4
+provider registry. Its native planner, physical index and publication protocol
+still need their own source-bound qualification. The existing Proof APIs
+remain compatible at this revision; adopting the new registry workflow would
+require an explicit provider/context mapping and a refinement to this source
+cut. This synchronization records the usable boundary and qualifies the
+current consumer against the new producer without claiming that mapping.
+
+Qualification: =direnv exec . just check-lean-proofs= completes with exit 0
+and 83 Lake jobs. =stagedReuse= reports only =propext= and =Quot.sound=;
+the restoration control compiles as a kernel-checked pending-membership proof.
+This gate qualifies the updated Lean consumer; it supplies no new native
+performance or publication receipt.
+
+** Existing consumer migration: prepare reads independently of the cut
+
+=FunctionalDependency.lean= now uses the producer's context adaptation workflow
+in its existing implementation. =provider= selects source-reading functions
+whose context is the complete typed source cut. =Program.prepare= depends only
+on a target's checklist. =Program.step= adapts that prepared tuple to the
+current cut with =Requirements.reindex= and feeds the existing rule evaluator.
+Previously each provider captured one source cut before preparation.
+
+=Program.step_eq_prepared_cut= proves the migrated evaluator equals its
+previous per-cut behavior for every source/checklist. =Program.prepare_at=
+applies upstream =prepare_reindex= to prove the adapted
+tuple equals independent preparation at the exact cut, including the complete
+success/error outcome. =Program.local= combines this law with =prepare_congr=;
+=SourceUpdateFrame.completed_reuse= and the downstream RuleBodyFrame proof
+continue to use the same locality contract. No separate solver-route module
+is part of this migration.
+
+The existing AscentProofTests retain one checklist with heterogeneous Nat/Bool
+values and a repeated Nat key, then adapt that same tuple to two source cuts.
+They check current values and duplicate request order, while the existing
+self-read and completed-frame fixtures qualify the changed consumer. Preparation
+is independent of the cut; these Lean contracts do not demonstrate a native
+cache or a runtime speedup. The native Scheme implementation has not changed.
+
+Qualification: =direnv exec . just check-lean-proofs= succeeds with exit 0
+and 84 Lake jobs. The preparation correspondence and evaluator equivalence
+report only =propext=; the existing completed-frame theorem retains its
+standard-only axiom report. The earlier solver-route files and imports have
+been removed because they did not migrate the existing consumer.
+
+
+* Canonical package artifacts and preparation ownership
+
+Production modules, compiled test Suites, reference modules and AOT objects
+now use the standard active package library, =$GERBIL_PATH/lib=. The default
+workspace prefix is =.gerbil=. A caller selecting another prefix selects the
+same library for every Just recipe and the native builder; it does not create
+a second production output tree. =.cache/ascent/native-library= retains only
+qualification metadata, its advisory lock and executable entries.
+
+The package build and native preparation both delegate dependency freshness to
+upstream =std/make=. The production module roster remains in native preparation
+so standalone qualification rebuilds changed production code. In a CI run,
+=check-policy= builds that roster first, and qualification must reuse it. CI
+rejects a subsequent production compile message rather than treating repeated
+compilation as acceptable preparation. Test bodies, source inventories and
+publication checks retain their existing ownership.
+
+CI invokes compiled semantics, allocation contracts, shared-index measurements
+and SS scenarios in one Just invocation. Their common =prepare-test-library=
+dependency runs once. DSL executable construction remains a separate source
+freeze and binding boundary. Compiler measurements report inventory-before,
+upstream make and inventory-after separately; overlapping compiler jobs are
+not summed into a fabricated wall-clock breakdown.
+
+Application cache restoration precedes package construction, so restored
+artifacts cannot overwrite a library already built from this checkout. Cache
+keys bind source and toolchain content; upstream make still checks freshness.
+Cross-checkout timestamp-driven rebuilds remain a distinct upstream cache
+problem and are not claimed to be eliminated by unifying output ownership.
+
+AOT benchmark builders no longer invoke =compile-module= after upstream
+=make= has compiled the same entry. They link those admitted module objects
+with =compile-exe= and retain the compiler completion barrier and source-change
+rejection. Native preparation also reports the number of production interfaces
+rewritten during its make call, derived from the declared production roster.
+
+The first canonical-prefix compiled qualification rejected the Homebrew
+=gerbil test= dispatcher: no Case output appeared before the unchanged
+120-second timeout (exit 124). The compiler had already completed with
+=production-rebuilt=0. Compiled and SS purpose groups now use the same standard
+=gxi :gerbil/tools/gxtest= entry as source discovery; this does not introduce
+a project runner or change the test roster. Dispatcher diagnosis remains
+separate from artifact reuse and compiler completion.
+
+Direct Gxi on the same host subsequently reached 58 Cases and two complete
+Suites before the unchanged 120-second limit rejected the run. A process
+sample during startup placed all 890 samples in Gambit dynamic loading through
+=dlopen -> dyld mapSegments -> fcntl=. This is concrete OS loader evidence,
+not proof of a dispatcher-only defect or a compiler deadlock. Neither rejected
+run qualifies the complete test roster. Ubuntu CI is the independent acceptance
+gate; no deadline was widened and no warm retry is promoted to a cold speedup.
+
+** Exact-head Ubuntu acceptance
+
+Commit =7189f30eca5322daae53f924b138e8abe2fa8d4c= passed all six checks in
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/37804164094][GitHub CI]]. Native preparation compiled 250 test/reference modules and
+executed 520 compile-file jobs, with =production-rebuilt=0. The former path
+compiled 335 modules and executed 723 jobs, including a second compilation of
+all 85 production modules. Shared preparation appeared once for the four
+qualification goals. The independent DSL preparation also rewrote zero
+production interfaces.
+
+The preparation receipt was 180.530100 seconds (inventory before 0.025545,
+upstream make 180.476521, inventory after 0.027266), compared with the earlier
+171.407232-second receipt. Fewer compiler jobs establish eliminated duplicate
+work; these single runs do not establish a wall-clock speedup. Source discovery
+passed in 135 seconds under its unchanged 180-second limit. The unchanged SS
+expression contract passed with candidate p95 531.029 microseconds against the
+2-millisecond budget, with independent semantic equivalence. Lean, Quint and
+all three Rust oracle shards passed. No provider calls were added.
+
+All 15 benchmark build entries produced their native executables after the
+module/link split, including the actor entry added explicitly to its make graph.
+The DSL study entry is likewise part of its upstream make graph: repeated DSL
+construction reuses its module objects and regenerates only the executable
+stub/link needed for a fresh source-bound publication receipt. No unconditional
+=compile-module= remains in these build entries.
+
+The DSL graph contains 195 modules after admitting its study entry. Its full
+204-Case, 15-Suite closure and actual compiler source probe passed. A second
+construction emitted no module compile messages, reported zero rewritten
+production interfaces, completed preparation in 4.136545 seconds and passed
+the fresh publication/source probe. This is an incremental reuse receipt,
+not a cold-build or end-to-end performance claim.
+
+* Fixed-plan worker oracle reuse (2026-10-09)
+
+The exhaustive SCC worker Case uses identical rule/schema metadata for all 512
+input graphs. It now admits and compiles that metadata once, then replaces the
+input edge frontier in a freshly copied request for each graph. Every component
+receives a new private snapshot and retains all independent closure, emission,
+isolation and second-initialization checks. This verifies worker execution with
+reusable plans; existing fresh solve/admission checks retain their own owner.
+The change addresses aggregate test work without extending the 120-second
+compiled semantic deadline. See [[file:../withholding/acceptance.org][the rejected initial CI and current boundary]].
+
+* Standard source qualification through native batches (2026-10-10)
+
+Exact revision =bd77446= passed formal and all three oracle checks but failed
+Scheme: the single source-directory process exhausted its unchanged 180-second
+command deadline while still completing BYODS assertions. The scoped group
+corpus completed in approximately one second; no stopped Case or semantic
+mismatch preceded the deadline. This is a failed aggregate qualification receipt.
+
+The existing compiled-performance runner is now =tools/test-modules.ss=.
+It supports source directories and explicit compiled modules. Directory file
+selection preserves native GxTest's flat =*-test.ss= boundary; each native
+GxTest child still owns import validation, exported Suite/Case discovery,
+assertions and final verdict. Ordinary =just test= selects the declared ASP
+batch profile. =testing-interface-test-file-batches= balances compatible files
+using =GERBIL_BUILD_CORES= and machine capacity. No second concurrency knob or
+Bash discovery/scheduling loop is introduced. Performance consumers keep the
+process-isolation profile and sequential matched pairs inside each Suite.
+
+Every child retains the existing 2 GiB heap ceiling. The ordinary parent keeps
+its 180-second total deadline; performance keeps 120 seconds. No corpus or
+assertion is removed, no extra compilation pass is introduced, and single-file
+=just test-file= keeps the normal Gerbil dispatcher. The coordinator copies
+real Case/module/progress output live, then drains separate UUID-owned batch
+logs contiguously for the existing Case audit. Worker failures are captured in
+separate owner slots; after the pool quiesces and logs drain, the first typed
+process failure is raised. =MODULE-OK= or =HARNESS-OK= cannot conceal a child
+whose native =main= returns nonzero.
+
+An intermediate per-module process implementation completed 117/123 local
+source modules and still exceeded 180 seconds. That rejected attempt showed
+startup/import repetition remained significant. Native compatible batching
+replaces that attempt; it does not widen its deadline. A first dispatch probe
+also rejected misplaced =-v= arguments; the directory coordinator receives
+its own arguments while each child receives native verbosity 5.
+
+Intentional failure with a healthy sibling verifies that both logs are retained,
+the healthy sibling completes, and the parent still rejects the run. An ordinary
+export without a Suite verifies that zero discovered Cases remain a failure.
+Temporary injected failures are not part of the committed source roster.
+Exact-head Linux CI remains a separate qualification gate from local receipts.
+
+** Local receipts and their limits
+
+The native batched source entry passed all 123 modules / 1,070 Cases in
+104 seconds, with final =OK= and exit zero under the unchanged 180-second
+bound. Native capacity selected 12 workers and 12 compatible batches. This
+shared-checkout roster includes the concurrent retained-source-snapshot
+feature, subsequently committed in =abe32db=. Source versus compiled
+qualification remains distinct; the ordinary pass did not compile a second
+semantic Suite roster.
+
+An isolated compiled relation-view performance module passed its three Cases
+through the promoted runner. A prior two-module compiled probe passed four
+Cases, including library lifecycle. The intentional failed Case with its
+healthy sibling returned nonzero after both logs drained; the healthy Case
+completed. A valid module exporting an ordinary value and no TestSuite was
+rejected by the Case audit with exit 1. These checks establish error propagation,
+complete discovery and dispatch behavior, not a matched throughput speedup.
+The rejected per-module run and the passing batched run had differing shared
+host load; their elapsed times must not be promoted into an end-to-end ratio.

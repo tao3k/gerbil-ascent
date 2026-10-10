@@ -8,7 +8,8 @@
                  gerbil-ascent-trrel-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
-                 ascent-storage-fixture-evaluate))
+                 ascent-storage-fixture-evaluate
+                 ascent-default-storage-evaluate))
 
 (export main)
 
@@ -20,8 +21,14 @@
                     ((member "trrel" args)
                      gerbil-ascent-trrel-storage-provider)
                     (else gerbil-ascent-eqrel-storage-provider)))
-         (result (ascent-storage-fixture-evaluate
-                  (car request) (cadr request) provider))
+         (result (if (member "default" args)
+                   (ascent-default-storage-evaluate
+                    (car request) (cadr request))
+                   (if (member "scale" args)
+                     (ascent-storage-fixture-evaluate
+                      (car request) (cadr request) provider 10000 200000 200000)
+                     (ascent-storage-fixture-evaluate
+                      (car request) (cadr request) provider))))
          (rows-of (.ref result 'rows-of)))
     (for-each
      (lambda (name)

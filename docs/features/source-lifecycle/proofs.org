@@ -1,0 +1,179 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Source Lifecycle: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Completed snapshot rebasing
+
+=SnapshotClosure= proves the pure frame/merge obligation for completed worker
+results. Relevance is derived from owned rule bodies and ownership, not an
+opaque callback premise. Local iteration respects this frame; merging owned
+completed facts into the current database equals current local evaluation,
+and snapshot stability yields current closure. Writes by another component
+with no read edge derive the frame via =iterate_frame=. Changed predecessor
+reads are a negative control, even if the old empty snapshot was stable.
+Lean contains no temporal protocol replica. Existing Quint ready/credit models
+check terminal delivery and admission; the native concurrent fixture completes
+right while left retains an older snapshot and verifies both results survive.
+This closes completed-result semantic rebasing under the explicit frame. It
+does not prove every native execution trace, arbitrary intermediate chunks,
+cancellation or mutable row encoding. See [[file:../../evidence/scheme-snapshot-closure-20261006/receipt.json][source-bound receipt]].
+
+
+* Batch publication and completed closure
+
+=SnapshotClosure.publish_exact= establishes the Set semantics of incremental
+owned batch admission. Chunk boundaries, duplicate candidates and output order
+are observationally irrelevant to membership (=publish_ext=). Sound partial
+publication follows from local evaluation soundness; it does not imply closure.
+Complete terminal membership, including retained seed facts, connects the batch
+fold to current local evaluation and stable closure through the prior snapshot
+frame theorem. A missing candidate rejects the delivery premise in Lean.
+The native 65-candidate/17-value fixture crosses two credit batches and a
+terminal tail and checks successor admission after complete owner observation.
+Existing Quint credit/terminal controls retain temporal ownership. This closes
+batch algebra under candidate origin and complete-delivery premises; native
+trace extraction and cancellation semantics remain outstanding. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][receipt]].
+
+** Actor Session admission after expression-plan compilation
+
+The 2026-10-06 rebase exposed an admission regression: a compiled positive plan
+may now contain callbacks. Plan existence therefore no longer establishes
+worker purity. Actor Session admission now uses the explicit
+=gerbil-ascent-pure-positive-plan?= predicate, matching component dispatch.
+The existing callback-rejection control detects the old behavior. This check
+preserves the native boundary required by the actor protocol assumptions.
+
+
+* Engine index publication failure and source reconstruction (2026-10-07)
+
+After integrating initialization owner revision =b7abe1b=, this slice closes
+an engine boundary adjacent to physical cache revocation. Set source flush
+admits membership before custom index extension. A mutate-then-raise extension
+previously allowed a second raw engine run to report success. Cache revocation
+alone did not repair the interrupted engine publication.
+
+One engine-local failure flag now wraps the shared index advance dispatch.
+It preserves the original exception and requires source replay for subsequent
+raw run, timed run and both append entrypoints. Checked Session reconstructs
+from its committed source cut. Whole-source replacement evaluates a fresh
+candidate before clearing this new flag. Storage owner readiness remains
+independent; direct physical index owners retain their existing rebuild path.
+
+The [[file:../../evidence/scheme-engine-publication-20261007/receipt.json][receipt]] binds the integrated source freeze to 42 native Cases: storage 19
+and index ownership 23. The new Case checks multi-relation and single-Set
+entrypoints, rejection after interrupted publication, Session recovery to all
+33 facts and stability of the previous 32-fact result. Both commands exited
+zero with native module/harness markers and explicit =OK=. Policy build exited
+zero with 17 findings and no errors. An intermediate malformed fixture is
+retained as development history, separate from the semantic counterexample.
+
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] explains the concretization/index distinction as an
+implementation inference. No algebraic theorem or performance claim is added.
+The 545-file Scheme source digest was checked unchanged across the final
+qualification. Full CI remains bound to the subsequent pushed revision.
+
+
+
+* Fresh source recovery handoff and budget authority (2026-10-07)
+
+At base =fbe42d6=, four outcomes in one unchanged native fixture failed:
+=eqrel=, =trrel= and =trrel_uf= source replacement completed but later append
+still rejected the retired storage owner; a custom indexed admission failed
+between source counting and source-log publication, making a valid 33-row
+replacement exceed a 33-row input limit. The red command exited 70 with three
+storage replay diagnostics and one input budget diagnostic.
+
+Raw source replacement now counts its complete prospective source cut before
+fresh evaluation. Only successful evaluation publishes the authoritative count,
+override and result. Once replacement selects fresh recomputation, later
+appends do not check obsolete incremental storage/index state. That state is
+not repaired or marked ready; unreplaced engines retain the existing guards.
+
+The [[file:../../evidence/scheme-source-reconstruction-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
+Only =program/evaluate.ss= differs between those source freezes. Green
+qualification passed 46 native Cases: storage/recovery 20 and Session deletion
+26, each exiting zero with module/harness completion and explicit =OK=. The
+new Case compares all three recovered graph relations against fresh evaluation,
+checks the exact input limit through later replacement/append and preserves
+the prior 32-fact result. The existing deletion matrix covers source log order,
+duplicates, lattice budgets, independent reuse and successive withdrawals.
+Policy build exited zero with 17 findings and no errors.
+
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] distinguishes source injection logs, concretized relation
+facts and transient engine counters. This is a code-supported recovery design
+inference, not an extension of the paper's theorem to arbitrary callback
+exceptions. Full CI remains bound to the subsequent pushed revision.
+
+
+
+* Eager result and opaque source acceptance ownership (2026-10-07)
+
+At base =0769ae4= a native negation/derived-Provider Case exposed public row
+aliasing after eager append and opaque single replacement. Mutating the read
+row and outer list changed the current result to =((99))=; append also changed
+the previous result, and both paths fed =99= into the next accepted input and
+output. The caller's mutable replacement row is part of the same control.
+The final red command exited 70 on these scalar facts, not on a shape or
+compile error. The earlier immutable quoted-row fixture error is retained
+separately as development history.
+
+Both eager evaluator paths now call a fresh retained engine's =.run=, using
+its existing list/row detachment for public result reads. Checked Session's
+opaque replacement path copies the input list and row spines before engine
+acceptance and pending-source recording. Nested field identity is unchanged;
+ordinary non-retained evaluation is not used as a Session snapshot boundary.
+
+The [[file:../../evidence/scheme-eager-snapshot-20261007/receipt.json][receipt]] binds identical red/green fixtures to 545 tracked Scheme sources.
+Only evaluator and Session production owners differ between those freezes.
+Green qualification passed 59 native Cases: storage 21, timeout 12 and source
+deletion 26. Each command exited zero with module/harness markers and explicit
+=OK=. The new Case checks repeated reads, the prior result, caller replacement
+mutation and later complete input/output facts. Timeout checks include eager
+replacement and nonpositive updates, resumed rounds and failed resume recovery;
+delete/update checks retain source order, budgets and rollback behavior.
+Policy build exited zero with 17 findings and no errors.
+
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization ownership follow-up]] is an implementation inference from stable
+concretized facts. It does not prove arbitrary host effects or add a theorem
+or performance qualification. Full CI must be read at the new pushed revision.
+
+
+
+* Buffered append recovery includes cross-relation index publication (2026-10-07)
+
+At base =85afa3f= the final native control accepted two distinct Set source
+rows, then forced a budget-triggered flush. Its custom index cleared its
+physical table and raised once. Both the custom-index target and a different
+native-index target reported the original append error, then failed the next
+run with =ASCENT engine publication requires source replay=. The red command
+exited 70 on these observations. This demonstrates that append recovery
+classification must include every relation its buffered flush can publish.
+
+Checked Session now treats Set append as atomic only when every possible
+buffered Set owner has a canonical hash IndexProvider. Otherwise its existing
+append recovery restores the pre-append pending source cut. Native Set/index
+programs retain direct append; lattice eager candidates retain their existing
+classification. Raw index publication quarantine and physical cache ownership
+are unchanged.
+
+The [[file:../../evidence/scheme-append-flush-20261007/receipt.json][receipt]] binds identical final fixtures and 545 tracked Scheme sources;
+only =program/session.ss= differs between red and green. Green passed 60
+native Cases: storage 22, timeout 12 and source deletion 26, each with exit zero,
+module/harness markers and explicit =OK=. The final control checks 34 accepted
+source rows, both new rows, exclusion of the triggering source, constant output
+and stability of the previous 32-row result. Policy passed with 17 findings
+and zero errors. Source freezes before/after qualification are identical.
+
+An earlier duplicate-bearing control exposed a separate replay limitation:
+fresh custom-index lookup rejected duplicate result rows, and pending recovery
+fell back to the committed source cut. Its failing runs and diagnostic are
+retained separately. This slice qualifies distinct-row pending reconstruction;
+it does not qualify a replay that itself fails or external callback rollback.
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization flush-footprint inference]] connects the implementation boundary to
+§3.3's total/delta decomposition and §5.5's logical/physical index distinction.
+No Lean/Quint theorem or performance claim is added. Full CI remains tied to
+the subsequently pushed revision.
+

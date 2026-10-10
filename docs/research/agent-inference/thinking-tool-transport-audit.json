@@ -1,0 +1,160 @@
+{
+  "schema": "ascent.thinking-transport-audit.v1",
+  "rejectedRequests": 17,
+  "scope": "Aborted interface preflight, excluded from semantic accuracy. Missing usage means unknown cost, not zero.",
+  "responses": [
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/1.response.json",
+      "sha256": "2ef4ecdf58475e8f348f946d31b4ab0ce4c7188de6b24f8cb9a458edb28c19fb",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/1.response.json",
+      "sha256": "8e0b69f7e13c7d7b7e5d6eafed25804d9c200ffc2748c54e2545cf95f91753a9",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/1.response.json",
+      "sha256": "2e1500de6b356725b307062c2299040cd22e11efd8dbbaf1d34a2994a2b327ca",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/1.response.json",
+      "sha256": "1a605f814d72b570f5d2464319c069cbe48386bc0dfc62e5901ccc263d2f010a",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/1.response.json",
+      "sha256": "e717744a08ad454259d794fd6ef07d2a3ce72e40387977ab0346d3ff985d9895",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/1.response.json",
+      "sha256": "917d56f4dc1ac0a58fc54bb82247731e842572eb89b11145ab41dc03816d6708",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/1.response.json",
+      "sha256": "b0badcf773c5b132dba22c98da8adafa40f95f9601045bf2ddf2c1df861e4f2e",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/1.response.json",
+      "sha256": "703ae154e26a9c1c1c216b32994054bb033840816092d6ca550392655e1710e0",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/1.response.json",
+      "sha256": "22bb405165310b664f80c977f11eaac3e4568dd6b7f88d07b21699fce2fd8953",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/1.response.json",
+      "sha256": "4e25f14ee7fff845ea3396d96d924c1c4d78315d830fc82803530aa781b34c2d",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/1.response.json",
+      "sha256": "06bc4febe18fbaafa6344ce5f0c0f0c1de944108991a304fb7d0daa2de429435",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/1.response.json",
+      "sha256": "0ca37e72618fdc93178e09dbc391cd48c698833c9401de9f0d59d46cba8ad5bd",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/1.response.json",
+      "sha256": "977ed25ec70449e58f947109a25620f6bf32a822d86a93ca861b845aa2521eed",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/1.response.json",
+      "sha256": "f3a33fb2361005668d0b8cfcd6c452c3caa0a07aa8446b9f54066637bc1913e4",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/1.response.json",
+      "sha256": "5ba36df634f06852303f24780f7d55dfd9c5734aa783b410b19ee0f19a9327ae",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tools-real-20261010/scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/1.response.json",
+      "sha256": "23578f4207c734fea752d8501fd4b21041d7d7f7bf8ca1eb797a106b2fc81e1d",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400"
+      },
+      "usage": null
+    },
+    {
+      "path": ".cache/ascent/movie-study/compound-thinking-tool-transport-probe-20261010.response.json",
+      "sha256": "6b21a446ad90b4ee2c7447b44f80594f14a3da4a2ffcb69d17d4ce991c7f84ac",
+      "error": {
+        "type": "RuntimeError",
+        "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 1c038f77-db3d-49f4-953c-20b9f3a79418)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+      },
+      "usage": null
+    }
+  ]
+}

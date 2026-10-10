@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "sourceBase": "50c79d4fd48ee5ea5cef3349923edebe03ce2008",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "1881b6dd48ed41dd2894c50f92ebced461d8134c23edd4e9794cd1a3b1e69ee3"
+  },
+  "native": {
+    "artifactSHA256": "1e8a40dd3200eaf6c82e69f2a45f3039fa69fedea21294b26fefbf529989c55b",
+    "sourceCount": 357,
+    "sourceMapSHA256": "41898d356c34257964afcb4d7e0bfa61e35f52998205cfd72c62d717c540c287",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 197.80883693695068,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-higher-order",
+      "scheme-model-closure",
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract"
+    ],
+    "counts": {
+      "cases": 90,
+      "suites": 5,
+      "modules": 5,
+      "harnesses": 5,
+      "finalOK": 5
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "newRegressions": [
+      "Nine exhaustive tuple/relation signatures including empty domain and zero arity",
+      "24-layer shared type graph analyzed without repeated formula expansion",
+      "Changed duplicate domain canonicalized; opaque/cyclic domain rejected",
+      "Typed pointer cycle and out-of-domain modified map rejected",
+      "Program domains/source/mapping rows unaffected by subsequent descriptor mutation"
+    ]
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "8672bd5a9b963d439b4860d9433ec4498ec6b5d4b6c835a3ab9348c09f5f907e",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 20,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "implementation": {
+    "owners": [
+      "program/higher-order.ss",
+      "packages/proofs/lean/FiniteHeight.lean"
+    ],
+    "claims": [
+      "Scoped admission returns owned canonical type/typed-term graphs and lowering consumes that graph",
+      "Public height analysis reuses finite-type shape/cycle/depth admission",
+      "Invocation-local type formula caches preserve shared graph structure",
+      "Exhaustive finite table/tuple enumeration, full-input function encoding and abstract signature cardinality/height formula correspondence proved",
+      "Monotone steps over abstract complete signature semantics reach their least fixed point by the stated height"
+    ],
+    "remaining": [
+      "Native scalar equality/domain deduplication and list-row encoding to finite atoms/tuples",
+      "Concrete typed descriptor/capture interpretation and actual normalization-step monotonicity",
+      "Native formula/term memo and emitted rule/delta execution refinement",
+      "Atomic acquisition under concurrent mutation is not claimed",
+      "General provenance algebras, measured architecture benefit and new authorized model study"
+    ]
+  },
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "developmentAttemptsExcluded": {
+    "failedBuilds": [
+      {
+        "exit": 70,
+        "cause": "Malformed let* binding in typed snapshot reconstruction"
+      },
+      {
+        "exit": 70,
+        "cause": "Missing closing parenthesis in new qualification case"
+      },
+      {
+        "exit": 70,
+        "cause": "Test generic expt introduced unresolved native _pow symbol; replaced by independent integer multiplication"
+      }
+    ],
+    "failedProofInvocations": 5,
+    "failedExpansionDiagnostic": {
+      "exit": 70,
+      "cause": "Own module path absent from diagnostic load path; corrected without dependency changes"
+    },
+    "rejectedQualification": {
+      "artifactSHA256": "1dba6af6055a19142e9e735e430daa56f0ef1c64a82c96f089ef12c1f1337726",
+      "compilerExit": 0,
+      "qualificationExit": 1,
+      "caseErrors": 8,
+      "finalOK": 0,
+      "cause": "Extra closing parenthesis ended function if branch; ordinary child validation ran unconditionally in outer scope",
+      "resolution": "Correct branch nesting; interpreted identity compilation then full rebuild and fresh native qualification"
+    },
+    "initialReceiptCountAssertion": {
+      "expectedStaticCaseCount": 67,
+      "actualExecutedCaseCount": 90,
+      "cause": "Model-task cases expand dynamically; static test-case count is not the execution count",
+      "resolution": "Receipt asserts actual CASE-OK/SUITE/MODULE/HARNESS/final OK counts"
+    }
+  },
+  "integrationBoundary": {
+    "rebasedOnto": "7d590e1fb4c5d0525c6fbeda493da18fa75e0701",
+    "nativeQualification": "SourceBase plus source-snapshot.patch only; subsequent certificate/table refactors require exact integrated-head CI",
+    "formalFilesUnchanged": true
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "sources": {
+    "table/expression.ss": "95a16012510220d79a329074a44bfac7b4b611e315173126869e1748ce69ba05",
+    "t/qualification/ascent-materialization-test.ss": "4a8875013b7893309dfc6aacff6abd47f99220442f9cbbf2dcce4a3cea9d5f0f",
+    "justfile": "924cdf716439763cb79fe2eb725b6f14e48a1b9d39896a0882d1ab1ad416caaf",
+    "t/performance/row-propagation/benchmark.ss": "f7e89d002a8c3d9ea279730df2ef6e04c188aa7edc23c29d3338fc42ada01d95",
+    "t/performance/row-propagation/build.ss": "7c021496261a3a69007ff92fbf44e435ef38f00ab91efa334f8fee6daef4a86a",
+    "t/performance/row-propagation/kernel.ss": "b2d25c83350f636a7f77d26243873347cc641313227701b5e02b2e9f0fa1c637",
+    "t/performance/row-propagation/oracle.ss": "6b6524f1c9162207cbb98f92081a397dcd8af1ac79d6adbb5293dffc65825c73",
+    "t/performance/row-propagation/reference.ss": "b2eaf5d6e038c3d9656eb47018bce26e3c2bd54eb3da3f1b32e9f70ae9ae2e56",
+    "t/performance/row-propagation/qualify.py": "73931d9e4cafc36c8834c179606e8cdf92e705b1bef4285e431a4036d5f1eb06"
+  },
+  "artifacts": {
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/static/gerbil-ascent__t__performance__row-propagation__kernel.scm": "0dc9af71d593d188cd7e13e6ef453bfccd920dd893b6455c3e4bf8e0dc1c839b",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/static/gerbil-ascent__t__performance__row-propagation__reference.scm": "87b9fdd4e02c28dee18774373e534c4906f503a3f6640fa2127493223672e7b3",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel.ssi": "030bbab5164c1e58cdbb3ee2af96b9605c08ed85fef62436ea5f8ca6feec0b90",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference.ssxi.ss": "baf95c3ca5f0b7d7a52811b6b12e834b2e1d27f04dda5b6ea5c6db4de67cf559",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel.scm": "9858e5412d46cb2a17537c1f5b455032c9d8cc0b13e710d4997dd3cdb05e83ac",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference.o1": "aacde527a726146ef8bbb172e82fa219105a7320827c2890d835eb2bf1637dfb",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference~0.o1": "a80c5265428de54450b8e2944c17b59301c5174ebbca0a4267970bb3bff6d68c",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel.ssxi.ss": "9d25d4226715a672bb25ba1e7af74dc8ecfb5d59000864c1d76601f1af0042c2",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel~0.scm": "0dc9af71d593d188cd7e13e6ef453bfccd920dd893b6455c3e4bf8e0dc1c839b",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference~0.scm": "87b9fdd4e02c28dee18774373e534c4906f503a3f6640fa2127493223672e7b3",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference.ssi": "8bb83bbd1f3dd616c1b26cc650a19d6802600f55005f67713fb5ff49d14d4572",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel~0.o1": "8fa3d2a8de0f17d567feed7e8526ad7370a09d16e868d1bfe9664e47199f127f",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/reference.scm": "a637ec40d064072d927f1609ae20e3fb30dd42a85c797a57dbd2031c1e8a34a8",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/row-propagation/lib/gerbil-ascent/t/performance/row-propagation/kernel.o1": "14edae8a7336b80b2f64b24515831bb64e9ee2b45ef81ef34dca2cc274a0f789"
+  }
+}

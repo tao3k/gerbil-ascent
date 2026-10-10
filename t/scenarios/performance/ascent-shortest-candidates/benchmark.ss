@@ -7,7 +7,7 @@
  (target_total . 1000us)
  (regression_budget . 1000us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure complete Scheme Dual shortest-distance closure and source support candidates over a 20-node chain.")
  (unit . "us")
  (sourcePath . "t/performance/ascent-shortest-candidates-performance-test.ss")

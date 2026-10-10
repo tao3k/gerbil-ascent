@@ -1,0 +1,63 @@
+#+title: Repeated-column index lifecycle qualification
+
+* Frozen source and protocol
+
+Baseline =208201e4c48649b7f7496c1cff3309cfdcb04ed7=.
+Original and unmodified frozen =table/funs.ss= blob:
+=be8cc10da2562e9a684d06118a59e7f874c487dd=.
+
+Installed Gerbil =1cfb032= =core/sugar.ss:933-973= supplies the conditional
+value-binding contract of =alet=. The forward-distance constructor rejects an
+unordered suffix before publishing a partial spine. =forward-key-step= syntax
+shares field selection and publication for streamed single-key columns and
+retained batch distances. Zero distances reread a repeated column. Caller
+metadata is not cached; reordered columns retain direct selection. Existing
+integral inexact ordered columns retain distance normalization.
+
+* Native complete index cycle
+
+The ASP Scheme benchmark API runs 50 alternating old/new pairs. Each call
+builds the index over half the rows, extends the remaining half, computes all
+lookup keys and consumes every matching bucket. Both results must equal an
+independent original row sum. Input rows are outside measurement; index, keys,
+buckets and result consumption are included. GC occurs before measurement;
+CPU uses process user/system counters and memory uses allocated bytes.
+Compilation and qualification do not overlap the timing lanes.
+
+The repeated target is declared before execution to require >=10% CPU
+improvement and >=40 faster pairs. Controls allow 110% CPU + 20 microseconds;
+allocation allows 110% + 4096 bytes. No gate was relaxed.
+
+| Scenario | Row width | Rows | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-----------+------+------------+------------+-----------+-----------+--------------|
+| repeated columns | 256 | 128 | 276 | 130 | 94000 | 94576 | 50 |
+| ordered columns | 256 | 128 | 104 | 103 | 75856 | 57424 | 31 |
+| reversed columns | 256 | 128 | 141 | 131 | 57136 | 57136 | 45 |
+| small repeated | 2 | 1 | 2 | 2 | 1808 | 2384 | 20 |
+| empty | 2 | 0 | 2 | 2 | 1184 | 1184 | 23 |
+
+The target improves CPU about 52.9% with 576 extra bytes. The ordered control
+uses about 24.3% less allocation. All declared gates pass; tiny CPU differences
+are not treated as stable gains. Results concern the complete physical index
+cycle, not public program evaluation or wall-clock speedups.
+
+The initial retained-single-key candidate failed allocation: CPU 247 -> 130
+microseconds, bytes 94000 -> 131440. That rejected receipt remains in cache.
+The final single-key path streams distances without constructing their list.
+Logs, receipts and binaries stay under ignored =.cache/ascent/repeated-columns=.
+
+* Semantic qualification
+
+Existing index build and lifecycle suites exercise physical scalar/composite
+indexes, custom providers, key evaluation before publication, ordered subsets,
+arbitrary columns and held snapshots. Added property cases compare all 121
+column tuples of lengths zero through four over three positions against both
+frozen implementations and direct selection, including nested fields and false
+values. Caller metadata changes, integral inexact columns and retained bucket
+spines remain explicit gates. Root =build.ss= is unchanged.
+
+Final local qualification: three Suites, 21 Cases, final =OK= and exit zero.
+The source-loaded repeated-key build/extend/held-bucket pipeline also passed.
+Native policy completed with 30 advisories and zero errors; the repository is
+not claimed warning-free. Typed contracts cover all module definitions. These
+local receipts do not establish completed remote CI.

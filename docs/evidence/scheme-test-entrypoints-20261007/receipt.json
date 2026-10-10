@@ -1,0 +1,81 @@
+{
+  "schema": "ascent.standard-test-entrypoints",
+  "version": 1,
+  "parentCommit": "6c2cb9873dee771fc9dc8eb03929ef62a8f8ae84",
+  "sourceSha256": {
+    "justfile": "8082c6a05f99c615828932df9074eb9aa873179fdff7c2b1d8018eaad9942365",
+    ".github/workflows/ci.yml": "eabf5cde2439f730f1ec6d10be7c6356e84bc79b3e0aa0e2c344b76c020c2168",
+    "t/native/qualification.ss": "05325e090f09e01dd4e800e520c5e0e5412ab61eacf4303ea21e7600b9b6ac69",
+    "t/native/native-registry.ss": "ecabc29ad60db98f405a29fb538815f051706524ad41c599bc09188894eb81fe",
+    "t/native/artifact-admission.ss": "1d8db83253f39a6320f9c9b38030c2d89f8776fc44aea90c4904ec73f581322f",
+    "t/qualification/scheme-artifact-test.ss": "9a23c639ed4d690a8e5df2314bb1d420a742bc90f446ab1541321625025dc95b",
+    "t/qualification/ascent-finite-flow-test.ss": "4682b21fad72be34593353c32d7852b143d3f1ebd3f7af29c8904cc940e79aed",
+    "core/finite-flow.ss": "055d808c06e10ff473eee2fb57229e633123db955b07b72475752cfe1a70bc30",
+    "applications/polonius-paths.ss": "2e4ba7e804e875a66491540046f54fe48c00590938c3803101b36f1c074031c3"
+  },
+  "architecture": {
+    "ordinaryTests": "justfile invokes upstream gerbil test, separately per module for the full inventory",
+    "productionBuild": "direct gerbil build",
+    "nativeQualification": "explicit test-native and test-native-suite; std/make and immutable Suite bindings",
+    "removed": [
+      "t/runner",
+      "gxtest forwarding adapter",
+      "temporal import adapter"
+    ],
+    "environment": "Just-owned macOS environment definitions match mrr-gerbil compiler flag and SDK cleanup",
+    "policyEnabled": true,
+    "buildCores": 12,
+    "heapBytes": 1073741824,
+    "moduleTimeoutSeconds": 120
+  },
+  "accepted": {
+    "ordinaryArtifactCases": 7,
+    "ordinaryFiniteFlowCases": 6,
+    "finiteFlowDecodedPairs": 1048576,
+    "ordinaryCacheCases": 1,
+    "modelProjectionCases": 27,
+    "modelApiCalls": 0,
+    "pythonTests": 21,
+    "policyFindings": 26,
+    "policyErrors": 0,
+    "nativePoolCases": 10,
+    "nativePoolFinalOkMarkers": 2,
+    "nativeArgumentControls": {
+      "missing": 70,
+      "unknown": 70,
+      "extra": 70
+    },
+    "nativeLifecycleControls": {
+      "setup": 42,
+      "case": 42,
+      "cleanup": 42,
+      "empty": 70
+    },
+    "ordinaryLifecycleControls": "setup, case, cleanup and empty each rejected with exit 1",
+    "nativeWarmCache": {
+      "libraryHit": true,
+      "entryHit": true,
+      "compilerProcesses": 0,
+      "cases": 1,
+      "finalOk": true,
+      "wallSeconds": 12.82
+    },
+    "ordinaryFiniteFlowWallSeconds": [
+      24.8,
+      10.56
+    ]
+  },
+  "rejectedAttempts": [
+    "Default user prefix could not resolve the pinned ASP build API; accepted runs use the project dependency prefix",
+    "Nix SDK headers failed under configured Homebrew GCC",
+    "Partial compiler artifacts after the SDK failure were rejected; only generated native and retired runner cache namespaces were removed before Just-owned requalification",
+    "A single all-source process exhausted the unchanged 1 GiB heap after 25 Cases; full ordinary inventory now uses independent standard Gerbil invocations",
+    "A command concatenation without a separating space was rejected before execution and corrected"
+  ],
+  "limits": [
+    "Shared-host timings do not qualify a stable whole-suite speedup",
+    "The complete ordinary source inventory has not been requalified; CI retains the full compiled native gate",
+    "No claim is made that every earlier eight-minute invocation has the same root cause",
+    "No heap, Case limit or per-module deadline was enlarged"
+  ]
+}

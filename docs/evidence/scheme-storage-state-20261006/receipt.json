@@ -1,0 +1,87 @@
+{
+  "qualifiedBaseHead": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+  "scope": "Per-engine custom storage readiness covers dispatch through complete batch/round publication; interrupted raw engines require source replay and Session reconstructs independent fresh state.",
+  "sources": {
+    "table/storage.ss": "f2300368fe7150caf0f55a508c167f5db8e40dec195d5c56cc4bcba1a8235ab9",
+    "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",
+    "program/evaluate.ss": "81df482fbcfbd8ed139f22db94123237839c89dd55e53e3d5e02ceb8f8e115ee",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "table/eqrel.ss": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "t/qualification/ascent-storage-batch-test.ss": "840f6b5f2145f7a56087a1195ef9bdb57eb4971247e1fcf5c7ac25493c697dad",
+    "t/qualification/ascent-byods-index-test.ss": "f144c332c49deaf7cc223266733d7e22e5bfd3b3e26eba17d50c4eeea5b6fd8a",
+    "t/performance/storage-batch/fixture.ss": "4ee509500a98ac87798eb44460f21c5cfc866cff05919acb17c55b9e1ac6201a",
+    "t/performance/storage-batch/reference.ss": "4cf369a3830cc523cf48ccd1de99e3180a153fbe9d8ed0e135b0bfaaef2d31bc",
+    "t/performance/storage-batch/reference-evaluate.ss": "44e99690ee2d85b929c27a6f1f3fa8b3756f71ad878d6737ca7d83c1b025456e",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "2ad530f1adb93b971f4383727a5739cae790be13844b268888c1033fc75fd692",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "suiteCases": 15,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "4dd1f0366fc775796ae89646a854e1df2b8b0081475cafef5783fb3d19a50471"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 8,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "0ae4c0ed1a4ed0333350cfb748771c67e6ba82fd20bb08346f4cd64c083e14d8"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+    "productionSourceHashes": {
+      "table/storage.ss": "c8b77d4d30bd907c457b99192ee3414ddfbd085c8c38402e39ecb079f7f57b59",
+      "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+      "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",
+      "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c"
+    },
+    "testSourceSha256": "d01982998aa63db92f9762fd8c834dffe16f57904557df6e3be3149cdd390741",
+    "exitCode": 70,
+    "observedAfterMutationAndFailure": "Raw retained engine run returned successfully with private state already marking the unpublished fact",
+    "expectedAfterMutationAndFailure": "ASCENT storage state requires source replay",
+    "logSha256": "e4792b8ed54076002c6ead0e7daae4135a9c83300fc1a950cfdcb5079981f640",
+    "qualification": "Rejected native result; original raised error and private mutation were checked before unsafe engine reuse. The final suite retains this case and adds Session/late-guard controls."
+  },
+  "discriminators": [
+    "Raised dispatch, wrong shape, field checker and output budget failures propagate original diagnostics and revoke raw engine reuse",
+    "Fresh engines accept the same fact that interrupted private state could suppress",
+    "Session source reconstruction recovers all four failure modes and preserves prior results",
+    "A successful custom injection followed by a later guard failure keeps the entire rule round tentative",
+    "Repeated injections inside a round remain legal and become ready only after its full commit",
+    "Prior spine ownership, malformed packet exclusion, native direct dispatch, duplicate order, budgets and BYODS composition pass"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Sections 3.1 and 3.3: injection and total/delta concretization",
+    "transfer": "Exception recovery must not reuse private state whose recorded facts did not cross the evaluator publication boundary.",
+    "boundary": "Scheme readiness/replay protocol; not arbitrary Provider rollback or a new DLDS theorem."
+  },
+  "cost": "One private readiness record per custom relation state; public run/append and completed rule rounds traverse custom owners. Native state values remain unchanged.",
+  "remaining": [
+    "Independent fresh state construction is a Provider premise",
+    "Nested field value stability and equality laws",
+    "Native callback-sensitive atomicity and general representation extraction",
+    "Arbitrary closure side effects and general concretization completeness"
+  ],
+  "developmentFailures": [],
+  "modelCalls": 0
+}

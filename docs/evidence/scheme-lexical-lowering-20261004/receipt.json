@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "sourceBase": "aa07037f5e77a3dc810e4c14503d7a829ee18f2b",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "dfdbf67b2ed7edf07c686e2f6a930d6f99abf5ca1c104f3aef06f71d3feb378b"
+  },
+  "native": {
+    "artifactSHA256": "f7b5aed3466b14056d8ea9891fa6083ff1454e09f1cfc3ac3f00e8c22b683f1e",
+    "sourceCount": 353,
+    "sourceMapSHA256": "1ef2682acfcf24ecd3081c1a496f8cafdab25bd28e95096c1ec33571b2bdf245",
+    "buildElapsedSeconds": 128.0523419380188,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "counts": {
+      "modules": 13,
+      "suites": 13,
+      "cases": 139,
+      "harnesses": 13,
+      "finalOK": 13
+    },
+    "newFiniteInputPairs": 16,
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    }
+  },
+  "formal": {
+    "lean": "leanprover/lean4:v4.34.1",
+    "checkedFilesSHA256": {
+      "packages/proofs/lean/FiniteHeight.lean": "5f95e899e66d75b440d0d0c5c56d0572b939f79257f09c8aa8157120a33734ea",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newLexicalTheorems": 12,
+    "exit": 0,
+    "tlaExplorationDepth": 4,
+    "unboundedProtocolGeneration": true,
+    "normalModels": 2,
+    "intentionalCounterexamples": {
+      "early": "AtomicSnapshot (exit 12)",
+      "stale": "NoStaleCommit (exit 13)"
+    }
+  },
+  "excludedDevelopmentAttempts": [
+    {
+      "phase": "Scheme reader",
+      "exit": 70,
+      "reason": "Extra closing parenthesis in the new test; corrected before successful build"
+    },
+    {
+      "phase": "Lean elaboration",
+      "exit": 1,
+      "reason": "Finite tuple projection required an explicit dependent motive; corrected before successful formal gate"
+    }
+  ],
+  "upstreamCI": {
+    "head": "aa07037f5e77a3dc810e4c14503d7a829ee18f2b",
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37202162848",
+    "formal": "success",
+    "oracleByods": "success",
+    "oracleOther": "success",
+    "scheme": "failure",
+    "failure": {
+      "exit": 70,
+      "location": "retained-benefit group 0 after solve-only arm; before fresh-update completion",
+      "category": "Stack overflow in ##structure-instance-of?",
+      "scope": "No accepted three-arm benefit result; not a lexical-kernel test failure"
+    }
+  },
+  "modelCalls": 0,
+  "scope": "Typed mathematical positive lexical lowering, finite join tuple encoding, and exact-source native qualification. Concrete descriptor admission, relation feedback, finite type height/saturation and complete compiler refinement remain open. No performance/model benefit claimed.",
+  "publication": "Structured outcomes only. Execution logs are excluded from Git."
+}

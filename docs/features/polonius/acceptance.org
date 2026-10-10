@@ -1,0 +1,251 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Polonius: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Complete Polonius reference observations and dense-path gate (2026-10-07)
+
+The independently buildable =polonius-engine= 0.13.0 crate is now frozen by
+Cargo.lock and archive SHA256, with upstream Git identity
+=741e6095fe50f468982d4d253e842eb7d12ed9d3=. Its =facts.rs=, initialization
+and liveness modules are byte-identical to the input fork's corresponding Git
+blobs. The oracle runs the complete public engine, including initialization,
+move errors, use/drop liveness, placeholder initialization and borrow checking;
+it does not substitute a subset closure fixture. =Naive= and =DatafrogOpt= are
+explicit selections. Intermediate relations must be interpreted according to
+the selected algorithm, rather than assumed identical across algorithms.
+
+The [[file:../../evidence/scheme-application-admission-20261007/polonius-reference.json][structured reference receipt]] binds all 18 input files, the runner, locked
+dependencies and executable. The complete =DatafrogOpt= invocation terminated
+with exit zero and exported all 14 public observation fields. Large computed
+relations include =path_maybe_uninitialized_on_exit= (291,826,811 rows),
+=subset= (2,512,445 rows), =origin_live_on_entry= (1,033,354 rows) and
+=known_contains= (19 rows). Borrow, move and illegal-subset errors are empty on
+this complete input. This reference output is not a Scheme correctness result.
+
+One upstream observation must not be used as logical truth:
+=Output.loan_invalidated_at= is not populated by this compute path. Its exported
+inspection field is empty even though the raw input contains 118,208 facts.
+The receipt distinguishes this inspection field from computed observations.
+Native comparison must use the actual input predicate and schema translation,
+not mistake an unpopulated carrier for certified absence. Positive invalidation
+and killed-loan controls independently exercise the reference algorithms.
+
+Canonical export retains fixed-size interned-ID tuples and compares borrowed
+source names. It writes field-preserving sorted rows without copying names into
+a tree node for every result. Four Rust tests cover actual file loading and
+point/loan order, killed-loan propagation, point isolation/non-diagonal cycle
+outputs, and name-order/duplicate export. Eight complete files from the earlier
+string-copy exporter are byte-identical to the final exporter. The failed
+partial file is not admitted as a completed observation.
+
+** Accuracy and resource boundaries
+
+All four 180-second observations failed with exit 124: naive and optimized runs
+alongside native preparation, the optimized run without native preparation,
+and the ID-export run under the same bound. These failures remain failures.
+The separate complete observation used a 900-second observation bound and
+finished in 245.29 seconds: 157.784 seconds for solve and 85.738 seconds for
+canonical export. Direct process measurement reports 12,124,520,448 bytes
+maximum RSS and 13,104,310,016 bytes peak footprint. This is one reference
+pipeline including dump, export and teardown; it is not a paired Scheme benefit,
+a paper timing reproduction, a physical-allocation result or a 180-second pass.
+No actor speedup follows from these measurements.
+
+CI independently replays the complete input and all output digests, with an
+explicit full-reference truth step. Its larger observation bound does not
+replace the failed 180-second observations. Partial exports cannot pass:
+the process must finish successfully and all fourteen frozen digests must match.
+The Scheme source refactor has also passed 86 native modules / 829 Cases;
+the Python byte/process framework passed 21 Cases and Rust all-target Clippy
+passed. GitHub head =9d182d5= passed all six qualification jobs; later commits
+must be requalified independently.
+
+** Coupled native implementation and proof plan
+
+The dominant full output is a dense path dataflow relation, not merely the
+2.5-million-row subset relation. A complete native application must therefore
+port initialization, liveness and borrow rules together with a representation
+that can admit that dense relation. The current explicit Hash/Set path has no
+admitted full Polonius resource result. A compact finite-domain Boolean relation
+with exact keyed enumeration and delta publication is a design candidate;
+it is not an implemented capability or a proved space bound.
+
+Lean must connect admitted domain ordinals, membership, cardinality, old/delta/
+total cuts and indexed column projections to the rule consequence operator.
+Quint must cover private domain/index construction, owner publication, foreign or
+stale roots and actor cancellation. The existing publication models may be
+reused where those transitions remain unchanged; copying their semantic laws
+into another protocol model adds no assurance. Native controls must compare
+complete public observations and all error sets, including point boundaries,
+cyclic origins, killed loans and field permutations.
+
+This closes the reference input/output baseline for the selected algorithm.
+The complete Scheme Polonius application, its representation refinement and
+matched resource benefits remain open. PageRank's lawful numeric contribution
+maps and LLVM's complete parsing/context-sensitive analysis remain subsequent
+application gates. MR/MRR and new paid model calls remain deferred.
+
+
+* Complete native Polonius rule chain and initialization laws (2026-10-07)
+
+=applications/polonius.ss= now constructs one ordinary Program containing the
+complete Polonius 0.13.0 Naive initialization, liveness, placeholder preprocessing
+and borrow-checking rules. All eighteen raw input relations are required,
+including empty relations; duplicate, missing and unknown names are rejected.
+The Program owns no mutable application state. Existing exact relation storage,
+stratification, actor cancellation and immutable result publication contracts
+apply. The two origin-inequality predicates are actual algorithmic comparisons,
+not model instructions or precomputed answers.
+
+The public input =loan_invalidated_at= retains =(Point, Loan)= order, while
+=errors= and =loan_live_at= expose =(Loan, Point)=. The input remains observable
+as a source relation; the upstream never-populated output carrier is not
+presented as a computed empty logical relation. =subset= excludes diagonal
+pairs at both seed and consequence insertion. =placeholder_origin= is derived from =universal_region=, not from the first
+column of =placeholder=. =known_subset= is independently closed before the
+negative placeholder-error test. Universal origins become
+live only at CFG endpoints, exactly as in the selected reference preprocessing.
+
+The committed =t/qualification/fixtures/polonius/controls.sexp= carries ten
+complete input/result pairs: the combined rule chain, source-point loan kills,
+raw invalidation field permutation, child-path direction, cyclic known
+placeholder subsets, dead origins, uninitialized drops, conflicting move and
+assignment seeds, isolated point scopes, and empty input. Each pair contains
+all eighteen sources and thirteen computed observations, including every error
+relation. Rust's restricted data reader executes no Scheme; it reloads the raw
+facts into the pinned independent engine, recomputes Naive, exports the public
+observations and compares every frozen result byte for byte. Scheme compares
+exact set membership and cardinality through both published row and visitor
+interfaces, at one and two workers. Source replacement retains the old cut;
+actor cancellation must fail before a clean retry matches all observations.
+
+The selected semantics here are explicitly =Naive=. Full DatafrogOpt reference
+observations from the previous section remain a separate algorithm-qualified
+baseline; intermediate dumps are not silently treated as interchangeable.
+The previous reference receipt binds its recorded runner and binary to the
+previous commit. Adding reference tests does not rewrite that historical
+measurement or imply a new full-data performance sample.
+
+The dead-origin control found and corrected a translation defect before
+acceptance: deriving =placeholder_origin= from =placeholder= instead of
+=universal_region= produced three spurious subset errors. The initial combined
+control had identical origin rosters and could not distinguish those rules.
+The two input rosters now differ in a permanent regression control; the
+independent reference observations were retained unchanged.
+
+** Lean and Quint responsibilities
+
+=PoloniusInitialization.lean= proves four laws without axioms:
+
+1. Every propagated exit fact is exactly a finite CFG path from a seed, with
+   blockers checked at each propagated successor.
+2. At a blocked target, an exit fact exists exactly when the target itself is
+   a seed. A move and assignment at the same point therefore need not erase
+   either independently seeded may fact.
+3. A seed-free cyclic CFG cannot invent initialization or uninitialization.
+4. Enlarging blockers can only remove propagated exit facts.
+
+Initialization instantiates these laws once with assignment seeds and move
+blockers, and once with move seeds and assignment blockers. Tests reside under
+=packages/proofs/lean/Tests=. These are relation-level proofs, not extraction
+proofs of the native Program compiler, all Polonius rules, or bitmap storage.
+The existing Session/actor publication and cancellation Quint models remain the
+protocol owners. No new application publication protocol was introduced, so
+copying those models into an application-specific state machine would duplicate
+their obligations. A future compact representation must extend protocol
+verification only where it introduces domain/index publication transitions.
+
+** Acceptance boundary
+
+This closes native implementation and matched semantic controls for the complete
+Naive rule chain. It does not close the full =clap-rs= Scheme run: its
+291,826,811-row uninitialized-path output still requires admitted compact
+storage, exact indexed selection and delta/refinement laws. No full-input native
+speedup, memory improvement or whole-BYODS closure is claimed. The next coupled
+implementation gate is that representation and its proofs, followed by the
+complete source-bound application comparison. PageRank and LLVM remain on the
+same application plan; MR/MRR integration remains deferred.
+
+
+* Packed finite CFG propagation for Polonius paths (2026-10-07)
+
+=core/finite-flow.ss= implements the seed/CFG/target-blocker relation characterized
+by =PoloniusInitialization.flow_iff_seed_path=. It admits unique fixed fact and
+point domains from actual source values, encodes each fact ordinal into a byte
+and bit, and stores one optional fact bitmap per point. Duplicate seeds are
+idempotent. A seed at a blocked point remains present; only incoming propagation
+is blocked. No generation or work-depth bound defines its semantics.
+
+The queue carries pending bits, not the whole accumulated relation. An edge
+computes =incoming & ~stored & ~blocked=, charges exactly the fresh logical
+facts, merges those bits into the target's total and pending roots, and queues
+the target once. Total and pending byte vectors never alias. Queue membership
+coalesces updates until their point is processed; cyclic CFGs terminate when
+there are no fresh bits. The caller's fact budget is resource admission, not
+an approximation of the fixed point. Cancellation or admission failure returns
+no published view and all invocation-private state becomes unreachable.
+
+Published views retain immutable point roots and invocation-local traversal.
+Both field orders, repeated/contradictory keys, unknown values and false-valued
+keys are checked. Selection preserves domain value identities and emits fresh
+row spines; the parts visitor avoids constructing row tuples. Point-keyed
+selection inspects the fact domain of that point; fact-keyed selection inspects
+that fact bit at each point. There is no separately built transpose index or
+constant-time claim for the latter. Domains and nested field equality must stay
+stable for the view's lifetime, as with existing frozen representations.
+
+=applications/polonius-paths.ss= elaborates descendant paths for assignment and
+move seeds, then invokes the packed kernel for both initialized and uninitialized
+exit relations. Descendant traversal handles cycles with a visited set; captured
+closures are shared between the two seed elaborations. Domain admission uses
+hash membership and first occurrence order, avoiding quadratic list deduplication
+on the full CFG. The existing complete Program remains the owner of liveness,
+move-error, placeholder and borrow rules. This phase API is not automatic
+representation admission into that Program or Session.
+
+** Semantic and representation checks
+
+The native qualification exhausts all 256 combinations of two-node CFG edges,
+seed facts and target blockers against an independent explicit closure. Further
+controls cover byte boundaries, partial-byte padding, false values, duplicate
+seeds, conflicting repeated keys, malformed/out-of-domain inputs, exact budget
+refusal, cancellation and clean retry. Both compact Polonius exit relations
+are compared with all ten independent complete-rule fixtures from the previous
+section, including conflicting seeds, child direction and isolated points.
+
+A 512-fact, 2,048-point chain produces 1,048,576 logical pairs with 131,072
+retained bitmap payload bytes. This is a payload accounting result, not a
+measurement of total process memory, physical allocation or a matched speedup.
+Domain values/maps, CFG adjacency, root vectors, pending/fresh buffers, queue
+storage and collector behavior are excluded from that payload number.
+
+** Proof ownership and next integration gate
+
+=FiniteFlowPacking.lean= proves address injectivity and in-byte bounds, bit-level
+fresh-delta semantics, disjointness from old facts, exact merged-minus-old delta,
+target-blocker suppression, and the retained payload upper bound. Its tests and
+axiom inspection live under =packages/proofs/lean/Tests=. Standard Lean logical
+axioms used by imported BitVec lemmas are recorded; no custom axioms or =sorry=
+are introduced. These mathematical byte laws do not establish extraction of
+Gambit u8vector operations or completeness of the native queue implementation.
+
+The kernel introduces no actor publication protocol: one call owns all mutable
+state and returns only its completed frozen view. Existing actor/Session Quint
+models remain their protocol owners. The current UF view recovery journal is
+UF-specific; granting this bitmap view UF identity would be incorrect. The next
+integration must admit fixed domains, exact total/delta cuts and recovery without
+retaining one injection row per dense fact, and extend protocol checks only for
+new ownership/publication transitions. Complete source-bound =clap-rs= comparison
+and paired whole-application resource measurements remain separate gates.
+
+The exact =4511c2b= GitHub run found =RUST-MOD-R011=: the Polonius reference
+example had both =polonius_data_truth.rs= and a same-named child directory.
+The owner interface now lives at =examples/polonius_data_truth/mod.rs= with an
+explicit Cargo example path; the executable/CLI name is unchanged. The strict
+ASP Rust gate, five reference tests and all-target Clippy checks pass after the
+layout repair. Earlier source-bound receipts retain their historical paths and
+hashes at their recorded commits rather than being rewritten as new executions.
+

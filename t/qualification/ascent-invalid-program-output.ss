@@ -1,0 +1,292 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import (only-in :gerbil/runtime/gambit
+                 call-with-output-string display-exception
+                 with-exception-catcher)
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-count gerbil-ascent-sum
+                 gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
+
+(export main category)
+
+(def (invalid-program name)
+  (case name
+    ((source-row-arity)
+     (ascent
+      (relation seed (from to) '((1)))
+      (bounds 8 8 16)))
+    ((source-field-type)
+     (ascent
+      (relation seed ((value number?)) '(("bad")))
+      (bounds 8 8 16)))
+    ((derived-field-type)
+     (ascent
+      (relation seed ((value number?)) '((1)))
+      (relation out ((value number?)))
+      ((out (lit "bad")) <-- (seed _))
+      (bounds 8 8 16)))
+    ((lattice-projection-feedback)
+     (ascent
+      (relation out (value) '((1)))
+      (lattice best (key value) '() (lambda (a b) (min a b)))
+      ((best x x) <-- (out x))
+      ((out x) <-- (best x _))
+      (bounds 8 8 16)))
+    ((negative-self)
+     (ascent
+      (relation node (value) '((1)))
+      (relation looped (value))
+      ((looped x) <-- (node x) (not (looped x)))
+      (bounds 8 8 16)))
+    ((mutual-negation)
+     (ascent
+      (relation node (value) '((1)))
+      (relation left (value))
+      (relation right (value))
+      ((left x) <-- (node x) (not (right x)))
+      ((right x) <-- (node x) (not (left x)))
+      (bounds 8 8 16)))
+    ((negative-feedback)
+     (ascent
+      (relation node (value) '((1)))
+      (relation left (value))
+      (relation right (value))
+      ((left x) <-- (node x) (not (right x)))
+      ((right x) <-- (left x))
+      (bounds 8 8 16)))
+    ((aggregate-self)
+     (ascent
+      (relation number (value) '((1)))
+      ((number total) <--
+       (aggregate total gerbil-ascent-count () (number x)))
+      (bounds 8 8 16)))
+    ((negative-with-unrelated-aggregate)
+     (ascent
+      (relation node (value) '((1)))
+      (relation left (value))
+      (relation total (value))
+      ((left x) <-- (node x) (not (left x)))
+      ((total n) <--
+       (aggregate n gerbil-ascent-count () (node x)))
+      (bounds 8 8 16)))
+    ((unsafe-negation)
+     (ascent
+      (relation node (value) '((1)))
+      (relation block (value))
+      (relation out (value))
+      ((out x) <-- (node x) (not (block y)))
+      (bounds 8 8 16)))
+    ((unbound-head)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x))
+      (bounds 8 8 16)))
+    ((unknown-relation)
+     (ascent
+      (relation out (value))
+      ((out x) <-- (missing x))
+      (bounds 8 8 16)))
+    ((unknown-negated-relation)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (not (missing x)))
+      (bounds 8 8 16)))
+    ((atom-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x x))
+      (bounds 8 8 16)))
+    ((duplicate-relation)
+     (ascent
+      (relation node (value))
+      (relation node (value))
+      (bounds 8 8 16)))
+    ((unbound-guard)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (if (y) (> y 0)))
+      (bounds 8 8 16)))
+    ((head-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x x) <-- (node x))
+      (bounds 8 8 16)))
+    ((unbound-let-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x) (let y (missing) missing))
+      (bounds 8 8 16)))
+    ((unbound-for-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x) (for y (missing) (list missing)))
+      (bounds 8 8 16)))
+    ((unbound-aggregate-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out total) <--
+       (aggregate total gerbil-ascent-sum (missing) (node x)))
+      (bounds 8 8 16)))
+    ((aggregate-two-relation-cycle)
+     (ascent
+      (relation left (value))
+      (relation right (value))
+      ((left total) <--
+       (aggregate total gerbil-ascent-count () (right _)))
+      ((right x) <-- (left x))
+      (bounds 8 8 16)))
+    ((unknown-aggregate-relation)
+     (ascent
+      (relation out (value))
+      ((out n) <--
+       (aggregate n gerbil-ascent-count () (missing _)))
+      (bounds 8 8 16)))
+    ((negation-before-binding)
+     (ascent
+      (relation node (value) '((1)))
+      (relation block (value))
+      (relation out (value))
+      ((out x) <-- (not (block x)) (node x))
+      (bounds 8 8 16)))
+    ((unknown-head-relation)
+     (ascent
+      (relation node (value) '((1)))
+      ((missing x) <-- (node x))
+      (bounds 8 8 16)))
+    ((negation-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation block (value))
+      (relation out (value))
+      ((out x) <-- (node x) (not (block x x)))
+      (bounds 8 8 16)))
+    ((aggregate-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out n) <--
+       (aggregate n gerbil-ascent-count () (node _ _)))
+      (bounds 8 8 16)))
+    ((unbound-head-expression)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out (expr (missing) (+ missing 1))) <-- (node x))
+      (bounds 8 8 16)))
+    ((unbound-atom-expression)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x)
+                   (node (expr (missing) (+ missing 1))))
+      (bounds 8 8 16)))
+    ((let-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (let x (x) (+ x 1)))
+      (bounds 8 8 16)))
+    ((for-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (for x (x) (list (+ x 1))))
+      (bounds 8 8 16)))
+    ((aggregate-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x)
+       (aggregate x gerbil-ascent-count () (node _)))
+      (bounds 8 8 16)))
+    (else (error "unknown ASCENT invalid-program case" name))))
+
+(def (problem name)
+  (with-exception-catcher
+   (lambda (failure)
+     (call-with-output-string
+      (lambda (port) (display-exception failure port))))
+   (lambda ()
+     (gerbil-ascent-evaluate-program (invalid-program name))
+     #f)))
+
+(def (category name)
+  (let (message (problem name))
+    (cond
+     ((and (string? message)
+           (string-contains message
+                            "unstratifiable ASCENT negation cycle"))
+      'negation-cycle)
+     ((and (string? message)
+           (string-contains message
+                            "unstratifiable ASCENT aggregate cycle"))
+      'aggregate-cycle)
+     ((and (string? message)
+           (string-contains message
+                            "unstratifiable ASCENT lattice projection cycle"))
+      'lattice-projection-cycle)
+     ((and (string? message)
+           (or (string-contains message
+                                "ASCENT relation source field type mismatch")
+               (string-contains message
+                                "ASCENT relation field type mismatch")))
+      'field-type)
+     ((and (string? message)
+           (string-contains message "invalid ASCENT relation row"))
+      'source-row-arity)
+     ((and (string? message)
+           (string-contains message
+                            "unsafe ASCENT negation variable"))
+      'unsafe-negation)
+     ((and (string? message)
+           (or (string-contains message "unbound ASCENT head variable")
+               (string-contains message "unsafe ASCENT head variable")
+               (string-contains message
+                                "unsafe ASCENT head expression variable")))
+      'unbound-head)
+     ((and (string? message)
+           (string-contains message "unknown ASCENT relation"))
+      'unknown-relation)
+     ((and (string? message)
+           (string-contains message "ASCENT atom arity mismatch"))
+      'atom-arity)
+     ((and (string? message)
+           (string-contains message "invalid or duplicate ASCENT relation"))
+      'duplicate-relation)
+     ((and (string? message)
+           (string-contains message "unbound ASCENT clause variable"))
+      (if (eq? name 'unbound-guard) 'unbound-guard 'unbound-clause))
+     ((and (string? message)
+           (string-contains message "unbound ASCENT expression variable"))
+      'unbound-clause)
+     ((and (string? message)
+           (string-contains message "ASCENT aggregate input absent from atom"))
+      'unbound-clause)
+     ((and (string? message)
+           (or (string-contains message "ASCENT computed variable already bound")
+               (string-contains message "ASCENT aggregate variable already bound")))
+      'variable-shadowing)
+     (else (error "unexpected ASCENT invalid-program diagnostic"
+                  name message)))))
+
+(def (main . args)
+  (unless (null? args)
+    (error "ASCENT invalid-program corpus reads case names from stdin"))
+  (for-each
+   (lambda (name)
+     (display name) (display #\tab) (display (category name))
+     (newline))
+   (read))
+  (display "END\n")
+  (force-output))

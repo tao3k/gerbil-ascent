@@ -1,0 +1,61 @@
+{
+  "qualifiedBaseHead": "59c17106063f2caa250de47905c9dfaf52bd91b8",
+  "scope": "Prepared fragment-scoped read capabilities applied to exact completed solutions; retained operator consumer and ordered detached public views.",
+  "producerReference": {
+    "repository": "https://github.com/tao3k/lean-poo",
+    "revision": "247d1d6094b6af1bb873f69564b271bc978730ed",
+    "role": "Design/usage reference; no typed registry adapter or cross-language refinement claim"
+  },
+  "sources": {
+    "program/scheme-query.ss": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+    "program/scheme-admission.ss": "ac015e16d62a86d75159bd97b9f720685864c57af07eca952d742be96c9785aa",
+    "program/scheme-language.ss": "26f3343ec251127412559fe76f189956f0cb3463d21faa36ab740f2058991bbc",
+    "program/operator-session.ss": "e03ffcde8372f5aa4013fdcf5ec430e3f44a1445e51515f7fb0be1afa49c8c61",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/evaluate.ss": "6e63fd8454121c5aea83bd5e84fa1c80bdd867a3a69d8de2f59e06d8a0b16e17",
+    "program/scheme-session.ss": "72d345a54785bc4ae0ddcb53e3901f7c70b5230ea12518a8fef837d69ff45465",
+    "t/qualification/scheme-operator-retained-test.ss": "1fa1ed3bf3ca054db74ea1149b8ad98f25e28310e1a9643841dbeebabe914635",
+    "t/qualification/ascent-result-publication-test.ss": "d1ea2be4239843c8b843deae73fcb483a754f3a7baafcd97a17026888cda3ccc",
+    "build.ss": "720a976fae953276b390dac1ef547eabade0bf07c14c3c367b03ad09e6b97da4",
+    "t/harness/run.ss": "d915a4db3ff81c1fca21d7d7a2c6c33ed5a5031a7f6eafadf859cbca1f11edca"
+  },
+  "trackedSchemeSourceCount": 531,
+  "trackedSchemeSourceDigest": "2de0d70be076b3c059d0626bacb0af0c858ca4b07c903f28201ddcff174800cc",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-operator-retained-test.ss",
+      "exitCode": 0,
+      "suiteCases": 8,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "65c6f96ce0036ec61cdcf343a86e18c12fc4a0c9770e651df04b02726de39a12"
+    },
+    {
+      "command": "direnv exec . just test-native t/qualification/ascent-result-publication-test.ss",
+      "exitCode": 0,
+      "suiteCases": 5,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "614506c8d2f6eaa8052c7b38298f5ced4e184367547adf9e0691f09ff20cf723"
+    }
+  ],
+  "discriminators": [
+    "Export selection is lazy and frozen against caller checklist mutation",
+    "Completion is required before any row observation, including empty views",
+    "Ordered repeated views own independent row spines",
+    "Reader follows the supplied completed solution while earlier snapshots stay stable",
+    "Fragment-scoped handles reject independently declared same-label contexts",
+    "Failed source batch preserves committed output",
+    "Retained operator append and withdrawal preserve finite graph semantics",
+    "Existing publication cache independence and partial snapshot stability remain qualified"
+  ],
+  "performanceClaim": false,
+  "remaining": [
+    "No typed LeanPoo registry or ContextSlot bridge",
+    "No formal equivalence between native prepared reads and LeanPoo evaluation"
+  ],
+  "modelCalls": 0
+}

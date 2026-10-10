@@ -1,0 +1,281 @@
+diff --git a/build.ss b/build.ss
+index d4ae381..9dd5811 100755
+--- a/build.ss
++++ b/build.ss
+@@ -27,6 +27,7 @@
+     "program/scheme-admission"
+     "program/scheme-language"
+     "program/operator"
++    "program/finite-arithmetic"
+     "program/higher-order"
+     "program/operator-change"
+     "program/operator-session"
+diff --git a/packages/proofs/lean/CappedArithmetic.lean b/packages/proofs/lean/CappedArithmetic.lean
+new file mode 100644
+index 0000000..f4a65c4
+--- /dev/null
++++ b/packages/proofs/lean/CappedArithmetic.lean
+@@ -0,0 +1,151 @@
++/-
++SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++
++Natural budget saturation for program/finite-arithmetic.ss. Arithmetic
++preservation does not establish compiler type-bound completeness.
++-/
++import Std
++namespace Ascent
++theorem cap_mul_left (cap a b : Nat) :
++    min cap (min cap a * b) = min cap (a * b) := by
++  by_cases hb : b = 0
++  · simp [hb]
++  by_cases ha : a ≤ cap
++  · simp [Nat.min_eq_right ha]
++  · have hca : cap ≤ a := by omega
++    have hcb : cap ≤ cap * b := Nat.le_mul_of_pos_right cap (by omega)
++    have hab : cap ≤ a * b := Nat.le_trans hca (Nat.le_mul_of_pos_right a (by omega))
++    simp [Nat.min_eq_left hca, Nat.min_eq_left hcb, Nat.min_eq_left hab]
++theorem cap_mul (cap a b : Nat) :
++    min cap (min cap a * min cap b) = min cap (a * b) := by
++  rw [cap_mul_left, Nat.mul_comm a, cap_mul_left, Nat.mul_comm b]
++ def cappedPowerFrom (cap base : Nat) : Nat → Nat → Nat
++  | 0, acc => min cap acc
++  | n + 1, acc => cappedPowerFrom cap base n (min cap (acc * base))
++theorem capped_power_from_exact (cap base exponent acc : Nat) :
++    cappedPowerFrom cap base exponent acc = min cap (acc * base ^ exponent) := by
++  induction exponent generalizing acc with
++  | zero => simp [cappedPowerFrom]
++  | succ n ih =>
++    rw [cappedPowerFrom, ih, cap_mul_left, Nat.pow_succ]
++    congr 1
++    simp [Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
++theorem capped_power_inputs (cap base exponent acc : Nat) :
++    cappedPowerFrom cap (min cap base) exponent (min cap acc) =
++      cappedPowerFrom cap base exponent acc := by
++  induction exponent generalizing acc with
++  | zero => simp [cappedPowerFrom]
++  | succ n ih =>
++    rw [cappedPowerFrom, cap_mul, ih, cappedPowerFrom]
++    simp only [capped_power_from_exact, cap_mul_left]
++
++theorem capped_power_zero_cap (base exponent acc : Nat) :
++    cappedPowerFrom 0 base exponent acc = 0 := by
++  simp [capped_power_from_exact]
++
++theorem capped_power_zero_base (cap exponent acc : Nat) :
++    cappedPowerFrom cap 0 (exponent + 1) acc = 0 := by
++  simp [capped_power_from_exact]
++
++theorem capped_power_one_base (cap exponent acc : Nat) :
++    cappedPowerFrom cap 1 exponent acc = min cap acc := by
++  simp [capped_power_from_exact]
++
++theorem capped_power_stop (cap base exponent acc : Nat)
++    (positive : 0 < base) (saturated : cap ≤ acc) :
++    cappedPowerFrom cap base exponent acc = cap := by
++  rw [capped_power_from_exact]
++  exact Nat.min_eq_left (Nat.le_trans saturated
++    (Nat.le_mul_of_pos_right acc (Nat.pow_pos positive)))
++
++theorem capped_power_exact (cap base exponent : Nat) :
++    cappedPowerFrom cap (min cap base) exponent (min cap 1) =
++      min cap (base ^ exponent) := by
++  rw [capped_power_inputs, capped_power_from_exact]
++  simp
++
++theorem natural_power_grows (base exponent : Nat) (large : 2 ≤ base) :
++    exponent + 1 ≤ base ^ exponent := by
++  induction exponent with
++  | zero => simp
++  | succ n ih =>
++    rw [Nat.pow_succ]
++    have h := Nat.mul_le_mul ih large
++    omega
++
++theorem capped_exponent_exact (cap base exponent : Nat) :
++    min cap (base ^ min cap exponent) = min cap (base ^ exponent) := by
++  by_cases hc : cap = 0
++  · simp [hc]
++  by_cases he : exponent ≤ cap
++  · simp [Nat.min_eq_right he]
++  have hce : cap ≤ exponent := by omega
++  by_cases hb : base = 0
++  · simp [hb, Nat.min_eq_left hce, Nat.zero_pow (by omega : 0 < cap),
++      Nat.zero_pow (by omega : 0 < exponent)]
++  by_cases hb1 : base = 1
++  · simp [hb1]
++  have hbc : cap ≤ base ^ cap := by
++    have h := natural_power_grows base cap (by omega)
++    omega
++  have hbe : cap ≤ base ^ exponent :=
++    Nat.le_trans hbc (Nat.pow_le_pow_right (by omega) hce)
++  simp [Nat.min_eq_left hce, Nat.min_eq_left hbc, Nat.min_eq_left hbe]
++
++theorem capped_base_exact (cap base exponent : Nat) :
++    min cap ((min cap base) ^ exponent) = min cap (base ^ exponent) := by
++  have h := capped_power_exact cap base exponent
++  rw [capped_power_from_exact, cap_mul_left] at h
++  simpa using h
++
++inductive BudgetExpression where
++  | literal : Nat → BudgetExpression
++  | product : BudgetExpression → BudgetExpression → BudgetExpression
++  | power : BudgetExpression → BudgetExpression → BudgetExpression
++
++def exactBudget : BudgetExpression → Nat
++  | .literal n => n
++  | .product a b => exactBudget a * exactBudget b
++  | .power a b => exactBudget a ^ exactBudget b
++
++def cappedBudget (cap : Nat) : BudgetExpression → Nat
++  | .literal n => min cap n
++  | .product a b => min cap (cappedBudget cap a * cappedBudget cap b)
++  | .power a b => min cap (cappedBudget cap a ^ cappedBudget cap b)
++
++theorem capped_budget_exact (cap : Nat) (expression : BudgetExpression) :
++    cappedBudget cap expression = min cap (exactBudget expression) := by
++  induction expression with
++  | literal n => rfl
++  | product a b ia ib =>
++    simp only [cappedBudget, exactBudget, ia, ib, cap_mul]
++  | power a b ia ib =>
++    simp only [cappedBudget, exactBudget, ia, ib,
++      capped_base_exact, capped_exponent_exact]
++
++/-- Cardinality is the conservative all-functions bound, not a claim that
++    every mathematical function is admitted as a monotone descriptor. -/
++inductive BudgetSignature where
++  | relation : Nat → Nat → BudgetSignature
++  | arrow : BudgetSignature → BudgetSignature → BudgetSignature
++
++def cardinalityExpression : BudgetSignature → BudgetExpression
++  | .relation width atoms => .power (.literal 2) (.power (.literal atoms) (.literal width))
++  | .arrow domain codomain => .power (cardinalityExpression codomain) (cardinalityExpression domain)
++
++def heightExpression : BudgetSignature → BudgetExpression
++  | .relation width atoms => .power (.literal atoms) (.literal width)
++  | .arrow domain codomain => .product (cardinalityExpression domain) (heightExpression codomain)
++
++theorem capped_cardinality_exact (cap : Nat) (signature : BudgetSignature) :
++    cappedBudget cap (cardinalityExpression signature) =
++      min cap (exactBudget (cardinalityExpression signature)) :=
++  capped_budget_exact cap _
++
++theorem capped_height_exact (cap : Nat) (signature : BudgetSignature) :
++    cappedBudget cap (heightExpression signature) =
++      min cap (exactBudget (heightExpression signature)) :=
++  capped_budget_exact cap _
++
++end Ascent
+diff --git a/program/finite-arithmetic.ss b/program/finite-arithmetic.ss
+new file mode 100644
+index 0000000..85b91be
+--- /dev/null
++++ b/program/finite-arithmetic.ss
+@@ -0,0 +1,26 @@
++;;; -*- Gerbil -*-
++;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++
++;;; Exact natural arithmetic truncated at a caller-owned budget, not a
++;;; semantic bound. Zero caps and 0^0 are intentional parts of the contract.
++(export relational-capped-product relational-capped-power)
++
++(def (natural? value) (and (exact-integer? value) (>= value 0)))
++
++(def (relational-capped-product cap left right)
++  (unless (and (natural? cap) (natural? left) (natural? right))
++    (error "capped arithmetic requires natural numbers"))
++  (min cap (* (min cap left) (min cap right))))
++
++(def (relational-capped-power cap base exponent)
++  (unless (and (natural? cap) (natural? base) (natural? exponent))
++    (error "capped arithmetic requires natural numbers"))
++  (let (factor (min cap base))
++    (let loop ((remaining exponent) (accumulator (min cap 1)))
++      (cond ((zero? remaining) accumulator)
++            ((zero? factor) 0)
++            ((= factor 1) accumulator)
++            ((>= accumulator cap) cap)
++            (else (loop (- remaining 1)
++                        (min cap (* accumulator factor))))))))
+diff --git a/program/higher-order.ss b/program/higher-order.ss
+index 1c9ca38..fe35577 100644
+--- a/program/higher-order.ss
++++ b/program/higher-order.ss
+@@ -4,7 +4,9 @@
+ 
+ ;;; Typed higher-order descriptors normalize to the existing positive IR.
+ ;;; Builders run once during construction; admitted solves hold no callbacks.
+-(import (only-in :gerbil-ascent/program/operator
++(import (only-in :gerbil-ascent/program/finite-arithmetic
++                 relational-capped-product relational-capped-power)
++        (only-in :gerbil-ascent/program/operator
+                  relational-op-source relational-op-union relational-op-join
+                  relational-op-project relational-op-select-eq relational-op-flatmap
+                  relational-op-fix relational-op-compile)
+@@ -328,14 +330,9 @@
+     ;; function-space cardinalities can allocate enormous exact integers.
+     (def (bounded-height type)
+       (let (cap (+ expansion-limit 1))
+-        (def (power base exponent)
+-          (let loop ((base base) (exponent exponent) (result 1))
+-            (cond ((zero? exponent) result)
+-                  ((>= result cap) cap)
+-                  (else
+-                   (loop (min cap (* base base)) (quotient exponent 2)
+-                         (if (odd? exponent) (min cap (* result base)) result))))))
+-        (type-height type power (lambda (left right) (min cap (* left right))))))
++        (type-height type
++                     (lambda (base exponent) (relational-capped-power cap base exponent))
++                     (lambda (left right) (relational-capped-product cap left right)))))
+     (def (bottom-term type)
+       (case (relational-type-kind type)
+         ((relation)
+diff --git a/t/qualification/scheme-higher-order-test.ss b/t/qualification/scheme-higher-order-test.ss
+index a6acb84..0557ed7 100644
+--- a/t/qualification/scheme-higher-order-test.ss
++++ b/t/qualification/scheme-higher-order-test.ss
+@@ -1,7 +1,9 @@
+ ;;; -*- Gerbil -*-
+ ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+ ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+-(import (only-in :std/test check-equal? check-exception test-case test-suite)
++(import (only-in :gerbil-ascent/program/finite-arithmetic
++                 relational-capped-product relational-capped-power)
++        (only-in :std/test check-equal? check-exception test-case test-suite)
+         (only-in :gerbil-ascent/program/higher-order
+                  relational-relation-type relational-arrow-type relational-type=?
+                  relational-type-height-expression relational-typed-source
+@@ -267,6 +269,31 @@
+          (relational-admit (with-relations program
+                             (list (.o (:: @ relation) checked-domain: (vector 'opaque '()))))) true)
+         (check-exception (relational-finite-lattice 'l 1 '((0)) 'max '((bad))) true)))
++    (test-case "capped arithmetic equals independent exact natural calculations"
++      (for-each
++       (lambda (cap)
++         (for-each
++          (lambda (base)
++            (for-each
++             (lambda (exponent)
++               (check-equal? (relational-capped-power cap base exponent)
++                             (min cap (apply * (make-list exponent base))))
++               (check-equal? (relational-capped-product cap base exponent)
++                             (min cap (* base exponent))))
++             (iota 17)))
++          (iota 17)))
++       (iota 17)))
++    (test-case "capped arithmetic handles enormous exponents without materializing powers"
++      (let (huge (apply * (make-list 100 10)))
++        (check-equal? (relational-capped-power 0 0 0) 0)
++        (check-equal? (relational-capped-power 1 0 huge) 0)
++        (check-equal? (relational-capped-power 7 0 0) 1)
++        (check-equal? (relational-capped-power 7 1 huge) 1)
++        (check-equal? (relational-capped-power 7 2 huge) 7)
++        (check-equal? (relational-capped-product 7 huge 0) 0)
++        (check-equal? (relational-capped-product 7 huge huge) 7))
++      (check-exception (relational-capped-power 4 2 -1) true)
++      (check-exception (relational-capped-product 4 2 1.5) true))
+     (test-case "finite height arithmetic preserves empty and nullary function bottoms"
+       (for-each
+        (lambda (arity)

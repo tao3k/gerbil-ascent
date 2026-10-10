@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Provider Iteration: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Finite occurrence coverage closes duplicate-bearing source replay (2026-10-07)
+
+The duplicate replay limitation recorded at =93e81c1= came from custom lookup
+coverage, not Session source logging. Native initial source admission retains
+equal row occurrences; a derived native hash Provider naturally returns them.
+The custom witness counted unique rows and rejected the second occurrence.
+In the Session red control, pending reconstruction therefore fell back from
+34 accepted source occurrences to 32 committed rows, losing the accepted new
+row and duplicate. Same-relation and cross-relation append targets both
+exposed this result. The low-level red index control failed on a represented
+duplicate row. Both commands exited 70 on semantic checks.
+
+The private physical-entry witness now counts each admitted row occurrence
+and sums counts for projected keys. A complete returned packet must respect
+each row's occurrence cap, including overselected rows, and include every
+requested-key occurrence. Exact key coverage follows because each row is
+bounded above by its admitted count and the matching total equals their sum.
+This is a finite validation argument; no new Lean theorem is claimed.
+Witness extension updates occurrence and key counts for the new all version.
+Independent delta entries retain their own counts. Existing failed-read
+revocation, shape admission and detached candidate ownership remain active.
+The Provider contract documents occurrences explicitly instead of assuming
+unique source tuples.
+
+The [[file:../../evidence/scheme-index-occurrences-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
+Only =program/index.ss= and the contract comments in =table/provider.ss= differ
+between the source freezes. Qualification passed 85 native Cases: index 24,
+storage 23, timeout 12 and source deletion 26. Every run exited zero with
+module/harness markers and explicit =OK=; final policy passed with 17 findings
+and zero errors. An earlier concurrent policy attempt failed on its existing
+flock deadline; the serial rerun used unchanged sources and no wider timeout.
+
+The native controls retain canonical/custom duplicate enumeration parity,
+excess-repeat and missing-occurrence rejection, alias recovery, incremental
+all counts and delta isolation. Checked Session now reconstructs the duplicate
+pending cut with 34 occurrences, two copies of (0 0), the accepted new row and
+an unchanged old result. Both append targets exclude their triggering row.
+The [[file:../../research/scheme-dsl/provider-concretization.org][research follow-up]] distinguishes Provider concretization's powerset concretization from the
+finite natural-number occurrence annotation described in provenance semirings §2–3. This
+closes the preceding qualified hash-receiver replay limitation while retaining
+field stability and successful fresh replay premises. It does not implement
+recursive bag Datalog, arbitrary callback rollback or new performance claims.
+
+* Abstract Provider iteration proof ownership (2026-10-07)
+
+ProviderIteration adds complete-join tuple injection, whole-program positive
+round equivalence, least-state construction and ranked convergence. The proof
+works over an abstract database and does not require powerset representation,
+join-preserving gamma or disjoint delta. Semantic Domain/Program laws remain
+caller obligations; native procedure shape is not a proof of those laws.
+
+Lean owns abstract order, supremum, injection and rule/history equations. Quint
+owns the accumulated-head publication seam: overwriting retained answers with
+only fresh pivot output must fail ConsumerSnapshot. Scheme retained sessions
+exercise implied rows, empty frontiers, delayed producers, repeated three-body
+reads and immutable prior results for three built-in Providers.
+
+This closes the conditional merged-snapshot abstract iteration component, not
+arbitrary native callbacks, asynchronous lattice execution or universal native
+hash/key extraction. A complete lattice gives least-state existence; termination
+requires a separate parameterized finite-rank witness. See
+[[file:../../scheme-trrel-uf-design.org][the design]] and
+[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
+

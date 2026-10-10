@@ -1,0 +1,71 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/candidate/program candidate-inspect)
+        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :std/test check-equal? test-case test-suite)
+        (only-in :gerbil-ascent/t/performance/nonmembership-index/input absence-input)
+        (only-in :gerbil-ascent/candidate/nonmembership candidate-positive-nonmembership candidate-verify-positive-nonmembership positive-nonmembership-closure positive-nonmembership-status)
+        (rename-in (only-in :gerbil-ascent/t/performance/nonmembership-index/reference candidate-positive-nonmembership candidate-verify-positive-nonmembership positive-nonmembership-closure positive-nonmembership-status)
+          (candidate-positive-nonmembership old-produce) (candidate-verify-positive-nonmembership old-verify)
+          (positive-nonmembership-closure old-closure) (positive-nonmembership-status old-status)))
+(export ascent-nonmembership-index-test)
+(def ascent-nonmembership-index-test
+  (test-suite "absence relation indexing preserves independent checking"
+(test-case "static patterns preserve false literals repeated variables and fixed clauses"
+  (let* ((input (reasoning-source-snapshot 'patterns 0 '((edge 2 ((#f #f) (1 1) (1 2))))))
+         (program (candidate-inspect input
+           '(candidate (relation path 2)
+              (rule (path ?x ?x) (edge ?x ?x))
+              (rule (path ?x ?x) (edge ?x ?_))
+              (rule (path #f #f) (edge #f ?_))
+              (rule (path ?z ?z) (edge 1 ?y) (where (even? ?y)) (compute ?z (identity ?y)))
+              (query path 99 99) (limits 64 4096 4096))))
+         (a (old-produce input program 'digest 'complete [] 1000))
+         (b (candidate-positive-nonmembership input program 'digest 'complete [] 1000)))
+    (check-equal? (positive-nonmembership-closure b) (old-closure a))
+    (check-equal? (positive-nonmembership-closure b)
+      '((edge 2 ((#f #f) (1 1) (1 2))) (path 2 ((#f #f) (1 1) (2 2)))))
+    (for-each (lambda (budget)
+      (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] b budget)
+                    (old-verify input program 'digest 'complete [] a budget))) (iota 60 1))))
+    (test-case "all budgets preserve rule-instance charging and priority"
+      (let-values (((input program expected) (absence-input 4 3 2)))
+        (let ((a (old-produce input program 'digest 'complete [] 1000))
+              (b (candidate-positive-nonmembership input program 'digest 'complete [] 1000)))
+          (check-equal? (old-closure a) expected)
+          (check-equal? (positive-nonmembership-closure b) expected)
+          ;; 1 + 12 certificate rows + 12 source rows, then two rules
+          ;; each charge 3 outer + 9 inner row visits: exact work is 49.
+          (for-each (lambda (budget)
+            (let ((old (old-verify input program 'digest 'complete [] a budget))
+                  (new (candidate-verify-positive-nonmembership input program 'digest 'complete [] b budget)))
+              (check-equal? new old)
+              (check-equal? new (if (< budget 49) 'bounded 'valid)))) (iota 60 1)))))
+    (test-case "late relation identities preserve ordered detached closure"
+      (let-values (((input program expected) (absence-input 64 16 1)))
+        (let ((a (old-produce input program 'digest 'complete [] 10000))
+              (b (candidate-positive-nonmembership input program 'digest 'complete [] 10000)))
+          (check-equal? (old-status a) 'complete)
+          (check-equal? (positive-nonmembership-status b) 'complete)
+          (check-equal? (positive-nonmembership-closure b) expected)
+          (check-equal? (positive-nonmembership-closure b) (old-closure a))
+          (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] b 10000) 'valid)
+          (set-car! (car (caddar (positive-nonmembership-closure b))) 99)
+          (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] b 10000) 'invalid)
+          (check-equal? (old-closure a) expected)
+          (let (fresh (candidate-positive-nonmembership input program 'digest 'complete [] 10000))
+            (check-equal? (positive-nonmembership-closure fresh) expected)))))
+    (test-case "supersets remain valid but duplicates and missing inputs fail"
+      (let-values (((input program expected) (absence-input 3 2 1)))
+        (for-each (lambda (replacement verdict)
+          (let ((a (old-produce input program 'digest 'complete [] 1000))
+                (b (candidate-positive-nonmembership input program 'digest 'complete [] 1000)))
+            (set-car! (cddr (car (reverse (old-closure a)))) replacement)
+            (set-car! (cddr (car (reverse (positive-nonmembership-closure b)))) replacement)
+            (check-equal? (old-verify input program 'digest 'complete [] a 1000) verdict)
+            (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] b 1000) verdict)
+            ;; Shape/binding checks precede budget, semantic checks follow it.
+            (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] b 1) 'bounded)))
+          '(((0) (1) (2)) ((0) (1) (1)) ((0)) ((0) (1) (-1)))
+          '(valid invalid invalid invalid))))))

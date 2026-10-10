@@ -1,0 +1,136 @@
+#+TITLE: Guarded callback invocation qualification
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Production path and source learning
+
+Gerbil compiler =optimize-call.ss:85-129= checks parameter shape and mutable
+bindings before rewriting inline lambda applications. Its =!lambda= dispatch
+at =632-650= checks arity and local dispatch identity. These are admission
+boundaries, not a prescription to rewrite every recursive function.
+
+Our positive-rule compiler already captures the original callback and slot
+mapping, checks current procedure identity and input metadata, and falls back
+to lexical bindings when public payloads change. This change specializes the
+shared expression-plan invocation behind those existing guards. Three and four
+arguments are read in explicit order and passed directly, avoiding the transient
+=map= result and =apply=. Larger calls retain the general path. No callback is
+executed during compilation; frames and callback results are never cached.
+
+For metadata shapes above two inputs, a detached vector replaces the copied
+list spine. A forward comparison validates each current element and the complete
+shape, using =equal?= for element values. Changed, shortened, extended and
+improper inputs reject the fast path. The snapshot does not retain a borrowed
+spine. Existing zero/one/two-input semantics remain intact.
+
+* Matched native measurements
+
+=expression-reference.ss= is byte-identical to =core/expression-plan.ss= at
+=fc0bd1ec544c2618841ed899820235d8244f5a54=. Both complete modules are compiled
+and linked into the same native executable. The runner checks their native
+library paths and object files. The public ASP =make-benchmark-fixture= supplies
+the fixture and =benchmark-run/result= admits each 50-pair run.
+
+Pairs alternate baseline/candidate order, collect GC before each leg, and use
+process CPU and allocation counters. Prepared names, frames and closures are
+outside timing. Calls and metadata checks are inside timing. Every sample
+checks the result against independent arithmetic. Guarded scenarios include the
+production call-site sequence: read procedure then names from a payload vector,
+check procedure identity, check current names and execute the frame call. They
+measure the stable fast path, not a complete rule evaluation or engine solve.
+
+Relative gates were fixed before sampling: optimized scenarios require <=80%
+CPU, no additional invocation allocation and >=35 CPU wins. Controls allow
+<=105% CPU plus 20 us and <=1 KiB allocation. Absolute ASP duration admission
+is checked separately; it is not evidence of end-to-end speedup.
+
+| Scenario | CPU us old / new | Bytes old / new | Wins / 50 | Gate |
+|----------+------------------+-----------------+-----------+------|
+| call-three | 0.06323 / 0.04102 | 336 / 192 | 48 | pass |
+| call-four | 0.10767 / 0.04590 | 480.06 / 288 | 50 | pass |
+| call-general-six | 0.16235 / 0.16138 | 768.07 / 768.07 | 23 | pass |
+| guarded-three | 0.08594 / 0.05273 | 336 / 192 | 49 | pass |
+| guarded-four | 0.13379 / 0.05859 | 480.06 / 288 | 50 | pass |
+| guard-wide-128 | 0.39941 / 0.18848 | 0 / 0 | 50 | pass |
+| guard-small-two | 0.00537 / 0.00537 | 0 / 0 | 20 | pass |
+
+Stable guarded three/four-input calls reduce CPU by approximately 39% / 56% and
+save 144 / 192 bytes of transient argument lists per invocation. A variadic
+sum callback still allocates its own rest arguments in both implementations.
+Those common allocations are included. Wide metadata checks reduce CPU by
+approximately 53% without per-call allocation. These are prepared callback
+path measurements; compile time, changed-payload fallback, full solve latency
+and scheduler throughput are outside the timed scope.
+
+* Rejected experiment
+
+An initial reverse-and-tail-builder rewrite of callback sequence and positive
+plan construction was withdrawn. A 4096-action compilation comparison increased
+CPU from approximately 16.25 to 88.5 us and allocation from 327680 to 524340
+bytes, with zero CPU wins in 50 pairs. The recursive production constructors
+remain unchanged. Raw failed receipts are retained under ignored
+=.cache/ascent/callback-plan/rejected-*=. No gate was loosened to admit them.
+
+* Reproduction
+
+Use the installed project SDK; no Gerbil source rebuild is required.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.cache/ascent/sdk" GERBIL_LOADPATH="$PWD" \
+  gerbil env gxi -:max-heap=1G,debug=q t/performance/callback-plan-build.ss \
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/callback-plan/benchmark"
+
+result=0
+for scenario in call-three call-four call-general guarded-three guarded-four guard-wide guard-small; do
+  .cache/ascent/callback-plan/benchmark -:max-heap=1G,debug=q "$scenario" \
+    "$PWD/.gerbil/lib" ".cache/ascent/callback-plan/$scenario.sexp" || result=1
+done
+exit "$result"
+#+end_src
+
+Benchmarks and regression cases belong to =t/=; build logs, raw receipts and
+executables remain in ignored =.cache/ascent/callback-plan/=. Scenario and
+library configuration are explicit arguments. =build.ss= has no new test duties.
+
+* Integrated consumer qualification
+
+After preserving upstream =18c8809= (finite slot-frame checks and source-only
+index ownership), the native pool passes nine modules and 114 Cases: callback
+plans, existing expression plans, positive plans, index entries, index lifecycle,
+positive components, actor Sessions, retained operators and native integration.
+Every module has =MODULE-OK=, =HARNESS-OK= and final =OK=, with process exit zero.
+The pool selects machine core capacity through its existing =auto= option.
+
+Six new native Cases check ordered effects and failures, deep independent
+frames, detached metadata mutation and malformed shapes, value-equal metadata,
+repeated/false inputs and reentrant direct calls. Existing expression-plan
+Cases exercise changed callback procedures and borrowed payloads through the
+production fallback. Upstream slot-frame/source-index additions are retained.
+
+The earlier =fc0bd1e= Linux CI failed at AOT linkage because the index-entry
+Suite's frozen index-sharing reference was omitted from the harness build
+selection. Local benchmark artifacts masked that omission. The harness now
+selects both this reference and the callback reference for their consuming
+Suites. Before integrated qualification, both references' seven dynamic/static
+artifacts were moved out of the native library. Logs confirm compilation from
+source before Suite compilation and successful final AOT linkage. This removes
+the specific cached-baseline dependency; it is not a claim of a complete clean
+SDK build or completed remote CI.
+
+Raw integrated logs are ignored under =.cache/ascent/callback-plan/=. The
+expression-plan production function bodies match the measured version; only
+boundary comments changed after sampling. Upstream =18c8809= leaves this module
+unchanged and contributes the separately tested consumer changes.
+
+The complete native BuildSpec source-selection policy exits zero with 15
+warnings and zero errors. The pre-integration run had 13 warnings; the two
+additional warnings belong to upstream =program/index.ss= documentation after
+its new index-owner split. Existing typed-contract warnings, including the
+expression-plan owner warning, remain visible and are not waived.
+
+The subsequent concurrent =8f317af= carries the same index-reference selection
+repair. Integration retains that upstream owner and adds only the callback
+reference selection, with no duplicate index-reference entry. Production and
+regression source bytes are unchanged from the nine-module qualification.
+The final deduplicated native closure also passes the callback and index-entry
+modules, all 25 Cases, with process exit zero and all native/module/final markers.

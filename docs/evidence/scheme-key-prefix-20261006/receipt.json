@@ -1,0 +1,74 @@
+{
+  "qualifiedBaseHead": "27cd6ae47e8fb2e070deaf9aa94ec23b80be568c",
+  "scope": "Compiled index keys require the logical prior binding prefix, not merely a frame cell assigned in the current atom.",
+  "sources": {
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/planning.ss": "338a3e269dd796a3756855ff172b38814fd7ed95f487c840ad333abcb4242078",
+    "program/index.ss": "901164c861fc71625e1c4d6dd696d6c86e9f56798d57322f1f0d2a716ebef69d",
+    "program/component-plan.ss": "830988182d40ef53c55a2ce21fc80bde33caeeecd7c927af549236875500816f",
+    "program/component-worker.ss": "bd47c1f33b65d11bd57bbbdef7796bd0ab34a4eae1fc44622b164adaafb8e608",
+    "program/update-selection.ss": "68d9ebfa7ec6bbdaf8a1f416a34b6dd79d2beefbf8cb20f14d46b6e869d6445a",
+    "t/qualification/ascent-positive-plan-test.ss": "07623fa235f9d5886490001b48c73123bf4c27fcebbdce78e5046d8868634be3",
+    "t/qualification/ascent-positive-components-test.ss": "3e5269be391aa3f4ff9733dbd2ad7ec1e308a7a8926be407c0529306c59304df",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "24106fce1b9bc377cf7e0a0708d07c4a5e2923ade4e70028bafadb80d681d6f9",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-positive-plan-test.ss",
+      "exitCode": 0,
+      "suiteCases": 27,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "ea2326ed0e2876cddae3566f020a173aa8cd74f088e9f77a46879b1519f9c8fb"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-positive-components-test.ss",
+      "exitCode": 0,
+      "suiteCases": 21,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "30e7f2a70b97a51126c1981a6ae8ab1eb4b30c4af6681939d9a54bb740e5ce3b"
+    }
+  ],
+  "discriminators": [
+    "Fresh and same-atom repeated bound slots cannot become pre-match keys",
+    "Wildcards and row-local expression dependencies reject without executing expressions",
+    "Negative, out-of-range, nonexact and improper column lists return unsupported",
+    "Legal prior-bound variable, literal false, repeated-column and expression keys retain order and dirty-frame independence",
+    "Existing wide composite joins and independent binding corpus pass",
+    "Actual SCC worker closure and failure-drain Cases pass"
+  ],
+  "developmentFailure": {
+    "kind": "Old wide projection test expected fresh/wildcard keys to compile",
+    "resolution": "Retain wide literal-key and actual join controls; explicitly reject invalid full-column key metadata",
+    "qualification": "Only corrected final native runs qualify this source"
+  },
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "remaining": [
+    "Universal native descriptor-to-proof extraction",
+    "General Provider key/concretization refinement"
+  ],
+  "modelCalls": 0,
+  "rebaseIntegration": {
+    "baseHead": "4b14edb8c88083d322d66dddb58ee29544391320",
+    "changedPaths": [
+      "docs/evidence/scheme-set-frontier-20261006/receipt.json",
+      "docs/evidence/scheme-set-frontier-20261006/receipt.json.license",
+      "docs/scheme-compiler-proof-bridge.org",
+      "docs/scheme-research-proof-audit.org",
+      "packages/proofs/lean/GroundedBinding.lean",
+      "packages/proofs/lean/ProviderFrontier.lean",
+      "packages/proofs/lean/Tests/GroundedBindingTests.lean",
+      "t/qualification/ascent-set-batch-test.ss"
+    ],
+    "scope": "Only parallel proofs, documentation and unrelated Set-batch test changed. Every recorded qualified runtime and native test source hash is unchanged. Aggregate Scheme digest describes the native qualification base."
+  }
+}

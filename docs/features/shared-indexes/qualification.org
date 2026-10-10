@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Shared indexes: qualification
+
+* Evidence ownership
+
+[[file:proofs.org][Proof obligations]], [[file:compiler.org][compiler correspondence]], [[file:byods.org][BYODS interpretation]] and
+[[file:acceptance.org][acceptance boundaries]] belong to this feature. Record actual commands and
+results here. Performance measurements come from the existing
+[[file:../../../t/performance/index-sharing/benchmark.ss][benchmark implementation]] through =just performance-index-sharing=.
+Handwritten JSON copies of these qualification summaries are not maintained.
+
+* Curried collection qualification
+
+Commit =de79986f6a277ec0ad5c511aea432cf223e9adc7= qualified the tail collector,
+ordinal restoration and reusable view lifecycle on 2026-10-08:
+
+| Command | Result |
+|---------+--------|
+| just check-lean-proofs | Successful full package build, 113 jobs |
+| just check-formal | Successful positive checks and 93 expected counterexamples |
+| just test-file t/qualification/ascent-index-entry-test.ss | 26 cases; OK; exit 0; 33 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 26 cases; native marker and OK; exit 0; 5 seconds execution |
+| just performance-index-sharing | Five scenarios, 250 matched pairs, original gates passed |
+
+The [[file:../../../t/performance/index-sharing/README.org][benchmark specification]] defines the frozen reference, counters and
+predeclared gates. Generated numerical samples remain in
+[[file:../../evidence/scheme-curried-collection-20261008/wide.sexp][wide]], [[file:../../evidence/scheme-curried-collection-20261008/sparse.sexp][sparse]], [[file:../../evidence/scheme-curried-collection-20261008/small.sexp][small]], [[file:../../evidence/scheme-curried-collection-20261008/scalar.sexp][scalar]] and
+[[file:../../evidence/scheme-curried-collection-20261008/empty.sexp][empty]] S-expression outputs. This cumulative lifecycle comparison does not
+isolate the collector change or establish whole-application benefits.
+
+* Logical key adaptation qualification
+
+Commit =079919f8f2b66f151bf0d79b9d04156879d6890c= qualified six positional
+key-adaptation laws and malformed requests on 2026-10-08:
+
+| Command | Result |
+|---------+--------|
+| just check-lean-proofs | Successful full package build, 113 jobs |
+| just check-component-index-formal | 673 generated states; 196 distinct; 13 expected faults; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 27 cases; OK; exit 0; 32 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 27 cases; native marker and OK; exit 0; 5 seconds execution |
+
+The [[file:proofs.org::*Provider concretization constructed logical key adaptation (2026-10-08)][algorithm bridge]] retains coverage, native exception abstraction and
+primitive representation contracts. Production Scheme was unchanged.
+
+* Trie construction qualification
+
+The 2026-10-08 continuation adds nine laws for recursive dictionary construction,
+insertion, histories, prefix occurrence counts and fresh ordinal restoration.
+The [[file:proofs.org::*Provider concretization constructed curried trie and prefix occurrences (2026-10-08)][construction bridge]] states the functional map and inventory assumptions.
+
+| Command | Result |
+|---------+--------|
+| lake build ProviderRouting Tests.ProviderRoutingTests | Nine laws and their positive/negative examples passed; exit 0 |
+| just check-lean-proofs | Full proof package passed; exit 0 |
+| just check-component-index-formal | 673 generated states; 196 distinct; depth 11; 13 expected faults; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 28 cases; OK; exit 0; 37 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 28 cases; NATIVE-MODULES-OK and OK; parent exit 0; 8 seconds execution |
+
+Native compilation qualified layers of 85 production modules, 91 support
+modules and one test module. Execution time excludes admission, compilation
+and linking. Sparse layout fixtures cover depths one through five; proof depth
+is an arbitrary natural number. Duplicate and omitted child inventories are
+retained negative controls. No new performance samples were taken.
+
+The source commit and GitHub checks must be read from the associated PR;
+these command results do not substitute for final-commit CI. Native per-node
+hash extraction, sort primitive correspondence and application benefits remain
+separate gates. The protocol model was unchanged at that snapshot; its current Quint
+source retains lifecycle ownership.
+
+* Materialized dictionary qualification
+
+The 2026-10-08 continuation derives per-node inventories from source rows and
+permits different visitation orders at different paths. Eight new laws and
+positive/negative examples were admitted by the full Lean build.
+
+| Command | Result |
+|---------+--------|
+| lake build CurriedDictionary Tests.CurriedDictionaryTests | Eight laws and examples passed; exit 0 |
+| just check-lean-proofs | Full package passed; 115 jobs; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 29 cases; OK; exit 0; 41 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 29 cases; NATIVE-MODULES-OK and OK; parent exit 0; 9 seconds execution |
+
+Native compilation admitted 85 production, 91 support and one test module.
+The new fixture covers all prefixes of a three-column physical layout over
+49 rows with boolean, numeric, symbol, string, list and vector fields. It checks
+ordered occurrence identities, warm reuse, separately allocated duplicate
+values, incremental extension and stable held prefix results. A first source
+fixture referenced an unavailable =append-map=; that run was rejected, the
+fixture was corrected to existing list primitives, and both gates reran.
+Execution time excludes compilation/linking; no performance gain is claimed.
+
+* Quint lifecycle migration qualification
+
+=just check-component-index-formal= passed the typed Quint source and exhausted
+673 generated states, 196 distinct states and depth 11, matching the previous
+fixture. All four original safety predicates are checked together. Each of the
+thirteen mutation controls separately produced the requested invariant violation
+and expected Quint exit status. Parse/type, backend and service failures do not
+satisfy the negative-control gate. The original authored Quint/CFG pair is removed.
+
+The owner-record state factors the earlier fourteen owner-indexed functions:
+selecting a record field at an owner recovers each original function entry.
+Each of the five actions preserves the corresponding guard and field update;
+record spread preserves every unchanged field. This structural correspondence,
+matching graph counts and preserved defect controls provide migration evidence;
+counts alone are not a general equivalence theorem.
+
+The final command exited 0 in 115 seconds with an already installed tool cache.
+It includes typechecking, transcompilation, exhaustive exploration and all
+thirteen controls, and excludes dependency installation/download. One owned
+compiler service is reused across the controls and stopped by the recipe trap.
+Java 21 or newer is required by the pinned backend; CI installs Java 21.
+This is protocol qualification, not an ASCENT runtime benchmark. The other
+seventeen authored models remain visible in the feature migration inventory.

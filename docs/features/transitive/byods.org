@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Transitive: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Native union-find implementation follow-up (2026-10-05)
+
+The earlier algorithm gap is addressed by [[file:../../scheme-trrel-uf-design.org][a new Scheme SCC owner]] with
+weighted parent links, component members and reachability, exact frontier
+preflight and atomic budget rejection. [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][Its receipt]] binds actual native tests,
+Lean edge/quotient laws and finite TLA remapping/refusal controls. The earlier
+frontier receipt remains a historical snapshot. Full native refinement and
+whole-engine/application cost evidence remain open; representation counts are
+not allocator or end-to-end memory measurements.
+
+
+* Directed frontier instances follow-up (2026-10-06)
+
+The primary text was reread at sections 3.3 and 5.3-5.4. =DirectedFrontier=
+connects directional insertion to exact UF/strict public frontier laws and
+finite-history least latent closure. The strict explicit-self filter follows
+the current native contract; it is not presented as an unqualified diagonal
+transitivity theorem or attributed to the paper's abstract laws. Native
+qualification tests both preflight and direct commit under matched input
+histories, rejection/retry, SCC observation preservation and component
+bridges. See [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][the receipt]]. General representation extraction and custom lattice
+laws remain separate, and no new Scheme performance benefit is claimed.
+
+
+
+* Operational SCC refinement (2026-10-07)
+
+The UF design now connects BYODS SCC compression to maximum-size representative
+selection, retained parent chains, member migration, additive sizes and optimized
+absorbed-key deletion. Lean derives the complete-closure conditions for safe key
+cleanup; Quint explores the operational updates and four additional seeded defects;
+native Scheme audits actual storage after graph-prefix acceptance/refusal and a
+balanced ten-node merge sequence. This strengthens representation evidence, not
+a universal mutable-memory proof or a new performance claim. See
+[[file:../../scheme-trrel-uf-design.org][the UF design]] and its operational receipt for scope and remaining obligations.
+
+The primary paper was rechecked at Section 5.4 (PDF page 15): parent-based SCC
+unification must leave all stored connections pointing to current component
+identities. This is the precise motivation for =PrivateArcs=, member ownership
+and direct-parent/root correspondence in this unit. The paper distinguishes
+large SCC workloads from DAG workloads; no new asymptotic or end-to-end gain
+is inferred from the correctness checks above.
+

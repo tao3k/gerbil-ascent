@@ -1,0 +1,275 @@
+#+TITLE: Lexical expression plans across admission, execution and scheduling
+
+* Gerbil source study and production boundary
+
+Studied Gerbil =0.19.2591dcd.patchf5cedd8168cb= directly:
+- =compiler/optimize-call.ss:89-131= checks arity and mutable bindings before
+  lambda substitution, retaining bindings for ordered operand evaluation.
+- =compiler/optimize-call.ss:189-204= separately admits known-call optimization.
+- =compiler/optimize-call.ss:283-296= requires explicit effect information to
+  classify a call as free of side effects. Optimized call representation alone
+  does not establish purity.
+- =compiler/optimize-spec.ss:406-435= collects receiver method/slot references
+  before substitution. Identity and lexical context guard the analysis.
+
+The production change covers the entire expression plan lifecycle:
+1. =core/positive-plan.ss= assigns lexical slots in admitted body order, lowers
+   callback input names once and retains ordered head/index expression calls.
+2. =core/expression-plan.ss= prepares zero/one/two-input direct calls and the
+   existing variadic apply convention. Consecutive guard/binding actions become
+   one ordered continuation segment, split at atom boundaries with ordered structural recursion and values.
+3. =program/evaluate.ss= executes those plans with engine-owned frames. Calls
+   occur at the same lookup/match/guard/binding/head points, without result reuse.
+4. =program/component-plan.ss= and the actor round gate inspect a separate pure
+   flag. Compiled callbacks stay serial even when workers are requested.
+5. =program/update-selection.ss= preserves that flag while projecting heads.
+   Cached analyses own immutable actions; activations own mutable frames.
+
+Patterns, generators, aggregates and negation retain their general interpreter.
+An unsupported clause keeps the whole rule on that interpreter. Invalid input
+names are not silently assigned fresh slots. Guard Boolean checks, exceptions,
+field/storage admission, budgets and original delta depth remain authoritative.
+
+* Comparator and public benchmark
+
+Baseline =5e2305b1f8310b38561c40829382ec8c8d337fc2= supplies the complete
+=core/positive-plan.ss= and =program/{analysis,planning,evaluate}.ss= sources.
+The four frozen modules change import references only, selecting the baseline
+planner/executor and independent analysis caches; engine logic is unchanged.
+Both legs share unchanged source/storage/index/binding contracts.
+
+=benchmark.ss= is generated through public ASP =make-benchmark-fixture= with
+sampleCount explicitly set to 50 (the API default is 20). The native executable
+uses =benchmark-run/result= with 50 alternating paired samples. GC precedes each
+leg. Both analysis caches are warmed separately; every timed sample then creates
+a fresh engine, admits source rows and computes the complete fixed point.
+This qualifies warm-analysis full solving, not cold expression compilation.
+
+Outside timing, every relation's ordered rows and completion status agree, and
+an independent closed arithmetic formula checks the final relation. A binding
+scope of n computes the stage recurrence =(n+1)*x+n+1=. Index module resolution
+and benchmark imports are qualified against the native library before sampling.
+CPU and allocated bytes are native process-counter deltas. Outer ASP wall/heap
+observations are diagnostic, not an application latency claim.
+
+All expression scenarios retain a fixed <=80% baseline CPU gate, <=baseline+8192
+allocation gate and >=35 CPU wins. Pure/small controls permit <=105% CPU+20 us
+and <=baseline+4096 bytes. Long-scope scenarios were added after the short-scope
+CPU gate failed, to check the identified scope-size cost; the original gates
+were retained, and the overall recipe remains unsuccessful if any gate fails.
+=just performance-expression-plan= runs all six scenarios and propagates failure.
+
+* Experiments and boundaries
+
+The first short-scope attempt reduced allocation 45% but did not improve CPU.
+It used the factory default 20 samples, despite a progress label of /50; that
+receipt is retained as a negative experiment and is not a 50-pair qualification.
+An explicit 50-sample rerun of callback segments also failed the original 20%
+CPU gate. Prepared tuple matchers/builders did not establish that improvement
+and were withdrawn, retaining the simpler existing tuple traversal.
+
+Final native medians (50 alternating pairs in every row):
+
+| Scenario | Rows | Stages | Scope | CPU us old/new | Bytes old/new | Wins | Fixed gate |
+|----------+------+--------+-------+----------------+---------------+------+------------|
+| deep | 512 | 4 | 24 | 2881 / 1627 | 5601456 / 774352 | 50 | pass |
+| scope | 1024 | 1 | 48 | 3822 / 1311 | 5264352 / 510016 | 50 | pass |
+| chain | 512 | 8 | 2 | 1675 / 1629 | 2632464 / 1452368 | 48 | fail CPU |
+| wide | 2048 | 2 | 2 | 1852 / 1794 | 2842224 / 1662512 | 43 | fail CPU |
+| pure | 512 | 8 | no callbacks | 1315 / 1316 | 1452112 / 1452112 | 28 | pass |
+| small | 2 | 1 | 2 | 7 / 7 | 13440 / 12864 | 20 | pass |
+
+Long scopes reduced median CPU 44%/66% and allocation 86%/90%. Short scopes
+reduced CPU 3%/3% and allocation 45%/42%, but failed their unchanged 20% CPU
+gates. The overall command returned nonzero (recipe exit 1, enclosing Gerbil
+process exit 70); it is not an overall performance gate pass. Pure and small
+controls passed; neither establishes a speed improvement. Raw logs, rejected experiments,
+receipts, generated native objects and executables remain only under ignored
+=.cache/ascent/expression-plan/=. No performance gate is reported as passing
+merely because allocation improves or correctness tests pass.
+
+* Semantic qualification
+
+The native expression suite compares complete solves against the frozen engine
+and independently checks arithmetic over empty, singleton and larger sources,
+multiple stages and binding scopes up to 48. It covers false values, repeated
+and zero/variadic callback inputs, nested solves, retained source replacement,
+exact callback traces and thread identity with workers 1/2/4, type errors and
+fact-budget errors. It checks that compiled effectful plans are not pure plans.
+
+Existing positive plan, SCC, runtime bindings, mixed binding program and table
+expression suites cover slot freshness/backtracking, ordered physical keys,
+custom provider effects, update head selection, concurrent frame ownership and
+finite graph execution. SCC comparator normalization compares its original
+three execution fields explicitly; the added purity field has separate checks.
+
+The final six native modules passed all 66 Cases, each with explicit
+=MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0. Comparator sources were
+checked against their baseline: imports are the only differences. Selected
+production source policy completed with zero errors and one existing warning:
+=GERBIL-SCHEME-AGENT-POLICY-041= flags the unchanged forward =list-tail= cursor
+in =project-slot-terms=. That loop advances its cursor and does not restart at
+the list root; this patch did not alter it or suppress the policy finding.
+
+* Complete qualification follow-up
+
+Full-pool qualification found two remaining integration boundaries. Actor
+Session creation also used plan existence as its pure-rule admission check;
+it now uses the same independent purity predicate as SCC and actor rounds.
+The selected-activation synthetic metadata fixture now constructs the four-field
+private plan and compares original execution fields explicitly with its frozen
+three-field projector. The real actor callback-rejection Case passes.
+
+The preceding GitHub run =37420839719= failed with heap overflow while compiling
+the generated combined entry, before Case execution. Native entry compilation
+now runs in =t/native/compile-entry.ss= in a fresh Scheme process with the same
+=-:max-heap=1G,debug=q= bound. Library-make expander/optimizer contexts remain in
+the parent. Child output is forwarded, compiler errors propagate, and both child
+and parent check the generated source digest. The old executable is removed
+before compilation and the pending compiler/link jobs are drained before use.
+
+The complete =t/native/qualification.ss test 2 all= command passed all 82 modules and 708
+Cases with process exit 0 and explicit =MODULE-OK=, =HARNESS-OK= and final =OK=
+for every module. This used two parallel module processes and the existing
+exclusive lane. It confirms the complete generated entry can compile and run
+under the retained heap bound. This is local evidence; GitHub must independently
+qualify the exact pushed revision.
+
+The local =test auto all= run admitted 12 processes and hit the unchanged 5s
+progress watchdog during simultaneous initialization of the combined entry.
+That negative result remains in ignored cache; the default automatic capacity,
+startup/idle deadlines and native Case ordering were not changed. The two-process
+full pass does not establish that automatic 12-process startup is qualified.
+Actor Session source policy has no errors and retains its existing repeated
+match-branch warning (policy 014); the source was not rewritten to suppress it.
+
+* Guard public callback mutation
+
+Gerbil's lambda substitution checks mutable bindings before replacing reads.
+Our public expression payload vectors and clause input lists are borrowed and
+mutable, so compiling their initial values unconditionally is not equivalent
+to interpretation. Each compiled call now checks the current procedure and
+input tuple against its prepared values. Mutation uses the original runtime
+binding protocol with a snapshot of the lexical names visible at that point.
+Index-key evaluation snapshots the scope before row matching; row expressions
+can see earlier terms in that row. Frames and callback results remain private
+and uncached. The medians above include these guards (=guarded-benchmark.log=),
+including the failed short-scope gates; guard cost is not excluded from timing.
+
+The mutation suite passed 11 native Cases, including procedure/input replacement,
+borrowed clause-list mutation and a 64-row indexed lookup whose changed inputs
+must not observe row-local slots. Each is checked against the complete frozen
+interpreter, with explicit unbound-variable and false-value controls. Selected
+Core policy has zero errors; it also reports policy 013 on the new input guard's
+compact signature comment, alongside the existing cursor warning 041.
+
+GitHub run 37427304589 for c3bc505 still failed before Cases: its library-make
+worker overflowed the unchanged 1 GiB heap. The fresh entry compiler addresses
+entry phase ownership only; it does not qualify cold full library compilation
+on GitHub. Local module passes must not be reported as remote acceptance.
+
+After adding mutation guards and integrating the concurrent remote changes, the
+complete native =test 2 all= rerun passed 82 modules and 713 Cases. It returned
+exit 0 with 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers. The receipt
+is =.cache/ascent/expression-plan/guarded-full-native-tests.log=. This supersedes
+the earlier local 708-Case count for the final guarded production sources.
+
+Concurrent commit 67da108 separates production, reference/fixture and Suite
+library compilation into fresh processes under the same heap limit. Its GitHub
+run 37429219617 completed the first two layers but still overflowed in the
+Suite layer before Cases. This integration narrows the remaining cold-build
+resource boundary; it does not establish remote qualification. The final local
+integration rerun is retained in =rebased-guarded-full-native-tests.log=.
+The rebased local integration rerun also returned exit 0 with all 82 modules and
+713 Cases, plus 82 of each required module/harness/final success marker. The
+production expression sources and frozen expression comparator were unchanged
+by integration; the remote-only changes preserve compiler phase ownership and
+purity metadata in earlier update benchmark adapters.
+
+Concurrent follow-up 5a75020 releases Suite compiler state per consumer instead
+of retaining all Suite contexts. Integration leaves the guarded Core sources
+byte-identical. The final expression Suite passed all 11 Cases through this
+boundary with exit 0 and all required success markers; its receipt is
+=final-consumer-native-tests.log=. The two full 713-Case passes precede this
+consumer-boundary follow-up. Its complete Linux CI qualification remains open.
+
+* Shared lexical scope lowering
+
+The next complete compiler change uses private persistent lexical scope tails.
+The first actual callback consumer materializes the slot map once. Later
+bindings prepend pairs; captured scopes retain their old tails and shadowed
+slot identity. A row expression and an index-key expression retain their own
+original visibility boundaries. Pure rules do not materialize fallback scopes.
+
+=scope-reference.ss= is the complete positive-plan source at
+=91d42d459f9fe6ac2e6bf9b64b1d64a2a938bba3=, with only its two relative imports
+qualified. The expression and binding dependencies are unchanged. Native checks
+reverse those rewrites and require byte equality with Git. The public ASP
+=make-benchmark-fixture= generates =scope-benchmark.ss=; =benchmark-run/result=
+owns 50 alternating pairs. Admitted rule preparation is outside timing. Each
+leg compiles the entire rule afresh; outside timing both plans execute on
+independent source tuples and must agree with arithmetic truth, slot counts
+and effect flags. This measures whole-rule lowering only, not full analysis,
+engine admission, cold solve or warm solve.
+
+Long-scope gates were fixed before sampling: CPU <=80% baseline, allocation
+<=baseline and >=35/50 CPU wins. Small and pure controls retain <=105% CPU plus
+20 us and <=4 KiB allocation overhead. No gate was widened after measurement.
+
+Final lazy-scope native medians (50 pairs per row):
+
+| Scenario | Shape | CPU us old/new | Bytes old/new | Wins | Gate |
+|----------+-------+----------------+---------------+------+------|
+| lower-deep | 128 bindings | 87 / 18 | 930224 / 114896 | 50 | pass |
+| lower-scope | 256 bindings | 283 / 29 | 3419224 / 215928 | 50 | pass |
+| lower-small | 2 bindings | 3 / 2 | 7424 / 6560 | 20 | pass |
+| lower-pure | unary pure rule | 1 / 1 | 3872 / 3824 | 22 | pass |
+| lower-pure-wide | 256-column pure rule | 18 / 20 | 71192 / 71144 | 9 | pass |
+
+Long scopes reduce lowering CPU about 79%/90% and allocation about 88%/94%.
+The pure-wide control establishes its bounded overhead gate, not a speed gain.
+An initial eager scope experiment passed the long-scope gates but allocated
+48 extra bytes for the unary pure control. It was replaced by consumer-driven
+materialization; both logs remain in ignored cache. The intermediate full pool
+was stopped before completion to apply that correction and is not a pass.
+
+The unchanged warm-solve comparisons against 5e2305b still pass long-scope,
+pure and small controls; short chain/wide CPU gates still fail. The combined
+=just performance-expression-plan= command therefore still returns nonzero.
+The five lowering gates above passing does not turn it into an overall pass.
+Raw final data is =.cache/ascent/expression-plan/lazy-shared-scope-benchmark.log=.
+
+The final expression Suite passed 13 native Cases, with exit 0 and explicit
+module/harness/final success markers. New controls cover legal scope extension,
+borrowed input-name changes, changed head inputs and false values. A prior
+binding callback changed to read its own later output must raise the same
+unbound-clause-variable error after one successful row; a stale frame slot must
+not make that name visible. This distinguishes a retained lexical tail from a
+mutable reference to the compiler's latest scope.
+
+An earlier new Case attempted to shadow an already-bound variable through the
+standard binding constructor. Admission correctly rejects that shape before
+Core lowering; the failed full pool is retained and is not an acceptance pass.
+The corrected controls use the supported public API and compare complete solves
+with the frozen general interpreter. The focused receipt is
+=.cache/ascent/expression-plan/shared-scope-boundary-tests.log=.
+Source policy has zero errors and retains the existing cursor warning 041.
+
+Final complete native =test 2 all= qualification passed 82 modules and 715
+Cases, with exit 0, 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers.
+The receipt is =.cache/ascent/expression-plan/final-shared-scope-full-native-tests.log=.
+This includes the corrected 13-Case expression Suite and actor, SCC, update,
+proof and typed-expression integration. It uses explicit local concurrency 2;
+it does not establish automatic 12-process startup or exact-head GitHub CI.
+
+After integrating concurrent commit 59c1710 (native PO operator compiler
+composition), seven affected native modules passed 118 Cases with exit 0 and
+seven of each required module/harness/final success marker. This covers the
+expression Suite, typed-domain, higher-order, operator, retained operator,
+native reduction and model closure. Core lowering and both benchmark contracts,
+comparators and runner were byte-identical to the full 715-Case pass. The
+integration receipt is =integrated-scope-operator-native-tests.log=.
+
+GitHub run 37431877416 for the preceding baseline 91d42d4 completed successfully
+in all Scheme, formal and oracle jobs. That closes its earlier remote compiler
+qualification boundary; it does not qualify this new scope-lowering revision.

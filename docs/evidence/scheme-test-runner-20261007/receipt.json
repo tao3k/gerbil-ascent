@@ -1,0 +1,177 @@
+{
+  "date": "2026-10-07",
+  "parent_commit": "c7d77de4b3906f6bfffc0aaecdafc810dda176fd",
+  "sources": {
+    ".github/workflows/ci.yml": "f014ef6b53101ad7c04aa7c7de67367e3f103ff96daf6bb4017de0143c3c4241",
+    "docs/coding-style/admission-and-evidence.org": "20e398e99a811a671ce1eb99112898aa3be003e24137e30d30cd4d04f28b2222",
+    "docs/coding-style/build-and-test.org": "560cd75ec82132362749e06e0f0abef77da6af51b05fc447d8624a1f2b9637f3",
+    "docs/coding-style/planning-and-graphs.org": "1f323a9420670b158cd6a70e9c12bf301e87ee2c2043ff95b2e380cfc1a61780",
+    "docs/scheme-actor-runtime-design.org": "8bfc7196c16c8e3541d6732d0fa3fba8753cba8a57cae4c2a44d85691a294788",
+    "docs/scheme-design-framework.org": "184565faafc4e4e2b6f1d2a25b7cea9a62ff6b4047f74d4d62294a6464391c21",
+    "docs/test-execution.org": "824bafb864392825a52068c2ac9c8d876b65e8386c0b1103825698afa164ba71",
+    "docs/test-module-scheduling.org": "ead09134dc1f9272abde52b5f52bc6dc82197b681e922fc8aec4ac687cc87a92",
+    "justfile": "0310e9a4b081d35c2ef69be50760c4a8e689435726f10efc128f0ce311cfd87a",
+    "python/README.org": "44033a4b050ce8499f1698194b8e35d34e743e67f124dabb8d936ba2a0b4227b",
+    "python/src/ascent_test_support/model_study.py": "1748acf55049fbe3790d7288726992b049f81f6e49c9a3cc107effdcb4484fd9",
+    "t/performance/actor-admission-build.ss": "7358beb60e525b502fbfb14a3578cff0b8c80b418aa90a7384e9f8f5a63eb847",
+    "t/performance/callback-plan-build.ss": "f0a5a1243e2a4487ca1d26b65b99f86c8f2fd297fa07c0601448e6d5de7f19a4",
+    "t/performance/component-workspace-build.ss": "168048936a20c18c56cb2cde7d40d12e88fab07a303cf523a6830d2937575ffd",
+    "t/performance/expression-plan-build.ss": "31a4e46c9d393d8dbcd1d1e81edd7f160233087045b25ada9834a0af7125e8a9",
+    "t/performance/expression-plan/README.org": "788af7f3fed4b2c914801b869cbab827d996eca89867520d4aaac60934d082ab",
+    "t/performance/index-projection-build.ss": "aaa36e8f0d276d86d9c3b06bed0dde1f9b0c16518d111f6826ecf0f9dcb9b43e",
+    "t/performance/index-sharing-build.ss": "7f7e0d36e5e4bff47366c43c017fa32b37cd653848163eb5e8be6f8fa7884e00",
+    "t/performance/nonmembership-index-build.ss": "8e978ef08775b14886dfa356e8627e535317060ff81c3170f463e0fcaf2bd02c",
+    "t/performance/operator-scope-build.ss": "1a6f7f530313ed690f80359f82543bb6ff6d62848373615c31f1bd54afbbb7e4",
+    "t/performance/proof-replay-build.ss": "411a3bc166d25effbadb761e0f46258976f9a770986665adf52a4840bad27668",
+    "t/performance/provenance-maintenance-build.ss": "f0ef39c75f21113ef7083b96eef836a48b9a44878a42b3f4d43a9acc5dd3a94f",
+    "t/performance/slot-projection-build.ss": "1e89c87f79fd8815e97f0bd90c83776256b1129d91f6acd006b51340cabe1ad4",
+    "t/performance/stratified-model-build.ss": "f72cf4d2f84b5e21c7201077820dd63890e049f800130da48175b1cb4474e947",
+    "t/performance/temporal-projection-build.ss": "2e5dbc8c54ed4fe90a1aeb5c2d202a233265a6e69362b12c2ff943fdad6b4254",
+    "t/performance/typed-domain-build.ss": "cd2d115a06294ebbc6273ce7bfee60148d7a239c423cb16c1cfd35dd1023972e",
+    "t/performance/uf-commit-build.ss": "c74b35521414088048ffa34ec29a8da064b4e73cb127ec15d0bd7c122a885ea6",
+    "t/qualification/scheme-artifact-test.ss": "1c15580e7ae979b3bb53b6518fff7189b39349b78366f569cffcc41b132d87d0",
+    "t/qualification/scheme-model-closure-test.ss": "c4446fab86746c5629747da6a3e266c1998c6c0a9aa5c525b296def01c90ea64",
+    "t/runner/entry-cache-test.ss": "3c810d4157fb315168ca891ba32535cef592c5fe0c933e31be2e8ec2b6161040",
+    "t/runner/entry-cache.ss": "444cceabc46e55d8f11e92a1d784a77d7750271853675ee21386d444d1dab742"
+  },
+  "naming": {
+    "removed_directory": "t/harness",
+    "runner_directory": "t/runner",
+    "model_directory": "t/model",
+    "roles": {
+      "main.ss": "command dispatch and compilation scheduling",
+      "native-registry.ss": "frozen Suite binding registry",
+      "compile-entry.ss": "entry compiler worker",
+      "artifact-admission.ss": "source and executable content admission",
+      "module-process.ss": "process verdict receipts",
+      "response-projection.ss": "inert model response projection"
+    },
+    "upstream_names_retained": [
+      "TestHarness",
+      "HARNESS-OK"
+    ],
+    "historical_evidence_rewritten": false
+  },
+  "cache": {
+    "test_results_cached": false,
+    "artifact_limit": "last executable per entry mode (single module or pool)",
+    "reuse_requires": [
+      "requested registry key",
+      "generated source digest",
+      "repository source digests",
+      "compiled library content digests",
+      "selected environment",
+      "compiler executable identities",
+      "executable digest"
+    ],
+    "focused_hit_skips": [
+      "three library compiler/check processes",
+      "entry compilation and link"
+    ],
+    "miss_checks": "repository sources, compiled source/interfaces and toolchain remain unchanged; compiler-created object and optimizer outputs are bound after success",
+    "lane_owner": "existing repository lane lock",
+    "heap_bound_changed": false,
+    "deadlines_changed": false
+  },
+  "qualification": {
+    "cache_admission_cases": 1,
+    "artifact_binding_cases": 7,
+    "native_lifecycle_cases": 2,
+    "native_lifecycle_negative_controls": {
+      "setup": 42,
+      "case": 42,
+      "cleanup": 42,
+      "empty": 1
+    },
+    "model_projection_cases": 27,
+    "actor_pool_cases": 8,
+    "pool_registry_controls": {
+      "missing": 70,
+      "unknown": 70,
+      "extra": 70
+    },
+    "python_tests": 21,
+    "policy_findings": 26,
+    "policy_errors": 0,
+    "dsl_binary_sha256": "ca917ecc8f95f612c9cd7a78107d6cee36056d628800a5fa246a92f65cb89695",
+    "dsl_compiler_exit": 0
+  },
+  "negative_observations": [
+    "prototype source inventory rejected unstaged deleted paths during directory migration",
+    "prototype input check incorrectly included generated entry intermediate files",
+    "prototype input check rejected compiler-created dependency objects; separate source/interface freeze and final object binding corrected this",
+    "prototype optional argument edit failed module syntax reading; corrected before final qualification",
+    "standalone actor pool fixture invocation rejected registry arguments; qualified with its required pool entry",
+    "macOS Bash 3 empty-array argument forwarding failed after native pool success; positional parameter forwarding corrected and all three controls passed",
+    "sandboxed Python CPU progress probes were denied ps access; unsandboxed 21-test run passed"
+  ],
+  "performance_scope": "repeated focused test invocation on one host; cold setup and host contention vary; not whole-suite or CI speedup qualification",
+  "acceptance": {
+    "source_and_verdict_admission_preserved": true,
+    "library_and_entry_reuse": true,
+    "named_responsibilities_migrated": true,
+    "all_project_performance_closed": false,
+    "whole_byods_paper_implemented": false,
+    "mrr_integration": false,
+    "new_model_calls": 0
+  },
+  "performance": {
+    "command": "just test-file t/qualification/ascent-finite-flow-test.ss",
+    "baseline": {
+      "wall_seconds": 103.81,
+      "user_seconds": 25.15,
+      "system_seconds": 5.73,
+      "cases": 6,
+      "final_ok": true,
+      "entry_compiler_processes": 1,
+      "library_check_processes": 3
+    },
+    "delivery_cold": {
+      "wall_seconds": 169.47,
+      "user_seconds": 32.76,
+      "system_seconds": 16.04,
+      "cases": 6,
+      "final_ok": true,
+      "entry_compiler_processes": 1,
+      "library_check_processes": 3
+    },
+    "delivery_warm": [
+      {
+        "wall_seconds": 29.36,
+        "user_seconds": 7.02,
+        "system_seconds": 4.6,
+        "cases": 6,
+        "final_ok": true,
+        "entry_compiler_processes": 0,
+        "library_check_processes": 0
+      },
+      {
+        "wall_seconds": 40.76,
+        "user_seconds": 7.09,
+        "system_seconds": 4.35,
+        "cases": 6,
+        "final_ok": true,
+        "entry_compiler_processes": 0,
+        "library_check_processes": 0
+      }
+    ],
+    "intermediate_observations": {
+      "cold_seconds": 315.36,
+      "warm_seconds": [
+        158.47,
+        67.58,
+        48.83,
+        89.22
+      ],
+      "scope": "development stages; not final-code samples"
+    },
+    "baseline_samples": 1,
+    "final_warm_samples": 2,
+    "stable_or_whole_suite_speedup_claim": false,
+    "common_semantic_sources": {
+      "t/qualification/ascent-finite-flow-test.ss": "4682b21fad72be34593353c32d7852b143d3f1ebd3f7af29c8904cc940e79aed",
+      "core/finite-flow.ss": "055d808c06e10ff473eee2fb57229e633123db955b07b72475752cfe1a70bc30",
+      "applications/polonius-paths.ss": "2e4ba7e804e875a66491540046f54fe48c00590938c3803101b36f1c074031c3"
+    }
+  }
+}

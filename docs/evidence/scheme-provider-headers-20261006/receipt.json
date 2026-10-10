@@ -1,0 +1,101 @@
+{
+  "qualifiedBaseHead": "ad60085875b0b007bb96ce590c8dcebd0f01698c",
+  "scope": "Custom build/extend column and lookup key headers are receiver-owned copies, preserving admitted metadata and original coverage key.",
+  "sources": {
+    "table/access.ss": "7d39828036c38153e1d0be8458e7000da2277c2e1101df351738bd660e91fca8",
+    "table/provider.ss": "c9b80a8c04c1219daff01569519c4c0b56a7ea3a1de3022f496aad74d8ea88ae",
+    "program/index.ss": "d2b800005fda618b75319756730d0ef367e7b40cc562aa657f4251bbe9f428cd",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-byods-index-test.ss": "84aeea6bef410d9e33bdbaac4cedf6bb3e2a9594d2fa53d522093d7335bd112d",
+    "t/qualification/ascent-index-entry-test.ss": "c94b6eda0667a5508758bcdf82cb19452e086df30a908ce316a1938fef398167",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "3b0cdb58cfe88cbcc41e268f4e27a729c9843ff5eabbb5ad481b205dd826c76c",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 6,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "e4f4418f7765fca95bc517d21b3d83db8e82206be4897402f5517e6300137824"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 21,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "bbec202ddd66f09dc6d0f94c5e5e8ef2aeed122e3dd322c3cbe0a8916f860f42"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "ad60085875b0b007bb96ce590c8dcebd0f01698c",
+    "productionAccessSha256": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "testSourceSha256": "84aeea6bef410d9e33bdbaac4cedf6bb3e2a9594d2fa53d522093d7335bd112d",
+    "exitCode": 70,
+    "observedPublishedRows": [
+      []
+    ],
+    "expected": "ASCENT index provider omitted matching rows",
+    "logSha256": "8b4ca305914601e5320978e2600e7d88efea427c0b4e765d6ec6e0131e04f4fb",
+    "qualification": "Rejected: native check failure and nonzero exit despite MODULE-OK and HARNESS-OK markers."
+  },
+  "discriminators": [
+    "A mutated represented lookup key cannot certify false absence through a stratified negative rule",
+    "The same failed Session recovers when the receiver returns complete matching rows",
+    "Build and extend header mutation cannot change admitted columns or cache keys",
+    "Retained callback arguments remain isolated after return",
+    "All/delta aliases, append, failure recovery, ordered key expressions and independent solve parity pass"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 4 and Figure 1, PDF pages 11-12; index_get shared key reference",
+    "transfer": "Scheme open dispatch needs explicit header ownership so native coverage checks retain the evaluated key.",
+    "boundary": "Header isolation only; rows, nested values and arbitrary callback purity remain existing semantic premises."
+  },
+  "cost": "Custom calls copy headers in O(selected key width); canonical trusted paths remain direct.",
+  "remaining": [
+    "Mutable row spines and nested-value stability",
+    "Callback purity and general storage Provider concretization",
+    "Universal native-to-proof extraction"
+  ],
+  "developmentFailures": [
+    {
+      "kind": "Initial red-run build stopped before module execution to correct extra closing parenthesis in new discriminator",
+      "logSha256": "0ab88551823cfbbc71e82c1b5d4c38d221f8da03866d37d671dc1325389dc138",
+      "qualification": "Not used as the semantic counterexample or final qualification"
+    }
+  ],
+  "modelCalls": 0,
+  "rebaseIntegration": {
+    "baseHead": "4ac16d4dbc3e133a7760da63a23254e036ce3074",
+    "changedPaths": [
+      "docs/evidence/scheme-directed-frontier-20261006/receipt.json",
+      "docs/evidence/scheme-directed-frontier-20261006/receipt.json.license",
+      "docs/research/scheme-dsl/byods-b23.org",
+      "docs/scheme-compiler-proof-bridge.org",
+      "docs/scheme-paper-closure.org",
+      "docs/scheme-research-proof-audit.org",
+      "packages/proofs/lean/AscentProof.lean",
+      "packages/proofs/lean/DirectedFrontier.lean",
+      "packages/proofs/lean/Tests/DirectedFrontierTests.lean",
+      "packages/proofs/lean/lakefile.lean",
+      "t/qualification/ascent-byods-invariants-test.ss"
+    ],
+    "scope": "Parallel directed-frontier proofs, documentation and unrelated BYODS invariant test only. Every qualified runtime/test/harness source hash must remain unchanged after rebase. Aggregate digest describes the qualification base."
+  }
+}

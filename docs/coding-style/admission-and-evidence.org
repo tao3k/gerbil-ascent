@@ -1,0 +1,811 @@
+#+title: Scheme Coding Style: Admission and evidence
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Study: private ordered storage batch admission
+
+Gerbil =2591dcd=, =std/list/list-builder.ss:8-22=, appends through an owned
+head/tail queue. Its documentation at =25-32= warns that exposing a peek
+before construction ends exposes subsequent mutations. Provider preflight
+has a suitable lifetime: no partial accepted list escapes before the whole
+batch has passed its ordered row checks and fact-budget check.
+
+=program/admission.ss= now owns =gerbil-ascent-prepare-storage-batch=.
+It validates every row, including duplicates and existing rows, in provider
+order. It retains the first new row object and returns fresh forward list
+headers plus the private deduplication table's cardinality. Gerbil's
+=runtime/hash.ss:564-566= reads that stored count directly. Empty/singleton
+expansions require no private deduplication table; their count is 0 or 1.
+Existing membership, provider list headers and row objects remain unchanged.
+=program/evaluate.ss= owns the later membership, source-count, all/delta,
+index, size and version publication. The two all/delta header sequences remain
+separate after appending; custom providers can observe their identity.
+The private standard builder replaces cons/reverse copying, not persistent
+source logs or published solver frontiers.
+
+The frozen full engine is =program/evaluate.ss= at
+=fcb9ed1117cf597b7acdcc2c9b5895cd1bffb1c3=, with only relative imports
+made absolute. The isolated baseline exposes that revision's preflight slice
+through explicit membership/count arguments. =just performance-storage-batch=
+compiles both sides natively and checks exact module resolution. Each scenario
+uses 50 alternating pairs; initial collection and warm semantic checks are
+outside timing, natural collections remain inside. The batch gate requires
+at least 3800 bytes saved for 256 accepted rows, with CPU overhead at most
+5% + 20 microseconds. Small/empty controls allow at most 512 extra bytes and
+the same CPU bound. These gates are fixed before sampling.
+
+All seven gates passed on the final implementation:
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Preflight, 256 scalar rows | 40.328 | 39.297 | 43763.25 | 31523.25 | 36/50 |
+| Preflight, 256 eight-field rows | 157.703 | 156.562 | 43763.25 | 31523.25 | 33/50 |
+| Preflight, 512 rows / 256 unique | 65.000 | 63.766 | 43763.25 | 31523.25 | 38/50 |
+| Complete engine create/run/append/run, 256 rows | 138.000 | 135.300 | 302740.8 | 290612.8 | 34/50 |
+| Singleton preflight control | 0.094 | 0.078 | 227.25 | 227.25 | 31/50 |
+| Empty preflight control | 0.031 | 0.031 | 131.25 | 179.25 | 30/50 |
+| Complete singleton engine control | 76.200 | 75.900 | 216612.8 | 216724.8 | 21/50 |
+
+The qualified improvement is allocation: preflight saves 12240 bytes (28.0%)
+for 256 accepted rows; the complete engine update saves 12128 bytes (4.0%).
+The small CPU differences are nonregression evidence, not a qualified speedup.
+Empty preflight adds 48 bytes and the complete singleton control adds 112
+bytes. The earlier explicit-counter implementation's duplicate scenario was
+1.6% slower; its receipts remain available rather than being discarded.
+The engine scenario includes native construction, initial run, provider
+expansion, admission, publication and the final run. It does not time the
+public retained wrapper's recovery or arbitrary rule solving.
+Logs and raw pairs remain in ignored =.cache/ascent/storage-batch/=.
+
+After integrating the remote bitmap proof and source-withdrawal tests, the
+existing native actor pool passed six modules / 43 Cases with =jobs=12=.
+Module execution took 1-7 seconds with real Case/withdrawal progress. The new
+Suite includes 1944 independent finite duplicate traces, first-row identity,
+ordered checker/budget failures, provider header identity, complete updates
+and retained recovery. Selected production policy found zero findings/errors.
+The production and frozen benchmark files retained identical hashes across
+integration. No additional environment controls or build entry logic was added.
+
+* Study: ordered finite replay with private row indexes
+
+The installed Gerbil =2591dcd= compiler's =optimize-base.ss:24-29= owns
+lookup tables in an =optimizer-info= record. Its =compile.ss:1446-1469=
+collects generated items with cons and reverses its private accumulator.
+These are separate choices for lookup and ordered publication.
+
+The native =std/list/list-builder.ss:8-22= instead appends through a shared
+tail; its documentation at =25-32= explicitly says that peek returns the
+shared queue that later puts mutate. This is suitable for its builder
+contract. Finite replay needs a different contract: a rule keeps the rows
+visible at the start of each relation traversal while its bindings derive
+later rows. A mutable-tail builder would change that frontier and its work
+budget even when the final set happens to be equal.
+
+=candidate/finite-evidence.ss= now keeps one private =replay-relation= record
+per schema entry:
+
+| State | Owner and purpose |
+|-------+-------------------|
+| Arity | The inspected schema, unchanged in the published closure |
+| Present | Structural membership table keyed by replay-owned row copies |
+| Reversed | Private cons accumulator in reverse insertion order |
+| Frontier | Ordered list captured by callers; its spine is never mutated |
+| Dirty | New rows require rebuilding the next requested frontier |
+
+Insertion checks membership before copying or incrementing the derived-row
+count. It copies a new row once, then indexes and accumulates that owned
+copy. A rows request reverses the accumulator only when dirty; subsequent
+reads reuse the published frontier until another insertion. Old frontiers
+remain unchanged while recursive bindings run. Final closure publication
+uses schema order and first-insertion row order, never hash iteration order.
+Unlike the compiler's finished accumulator, this accumulator is still used
+after a frontier is published, so publication uses nonmutating =reverse=,
+not =reverse!=. Frontier cells are fresh; their row values remain replay-owned.
+Generator detachment and the independently verified closure boundary retain
+their existing roles. Relation lookup remains the small inspected schema
+association list; this change targets repeated row scans and append copying.
+
+=candidate/funs.ss= also replaces repeated bidirectional =member= scans in
+=candidate-same-row-set?=. It first retains the old proper-list length check,
+then returns directly for ordered equality. Otherwise two private structural
+indexes compare distinct support counts and left membership in right. Equal
+support sizes and inclusion establish both directions. This deliberately
+retains the old length-and-support semantics: =((0) (0) (1))= and
+=((0) (1) (1))= compare true. It does not introduce multiset comparison.
+
+The new native Suite checks all 14,641 pairs of row lists of length zero
+through four over three rows against a separate bit-support oracle. It also
+covers scalar kinds, duplicate seeds and exact replay order, recursively
+growing frontiers, derived-row exhaustion and detached verified closures.
+The recursive fixture binds seed, one and the upper bound through source
+relations, following the inspected grammar's source-only facts,
+derived-only rule heads and bound-variable-only fixed operands. At size n
+its retained p frontier lengths are 1 through n. Each round probes the seed;
+each p row probes p/one/bound, computes and checks the limit. The independent
+exact work count is =n+5*n*(n+1)/2=. One less must be bounded, which detects a live-tail traversal
+that might still produce the same final row set with a different work count.
+
+=just performance-finite-replay= compiles current and frozen reference
+modules into one native prefix and checks resolution plus =.o1= existence.
+The =306aa91= reference keeps =candidate/funs.ss= byte-for-byte and changes
+only the finite-evidence import to use that frozen helper. Snapshot checking,
+datum traversal, candidate inspection and other dependencies are shared.
+Inputs, inspected programs, model answers and verifier certificates are
+prepared outside timing. Each generator call must produce the independent
+expected ordered closure; each verifier call must return valid. These model
+answers are independent fixtures, not timed native-solver outputs.
+
+Each scenario uses 50 alternating pairs with ten calls per sample, initial
+GC and natural collections during sampling. Fixed gates require 20% lower
+median CPU and allocation plus 35/50 CPU wins for wide and duplicate-support
+workloads. Small and constant-support controls admit at most 8 KiB allocation
+and 20 microseconds CPU setup increase. Gates were fixed before timing and
+all eight passed. Process statistics report allocation and CPU per call;
+startup, compilation, wall time and complete native solving are separate.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Wide generate, 256 distinct source rows | 3076.6 | 446.7 | 3587036.8 | 554764.8 | 50/50 |
+| Wide verify | 4543.6 | 445.3 | 3537468.8 | 505004.8 | 50/50 |
+| Duplicate generate, 256 source rows / 64 supports | 499.3 | 290.8 | 414084.8 | 253748.8 | 49/50 |
+| Duplicate verify | 597.3 | 247.0 | 401380.8 | 240852.8 | 49/50 |
+| Small generate, 2 supports | 14.1 | 15.2 | 29556.8 | 31860.8 | 3/50 |
+| Small verify | 14.2 | 15.1 | 28756.8 | 30868.8 | 9/50 |
+| Constant generate, 64 source rows / 1 support | 45.5 | 49.4 | 65268.8 | 67572.8 | 4/50 |
+| Constant verify | 46.5 | 50.5 | 64660.8 | 66772.8 | 8/50 |
+
+Wide generation improves median CPU by 85.5% and allocation by 84.5%; wide
+verification improves CPU by 90.2% and allocation by 85.7%. Duplicate-support
+generation/verification improve CPU by 41.8%/58.6%. The controls expose fixed
+index setup and lookup overhead; no universal small-input benefit is claimed.
+
+The first benchmark launch was rejected before sampling: its input limit was
+64 for a 256-row snapshot. The fixture now declares the existing allowed
+1024-row input budget; no timing gate or execution deadline changed.
+Logs stay in ignored =.cache/ascent/finite-replay/=. The selected production
+policy for both modified owners completes with zero findings and zero errors.
+The first qualification launch passed support and detachment Cases but
+rejected two fixture programs for putting candidate facts in derived
+relations. The corrected programs use source facts and derived rule heads;
+the failed transcript is retained alongside the corrected qualification.
+
+Native qualification passes all 20 Cases with native resolution, explicit
+Case/Suite/Module/Harness/final =OK= markers and successful process exits:
+
+| Suite | Cases | Execution seconds, excluding compilation |
+|-------+-------+------------------------------------------|
+| =scheme-finite-replay-test.ss= | 4 | 1 |
+| =ascent-finite-evidence-test.ss= | 9 | 6 |
+| =scheme-stratified-provenance-test.ss= | 7 | 2 |
+
+The consumer Suites independently enumerate 64 reachability graphs and
+64 grounded-alternative graphs, including negation, empty reducer groups,
+strict cycles, resource exhaustion and mutated evidence. These are semantic
+checks; their execution durations are not a matched A/B performance claim.
+All eight performance scenarios pass 400 alternating pairs; both frozen
+reference files were compared against the original revision/import rewrite.
+
+* Study: bounded datum cursors and private return frames
+
+The installed Gerbil =2591dcd= runtime's =table.ss:141-152= walks the owned
+table with an index cursor instead of allocating a task for each key/value.
+The compiler's =compile.ss:1446-1469= builds and reverses its own accumulator
+without mutating incoming syntax. These examples distinguish traversal state
+from input state; they do not prescribe a particular tree-walk algorithm.
+The compiler's =optimize-base.ss:24-29= names owned state with an
+=optimizer-info= record. The guard likewise uses a private =datum-frame=
+record instead of exposing numbered event-vector slots. As in
+=optimize-base.ss:572-573=, =using (frame :- datum-frame)= projects slots
+directly after the constructor and private ownership establish the record
+type. The specialization covers only return records; caller-owned data keeps
+its explicit type, cycle, depth and budget checks.
+
+=candidate/datum.ss= owns the inert pair-tree guard used by snapshot admission,
+candidate parsing and proof checking. It accepts integers, booleans, symbols,
+characters and null, rejects executable/mutable opaque leaves, and checks
+cycles using the current path rather than a global visited set. Shared acyclic
+subtrees consume their occurrence budgets again when revisited.
+
+The guard previously allocated three event vectors and three list cells per
+pair. Single-branch chains now use budgeted cursors and double-speed cursors
+for cycle rejection, without per-pair frames or active-table entries. These
+are scalar-car/cdr spines and car chains with null cdrs. On reaching a branch,
+the guard activates the already charged prefix once, then continues
+depth-first traversal with private return records. Each record
+holds the input pair, its original depth and whether the cdr is being visited.
+The input remains read only. Scalar children are charged directly.
+
+A completed single-branch scan cannot contain an active ancestor: that
+ancestor's pending branch either makes the chain cyclic or forces a branch
+fallback before completion. Fallback checks each prefix pair's active identity
+before entering the branch. Prefix activation is bounded by the number of
+pairs just scanned; it does not traverse their subtrees again. This applies
+to both cdr spines and unary car chains. A unary step charges its pair and null
+cdr before the car, retaining the same occurrence total and Boolean verdict;
+pair depth is checked at every step. No unbounded =list?= preflight or repeated
+suffix replay is involved.
+
+The work budget still counts every entered pair and leaf, including null.
+Unwinding a completed pair does not consume a node. Pair depth increases only
+through car edges; cdr edges retain their original depth, and leaves have no
+pair-depth constraint. The active identity entry stays true until both
+branches finish, then becomes false. No frame, table or input pointer escapes
+the Boolean result, and early rejection discards only private state.
+
+The independent structural oracle in =scheme-bounded-datum-test.ss= enumerates
+147 scalar/pair terms against 18 node budgets and five pair-depth limits:
+13,230 combinations, each checked against the original and current guard.
+Additional Cases cover admitted scalar leaves, exact shared-subtree budgets,
+car/cdr cycles, mixed-prefix ancestor cycles, exact late-fallback budgets,
+arbitrary-precision budgets, input identity preservation, 4096-element/deep
+structures and procedure rejection without invocation. Parser-owned candidate descriptions
+and the complete provenance/deletion Suite provide consumer checks.
+
+=just performance-bounded-datum= compiles both guards and both verifier
+variants into one native prefix. Arguments select the scenario and library;
+no new environment switch controls traversal. The original =b622b50= guard
+is frozen byte-for-byte under =t/performance/bounded-datum/reference.ss=.
+The verifier reference copies that revision's =provenance-graph.ss= with only
+its datum import redirected. Both variants share the same current witness
+replay and other dependencies. Its A/B measures the complete verifier call
+while isolating its direct guard calls; it is not a before/after measurement
+of the entire historical dependency graph or complete solving.
+
+Every scenario has 50 alternating pairs and ten calls per sample. Kernel
+fixtures cover flat, shared, deep and rejected data, plus four-element and
+late-mixed-prefix controls. The latter must remain linear when specialization
+falls back near the tail. Guards must match independent expected verdicts. The verifier uses
+equivalent 192-edge certificates, checks exact witness/alternative parity
+before timing, and must accept both variants on every pair. Initial GC precedes
+warm-up; natural collection remains in the measured batches. Compilation,
+startup and fixture/certificate construction are outside timing. Native
+resolution and =.o1= files are asserted before measuring.
+
+Predeclared large-kernel gates require 30% less allocation, 10% lower median
+CPU and 35/50 CPU wins; the small control requires nonincreasing allocation
+and permits at most 10% CPU regression. Complete verification requires at
+least 5% less allocation and at most 5% CPU regression. No wall-clock or peak
+memory improvement is inferred from =##process-statistics= samples.
+
+The selected ASP policy additionally flags generic arithmetic in the bounded
+cursor loop. The node/depth budgets retain the existing integer domain,
+including rejection at nonpositive node budgets and negative pair-depth
+limits. No unchecked fixnum arithmetic is substituted: an arbitrary-precision
+budget must not overflow or silently change the old verdict. This is an
+advisory performance finding, not an absent input validation gate.
+
+The first implementation delegated every leaf to =visit/resume=. Its flat
+fixture allocated =1609156.8 -> 691540.8= bytes but median CPU was
+=894.1 -> 825.2= microseconds with 33/50 wins. It failed the original CPU
+gates and the remaining scenarios did not run. Fusing leaf visits reached
+=1021.5 -> 910.1= microseconds but only 34/50 wins, also failing. The scalar
+spine/vector-frame version passed flat and shared fixtures, but deep nesting
+reached only =145.9 -> 141.6= microseconds with 30/50 wins, failing the same
+gate. Ordinary checked record access likewise failed the deep CPU gate
+=(70.9 -> 70.7 microseconds, 29/50 wins)=. Typed projection alone failed too
+=(65.9 -> 73.2 microseconds, 27/50 wins)=; no speedup is attributed to it.
+These failures motivate specializing both single-branch shapes rather than
+allocating return state for every nested pair. They are not successful
+qualification receipts.
+Raw transcripts and the rejected implementation stay in ignored
+=.cache/ascent/bounded-datum/=.
+
+The final single-branch implementation passed the unchanged gates in all
+seven scenarios (350 alternating pairs). Each row reports median process CPU
+microseconds and allocated bytes per call, not startup or wall time:
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Flat 4096 | 761.0 | 12.3 | 1609156.8 | 2788.8 | 50/50 |
+| Shared 64 x 64 | 214.7 | 19.1 | 1414244.8 | 19300.8 | 49/50 |
+| Deep 512 | 61.1 | 2.6 | 210428.8 | 2788.8 | 50/50 |
+| Rejected tail | 795.5 | 13.0 | 1609156.8 | 2788.8 | 50/50 |
+| Late mixed control | 481.8 | 505.9 | 847676.8 | 420908.8 | 22/50 |
+| Small control | 0.6 | 0.4 | 4244.8 | 2788.8 | 47/50 |
+| Complete verifier | 1202.7 | 1001.3 | 1903369.6 | 1158316.8 | 39/50 |
+
+Complete verification improves median CPU by 16.7% and allocation by 39.1%
+within the direct-guard comparison boundary above. Late mixed input allocates
+50.3% less but consumes 5.0% more median CPU; no universal traversal speedup
+is claimed. Typed projection alone remains a rejected performance hypothesis.
+
+Native qualification passes 18 Cases through the existing =std/test= entry:
+
+| Suite | Cases | Execution seconds, excluding compilation |
+|-------+-------+------------------------------------------|
+| =scheme-bounded-datum-test.ss= | 6 | 2 |
+| =ascent-candidate-description-test.ss= | 5 | 3 |
+| =scheme-provenance-graph-test.ss= | 7 | 68 |
+
+The final Suite includes 64 graphs, 192 withdrawals and 72 budget/cap
+combinations; these are conformance counts, not end-to-end speedup evidence.
+Every run has explicit Case, Suite, Module, Harness and final =OK= markers,
+native module resolution, and successful process exit. Existing execution
+deadlines remain intact; graph/withdrawal progress is real work output.
+The selected production policy completes with zero errors and the single
+generic-arithmetic advisory explained above.
+
+* Study: private indexes for ordered complete provenance
+
+The installed Gerbil =2591dcd= compiler's =optimize-base.ss:334-343=
+keeps a class's method table with the class that owns it. At
+=435-453=, type/class declarations populate private lookup tables rather
+than rediscovering metadata from output lists. The useful pattern is an
+explicit owner and a lookup representation chosen for its queries.
+
+In =candidate/provenance-graph.ss=, the completed witness is immutable input
+to a single enumeration call. That call now owns three temporary indexes:
+
+| Index | Equality and purpose | Ordered evidence |
+|-------+----------------------+------------------|
+| Relation/row to first node | Structural equality, matching the former row lookup | Witness node identities remain unchanged |
+| Relation to nodes | Symbol identity; bucket spine is private | Buckets are reversed once into witness order |
+| Seen alternatives | Structural equality of the entire edge | Accepted edges still accumulate in a list |
+
+The third index replaces repeated =member= scans. A private counter replaces
+repeated =length= scans without changing the cap: a duplicate edge consumes
+no capacity; the first distinct edge beyond the limit returns =bounded= with
+no alternatives. Source labels retain their occurrence positions, including
+duplicate source rows. Rule occurrence positions and input-node order also
+retain their original meaning. Hash iteration never determines wire output.
+
+Relation buckets replace repeated full-witness filtering during grounding.
+They retain node order, so body-row probes and fixed-clause evaluations hit
+the same work budget at the same position. No index escapes into a certificate
+or retained maintenance object. Verification and opening maintenance benefit
+through their existing reconstruction call; withdrawal publication and its
+work accounting remain separate responsibilities.
+
+The original =8b926e2= implementation is frozen byte-for-byte at
+=t/performance/provenance-index/reference.ss=. Native A/B runs through
+=just performance-provenance-index=, with explicit scenario and library
+arguments. Both modules must resolve to the same native prefix and have
+compiled =.o1= files. Each scenario performs 50 alternating pairs with exact
+status, witness and ordered-alternative comparisons outside the timers,
+plus an independent alternative-count assertion.
+
+The timed boundary is the complete =candidate-positive-provenance= call,
+including closed-absence witness replay and index construction. Snapshot and
+candidate construction, process startup, verification, opening maintenance,
+and subsequent withdrawals are excluded. Private indexes have a fixed
+memory cost; the small graph is a diagnostic control, not a speedup claim.
+Before sampling, larger scenarios require at least 10% median CPU improvement,
+35/50 CPU wins and no more than 50% additional allocation. CPU and allocation
+are measured with =##process-statistics=; wall-clock is not a qualification.
+
+The original Scheme Suite adds exact reference comparisons to all 64 graphs
+and checks every successive source withdrawal against a separate matrix
+closure and a fresh native relational solve. A separate 72-combination
+budget/cap Case includes duplicate =#f= rows, characters and unrelated relations;
+it also asserts the independent source-label sequence and exact 13-edge cap.
+Generated transcripts stay under ignored =.cache/ascent/provenance-index/=.
+
+Local native A/B on 2026-10-05 completed all three scenarios, with exact
+parity on all 150 pairs and process exit 0:
+
+| Scenario | Old bytes | New bytes | Old CPU us | New CPU us | CPU wins |
+|----------+-----------+-----------+------------+------------+----------|
+| One source row | 18880 | 23712 | 8 | 10 | 11/50 |
+| 256 distinct source rows | 4407272 | 4562968 | 16162 | 6155 | 49/50 |
+| 256 identical source rows | 436528 | 471824 | 1039 | 320 | 50/50 |
+
+For distinct rows, median CPU falls 61.9% with 3.5% more allocation; for
+identical rows, it falls 69.2% with 8.1% more allocation. The tiny graph pays
+2 microseconds and 4832 bytes of fixed overhead. These results qualify
+complete provenance generation for these workloads, not full solving,
+certificate verification, retained-update latency or peak memory. They do
+not claim an allocation reduction. No adaptive cutoff or environment switch
+was added to hide the small-graph result. The selected production policy
+completed with =findings=0 errors=0=.
+
+The first semantic run rejected the new fixture before enumeration because
+Reasoning Snapshot's scalar domain excludes strings. The six existing Cases,
+including all 64 graphs and 192 successive withdrawals, completed, but the
+invocation exited 70 and is retained as a failure. The fixture now uses
+admitted characters; the domain and test deadlines were not widened.
+
+The corrected native AOT invocation exited 0 with all seven =CASE-OK=
+markers, 64 complete-graph markers, 192 withdrawal markers, final =OK= and
+the outer source/executable consistency check. The module reported =PASS=
+at 83 seconds under its original 120-second deadline. The new 72-combination
+Case passed with the independently asserted exact cap and label sequence.
+The reference target is also registered in the existing test owner's selected
+native build list, so a clean test prefix need not run the benchmark first.
+This last declarative target registration is separate from the local AOT
+receipt; clean-prefix integration is checked by the exact commit's CI.
+
+* Feature: finite selection and admission
+
+=program/operator.ss= lowers =select-eq= into a singleton source relation
+plus an equality join. A direct literal term in the body and head was
+tried locally. It removed one relation and allowed a smaller source
+budget, and it passed the finite selection and operator qualifications.
+A paired native probe then compared the original declaration order and
+source handles with the literal version, under equal budgets and with
+independent expected-row checks. At 64 and 256 source rows, most
+alternating admission-plus-solve samples for the literal version were
+much slower, despite noisy host timing. The experiment was reverted;
+the singleton join remains the implementation. Do not infer a runtime
+gain from the smaller rule shape.
+
+=program/scheme-admission.ss= used to copy Core relation rows before
+calling =relational-source=, which checks and copies them again. The
+snapshot now delegates that single copy to =relational-source=. A
+mutable Core input-row test changes the caller's list after admission
+and confirms the admitted result stays unchanged. Retained replacement
+and append paths had the same duplicate =relational-source= validation
+after =relational-copy-rows= had already checked scalar values, arity,
+and copied the row lists. They now send that checked copy directly to
+the native session. Append uses the existing single-row validator and
+copier directly, without building a temporary one-element list.
+Existing replacement rollback and isolation cases,
+plus a new append isolation and non-scalar case, protect the contract.
+These are fewer copies at the boundaries; their runtime benefit still
+needs a matched measurement rather than an inference from shorter
+source.
+
+The reproducible boundary probe is =just admission-copy-benchmark=. It
+runs the old and new operations in one Gerbil process, checks equal
+rows and independent list spines after every sample, warms both paths,
+and alternates their order for eight pairs per case. Bulk admission
+and replacement use 512 two-column rows, 20 repetitions per timed
+sample; single-row append uses 1000 repetitions. Timing starts inside
+the loaded process, so Gerbil startup is excluded. This measures row
+copy and validation work only; it does not measure a complete retained
+solve, rollback, or application latency.
+
+Two consecutive local runs of =GERBIL_PATH=/private/tmp/ascent-v0121-gerbil
+just admission-copy-benchmark= each completed all three cases, six
+warm-ups, 48 alternating timed samples, final =OK=, and exit 0. Times
+below are median microseconds for one timed sample. Each case has eight
+old/new pairs; "new wins" counts pairs where the new sample was faster.
+
+| run | boundary    | rows x repeats | old median us | new median us | new wins |
+|-----+-------------+----------------+---------------+---------------+----------|
+|   1 | admission   | 512 x 20       |        280082 |        236348 | 4/8      |
+|   1 | replacement | 512 x 20       |        218451 |         61335 | 7/8      |
+|   1 | append      | 1 x 1000       |       6309096 |           760 | 8/8      |
+|   2 | admission   | 512 x 20       |        261153 |        133609 | 6/8      |
+|   2 | replacement | 512 x 20       |        191588 |          4591 | 7/8      |
+|   2 | append      | 1 x 1000       |       4121766 |           366 | 8/8      |
+
+The admission pair counts are inconclusive under host timing noise.
+Replacement and append consistently favor the single-copy boundary.
+These results establish local copy/validation cost, not an end-to-end
+speedup for a retained solve. A broader runtime performance claim
+requires a matched complete workload on an uncontended machine.
+
+* Study: owned finite mapping construction and canonical receivers
+
+The installed Gerbil =2591dcd= compiler's
+=compile.ss:1446-1469= constructs a private accumulator in
+=generate-meta-define-values%= and uses =reverse!= on that accumulator,
+while the incoming syntax stays untouched. =base.ss:147-174= returns
+already interned runtime identifiers directly and only constructs/caches
+identifiers when the admitted binding shape requires it. These are ownership
+and representation decisions, rather than a blanket preference for mutation
+or another wrapper around every value.
+
+Applying that distinction to =program/scheme-checked.ss= removes two
+redundant ownership copies along the finite mapping path. The input row is
+checked without making an intermediate copy: =append= itself copies its
+spine. The output row is checked while making a fresh copy, and becomes the
+private tail of the combined row. =relational-finite-view= then gives these
+fresh rows to a private source constructor without copying them again.
+The ordinary public =relational-source= still copies caller-owned rows.
+Shape admission remains before scalar checks, and the closed scalar
+predicate has no user callbacks. A failed copy can allocate private temporary
+pairs but never returns them or mutates the original row.
+
+The same admitted-identity idea applies to =program/types.ss=. The exact
+hash Index Provider and set Storage Provider are already validated by their
+own module initializers (=table/provider.ss:53= and =table/storage.ss:112=).
+Their relation-slot predicates now accept those exact objects directly.
+Derived and custom objects still run the original full receiver contract.
+There is no mutable admission cache, callback suppression for custom receivers,
+or new exported constructor that lets callers claim ownership.
+
+A live =gxi= probe confirms that imported exported bindings can be reassigned.
+Comparing against the mutable exported default is therefore not a stable
+admission fact. Provider modules now retain the originally validated object
+privately and export a pure canonical-identity predicate. Relation contracts,
+physical indexing, evaluator Set shortcuts, session append admission and
+reuse selection use that predicate. Existing exported defaults retain their
+constructor role. A dedicated native Case rebinds both defaults to false,
+checks rejection of false receivers, and extends/queries an existing physical
+index through its retained original receiver; it restores both bindings in
+the finally clause. Derived and custom objects still have distinct identities.
+
+=t/qualification/scheme-finite-mapping-test.ss= compares all input/output
+width pairs from zero through four, duplicate order, shared input/output
+aliases, caller mutations, invalid signatures, malformed/cyclic lists,
+scalar rejection and receiver admission against the old boundaries.
+=just performance-finite-mapping= builds both frozen and current implementations
+as native modules and checks their resolution paths. The frozen copy, finite
+row, source and view definitions come from =541d5b5=; a Scheme-reader audit
+checks all five forms against that source revision. Scenario and library
+paths are explicit =main= arguments, and logs remain in ignored =.cache=.
+
+Each construction scenario uses 128 entries, widths one or eight, ten calls
+per sample and 100 alternating old/new pairs. Ordered row parity is checked
+outside every timed interval. Gates are at least 20% lower allocation,
+10% lower median CPU cost and 75/100 CPU wins for the optimized cases;
+the ordinary source control requires equal allocation and at most 5% CPU
+regression. Wall time is diagnostic from the start. The canonical receiver
+scenario compares the two original slot predicates with the current ones
+through the same public =element?= protocol.
+
+The complete-view reference freezes the original Core contracts and four
+constructor/helper definitions as well as the checked functions. Otherwise
+sharing modified Core constructors would hide the admission change in both
+variants. The ordinary-source control deliberately shares current Core to
+check the unchanged public ownership boundary; receiver cost is also measured
+separately through frozen slot predicates. Native compilation includes these
+reference modules explicitly, rather than leaving one side interpreted.
+No complete solve, rollback, tail-latency or application speedup follows
+from these construction measurements.
+
+The first non-fused copy attempt fails its narrow-row CPU gate (74/100 wins,
+about 4% lower median CPU despite 25% less allocation). Fusing scalar checks
+with output copying passes the row kernels but the original complete-view
+trial fails: allocation drops only 8.3%, CPU drops about 9.7%, and only
+55/100 CPU pairs improve. These failures remain recorded; gates are unchanged.
+The subsequent shared-Core probe still fails the view gate after canonical
+admission changes (12.5% less allocation, 7.8% lower CPU, 60/100 wins).
+It isolates the copy change under faster common admission; it does not
+measure the complete before/after batch. Its negative result remains separate
+from the corrected frozen-Core comparison.
+
+The corrected native comparison completes five scenarios, all 100 pairs,
+with final OK and coordinator exit 0. Per-call medians are:
+
+| Boundary          | Bytes old/new       | CPU us old/new | CPU wins |
+|-------------------+---------------------+----------------+----------|
+| Narrow row graph  | 24651.2 / 18507.2   | 9.7 / 8.5      |   90/100 |
+| Wide row graph    | 153675.2 / 104523.2 | 27.5 / 23.0    |   90/100 |
+| Full finite view  | 1854907.2 / 1073979.2 | 733.0 / 472.5 |  81/100 |
+| Source copy control | 479499.2 / 479499.2 | 177.7 / 176.1 | 53/100 |
+| Canonical receiver slots | 387659.2 / 74027.2 | 141.8 / 26.9 | 99/100 |
+
+Full view construction allocates 42.1% less and has 35.5% lower median
+CPU cost after privately retaining canonical identities. The source control
+has 0.9% lower median CPU cost and identical allocation, within its original
+5% limit. The isolated receiver check shows why
+the complete path needed Core admission as well as fewer copies. These
+measurements use one collector before warmup and natural GC during batches;
+they include constructor contracts and exclude module startup and solving.
+
+The final native module qualification passes 67 Cases across finite mapping
+(7), higher order (33), native integration (1), index program (9), index
+lifecycle (5), and timeout/session restoration (12). Every module and the
+coordinator exit 0 under the existing deadlines. The nine changed production
+modules pass the Scheme policy scan with zero findings and zero errors.
+The batch is rebased over =8bc844c=; its incoming changes do not alter these
+production modules. The test harness registers the finite-mapping Suite and
+all three frozen reference modules for ordinary native execution and static
+linkage. Test registration remains in =t/native/=.
+
+The static artifact is built and source-verified, then both registered Suites
+pass in AOT execution (7 finite-mapping Cases and 5 index-lifecycle Cases),
+with final MODULE-OK, HARNESS-OK and OK. Initial AOT attempts expose a missing
+default-prefix dependency and a stale isolated-SDK =clan/poo/table.o= whose
+symbol names disagree with its current =table.ssi=. Recompiling that dependency
+inside the ignored SDK cache repairs the link; no workaround import is added
+to production. Failed attempts and the successful build/run receipts remain
+under ignored =.cache/ascent/finite-mapping/=. These are local qualification
+results; current-head GitHub CI is a separate gate.
+
+* Feature: execution and evidence
+
+The stateful engine is in =program/evaluate.ss=; =program/analysis.ss=
+owns immutable declaration caches. A change that crosses this boundary
+needs retained-session source replacement, cache invalidation,
+provider dispatch, and stale-receipt tests together.
+
+For each code change, record the old and new invariant, the exact
+v0.19 source operation used, a qualifying example including edge
+cases, and the smallest relevant =just test-file= result. A complete
+slice also needs =just test=, =just check-policy=, and =just build=.
+The =justfile= harness requires =MODULE-OK=, =HARNESS-OK=, final =OK=,
+and no error or overflow markers. For a performance claim, compare
+matched runs from =just small-graph-benchmark= and the existing
+scenario recipes, including timing spread and semantic equivalence.
+
+The current code-review reference is PR #1, branch =feature/ascent-scheme-syntax=.
+The published
+small-graph receipts in =docs/small-graph-benchmark.org= include earlier
+source states; rerun the exact head for performance comparisons. They
+cover one positive-closure workload and do not establish general
+Datalog speed.
+
+* Study: certificate boundaries with explicit shared owners
+
+The installed Gerbil =2591dcd= sources provide several concrete style lessons:
+
+| Upstream source | Technique | ASCENT application |
+|-----------------+-----------+--------------------|
+| =compiler/optimize-xform.ss:18-39= | Shared traversal dispatch with a dedicated mutation handler | Separate certificate material helpers from each verifier's proof semantics |
+| =compiler/optimize-xform.ss:117-164= | Small reference/set handlers preserve their own matching and publication rules | Retain exact-replay and inductive-nonmembership checks as distinct algorithms |
+| =compiler/base.ss:80-93= | Equality is selected from identifier semantics: bound-identifier comparison or symbol identity | Certificate row uniqueness retains structural equality, not symbol/object identity |
+| =std/struct/dag.ss:35-54= | Tables and visiting state belong to one traversal; cleanup is explicit | Allocate a fresh membership table for each uniqueness check |
+
+The two certificate modules repeated material caps, bounded list traversal,
+row uniqueness and program serialization. Their shared details had multiple
+owners, while their meaningful differences were implicit in long helper bodies.
+This is a responsibility and protocol-maintenance issue even without a timing
+regression.
+
+=candidate/certificate-limits.ss= now owns the original relation/row/cell/arity
+caps and bounded spine/structural uniqueness helpers. Bounded traversal remains
+an explicit =do= loop: an eager fold or a complete =length= followed by a cap
+check cannot terminate an adversarial cyclic spine at the required boundary.
+Each verifier retains its schema/groundness checks and their original ordering;
+there is no extra whole-certificate validation pass.
+
+=candidate/program-identity.ss= owns the ordered projection of relation, fact,
+rule, query and limit fields, followed by byte serialization and hashing.
+A named three-field entry projection removes repeated anonymous field reads.
+It does not serialize an entire vector, sort declarations or normalize rows.
+Two explicit fingerprint functions preserve the historical untagged finite
+format and =positive-program-v1= positive format. Query source labels remain
+excluded, while fact/rule labels remain included.
+
+The public certificate records and verifier entry points retain their fields
+and contracts. Exact finite replay, inductive nonmembership, stratified proof
+checking and production evaluation keep their distinct semantic roles. The
+build entry only declares the two new library modules; regression Cases stay
+in native Unit Tests.
+
+The boundary Unit Test has independent fixed SHA-256 goldens for both wire
+formats, checks projected-field changes and intentionally unprojected query
+labels, covers finite length/cap combinations, and rejects improper/cyclic
+spines and structurally repeated rows. Consumer qualification covers finite
+evidence, positive nonmembership and stratified proof checks. No runtime
+speedup is claimed.
+
+** Local verification
+
+Against source baseline =f6ff037=, the boundary module passes four native Cases,
+finite evidence nine, positive nonmembership eight, and stratified proof
+checking twelve, for 33 Cases in total. All four module processes exit 0 with
+their original timeouts and proof/work budgets. The boundary tests cover
+4356 finite length/cap combinations and both fixed historical fingerprint
+goldens. Schema and size validator forms remain unchanged.
+
+Production policy exits 0 with =findings=2 errors=0= before upstream integration;
+both existing warnings belong to =program/finite-arithmetic.ss=. The changed
+certificate modules introduce no warnings. Org links/blocks and diff formatting
+pass static checks. Execution logs and source hashes stay in ignored
+=.cache/ascent/certificate-boundary/=. These focused checks do not qualify the
+whole suite, SS performance, AOT applications or remote CI.
+
+Normal rebase incorporates upstream =cfda5cd= and =43fd04d=. SHA-256 checks
+confirm the four certificate source modules and four qualified test modules
+are unchanged after integration. Integrated production policy still reports
+=findings=2 errors=0=, with no certificate-module findings. This preserves the
+focused source receipts; it does not qualify the upstream descriptor changes.
+
+* Study: one owner for inert data operations
+
+Gerbil =2591dcd= separates the lower-level syntax representation from compiler
+coordination. =expander/stx.ss:8-9= depends on =common=; its
+=syntax->datum= implementation at lines 76-88 reconstructs pairs, vectors and
+boxes according to their representations. =datum->syntax='s local
+=wrap-inner= traversal at lines 97-108 follows the same explicit shape cases.
+=apply-mark= at =expander/stx.ss:176-183= names a pair's head and tail with
+=match= rather than repeating field projections. The shared ASCENT copier
+uses that pair-pattern form while retaining its recursive algorithm.
+=compiler/base.ss:8-10= imports the expander rather than defining another copy
+of those representation operations.
+
+The transferable lesson is ownership of data transformations at the lowest
+appropriate domain layer. ASCENT's inspected candidate grammar is narrower:
+scalar leaves and pairs. Gerbil's syntax conversion is not a candidate copier;
+its handling of syntax objects, vectors and boxes would change our contract.
+
+Previously, =types= owned the bounded pair walker, =funs= owned a recursive
+pair copier, and =program= and =reasoning= each defined another pair copier.
+The =funs= module also depends on the candidate parser for variable recognition.
+Using it as the parser's shared data layer would introduce a dependency cycle.
+
+=candidate/datum.ss= now owns the unchanged bounded pair walk and the single
+=candidate-copy-pairs= implementation. It imports no candidate, compiler,
+crypto, evaluator or proof module. Consumers import these operations directly:
+
+| Module group | Responsibility |
+|--------------+----------------|
+| =datum= | Bound inert pair trees; detach pairs at publication boundaries |
+| =types= | Snapshot and diagnostic records, snapshot consistency and digest |
+| =program= | Inspect grammar; lower admitted forms; describe parser vocabulary |
+| =funs= | Bind inspected rules, schemas and strata |
+| Proof and provenance modules | Produce/check their distinct evidence semantics |
+| =reasoning= | Coordinate attempts and publish detached receipts |
+
+=types= continues to export the existing public bounded-data predicate through
+its imported binding. Internal consumers use =datum= directly. The old copier
+export in internal =funs= is removed and every repository consumer is migrated.
+The build declaration adds one library module; no build procedure is added.
+
+Pair copying still reconstructs both cars and cdrs, preserves leaf identity,
+and intentionally duplicates shared acyclic pairs. It is not input admission;
+its callers retain their existing finite-data checks and trusted-description
+boundary. Node/depth budgets, cycle rejection, digest bytes and diagnostic
+publication order remain unchanged. The bounded walker remains iterative;
+the copier retains its prior recursive algorithm. This is a responsibility
+refactor, with no stack-depth or runtime speedup claim.
+
+The native boundary Case copies nested and shared pairs with an improper tail,
+then mutates the caller's pair and one published branch independently. It
+checks unchanged values in the detached copy and its other branch. Existing
+Cases retain cycle/depth/work exhaustion, source/receipt mutation isolation,
+fixed digest bindings and independent graph/reference checks.
+
+The selected-library policy completes with =errors=0= and three findings:
+two pre-existing =program/finite-arithmetic.ss= warnings and one R013 warning
+for =candidate/datum.ss=. The latter's reported facets include manual-loop
+and numeric-domain signals. Its bounded active-path traversal needs explicit
+pending work and remaining node/depth budgets; eagerly applying a list
+combinator would traverse input before enforcing those limits. The warning is
+retained as an advisory, with the specialized boundary documented rather than
+adding an unrelated combinator to satisfy file-level coverage.
+
+** Local verification
+
+Against source baseline =7d590e1=, eight native modules pass 65 distinct Cases:
+
+| Module | Cases |
+|--------+-------|
+| =ascent-reasoning-library= | 12 |
+| =ascent-candidate-description= | 5 |
+| =ascent-finite-evidence= | 9 |
+| =ascent-positive-nonmembership= | 8 |
+| =ascent-positive-provenance= | 6 |
+| =ascent-stratified-proof= | 12 |
+| =scheme-provenance-graph= | 6 |
+| =scheme-stratified-provenance= | 7 |
+
+Reasoning and description are rerun after the final copier and boundary Case
+changes; the table uses these final runs. All module processes and both
+supervising command loops exit 0, with unchanged test timeouts and proof/work
+budgets. Source hashes remain equal to the final-run snapshot. These focused
+local results do not establish full-suite, AOT application or remote CI closure.
+Logs and source hash receipts live under ignored =.cache/ascent/candidate-datum/=.
+
+Before push, this change is rebased over the concurrent remote head =4980321=.
+The incoming production change is isolated to =program/higher-order.ss=;
+no production module or any of these eight test modules imports that module.
+Candidate, build declaration and modified test source hashes remain identical
+to the qualified snapshot. The 65-Case receipt remains a source-scoped local
+result; it is not a claim that the incoming higher-order changes were tested
+by this study.
+
+* Study: Candidate construction through receipt publication
+
+[[file:../../t/performance/candidate-flow/README.org][Candidate construction and execution flow]] retains complete frozen constructors,
+inspection and receipt execution from =189a691=. Gerbil =1cfb032= compiler fact
+ownership and native structural binding guide private schema/scope indexes and
+named stage results. Public POO contracts and independent proof verification
+remain the extension and trust boundaries.
+
+Repeated validation of every newly constructed term, atom, rule and program
+rebuilds nested Core responsibility evidence. Inert Candidate lowering now owns
+one synchronous construction scope and validates the entire POO program tree
+before it escapes. Ordinary constructors still validate immediately; the internal
+scope entry is excluded from the public interface. Invalid nested terms and roots
+must fail, and failed construction must restore ordinary validation. The scope
+cannot contain supplied procedures or expose partially constructed children.
+
+Schema authority, rule membership, ordered hypothetical fact partition and graph
+record selection have explicit private owners. Receipt prepare, solve, observation
+and proof publication have named stages rather than a single nested decision tree.
+Proof-production diagnostics cannot erase native completion, and current source,
+proposal and certificate binding are independently rechecked at verification.
+
+The paired ASP study reports complete construction separately from complete
+execution receipts. Natural GC participates in timed consumers; forced collection
+for VM-wide allocation measurement belongs to a separate equal-result phase.
+Numeric gates and failed experiments remain part of the receipt. No lookup-only
+CPU result is promoted to an end-to-end gain.

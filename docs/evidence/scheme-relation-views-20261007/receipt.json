@@ -1,0 +1,1260 @@
+{
+  "qualifiedBaseHead": "3653d214a5ae7a61187bd48a0ba90261d6f102f1",
+  "scope": "Five-stage private frozen representation migration for exact built-in UF storage plus canonical hash index; explicit Set and custom receiver protocols retain their separate paths.",
+  "schemeSourceCount": 549,
+  "schemeSourceDigest": "df28aa2fe6794604a3b221ef1538a6274939473d7f68bfd6556995746f10c9c0",
+  "schemeDigestFormat": "Sorted tracked and nonignored untracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "sources": {
+    "build.ss": "bedd1a4b003b81ec65c52808af0ae383665b8d4019259580a50bfe9ca92fb2e9",
+    "core/relation-view.ss": "392bf1b18ba6adfb92499b5c568217f44db9f71a4d421c94e777bb1f24c55bae",
+    "core/positive-plan.ss": "4ccf295de2b4ae45a4aef052b5d16012d409ed0cd7091a0bd121b56d456f685b",
+    "program/view-state.ss": "f4541aeefa1f111eae948e25a5408ffe3dec0d42c5c2168ac8d0e32c0a1daa92",
+    "program/actor-round.ss": "78a01abdefe58a068a72c30c680de53f6834cdc163ff0d585a02cb99db469b5f",
+    "program/evaluate.ss": "62d6a099929915765eea33fe0160532a4a0228b6027514e11a1ab9265c234fbe",
+    "program/index.ss": "6b4be45db048e7c7f15057776333f373df4dd0183a30b75888ef578a3f25847f",
+    "program/initialization.ss": "6fff535ac74d3860d5364368fc9010c90f94be196fba6eef064c8ae6cfa79fc9",
+    "program/result.ss": "f2d9e885f4e40de4a6d6b926ba7e2e68bb1a7a3d801d5d4dc1f7874750260946",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "table/storage.ss": "cbac013d70dfd215058c889c39e3f20b7fc813764d63f0abf9878e8912a319c1",
+    "table/trrel-uf.ss": "b0acc56983f21a436ab8567e0e4119b97ad3a7d9947d703f7104ed3d5d953ae0",
+    "t/harness/run.ss": "7903e58247aca05e12b8a3073b86b0769d7fc905de08dec0cb159e5801280f17",
+    "t/qualification/ascent-relation-view-test.ss": "235d22ab5b1512dced910bac82fe41601641556e1109511d6072af9b7eb634ce",
+    "t/qualification/ascent-provider-views-test.ss": "b623365c694b6b8c893449f14814f88bcf74836afcbed1e98ea7e163458bc63b",
+    "t/qualification/ascent-storage-batch-test.ss": "1bd6804154d95cc0e658be26fb86c470b1054565259de30a8c4bd3f1d6f65fe4",
+    "t/qualification/ascent-timeout-test.ss": "8f8f6fa3c9fa70f9d7e452735ed670572f9fa45892bb60ec652dd530ff3ed236",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2",
+    "t/qualification/ascent-actor-round-test.ss": "b0953922e53739af57c9e5ce3611815f5b7fe9ece968ba4188810406a8a76dca",
+    "t/qualification/ascent-actor-credit-test.ss": "937f7ec6e65ed015b3fb02f5c0adeaf585695679fb3ab6e2ffe6e2f7d54b4b09",
+    "t/performance/index-entry/reference-evaluate.ss": "5c379f7b26f9ef3d986f0da0ae758f9cb1c578329e8e884702c39acd444dbc6f"
+  },
+  "formalBoundary": {
+    "claim": "Reuses abstract rectangle/lifetime artifacts and independent native correspondence controls. Does not claim mechanically extracted native refinement or universal callback-trace equivalence.",
+    "artifactsAtNativeQualification": {
+      "packages/proofs/lean/ProviderRectangles.lean": "9cd470b32c2ed7c854fc172fcee85b71f4ff875671e4d1a4a565ff6f711f35fd",
+      "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "2b5885cfae3ad02b2fdc5c974b197d3301da7313ac76a108ae496a13731ad195",
+      "packages/proofs/tla/ProviderViews.tla": "973561f0a8066854bad4e7c60a7387f8b17475909536290c66e4e3daa489b349"
+    },
+    "laterIntegratedProofRevision": "5fc48c5bf78e53796262c390ee9eb626c625168f",
+    "integratedProofArtifacts": {
+      "packages/proofs/lean/ProviderRectangles.lean": "5e1fd08bc0188abf8085590f1f487f4b5277eb7c0599a9af9f6af4c5bbcb1886",
+      "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "ecc55e51a281660cfec2ee256fc7b1bef8c450669490264f052fecf8b12e6af4",
+      "packages/proofs/tla/ProviderViews.tla": "7edda6b7c03ebfe4b3eb5da6f5a2d4466298fd01de5088e7fe003778a45f6c73",
+      "packages/proofs/tla/ReaderLifetime.tla": "8f196352f95ed729525e0e2f876a3f57e4544c5d9666b61efc9e678acc52da32",
+      "packages/proofs/tla/ReaderLifetime.cfg": "e07c9ffa235fedfdaba40a99d65e10d1021d252d43514cbd5313ab563d699f56"
+    },
+    "localFormalGate": "The later pure proof/Justfile addition was inherited from its owner, not locally rerun here; exact-head CI remains separate."
+  },
+  "fullNative": {
+    "exitCode": 0,
+    "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test 4",
+    "caseHeaders": 793,
+    "nativeCases": 793,
+    "modules": 85,
+    "harnessOK": 85,
+    "nativeModulesOK": 85,
+    "explicitOK": 85,
+    "transcript": {
+      "path": "/private/tmp/ascent-view-acceptance-full.log",
+      "sha256": "554c57c1363e3088b37873f33ce53b9c7a6b3a7fddaee38bf0780616a80d5c79"
+    }
+  },
+  "standaloneCostQualification": {
+    "exitCode": 0,
+    "nativeCases": 12,
+    "moduleOK": true,
+    "harnessOK": true,
+    "explicitOK": true,
+    "transcript": {
+      "path": "/private/tmp/ascent-view-acceptance-cost.log",
+      "sha256": "98ff6d43cb1a87233f7d150bd3b8b8712a16034ddddd1d74d278c373f5505099"
+    },
+    "pairs": 72,
+    "order": "Alternating explicit-first and frozen-first, after warming both evaluators on the same immutable program object.",
+    "baseline": "Repository explicit reference evaluator with current shared helpers and UF kernel; source identity included. Not an exact full prior-PR performance baseline.",
+    "fresh": {
+      "nodes": 128,
+      "conditions": {
+        "dagSparse": {
+          "samples": [
+            {
+              "pair": 0,
+              "explicit": [
+                7789.999999999992,
+                7814.0,
+                8469368.0
+              ],
+              "frozen": [
+                4377.999999999993,
+                4376.0,
+                6269120.0
+              ]
+            },
+            {
+              "pair": 1,
+              "explicit": [
+                6555.999999999993,
+                6557.0,
+                8761336.0
+              ],
+              "frozen": [
+                4008.9999999999986,
+                4007.0,
+                6269120.0
+              ]
+            },
+            {
+              "pair": 2,
+              "explicit": [
+                6425.000000000014,
+                6420.0,
+                8760696.0
+              ],
+              "frozen": [
+                3929.000000000016,
+                3928.0,
+                6269632.0
+              ]
+            },
+            {
+              "pair": 3,
+              "explicit": [
+                6382.999999999972,
+                6398.0,
+                8761528.0
+              ],
+              "frozen": [
+                3941.0,
+                3940.0,
+                6269632.0
+              ]
+            },
+            {
+              "pair": 4,
+              "explicit": [
+                6250.0000000000055,
+                6248.0,
+                8762616.0
+              ],
+              "frozen": [
+                3900.0000000000146,
+                3898.0,
+                6273736.0
+              ]
+            },
+            {
+              "pair": 5,
+              "explicit": [
+                7378.000000000024,
+                7376.0,
+                8469816.0
+              ],
+              "frozen": [
+                4010.0000000000136,
+                4010.0,
+                6274376.0
+              ]
+            },
+            {
+              "pair": 6,
+              "explicit": [
+                6325.999999999998,
+                6324.0,
+                8763256.0
+              ],
+              "frozen": [
+                4262.0000000000155,
+                4264.0,
+                6270592.0
+              ]
+            },
+            {
+              "pair": 7,
+              "explicit": [
+                6401.999999999964,
+                6407.0,
+                8764152.0
+              ],
+              "frozen": [
+                3949.9999999999814,
+                3948.0,
+                6270592.0
+              ]
+            },
+            {
+              "pair": 8,
+              "explicit": [
+                6251.99999999998,
+                6251.0,
+                8765624.0
+              ],
+              "frozen": [
+                4068.999999999989,
+                4072.0,
+                6267648.0
+              ]
+            },
+            {
+              "pair": 9,
+              "explicit": [
+                6437.999999999999,
+                6452.0,
+                8765624.0
+              ],
+              "frozen": [
+                4172.999999999983,
+                4171.0,
+                6267648.0
+              ]
+            },
+            {
+              "pair": 10,
+              "explicit": [
+                7359.000000000032,
+                7361.0,
+                8475640.0
+              ],
+              "frozen": [
+                4087.0000000000073,
+                4085.0,
+                6267648.0
+              ]
+            },
+            {
+              "pair": 11,
+              "explicit": [
+                6312.999999999985,
+                6312.0,
+                8763640.0
+              ],
+              "frozen": [
+                3976.0000000000073,
+                3974.0,
+                6267648.0
+              ]
+            }
+          ],
+          "median": {
+            "cpuMicroseconds": {
+              "explicit": 6413.499999999989,
+              "frozen": 4009.5000000000064,
+              "medianPairedRatio": 0.6172079822110283
+            },
+            "elapsedMicroseconds": {
+              "explicit": 6413.5,
+              "frozen": 4008.5,
+              "medianPairedRatio": 0.6160092365371124
+            },
+            "allocatedBytes": {
+              "explicit": 8762072.0,
+              "frozen": 6269376.0,
+              "medianPairedRatio": 0.71557081829165
+            }
+          }
+        },
+        "dagFullExport": {
+          "samples": [
+            {
+              "pair": 0,
+              "explicit": [
+                6352.999999999997,
+                6357.0,
+                8763640.0
+              ],
+              "frozen": [
+                8011.000000000018,
+                8011.0,
+                13476784.0
+              ]
+            },
+            {
+              "pair": 1,
+              "explicit": [
+                10781.999999999958,
+                14573.0,
+                8760696.0
+              ],
+              "frozen": [
+                7880.999999999972,
+                7880.0,
+                13476144.0
+              ]
+            },
+            {
+              "pair": 2,
+              "explicit": [
+                9522.999999999949,
+                11402.0,
+                8760696.0
+              ],
+              "frozen": [
+                9424.000000000044,
+                9596.0,
+                13477936.0
+              ]
+            },
+            {
+              "pair": 3,
+              "explicit": [
+                6603.999999999999,
+                6619.0,
+                8760696.0
+              ],
+              "frozen": [
+                8024.000000000031,
+                8030.0,
+                13478576.0
+              ]
+            },
+            {
+              "pair": 4,
+              "explicit": [
+                6755.9999999999845,
+                6755.0,
+                8760696.0
+              ],
+              "frozen": [
+                8220.000000000005,
+                8219.0,
+                13479856.0
+              ]
+            },
+            {
+              "pair": 5,
+              "explicit": [
+                6352.999999999997,
+                6347.0,
+                8760696.0
+              ],
+              "frozen": [
+                8063.99999999996,
+                8062.0,
+                13479856.0
+              ]
+            },
+            {
+              "pair": 6,
+              "explicit": [
+                6452.000000000014,
+                6450.0,
+                8761336.0
+              ],
+              "frozen": [
+                8244.00000000003,
+                8249.0,
+                13477744.0
+              ]
+            },
+            {
+              "pair": 7,
+              "explicit": [
+                6749.999999999923,
+                6761.0,
+                8760696.0
+              ],
+              "frozen": [
+                8455.999999999964,
+                8488.0,
+                13476912.0
+              ]
+            },
+            {
+              "pair": 8,
+              "explicit": [
+                6630.000000000025,
+                6626.0,
+                8761336.0
+              ],
+              "frozen": [
+                8209.999999999995,
+                8233.0,
+                13477416.0
+              ]
+            },
+            {
+              "pair": 9,
+              "explicit": [
+                6168.99999999998,
+                6179.0,
+                8760696.0
+              ],
+              "frozen": [
+                8334.999999999982,
+                8348.0,
+                13477416.0
+              ]
+            },
+            {
+              "pair": 10,
+              "explicit": [
+                6516.999999999995,
+                6523.0,
+                8760696.0
+              ],
+              "frozen": [
+                8067.000000000046,
+                8066.0,
+                13472488.0
+              ]
+            },
+            {
+              "pair": 11,
+              "explicit": [
+                6423.99999999993,
+                6423.0,
+                8760696.0
+              ],
+              "frozen": [
+                8042.000000000049,
+                8041.0,
+                13471848.0
+              ]
+            }
+          ],
+          "median": {
+            "cpuMicroseconds": {
+              "explicit": 6560.499999999997,
+              "frozen": 8138.50000000002,
+              "medianPairedRatio": 1.24508935195882
+            },
+            "elapsedMicroseconds": {
+              "explicit": 6571.0,
+              "frozen": 8142.5,
+              "medianPairedRatio": 1.2472183189948174
+            },
+            "allocatedBytes": {
+              "explicit": 8760696.0,
+              "frozen": 13477416.0,
+              "medianPairedRatio": 1.538329344768418
+            }
+          }
+        },
+        "cycleSparse": {
+          "samples": [
+            {
+              "pair": 0,
+              "explicit": [
+                11917.000000000011,
+                11925.0,
+                14945808.0
+              ],
+              "frozen": [
+                3332.999999999975,
+                3332.0,
+                6457312.0
+              ]
+            },
+            {
+              "pair": 1,
+              "explicit": [
+                11159.00000000003,
+                11157.0,
+                14945808.0
+              ],
+              "frozen": [
+                3324.999999999967,
+                3324.0,
+                6456480.0
+              ]
+            },
+            {
+              "pair": 2,
+              "explicit": [
+                11263.999999999996,
+                11271.0,
+                14945808.0
+              ],
+              "frozen": [
+                3574.000000000022,
+                3582.0,
+                6457504.0
+              ]
+            },
+            {
+              "pair": 3,
+              "explicit": [
+                11425.000000000075,
+                11425.0,
+                14945808.0
+              ],
+              "frozen": [
+                3433.9999999999372,
+                3434.0,
+                6457504.0
+              ]
+            },
+            {
+              "pair": 4,
+              "explicit": [
+                11147.000000000018,
+                11146.0,
+                14946640.0
+              ],
+              "frozen": [
+                3317.0000000000146,
+                3316.0,
+                6457376.0
+              ]
+            },
+            {
+              "pair": 5,
+              "explicit": [
+                11125.000000000051,
+                11124.0,
+                14950352.0
+              ],
+              "frozen": [
+                3426.9999999999577,
+                3430.0,
+                6457376.0
+              ]
+            },
+            {
+              "pair": 6,
+              "explicit": [
+                11166.00000000001,
+                11164.0,
+                14950352.0
+              ],
+              "frozen": [
+                3535.000000000066,
+                3535.0,
+                6456864.0
+              ]
+            },
+            {
+              "pair": 7,
+              "explicit": [
+                11256.000000000044,
+                11277.0,
+                14950736.0
+              ],
+              "frozen": [
+                3396.999999999983,
+                3396.0,
+                6456864.0
+              ]
+            },
+            {
+              "pair": 8,
+              "explicit": [
+                11572.999999999944,
+                11570.0,
+                14950736.0
+              ],
+              "frozen": [
+                3383.9999999999427,
+                3382.0,
+                6458208.0
+              ]
+            },
+            {
+              "pair": 9,
+              "explicit": [
+                11098.99999999997,
+                11096.0,
+                14948752.0
+              ],
+              "frozen": [
+                3452.0000000000105,
+                3452.0,
+                6458208.0
+              ]
+            },
+            {
+              "pair": 10,
+              "explicit": [
+                11058.000000000013,
+                11057.0,
+                14948752.0
+              ],
+              "frozen": [
+                3328.9999999999154,
+                3327.0,
+                6458336.0
+              ]
+            },
+            {
+              "pair": 11,
+              "explicit": [
+                11220.000000000007,
+                11220.0,
+                14945808.0
+              ],
+              "frozen": [
+                3335.0000000000878,
+                3335.0,
+                6458976.0
+              ]
+            }
+          ],
+          "median": {
+            "cpuMicroseconds": {
+              "explicit": 11193.000000000007,
+              "frozen": 3390.4999999999627,
+              "medianPairedRatio": 0.3008089710391085
+            },
+            "elapsedMicroseconds": {
+              "explicit": 11192.0,
+              "frozen": 3389.0,
+              "medianPairedRatio": 0.3007321440975538
+            },
+            "allocatedBytes": {
+              "explicit": 14947696.0,
+              "frozen": 6457440.0,
+              "medianPairedRatio": 0.4320259124109395
+            }
+          }
+        },
+        "cycleFullExport": {
+          "samples": [
+            {
+              "pair": 0,
+              "explicit": [
+                11677.999999999965,
+                11702.0,
+                14945808.0
+              ],
+              "frozen": [
+                9857.000000000116,
+                9862.0,
+                19699208.0
+              ]
+            },
+            {
+              "pair": 1,
+              "explicit": [
+                11125.000000000051,
+                11127.0,
+                14947728.0
+              ],
+              "frozen": [
+                9538.999999999964,
+                9536.0,
+                19699208.0
+              ]
+            },
+            {
+              "pair": 2,
+              "explicit": [
+                11238.999999999998,
+                11256.0,
+                14947728.0
+              ],
+              "frozen": [
+                9643.999999999985,
+                9651.0,
+                19696264.0
+              ]
+            },
+            {
+              "pair": 3,
+              "explicit": [
+                11217.000000000033,
+                11217.0,
+                14950736.0
+              ],
+              "frozen": [
+                9915.000000000007,
+                9910.0,
+                19696264.0
+              ]
+            },
+            {
+              "pair": 4,
+              "explicit": [
+                11214.000000000056,
+                11212.0,
+                14950736.0
+              ],
+              "frozen": [
+                9565.999999999964,
+                9564.0,
+                19700232.0
+              ]
+            },
+            {
+              "pair": 5,
+              "explicit": [
+                11132.000000000031,
+                11131.0,
+                14948752.0
+              ],
+              "frozen": [
+                9512.999999999995,
+                9514.0,
+                19700232.0
+              ]
+            },
+            {
+              "pair": 6,
+              "explicit": [
+                11117.000000000044,
+                11120.0,
+                14948752.0
+              ],
+              "frozen": [
+                9391.000000000038,
+                9395.0,
+                19699848.0
+              ]
+            },
+            {
+              "pair": 7,
+              "explicit": [
+                10967.00000000006,
+                10972.0,
+                14945808.0
+              ],
+              "frozen": [
+                9463.0,
+                9461.0,
+                19699208.0
+              ]
+            },
+            {
+              "pair": 8,
+              "explicit": [
+                11319.000000000078,
+                11333.0,
+                14945808.0
+              ],
+              "frozen": [
+                9607.000000000033,
+                9626.0,
+                19699208.0
+              ]
+            },
+            {
+              "pair": 9,
+              "explicit": [
+                11693.999999999982,
+                11713.0,
+                14946640.0
+              ],
+              "frozen": [
+                9569.999999999967,
+                9571.0,
+                19696264.0
+              ]
+            },
+            {
+              "pair": 10,
+              "explicit": [
+                10828.00000000006,
+                10827.0,
+                14946640.0
+              ],
+              "frozen": [
+                9579.99999999981,
+                9588.0,
+                19693960.0
+              ]
+            },
+            {
+              "pair": 11,
+              "explicit": [
+                11344.999999999938,
+                11361.0,
+                14947280.0
+              ],
+              "frozen": [
+                9882.000000000058,
+                9900.0,
+                19693960.0
+              ]
+            }
+          ],
+          "median": {
+            "cpuMicroseconds": {
+              "explicit": 11215.500000000044,
+              "frozen": 9574.999999999889,
+              "medianPairedRatio": 0.8560008115080677
+            },
+            "elapsedMicroseconds": {
+              "explicit": 11214.5,
+              "frozen": 9579.5,
+              "medianPairedRatio": 0.8558722512746939
+            },
+            "allocatedBytes": {
+              "explicit": 14947504.0,
+              "frozen": 19699208.0,
+              "medianPairedRatio": 1.3177988080379004
+            }
+          }
+        }
+      },
+      "truth": "DAG reach=8256, cycle reach=16384; out=128. Full export checks length; bounded independent Floyd and every-prefix controls establish facts separately."
+    },
+    "grouped": {
+      "nodesPerGroup": 16,
+      "groups": [
+        false,
+        true
+      ],
+      "logicalReach": 512,
+      "logicalOut": 512,
+      "query": "reach(g,x,y) join reach(g,y,z), independent expected full product per group.",
+      "samples": [
+        {
+          "pair": 0,
+          "explicit": [
+            2357.9999999999714,
+            2355.0,
+            2165184.0
+          ],
+          "frozen": [
+            2415.9999999999736,
+            2425.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 1,
+          "explicit": [
+            2347.000000000099,
+            2346.0,
+            2164544.0
+          ],
+          "frozen": [
+            2299.9999999999686,
+            2299.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 2,
+          "explicit": [
+            2389.0000000000855,
+            2388.0,
+            2164544.0
+          ],
+          "frozen": [
+            2458.0000000000714,
+            2456.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 3,
+          "explicit": [
+            2376.0000000000446,
+            2375.0,
+            2165184.0
+          ],
+          "frozen": [
+            2396.9999999999823,
+            2397.0,
+            2195344.0
+          ]
+        },
+        {
+          "pair": 4,
+          "explicit": [
+            2356.000000000136,
+            2355.0,
+            2164544.0
+          ],
+          "frozen": [
+            2397.9999999999004,
+            2397.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 5,
+          "explicit": [
+            2367.000000000119,
+            2366.0,
+            2164544.0
+          ],
+          "frozen": [
+            2421.0000000001173,
+            2420.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 6,
+          "explicit": [
+            2338.0000000000623,
+            2337.0,
+            2164544.0
+          ],
+          "frozen": [
+            2408.9999999999945,
+            2408.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 7,
+          "explicit": [
+            2356.0000000000246,
+            2355.0,
+            2164544.0
+          ],
+          "frozen": [
+            2475.000000000005,
+            2474.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 8,
+          "explicit": [
+            2416.0000000000846,
+            2415.0,
+            2164544.0
+          ],
+          "frozen": [
+            2470.99999999989,
+            2470.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 9,
+          "explicit": [
+            2355.000000000107,
+            2356.0,
+            2164544.0
+          ],
+          "frozen": [
+            2388.9999999999745,
+            2388.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 10,
+          "explicit": [
+            2362.999999999893,
+            2366.0,
+            2164544.0
+          ],
+          "frozen": [
+            2407.000000000048,
+            2407.0,
+            2194704.0
+          ]
+        },
+        {
+          "pair": 11,
+          "explicit": [
+            2335.9999999998936,
+            2335.0,
+            2164544.0
+          ],
+          "frozen": [
+            2399.9999999999577,
+            2399.0,
+            2194704.0
+          ]
+        }
+      ],
+      "median": {
+        "cpuMicroseconds": {
+          "explicit": 2357.0000000000537,
+          "frozen": 2408.0000000000214,
+          "medianPairedRatio": 1.022789294437548
+        },
+        "elapsedMicroseconds": {
+          "explicit": 2355.5,
+          "frozen": 2407.5,
+          "medianPairedRatio": 1.0227988288188956
+        },
+        "allocatedBytes": {
+          "explicit": 2164544.0,
+          "frozen": 2194704.0,
+          "medianPairedRatio": 1.0139336506903995
+        }
+      }
+    },
+    "retained": {
+      "nodes": 64,
+      "updates": [
+        [
+          63,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "heldOldResult": true,
+      "truth": "Old DAG export stays unchanged; every update has reach=4096 and out=64.",
+      "timing": "Sum of three append+run+size observations; initialization, manual GC and independent old-cut checks excluded.",
+      "memory": "Maximum live bytes sampled after GC at initialization and after each update while old result and old exported rows remain held. Includes ambient runtime; not continuous RSS, transient high-water memory or a universal space bound.",
+      "samples": [
+        {
+          "pair": 0,
+          "explicit": [
+            1544.000000000212,
+            1541.0,
+            2191264.0,
+            6622920.0
+          ],
+          "frozen": [
+            537.9999999999274,
+            535.0,
+            995680.0,
+            5840664.0
+          ]
+        },
+        {
+          "pair": 1,
+          "explicit": [
+            1598.9999999999059,
+            1607.0,
+            2191264.0,
+            6627704.0
+          ],
+          "frozen": [
+            536.9999999997876,
+            534.0,
+            995680.0,
+            5841944.0
+          ]
+        },
+        {
+          "pair": 2,
+          "explicit": [
+            1561.0000000003677,
+            1557.0,
+            2191264.0,
+            6628984.0
+          ],
+          "frozen": [
+            570.9999999998772,
+            573.0,
+            995680.0,
+            5846728.0
+          ]
+        },
+        {
+          "pair": 3,
+          "explicit": [
+            1662.0000000000525,
+            1657.0,
+            2191264.0,
+            6633768.0
+          ],
+          "frozen": [
+            558.0000000000584,
+            556.0,
+            995680.0,
+            5848008.0
+          ]
+        },
+        {
+          "pair": 4,
+          "explicit": [
+            1582.99999999989,
+            1579.0,
+            2191264.0,
+            6635064.0
+          ],
+          "frozen": [
+            564.0000000004532,
+            562.0,
+            995680.0,
+            5852792.0
+          ]
+        },
+        {
+          "pair": 5,
+          "explicit": [
+            1533.9999999999243,
+            1533.0,
+            2191264.0,
+            6639848.0
+          ],
+          "frozen": [
+            561.0000000002558,
+            557.0,
+            995680.0,
+            5854088.0
+          ]
+        },
+        {
+          "pair": 6,
+          "explicit": [
+            1545.9999999998254,
+            1543.0,
+            2191264.0,
+            6641128.0
+          ],
+          "frozen": [
+            547.0000000000753,
+            545.0,
+            995680.0,
+            5858872.0
+          ]
+        },
+        {
+          "pair": 7,
+          "explicit": [
+            1525.9999999999163,
+            1523.0,
+            2191264.0,
+            6645912.0
+          ],
+          "frozen": [
+            549.9999999998284,
+            548.0,
+            995680.0,
+            5860152.0
+          ]
+        },
+        {
+          "pair": 8,
+          "explicit": [
+            1511.9999999997358,
+            1508.0,
+            2191264.0,
+            6647208.0
+          ],
+          "frozen": [
+            546.0000000001576,
+            544.0,
+            995680.0,
+            5864936.0
+          ]
+        },
+        {
+          "pair": 9,
+          "explicit": [
+            1546.999999999965,
+            1544.0,
+            2191264.0,
+            6651992.0
+          ],
+          "frozen": [
+            533.9999999998124,
+            530.0,
+            995680.0,
+            5866232.0
+          ]
+        },
+        {
+          "pair": 10,
+          "explicit": [
+            1543.000000000072,
+            1540.0,
+            2191264.0,
+            6653272.0
+          ],
+          "frozen": [
+            560.000000000116,
+            557.0,
+            995680.0,
+            5871016.0
+          ]
+        },
+        {
+          "pair": 11,
+          "explicit": [
+            1581.9999999999723,
+            1580.0,
+            2191264.0,
+            6658056.0
+          ],
+          "frozen": [
+            567.9999999999019,
+            563.0,
+            995680.0,
+            5872296.0
+          ]
+        }
+      ],
+      "median": {
+        "cpuMicroseconds": {
+          "explicit": 1546.4999999998952,
+          "frozen": 553.9999999999434,
+          "medianPairedRatio": 0.35766236234722104
+        },
+        "elapsedMicroseconds": {
+          "explicit": 1543.5,
+          "frozen": 552.0,
+          "medianPairedRatio": 0.3561252916042039
+        },
+        "allocatedBytes": {
+          "explicit": 2191264.0,
+          "frozen": 995680.0,
+          "medianPairedRatio": 0.4543861442528148
+        },
+        "sampledPeakLiveBytes": {
+          "explicit": 6640488.0,
+          "frozen": 5856480.0,
+          "medianPairedRatio": 0.8819350547255
+        }
+      }
+    },
+    "runtimeCounters": {
+      "allocated": "##get-bytes-allocated! cumulative bytes",
+      "cpu": "##process-statistics fields 0+1",
+      "elapsed": "current-jiffy and jiffies-per-second",
+      "live": "##process-statistics field 17 following explicit GC",
+      "primaryDefinition": "https://raw.githubusercontent.com/gambit/gambit/master/lib/_kernel.scm",
+      "installedHeaderVersion": 409008,
+      "localLiveCalibration": {
+        "exitCode": 0,
+        "retainedVectorSlots": 1000000,
+        "field17DeltaBytes": 8000176,
+        "lastRetainedValue": 42
+      }
+    },
+    "boundaries": [
+      "Canonical UF total stores copied component members and rectangles; no engine expanded UF tuple membership/index map.",
+      "Compiled slot matching consumes fields without temporary candidate tuples.",
+      "Public ordered export replays frozen injections and can increase full-export costs.",
+      "DAG arcs/descriptors and dense injection journals can be quadratic.",
+      "Representation units exclude header, closure, journal, index and engine bytes.",
+      "Native actor eligibility remains pure built-ins without field/lattice/custom callbacks."
+    ]
+  },
+  "policy": {
+    "exitCode": 0,
+    "findings": 18,
+    "errors": 0,
+    "transcript": {
+      "path": "/private/tmp/ascent-view-acceptance-policy.log",
+      "sha256": "93357887db194f50666d3c38d160db98317d8bff9c1f727993b9ccfb7b0027ca"
+    }
+  },
+  "environment": {
+    "architecture": "arm64",
+    "macOS": "26.6.1",
+    "gambitHeader": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/include/gambit.h"
+  },
+  "developmentControls": {
+    "supersededFullRun": "Old base 0a45d8e full run stopped with SIGTERM after PR advanced; not accepted.",
+    "preFieldTraversalFull": {
+      "schemeSourceDigest": "26ebe86055e6e5982653290145b76ac131d89e7b6b3a9d387aea927dd92a936c",
+      "exitCode": 0,
+      "modules": 85,
+      "nativeCases": 793,
+      "groupedAllocatedBytes": {
+        "explicit": 2203456,
+        "frozen": 4422688
+      },
+      "use": "Identified temporary candidate tuple cost; parallel timing excluded from final performance conclusions."
+    },
+    "rejectedPreparation": [
+      "Fixture extra closing parenthesis",
+      "Missing actor UF import",
+      "Fixture cancellation text mismatch",
+      "Early allocation sample used GC-latched field 16 without an end GC and included program construction; excluded."
+    ]
+  },
+  "githubGate": {
+    "pullRequest": "https://github.com/tao3k/gerbil-ascent/pull/1",
+    "status": "Exact published revision/checks queried after push; local receipts do not establish remote CI."
+  },
+  "rebasedOnto": "5fc48c5bf78e53796262c390ee9eb626c625168f"
+}

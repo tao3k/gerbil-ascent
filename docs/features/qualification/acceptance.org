@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Oracle evidence admission (2026-10-07)
+
+The 7abd3d6 formal/Scheme/BYODS/BYODS-scale gates succeeded, but the other shard's
+10,000-pair case failed in a stdout reader. No wrong lattice result was shown;
+the reader panic's original error was hidden by the join diagnostic. The adapter
+now preserves typed read failures and partial bytes, handles interruption without
+inventing progress, and requires both pipe EOFs plus process/request success.
+
+PipeCapture proves ordered chunk replay and failure/completion admission laws.
+OracleTransport checks the concurrent exit/drain/admit boundary with four faults.
+These strengthen the evidence path rather than the paper's lattice algebra:
+actual BYODS graph/row comparisons remain required. Historical EINTR causality
+is not asserted without the missing diagnostic. See
+[[file:../../scheme-trrel-uf-design.org][the investigation]] and
+[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+
+
+* Remaining application admission and corrected build gate (2026-10-07)
+
+The =dc95671= GitHub run passed all independent oracle shards and formal
+qualification, but the Scheme build failed before tests: the native package
+policy counted 1003 effective lines in =program/evaluate.ss=. The result object
+constructor now belongs to =program/result.ss=, beside the snapshot visitor,
+ordered export and observation functions. Evaluation supplies one immutable
+published cut and keeps transaction state. No policy limit or semantic admission
+was relaxed. The corrected package policy reports zero errors. Existing native
+result-publication and Steensgaard tests cover historical reads, replacements,
+partial/resumed snapshots, keyed traversal and callback mutation isolation.
+
+The complete reference Polonius =clap-rs= input is now pinned in
+[[file:../../evidence/scheme-application-admission-20261007/polonius-clap-source.json][the input manifest]]: 18 files, 1,107,599 rows and 42,271,852 bytes from
+=s-arash/polonius@7fe7cca808115828b1105c86003a768a6749383f=. Every file binds
+SHA256, Git blob identity, bytes, row count and arity. The empty drop-dereference
+file still has arity two, as declared by the pinned =facts.rs= schema. The byte
+verifier accepts manifest-defined identifiers, rejects path syntax and repeated
+relation names, and leaves values and all semantic assertions to native Scheme
+and Rust. CI verifies this entire input separately from Steensgaard solve truth.
+This is reference-input admission, not a Scheme borrow-checker result or a pin
+of the unpublished BYODS Polonius experiment implementation.
+
+The candidate reference fork is not yet a reproducible runtime oracle: its
+=polonius-engine/Cargo.toml= declares =infer={path="../../infer/infer"}=, but
+that directory is absent from the complete pinned Git tree. We have not removed
+that dependency or reported this fork's engine as executed. A buildable engine
+revision with the same fact schema and an explicit rule/output correspondence
+must be frozen before admitting full reference outputs. The Steensgaard source
+pin also contains no complete Polonius, PageRank or LLVM application source;
+its identity cannot be inherited by those applications.
+
+** Complete application obligations
+
+| Application | Complete semantic boundary | Required independent acceptance and remaining implementation |
+|------------+----------------------------+------------------------------------------------------------|
+| Polonius, Provider concretization sections 5.3 and 5.5 | Initialization/move-path facts, variable use/drop liveness, universal/placeholder initialization, point-indexed subset and loan propagation, illegal accesses and illegal placeholder subsets | Port all preprocessing and naive rules together; compare every declared output with the pinned reference engine. Compare explicit, transitive and shared-index representations on the same complete input. Point isolation, loan kill, dead origins, unknown placeholder subsets and field permutations need negative controls. |
+| PageRank, Provider concretization section 5.6 | Two recursive map-lattice rules over weighted adjacency, predecessor-indexed contributions, damping and rank sums | Implement lawful contribution-map joins and the chosen numeric domain before running the complete graphs. Compare every node's rank and the stopping certificate with a matrix-based independent oracle. State finite numeric stabilization or a certified approximation contract; a fact/work budget is not a convergence proof. |
+| LLVM, Provider concretization section 5.7 | LLVM parsing, allocation-site abstraction, context-sensitive inclusion analysis, indirect calls and loads/stores | Pin parser/input identity and complete rules; compare operand points-to, allocation points-to and calls, including contexts. A graph reachability or index-sharing fixture does not replace this analysis. Preserve the paper's unsupported instruction and abstraction boundaries. |
+
+Polonius field order requires explicit schema translation: raw
+=loan_invalidated_at= has =(Point, Loan)= columns, while the naive solver uses
+an internal loan/point index. Raw =subset_base= is =(Origin1, Origin2, Point)=;
+our grouped transitive Provider uses its grouping ordinal separately. Reading
+two fields correctly by arity alone does not establish either translation.
+The pinned reference also excludes self-subsets from its published =subset=.
+A transitive Provider can derive diagonal pairs from cycles, so full result
+comparison must validate an explicit non-diagonal projection rather than
+silently comparing only counts or error sets. These differences must be tested
+before admitting a complete Scheme Polonius application.
+
+Lean owns representation-independent rule, projection and lattice laws; Quint
+owns actual worker/source publication and cancellation histories. Application
+laws must connect to the admitted native descriptors and full outputs. Existing
+protocol models can be reused for unchanged publication paths; adding another
+copy of the same model does not close numeric convergence, parsing or complete
+rule correspondence. Package 9 remains open for the other applications and
+package 10 remains open for matched end-to-end benefits. MR/MRR is deferred.
+
+Primary references: [[https://kmicinski.com/assets/byods.pdf][Provider concretization, sections 5.3 and 5.5--5.7]];
+[[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/facts.rs][pinned Polonius schema]];
+[[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/output/naive.rs][pinned reference naive rules]].
+

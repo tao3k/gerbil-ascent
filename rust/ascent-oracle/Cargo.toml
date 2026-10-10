@@ -9,8 +9,13 @@ publish = false
 ascent = "=0.8.0"
 
 [dev-dependencies]
+polonius-engine = "=0.13.0"
 ascent-byods-rels = "=0.8.0"
 asp-rust = { git = "https://github.com/tao3k/asp-rust", rev = "2419414ee5379bad89506496e3eaab928df68daf", version = "0.1.2", default-features = false }
+
+[[example]]
+name = "polonius_data_truth"
+path = "examples/polonius_data_truth/mod.rs"
 
 [[test]]
 name = "scheme_parity"
@@ -19,3 +24,6 @@ path = "tests/integration/main.rs"
 [[test]]
 name = "asp_rust_gate"
 path = "tests/unit/asp_rust_gate.rs"
+
+# This test-only oracle is independent of any consumer workspace containing the checkout.
+[workspace]

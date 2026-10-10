@@ -1,0 +1,18 @@
+{
+  "absoluteWallDeadlineSeconds": null,
+  "date": "2026-10-06",
+  "exitStatus": 0,
+  "externalCalls": 0,
+  "feesUsd": 0,
+  "keepaliveRenewsDeadline": false,
+  "observableProgressIdleSeconds": 45,
+  "offlineControls": 4,
+  "rawLogsCommitted": false,
+  "semanticOwner": "Native Scheme truth, projection and scoring unchanged",
+  "sourceSha256": {
+    "python/src/ascent_test_support/model_study.py": "388c1a7cc31e1a70095c24dd2b3464e824c388a2ef44748e62773836a8017cf5",
+    "python/tests/test_model_context.py": "2cf1fdd7d4b65728f4852965091722640bca0bd0cb0d0e72fedc0f61775d9a62"
+  },
+  "unknownEventsRenewDeadline": false,
+  "virtualActiveStreamSeconds": 220
+}

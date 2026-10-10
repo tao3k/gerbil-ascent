@@ -1,0 +1,97 @@
+{
+  "schema": "ascent.byods-design-refinement",
+  "version": 1,
+  "baseCommit": "3653d214a5ae7a61187bd48a0ba90261d6f102f1",
+  "lean": {
+    "exitCode": 0,
+    "buildJobs": 90,
+    "rectangleLaws": 16,
+    "examples": 12,
+    "newLaws": [
+      "selected_member",
+      "selected_nodup",
+      "uf_selected_exact",
+      "component_uniform"
+    ],
+    "negativeExample": "mixed old/fresh rectangle loses fresh rows under whole-rectangle rejection",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "remainingPremises": [
+      "candidate encoding",
+      "SCC/root interpretation and active endpoints",
+      "unique members and disjoint rectangles",
+      "Scheme row decoding"
+    ]
+  },
+  "tla": {
+    "exitCode": 0,
+    "safety": {
+      "model": "ProviderViews",
+      "generated": 197536,
+      "distinct": 55197,
+      "explorationBound": 4,
+      "semanticGenerationBound": false,
+      "seededFaults": [
+        "alias",
+        "retire",
+        "early",
+        "stale",
+        "budget"
+      ],
+      "expectedExitCode": 12
+    },
+    "liveness": {
+      "model": "ReaderLifetime",
+      "generated": 2577,
+      "distinct": 315,
+      "generationVariable": false,
+      "stateConstraint": false,
+      "property": "ReaderCompletion",
+      "fairness": "WF_vars(Finish)",
+      "seededFaults": [
+        "stuck",
+        "unfair"
+      ],
+      "expectedExitCode": 13,
+      "mapping": "current iff active captured revision remains compatible; every publication invalidates until next borrow",
+      "scope": "finite reader protocol abstraction; correspondence not source-extracted or machine-checked"
+    }
+  },
+  "policy": {
+    "exitCode": 0,
+    "errors": 0,
+    "advisoryFindings": 18
+  },
+  "excludedEvidence": [
+    "initial constrained liveness experiment",
+    "initial Lean test elaboration and TLC parsing failures"
+  ],
+  "implementationScope": "formal design repair; no Scheme runtime behavior change",
+  "nativeEvidence": "existing source tests plus exact-head GitHub CI; no new native result claimed by this receipt",
+  "remainingGates": [
+    "whole-engine compressed-view integration",
+    "multi-reader retirement",
+    "legacy export order",
+    "retention allocation and runtime cost"
+  ],
+  "modelCalls": 0,
+  "sourceHashes": {
+    "justfile": "ac8bfad19c511594182d0a6c05ba62e4a159a9301339f0c3d664a7ea74260cd6",
+    "packages/proofs/lean/ProviderRectangles.lean": "5e1fd08bc0188abf8085590f1f487f4b5277eb7c0599a9af9f6af4c5bbcb1886",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "ecc55e51a281660cfec2ee256fc7b1bef8c450669490264f052fecf8b12e6af4",
+    "packages/proofs/tla/ProviderViews.tla": "7edda6b7c03ebfe4b3eb5da6f5a2d4466298fd01de5088e7fe003778a45f6c73",
+    "packages/proofs/tla/ReaderLifetime.tla": "8f196352f95ed729525e0e2f876a3f57e4544c5d9666b61efc9e678acc52da32",
+    "packages/proofs/tla/ReaderLifetime.cfg": "e07c9ffa235fedfdaba40a99d65e10d1021d252d43514cbd5313ab563d699f56",
+    "docs/scheme-trrel-uf-design.org": "ab0fb460b4ddd21a1d5e3ab19358877715ca8195b344531b2f26bcf4d92dced8",
+    "docs/scheme-research-proof-audit.org": "87091c740034186ac80ebcce26ea7b9aef2734d0307a91620ad82ceeb1bfcd6c",
+    "docs/research/scheme-dsl/byods-b23.org": "59fe030534736851246b002c57281e7f12b056c26947a20c9456c494efea0edf"
+  },
+  "transcriptHashes": {
+    "lean": "802b4bc52a6d827fc40b6fa25a24be5e218438ccbfcf2780bd1a7ea5457e32f7",
+    "tla": "70ba1a36e6fa67793cf24cd224ea93633b0e738ef52f8eb112984eb3797f98b7",
+    "policy": "7d1217dd0f55a81a66f23c90409d88e89a1b1c5a52352e0a8f7c0e0ac30a7150"
+  }
+}

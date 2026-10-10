@@ -1,0 +1,412 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Shared Indexes: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Canonical demand planning (2026-10-09)
+
+[[file:../../research/scheme-dsl/index-planning.org][Souffle method reading]] maps the existing maximum-matching planner to
+primitive-search chain coverage. Normalized demands now have lexicographic
+order before augmentation: equal demand sets generate equal physical layouts,
+including equal minima with several legal chain choices. The 128-family native
+partition oracle now compares three alternate demand enumerations per family.
+Lean =CanonicalIndex= adds five inventory/determinism laws and Quint adds bounded
+collection/publication controls. Existing minimality, prefix lookup and owner
+publication gates remain separate. No application speedup is inferred.
+
+* Curried physical index implementation (2026-10-06)
+
+The admitted rule analysis now supplies logical column requirements to each
+engine. Pure component and actor workers derive requirements from their actual
+compiled actions and build independent mutable roots. The explicit =gerbil-ascent-curried-index-provider= receiver
+uses maximum bipartite matching over strict subset requirements to form chains;
+each chain's permutation covers every assigned logical requirement as a prefix.
+The default hash receiver, singleton requirements and arbitrary custom
+Providers retain their existing representations. Requirements are planned only
+when an explicit curried receiver first needs an actual physical lookup. This implements the layout-sharing mechanism discussed in
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization section 5.5]], rather than renaming the former cache.
+
+A physical trie stores each input occurrence at one full-depth leaf. Ordinals
+restore exact relation order when selecting a shorter prefix; ordered view
+spines are cached lazily and invalidated together on extension. Existing
+returned spines remain immutable. Multiple logical aliases extend one physical
+entry once. All/delta and different engine/worker roots remain separate.
+No general memory or application speed improvement follows from the reduced
+physical root count: ordinals, trie nodes and cached view spines have costs.
+The paired complete-solve fixture is observational and retains negative results;
+it is not the paper's Polonius, LLVM or whole-application replication.
+
+Native acceptance compares all 128 requirement families over three columns
+with an independent chain-partition enumeration and checks actual compiled
+serial/component actor solves against independent truth. Shared prefixes cover
+false values, repeated row occurrences, reordered keys, immutable old views,
+alias extension and owner/delta isolation. Lean proves universal prefix-coverage
+lookup equality, ordered batch decomposition and exact membership; minimum
+matching optimality and native trie ordinal collection are not inferred from
+those theorems. Quint extends the existing root-publication model with alias and
+foreign-owner mutations; it does not repeat those algebraic statements.
+
+The Linux CI run at =67da108a97de39722087b6bcabe8398d8b4163ba= passed
+production and support compilation, then exhausted the 1 GiB heap in the
+combined Suite expansion process. That rejected result is retained. Suite
+compilation now releases expander/compiler state per Suite consumer, preserving
+the full module registry and the same heap/progress contracts. Runtime workers
+still use the configured parallel module pool and actor execution paths.
+
+** Cost admission and retained negative outcomes
+
+The initial three-view fixture produced no CPU wins in 50 paired solves and
+allocated 6,971,728 bytes per solve (median), compared with 380,768 for the
+historical ordinary-index reference. Resolving layout identity once per atom,
+removing per-query adaptation hash tables and retaining immutable ordered views
+reduced the revised median to 663,744 bytes; CPU still had no wins (744 versus
+635 microseconds). These measured revisions were rejected as a default-path
+performance improvement. The curried receiver is therefore an explicit
+physical representation choice; no reduced root count is promoted to an
+application benefit. These comparisons use the existing historical complete
+solve reference and do not isolate every earlier engine change.
+
+The first complete native run with the prototype passed 50 modules and 432
+Cases, then the stratified proof checker triggered the unchanged five-second
+idle guard. Its isolated rerun passed in three seconds. The tiny founded-proof
+case now reports only completed direct and generated witness checks as actual
+progress; no heartbeat or timeout increase was introduced. A new complete
+native run must qualify the final receiver/adapter implementation.
+
+** Final source-bound qualification
+
+The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][curried receiver receipt]] records the final frozen implementation: 82 native
+modules, 717 CASE-OK, 82 explicit OK, parent exit zero, four concurrent module
+workers, unchanged 1 GiB compiler heap and five-second startup/idle limits.
+The complete formal collection has 84 Lean build jobs, 19 normal TLC
+explorations and 33 required counterexamples. All seven existing default-path
+cost gates passed; the explicit shared fixture remains observational and its
+negative outcome is retained. The compiler-only parent =5a75020= passed every
+GitHub CI job. The final receiver commit must independently pass exact-head CI.
+
+** Rebased qualification and founded recovery
+
+The current receiver implementation integrates upstream mutable callback
+semantics and native PO compiler composition through =59c1710=. The complete
+requalification passes all 82 native modules, 722 CASE-OK, 82 explicit OK and
+exit zero with four workers and unchanged heap/startup/idle contracts. The
+717-Case result above remains historical; it is not relabeled as this run.
+The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] records both source boundaries.
+
+Lean additionally proves that appending only missing columns covers each next
+chain requirement, preserves every earlier prefix, and retains a duplicate-free
+physical permutation. This closes the chain construction coverage step without
+claiming general maximum-matching optimality or extracted native trie correctness.
+
+=ComponentClosure.SourceWithdrawal= proves exact least-model recovery from
+remaining sources plus unaffected founded facts for any dependency-closed
+invalidation set. It also distinguishes duplicate source occurrences from fact
+identity and rules out source-free cycles when every rule has a nonempty body.
+Empty-body constants remain independent foundations. These are semantic laws;
+transaction publication and cancellation remain Quint responsibilities. Native
+support-graph completeness and its correspondence to Session invalidation remain
+explicit premises to discharge. All examples and axiom reports reside in =Tests=.
+The complete Lean collection passes 84 jobs. This source needs its own GitHub CI.
+
+** Constructed ground invalidation and all simultaneous withdrawal cuts
+
+=SourceWithdrawal.dependencyRules= constructs one dependency edge per admitted
+ground rule premise. =constructed_closed= proves closure of propagation from
+withdrawn seeds, and =constructed_sources= proves preservation of unaffected
+seeds. =constructed_recovery= supplies both premises to exact least-model
+recovery. Neither stability nor dependency closure is supplied by the caller.
+Complete native grounding/representation remains an explicit bridge; this does
+not establish deletion rederivation DRedc recursive/nonrecursive counter maintenance or incremental view maintenance DBSP.
+
+The existing native graph suite now checks all 729 simultaneous withdrawal
+cuts across 64 three-node graphs against independent Floyd matrix closure.
+Selectors are reversed and duplicated, and every withdrawal is repeated to
+check occurrence idempotence. The full suite passes with explicit OK and exit
+zero under the unchanged progress contract. Existing exact-budget parity,
+failed publication, complete-alternative tampering and last cyclic support
+controls remain included. The complete Lean collection passes 84 build jobs.
+See the [[file:../../evidence/scheme-founded-recovery-20261006/receipt.json][source-bound recovery receipt]].
+
+** Native owner boundaries and package policy acceptance
+
+GitHub Scheme job =112186600199= at =80f1af4= failed before runtime tests:
+ASP rejected =program/evaluate.ss= at 1010 effective lines. An intermediate
+index extraction still had 1000 lines and was rejected. Neither outcome is a
+native Runtime stall or an accepted test run.
+
+Logical requirement discovery now belongs to =program/index.ss=. Engine rules
+and compiled SCC/actor actions use its registration functions in original order;
+no key expression is evaluated during registration. Actor capability admission
+belongs to =program/actor-round.ss= and retains exactly the prior purity,
+canonical Set/index, lattice and field-callback restrictions. Each executor
+still owns separate all/delta physical roots. The source policy threshold is
+unchanged; the actual complete package build passes with 13 advisory findings
+and zero hard errors. The concurrent =735f610= prepared atomic transaction
+update is integrated. Complete native/formal and exact-head GitHub acceptance
+must separately qualify this combined source.
+
+
+* Certified minimum physical chains (2026-10-06)
+
+The Provider concretization index-sharing planner now checks its search result independently before
+returning any layout. It verifies reciprocal matching endpoints, actual strict
+subset edges, alternating reachability, coverage of every edge, and equality of
+cover and matching cardinalities. Chain traversal separately rejects duplicate
+or omitted logical requirements. These checks own no rows and do not evaluate
+lookup expressions. Each engine and actor worker retains its existing private
+physical roots and publication boundaries.
+
+=SharedIndex.MatchingCertificate.minimum_partition= proves that a tight endpoint
+cover bounds every legal competing chain partition. Adjacency edges, endpoint
+uniqueness and the edge/chain balance are constructed from the partition rather
+than supplied as independent matching/count assumptions. This is an unbounded
+finite mathematical result; the native-to-Lean graph representation bridge and
+trie refinement remain distinct obligations. Existing Quint publication/ownership
+checks are retained without duplicating the matching algebra. Native invalid
+matching controls and independent exhaustive partition comparisons qualify the
+implementation separately. The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
+results and the negative complete-solve cost result. No model or Rust result is
+implied by minimum physical root count.
+
+
+* Provider concretization constructed column projection and index layout lifetime (2026-10-08)
+
+Provider concretization section 4, printed page 264:11, requires keyed reads and ReadAll to agree
+on a relation's concretization. The [[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates the obligation;
+the cursor algorithm below is our Scheme implementation choice. It does not
+come from a new paper claim or establish all of section 4.
+
+=table/funs.ss= now uses the existing forward cursor for public index keys as
+well as ordered batch construction. Strictly increasing natural column indices
+compile into gaps; after selecting a field, the next cursor begins immediately
+after it. Repeated or reordered columns use direct selection. Gaps are computed
+from the current caller-owned columns on each invocation. Caching them across
+calls would be incorrect when that header changes. Field values retain identity.
+
+=ProviderRouting= supplies nine additional laws. =compiled_columns_exact=
+recovers arbitrary ordered columns from the generated gaps;
+=cursor_columns_exact= derives the forward traversal from list-drop composition;
+=stepped_projection_exact= connects both. =stepped_build_exact= and
+=stepped_history_exact= derive exact ordered buckets for arbitrary finite batch
+histories using the actual projection, without an assumed =keyOf= equality or
+bucket-coverage premise. =ordered_check_iff= and =dispatched_projection_exact=
+cover the repeated/reordered fallback. =column_key_missing_iff= and
+=admitted_projection_present= state the bounds obligation explicitly. The
+optional-field model distinguishes absence from a stored Boolean false. These
+are mathematical list algorithms; native lawful hash/value equality and Gerbil
+primitive behavior remain representation contracts.
+
+=ComponentIndex= now carries each cache root's declared column header and an
+independent frozen old-reader header. Correct extension and rebuild preserve
+the layout; publication must not change a held header. Three new mutations
+reverse columns during extension, overwrite a held header, or rebuild with the
+wrong columns. The first and third violate =Consistent=; the second violates
+=HeldStable=. TLC explores protocol interleavings, not cursor arithmetic.
+The two-column, two-batch fixture limits exploration data, not runtime
+arity or generation. This fixed-layout contract applies to declared engine
+index roots. Raw helpers still accept caller-mutated columns between calls;
+that behavior is separately tested, not claimed to preserve one root's layout.
+
+Native qualification uses direct =list-ref= truth, shared vector identities,
+96-field rows, ordered/repeated/reversed/full/empty layouts, mutable caller
+headers and Boolean fields. Callback tests mutate the received column/key
+headers and require the caller's headers to remain intact. The existing 256
+retained-history corpus and compiled self-join controls remain independent.
+Lean examples and negative controls stay under =Tests/ProviderRoutingTests.lean=.
+
+See the [[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound receipt]] and the updated closure matrix. This discharges the
+previously named stepped-projection algebra gap. Universal native hash/trie,
+ordinal and rectangle-visitor refinement, full paper applications, and matched
+whole-application benefit remain separate obligations. No measured speedup,
+physical-memory reduction or complete paper replication is claimed.
+
+
+* Provider concretization curried collection, ordinal restoration and cached views (2026-10-08)
+
+Provider concretization section 5.5, printed pages 264:16--17, uses nested dictionaries and adapters
+so one physical chain serves multiple logical indexes. The
+[[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates shared lookup; Scheme additionally preserves ordered
+row occurrences, including duplicates. The earlier =SharedIndex.prefix_lookup=
+filter theorem did not derive the order obtained from actual trie enumeration.
+
+=table/index-sharing.ss= now threads one tail through recursive collection.
+=hash-fold= visits a node's children; leaf bucket spines append directly to the
+shared tail. Ancestors never append an already collected child subtree again.
+Rows and ordinal records remain borrowed. Sorting and =map cdr= still create the
+ordered public result. Cache hits keep the same public spine; nonempty extension
+invalidates cached aliases, while empty extension preserves them.
+
+=ProviderRouting.collect_tail_exact= proves the accumulator transformation for
+arbitrary finite binary branch descriptions and arbitrary tails. Leaves describe
+last-level record enumeration; branches describe nested child traversals.
+=leaf_copies_exact= counts one copied spine cell per enumerated record in this
+model. =collection_copies_le= compares that count with repeated subtree appends.
+This is explicit list-copy work, not physical allocation bytes or universal
+native complexity. General hash traversal and its branch extraction remain
+representation contracts. The native helper supports arbitrary branching.
+
+=numberRows= models fresh increasing insertion ordinals. Lower/upper bounds,
+strict order and =strict_ordinal_unique= derive unique labels without requiring
+unique row values. Extension preserves order and the next-label bound;
+=numbered_history_order= and =numbered_history_values= carry both through
+arbitrary finite histories, including empty batches. =constructed_history_restore=
+then restores the exact =replayRows= sequence from any permutation of the
+constructed records. Coverage is stated for actual record occurrences, not just
+set membership. Omitting a duplicate occurrence is rejected.
+=constructed_prefix_restore= composes restoration with an arbitrary row
+predicate, preserving exact filtered order and multiplicity across those same
+histories. This connects prefix selection to the occurrence restoration law;
+extraction of the native trie leaves satisfying that predicate remains explicit.
+
+The executable Lean reference uses mergeSort with a total descending comparator.
+=restored_occurrences_exact= derives the unique result. Native Scheme uses
+strict greater-than comparison: =native_strict_sort_exact= proves the same unique result
+under its primitive permutation/strict-order contract. The Lean theorem does
+not verify Gambit's sorting implementation. Native direct-column truth and
+frozen reference comparisons independently qualify that correspondence.
+All examples and fault controls remain under =Tests/ProviderRoutingTests.lean=.
+
+Quint =ComponentIndex.ReadView= adds cold all-row prefix caching. =viewValid=
+means the cache may be reused, not that a previously returned reader is still
+alive. =ViewConsistent= requires a reusable view to equal the committed root
+and forbids reuse during private extension or failed mutation. =HeldStable=
+continues to protect old returned readers independently. Correct extension and
+failure revoke reuse; rebuild starts with an invalid cache. Three mutations
+retain reuse during extension, retain reuse after failure, or populate a rebuilt
+view from the damaged pre-rebuild cache. Each must violate =ViewConsistent=.
+This finite protocol models the all-row prefix and two owners, not every key or
+unbounded callback liveness. Ordinal algebra remains exclusively in Lean.
+
+The native corpus now enumerates 64 source subsets, all six three-column
+physical permutations, prefix depths zero through three, original/reversed
+logical keys, absent keys, Boolean fields, duplicate insertions, cold/warm cache
+identity, empty batches and held old results. Each query must agree with direct
+=list-ref= filtering and the existing frozen implementation, retaining each row
+object. Earlier native failure, shared alias and actor Session controls remain.
+See [[file:qualification.org::*Curried collection qualification][feature qualification]].
+
+The existing five-scenario benchmark is exposed through the ordinary Justfile
+as =performance-index-sharing=. Its immutable reference remains commit
+=4fe11743929170e177ab8e7b6388e00d21595e72=, predating earlier projection changes.
+Any new sample measures the cumulative build/extend/read lifecycle against that
+reference; it cannot isolate this collector change. Paired samples, independent
+truth, CPU/allocation counters and predeclared gates remain unchanged. Physical
+memory and whole-application speedup require separate measurements.
+GitHub's Scheme job repeats this native lifecycle gate through that Justfile
+entry; no Python supervisor or additional test entry layer is introduced.
+
+
+* Provider concretization constructed logical key adaptation (2026-10-08)
+
+Section 5.5 of the [[https://kmicinski.com/assets/byods.pdf][primary paper]] separates a logical index from its nested
+physical dictionary. =SharedIndex.keyValue= now mirrors the native =value-of=
+recursion through parallel column/value lists; =adaptKey= mirrors =adapt=
+through a requested physical prefix. Missing fields and overlong requests yield
+=none= in the model and raise in Scheme. =some false= remains a valid field.
+This failure abstraction does not equate exception messages or types.
+
+Six laws connect these executable definitions to the existing filter semantics:
+=key_value_mapped= and =key_value_absent= establish successful and absent
+searches; =key_value_pair= derives first-match lookup for arbitrary positional
+values under distinct logical columns; =adapt_key_overlong= rejects requests
+beyond physical depth; =adapt_key_mapped= constructs the physical key from a
+covered logical key; =adapted_prefix_exact= derives physical key comparison
+equivalence to the logical row constraints. No physical key oracle or adapter
+permutation is a premise. Prefix coverage and the supplied field function
+remain explicit; this does not extract native hash/trie state.
+
+Examples and wrong-order, missing-value, duplicate-column and overlong controls
+remain in =Tests/IndexedPositiveTraversalTests.lean=. The native suite additionally
+checks six malformed requests before cache publication, after publication and
+after extension, and preserves valid cached spines and held old readers.
+It retains the independent direct-filter and frozen-reference corpus.
+
+The ordinary Justfile commands qualify this bridge. Lean owns positional
+semantics; the unchanged Quint =ComponentIndex= owns extension, failure, rebuilding,
+view admission and held-reader stability. Repeating its existing 13 fault
+controls provides lifecycle regression evidence without duplicating the key
+algebra in Quint. The [[file:qualification.org::*Logical key adaptation qualification][feature qualification]] records results and source identity.
+Native trie extraction, primitive hash/equality/sort implementation contracts,
+rectangle visitors and complete paper applications remain separate gates.
+
+
+* Provider concretization constructed curried trie and prefix occurrences (2026-10-08)
+
+Section 5.5 of the [[https://kmicinski.com/assets/byods.pdf][primary paper]] uses nested maps to serve physical prefixes.
+The earlier ordinal restoration theorem accepted an occurrence permutation as
+a premise. =ProviderRouting.CurriedTrie= now gives an executable, depth-indexed
+dictionary construction. Depth zero is a leaf bucket; each higher level is a
+key-to-child map. =trieInsert= updates exactly the selected branch and prepends
+one leaf occurrence. =trieBuild= groups source occurrences by each coordinate.
+=trie_insert_build= proves these constructions agree at every finite depth.
+=trie_prepend_build= and =trie_replay_build= derive batch and history direction.
+
+=trie_collect_build_count= derives exact occurrence counts by induction through
+the nested maps. Its child inventory must be unique and cover every inserted
+coordinate at the corresponding depth. =trie_collect_build_perm= derives the
+enumeration permutation from those counts. =trie_read_build_perm= composes
+selected branch descent with child collection: the result is a permutation of
+the directly filtered source, including repeated equal rows. Missing branches
+and overlong prefixes yield empty results in this read model.
+
+=trieNumberedReplay= inserts actual freshly numbered batches into the trie.
+=trie_numbered_replay_build= connects that execution to =replayNumbered=;
+=prefix_selected_projection= connects record keys to row keys.
+=trie_numbered_prefix_restore= then derives the exact ordered logical result
+through arbitrary finite insertion histories. The gathered-record permutation
+is no longer a caller premise in this theorem. All nine laws and positive and
+negative examples are checked under =Tests/ProviderRoutingTests.lean=. Duplicate
+and omitted child inventories have retained executable counterexamples.
+
+The functional dictionary assumes coherent key equality and map lookup/update.
+Collection uses one supplied finite key inventory, allowing any inventory order;
+native hash nodes enumerate their own materialized children in potentially
+different orders. Extracting those per-node inventories and their correspondence
+to the functional branches remains a native representation obligation. This
+does not verify Gambit's hash implementation or remove the sort primitive
+contract. The native build requires nonempty physical columns; model depth zero
+describes a leaf, not a newly admitted empty physical layout.
+
+The Scheme qualification additionally checks depths one through five with
+reversed sparse physical layouts, all prefix depths, reordered logical keys,
+duplicates, row identity, warm spine identity, extensions and held old readers.
+Each result is compared with independent =list-ref= filtering. Those finite
+fixtures do not bound the theorem or runtime depth. Production Scheme storage
+and routing are unchanged in this slice. Quint retains lifecycle ownership;
+the unchanged =ComponentIndex= model is qualified separately, without adding
+positional or trie algebra to its state machine. See the
+[[file:qualification.org::*Trie construction qualification][feature qualification]]. No new performance samples are claimed.
+
+* Provider concretization materialized per-node inventories (2026-10-08)
+
+=CurriedDictionary.lean= derives distinct child keys from the actual source
+rows at each path. Every node may enumerate these keys in a different order;
+only a permutation of that node's constructed keys is required. Eight laws
+prove unique/covered inventories, erasure to the functional trie, occurrence
+counts, collection/prefix permutations and exact ordinal-restored prefix order.
+This removes the earlier construction model's common global key inventory.
+
+The tests under =Tests/CurriedDictionaryTests.lean= use independently reordered
+siblings, duplicate-valued occurrences, absent/overlong prefixes and empty then
+nonempty numbered history. Duplicating or omitting a child inventory fails the
+occurrence specification. Native qualification separately checks heterogeneous
+Scheme keys and row identity. The laws cover arbitrary natural depths and
+source lists; native hash get/put/equality, enumeration and sort correspondence
+remain primitive implementation obligations.
+
+* Quint lifecycle authoring (2026-10-08)
+
+The shared-root lifecycle is authored in
+[[file:../../../packages/proofs/quint/ComponentIndex.qnt][ComponentIndex.qnt]]. It checks publication, private extension, failed mutation,
+rebuild, held readers and cached views. Lean owns dictionary construction and
+lookup algebra; Quint owns interleavings and protocol transitions. Neither is
+presented as a proof of the other's implementation correspondence.
+
+The four invariants and thirteen mutations are preserved. The finite input
+fixture is supplied by a module instance; no generation cap is imposed on the
+library. =just check-component-index-formal= performs Quint type/effect checking
+and exhaustive TLC exploration through Quint's verification backend. Generated
+Quint is a temporary checker representation, not an authored repository model.
+See the [[file:../qualification/quint.org][protocol migration contract]] for the remaining feature owners.

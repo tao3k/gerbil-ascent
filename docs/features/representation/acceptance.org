@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Representation: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Retired collector removal (2026-10-07)
+
+The complete CI at =0f20eb9= passed Scheme, all three oracle shards, formal
+verification and the final aggregate gate. The previously failed 10,000-pair
+case passed in the parallel other shard (66 passed, zero failed).
+
+A following audit found 49 one-shot Python collectors under =t/performance=.
+They were outside the current build/CI entry graph; several imported removed
+=tools/test_execution.py= or =tools/performance_execution.py=, used stale partial
+suite inventories, or printed periodic RUNNING notices without native progress.
+They are removed rather than adapted back into the current Scheme harness.
+Historical readmes now mark their result/source scope and retire executable
+collector instructions. Native Scheme tests, benchmark/reference modules and
+negative measurement receipts retain their roles. No production evaluator,
+callback semantics, proof model, timeout or source pin changes in this cleanup.
+
+This removes obsolete orchestration, not an outstanding native refinement
+obligation. Provider multi-column routing correspondence and complete paper
+application/time/memory acceptance remain on the mainline closure plan. See
+[[file:../../evidence/scheme-provider-views-20261007/retired-collectors.json][the deletion inventory and qualified source boundary]].
+

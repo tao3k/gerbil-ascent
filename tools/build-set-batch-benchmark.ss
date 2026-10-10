@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("table/storage" "t/qualification/ascent-set-batch-reference")
+      srcdir: (current-directory)
+      libdir: (getenv "ASCENT_SET_BATCH_LIB")
+      build-deps: ".gerbil/set-batch/build-deps")
+(exit 0)

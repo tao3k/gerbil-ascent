@@ -1,0 +1,84 @@
+{
+  "qualifiedBaseHead": "b35152063b1033fc0bfe6869837c7bf9572feaff",
+  "scope": "Failed custom index lookup dispatch or complete candidate admission revokes the selected physical entry version; aliases rebuild from unchanged committed rows.",
+  "sources": {
+    "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+    "table/provider.ss": "6727d87e9f705ca24a459b413c5babf37fab1749c24572043f6405dd98f5483e",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-byods-index-test.ss": "f144c332c49deaf7cc223266733d7e22e5bfd3b3e26eba17d50c4eeea5b6fd8a",
+    "t/qualification/ascent-index-entry-test.ss": "80eb2f771d2a82e0971014a4650a054667be7b69081df1c568d32425d5942daf",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294",
+    "t/harness/native-compile.ss": "b9767e3aefeb1e1f8e2cf440d6f40ba43f51d051dd5be350c7ab434aa3965848",
+    "t/harness/native-entry.ss": "0da981b6265fb747341229fc6d87fc1bb3cbb304263b8c83df675bf4f6fde610"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "43f52c7f611be611315e35af437f2b9121e64165ca7ac673ad3754dc6fb9ed67",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 23,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "808bb5287c38124356aad76a521ea1e1e02655baff2ddd36b8d2cc81a38d1446"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 8,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "40f8edb545b295dcc77505723c93524fae343a346b09206f489be6cda22660e7"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "b35152063b1033fc0bfe6869837c7bf9572feaff",
+    "productionSourceHashes": {
+      "program/index.ss": "2c9601457f6f4f4e9e576472ca1acc00f095e8e38ebd8d111358060005dd6531",
+      "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+      "table/provider.ss": "5d3a29788f39d4bb2d55d44bde1a7ec893165203c4da5a7c4b413d39565a4283",
+      "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+      "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c"
+    },
+    "testSourceSha256": "80eb2f771d2a82e0971014a4650a054667be7b69081df1c568d32425d5942daf",
+    "exitCode": 70,
+    "observedExtensionsAfterLookupFailure": 1,
+    "expectedExtensionsAfterLookupFailure": 0,
+    "logSha256": "cbbf0d4b3f0ef47a0302fd2f04ed3775d179c1450373766788e1a1ed846452a6",
+    "qualification": "Rejected native result: failed mutating lookup left its physical entry eligible for extension. MODULE/HARNESS markers did not establish success."
+  },
+  "discriminators": [
+    "Six modes: raised callback, non-list packet, wrong arity, foreign row, duplicate row and omitted key group",
+    "Original failure diagnostics propagate; revoked total entries skip extension",
+    "Structural atom aliases rebuild without source version changes, then reuse successful cache hits",
+    "Reciprocal all/delta failures preserve the other lane without rebuilding it",
+    "Existing Session engine recovery returns all 32 independently enumerated facts after raised and rejected mutating reads"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 4, PDF page 11: index reads implement concretization and logical indices must agree",
+    "transfer": "Effectful Scheme callback failure cannot certify that a private physical cache still represents the committed snapshot.",
+    "boundary": "Exception recovery is our implementation obligation; not a DLDS theorem or a paper performance result."
+  },
+  "remaining": [
+    "Rebuild requires the Provider to return a valid index again",
+    "Nested field value stability and equality laws",
+    "External callback effects and general storage rollback",
+    "Universal native-to-proof extraction"
+  ],
+  "modelCalls": 0,
+  "developmentFailures": []
+}

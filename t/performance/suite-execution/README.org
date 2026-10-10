@@ -1,0 +1,92 @@
+#+title: Complete qualification suite execution
+
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+* Scope
+
+Baseline: 2b3d172, clean feature/ascent-scheme-syntax checkout. This slice
+optimizes the whole qualification execution pipeline: admission, scheduling,
+worker lifecycle, isolation, native failure validation, and complete receipts.
+Production evaluator code and dependency pins are unchanged in this slice.
+
+* Admission and isolation
+
+The previous suite admitted 7 semantic modules and ran 36 modules sequentially.
+The new inventory admits 33 modules in separate processes and runs 10 exclusive
+modules after that phase finishes. admission.json records the full inventory
+and individual exclusion reasons. Unknown modules remain exclusive by default.
+
+Admitted modules assert values, identities, callback traces, or bounded semantic
+outcomes under unchanged Core default Case policies. Mutation stays inside each
+module's process. Zero-timeout differential controls compare their final fixed
+points, without requiring equal partial prefixes. Explicit timeout behavior,
+per-rule timing, custom duration/GC profiles, internally threaded cases, and the
+large exhaustive reasoning/operator/library corpora remain exclusive.
+
+Native std/test owns suite and Case execution inside each worker; this change
+does not introduce concurrent Cases or shared native interpreter state.
+GERBIL_BUILD_CORES continues to select capacity through ASP's native builder
+API, with its host fallback. Explicit test jobs override only this capacity.
+There is no fixed four-process cap. With capacity 12 and 33 admitted modules,
+the measured parallel phase uses 12 workers. Each process retains its 1 GiB
+heap fence, native Case profiles and test timeout.
+
+Both phases now use the same worker lifecycle and receipt code. Worker failures
+are retained while remaining discovered modules execute. Completion is checked
+against the exact discovered inventory. Cancellation stops queued work, sends
+TERM to all tracked active workers, then reaps or kills them under a shared
+five-second grace deadline. The inherited exclusive command path also uses
+managed child cleanup. Native receipts reject MODULE errors and require an
+exact MODULE-OK line, even if the native process exits zero.
+
+* Whole-suite comparison
+
+Commands for both measurements:
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 just test
+#+end_src
+
+| measurement | parallel modules | exclusive modules | elapsed seconds | modules | Cases | exit |
+|-------------+------------------+-------------------+-----------------+---------+-------+------|
+| baseline    |                7 |                36 |         187.011 |      43 |   345 |    0 |
+| candidate   |               33 |                10 |         135.817 |      43 |   345 |    0 |
+| final verify |               33 |                10 |         89.858 |      43 |   345 |    0 |
+
+This local, sequential baseline/candidate pair reduces full-suite wall time by
+51.194 seconds (27.375%). It is a suite execution measurement, not an evaluator
+speedup or a statistical latency qualification. No native SS p95 profile was
+changed or rerun in this slice; the previously recorded SS failure is unresolved.
+The candidate's parallel phase took 36.125 seconds and exclusive phase 99.411
+seconds. The exclusive corpus is the main remaining suite cost.
+
+baseline.json and candidate.json retain wall times and exit codes. Baseline and
+candidate native log directories retain all 43 module transcripts per run.
+Coverage JSON files verify exact module inventory and identical ordered native
+Case names across both runs, including MODULE-OK, HARNESS-OK and final OK.
+Phase and suite JSON files retain the scheduler's original receipts.
+
+candidate-tested-scheduler.py preserves the measured implementation. The final
+source additionally moves worker submission inside the interruption handler,
+covering cancellation during dispatch; it receives a final complete native run.
+
+* Verification
+
+The scheduler unittest transcript includes overlap/exclusion, inherited leases,
+worker failure preservation, unknown-module admission, native Core capacity,
+uncapped explicit capacity, exact suite inventory, a phase barrier, cancellation
+of a TERM-resistant worker (including PID disappearance), and four zero-exit
+native receipt fixtures: valid, MODULE error, empty Cases, and wrong module.
+
+The final native run and source manifest are retained separately. Exact raw
+completion lines and Case names are the coverage boundary. Build and dependency
+qualification from earlier evaluator slices are not counted as new checks here.

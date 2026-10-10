@@ -1,0 +1,30 @@
+[
+  {
+    "run": 1,
+    "jobs": 1,
+    "status": 0,
+    "elapsedSeconds": 15.412920792000023,
+    "log": ".gerbil/test-scheduling-run-1.log"
+  },
+  {
+    "run": 2,
+    "jobs": 2,
+    "status": 0,
+    "elapsedSeconds": 4.2498680420001165,
+    "log": ".gerbil/test-scheduling-run-2.log"
+  },
+  {
+    "run": 3,
+    "jobs": 2,
+    "status": 0,
+    "elapsedSeconds": 14.267882124999915,
+    "log": ".gerbil/test-scheduling-run-3.log"
+  },
+  {
+    "run": 4,
+    "jobs": 1,
+    "status": 0,
+    "elapsedSeconds": 21.42863866699986,
+    "log": ".gerbil/test-scheduling-run-4.log"
+  }
+]

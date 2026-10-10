@@ -1,0 +1,197 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: Quint and Lean responsibilities
+
+* Authoring decision
+
+All eighteen ASCENT protocol specifications are authored in typed Quint.
+Handwritten TLA specifications, CFG fixtures, their license sidecars and the
+legacy checker bootstrap have been removed. The existing Justfile is the
+verification entry point; no second test runner is introduced.
+
+Lean proves semantic and algebraic statements over arbitrary admitted data.
+Quint covers transitions, ownership, publication, resource accounting and
+adversarial interleavings. Scheme tests establish observable correspondence to
+native code. Changing the specification language does not establish new native
+refinement, universal protocol proofs or application performance benefits.
+
+The [[https://quint.sh/docs/model-checkers][official checker documentation]] distinguishes exhaustive finite TLC exploration
+from Apalache's bounded symbolic checks. Acceptance compiles Quint and checks
+the generated protocol with the bundled TLC backend. The Justfile generates
+checker configuration so that state constraints and fairness specifications
+remain explicit. Random =quint run= samples do not discharge this gate.
+Generated backend TLA/configuration and execution output remain uncommitted.
+
+Quint 0.33.0 and its transitive dependencies are pinned in the package manifest
+and lockfile under =packages/proofs/quint=. These JSON files are consumed by
+=npm ci=, rather than duplicating benchmark receipts. Installation stays in the
+ignored tool cache. Apalache 0.62.1 is the compiler/backend distribution; its
+jar checksum is pinned in Justfile. Java 21 is required by that distribution.
+
+* Feature migration inventory
+
+All modules below have passed their positive configurations and original
+property-specific defect controls. Sources live under =packages/proofs/quint=.
+
+| Feature | Protocol modules | Required defect controls |
+|---------+------------------+--------------------------|
+| Shared indexes | ComponentIndex | 13 |
+| Provider admission | ProviderAdmission | 6 |
+| Provider frontiers | ProviderFrontier, TransitiveComponents | 17 |
+| Provider replay | ProviderReplay | 6 |
+| Provider views and routing | ProviderViews, ProviderRouting | 9 |
+| Lattice projection | LatticeProjection | 12 |
+| Component scheduling | ReadyComponents, ActorRound | 8 |
+| Actor capacity and lifecycle | ActorTestPool, ActorRoundCredits, ActorSession | 4 |
+| Oracle transport | OracleTransport | 4 |
+| Session publication | NativeSessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | 14 |
+| Total | 18 modules | 93 |
+
+* Transition and property correspondence
+
+The migrated state record packs the former variables into named fields.
+Projection of each field recovers the corresponding state; finite symbolic
+worker/reader/node identifiers are renamed bijectively. Stuttering and fairness
+refer to the complete record, corresponding to the former variable tuple.
+Each action retains its guards and changed/unchanged observations.
+
+Positive graph closure uses a finite Floyd-style set fold, rather than recursive
+Quint definitions. Replay ordering uses an ordered fold over the admitted
+fixture's unique row codes. Expected closure still comes from independent
+input facts, not from the implementation's emitted frontier. Matching state
+counts are a discriminator, not a complete compiler-refinement theorem.
+
+Session action properties use =orKeep(q).always()= around the action implication.
+This preserves the original stuttering action property. Wrapping a next-state
+expression in an unrestricted =always()= compiled but failed the backend's
+semantic analysis; that attempted translation is excluded from acceptance.
+
+ReaderLifetime preserves per-reader weak completion fairness, the insufficient
+aggregate fairness control, the valid single-reader aggregate case and the
+sealed-round completion property. Strong fairness was not substituted for weak
+fairness. No fairness assumption was dropped to obtain a passing result.
+
+* Compiler compatibility finding
+
+The raw compiler output's =:= assignments caused TLC to report an unexpected
+ReaderCompletion counterexample for the correct model. The unchanged original
+model passed on the same bundled checker. Erasing assignment annotation tokens
+in the generated copy restored both the correct-model verdict and its exact
+state counts: 132,616 generated and 14,175 distinct states.
+
+The backend's bundled =Apalache= standard module defines =__x := __e= as
+=__x = __e=; the [[https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla][upstream module]] documents this erasure interpretation.
+The Justfile applies that equality lowering only to operator tokens, preserving
+quoted model values, including escaped quotes. Authored Quint actions and
+fairness are unchanged. The entire positive/defect matrix is checked after
+lowering; raw compiler artifacts alone are not accepted as verification.
+
+* Complete migration qualification (2026-10-08)
+
+The full CI configuration passes thirty positive configurations and all
+ninety-three expected counterexamples. Session and provider-view exploration
+use generation bound four; actor generation/round bounds remain two/four and
+ActorSession uses four. Pool, credit and ready scheduling check capacities
+one/two/three; lattice projection checks remaining budgets zero/one/two.
+Frontiers include empty, seeded and overlapping producer configurations.
+The complete Lean package and its separate =Tests/= library pass 115 build jobs.
+The observed full protocol replay took 508 seconds in one warm-cache invocation;
+this includes all mutant checker processes and is not a Gerbil test duration or
+a statistical speedup result.
+
+=GenerationCutoff= and =RoundCutoff= constrain finite checker enumeration only.
+They are referenced by exploration predicates, not protocol transition guards.
+Default Session enumeration uses two, default ProviderViews uses three and CI
+sets =ASCENT_FORMAL_GENERATION_CUTOFF= to four. These limits do not constrain a
+native Session, a fixed point or a model's reasoning budget.
+
+The compiler starts once per invocation if a source-bound compiled artifact is
+missing. Cache admission checks the source, lockfile, backend, selected module,
+properties and artifact checksum; checker outcomes are always recomputed.
+Two independent protocol lanes explore states while Lean builds separately.
+Real TLC exploration progress is emitted. Each checker has a private temporary
+directory for standard module extraction and state storage.
+
+Positive acceptance requires exit zero and completed model checking. A defect
+control requires its exact violated property and expected exit twelve or
+thirteen. Parse, type/effect, startup, backend and resource errors fail the gate.
+Invalid checksum/bound controls are refused; failure-join controls confirm that
+either failed branch prevents the aggregate success marker. These entry tests
+are not counted among the ninety-three protocol counterexamples.
+
+Dated TLA receipts retain their source hashes, checker identities and measured
+results. They do not certify this migration or a later commit. Final-commit
+GitHub checks remain the independent delivery gate. No new model-provider calls,
+Scheme runtime changes or performance benefits are claimed by this migration.
+
+* Execution feedback qualification (2026-10-10)
+
+[[file:../candidate-feedback/acceptance.org][ExecutionFeedback]] is registered in the existing all/Nonmembership gates.
+The finite correct configuration explores 2,048 distinct states. Stale/partial
+candidate or gold qualification, a changed query and omitted missing/extra
+rows each violate the designated invariant (exit 12). Seven corresponding
+production Scheme Cases use the same mutation identifiers, real executor
+receipts and exact refusal/difference assertions. Lean states the matching
+qualification and set-difference laws; the acceptance page records the
+abstraction and source-refinement boundary. The model's actual =evaluate=
+function also exports all 1,024 initial observations. Formal CI regenerates
+them and compares them and the frozen artifact with a kernel-checked executable
+Lean grader; ordinary Gerbil tests replay the same artifact with real native
+receipts and check the abstraction premises. This feedback model is additional to
+the historical migration inventory above.
+
+* Branch scoped witness qualification (2026-10-10)
+
+[[file:../scoped-witness/composition.org][Scoped composition]] additionally checks 1,024 pending/complete states and
+four group OR/AND faults. The 512-input corpus is produced by the transition
+evaluator and compared with the Lean witness/coverage/missing/answer grader.
+Native replay checks real branch-answer input premises before group results.
+=check-scoped-composition-conformance= is part of the shared formal CI gate.
+
+[[file:../scoped-witness/acceptance.org][Branch scoped witnesses]] adds a 2,048-state model to the all gate. Its
+four injected faults cross scope masks, swap attachments, erase witness scope
+and collapse branch answers. All must fail their named exact-output invariant;
+the correct model also checks the final union and unpublished state. Each
+fault maps to a native regression under the same name.
+
+The transition evaluator exports all 1,024 inputs. CI runs
+=check-branch-scoped-witness-conformance= to compare current/frozen vectors with
+Lean's independent, kernel-checked finite witness/answer/union grader. Scheme
+checks exact scope-tagged rows from real Program/Session outputs. This bounded
+bridge does not establish full EEC or source/compiler refinement.
+
+* Scoped witness qualification (2026-10-10)
+
+[[file:../scoped-witness/acceptance.org][ScopedWitness]] adds a 512-state model to the all gate. Late/global filtering,
+discarding an allowed alternative and forgetting witness rows each violate
+the named invariant. Its actual transition evaluator exports all 256 initial
+input observations; formal CI compares current/frozen outputs with the
+kernel-checked Lean witness semantics, and native Scheme Sessions consume
+that same corpus. Named native Cases cover all four mutation identifiers.
+
+* Whole-batch withholding qualification (2026-10-09)
+
+[[file:../withholding/acceptance.org][Withholding]] adds a 28-state finite publication model to all/Nonmembership.
+Early publication, local-only protection, stale binding and missing body
+membership each produce the designated counterexample (exit 12). This
+addition is separate from the historical migration inventory.
+
+* Scoped structural reachability-mask qualification
+
+The [[file:../scoped-witness/query.org][unified bounded scoped query]] additionally checks the complete request
+chain in =ScopedQuery=: 3,072 pending/completed states, eight exact output
+invariants and empty pending publication. Five controls must fail on ignored K, independently bounded mask sides,
+global masks, lost predecessors and lost final traces. The total-hop mask
+transition uses shortest distances; its independent expectation enumerates
+exact prefix/suffix lengths whose sum fits K. Its 1,536 complete
+request observations are independently graded by Lean and replayed through the
+public Scheme compiler and retained Sessions. =check-scoped-query-conformance=
+is part of formal CI; ordinary Gerbil tests reconstruct paths from its evidence.
+
+[[file:../scoped-witness/reachability-mask.org][Scoped structural reachability masks]] checks 1,024 states and four deliberate
+faults (global masking, endpoint-only exclusion, clean-alternative substitution,
+and lost exclusion witnesses). Its 512-input corpus connects actual recursive
+closure and scoped-mask evaluation to independent Lean grading and native
+Session replay, then the existing group composer. The structural formula and
+clean-path semantics remain explicitly distinct. CI runs
+=check-scoped-reachability-mask-conformance= after the shared formal gate.

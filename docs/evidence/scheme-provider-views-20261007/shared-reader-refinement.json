@@ -1,0 +1,492 @@
+{
+  "schema": "ascent.byods-component-and-shared-reader-refinement",
+  "version": 1,
+  "baseCommit": "9fd161f9a1477a56899d6f1c540276f47fc86016",
+  "scope": "Formal refinement of captured component plans, additive frontier union and multi-reader lifetime over the engine view migration; no Scheme runtime behavior change",
+  "lean": {
+    "exitCode": 0,
+    "jobs": 90,
+    "rectangleLaws": 24,
+    "examples": 14,
+    "newLaws": [
+      "component_pair_owned",
+      "component_plan_separate",
+      "component_plan_nodup",
+      "component_plan_uniform",
+      "component_plan_reach_uniform",
+      "successive_frontiers_disjoint",
+      "successive_union_exact",
+      "successive_union_nodup"
+    ],
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "negativeExamples": [
+      "repeated root-pair descriptors",
+      "repeated component members"
+    ]
+  },
+  "tla": {
+    "exitCode": 0,
+    "viewSafety": {
+      "distinct": 55197,
+      "generated": 197536,
+      "explorationBound": 4,
+      "semanticGenerationMaximum": false
+    },
+    "sharedReaders": {
+      "readers": 2,
+      "distinct": 14175,
+      "generated": 132616,
+      "generationVariable": false,
+      "stateConstraint": false,
+      "fairness": "per-reader WF_vars(Finish(r))"
+    },
+    "singleReaderGlobalFairnessControl": {
+      "distinct": 315,
+      "generated": 2577,
+      "result": "passes"
+    },
+    "seededFaultsDetected": 11,
+    "counterexampleTraces": {
+      "global": {
+        "expectedExitCode": 13,
+        "states": [
+          {
+            "number": 1,
+            "action": "Initial predicate",
+            "variables": {
+              "credits": "0",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          },
+          {
+            "number": 2,
+            "action": "Borrow",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 3,
+            "action": "Cancel",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 4,
+            "action": "Publish",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{b, c}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 5,
+            "action": "Borrow",
+            "variables": {
+              "credits": "2",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{b, c}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1, r2}"
+            }
+          },
+          {
+            "number": 6,
+            "action": "Publish",
+            "variables": {
+              "credits": "2",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "committed": "{a, b}",
+              "valid": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1, r2}"
+            }
+          },
+          {
+            "number": 7,
+            "action": "Discard",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "committed": "{a, b}",
+              "valid": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 8,
+            "action": "Publish",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "committed": "{a}",
+              "valid": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 9,
+            "action": "Borrow",
+            "variables": {
+              "credits": "2",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{a}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {a})",
+              "reading": "{r1, r2}"
+            }
+          },
+          {
+            "number": 10,
+            "action": "Reply",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{a}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{r2}",
+              "captured": "(r1 :> {} @@ r2 :> {a})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 11,
+            "action": "Publish",
+            "variables": {
+              "credits": "1",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{b, c}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {a})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 12,
+            "action": "Borrow",
+            "variables": {
+              "credits": "2",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "committed": "{b, c}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1, r2}"
+            }
+          },
+          {
+            "number": 13,
+            "action": "Publish",
+            "variables": {
+              "credits": "2",
+              "canceled": "{r1}",
+              "alive": "TRUE",
+              "current": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "committed": "{a, b}",
+              "valid": "(r1 :> FALSE @@ r2 :> FALSE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {b, c})",
+              "reading": "{r1, r2}"
+            }
+          }
+        ],
+        "loopBackTo": 7,
+        "transcriptHash": "84cf1e9962ac2ce945f69d23aa074d0ee9046403ba266c6860af521dca50169b"
+      },
+      "retire": {
+        "expectedExitCode": 12,
+        "states": [
+          {
+            "number": 1,
+            "action": "Initial predicate",
+            "variables": {
+              "credits": "0",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          },
+          {
+            "number": 2,
+            "action": "Borrow",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 3,
+            "action": "Borrow",
+            "variables": {
+              "credits": "2",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1, r2}"
+            }
+          },
+          {
+            "number": 4,
+            "action": "Reply",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{r1}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r2}"
+            }
+          }
+        ],
+        "loopBackTo": null,
+        "transcriptHash": "7a114a01d23f39f2195330ae6e18a9d752063a0b7775845c23d7a05022ae8f5f"
+      },
+      "credit": {
+        "expectedExitCode": 12,
+        "states": [
+          {
+            "number": 1,
+            "action": "Initial predicate",
+            "variables": {
+              "credits": "0",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          },
+          {
+            "number": 2,
+            "action": "Borrow",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 3,
+            "action": "Reply",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{r1}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          }
+        ],
+        "loopBackTo": null,
+        "transcriptHash": "a5523aa7c669cf01378f786ca9913175866a76adca684c434fc178021a9abaa5"
+      },
+      "aba": {
+        "expectedExitCode": 12,
+        "states": [
+          {
+            "number": 1,
+            "action": "Initial predicate",
+            "variables": {
+              "credits": "0",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          },
+          {
+            "number": 2,
+            "action": "Borrow",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 3,
+            "action": "Publish",
+            "variables": {
+              "credits": "1",
+              "canceled": "{}",
+              "alive": "TRUE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{r1}"
+            }
+          },
+          {
+            "number": 4,
+            "action": "Reply",
+            "variables": {
+              "credits": "0",
+              "canceled": "{}",
+              "alive": "FALSE",
+              "current": "(r1 :> TRUE @@ r2 :> TRUE)",
+              "committed": "{}",
+              "valid": "(r1 :> FALSE @@ r2 :> TRUE)",
+              "accepted": "{r1}",
+              "captured": "(r1 :> {} @@ r2 :> {})",
+              "reading": "{}"
+            }
+          }
+        ],
+        "loopBackTo": null,
+        "transcriptHash": "083d54c850ef729156191ed4e6d9ce345936bdbb9940a213f1ffd12a8c15f55e"
+      }
+    }
+  },
+  "nativeCorrespondence": {
+    "activeOwnership": "program/actor-round.ss active worker/task assignments",
+    "cutCompatibility": "fresh round identity with frozen total/delta vectors",
+    "retirement": "coordinator drain and worker joins precede owner publication",
+    "componentRepresentation": "table/trrel-uf.ss captured component member lists",
+    "frontierUnion": "core/relation-view.ss disjoint caller contract",
+    "limitations": [
+      "ownership is distinct from row batch credits",
+      "alive abstracts captured backing accessibility, not a native refcount API",
+      "model admits more publication interleavings than drain-before-commit"
+    ]
+  },
+  "policy": {
+    "exitCode": 0,
+    "errors": 0,
+    "findings": 18
+  },
+  "remainingPremises": [
+    "native root/member extraction",
+    "candidate completeness and grouped row decoding",
+    "scheduler fairness and callback termination",
+    "machine-checked journal replay ordering"
+  ],
+  "excludedEvidence": [
+    "Lean union theorem elaboration failure repaired before acceptance"
+  ],
+  "modelCalls": 0,
+  "sourceHashes": {
+    "justfile": "44c0faeaffb52e9b8781b183918344f6008bb291e30672ec8bab7770834cb348",
+    "packages/proofs/lean/ProviderRectangles.lean": "7570961487fcca7f31444b99d31713eebf00ff26ba5603c3df61e0b98ea31595",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "1ccefe29608534d6540a2d28b099bbcdc69ad66e481de6db062b561a6dd9e036",
+    "packages/proofs/tla/ReaderLifetime.tla": "308b37b44315c2b3c2a207ba523ac946ac20d9867f32d6ccb5cd6fbdf2940202",
+    "packages/proofs/tla/ReaderLifetime.cfg": "1b7efa722f700222dedbac3e6c160e8a4786dea6008dc94e787eb5d996b4d007",
+    "docs/scheme-trrel-uf-design.org": "890293faacb5997d7427689e7ed004cb899298c8d8b999cc59f640418642738a",
+    "docs/scheme-research-proof-audit.org": "57540e7ec5030be691990808726b89bd0fb1de76fa4db82910f9a6dcabe498a4",
+    "docs/research/scheme-dsl/byods-b23.org": "5b6adc58f13f74eba9495248558b7b9eca1c0673c7e57b1083c9b2bb6bb6a34b"
+  },
+  "nativeOwnerHashes": {
+    "core/relation-view.ss": "392bf1b18ba6adfb92499b5c568217f44db9f71a4d421c94e777bb1f24c55bae",
+    "table/trrel-uf.ss": "b0acc56983f21a436ab8567e0e4119b97ad3a7d9947d703f7104ed3d5d953ae0",
+    "program/view-state.ss": "f4541aeefa1f111eae948e25a5408ffe3dec0d42c5c2168ac8d0e32c0a1daa92",
+    "program/actor-round.ss": "78a01abdefe58a068a72c30c680de53f6834cdc163ff0d585a02cb99db469b5f"
+  },
+  "transcriptHashes": {
+    "lean": "659e1943c47c6c27cbe722fd61323e0572e61138261a6f4fc80942a6af8363de",
+    "tla": "d4ee0b172c3cc41e20c9343eb815f08acfda961b6666946b30558c6bcf1b626e",
+    "policy": "8a3d9fc47dd28783d33d5da2bd9dfa158505c106590d76ffc8e525e99df47bad"
+  }
+}

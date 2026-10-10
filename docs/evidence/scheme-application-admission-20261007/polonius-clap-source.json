@@ -1,0 +1,163 @@
+{
+  "repository": "s-arash/polonius",
+  "revision": "7fe7cca808115828b1105c86003a768a6749383f",
+  "source_directory": "inputs/clap-rs/app-parser-{{impl}}-add_defaults",
+  "files": [
+    {
+      "relation": "cfg_edge",
+      "arity": 2,
+      "rows": 48801,
+      "bytes": 1737265,
+      "git_blob": "f1570d38109525dc047c8ef40ca441736fc81bb0",
+      "sha256": "f4afe1e2e62e4106206c277965898ce2c27854bee8122512983ff0f99baaed85"
+    },
+    {
+      "relation": "child_path",
+      "arity": 2,
+      "rows": 12,
+      "bytes": 214,
+      "git_blob": "6be328700a38da871d5e05ee70035412938303f9",
+      "sha256": "da6b7e25fd9c1f6e79da5701de5b6bc97783f22920e0c9dc9ef674ded82e3b43"
+    },
+    {
+      "relation": "drop_of_var_derefs_origin",
+      "arity": 2,
+      "rows": 0,
+      "bytes": 0,
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "relation": "known_placeholder_subset",
+      "arity": 2,
+      "rows": 13,
+      "bytes": 234,
+      "git_blob": "189ce08a62617016c4d60ed50cde9f4b06c319a3",
+      "sha256": "3bd61ec3a6ffb67370b6e3acf07f659617e599eba8d6bb5e95cf3404420f4c61"
+    },
+    {
+      "relation": "loan_invalidated_at",
+      "arity": 2,
+      "rows": 118208,
+      "bytes": 3190630,
+      "git_blob": "10ed910347465085b739596e240aa36d02379f32",
+      "sha256": "bdf78939d1a26636387e79aaa81136a14c7643b299315f45c5462b6a1d7776ce"
+    },
+    {
+      "relation": "loan_issued_at",
+      "arity": 3,
+      "rows": 1316,
+      "bytes": 48466,
+      "git_blob": "16c455ca78d12ae8e67d1be5cacdb7730bdacca7",
+      "sha256": "6dd8580ee0ccd4c2cc981e7a206b2504d5c500a53e6377bf09fbd481da1bfc93"
+    },
+    {
+      "relation": "loan_killed_at",
+      "arity": 2,
+      "rows": 2458,
+      "bytes": 61593,
+      "git_blob": "3e4db5564ffb5cb39c7832fc23d2e5a5f40c0d42",
+      "sha256": "4a53d4ee2add65432c05c7315f1cd42b3ca4dc6c4dac0ce99aaac89ceb0dc8b8"
+    },
+    {
+      "relation": "path_accessed_at_base",
+      "arity": 2,
+      "rows": 7808,
+      "bytes": 199142,
+      "git_blob": "5b4007af8d95c39c289b271cae5ed6fc5458c19b",
+      "sha256": "be0e6352c7b6b81a19d9851290a430cd239836553c21161c35f6f0e33f850a74"
+    },
+    {
+      "relation": "path_assigned_at_base",
+      "arity": 2,
+      "rows": 6787,
+      "bytes": 176579,
+      "git_blob": "be64d0128449e5bfb84604587c946e34c94df7c1",
+      "sha256": "eea4b92b49fe39dcb45120a2fa88f11d5abf12b78849ed71dd82b63a18519257"
+    },
+    {
+      "relation": "path_is_var",
+      "arity": 2,
+      "rows": 6366,
+      "bytes": 106002,
+      "git_blob": "b69dc6a90b26b1ee9cd1e3030bbb5b5104ff561e",
+      "sha256": "cf1ca1cb937fe930f88bae2b4eb0ea2af86fd9ce86f0c2a2341fe6478cadf1c2"
+    },
+    {
+      "relation": "path_moved_at_base",
+      "arity": 2,
+      "rows": 16247,
+      "bytes": 411414,
+      "git_blob": "3dbd21d8a978651160f9a1e4b30945b04125ba96",
+      "sha256": "fab6f757f0bdab96e6b31f909c40aea3312c0f5c3b73a91911b550f35d774b9e"
+    },
+    {
+      "relation": "placeholder",
+      "arity": 2,
+      "rows": 6,
+      "bytes": 108,
+      "git_blob": "8a6efe113ddc822f5c93ad708fad71e89a152f45",
+      "sha256": "5d39348312e020ebcd71126786c383be70c45dc0fb273b635f045416a64fd216"
+    },
+    {
+      "relation": "subset_base",
+      "arity": 3,
+      "rows": 863390,
+      "bytes": 35485243,
+      "git_blob": "53179989777f1bc48775a7c5d66571dd137bef27",
+      "sha256": "b657c13d57960f4731c375fb48e4dea4fdabe9be7ab45aeb680caf9663ee907a"
+    },
+    {
+      "relation": "universal_region",
+      "arity": 1,
+      "rows": 6,
+      "bytes": 54,
+      "git_blob": "668718b6df5bd7576ca9851d1302917968e0a68f",
+      "sha256": "f7e4072b3fc344a39f75bb428dbc26ed47b7dd8bd662927f2e11b30a955fd023"
+    },
+    {
+      "relation": "use_of_var_derefs_origin",
+      "arity": 2,
+      "rows": 9144,
+      "bytes": 189570,
+      "git_blob": "2c348afe1100ed69d9cac4443a55824ff9708707",
+      "sha256": "7006ecd6dff19f194167956c554b85d70d62fd7eef290ce8452eaf8741391b91"
+    },
+    {
+      "relation": "var_defined_at",
+      "arity": 2,
+      "rows": 19145,
+      "bytes": 471989,
+      "git_blob": "4b77d58867caa6216cda59a8cbf377c0c8a38abe",
+      "sha256": "ee7c31dc0601e4706be782dcc39d2ea34556af7f27f88c52dc5f6636518fc181"
+    },
+    {
+      "relation": "var_dropped_at",
+      "arity": 2,
+      "rows": 78,
+      "bytes": 1886,
+      "git_blob": "fa2d22dc8562f76c24d3ebc675a5af54130438d5",
+      "sha256": "576b62540eb7d225c7f8ccedb1fc0df135bf9889583ad43ac071464786168464"
+    },
+    {
+      "relation": "var_used_at",
+      "arity": 2,
+      "rows": 7814,
+      "bytes": 191463,
+      "git_blob": "f30e4517e95515c9500c6b0122a74da42be3e121",
+      "sha256": "90ac397c2a0da288ef7fe7d240629feb4ee3026af4a0fcbc167987771498daca"
+    }
+  ],
+  "scope": "Pinned reference Polonius input bytes and TSV shape only. No Scheme borrow-checker output or BYODS experimental replication is admitted.",
+  "schema": {
+    "path": "polonius-engine/src/facts.rs",
+    "git_blob": "442ba186cc61f94d497b5df99210aea5375c847f",
+    "sha256": "9fad471b6ba5f63b8a1367002fee2b27fc3b3b893680eca390bc2616718f8915"
+  },
+  "reference_engine": {
+    "path": "polonius-engine/Cargo.toml",
+    "sha256": "d47f86e8a8770ce264b776d9798cf2f7464bf0d2a41283bf5913b2c38285a102",
+    "runtime_admitted": false,
+    "blocker": "The pinned fork depends on infer at ../../infer/infer; that path is absent from the complete pinned repository tree. Input/schema admission does not admit an executable reference engine."
+  }
+}

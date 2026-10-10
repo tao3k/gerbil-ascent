@@ -1,0 +1,62 @@
+{
+  "qualifiedBaseHead": "91d42d459f9fe6ac2e6bf9b64b1d64a2a938bba3",
+  "scope": "Existing operator compiler behavior composed as native PO declarations; typed higher-order compilation derives finite-domain relation construction.",
+  "producerReference": {
+    "repository": "https://github.com/tao3k/lean-poo",
+    "revision": "247d1d6094b6af1bb873f69564b271bc978730ed",
+    "examples": [
+      "Examples/ContextualFactories.lean",
+      "Examples/ObjectDefinition.lean",
+      "Examples/MethodDictionary.lean"
+    ],
+    "role": "Design/usage source, not a native runtime dependency or cross-language refinement proof"
+  },
+  "sources": {
+    "program/operator.ss": "5f59d9fae8b81d9bb3d6a2b787adcf0aaeb93519767a958f6bf1826a2195bbbe",
+    "program/higher-order.ss": "e55601ee7788b073c72509e5710bb9e99986ff49798c651c69487f9fe9019498",
+    "program/interface.ss": "d08be59fc84c427dc6540be3939e366b3f2730ac6e68c6e5b68142a2c981fdfd",
+    "t/qualification/scheme-operator-test.ss": "88cfc47155690f27da15a1be8b4f32ca8a30a86f82c3f500f36c75303d3a941e",
+    "t/qualification/scheme-higher-order-test.ss": "28f26f101959f83a1bd359001c75a110c953569d50a2326aa15e57a3659ea4e2",
+    "build.ss": "720a976fae953276b390dac1ef547eabade0bf07c14c3c367b03ad09e6b97da4",
+    "t/harness/run.ss": "d915a4db3ff81c1fca21d7d7a2c6c33ed5a5031a7f6eafadf859cbca1f11edca",
+    "packages/proofs/lean/lake-manifest.json": "55be951cde1df5c19b8f3d53c61f47e10bfe3379dff121ecfb3f959ecde92347"
+  },
+  "trackedSchemeSourceCount": 531,
+  "trackedSchemeSourceDigest": "447808f665c7eb9c96dea7df2f32861ec923c415b073c719eb0b9ee95c6d6a70",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-operator-test.ss",
+      "exitCode": 0,
+      "suiteCases": 28,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "acb0f2763f045a34d41d840afd1596c28622424396a0634ea7c0467f2154043c"
+    },
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-higher-order-test.ss",
+      "exitCode": 0,
+      "suiteCases": 33,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "b52d4cba1e0ec2e408e4e6cebb3e7fb56487f72ba430e364fed74dc395cd5af2"
+    }
+  ],
+  "discriminators": [
+    "Inherited compile method observes final constructor after the base method was forced",
+    "Shared-base C4 diamond selects left constructor; right and original snapshots remain independent",
+    "Original constructor procedure API produces the same solved rows",
+    "Missing compiler capabilities and non-procedure constructor are rejected",
+    "Preselected compile method rejects zero budget before invoking the constructor",
+    "Existing finite graph and higher-order suites pass through the migrated paths"
+  ],
+  "performanceClaim": false,
+  "remaining": [
+    "No native prepared-registry/cache-view bridge",
+    "No formal equivalence between native PO and LeanPoo object evaluation",
+    "No claim that lazy PO self recursion computes relational least closure"
+  ],
+  "modelCalls": 0
+}

@@ -1,0 +1,82 @@
+#+TITLE: Finite Positive Rule Provenance in ASCENT
+#+DATE: 2026-10-01
+#+STATUS: Implemented narrow semantic slice
+#+FILETAGS: :ascent:scheme:provenance:
+
+* Scope
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-provenance-scope
+:END:
+
+=candidate/provenance.ss= independently replays an *inspected* proposal
+whose rule bodies contain positive relation atoms and fixed =where=/=compute=
+clauses only. It records one
+finite derivation per tuple and compares its query rows with a completed
+native ASCENT query before returning =complete=.  Native completion is an
+explicit input and is checked.  The function receives an
+explicit work budget; the proposal's derived-fact limit bounds new proof
+nodes.  It does not execute candidate-provided Scheme procedures.
+
+This is a rule-level =Why= proof for present query rows in this subset.
+It is not a =Why-Not= proof. Empty query results, negation, reduction,
+work exhaustion, and a mismatch with the native result yield
+=unsupported= or =bounded= rather than a proof.
+
+* Receipt shape
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-provenance-receipt
+:END:
+
+The =positive-proof= value binds snapshot identity, generation and digest,
+candidate digest, query, status, nodes and roots.  These digests bind local
+content; source authentication and semantic admission remain with the
+caller.  Each =proof-node= has an ID, kind, relation, row, label, and input
+IDs.  Kinds are =source=, =candidate=, and =rule=.  A source label is its
+one-based position within its relation's copied rows; a candidate or rule
+label is its one-based proposal clause.  Every rule input refers to an
+earlier node.  A verifier can inspect the labelled rule, unify its body
+atoms with these input tuples in order, replay fixed filters and scalar
+computations from the resulting bindings, instantiate its head, and compare
+the resulting tuple with the node.  Roots identify the query rows.
+=candidate-verify-positive-proof= performs this replay against the original
+snapshot, inspected proposal, digest, native completion and native rows;
+mutation of a node row or mismatch of a digest fails verification.
+
+#+name: positive-provenance-invariants
+| Invariant | Enforcement |
+|-----------+-------------|
+| Observed and hypothetical facts remain distinct | Separate =source= and =candidate= node kinds |
+| A rule node has an acyclic witness | Inputs are existing node IDs from an earlier saturation round |
+| The native query agrees with the proof interpreter | Complete status requires set equality for query rows |
+| The native execution completed | Non-complete native status cannot produce a complete proof |
+| Work exhaustion cannot masquerade as completion | Probe and derived-node budgets return =bounded= |
+| Unsupported language constructs receive no proof | Negation and reduction return =unsupported= |
+| Absence is not promoted to a Why-Not proof | Empty root set returns =unsupported= |
+
+* Evidence and current integration boundary
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-provenance-evidence
+:END:
+
+=just test-file t/qualification/ascent-positive-provenance-test.ss= passes
+recursive rules, observed/candidate distinction, an exact dependency
+sequence, multi-source joins and repeated variables, native-result mismatch,
+digest/mutated-node verification, work and derivation caps, and unsupported
+negative/absent cases.  =candidate/reasoning.ss= now attaches a
+=reasoning-receipt-proof= field after native completion.  A third,
+optional =reasoning-attempt= argument selects the proof work budget
+(default 100000 body-row probes).  Query completion and proof completion
+are separate statuses: the receipt can contain complete native rows
+with a bounded or unsupported proof.
+
+The public integration test replays its proof against the original
+inspected proposal and checks that a smaller proof budget leaves the
+native rows complete while proof status becomes bounded. The positive
+arithmetic test checks =even?=, =<=, =+= and =identity= against a separate
+finite list calculation, then mutates a proof tuple to check rejection.
+Scalar clauses consume proof work but no row input ID. General negation,
+aggregation, general Why-Not, and deletion-aware support invalidation
+require separate semantics. A separate
+[[file:positive-nonmembership.org][ground finite positive nonmembership
+certificate]] covers a bounded absent tuple case, including these fixed
+scalar clauses; its closure checker is distinct from this Why DAG verifier.

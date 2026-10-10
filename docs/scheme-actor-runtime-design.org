@@ -1,0 +1,706 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scheme actor runtime: ownership, round merge, cancellation and publication
+#+DATE: 2026-10-05
+#+STATUS: native carrier, cancelable Session actor and ready positive Set SCC scheduling implemented; performance/reuse/provider gates remain
+
+* Architecture decision
+
+Actor/thread scheduling belongs in the Scheme runtime architecture. Test
+preparation and source binding remain in =t/native/qualification.ss=; immutable registry
+construction lives in =t/native/native-registry.ss= and test admission, output
+credits, monitoring and draining live in =t/native/actor-pool.ss=. The shell
+=xargs= pool and timer-only RUNNING output have been removed.
+
+The carrier implements the test boundary. The runtime separately implements
+ready-SCC scheduling for pure positive canonical Set cuts and cancelable
+Session publication; persistent workers, index reuse and parallel custom
+Providers remain open.
+A test module
+child runs its original =std/test= Suites and setup/cleanup in an isolated native
+process. It does not execute parallel Cases or parallelize the solver.
+
+The preferred pool carrier is one immutable AOT executable containing a frozen
+module registry, original Suites and original setup/cleanup callbacks. Build and
+link it once for the frozen source set; dispatch a checked registry key to each
+isolated child. The receipt binds source set, registry, carrier and selected
+module. Per-module immutable executables remain an alternative for smaller
+qualification slices. Compiling and linking a full runtime for every dispatch
+would defeat the intended preparation amortization. Reusing the mutable
+=single-test= name across concurrent preparations is inadmissible for either
+route. Measure preparation cost and steady execution separately.
+
+Gerbil's [[https://gerbil.scheme.org/reference/std/actor.html][actor API]] supplies envelopes, request/reply, shutdown reactions and
+actor monitors. The inspected 2591dcd SDK routes local envelopes through
+=thread-send=; =spawn/name= creates an actor thread. Local messages do not by
+themselves establish deep immutability of the payload. Admitted source rows,
+captures, plans and indexes must retain their ownership rules when transferred.
+Green-thread concurrency and CPU parallelism are separately qualified against
+the captured Gambit backend. No multicore speedup follows from actor count.
+
+* Execution owners and protocol
+
+| Owner | Exclusive mutable state | Reads and emitted messages |
+|-------+-------------------------+----------------------------|
+| Preparation actor | Compiler jobs, artifact registry, generated module entries | Frozen source manifest; emits immutable source-bound carriers and registry keys; live generations cannot overwrite each other |
+| Test coordinator actor | Admission queue, worker registry, lifecycle outcomes | Dispatches ready native modules; records genuine Case output and child exits; preserves exclusive lane and runtime budgets |
+| Session actor | Pending/committed cuts, generation, cancellation and publication | Accepts append/replace/run/cancel requests; freezes the admitted input cut before dispatch |
+| Round coordinator | Frozen total/delta frontier, assigned tasks, accepted replies, merge budget | Dispatches explicit rule/partition tasks; owns merge and the next-round barrier |
+| Evaluation worker | Private variable frame and candidate output batch | Reads a frozen frontier and immutable index view; emits candidates and terminal completion for its assigned task |
+
+Every work envelope binds session identity, generation, stratum/SCC, round,
+task identity, program/source identity and frontier/index version. Natural
+generations and rounds have no protocol maximum. Mailbox capacity and task size
+are configurable resource controls, not semantic bounds on generations.
+
+1. Admit and own the cut. Schedule ready independent SCCs from the dependency
+   DAG. Keep lower strata frozen before negation or aggregation reads them.
+2. Within an admitted positive SCC, freeze total and delta for the round.
+   Partition work into bounded batches with private frames. A worker cannot
+   mutate shared row buffers, canonical tables or public results.
+3. Validate each candidate batch, including its origin and domain. Record a
+   completion once for the assigned task; reject duplicate, stale and cross-round
+   replies. A custom Provider must meet the snapshot and delta contracts or run
+   on its exclusive owner. Thread-safety is not implied by its POO interface.
+4. Merge completed batches under the coordinator's ownership. Set union is
+   commutative/idempotent for the positive set subset. Admission counts unique
+   derived rows at the actual merge boundary; duplicate derivations cannot race
+   a budget or become an unreported budget bypass. Lattice joins and ordered
+   source occurrences retain separate semantics.
+5. Advance only after all assigned work is terminal and all accepted batches
+   have been merged. An empty mailbox or one empty worker batch is insufficient
+   for quiescence. New facts form the next delta; no new facts closes the SCC.
+6. Publish only after every required SCC closes for the same generation and cut.
+   Merge-owner serialization is measured separately from worker parallelism;
+   independent Sessions and ready SCCs can overlap without weakening this cut.
+
+* Cancellation, failure and backpressure
+
+Cancellation advances the generation, disables acceptance for old work, and
+enters a draining state. Workers cooperatively check cancellation at bounded
+work boundaries, discard private candidates and issue one terminal outcome.
+Actor monitors detect abnormal exits. The coordinator waits for every assigned
+task to terminate or acknowledge cancellation before releasing its resources or
+reusing its worker slot. Queued late replies are discarded; the last completed
+source/result pair stays visible. A bounded or failed run cannot publish a
+partial result as completed.
+
+A cancellation request is not a guarantee that a noncooperative host callback
+will stop. Such callbacks need a stated isolation boundary and failure outcome;
+reclamation or liveness cannot be claimed from a mailbox acknowledgement alone.
+The current protocol model checks safety, not worker termination or fairness.
+
+Bound dispatch and in-flight batches with credits. Release a credit only on
+terminal acceptance/drop/ack according to its task ownership. Feed control
+messages independently of data credits so cancellation cannot deadlock behind
+a full data mailbox. Cooperative yielding must correspond to completed real
+work; ticker messages do not satisfy the test progress gate.
+
+* Paper premises and transfer
+
+| Source | Verified premise | Runtime obligation |
+|--------+------------------+--------------------|
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, PDF pp. 6–7 | Join-column index selection, dependency SCCs and total/delta variants remain visible in the compiler | Parallel partitions preserve binder/key completeness and consume the same frozen logical frontier |
+| [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, PDF pp. 7–9 | Total/delta concretizations must expose newly implied facts to semi-naive consumers | Worker completion includes Provider expansion; raw insertion batches alone cannot close a round |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][functional fixed points]], §5.2–5.3, Lemma 4 | Monotonicity plus finite height establishes least-fixed-point termination | Round merge must preserve the operator/order; actor scheduling alone supplies neither premise |
+| [[https://arxiv.org/pdf/2203.16684][incremental view maintenance]], §2 and §5–6 | Synchronous stream positions and recursive iteration positions have distinct semantic roles | Separate transaction generation from inner round. Our positive set union does not implement signed Z-set change semantics |
+| [[file:research/scheme-dsl/deletion-rederivation.org][deletion rederivation]] and [[file:research/scheme-dsl/higher-order-change.org][higher-order change]] | Recursive support recovery and higher-order typed changes have their own premises | Initially retain affected-component rederivation; parallel scheduling does not authorize new deletion or function-delta semantics |
+
+The scheduling protocol is our synthesis. None of these papers proves the
+Gerbil actor implementation, cancellation protocol or performance claim.
+
+* Executable safety model and next gates
+
+=packages/proofs/quint/ActorRound.qnt= models two positive producers over a tiny
+finite source domain, frozen rounds, out-of-order replies, replay, generation
+invalidation, cancellation draining and atomic publication. Independent closure
+is {1,2,3} for seed {1}, and {2,3} for seed {2}. Fault controls disable the
+barrier, admit stale completion, or publish during cancellation. TLC cutoffs
+constrain enumeration only; the transition specification uses unbounded naturals.
+
+Native implementation gates:
+
+- Immutable precompiled carrier and module registry; actors coordinate isolated native test
+  children, preserving each original std/test Suite, setup/cleanup and verdict.
+- Scheme-owned protocol transitions and worker lifecycle with native shuffled,
+  duplicate, late, canceled, failed-worker and full-mailbox discriminators.
+- Positive SCC worker results equal the independent serial truth after every
+  round and at publication, including provider expansion and skewed partitions.
+- Quint refinement must link actual coordinator transitions to protocol safety.
+  Finite model checking does not establish an unbounded native trace theorem.
+- Matched 1/2/4-worker measurements report queue delay, work, merge time, CPU,
+  allocations, throughput and latency, including regressions and backend limits.
+
+This decision adds no native concurrent solver or measured parallel benefit.
+MRR Rust integration retains its later acceptance gate.
+
+=ActorRound.qnt= owns different-key/generation rejection, duplicate terminal
+replies, cancellation and publication checks over reachable modeled traces.
+The former Lean work-key transition replica has been removed; its unbounded
+claims are retired. Native coordinator correspondence and worker liveness
+remain separate obligations. =RoundAdmission.lean= retains only checkpoint
+arithmetic, immutable cache lookup and bucket extension equations.
+
+* Qualified slice
+
+The [[file:evidence/scheme-actor-binding-20261005/receipt.json][qualification receipt]] binds implementation/proof snapshot =bb2edaf=:
+seven native index/binding Cases, 9,999 independent assignment decisions,
+125 known-column programs, the full Lean package, four normal TLA models and
+ten required counterexamples. The actor model explores 41,763 distinct states
+at the recorded tool cutoffs. Rejected compiler/proof/sandbox attempts remain
+in the receipt; no execution logs are published. Native execution's two-second
+shell observation is qualification data, not an end-to-end or parallel gain.
+
+* Native test carrier implementation boundary
+
+The pool generates one immutable AOT registry for the selected source set.
+Exports are discovered during preparation; aliases bind each original Suite and
+module callback without collisions. Selection accepts exactly one known source
+path. Sources, generated entry and executable are checked before/after execution
+under the existing lane lock. Fixture and independent reference modules are
+compiled into the native library rather than recovered through runtime source
+loading. The temporal Suite follows the native path in the registry; its legacy
+incremental import wrapper remains available to interpreted invocations. The
+syntax diagnostic module initializes the real Gerbil interpreter/expander before
+its original eval-based Cases; the default AOT minimal evaluator is insufficient.
+
+Each invocation starts a private coordinator actor, protecting the caller's
+mailbox and nested invocations. It admits at most =jobs= isolated children.
+Workers relay actual child output with one outstanding line each and wait for
+credit. Coordinator failure of the output sink returns credit, stops further
+admission, drains assigned workers, and returns failure. Monitors join workers;
+uncaught worker failure becomes exit 70. Child verdicts retain their exit codes;
+the first observed failure stops pending admission. Already completed successes
+may release capacity before a later failure is observed. No claim of eager
+cancellation of every assigned child is made: they drain under their original
+5-second startup/idle output gates, 120-second deadline and 1G heap limit.
+Exclusive modules start only after the successful parallel lane is fully drained.
+
+The native qualification uses an explicit two-worker rendezvous to demonstrate
+actual overlap without comparing wall-clock samples. Additional Cases check
+failure admission, output failure draining, caller mailbox isolation, monitored
+worker exceptions, serial line ordering and empty inventory. =ActorTestPool.qnt=
+checks the abstract task partition, bounded active/output credits, stopped
+admission and complete return for exploration capacities 1, 2 and 3; an early
+return mutation must violate =CompleteReturn=. Exploration sizes are not runtime
+caps. The existing unbounded Lean round-key laws remain solver protocol laws,
+not a refinement proof for this test scheduler. Liveness of arbitrary callbacks,
+external cancellation and source-to-model refinement remain open obligations.
+
+No speedup is inferred from two-worker overlap. Matched preparation, queue,
+worker execution and throughput measurements remain the performance gate.
+
+The [[file:evidence/scheme-actor-pool-20261005/receipt.json][native actor pool receipt]] retains the initial macro diagnostic failure and
+separately binds full-suite and control snapshots. The full Suite passed 63
+modules/560 Cases. The affected mode-reset and registry gates passed alongside
+the six actor lifecycle Cases. GitHub exact-head CI is a separate publication
+gate rather than an inferred consequence of these qualification commands.
+
+* Native memory observation boundary
+
+The native Linux cold-start gate exposed an ambient-GC assumption in the zero
+budget control. POO Core's heap/live sample reads Gambit's latest-GC fields.
+The negative fixture explicitly requests collection and validates positive
+observed heap before testing rejection. Its actual before/after sample is emitted
+as evidence; no budget or assertion is relaxed. This controls the observation
+premise rather than assuming interpreted module import pressure. The runtime
+process's independent 1G heap bound and 5/5/120 progress/deadline gates remain.
+A latest-GC sample is not a proof of instantaneous RSS/live heap monitoring.
+
+The latest registry at =a0c5aa7= qualifies =a890b99='s canonical callback binding
+owner with the complete 64-module/566-Case Suite. Future solver workers must use
+these admitted binding operations with evaluation-local frames rather than
+introducing an alternative callback/binding evaluator. Thread safety of arbitrary
+callback payloads remains a separate admission obligation.
+
+* Native positive Set solver rounds (2026-10-05)
+
+=program/actor-round.ss= now coordinates actual solver tasks, independently of
+=t/native/actor-pool.ss=. =gerbil-ascent-evaluate-program= accepts =workers:=;
+the default 1 retains serial evaluation. For >1, an entire active stratum must
+have compiled pure positive plans; all relations must use canonical Set storage
+and hash indexing, without lattice joins or field checker callbacks. Otherwise
+that stratum uses its original serial path. Rule timing and retained Session
+engines reject the parallel option rather than silently changing ownership.
+
+The owner freezes total/delta row roots, size and version vectors for a round.
+Each assigned rule owns a fresh slot frame and its own mutable physical index
+cache. It executes the existing =core/positive-plan.ss= evaluator. Canonical
+plans continue to share the existing rule-binding compilation; no second
+callback interpreter was added. No shared mutable index cache is passed to a
+worker. This assumes the admitted caller values are not mutated concurrently;
+it does not deep-freeze arbitrary Scheme values.
+
+One fresh coordinator mailbox and key bind program, stratum, round and frozen
+frontier within the invocation. Sender identity and assigned task identity are
+checked before accepting messages. A worker buffers at most 32 candidates and
+waits for owner credit before continuing. Every 64 candidate traversal steps it
+also requests checkpoint credit, including non-emitting scans. Only the owner
+runs existing row validation, deduplication and unique-row budget charging into
+tentative pending storage. It returns only after every assigned worker and its
+joining monitor have terminated; the engine then commits the completed round.
+The round barrier is a semantic condition, not a serial rule execution loop.
+
+Merge failure, worker failure or the coordinator's cancellation predicate stops
+pending admission. Outstanding requests receive stop credit; later batches are
+refused, private candidates discarded, assigned workers drained, then the
+original failure is raised in the caller. Tagged exception outcomes prevent
+Gerbil's actor default error printer from polluting native acceptance output.
+The generic coordinator's merge function must write tentative state; it provides
+no rollback for arbitrary caller side effects. The engine's merge targets pending
+rows, never a public result.
+
+Output set membership is preserved; opt-in parallel row enumeration order is
+arrival-dependent. Tests canonicalize sets rather than require serial ordering.
+Callback trace/order remains serial through the eligibility gate. A single large
+rule is still one task: skew partitioning, persistent worker reuse, ready-SCC
+scheduling, Session actor generation/cancel publication and custom Provider
+concretization are outstanding. This slice must not be called whole-runtime
+closure or native refinement of all =ActorRound.qnt= actions.
+
+** Paper obligations mapped to this slice
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, printed pp.82–83, derives SCC dependency ordering and partitions
+new/delta/total before semi-naive traversal. Frozen round views and the complete
+merge barrier preserve that separation. This implementation still schedules the
+existing stratum, not the paper's SCC DAG independently; SCC scheduling therefore
+remains an explicit next obligation.
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, printed pp.264:8–9, requires total/delta concretizations to expose
+all implied facts; a new implied tuple may not bypass delta. Canonical Set is the
+first admitted parallel subset. Custom Provider/lattice paths retain serial
+execution until their concretization and ordering contracts have a native
+worker-safe representation. Plain concurrent tuple union does not establish it.
+
+** Formal/evidence boundary
+
+=ActorRoundCredits.qnt= owns queued/assigned work, stop and terminal
+acknowledgement transitions. It checks assignment capacity, one outstanding
+credit per worker and return only after
+drain at exploration capacities 1/2/3. An injected early return must produce a
+=CompleteReturn= counterexample. These are safety abstractions, without scheduler
+fairness, arbitrary callback termination or a proven Scheme/VM refinement.
+
+The native Suite covers real two-worker rendezvous; multi-batch order; stop and
+join after merge failure; non-emitting cancellation; recursive graph truth for
+1/2/4 workers (including an indexed 33-edge chain); independent candidates at
+each frozen toy round; unchanged callback traces; unique-row budgets and private
+caller mailbox preservation. =docs/evidence/scheme-actor-round-20261005/receipt.json=
+binds the qualified source and verification results. No speedup, multicore VM
+scaling or model accuracy gain is inferred from worker count. Model calls: 0;
+MRR Rust integration remains deferred.
+
+* Native cancelable Session actor (2026-10-05)
+
+=program/actor-session.ss= exports =gerbil-ascent-open-actor-session= for the
+admitted pure positive Set subset. It implements the existing Session source
+append/replace/run receivers and adds explicit cancel, last-completed, state and
+close receivers. =program/interface.ss= exposes these operations. Existing
+synchronous retained Sessions keep their established timeout/reuse semantics;
+this constructor owns a fresh evaluator for each frozen cut. It does not yet
+retain a completed engine or support custom Provider/lattice/callback execution.
+
+A persistent owner receives requests through a private mailbox. Each caller
+uses a fresh private reply actor, so unrelated caller messages cannot be consumed
+by the Session protocol. Source row/list spines are copied after native shape
+admission; immutable nested payloads remain a caller premise. Multi-relation
+replacement admits the whole prospective input budget before changing pending
+sources. Source updates and a second run are rejected during active computation;
+result/state/cancel/close remain available.
+
+The owner increments an unbounded natural generation for accepted source edits,
+run admission and cancellation. It freezes the cut before spawning an evaluator
+and joining monitor. A mutex-protected cancellation token is independent of the
+compute mailbox; =program/evaluate.ss= forwards its predicate to the existing
+credit/checkpoint round coordinator, including the one-worker execution case.
+The cancellation predicate requires pure Set worker rules, rather than silently
+falling back to a serial callback that cannot honor cooperative cancellation.
+The owner reports =draining= until the monitor joins the evaluator, which itself
+joins every assigned round worker. A cancel acknowledgment means admission has
+stopped; joining the run or closing the Session confirms drain completion.
+
+Only a terminal reply from the assigned evaluator with the current generation
+can change committed sources and the last-completed publication. Failure or
+cancellation restores pending sources from the committed cut and leaves the
+last-completed result object unchanged. An initial Session has no completed
+publication until its first successful run. Cancel may win over a computed
+result that has not yet been accepted by the owner. This is intentional: an
+unaccepted terminal reply has no publication authority.
+
+Close disables new request admission under a lifecycle mutex, cancels active
+work, waits for its terminal monitor, rejects requests already queued at closure,
+replies to admitted close callers and joins the owner. It does not return while
+assigned work remains. Cancellation is cooperative at native traversal and batch
+credit boundaries, not a hard interrupt of arbitrary Scheme code or an assurance
+of bounded index-build/payload comparison latency.
+
+The first native attempt exposed missing Session prototype instantiation; the
+next exposed POO self-slot recursion from constructing =relations:= inside that
+slot scope. The accepted implementation computes =next-relations= before entering
+the POO slot expression. Both rejected attempts remain in the evidence receipt.
+
+** Research and proof correspondence
+
+[[https://arxiv.org/pdf/2203.16684][incremental view maintenance]], §6, pp.9–10, separates the outer update time from inner recursive time
+through nested streams indexed by pairs of naturals. Our Session generation and
+inner solver round are distinct coordinates inspired by that separation. The
+fresh-cut Set implementation is not DBSP signed-change incrementalization, and
+the generation counter is not a runtime cutoff.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, traverses the SCC graph in dependency order. The current
+Session actor owns a complete cut and runs the existing stratum worker engine;
+it does not yet dispatch ready independent SCCs. That future scheduler must
+retain component-local round completion while releasing independent ready SCCs.
+Cancel cannot be made effective by deleting the complete-publication condition.
+
+=ActorSession.qnt= owns idle/foreign reply handling, failed/canceled publication
+and close-after-drain protocol checks. The duplicate Lean actor state machine
+has been retired. Native/VM refinement and fairness remain separate. TLC's
+configurable generation constraint limits exploration, not the runtime or
+specification. Stale-accept and early-close mutations must fail their invariants.
+
+The [[file:evidence/scheme-actor-session-20261005/receipt.json][Session actor qualification receipt]] records source/carrier/proof hashes,
+native lifecycle tests and model controls. No new model calls or MRR Rust work
+were performed. Matched throughput/CPU/allocation and cancellation latency probes,
+retained-engine reuse and independent SCC scheduling remain performance/design
+gates; correctness tests do not establish a speedup.
+
+** Ready-SCC scheduler prerequisites after Session ownership
+
+The current strict-stratum analysis computes components only when strict edges
+exist. Pure positive programs therefore need an explicit SCC inventory from the
+canonical dependency graph, rather than treating all stratum-zero rules as one
+SCC. Each multi-head activation must project heads to their component and compile
+that projection through the existing canonical plan path. A whole rule cannot
+be assigned to one output component when it also writes another.
+
+Ready components need their own frozen predecessor cut and local delta/round
+state. The Session owner admits component completions, deduplicates global
+unique-row budget charging and releases newly ready successors. Independent
+components may progress without a shared iteration barrier; each component must
+still complete its assigned local round before advancing delta. A cut publishes
+only when every required component closes under its current Session generation.
+Qualification must compare each component frontier and the final result against
+independent serial truth, inject stale/duplicate completions and failures, and
+measure skewed tasks with 1/2/4 workers before claiming throughput gains.
+
+* Ready positive Set SCC scheduler implementation (2026-10-05)
+
+=program/positive-components.ss= now derives the complete relation SCC inventory
+from the canonical dependency graph, including pure stratum-zero programs.
+=positive-component= owns named immutable metadata: id, member relations,
+projected rule plans and predecessor component ids. Each multi-head rule is
+projected to each output SCC; its complete ordered body is lowered using the
+existing canonical =gerbil-ascent-compile-positive-plan=. No alternate term
+matching or callback evaluator was introduced.
+
+The fresh pure Set worker path in =program/evaluate.ss= dispatches SCC tasks.
+Existing synchronous default/retained/provider/callback paths keep their prior
+semantics. The admission predicate requires every predecessor SCC terminal and
+merged. The coordinator snapshots immutable frontier roots before dispatch, so
+a worker never copies a vector concurrently being mutated by another owner.
+Source-only components are already closed after native source admission.
+
+An SCC worker owns its variable frames, Set membership tables, total/delta roots,
+size/version vectors and mutable index cache. The first round sees all admitted
+source and completed predecessor facts. Later local rounds use the existing
+semi-naive pivot traversal, and install new delta only after all projected rules
+finish that local round. An independent SCC can continue its own local rounds
+while another closes and releases a successor. There is no shared iteration
+barrier across independent SCCs; component-local round completion is retained.
+
+Candidate batches still use the existing 32-row credit and 64-traversal-step
+checkpoint protocol. The coordinator alone deduplicates and calls the engine's
+existing global budget admission. It extends a tentative frontier for completed
+predecessor reads; completion is accepted only after every batch receives merge
+credit and the terminal tail is merged. Workers may then be reused; the
+worker/monitor pool joins at whole-run exit. The outer engine installs the complete
+pending cut once all required SCCs close. Source-derived rows are not reclassified
+as new source facts in another engine, and no per-component budget reset can
+bypass the global derived/output limits.
+
+The ready callback and terminal-completion callback are coordinator operations.
+A ready callback failure stops admission and drains assigned work. A blocked
+pending dependency inventory with no active task raises a typed dependency
+failure rather than reporting completion. Cancellation and Session generation
+publication reuse the already-qualified lifecycle; this module does not expose
+an incomplete SCC publication as a completed Session result.
+
+** Native and formal gates
+
+The native ready-task rendezvous deliberately keeps independent task C assigned
+until successor B runs after A: a wave barrier would fail this Case. Additional
+Cases check exact SCC/head projection, independent graph truth for chains and a
+cycle at 1/2/4 workers, global unique-row budgets, dependency deadlock rejection
+and ready-callback failure drain. Session cancel/close/failure tests continue to
+exercise the actual SCC engine. This is executable causal overlap evidence,
+without an inference of multicore CPU scaling.
+
+=ReadyComponents.qnt= owns ready predecessor admission, foreign/duplicate
+completion and dispatch alongside unrelated active work. It explores capacities
+1/2/3 for prerequisite,
+partition, capacity and complete-return safety. Premature dispatch and early
+return mutations must fail =Prerequisites= and =CompleteReturn=. The model
+now captures a predecessor batch and terminal tail, owner merge credit, and the
+actual dispatch snapshot. Stale snapshots, dropped tails and completion before
+merge credit must violate =DependencySnapshot= or =CompletedDelivery=. The
+native terminal-tail rendezvous confirms that a credited intermediate batch
+does not release a successor and that its eventual snapshot contains all 33
+predecessor rows. These fragments
+do not prove the complete Gerbil/Tarjan/head-projection/VM refinement or liveness.
+
+** Paper obligations and performance boundary
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, identifies SCC dependency order and local total/delta/new
+state. The implementation now maps those premises to component-local native
+state and ready predecessor admission. Its owner-controlled global publication
+condition is retained when topological traversal becomes asynchronous dispatch.
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, p.264:9, shows why implied facts must not skip delta into total.
+The SCC subset remains canonical Set/hash storage with no lattice or field
+callbacks. Custom Provider concurrency requires its own concretization and
+mutation contract; Set union alone does not establish that contract.
+
+The native 64-edge probe alternates serial and SCC 1/2/4 capacities in the same
+AOT carrier and validates all four output relations against independent truth
+for each sample. SCC 1 is explicitly forced through the same cancelable SCC
+path, so the effect of SCC planning is distinguishable from worker count.
+Immutable analysis is warmed; each timed sample creates a fresh evaluator,
+including component planning, indexes, private membership and merge. Three
+samples per mode, wall jiffies only, one skewed graph and unmeasured VM processor
+topology make this exploratory evidence, not a stable CPU/allocation/throughput
+or general speedup claim. The receipt retains raw numbers and any negative result.
+
+The full-suite snapshot before the concurrent index-build rebase observed
+solve medians of serial 1.773 ms, SCC 1 worker 7.876 ms,
+2 workers 7.966 ms and 4 workers 7.647 ms. This small skewed fixture is a
+negative performance result: component planning, private state and actor merge
+cost more than serial evaluation. Ready dispatch is qualified, but performance
+benefit is not established. Cache/reuse and larger matched workloads remain gates.
+
+The [[file:evidence/scheme-ready-components-20261005/receipt.json][ready-component receipt]] binds source/carrier/proof hashes and verification
+results. Remaining gates include large SCC rule/row partitioning, persistent
+workers/index reuse, immutable component-plan caching, custom Provider workers,
+retained actor engine reuse and matched scale/CPU/allocation/latency measurements.
+Model calls remain 0 and MRR Rust integration remains deferred.
+
+After rebasing the concurrent index-build optimization =d471339=, the fresh
+native SCC, actor Session, actor round and index-build modules passed all 28
+Cases. This targeted receipt binds the rebased source/carrier independently;
+it does not relabel the earlier 71-module/610-Case suite as a full new-head run.
+The repeated timing probe still establishes no performance benefit.
+
+* Component plan identity cache and CI owner boundary (2026-10-05)
+
+The previous exact head =1de7af4= failed Scheme CI before execution because
+=evaluate.ss= had 1004 effective lines under =GERBIL-SCHEME-MOD-R002=.
+SCC eligibility now belongs to =positive-components.ss=; the evaluator calls
+that policy once. The threshold is preserved. Source size alone is not native
+or performance qualification; the exact-head GitHub check remains required.
+
+A weak identity table stores only fully compiled component metadata keyed by
+immutable program analysis. Cache hits reuse component membership, predecessor
+ids and canonical projected rule plans. A new analysis identity cannot hit an
+old entry. Source-only engines may share analysis but continue to own distinct
+rows, indexes, budgets, delta buffers, snapshots and variable frames. Component
+metadata is built privately and is read-only after publication. Primitive hash
+operations own a mutex; lowering is outside critical sections. Concurrent cold
+callers may build equivalent duplicate metadata. Single-flight compilation,
+weak-key lifetime and native allocation ownership are not proven here.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, computes SCCs and incrementalization before generated
+execution. We infer an ownership requirement for our architecture: immutable
+component lowering belongs to the declaration lifetime, while relation state
+belongs to a solve. This cache implements that separation for our relation SCC
+projection; the paper does not prove equivalence of that projection to its rule
+SCC transformation. Existing multi-head truth tests remain a separate gate.
+
+Native tests check exact analysis identity hits, independent analysis misses,
+unchanged output truth, and equality of fresh/cached projected metadata. A paired
+100-repeat planning probe measures uncached lowering versus a cache hit; the
+64-edge fresh-solve probe still checks all output relations for every sample.
+The planning probe cannot establish end-to-end or multicore benefit.
+
+=RoundAdmission.lean= proves immutable identity hit/miss and the equations
+for completed/failed cache construction. These are pure function laws, not
+publication or synchronization protocols. =ReadyComponents.qnt= is replayed unchanged because the
+cache adds no active/done/return transitions. Neither proves the native weak
+hash/mutex implementation. The [[file:evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
+negative measurements and the preceding CI failure. Model calls remain 0.
+
+The repaired full suite passed 72 modules and 617 Cases. The matched
+planning batch medians (100 operations) were fresh 0.989 ms and cached 0.012 ms.
+Fresh-solve medians were serial 1.780 ms, SCC 1/2/4 workers 7.796/8.274/7.859 ms.
+These retain the end-to-end negative result; three samples cannot establish
+stable CPU/throughput improvement.
+
+Rebased concurrent strict-dependency preflight optimization =0d19eca=. The new
+source/carrier snapshot passed six targeted modules and 43 Cases, including
+SCC/cache, Session/round, strata and lattice controls. Its separate receipt does
+not claim a full rerun of the earlier 72-module/617-Case suite.
+
+* Worker-owned incremental total indexes (2026-10-05)
+
+After the =eb4378d= ownership refactor, each SCC worker owns its physical index
+cache and version vectors. It previously installed new row roots and advanced
+the all-version without extending valid cached total indexes. The worker now
+calls =row-indexes-advance!= against the old version before installing roots,
+sizes and the next version. Delta indexes retain their round-local invalidation.
+Only canonical positive Set/hash workers use this path; custom Provider and
+lattice concurrency remain separate gates.
+
+The admitted batch is in reverse candidate order and is appended before old
+rows. Physical bucket extension prepends each visited row, so the worker uses
+reverse traversal to preserve exactly the order of a full rebuild over the new
+root. Empty batches leave the total version unchanged. All indexes are private;
+a failed extension cannot publish a completed SCC. Existing credit, join,
+cancellation and owner global budget/publication rules remain in force.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, assigns indexes to relation usage and maintains them
+when generated kernels insert derived rows. We apply that obligation to the
+worker's dynamic total relation. The paper does not prove our native physical
+cache/version installation, which is a separate qualification boundary.
+
+=RoundAdmission.lean= proves ordered bucket extension equals rebuilding over
+=batch ++ old=, including the reverse-traversal law, for an arbitrary Boolean
+key predicate. =ComponentIndex.qnt= explores two independent private owners and
+an extension/install pair, rejecting wrong bucket order and premature install.
+The two owners and fixed batch are exploration fixtures, not runtime bounds.
+Native pointer aliasing, hash key encoding and VM mutation are not refined by
+these models. Native tests separately compare single/composite keys (including
+=#f=), cyclic/chain truth, unchanged source roots and exact bucket order.
+
+The frozen =eb4378d= worker/coordinator provide matched native controls. The
+worker lane uses a no-op checkpoint on both sides to isolate local evaluation;
+50 alternating CPU/wall pairs and 10 separate forced-GC allocation pairs are
+checked against independent truth per key shape. The coordinator lane uses
+real actors, credits and checkpoints for 20 alternating pairs. Its output merge
+collects rows but excludes public engine construction/budget checking and LLM
+latency, so it cannot establish whole-application or multicore benefit.
+
+Wall measurements use native jiffies. An earlier statistics-vector field was
+mislabelled as wall time and is discarded; no result from that field is promoted.
+Preflight duplicate support registration, Lean reserved identifier, test syntax
+and host =ps= timeout failures are retained in the [[file:evidence/scheme-component-index-20261005/receipt.json][qualification receipt]]. The
+successful build requires continuous real compiler output under the unchanged
+60-second output watchdog; runtime 5/5/120-second checks remain unchanged.
+Model calls remain 0; MRR Rust integration remains deferred.
+
+The full snapshot passed 74 modules and 629 Cases. Composite-key worker
+CPU median decreased 11.822 to 11.141 ms (46/50 pairs won); allocation median
+decreased 9,626,816 to 9,206,272 bytes. Actor coordinator CPU/wall medians
+decreased 14.139/14.178 to 13.602/13.606 ms (17/20 pairs won). Single-key CPU
+median decreased but only 27/50 pairs won, so this lane remains unstable. These
+fixture-specific observations do not establish overall Runtime or LLM gains.
+
+After rebasing concurrent source/reuse fixes through =894ee13=, six targeted
+modules passed 60 Cases and the complete Lean library/test roots built in
+60/61 jobs. The receipt separately binds this source/carrier and repeated raw
+measurements; it does not relabel the earlier 74-module/629-Case snapshot.
+
+* Credit observations and traversal distance (2026-10-05)
+
+A successful batch credit is already a cancellation observation made by the
+owner. The worker now restarts its traversal counter after that credit. Batch
+size remains 32 and the no-output traversal checkpoint period remains 64;
+failed credit exits the worker instead of restarting an unchecked window.
+Key/sender/task validation, owner merge and terminal drain remain the authority.
+The bound counts traversal calls since the last successful owner observation,
+not wall-clock latency and not the number of derived rows.
+
+The frozen actor-round control keeps the previous counter behavior while both
+coordinators import the same current component worker and indexes. Native tests
+check independent stream and recursive closure truth for every alternating
+sample and verify cancellation rejects further rows and drains assigned workers.
+Lean proves the counter bound for every positive natural period, successful
+reset and refused-credit preservation. Existing Quint credit/drain checks cover
+capacities 1/2/3 plus an early-return negative control; they do not model this
+counter or refine the native VM. Generations remain unbounded.
+
+This is an implementation inference from our owner-credit protocol. rule planning's
+SCC/delta planning and Provider concretization's Provider contracts do not establish a cancellation
+protocol or authorize concurrent custom Providers. Measurements and limits are
+recorded in [[file:evidence/scheme-credit-observation-20261005/receipt.json][the receipt]]. No overall Runtime, LLM or multicore benefit is established.
+
+Public Session row-spine isolation is owned by =program/result.ss=. Moving the
+existing copy from =evaluate.ss= preserves the concurrent alias-safety fix and
+repairs the CI module-size violation without relaxing its policy threshold.
+
+The final source snapshot, rebased through =1556fba=, passes 75 native modules
+and 638 Cases. Lean completes 62 build jobs. TLC explores 73/121/137 distinct
+states for capacities 1/2/3 and rejects the early-return mutation. Dense stream
+owner cancellation checks decrease 51 to 35 for the same 512 rows. CPU/wall
+paired wins are only 32/50 (stream) and 30/50 (recursive coordinator), so these
+noisy measurements do not support a timing speedup claim. The receipt retains
+all final pairs, source/carrier hashes and unchanged resource limits.
+
+* Source budget admission before row ownership transfer
+
+=program/source-cut.ss= now prepares lightweight slot/count metadata before
+allocating detached rows. The whole batch passes source-name and row-shape
+validation first, then duplicate-slot checks and the exact total-input budget.
+Only admitted work copies row spines, append prefixes and dense slot headers.
+Refusal preserves the old rows/counts and publishes no new cut. Input
+multiplicity still counts even if the solver later deduplicates identical rows.
+Untouched slot rows remain shared read-only. No runtime generation bound or
+child timeout changed.
+
+The existing actor Session Suite checks replacement and append refusal with
+10,000 and 20,000 valid input rows against a two-fact limit. Native cumulative
+allocation is 101,984 bytes in all four refused operations, including exception
+formatting: it does not grow with the rejected row batch. This is a resource
+preflight discriminator, not a CPU, live-heap or application speedup claim.
+Malformed rows still reject before duplicate/budget errors, duplicates still
+reject before budgets, exact-limit retry succeeds and the accepted result owns
+its row spines after caller mutation. Existing actor cancellation, source
+updates and publication tests retain their original contract.
+
+The actor and composed Library modules passed 17 Cases with parent status zero;
+the latter rechecks the complete multi-cut lifecycle after this runtime change.
+Concurrent-pool lifecycle timing output does not replace the earlier focused
+cost receipt. The [[file:evidence/scheme-source-preflight-20261005/receipt.json][source-bound preflight receipt]] records the resource
+observations and source/carrier identities.
+
+=SourceUpdateFrame.lean= proves exact replacement count
+balance under valid removal, refusal above the budget, and bounded accepted
+counts. Native correspondence still assumes unique slots and correct cached
+row counts; these are not proofs of native allocation or heap ownership.
+The existing Actor Session TLA model explores 162 distinct states and rejects
+stale-publication and early-close mutations. Rejected preparation is a
+stuttering step on that protocol state; TLC does not model row copying.
+Its finite generation constraint remains exploration-only.
+
+* Direct native child admission (2026-10-06)
+
+The actor coordinator now launches the frozen AOT registry directly through
+=t/native/module-process.ss=. A child no longer re-enters =just _test-file=,
+starts a recipe shell or creates a =tee=/text-filter pipeline. Scheme owns
+the receipt: native module resolution, discovered Cases, the expected compiled
+module completion, harness completion, explicit =OK=, child exit status and
+error markers must all agree. A zero process exit with an incomplete receipt
+is rejected. The single-file shell adapter remains a separate entry point.
+
+The existing Python supervisor still observes process output and terminates
+stalled process groups. It provides no semantic verdict. The five-second
+startup/idle gates, 120-second deadline and 1 GiB runtime heap remain unchanged.
+The coordinator's capacity, mailbox isolation, output credits, failure admission
+and assigned-worker draining remain the protocol modeled by =ActorTestPool=.
+No new TLA+ transition or Lean theorem is claimed for this adapter change.
+
+The first full run at twelve workers failed four output watchdogs before
+completion. An isolated twelve-process recipe launch also failed one startup
+gate before its START marker. The same twelve registry keys launched directly
+all produced =NATIVE-MODULES-OK= within approximately 0.4--0.6 seconds and passed.
+This isolates the extra launch chain as an avoidable qualification cost; it is
+not an application throughput claim or an identification of one specific OS
+subprocess as the cause. Negative controls exercise setup, Case, cleanup, empty
+Suite and incomplete receipt rejection on the direct path.
+
+A later integrated inventory run rejected the BYODS three-body Case at the
+unchanged idle gate: 46 other admitted modules passed. Its first Case checked
+27 two-producer partitions for three providers before its next Case boundary.
+It now reports a partition only after every provider's result passes the
+independent closure/witness checks. The 5,120-history frontier Case already
+reported completed graph batches and was not reached by this failed child.
+This is evidence of completed computation, not timer-driven activity. Failure
+lines now include the registry key and decoded exit status.

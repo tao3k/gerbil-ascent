@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Evidence publication policy
+
+Publish structured results, exact source and tool identities, proof statements,
+comparison boundaries, failure categories and GitHub CI references. Execution
+logs and their license sidecars are excluded from Git and rejected by CI.
+
+Previously committed execution logs were removed on 2026-10-04 at the user's
+direction. Historical receipts may retain a log filename or digest as metadata;
+those fields no longer indicate an available repository artifact. Historical
+pass/failure results and their source boundaries remain unchanged. New receipts
+must state results directly and must not require repository log files for review.
+
+Raw model responses, finite case inputs and source patches are experimental
+data, distinct from process execution logs. Their publication requires the
+applicable study/source authorization and a documented semantic scope.

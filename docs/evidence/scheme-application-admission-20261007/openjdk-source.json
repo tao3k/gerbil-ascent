@@ -1,0 +1,52 @@
+{
+  "repository": "s-arash/ascent",
+  "revision": "03f4f792442ecaf9e4f178a6a1b5840eab526388",
+  "files": [
+    {
+      "relation": "alloc",
+      "arity": 2,
+      "rows": 4261,
+      "bytes": 737392,
+      "git_blob": "ced9d197fae28e43c7369478bff84a9ee1acab3a",
+      "sha256": "c84a99a1e7be0794831e6f870337b6cea9c7585e84eb1382d49b4abecfd03788"
+    },
+    {
+      "relation": "assign",
+      "arity": 2,
+      "rows": 39607,
+      "bytes": 13102621,
+      "git_blob": "42eb14e841d3b59d7b2d581d5c6f33a58607ec7f",
+      "sha256": "b4accb36a1b85d425b79ad3b9bd4bfb1ff1095f17c155a237296a7e051e412f0"
+    },
+    {
+      "relation": "load",
+      "arity": 3,
+      "rows": 2692,
+      "bytes": 1088142,
+      "git_blob": "9a52a450c993f07b1cfc27f0fbc3d946a78b8d57",
+      "sha256": "11f3904331441183437d93d45cd76bc8abcbe61f41b6a1d206bec7707c112b4a"
+    },
+    {
+      "relation": "store",
+      "arity": 3,
+      "rows": 509,
+      "bytes": 88661,
+      "git_blob": "ab3267e4f873a6813a7bd75629821825eb888fa5",
+      "sha256": "bcc6f3c1d8c31b5e4229b3a78912aafdf778fb747d8c1fb4c210ea43493ad68c"
+    }
+  ],
+  "scope": "pinned source identity and TSV shape; full Rust aggregate truth recorded below, no full Scheme solve admitted",
+  "rust_partition_and_implicit_count": {
+    "nodes": 53318,
+    "active_classes": 12688,
+    "largest_class": 20956,
+    "concrete_pairs": 440438706,
+    "effective_load_store_unions": 0,
+    "implicit_rust_count_matches": true,
+    "raw": "MODEL-SOURCE name=alloc rows=4261\nMODEL-SOURCE name=assign rows=39607\nMODEL-SOURCE name=load rows=2692\nMODEL-SOURCE name=store rows=509\nMODEL-ROUND round=1 effective-unions=0\nRUST-APPLICATION-START\nRUST-APPLICATION-OK pairs=440438706\n{\"nodes\":53318,\"active_classes\":12688,\"largest_class\":20956,\"concrete_pairs\":440438706,\"rounds\":1}\n",
+    "example": "rust/ascent-oracle/examples/steensgaard_data_truth.rs",
+    "source_sha256": "5d8deb940317801bebd8d6c4f26ac0c07db89289508368a771564139a8ecbc83",
+    "scope": "full input source and aggregate cardinality agreement; no full Scheme solve or Scheme memory result"
+  },
+  "source_directory": "byods/ascent-byods-rels/examples/steensgaard/openjdk_javalang_steensgaard"
+}

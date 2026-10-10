@@ -1,0 +1,229 @@
+{
+  "schema": "ascent.composed-lifecycle-qualification",
+  "version": 1,
+  "qualifiedBaseHead": "9b82843d5ee12b7a804c26c70262c20c210e2135",
+  "command": "just test-native t/qualification/scheme-library-contract-test.ss",
+  "parentExitStatus": 0,
+  "caseOkCount": 6,
+  "elapsedModuleSeconds": 22,
+  "sourceBinding": {
+    "baselineReceipt": "docs/evidence/scheme-trrel-uf-20261005/receipt.json",
+    "baselineReceiptSha256": "fe90848eb45623489e2892cc78a55748de51e8dc2d782c446a18abfb6a7e5323",
+    "sourceSha256Overrides": {
+      "t/qualification/scheme-library-contract-test.ss": "c3c8a5838439ee2e7abbe6495b44a56ee0f0bdaf4d0dad00f17ac5e307229c2c"
+    },
+    "sourceFileCount": 458,
+    "sameSourcePathSet": true,
+    "nativeRunnerCheckedBeforeAndAfter": true
+  },
+  "carrierSha256": {
+    ".cache/ascent/native-library/single-test": "e94c68084cdb1a973999b700e6e0787b9972281150369b3976a4c679565110da",
+    ".cache/ascent/native-library/single-test.ss": "62f591c5c1e88f03c6611cab2d41e494036d3b3ab57dd71bdb2a5fe978a75cd7"
+  },
+  "workload": {
+    "sourceCuts": 9,
+    "pairedTrials": 12,
+    "arms": 24,
+    "nativeRelations": [
+      "edge",
+      "blocked",
+      "weight",
+      "root",
+      "path",
+      "allowed",
+      "weighted",
+      "summary"
+    ],
+    "candidateQuery": "summary",
+    "independentModel": "three-node Boolean matrix closure with separately projected native relation sets",
+    "nativeCompleteSetComparisons": 1728,
+    "candidateCompleteSetComparisons": 216,
+    "rejectedUpdateCompleteSetComparisons": 192,
+    "allCompleteSetComparisons": 2136,
+    "candidateFiniteReplayChecks": 216,
+    "candidateStratifiedReplayChecks": 216,
+    "retainedUpdate": "atomic four-source replacement after initial solve",
+    "freshUpdate": "new program and Session at every cut"
+  },
+  "measurement": {
+    "included": [
+      "initial program/Session construction",
+      "initial solve",
+      "eight later source cuts",
+      "publication",
+      "candidate receipt construction",
+      "snapshot binding",
+      "finite replay",
+      "stratified replay",
+      "identical completed-cut progress output"
+    ],
+    "excluded": [
+      "AOT compilation",
+      "process startup",
+      "forced pre-sample GC",
+      "independent expected-set comparisons",
+      "post-sample rejected-transaction checks"
+    ],
+    "allocationMetric": "cumulative native allocated bytes, not live heap or RSS"
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "fresh-cpu-us": 929138.0000000001,
+      "retained-cpu-us": 522304.0,
+      "fresh-wall-us": 930772.0,
+      "retained-wall-us": 523163.0,
+      "fresh-bytes": 1520904576.0,
+      "retained-bytes": 850598792.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 1,
+      "fresh-cpu-us": 925503.9999999999,
+      "retained-cpu-us": 501338.00000000006,
+      "fresh-wall-us": 927768.0,
+      "retained-wall-us": 503227.0,
+      "fresh-bytes": 1520947568.0,
+      "retained-bytes": 849825672.0,
+      "retainedFirst": false
+    },
+    {
+      "pair": 2,
+      "fresh-cpu-us": 869404.9999999995,
+      "retained-cpu-us": 488238.0000000004,
+      "fresh-wall-us": 873126.0,
+      "retained-wall-us": 489429.0,
+      "fresh-bytes": 1520963192.0,
+      "retained-bytes": 849845952.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 3,
+      "fresh-cpu-us": 861055.9999999997,
+      "retained-cpu-us": 479642.0000000001,
+      "fresh-wall-us": 864177.0,
+      "retained-wall-us": 480576.0,
+      "fresh-bytes": 1520944232.0,
+      "retained-bytes": 849845048.0,
+      "retainedFirst": false
+    },
+    {
+      "pair": 4,
+      "fresh-cpu-us": 866027.0000000008,
+      "retained-cpu-us": 482829.9999999999,
+      "fresh-wall-us": 867928.0,
+      "retained-wall-us": 483677.0,
+      "fresh-bytes": 1520941344.0,
+      "retained-bytes": 849860280.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 5,
+      "fresh-cpu-us": 864561.0000000001,
+      "retained-cpu-us": 495472.9999999996,
+      "fresh-wall-us": 866172.0,
+      "retained-wall-us": 496418.0,
+      "fresh-bytes": 1520940896.0,
+      "retained-bytes": 849841008.0,
+      "retainedFirst": false
+    },
+    {
+      "pair": 6,
+      "fresh-cpu-us": 899993.9999999995,
+      "retained-cpu-us": 497923.99999999936,
+      "fresh-wall-us": 902627.0,
+      "retained-wall-us": 498828.0,
+      "fresh-bytes": 1520943136.0,
+      "retained-bytes": 849854408.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 7,
+      "fresh-cpu-us": 907230.0000000002,
+      "retained-cpu-us": 498174.0000000006,
+      "fresh-wall-us": 912427.0,
+      "retained-wall-us": 499034.0,
+      "fresh-bytes": 1520943304.0,
+      "retained-bytes": 849833768.0,
+      "retainedFirst": false
+    },
+    {
+      "pair": 8,
+      "fresh-cpu-us": 880653.9999999999,
+      "retained-cpu-us": 501302.0000000008,
+      "fresh-wall-us": 891430.0,
+      "retained-wall-us": 512945.0,
+      "fresh-bytes": 1520902504.0,
+      "retained-bytes": 849838248.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 9,
+      "fresh-cpu-us": 859156.0000000005,
+      "retained-cpu-us": 478362.9999999999,
+      "fresh-wall-us": 921818.0,
+      "retained-wall-us": 490983.0,
+      "fresh-bytes": 1520958592.0,
+      "retained-bytes": 849818720.0,
+      "retainedFirst": false
+    },
+    {
+      "pair": 10,
+      "fresh-cpu-us": 844901.0000000001,
+      "retained-cpu-us": 470960.99999999907,
+      "fresh-wall-us": 880043.0,
+      "retained-wall-us": 471737.0,
+      "fresh-bytes": 1520936896.0,
+      "retained-bytes": 849816584.0,
+      "retainedFirst": true
+    },
+    {
+      "pair": 11,
+      "fresh-cpu-us": 853924.9999999985,
+      "retained-cpu-us": 489570.99999999796,
+      "fresh-wall-us": 856045.0,
+      "retained-wall-us": 492928.0,
+      "fresh-bytes": 1520936848.0,
+      "retained-bytes": 849848968.0,
+      "retainedFirst": false
+    }
+  ],
+  "summary": {
+    "cpu-us": {
+      "freshMedian": 867716.0000000002,
+      "retainedMedian": 492521.9999999988,
+      "retainedWins": 12,
+      "medianReductionPercent": 43.239262615879085
+    },
+    "wall-us": {
+      "freshMedian": 885736.5,
+      "retainedMedian": 494673.0,
+      "retainedWins": 12,
+      "medianReductionPercent": 44.15122330399617
+    },
+    "bytes": {
+      "freshMedian": 1520942240.0,
+      "retainedMedian": 849843028.0,
+      "retainedWins": 12,
+      "medianReductionPercent": 44.12391176669536
+    }
+  },
+  "formalSourceSha256": {
+    "packages/proofs/lean/SourceUpdateFrame.lean": "c245f7afcafc0c47e7d9993113e5be964c328e41aa14acb2aa5ed727d27d69e7",
+    "packages/proofs/lean/SessionPublication.lean": "b62c3b03e36bd12cd5b78c515f9b82a4eaf556752a3523db6189db7d334bbb81",
+    "packages/proofs/tla/NativeSessionPublication.tla": "272f7cc46a27298f6350662f19fd352f290312fe8beea94d387e3abecefdc29b",
+    "packages/proofs/tla/NativeSessionPublication.cfg": "fe993b95bf925901679e7fe9901a891b7945c031f22f8d2b20636f640f6747c9",
+    "packages/proofs/tla/SessionTransaction.tla": "59451973b5516acf3525c4990174cb78da9e30b1cb0a0732af13b86f15ae8822",
+    "packages/proofs/tla/SessionTransaction.cfg": "09c5ff20bc44e46ebaf838f1f4612eae5734556498afd66f79764fb2e6f82518"
+  },
+  "formalBoundary": "Unchanged formal sources retain readsMatch, completed fixed-point and native protocol correspondence premises; no new proof or whole native refinement claim.",
+  "discardedRun": {
+    "parentExitStatus": 70,
+    "cause": "Test used POO .ref on a public relational-program-solution wrapper; corrected to public queries. Not a runtime completion failure."
+  },
+  "earlierSummaryOnlyRun": "Passed, superseded by the admitted full-relation verification source.",
+  "modelCalls": 0,
+  "rustRuntimeIntegrated": false,
+  "fullReleaseGate": "pending exact final-head GitHub CI",
+  "scope": "finite composed canonical-Set workflow; no timed Actor/BYODS arm, model answer, production scale or general benefit claim"
+}

@@ -1,0 +1,2317 @@
+{
+  "allocationContract": "native get-bytes-allocated! writes allocator counter to preallocated f64vector; per-operation batch mean; not live heap or peak RSS",
+  "artifactSha256": "e351d91b6537e25c5338e5033435853aef27c67cd4ca7a356cf5f3960f95cc6a",
+  "bounds": {
+    "buildSeconds": 180,
+    "heap": "1G",
+    "idleSeconds": 5,
+    "moduleSeconds": 120
+  },
+  "buildElapsedSeconds": 132.4230527079999,
+  "cpuSystemSeconds": 0.32,
+  "cpuUserSeconds": 10.26,
+  "elapsedSeconds": 108.92,
+  "exitStatus": 0,
+  "groups": 120,
+  "logsSha256": {
+    "retained-batch-build.log": "b7063f8c31719175798567c0686a498b132ffcd72a5b5a0fdd936910ee29b5f3",
+    "retained-batch-native.log": "cea515f5af0fbede38860c2a80b07765e9dc7a7f514948674cca0385cfb59c07"
+  },
+  "measuredNativeResults": 17280,
+  "modelCalls": 0,
+  "nativeTruth": "all four relations checked independently in Scheme; triangular chain cardinality plus membership and duplicate rejection",
+  "remainingScope": "three-arm complete-update comparison and final source qualification are separate receipts",
+  "samples": [
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 337419.625,
+        "cpuSeconds": 0.00027171093750000003,
+        "wallSeconds": 0.0021216015625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48760.125,
+        "cpuSeconds": 5.2531249999999844e-05,
+        "wallSeconds": 5.27265625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.0002475234374999999,
+        "wallSeconds": 0.003169765625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1695312499999875e-05,
+        "wallSeconds": 5.16953125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0002213515625000004,
+        "wallSeconds": 0.00182459375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.771093750000028e-05,
+        "wallSeconds": 6.8984375e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00022673437500000037,
+        "wallSeconds": 0.001266390625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.83984375000001e-05,
+        "wallSeconds": 0.00166578125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.00023060937500000035,
+        "wallSeconds": 0.0017276953125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1609375000000006e-05,
+        "wallSeconds": 5.16484375e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.0003358671875,
+        "wallSeconds": 0.002130671875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1476562500000524e-05,
+        "wallSeconds": 5.14921875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.00024555468750000076,
+        "wallSeconds": 0.003505140625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.55234374999998e-05,
+        "wallSeconds": 9.33828125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00025375781249999986,
+        "wallSeconds": 0.0031874453125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1664062499999844e-05,
+        "wallSeconds": 5.16796875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0002443046874999995,
+        "wallSeconds": 0.00182175
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1742187500000356e-05,
+        "wallSeconds": 5.17578125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00023616406250000048,
+        "wallSeconds": 0.00346465625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.392187499999931e-05,
+        "wallSeconds": 0.000888546875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0002672265625000003,
+        "wallSeconds": 0.0023288046875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.3859374999999654e-05,
+        "wallSeconds": 0.0006491953125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.0002089218749999986,
+        "wallSeconds": 0.00132734375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.162500000000092e-05,
+        "wallSeconds": 0.000814796875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0003355546874999997,
+        "wallSeconds": 0.0044809453125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.3437499999999666e-05,
+        "wallSeconds": 0.000170484375
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00024403906249999968,
+        "wallSeconds": 0.0029010546875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1851562499998297e-05,
+        "wallSeconds": 5.2109375e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0002736874999999996,
+        "wallSeconds": 0.00296428125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.840624999999989e-05,
+        "wallSeconds": 0.001038234375
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00027994531250000176,
+        "wallSeconds": 0.003410234375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1843750000000674e-05,
+        "wallSeconds": 5.1859375e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.0002651093749999993,
+        "wallSeconds": 0.003266578125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.9468749999999626e-05,
+        "wallSeconds": 5.96015625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00022885156249999837,
+        "wallSeconds": 0.0022539609375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.1492187500000106e-05,
+        "wallSeconds": 5.15078125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 336391.125,
+        "cpuSeconds": 0.00024332812500000092,
+        "wallSeconds": 0.0019003359375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 5.203125000000086e-05,
+        "wallSeconds": 5.20703125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "independent",
+      "edges": 12,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 342901.75,
+        "cpuSeconds": 0.00033692187499999825,
+        "wallSeconds": 0.0061235234375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 48337.5,
+        "cpuSeconds": 6.595312500000047e-05,
+        "wallSeconds": 0.00193915625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345498.0,
+        "cpuSeconds": 0.0003356406250000013,
+        "wallSeconds": 0.005202
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45786.625,
+        "cpuSeconds": 4.625781250000224e-05,
+        "wallSeconds": 4.6296875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.000317703124999999,
+        "wallSeconds": 0.005069140625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 7.066406249999976e-05,
+        "wallSeconds": 0.0005539765625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.00031620312500000095,
+        "wallSeconds": 0.0028542265625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 7.819531249999775e-05,
+        "wallSeconds": 0.0019521015625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00037117968750000063,
+        "wallSeconds": 0.0040476796875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 7.985937500000137e-05,
+        "wallSeconds": 0.00025375
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.0002785937499999967,
+        "wallSeconds": 0.0037145234375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 7.742187500000067e-05,
+        "wallSeconds": 0.0016221796875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.0002461562500000007,
+        "wallSeconds": 0.0021184140625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 9.247656249999903e-05,
+        "wallSeconds": 0.0009283203125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.0003090000000000037,
+        "wallSeconds": 0.0037468828125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.64687500000005e-05,
+        "wallSeconds": 0.0001575546875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00027503906249999946,
+        "wallSeconds": 0.0040216640625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 6.943749999999832e-05,
+        "wallSeconds": 0.000279265625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.00031900781250000093,
+        "wallSeconds": 0.004138734375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.605468749999814e-05,
+        "wallSeconds": 4.609375e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00025774218749999994,
+        "wallSeconds": 0.0034332421875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 6.112499999999868e-05,
+        "wallSeconds": 0.0004580546875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.0002493515624999998,
+        "wallSeconds": 0.00047253125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 8.071093750000244e-05,
+        "wallSeconds": 0.001551734375
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.0002532265625000002,
+        "wallSeconds": 0.0028749765625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 5.85546875000037e-05,
+        "wallSeconds": 5.85625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.0002736796874999968,
+        "wallSeconds": 0.002218875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 5.2187500000001885e-05,
+        "wallSeconds": 0.0005905625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00030480468750000017,
+        "wallSeconds": 0.002286171875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 8.621875000000209e-05,
+        "wallSeconds": 0.0016505078125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.0002888281249999944,
+        "wallSeconds": 0.0032385234375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 5.222656249999694e-05,
+        "wallSeconds": 0.0015029140625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00024362500000000079,
+        "wallSeconds": 0.002108578125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 6.100781249999965e-05,
+        "wallSeconds": 6.1015625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.00032720312500000154,
+        "wallSeconds": 0.0024486796875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.587499999999731e-05,
+        "wallSeconds": 4.59140625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00029792968750000023,
+        "wallSeconds": 0.00445815625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 8.22968749999986e-05,
+        "wallSeconds": 0.0016572578125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 345074.875,
+        "cpuSeconds": 0.000301140624999998,
+        "wallSeconds": 0.0044263828125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.582812500000116e-05,
+        "wallSeconds": 4.58671875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "recursive",
+      "edges": 12,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 351520.75,
+        "cpuSeconds": 0.00024023437500000216,
+        "wallSeconds": 0.0008595625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34408.875,
+        "cpuSeconds": 6.654687499999673e-05,
+        "wallSeconds": 0.0007678671875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344699.75,
+        "cpuSeconds": 0.000250906250000002,
+        "wallSeconds": 0.003212
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45786.625,
+        "cpuSeconds": 4.5937500000002573e-05,
+        "wallSeconds": 4.596875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00033772656250000144,
+        "wallSeconds": 0.0053476953125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 5.983593750000238e-05,
+        "wallSeconds": 5.98515625e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.00029628125000000227,
+        "wallSeconds": 0.00344553125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 6.064843749999799e-05,
+        "wallSeconds": 0.0006683203125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.0002651484375000013,
+        "wallSeconds": 0.001982015625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 8.743750000000244e-05,
+        "wallSeconds": 0.0011211796875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.00029931249999999576,
+        "wallSeconds": 0.001852390625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 6.198437499999737e-05,
+        "wallSeconds": 0.001185296875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00030458593749999735,
+        "wallSeconds": 0.0048341171875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 8.656250000000504e-05,
+        "wallSeconds": 0.0011827578125
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.0003237578125000057,
+        "wallSeconds": 0.0037587109375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.623437500000244e-05,
+        "wallSeconds": 4.63125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00028650000000000203,
+        "wallSeconds": 0.003988921875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 7.273437500000118e-05,
+        "wallSeconds": 0.0009809921875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.0003756874999999993,
+        "wallSeconds": 0.003140109375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 6.373437500000606e-05,
+        "wallSeconds": 8.33203125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00031078906249999705,
+        "wallSeconds": 0.005615046875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 7.074218749999334e-05,
+        "wallSeconds": 0.0021732734375
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.0002925625000000029,
+        "wallSeconds": 0.002694890625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 5.51718750000027e-05,
+        "wallSeconds": 0.002410421875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.0002565703125000096,
+        "wallSeconds": 0.001692671875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 5.987500000000784e-05,
+        "wallSeconds": 6.08125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.0003096484374999972,
+        "wallSeconds": 0.0055060625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.671093749999966e-05,
+        "wallSeconds": 4.67421875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00020690625000000656,
+        "wallSeconds": 0.0002070078125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 6.060156250000531e-05,
+        "wallSeconds": 0.0001863046875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.00031147656250000294,
+        "wallSeconds": 0.0054136328125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.57890624999957e-05,
+        "wallSeconds": 4.5828125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00029595312499999804,
+        "wallSeconds": 0.00364821875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 7.446093749999966e-05,
+        "wallSeconds": 0.001533296875
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.00026125000000000453,
+        "wallSeconds": 0.00192709375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 4.6015624999999616e-05,
+        "wallSeconds": 4.60546875e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.00023779687499999452,
+        "wallSeconds": 0.002468296875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 6.879687499999898e-05,
+        "wallSeconds": 0.0010208515625
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 344274.0,
+        "cpuSeconds": 0.00027585937499999963,
+        "wallSeconds": 0.0038321640625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 45361.5,
+        "cpuSeconds": 5.5468750000002565e-05,
+        "wallSeconds": 8.803125e-05
+      }
+    },
+    {
+      "batch": 128,
+      "condition": "all-inputs",
+      "edges": 12,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 350693.25,
+        "cpuSeconds": 0.0002939140624999975,
+        "wallSeconds": 0.002770984375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 34197.5,
+        "cpuSeconds": 5.889843749999624e-05,
+        "wallSeconds": 5.89453125e-05
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 310679.0,
+        "cpuSeconds": 0.0006742500000000429,
+        "wallSeconds": 0.00834225
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 521141.0,
+        "cpuSeconds": 0.0007501874999999436,
+        "wallSeconds": 0.0007505625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0006486249999999583,
+        "wallSeconds": 0.0097554375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 253203.0,
+        "cpuSeconds": 0.0009785624999999465,
+        "wallSeconds": 0.0052439375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 340461.0,
+        "cpuSeconds": 0.0008690625000000174,
+        "wallSeconds": 0.0131458125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0008601874999999981,
+        "wallSeconds": 0.0048274375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0008963750000000048,
+        "wallSeconds": 0.0223105
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.001029874999999958,
+        "wallSeconds": 0.007806625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0006147499999999417,
+        "wallSeconds": 0.0006148125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0007449374999999869,
+        "wallSeconds": 0.0007453125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0004245625000000586,
+        "wallSeconds": 0.000424875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.001055250000000063,
+        "wallSeconds": 0.0246915
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0006828750000000272,
+        "wallSeconds": 0.0061000625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0008528749999999752,
+        "wallSeconds": 0.01857225
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0005650625000000464,
+        "wallSeconds": 0.0061413125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.0009899999999999909,
+        "wallSeconds": 0.0103461875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0006402500000000089,
+        "wallSeconds": 0.006123125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0008706250000000137,
+        "wallSeconds": 0.0093195
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.00043181250000001725,
+        "wallSeconds": 0.0004321875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.001158687500000033,
+        "wallSeconds": 0.023534375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0006148750000000147,
+        "wallSeconds": 0.000615375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0008118124999999532,
+        "wallSeconds": 0.0059025625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0007060000000000399,
+        "wallSeconds": 0.0302690625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.0009929375000000684,
+        "wallSeconds": 0.00671175
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0006147499999999972,
+        "wallSeconds": 0.0006149375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0009058750000000004,
+        "wallSeconds": 0.0149463125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0007324375000000161,
+        "wallSeconds": 0.013499625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.0008603750000000243,
+        "wallSeconds": 0.0008605625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0007613750000000086,
+        "wallSeconds": 0.0132549375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0007455624999999633,
+        "wallSeconds": 0.0007461875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.000457749999999979,
+        "wallSeconds": 0.009799375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.0015723750000000702,
+        "wallSeconds": 0.02407825
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0007860624999999621,
+        "wallSeconds": 0.0175293125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0007829375000000249,
+        "wallSeconds": 0.0074335625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0004930624999999744,
+        "wallSeconds": 0.0080295
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.000874437500000047,
+        "wallSeconds": 0.000875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 323511.0,
+        "cpuSeconds": 0.0008860000000000534,
+        "wallSeconds": 0.01535025
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 517740.0,
+        "cpuSeconds": 0.0009120000000000239,
+        "wallSeconds": 0.0061875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "independent",
+      "edges": 48,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 1,
+        "allocatedBytes": 539540.0,
+        "cpuSeconds": 0.0008541874999999921,
+        "wallSeconds": 0.0139201875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 236253.0,
+        "cpuSeconds": 0.0008665000000000478,
+        "wallSeconds": 0.000866625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570883.0,
+        "cpuSeconds": 0.0012388750000000281,
+        "wallSeconds": 0.0158940625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 507077.0,
+        "cpuSeconds": 0.0008270625000000309,
+        "wallSeconds": 0.008606375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0010181250000000364,
+        "wallSeconds": 0.016060875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008637499999999965,
+        "wallSeconds": 0.0020009375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0012402500000000538,
+        "wallSeconds": 0.01355375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.001013374999999983,
+        "wallSeconds": 0.010966375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0008469375000000334,
+        "wallSeconds": 0.0012924375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0009175625000000243,
+        "wallSeconds": 0.0145109375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.001031749999999998,
+        "wallSeconds": 0.001032
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0007198125000000277,
+        "wallSeconds": 0.0007201875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.001148312500000026,
+        "wallSeconds": 0.021809625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0011676875000000142,
+        "wallSeconds": 0.016518
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0010340625000000436,
+        "wallSeconds": 0.00103475
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0011155625000000002,
+        "wallSeconds": 0.0112373125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0008934999999999915,
+        "wallSeconds": 0.0106504375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008335000000000425,
+        "wallSeconds": 0.00083425
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0010850000000001137,
+        "wallSeconds": 0.004163375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.000745875000000007,
+        "wallSeconds": 0.0019365
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0012286874999999364,
+        "wallSeconds": 0.009350375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0011564375000000515,
+        "wallSeconds": 0.0141801875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.001347750000000092,
+        "wallSeconds": 0.0099998125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0007224375000000061,
+        "wallSeconds": 0.0007230625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0011563749999998763,
+        "wallSeconds": 0.0190940625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.000962687499999948,
+        "wallSeconds": 0.00907625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0013181249999999478,
+        "wallSeconds": 0.018835875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0008864999999999013,
+        "wallSeconds": 0.0060356875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0012676874999998367,
+        "wallSeconds": 0.0211441875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0011703124999999925,
+        "wallSeconds": 0.0084675
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0015086875000001054,
+        "wallSeconds": 0.0110984375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0013094999999999635,
+        "wallSeconds": 0.0121259375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0011064999999998992,
+        "wallSeconds": 0.0188326875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.001064812500000012,
+        "wallSeconds": 0.0122440625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0012779375000000481,
+        "wallSeconds": 0.0189045
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0009030624999999404,
+        "wallSeconds": 0.01744025
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0013079999999999758,
+        "wallSeconds": 0.0112965625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0013133124999998858,
+        "wallSeconds": 0.0149091875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 570923.0,
+        "cpuSeconds": 0.0011822500000000513,
+        "wallSeconds": 0.0141810625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0007750624999999234,
+        "wallSeconds": 0.0020169375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "recursive",
+      "edges": 48,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 2,
+        "allocatedBytes": 765804.0,
+        "cpuSeconds": 0.0010204999999999798,
+        "wallSeconds": 0.0014258125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0010516250000000005,
+        "wallSeconds": 0.0169024375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 0,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570081.0,
+        "cpuSeconds": 0.0010883750000000303,
+        "wallSeconds": 0.004353375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 507077.0,
+        "cpuSeconds": 0.0012810625000000408,
+        "wallSeconds": 0.0183914375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 1,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010385625000000065,
+        "wallSeconds": 0.0181025
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008670624999999044,
+        "wallSeconds": 0.00141725
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 2,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0014140624999999796,
+        "wallSeconds": 0.0254061875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0008512500000000811,
+        "wallSeconds": 0.0160965
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 3,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.000983500000000026,
+        "wallSeconds": 0.017614375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0011215625000000617,
+        "wallSeconds": 0.016151
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 4,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.001220312499999987,
+        "wallSeconds": 0.0131063125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.000948562499999972,
+        "wallSeconds": 0.0069254375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 5,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010065624999998635,
+        "wallSeconds": 0.01802225
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.000953374999999923,
+        "wallSeconds": 0.0060505
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 6,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0012680625,
+        "wallSeconds": 0.0082686875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0009100624999999196,
+        "wallSeconds": 0.015693125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 7,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010776875000000352,
+        "wallSeconds": 0.0150821875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0009109375000000419,
+        "wallSeconds": 0.0088784375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 8,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.001573125000000175,
+        "wallSeconds": 0.020425875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0008283749999999923,
+        "wallSeconds": 0.00678325
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 9,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010985625000000665,
+        "wallSeconds": 0.0079050625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0009324375000000495,
+        "wallSeconds": 0.001530375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 10,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0016026250000001907,
+        "wallSeconds": 0.018992375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0008996249999999595,
+        "wallSeconds": 0.009281375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 11,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010127499999998957,
+        "wallSeconds": 0.01691025
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008356250000000065,
+        "wallSeconds": 0.0009809375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 12,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0013494375000000502,
+        "wallSeconds": 0.02054475
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.000788562499999923,
+        "wallSeconds": 0.0019443125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 13,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.000833374999999914,
+        "wallSeconds": 0.0008336875
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008745000000000003,
+        "wallSeconds": 0.0050429375
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 14,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0013055625000000237,
+        "wallSeconds": 0.018615375
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0007758124999999172,
+        "wallSeconds": 0.00490875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 15,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0008406875000001035,
+        "wallSeconds": 0.001313625
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008665625000000565,
+        "wallSeconds": 0.0056070625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 16,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.001126187500000042,
+        "wallSeconds": 0.0078568125
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0007701249999999549,
+        "wallSeconds": 0.008950625
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 17,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.0010550000000001392,
+        "wallSeconds": 0.01456925
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0008703750000000898,
+        "wallSeconds": 0.004550875
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "AB",
+      "pair": 18,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 570119.0,
+        "cpuSeconds": 0.0015353750000000055,
+        "wallSeconds": 0.02758
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 503676.0,
+        "cpuSeconds": 0.0009796249999999285,
+        "wallSeconds": 0.020486125
+      }
+    },
+    {
+      "batch": 16,
+      "condition": "all-inputs",
+      "edges": 48,
+      "order": "BA",
+      "pair": 19,
+      "retained": {
+        "activePlans": 3,
+        "allocatedBytes": 765004.0,
+        "cpuSeconds": 0.001104812499999941,
+        "wallSeconds": 0.02018475
+      },
+      "solve": {
+        "activePlans": 3,
+        "allocatedBytes": 279418.0,
+        "cpuSeconds": 0.0009446249999999212,
+        "wallSeconds": 0.0053030625
+      }
+    }
+  ],
+  "schema": "ascent.native-retained-batch-solve",
+  "sourceHead": "d2922ece980561f4b73c7b3f18c3d8af4e0a0822",
+  "sourceReconstruction": {
+    "base": "f01c7b0875a7206f7ede2e3598011552f89955a9",
+    "patch": "source-snapshot.patch",
+    "patchSha256": "5af4b880ebff97bcf5a16276b928d5ab19c85128280a74f44f178d8a9faa6942",
+    "reason": "source commit was rebased over subsequent owner changes; published base plus patch reconstructs every native artifact source digest"
+  },
+  "statsSource": "https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/_kernel.scm#L4126",
+  "timingBoundary": "preconstructed prospective solve versus complete retained replacement; constructor cost excluded only from solve control; not a complete fresh-update comparison",
+  "version": 1
+}

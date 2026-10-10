@@ -1,0 +1,252 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: ASCENT / BYODS Closure Matrix and Proof Gaps
+#+DATE: 2026-10-05
+#+STATUS: built-in engineering baseline qualified; full workload replication remains open
+
+* Current engineering acceptance and new-paper research (2026-10-09)
+
+The built-in BYODS Provider/frontier/shared-index engineering baseline is
+implemented and qualified by the current native/Rust/Lean/Quint CI. Keep its
+accepted mechanisms as regression gates. Full paper application replication,
+matched benefits and universal native extraction retain separate obligations
+below. Those obligations do not classify the implemented baseline as missing
+work or prevent advancing the README head papers. The [[file:research/paper-coverage.org][27-paper coverage audit]]
+corrects reading and acceptance statuses; IRIS now has a dedicated reading and
+finite Scheme path application with Lean and existing Session Quint checks.
+
+* Closure conclusions and criteria
+
+Deliver a usable native reasoning lifecycle, then assess architectural benefits
+on the same library scenarios. Model comprehension is separately qualified
+research, and MR/MRR consumer integration is deferred. This matrix retains every
+obligation for full replication; passing finite scenarios does not establish
+complete coverage of a paper.
+
+The objective remains complete ASCENT behavior and BYODS design coverage.
+Full workload replication has not yet been established. Native cases, finite Rust
+comparisons, abstract Lean theorems and finite TLC exploration answer distinct
+questions. Case counts or passing CI cannot replace missing functionality or
+proofs. This matrix aligns the original scope, recent actor implementation and
+proof catalog. Unimplemented or unproved items remain visible.
+
+An item closes only when all of the following evidence agrees:
+1. Identify its paper location, admitted Scheme behavior and implementation owner.
+2. Cover the item and its interactions with independent truth, Rust comparison
+   or explicitly recorded upstream differences.
+3. Connect Lean/Quint statements to the actual implementation and distinguish
+   premises from conclusions.
+4. Bind positive and negative controls, failure/timeout behavior and resource
+   constraints to execution results for the current source.
+5. Support claimed performance benefits with identical inputs and semantics,
+   alternating measurement order, and retained negative results.
+6. Verify ASCENT CI and pinned reference versions against the final GitHub
+   commit. External consumer integration and consumer pins are separate work.
+
+Sources: [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]] and [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], reread on 2026-10-05.
+rule planning presents parallelization as future work; the current actor architecture adds
+engineering obligations. Provider concretization's custom data structure interface and application
+experiments require separate acceptance. Published performance numbers do not
+constitute Scheme performance evidence.
+
+* Integrated acceptance of the current Runtime mainline
+
+The 2026-10-06 audit found that =SnapshotClosure.Agrees= required current owned
+facts to equal the earlier snapshot. The actual owner has already received
+credited batches, so this premise cannot apply directly to the live frontier at
+completion. The revised proof uses an external read frame and containment of
+published owned facts in the completed closure. =credited_terminal_closed=
+connects the credited prefix to the terminal tail.
+=GroundedBinding.credited_compiled_closed= combines row/binder/index validity,
+constructed grounding, snapshot framing and actual terminal completeness into
+one compiled-rule closure conclusion. Intermediate publication soundness and
+completed closure have separate obligations.
+=GroundedBinding.completed_compiled_least= combines seed coverage, sound
+publication and closure under every compiled rule to establish that the whole
+result equals the least model.
+
+The following gates jointly qualify the mainline:
+
+| Acceptance stage | Implementation and proof connection | Decision criterion |
+|------------------+-------------------------------------+--------------------|
+| Actual worker iteration and candidate emission | component-worker / IndexedIteration / GroundedBinding | All 512 three-node graphs; independently computed Floyd truth checks every emission; completed private and owner roots must both match exactly |
+| Batch publication and terminal completion | actor-round / SnapshotClosure / ReadyComponents / ActorRoundCredits | Credited prefixes may change owned facts; a complete tail establishes closure; retain the negative control for the old snapshot equality premise |
+| Cancellation and merge exceptions | actor owner drain / ActorRound / ActorSession | Worker finally executes; failure never invokes completed; qualify the full Session atomic publication suite together |
+| Admitted Library behavior | All current native modules | Execute all concurrent and exclusive lanes; check real Cases, explicit OK and parent exit for every module |
+| Rust comparison and formal gates | Pinned oracle / all Lean roots and TLC targets | Execute current source; retain negative controls and distinguish earlier commit results |
+
+The [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated acceptance receipt]] records these gates. A finite graph corpus does
+not establish a general proof of the Gerbil VM. Full paper replication still
+requires the functionality, applications, scale and benefit gates below.
+Unrestricted integer recursion or an unbounded lattice need not converge.
+Finite domain/height certificates and explicit budget failures require separate
+acceptance; truncated results must never be published as complete.
+
+* ASCENT behavior coverage
+
+Existing qualification references the [[file:rust-parity.org][Rust 0.8.0 comparison matrix]] and source.
+The integrated receipt binds the pre-rebase comparison results: 74 regular
+comparisons, one Release full-scale comparison and the ASP Rust gate passed.
+The rebased snapshot requires its own exact-head GitHub CI. Explicitly
+classified upstream differences remain recorded. The full-scale Debug control
+did not complete within 180 seconds; Release completed the same inputs and
+truth checks in 34.5 seconds. GitHub CI has a separate full-scale gate. Proof
+links specify statements and premises; independent native runs qualify their
+implementation correspondence.
+
+| Feature | Implementation / existing qualification | Lean / Quint correspondence | Remaining acceptance obligations |
+|---------+------------------------------------------+----------------------------+----------------------------------|
+| Declarations, arbitrary arity, types, invalid programs | program/types, schema; arity_repetition and compile-fail comparisons | DescriptorScope / AtomicBinding abstract syntax and matching | All admitted native declarations; remaining attributes, APIs and diagnostic classes; Scheme host predicates differ from Rust static types |
+| Binding, repeated variables, joins, wildcards, multiple heads | core/rule-bindings, rule-semantics; clause_composition, composed_corpus | AtomicBinding / LexicalLowering local soundness and completeness | Native scalar equality, vector encoding, arbitrary admitted body composition and rule execution correspondence |
+| Guards, let, for, disjunction, embedded macros | program/syntax, core clauses; native and Rust fixtures | Lowering statements for bounded admitted syntax | Host callbacks and iterators must satisfy their stated premises; errors and nontermination retain typed status |
+| SCC, semi-naive evaluation, strata, least fixed point | planning, component-plan/worker, evaluate; recursive and composition comparisons | RuleGraphClosure, RecursiveLowering, FiniteHeight | Full refinement of compiled adjacency, actual delta selection and execution steps to the consequence operator; general host termination cannot be assumed |
+| Negation and aggregation | program/strata, aggregation; finite interaction corpus | StratifiedNegation, PositiveNonmembership | Actual stratified read graph, aggregate row encoding and completed-stratum correspondence |
+| Lattices and downstream ordinary relations | table/storage, evaluate; finite min/union/product/LCM corpus | Abstract finite-height and monotonicity statements | User join laws and correspondence of partial orders, domains and native values; ordinary Set delta theorems do not cover arbitrary lattices |
+| Indexes / physical plans | table/provider, program/index; hash/alist/composite and scale comparisons | AtomicBinding indexed_atom_iff; ProviderRouting constructed buckets and cursor projection; ComponentIndex row/layout lifetime | Native hash/value equality and curried visitor refinement, user lookup completeness, further scale and cost evidence |
+| Timeout, resume, repeated run, source replacement | Session, source log, reuse; retained state and deletion corpus | SourceUpdateFrame dependency-frame/counting algebra; SessionTransaction / NativeSessionPublication temporal protocols | Completed solving remains a proof premise; native trace refinement and external Provider rollback scope |
+| Module / fragment / macro embedding | Gerbil syntax and include fixtures | DescriptorScope / local lowering correspondence | Broader macro capture and diagnostics; Scheme APIs corresponding to remaining Rust attributes |
+| Actor concurrency extension | Pure positive canonical Set SCCs support ready/credit/drain; the original serial-only description is obsolete | Quint: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession; Lean: checkpoint/index algebra | Custom Provider and lattice concurrency, partitioning one large SCC, actual multicore benefits, native mailbox/mutex refinement |
+
+* BYODS design coverage
+
+Provider concretization section 3 concretization and total/delta conditions, section 4 interfaces,
+and section 5 data structures and applications each require acceptance.
+Three built-in closure Providers alone do not cover the entire paper.
+
+| Acceptance item | Existing implementation / evidence | Formal and native strengthening | Remaining gaps |
+|-----------------+------------------------------------+---------------------------------+----------------|
+| Custom index / storage interfaces | POO Provider, hash/alist, Set/eqrel/trrel/trrel_uf | ProviderAdmission derives matching occurrence equality from quotas and key mass; Domain states monotone concretization and delta laws; native reordered/compensated-omission controls and six Quint admission faults | Native witness/key/equality extraction and caller storage semantic laws remain premises; interface declarations alone do not certify an arbitrary Provider |
+| Built-in eqrel/trrel/trrel_uf concrete rows | Three/four/eight-node graphs, two-producer partitions, group isolation and scale corpus | Independent concrete difference after each insertion; 512 graphs x 3 Providers x forward/reverse order | Larger group arities, native algorithm refinement for general graphs, scale/memory and complexity benefits |
+| trrel_uf storage algorithm | Independent table/trrel-uf.ss state: weighted union parent links, SCC members/size and component reach; budget preflight precedes merge/remapping | Native stepwise frontier, 64-node compression, budget rejection/retry; TransitiveComponents Lean/Quint and three mutations | Storage and admitted UF/hash engine representation implemented with source-bound native/cost controls; native hash/parent/row refinement, universal complexity/memory benefits and paper applications retain acceptance gates; see trrel_uf design and receipt |
+| Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderAdmission finite-body decomposition; ProviderIteration complete-join injection, arbitrary-round abstract history equivalence, least-state construction and ranked convergence; Quint accumulated-head overwrite control and native retained three-body sessions | Conditional abstract merged-snapshot core proved; native binder/gamma/head extraction, asynchronous custom-domain histories and arbitrary infinite-height execution convergence remain separate |
+| Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
+| Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; Quint alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
+| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; effective lattice admission, pending-first join/skip and support cost laws; dirty-key projection/refusal Quint with twelve faults; native false/true multi-field keys and retained projection controls | StrictDependencies weighted extraction and LatticeAdmission effective-write/roster contracts are proved; arbitrary callback join laws/purity and universal native vector/SCC/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
+| Paper applications and benefits | Complete native Steensgaard allocation/assignment/load/store rules and pinned OpenJDK source; closure examples and selected Rust package examples | Full member partition admission is documented in the Steensgaard acceptance section below; retain cost scope and negative measurements | Polonius, PageRank and LLVM/index-sharing full applications, matched cost baselines and universal native refinement remain required; full experimental replication has not been established |
+
+* Other papers and the proof chain
+
+The 2026-10-07 [[file:features/closure-plan/design.org::*Runtime audit closure and paper-to-code bridge (2026-10-07)][runtime audit bridge]] connects compressed total/delta ownership,
+ordered callback compatibility, keyed routing and reader lifetime to actual
+Scheme owners and discriminating tests. It adds one grouped request consumer
+with repeated UF joins, SCC growth, replacement and held old cuts. The source
+loader has its own CI gate after an interpreter import failure escaped native
+qualification. This slice advances implementation correspondence; the complete
+paper applications and universal native refinements above remain open.
+
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps functional fixed points/higher-order change monotone types and finite height, relational kernel
+binding, fragment composition/program lifecycle embedding, deletion rederivation deletion, incremental view maintenance change maintenance and provenance.
+Its native refinement, arbitrary syntax/host value, general maintenance and
+semantic benefit gaps remain applicable. ProviderFrontier does not discharge
+those separate statements. Existing proof models express named contracts or
+finite exploration; they do not automatically verify the entire native Scheme
+implementation. Nat generations remain unbounded; finite TLC node sets are
+exploration fixtures. This round adds no prompts, repair, paid model calls or
+Rust runtime integration.
+
+* Implementation order and final acceptance gates
+
+** Authorized connected work packages (2026-10-07)
+
+The following ten packages are the current library delivery scope. They are
+non-overlapping acceptance units, not a percentage, a theorem count, or ten
+missing features. All ten remain open until their own implementation and
+acceptance conditions are satisfied. Later entries in this document update
+specific obligations; historical progress paragraphs do not close a package.
+
+| Package | Implementation owners | Required closure output |
+|---------+-----------------------+-------------------------|
+| 1. Admitted language and compiler | program/higher-order.ss, operator.ss, rule-bindings and core/rule-semantics.ss | Decode actual owned descriptors, captures, types, rows and plans; connect native rule steps to the consequence operator and least-model chain. Finite-height premises must come from admitted domains, not budgets. |
+| 2. Provider and UF correspondence | table/storage.ss, eqrel.ss, trrel.ss, trrel-uf.ss | Extract native state, parent/member/SCC and gamma/delta laws; connect constructed frontiers and complete-join injection to arbitrary admitted positive bodies and finite histories. Caller semantic laws remain explicit contracts. |
+| 3. Index and physical-plan correspondence | table/funs.ss, access.ss, index-sharing.ss, core/relation-view.ss, program/index.ss | Derive lookup completeness from construction and extension; connect scalar/composite/curried keys, ordinal traversal and optimized visitors to common concretization. Validate all logical indexes across updates and failures. |
+| 4. Session and actor protocol correspondence | program/session.ss, reuse.ss, actor-round.ss, component-worker.ss | Relate actual publication, source identity, cancellation, drain and recovery traces to the protocol models. State external effects and callback liveness assumptions explicitly; do not infer unbounded progress from TLC. |
+| 5. API and diagnostic coverage | program/syntax.ss, summary.ss, schema and admission owners | Inventory every pinned Rust syntax/attribute/API/diagnostic family, implement the admitted Scheme counterparts, and retain declared semantic divergences with independent negative admission cases. |
+| 6. Concurrent extensibility and partitioning | actor eligibility, component-worker and Provider owners | Define lawful concurrent custom-domain/lattice capabilities before enabling them; implement large-task partitioning and ownership-safe execution, including cancel, late/duplicate output and exact semantic controls. |
+| 7. Maintenance and evidence | source-log.ss, update-selection.ss, candidate/provenance-graph.ss and stratified evidence | Integrate finer grounded maintenance with retained Session transactions without changing candidate authority; validate founded alternatives, simultaneous withdrawal, negation/aggregate observations and each claimed provenance valuation. |
+| 8. Typed function changes | program/higher-order.ss and operator lowering | Implement an actual higher-order change insertion-change compiler transformation with base-dependent function/argument changes, lexical captures and nested arrows; prove preservation against full evaluation before claiming saved work. |
+| 9. Complete paper applications | native Scheme application modules and independent truth/oracle fixtures | Deliver Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with complete program/input identity and full outputs. Small graph fixtures do not replace the paper workloads. |
+| 10. Whole-application benefit | existing native benchmark framework and structured evidence | Paired identical-input semantic controls and alternating measurements covering admission, planning, invalidation, solve and publication; record work, CPU, wall, allocation and peak memory, including regressions. |
+
+Packages 1--4 establish the shared correspondence before widening packages
+5--8. Application implementations in package 9 may proceed with explicit
+capability prerequisites, but package 10 is admitted only after their output
+truth passes. Closure requires the final GitHub commit's complete CI, not a
+previous successful head. Lean owns semantic/algebraic correspondence and Quint
+owns operational interleavings; native discriminators remain independent.
+
+Signed-weight DBSP circuits and raw real-model comprehension retain separate
+research gates outside these ten library packages. MR/MRR integration remains
+deferred. This authorization creates no new paid model-call budget.
+
+** Final acceptance sequence
+
+1. Connect admitted DSL, native row/binder/index/rule steps and the consequence
+   operator through refinement, composing the existing local statements.
+   Align input capabilities, exit status and semantic budgets.
+2. Connect built-in Provider gamma, stepwise emitted frontiers and arbitrary
+   bodies/iterations to complete the semi-naive/naive equivalence chain.
+   Define lattice and ordinary relation semantics separately.
+3. Complete native refinement and scale benefits for the implemented trrel_uf
+   SCC/union-find representation. Implement and verify index sharing and user
+   Provider concurrency protocols, preserving ownership, cancellation and
+   publication isolation. Restricted test scale cannot replace implementation.
+4. Complete paper applications, interaction cases, datasets and performance/
+   memory comparisons, retaining upstream differences.
+5. Once every closure item has current source, native/Rust/Lean/Quint evidence,
+   negative controls and evidence for each claimed benefit, verify ASCENT
+   final-head CI before declaring complete ASCENT/BYODS library closure.
+   MR/MRR integration is outside this acceptance decision.
+
+The 2026-10-05 frontier round initially passed 50 Cases in five modules. After
+integrating concurrent source-cut, default actor capacity and completed-reuse
+changes, six modules passed 76 Cases. All Lean roots completed 63 jobs. Positive
+TLC exploration generated 3,169 states, 1,376 distinct states, and correctly
+detected two mutations.
+
+See the [[file:evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]] for those historical results. The earlier
+75-module/638-Case full run belongs to its original commit.
+
+
+* Feature modules
+
+Detailed design, proof and acceptance records are maintained by feature.
+Do not append cross-feature implementation history to this overview.
+
+- [[file:features/assurance/acceptance.org][Assurance: acceptance]]
+- [[file:features/bitmap-lattices/acceptance.org][Bitmap Lattices: acceptance]]
+- [[file:features/equivalence/acceptance.org][Equivalence: acceptance]]
+- [[file:features/index-admission/acceptance.org][Index Admission: acceptance]]
+- [[file:features/lattices/acceptance.org][Lattices: acceptance]]
+- [[file:features/polonius/acceptance.org][Polonius: acceptance]]
+- [[file:features/positive-evaluation/acceptance.org][Positive Evaluation: acceptance]]
+- [[file:features/provider-iteration/acceptance.org][Provider Iteration: acceptance]]
+- [[file:features/provider-views/acceptance.org][Provider Views: acceptance]]
+- [[file:features/qualification/acceptance.org][Qualification: acceptance]]
+- [[file:features/representation/acceptance.org][Representation: acceptance]]
+- [[file:features/shared-indexes/acceptance.org][Shared Indexes: acceptance]]
+- [[file:features/steensgaard/acceptance.org][Steensgaard: acceptance]]
+- [[file:features/transitive/acceptance.org][Transitive: acceptance]]
+
+* Eqrel publication integration onto 6a03012 (2026-10-08)
+
+This integration retains the current native Gerbil/GxTest build and test
+commands, Polonius work, Quint protocols and feature assurance layout. The
+older custom test coordinator and its Python launch regressions belong only
+to the historical local receipts; they are not restored into this revision.
+
+Canonical Eqrel/hash now aggregates checked injection frontiers as private
+count tickets and publishes immutable total/minus-origin delta cuts. Budget
+preflight, failed-owner refusal, old cuts, accumulated source-delta origins,
+group/width isolation and ordered export are covered by the dedicated Eqrel
+Suite. The eager public extension retains its noncanonical checked protocol.
+The frozen eager kernel is a qualification input, not a runtime dependency.
+Performance remains in the native performance Suite; its measurement marker
+declares exactly one solve/export followed by validation of exported rows.
+
+The [[file:evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
+source bindings from before this integration. Their results do not qualify
+the current revision. The complete OpenJDK partition agreed for all 51,022
+active members in 12,688 components, representing 440,438,706 pairs. Current
+revision gates and GitHub CI are verified separately; universal native
+refinement and asymptotic live-space laws remain distinct obligations.

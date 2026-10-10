@@ -1,0 +1,83 @@
+#+TITLE: Native dependency invalidation and atomic deletion
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Source-only update and diagnostic ownership
+
+The retained Session inherits admitted immutable declarations for prospective
+source snapshots. Rows are captured eagerly into private snapshot fields;
+lazy POO slots do not close over mutable pending source logs. Comparing the
+committed source snapshot does not reconstruct and revalidate a second program.
+The fresh native engine still validates materialized rows and all fact budgets.
+
+=program/admission.ss= owns replacement shape/type checks for both the atomic
+and retained paths. Invalid row diagnostics are identical before any state
+publication. =program/update-selection.ss= owns eligibility and dependency
+closure; =program/reuse.ss= admits private completed-result capsules and owns
+rule activation metadata. The evaluator owns mutable row/index state and
+execution. =program/result.ss= freezes publication observations.
+
+Every single-source replacement keeps the original committed-round execution
+contract, including a zero-duration query of pending work. Explicit batch
+replacement owns prospective atomic publication and checked native dependency
+invalidation; the retained operator facade uses that batch path. Recovery of an
+accepted source snapshot retains a separate committed result, preserving its
+identity across failed partial runs before declaring the Session clean.
+The original timeout Suite and Rust BYODS lattice fixture check
+exact partial/resumed/full statuses; matching final rows alone is insufficient.
+
+The unchanged retained and 512-graph arity differential fixtures are compiled
+into the native entry. Their original stdin/row protocol and Rust expectations
+remain authoritative. The 90-second corpus deadline and 5-second progress
+watchdog remain unchanged. This avoids interpreting qualification modules for
+each fixture and exercises actual native execution of the entire corpus.
+
+* Native Session integration
+
+Completed source replacement now identifies changed relations and takes their
+transitive downstream dependency closure over the native plan. Positive atoms,
+negation, reductions and lattice projections all participate. The affected
+relations, including recursive components, start from prospective source facts;
+the native stratified evaluator computes their new least closure. Independent
+completed relations seed the new engine. Candidate replay is not the Session's
+query authority. Publication remains atomic and failed updates retain the
+previous complete result and input.
+
+This is relation-level invalidation, with complete rederivation of affected
+components. The finer grounded DRed kernel remains a separate checked support
+facility. Neither algorithm keeps an unfounded cycle alive after its last base
+support is removed. A fully connected dependency graph may require all rules;
+no universal deletion speedup is asserted.
+
+Only immutable atom terms and procedures constructed by the closed Scheme
+operator/reducer/lattice builders justify reuse. The native implementation
+records those procedures in a private weak registry. A descriptor attached to
+an arbitrary callback does not qualify it. Opaque generators, callbacks,
+patterns and custom storage providers use full prospective recomputation.
+
+The complete rule workspace is restored after initial update publication, so
+later insertion can affect a formerly independent component. Source logs keep
+actual source facts, rather than promoting reused derived rows into inputs.
+Result path, selected rule count and timing values are frozen at publication;
+they cannot change when the engine restores its workspace or accepts an append.
+
+* Correctness argument
+
+For an independent relation, none of its rule dependencies transitively reads a
+changed source. Its inputs and completed lower strata are unchanged. Induction
+over strata, with a least fixed point within each positive component, therefore
+preserves its completed rows. Invalidated components receive only current source
+facts plus independently unchanged upstream closures. Native rederivation then
+agrees with a fresh solve, including removal-driven additions through negation
+and changes to exact reduction groups and joined lattice values.
+
+The qualification compares 64 initial three-node graphs and 192 withdrawals
+against independent matrix closure and fresh native solves. Separate Cases
+check cyclic support removal, negation, aggregation, lattice retraction,
+failed publication, callback spoofing and insertion after a deletion. The
+independent branch fixture selects two of three native rule plans for deletion;
+this is evidence of skipped rule work, not a wall-time performance claim.
+
+The [[file:evidence/scheme-stratified-closure-20261004/receipt.json][source-bound receipt]] records both seven-Case Suites,
+independent corpora, fixed bounds and excluded failed runs.

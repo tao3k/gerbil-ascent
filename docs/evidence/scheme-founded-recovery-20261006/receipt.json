@@ -1,0 +1,52 @@
+{
+  "algorithm": "Existing conservative grounded DRed and coarse Session rederivation, not recursive/nonrecursive DRedc counters or signed-weight DBSP",
+  "benefitAdmitted": false,
+  "date": "2026-10-06",
+  "fullNativeQualification": {
+    "caseOk": 725,
+    "exitStatus": 0,
+    "explicitOk": 82,
+    "jobs": 4,
+    "modules": 82,
+    "schemeSourceParentHead": "3002cccc9cd772c13a7cb2b4ca6e5aa1fba35b3e",
+    "scope": "Before concurrent prepared atomic source transaction update and index-owner policy repair",
+    "sourcesSha256": {
+      "program/evaluate.ss": "6d0617497367f2ea002596f7cb1db905e43be93be696f87c22f43b8cfd277d01",
+      "program/index.ss": "e481190f08110a883abe1887cb1584002487fa1caf1b856f765f14a1eaac8da9",
+      "program/operator-session.ss": "e03ffcde8372f5aa4013fdcf5ec430e3f44a1445e51515f7fb0be1afa49c8c61",
+      "program/scheme-session.ss": "72d345a54785bc4ae0ddcb53e3901f7c70b5230ea12518a8fef837d69ff45465",
+      "t/qualification/scheme-provenance-graph-test.ss": "a0fa2ba3f388bb881a88767bfdc8162771baf8af76ab711bf6b48ceeab27e3e9"
+    }
+  },
+  "lean": {
+    "exitStatus": 0,
+    "jobs": 84,
+    "laws": [
+      "dependency_member",
+      "constructed_closed",
+      "constructed_sources",
+      "constructed_recovery"
+    ],
+    "scope": "Constructed ground premise dependency propagation supplies recovery assumptions; complete graph/native representation correspondence remains explicit"
+  },
+  "native": {
+    "batchCuts": 729,
+    "cases": 10,
+    "exitStatus": 0,
+    "explicitOk": 1,
+    "graphs": 64,
+    "truth": "Independent Floyd matrix closure; reverse/repeated occurrence selectors and repeated withdrawals",
+    "unchangedStartupIdleSeconds": 5,
+    "withdrawalsPerCut": 2
+  },
+  "rawLogsCommitted": false,
+  "sourceParentHead": "80f1af48393738f8550ac0af4c88e48083d51ec1",
+  "sourcesSha256": {
+    "candidate/provenance-graph.ss": "eb3fa32612d2f2529aeef3252a4e71b847a00bea1b36c1cfb493f68cd519f5a2",
+    "candidate/provenance-maintenance.ss": "259780858371e33f61f95eda698ff950b7b933fd36e36a3a6fea5c55441585e9",
+    "packages/proofs/lean/ComponentClosure.lean": "7a0a09196a8fe84cb59a3bf6ceb69749f62b892d784b238e0c5d04dd75b3130b",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "2dc8339e86025b6e2a194344ccd001a0e71257f3c289362d2790a35502e76bbe",
+    "t/qualification/scheme-provenance-graph-test.ss": "a0fa2ba3f388bb881a88767bfdc8162771baf8af76ab711bf6b48ceeab27e3e9"
+  },
+  "temporal": "Existing transaction/publication models unchanged; no duplicate Lean protocol model or new TLC claim"
+}

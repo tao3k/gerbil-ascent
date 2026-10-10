@@ -1,0 +1,67 @@
+{
+  "qualifiedBaseHead": "cdf5dd89918c50f595a17934a717b7cfc9bbb2e4",
+  "scope": "A22 admitted positive compiler execution: checked delta ordinals and unified head projection for SCC/source-update consumers.",
+  "sources": {
+    "core/positive-plan.ss": "98026c69ded872f67cd80d1a99a1c79bee87814029538b12373a00c51ca6f44f",
+    "program/component-plan.ss": "830988182d40ef53c55a2ce21fc80bde33caeeecd7c927af549236875500816f",
+    "program/update-selection.ss": "68d9ebfa7ec6bbdaf8a1f416a34b6dd79d2beefbf8cb20f14d46b6e869d6445a",
+    "program/activation.ss": "d4189e85f55d3f2bb178e89134c19e5232ee0bd72f9a3f19a1b8116febbfccc4",
+    "program/component-worker.ss": "bd47c1f33b65d11bd57bbbdef7796bd0ab34a4eae1fc44622b164adaafb8e608",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-positive-plan-test.ss": "a5d9df1ea532e728e8409fe5fb57fcc0bb19a999aeffd50a73f216f406a0d264",
+    "t/qualification/ascent-positive-components-test.ss": "3e5269be391aa3f4ff9733dbd2ad7ec1e308a7a8926be407c0529306c59304df",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "2a20a1df7ea923f27b3dc9725a258a59c0d743c1226d513e7af5451b1576fe56",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-positive-plan-test.ss",
+      "exitCode": 0,
+      "suiteCases": 26,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "b1deb09888135bc1c2ade30607715a0096397a1f640c70d6121bfc61a51e0973"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-positive-components-test.ss",
+      "exitCode": 0,
+      "suiteCases": 21,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "66849da953eaa0e2985e0d5ca805f034356d7ec779aa6f86faf5fa05c388d509",
+      "integrationScope": "Qualified before proof-only rebase; all recorded runtime and SCC test source hashes unchanged."
+    }
+  ],
+  "discriminators": [
+    "Out-of-range, negative-except-minus-one and nonexact selectors reject before callbacks, lookups, checkpoints or frame mutation",
+    "Callback segments do not consume atom ordinals",
+    "All legal traversals match independent binding interpretation in ordered repeated head emissions",
+    "Empty-body facts permit total traversal only",
+    "Partial-head source updates and SCC projections preserve complete immutable body metadata",
+    "Actual component workers preserve closure, dependency snapshots and failure draining"
+  ],
+  "developmentFailures": [
+    {
+      "kind": "Default Gerbil prefix lacked asp-gerbil-scheme/building-api",
+      "resolution": "Use existing repository isolated SDK"
+    },
+    {
+      "kind": "SCC projection retained old four-field compiled plan representation",
+      "resolution": "Centralize head projection in compiler and migrate both SCC and source-update consumers; both final Suites passed"
+    }
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "remaining": [
+    "Universal admitted native compiler refinement",
+    "General Provider/lattice correspondence beyond the qualified pure Set consumers"
+  ],
+  "modelCalls": 0,
+  "initialQualifiedBaseHead": "0c042d4a014fd7251dae95eb63b736d8f6c298d1",
+  "rebaseIntegration": "Rebased onto the parallel stored-actions theorem revision; positive-plan native Suite rerun with its additional representation test. Proof files unchanged by this implementation."
+}

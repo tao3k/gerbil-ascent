@@ -1,0 +1,152 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Source Lifecycle: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Completed closure reuse has a different state obligation (2026-10-06)
+
+Provider concretization §3.3, PDF pp. 7–9, relates each represented total/delta pair to its
+concretization. It does not establish that copying enumerated closure rows
+reconstructs an arbitrary Provider's private mutable state. In this Scheme
+implementation, =gerbil-ascent-update-eligible?= admits exact Set storage or
+registered stable lattice joins, exact hash indexes, and stable scalar values
+and callbacks. =eqrel=, =trrel=, =trrel_uf= and custom storage stay outside that
+completed-closure reuse admission; Session reconstructs them from source.
+This is an implementation boundary inferred from the paper's premises, not
+a claim that the paper proves the engine's failure recovery protocol.
+
+=program/reuse.ss= now owns completed-row seeding as well as reuse capsule
+admission. A private =closure-seed-state= groups prospective engine buffers.
+The seed checks every retained row, counts unique derived rows against the
+prospective source membership, enforces derived/output budgets, and seeds
+both total and initial delta. Lattice membership uses final joined source
+rows, so source joins do not consume the reused derived budget. The evaluator
+keeps engine readiness and whole-round publication. No completed result or
+cached analysis retains this mutable buffer frame.
+
+This owner split repairs a concrete build gate: =program/evaluate.ss= reached
+1006 effective lines and violated =GERBIL-SCHEME-MOD-R002= before tests could
+run. The algorithm, row order, field callback behavior and budget checks are
+preserved. Existing exhaustive deletion/dependency and lattice-budget Cases
+remain the semantic gate; native storage Cases cover the adjacent readiness
+boundary. See [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][the revision-bound receipt]].
+
+
+
+* Source reconstruction retires incremental state (2026-10-07)
+
+Provider concretization §3, PDF pp. 5–9, distinguishes injected source facts from a Provider's
+concretized relation. Recovery has a corresponding Scheme ownership rule:
+the new candidate is built from retained source logs, not from the interrupted
+materialized relation or its counters. This rule is an implementation inference;
+the paper does not prove the host's exception or Session publication protocol.
+
+Two executable counterexamples extend the publication audit. First, a graph
+injection mutates private state before a stored field rejects it. Raw source
+replacement then completes in a fresh engine, but a later append still checks
+the retired graph owner and is rejected. This occurs for =eqrel=, =trrel= and
+=trrel_uf=. Second, a custom-storage append admits rows and increments the
+source count before a physical index extension throws; its source log is not
+yet updated. The old replacement preflight combines that tentative count with
+the log length and rejects a legal 33-row replacement as though it had 34 rows.
+
+=replace-source!= now constructs the complete prospective source cut first
+and counts its rows, preserving duplicates as input facts. It publishes this
+count and the fresh result only after successful evaluation. With
+=recompute-from-source?= established by replacement, subsequent appends build
+another fresh candidate and no longer inspect retired incremental owners.
+Their old states are not marked ready or reused. Before successful replacement,
+run and append remain subject to the storage and index publication guards.
+
+The native Case checks all three graph providers against fresh evaluation,
+then checks the 33-row input limit after an interrupted indexed admission,
+a later replacement/append and stability of the original 32-row result.
+The existing Session deletion matrix covers replacement budgets, retained
+append logs, independent reuse, mutable callbacks and withdrawal. See
+[[file:../../evidence/scheme-source-reconstruction-20261007/receipt.json][the source reconstruction receipt]]. This closes recovery handoff and budget
+ownership; it makes no theorem, rollback or speedup claim.
+
+
+
+* Eager recomputation must preserve Session snapshot ownership (2026-10-07)
+
+Provider concretization's concretization maps private relation state to facts used by evaluation.
+In a mutable host language, accepting or enumerating those facts also needs
+an ownership boundary: external list mutation must not rewrite an admitted
+source cut or the facts of a previously published result. This is a Scheme
+implementation obligation inferred from the logical model, not a new theorem
+about arbitrary host callbacks or mutable nested fields.
+
+Two eager paths exposed an inconsistent boundary. Nonpositive source append
+and raw source replacement evaluated a fresh non-retained engine, then stored
+its result in a retained engine. That result's =rows-of= returned stored list
+and row spines. Checked Session therefore published borrowed rows after eager
+recomputation even though its ordinary retained result path detached reads.
+The opaque single-source replacement path also retained the caller's source
+list directly instead of copying its outer and row spines at acceptance.
+
+The eager paths now evaluate through a fresh retained engine's =.run= so the
+existing public snapshot routine detaches every list/row read. The opaque
+Session replacement path owns the incoming source spines before passing them
+to the engine and recording its pending source cut. Nested field objects keep
+the existing shared identity and immutability premise. No deep copy, public
+compatibility layer or alternate Provider protocol is introduced.
+
+A native control forces these paths with negation and a derived hash Provider.
+It mutates the returned input row and outer list after append/replacement,
+mutates the caller's replacement row, and checks repeated reads, the previous
+result and the next append's complete input/output against explicit scalar
+facts. The timeout suite checks that eager validation still hands timed runs
+to fresh committed round boundaries. See
+[[file:../../evidence/scheme-eager-snapshot-20261007/receipt.json][the eager snapshot ownership receipt]].
+
+
+
+* Source admission recovery follows the complete flush footprint (2026-10-07)
+
+Provider concretization §3.3 decomposes a database into total and delta states for semi-naïve
+iteration; Theorem 3.5 relates the resulting semantics to naïve evaluation.
+Its §5.5 separates logical index requirements from physical representations.
+These logical conditions do not specify recovery from mutable host exceptions.
+For our Scheme Session, an additional implementation obligation follows:
+recover the accepted source cut when any physical owner in an append's flush
+footprint fails. Invalidating the physical cache alone does not restore that
+source cut.
+
+A Set append normally buffers one row. Near the output budget it first flushes
+all staged Set relations, including relations other than the append target.
+The previous Session classification treated canonical Set storage as atomic
+without considering its IndexProvider. A custom index extension could clear
+its table and raise during that flush. The raw engine correctly quarantined
+its failed publication, but the Session append fast path skipped recovery.
+The next run consequently raised the replay error; its run-failure recovery
+used the older committed cut rather than the accepted pre-append pending cut.
+
+Session now computes whether every possible buffered Set owner uses a native
+hash index provider. Set appends use guarded pending-source recovery whenever
+that condition is false, including appends to a native-index relation which
+can flush another relation's custom index. Lattice eager candidate evaluation
+retains its existing atomic classification. Exact native Set/index programs
+retain their direct path. The predicate is conservative about unused custom
+indexes; it makes no performance claim.
+
+The control starts with 32 source rows and one constant derived row, accepts
+two distinct new rows, then triggers a flush at output limit 35.
+A one-shot custom extension mutates and raises. Both append-target variants
+must preserve 34 accepted source rows, both new rows, an empty unrelated
+source, the constant output and the original
+32-row public snapshot. The triggering row is excluded. This validates the
+reconstruction boundary on scalar facts, not rollback of external callback
+effects or a new theorem. See
+[[file:../../evidence/scheme-append-flush-20261007/receipt.json][the append flush recovery receipt]].
+
+
+An earlier development control used a duplicate buffered source. Its pending
+reconstruction hit the existing custom-index duplicate-result check and
+fell back to the committed cut. That outcome is retained in the receipt as a
+reconstruction limitation; the final distinct-row control isolates append
+flush recovery. This change does not qualify duplicate-bearing custom-index
+reconstruction or recovery when fresh replay itself fails.
+

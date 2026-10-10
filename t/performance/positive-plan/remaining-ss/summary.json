@@ -1,0 +1,74 @@
+{
+  "requested": [
+    "ascent-rule-clauses",
+    "ascent-var-points-to",
+    "ascent-upstream-examples",
+    "ascent-product-session",
+    "ascent-mutual-recursive-heads",
+    "ascent-derived-aggregate",
+    "ascent-indexed-joins",
+    "ascent-byods-eqrel",
+    "ascent-binary-program",
+    "ascent-reachability-closure",
+    "ascent-table-expression",
+    "ascent-table-expression-membership",
+    "ascent-shortest-candidates"
+  ],
+  "results": [
+    {
+      "name": "ascent-rule-clauses",
+      "exit": 0,
+      "seconds": 7.20710304199747
+    },
+    {
+      "name": "ascent-var-points-to",
+      "exit": 0,
+      "seconds": 6.411541875000694
+    },
+    {
+      "name": "ascent-upstream-examples",
+      "exit": 0,
+      "seconds": 10.046157832999597
+    },
+    {
+      "name": "ascent-product-session",
+      "exit": 0,
+      "seconds": 7.76388649999717
+    },
+    {
+      "name": "ascent-mutual-recursive-heads",
+      "exit": 0,
+      "seconds": 7.44581462500355
+    },
+    {
+      "name": "ascent-derived-aggregate",
+      "exit": 0,
+      "seconds": 6.5527791659988
+    },
+    {
+      "name": "ascent-indexed-joins",
+      "exit": 0,
+      "seconds": 6.267080584002542
+    },
+    {
+      "name": "ascent-byods-eqrel",
+      "exit": 0,
+      "seconds": 6.972849999998289
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 4.847731500005466
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 5.801941999998235
+    },
+    {
+      "name": "ascent-table-expression",
+      "exit": 1,
+      "seconds": 52.85754729099426
+    }
+  ]
+}

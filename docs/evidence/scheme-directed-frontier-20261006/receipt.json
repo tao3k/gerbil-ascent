@@ -1,0 +1,214 @@
+{
+  "beforeHeaderIntegrationVerification": {
+    "qualifiedBaseHead": "ad60085875b0b007bb96ce590c8dcebd0f01698c",
+    "verification": {
+      "lean": {
+        "command": "just check-lean-proofs",
+        "exitStatus": 0,
+        "jobs": 88,
+        "logSha256": "910f23378b7af3f9008c78882a28985236f1c5f53155fe014cdd6293733a792e",
+        "sourceCount": 47,
+        "sourceInventorySha256": "97121f5c1a528d90ce7740acd5e5467f220cc7d71fed6d02461a4bc46d4775f3"
+      },
+      "native": {
+        "cases": 13,
+        "command": "just test-file t/qualification/ascent-byods-invariants-test.ss",
+        "compilerHeap": "1G",
+        "directedFrontierHistories": 4096,
+        "enumeratedFrontierHistories": 5120,
+        "executionSeconds": 3,
+        "exitStatus": 0,
+        "explicitOK": true,
+        "graphs": 512,
+        "idleSeconds": 5,
+        "logSha256": "a0efb3d784bc5299e5c2652ce12c3c6b1845d80af4e5336fd947a5844e22d77c",
+        "modules": 1,
+        "nonSingletonDirectedHistories": 4,
+        "sourceCount": 543,
+        "sourceInventorySha256": "958d1070ffb368e4d67aaa5b07c14a8e9b357899ea25eaa13b063e4d19e9a7a1",
+        "startupSeconds": 5,
+        "threeNodePrefixSteps": 23040
+      }
+    }
+  },
+  "boundary": "Strict public trrel omits cycle-implied diagonals and is not asserted to be transitively closed on those diagonals. Latent closure and public visibility are distinct. Native hash/index/parent/member extraction is not proved by finite observations.",
+  "changedModules": {
+    "packages/proofs/lean/AscentProof.lean": "629db0bec5023253603231294e7976b43dd9ffe9913a0def406f532f41539785",
+    "packages/proofs/lean/DirectedFrontier.lean": "267301a1b28f4798aa13ba7a2cdb0932a6b08814caffedf895da029b8505e11f",
+    "packages/proofs/lean/Tests/DirectedFrontierTests.lean": "ad341b8c272da1c0bdd076f683c927f0d57840d03e7390be00096d4ba5ebadea",
+    "packages/proofs/lean/lakefile.lean": "ac5962c5d221f31334e7c4f64dbe7a3a4bbe40b1d704098de4313321133c162d",
+    "t/qualification/ascent-byods-invariants-test.ss": "641f1ada0e91cfa73064d9276a2316bd96bd70124f6aac8422dc849a3b0677ff"
+  },
+  "controls": [
+    "Independent adjacency traversal computes truth; provider predecessor/successor and SCC tables are not the oracle.",
+    "Every nonempty new frontier rejects at needed minus one, preserves UF physical counts, and retries the same state at exact needed.",
+    "A separate generous-budget state compares the same new facts, covering planned and direct commit paths.",
+    "Zero-budget replay is empty.",
+    "All 512 three-node graph subsets in binary forward/reverse and directed ternary forward/reverse histories.",
+    "Four-node two-SCC bridges, explicit loops, existing eight-node and multi-producer/group controls.",
+    "Lean counterexamples distinguish unknown diagonals, cyclic strict self omission, explicit self insertion, repeated edges and missing transitive bridge pairs."
+  ],
+  "failedFullCI": {
+    "failed": "scheme",
+    "head": "4ac16d4dbc3e133a7760da63a23254e036ce3074",
+    "passed": [
+      "formal",
+      "oracle (byods)",
+      "oracle (byods-scale)",
+      "oracle (other)"
+    ],
+    "rootCause": "Selected activation fixture used four plan fields; current projection requires compiled atom extent at field four. Corrected fixture qualified separately. Full CI must run again on the correction.",
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37472308312"
+  },
+  "integratedFullInventory": {
+    "carrierSha256": "b4d3d98d7f0316ade7a7c9488260017caf082a2409f61cd861cbb9e338cb7999",
+    "cases": 764,
+    "command": "just test",
+    "completedThreeBodyPartitions": 27,
+    "exitStatus": 0,
+    "explicitOKMarkers": 83,
+    "logSha256": "33248c057aa2f9039f3afd669f4dc917765804795949a92ad7fca7ab96f2f342",
+    "modules": 83,
+    "nativeReadyMarkers": 83,
+    "qualifiedBase": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+    "registrySha256": "fd2be49ed2e9ebaa8dc5643e919113797bc5d78c9f79d26032692d38ef0c0095",
+    "sourceInventorySha256": "9b47f6d1355822b88fdd6ebc1d5d8269d1fafaf287edc3f6255cd56cc9b9ac34",
+    "watchdogFailures": 0
+  },
+  "integration": "Rebased upstream custom lookup completeness and unique enumeration admission. Both appended B23 research and audit sections retained. Complete Lean and native BYODS suite rerun on combined source; prior output hashes retained. Subsequent Provider key/column argument isolation is retained; complete Lean and focused BYODS qualification rerun on that combined source.",
+  "modelCalls": 0,
+  "mr": "Deferred future library consumer.",
+  "nativeRuntimeSource": {
+    "program/index.ss": "d2b800005fda618b75319756730d0ef367e7b40cc562aa657f4251bbe9f428cd",
+    "table/access.ss": "7d39828036c38153e1d0be8458e7000da2277c2e1101df351738bd660e91fca8",
+    "table/provider.ss": "c9b80a8c04c1219daff01569519c4c0b56a7ea3a1de3022f496aad74d8ea88ae",
+    "table/storage.ss": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e"
+  },
+  "papers": [
+    {
+      "id": "B23",
+      "sections": "3.3, 5.3-5.4",
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "use": "Newly implied delta visibility and directed/SCC representation motivation. Native diagonal contracts are checked separately; paper performance does not transfer to Scheme."
+    }
+  ],
+  "performanceClaim": null,
+  "previousVerification": {
+    "qualifiedBaseHead": "1ead2244a64e7f344bb4e17fb16d1b5d57fb57c8",
+    "verification": {
+      "lean": {
+        "command": "just check-lean-proofs",
+        "exitStatus": 0,
+        "jobs": 88,
+        "logSha256": "658e1cea9826ba91d26c92df6933df703205e872f42519fff08efc6ef5335ed3"
+      },
+      "native": {
+        "cases": 13,
+        "command": "just test-file t/qualification/ascent-byods-invariants-test.ss",
+        "compilerHeap": "1G",
+        "directedFrontierHistories": 4096,
+        "enumeratedFrontierHistories": 5120,
+        "executionSeconds": 4,
+        "exitStatus": 0,
+        "explicitOK": true,
+        "graphs": 512,
+        "idleSeconds": 5,
+        "logSha256": "5cba7581fcac601d0e5d80df0cbf233073325abd8a6f41c4eb026c03e8396644",
+        "modules": 1,
+        "nonSingletonDirectedHistories": 4,
+        "startupSeconds": 5,
+        "threeNodePrefixSteps": 23040
+      }
+    }
+  },
+  "productionRuntimeChanged": false,
+  "proofOwnership": "Lean owns active domains, latent reach, strict/UF concretization and exact frontier algebra. Existing TLA+ owns publication, failure, credits and cancellation lifecycle; no temporal model changed.",
+  "qualifiedBaseHead": "6458ec36d0d86ad3126850172572747654bae55a",
+  "rejectedChecks": [
+    "Std does not provide tauto; explicit propositional constructors replaced it.",
+    "A proof binder used the reserved from token; renamed without changing the statement or assumptions."
+  ],
+  "remaining": [
+    "Universal native directional index and SCC/hash/member-rectangle extraction",
+    "Native budget, row encoding and ordering refinement",
+    "General custom lattice concretization/join/injection contracts",
+    "Universal native actor completion and TLA+ trace refinement"
+  ],
+  "schema": "ascent.directed-frontier-qualification",
+  "scope": "Reusable latent directed preorder with active-domain UF and explicit-self-filtered trrel concretizations; exact frontier, least UF insertion and finite latent history with exact active and explicit-self membership.",
+  "theorems": {
+    "cross_supported": [],
+    "injectMany_active_exact": [
+      "propext",
+      "Quot.sound"
+    ],
+    "injectMany_inputs": [
+      "propext",
+      "Quot.sound"
+    ],
+    "injectMany_least": [
+      "propext"
+    ],
+    "injectMany_monotone": [],
+    "injectMany_self_exact": [
+      "propext"
+    ],
+    "other_group": [
+      "propext"
+    ],
+    "strict_emitted_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "strict_partition": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "strict_self_exact": [
+      "propext"
+    ],
+    "strict_supported": [
+      "propext"
+    ],
+    "uf_emitted_exact": [
+      "propext"
+    ],
+    "uf_insert_least": [],
+    "uf_partition": [],
+    "uf_self_exact": []
+  },
+  "verification": {
+    "lean": {
+      "command": "just check-lean-proofs",
+      "exitStatus": 0,
+      "jobs": 88,
+      "logSha256": "910f23378b7af3f9008c78882a28985236f1c5f53155fe014cdd6293733a792e",
+      "sourceCount": 47,
+      "sourceInventorySha256": "97121f5c1a528d90ce7740acd5e5467f220cc7d71fed6d02461a4bc46d4775f3"
+    },
+    "native": {
+      "cases": 13,
+      "command": "just test-file t/qualification/ascent-byods-invariants-test.ss",
+      "compilerHeap": "1G",
+      "directedFrontierHistories": 4096,
+      "enumeratedFrontierHistories": 5120,
+      "executionSeconds": 3,
+      "exitStatus": 0,
+      "explicitOK": true,
+      "graphs": 512,
+      "idleSeconds": 5,
+      "logSha256": "d3a953201f6bb8993476b1d61449f060faa2ccbe4de24550e195deaeaa4562a2",
+      "modules": 1,
+      "nonSingletonDirectedHistories": 4,
+      "sourceCount": 543,
+      "sourceInventorySha256": "061ca537be984fb1bb1569eb7ded7e267021f03062c83a0e3c3cac7f8cbb5ecc",
+      "startupSeconds": 5,
+      "threeNodePrefixSteps": 23040
+    }
+  },
+  "version": 1
+}

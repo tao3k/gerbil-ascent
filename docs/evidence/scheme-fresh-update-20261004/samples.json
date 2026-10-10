@@ -1,0 +1,5034 @@
+{
+  "schema": 1,
+  "units": {
+    "wallSeconds": "seconds",
+    "cpuSeconds": "process CPU seconds",
+    "allocatedBytes": "total allocated bytes; not peak/live heap"
+  },
+  "summaries": [
+    {
+      "condition": "independent",
+      "edges": 12,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 5.2375e-05,
+          "cpuSeconds": 5.2312499999996806e-05,
+          "allocatedBytes": 48348.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00015696875,
+          "cpuSeconds": 0.0001569062499999995,
+          "allocatedBytes": 187938.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002435,
+          "cpuSeconds": 0.00024349999999999893,
+          "allocatedBytes": 338874.0
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 1.2337019658678938,
+        "cpuSeconds": 1.4435895255023392,
+        "allocatedBytes": 1.803115921208058
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 0.0011345,
+          "cpuSeconds": 0.0008638750000000139,
+          "allocatedBytes": 517776.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001159625,
+          "cpuSeconds": 0.0009851250000000866,
+          "allocatedBytes": 663072.0
+        },
+        "retained": {
+          "wallSeconds": 0.00072225,
+          "cpuSeconds": 0.000445749999999967,
+          "allocatedBytes": 539536.0
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 0.5264596241481093,
+        "cpuSeconds": 0.5251159313822018,
+        "allocatedBytes": 0.8136914241590657
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 4.5906249999999994e-05,
+          "cpuSeconds": 4.581250000000245e-05,
+          "allocatedBytes": 45372.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001489375,
+          "cpuSeconds": 0.0001483749999999992,
+          "allocatedBytes": 188084.5
+        },
+        "retained": {
+          "wallSeconds": 0.000262375,
+          "cpuSeconds": 0.00026225000000000553,
+          "allocatedBytes": 346834.5
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 2.2309067193451737,
+        "cpuSeconds": 1.7449146471809485,
+        "allocatedBytes": 1.8444440336515888
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 0.00128275,
+          "cpuSeconds": 0.0010319999999999774,
+          "allocatedBytes": 503712.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001075125,
+          "cpuSeconds": 0.00083175000000002,
+          "allocatedBytes": 649008.0
+        },
+        "retained": {
+          "wallSeconds": 0.001185875,
+          "cpuSeconds": 0.00114187500000007,
+          "allocatedBytes": 765840.0
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 1.0844143096487628,
+        "cpuSeconds": 1.2365433138103084,
+        "allocatedBytes": 1.180016270985874
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 4.86875e-05,
+          "cpuSeconds": 4.840624999999377e-05,
+          "allocatedBytes": 45372.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00016640625,
+          "cpuSeconds": 0.00014859375000000202,
+          "allocatedBytes": 188005.0
+        },
+        "retained": {
+          "wallSeconds": 0.0005106875,
+          "cpuSeconds": 0.0002850312500000049,
+          "allocatedBytes": 346013.0
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 2.321826695820773,
+        "cpuSeconds": 2.253552540264238,
+        "allocatedBytes": 1.840895613845258
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "groups": 30,
+      "medians": {
+        "solve": {
+          "wallSeconds": 0.001043625,
+          "cpuSeconds": 0.000999875000000039,
+          "allocatedBytes": 503712.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0011137500000000002,
+          "cpuSeconds": 0.0010575000000000445,
+          "allocatedBytes": 649008.0
+        },
+        "retained": {
+          "wallSeconds": 0.0011625,
+          "cpuSeconds": 0.001051375000000021,
+          "allocatedBytes": 765040.0
+        }
+      },
+      "pairedRetainedOverFreshUpdateMedian": {
+        "wallSeconds": 1.0744327614831213,
+        "cpuSeconds": 1.073605462603129,
+        "allocatedBytes": 1.1786674012097844
+      }
+    }
+  ],
+  "samples": [
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 9.06875e-05,
+          "cpuSeconds": 8.893750000000004e-05,
+          "allocatedBytes": 51729.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00029775,
+          "cpuSeconds": 0.0002578124999999998,
+          "allocatedBytes": 183821.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00045725,
+          "cpuSeconds": 0.0004288124999999995,
+          "allocatedBytes": 344114.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.175e-05,
+          "cpuSeconds": 5.1562499999999525e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000157,
+          "cpuSeconds": 0.00015693749999999996,
+          "allocatedBytes": 187938.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00018825,
+          "cpuSeconds": 0.00018812499999999992,
+          "allocatedBytes": 338874.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.125e-05,
+          "cpuSeconds": 5.118750000000002e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001008125,
+          "cpuSeconds": 0.00010068750000000095,
+          "allocatedBytes": 194000.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00024625,
+          "cpuSeconds": 0.0002462499999999991,
+          "allocatedBytes": 332116.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000142625,
+          "cpuSeconds": 0.00013312500000000043,
+          "allocatedBytes": 48380.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001010625,
+          "cpuSeconds": 0.00010081249999999934,
+          "allocatedBytes": 193768.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0013408125,
+          "cpuSeconds": 0.00034962499999999924,
+          "allocatedBytes": 337704.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007900625,
+          "cpuSeconds": 0.00010037499999999977,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0015686875,
+          "cpuSeconds": 0.00038881250000000027,
+          "allocatedBytes": 182882.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001868125,
+          "cpuSeconds": 0.00018674999999999942,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.2125e-05,
+          "cpuSeconds": 5.2062500000000025e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001569375,
+          "cpuSeconds": 0.00015687499999999903,
+          "allocatedBytes": 187226.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000187375,
+          "cpuSeconds": 0.00018724999999999992,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001973125,
+          "cpuSeconds": 6.656249999999891e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001024375,
+          "cpuSeconds": 0.0001023749999999983,
+          "allocatedBytes": 194180.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003435625,
+          "cpuSeconds": 0.0002877499999999998,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.325e-05,
+          "cpuSeconds": 5.2812500000000775e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001551875,
+          "cpuSeconds": 0.00015518749999999734,
+          "allocatedBytes": 187726.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000185625,
+          "cpuSeconds": 0.00018556249999999996,
+          "allocatedBytes": 338874.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.1625e-05,
+          "cpuSeconds": 5.1562499999999525e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001006875,
+          "cpuSeconds": 0.00010056249999999996,
+          "allocatedBytes": 194128.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002459375,
+          "cpuSeconds": 0.00024593750000000136,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001444375,
+          "cpuSeconds": 9.8875e-05,
+          "allocatedBytes": 48380.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.98125e-05,
+          "cpuSeconds": 9.975000000000088e-05,
+          "allocatedBytes": 193768.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000871625,
+          "cpuSeconds": 0.00043993749999999936,
+          "allocatedBytes": 337704.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00015125,
+          "cpuSeconds": 5.4437500000000666e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0002333125,
+          "cpuSeconds": 0.0002228125000000008,
+          "allocatedBytes": 182862.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0007055,
+          "cpuSeconds": 0.0003542500000000004,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.21875e-05,
+          "cpuSeconds": 5.212500000000009e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001678125,
+          "cpuSeconds": 0.0001676875000000029,
+          "allocatedBytes": 187414.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001911875,
+          "cpuSeconds": 0.0001910000000000002,
+          "allocatedBytes": 344111.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000542375,
+          "cpuSeconds": 0.00010662499999999908,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00093475,
+          "cpuSeconds": 0.0002326250000000002,
+          "allocatedBytes": 194008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0009166875,
+          "cpuSeconds": 0.0005371249999999994,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.2e-05,
+          "cpuSeconds": 5.1937500000001635e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001564375,
+          "cpuSeconds": 0.00015637500000000026,
+          "allocatedBytes": 187726.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00018725,
+          "cpuSeconds": 0.0001871875000000016,
+          "allocatedBytes": 338874.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.125e-05,
+          "cpuSeconds": 5.112499999999909e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001009375,
+          "cpuSeconds": 0.00010087500000000374,
+          "allocatedBytes": 194128.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000245625,
+          "cpuSeconds": 0.0002456249999999993,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.2e-05,
+          "cpuSeconds": 5.187499999999984e-05,
+          "allocatedBytes": 48380.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.99375e-05,
+          "cpuSeconds": 9.993750000000107e-05,
+          "allocatedBytes": 194000.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002398125,
+          "cpuSeconds": 0.00023975000000000038,
+          "allocatedBytes": 337704.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.225e-05,
+          "cpuSeconds": 5.212500000000009e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0033801875,
+          "cpuSeconds": 0.0003505000000000001,
+          "allocatedBytes": 182522.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001814375,
+          "cpuSeconds": 0.00018131249999999918,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.1625e-05,
+          "cpuSeconds": 5.156250000000126e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001568125,
+          "cpuSeconds": 0.00015675000000000064,
+          "allocatedBytes": 187390.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001856875,
+          "cpuSeconds": 0.00018556249999999996,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.1875e-05,
+          "cpuSeconds": 5.181250000000151e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001,
+          "cpuSeconds": 9.993750000000107e-05,
+          "allocatedBytes": 194008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00024625,
+          "cpuSeconds": 0.00024612499999999635,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0015529375,
+          "cpuSeconds": 0.00011162500000000061,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00015875,
+          "cpuSeconds": 0.00015874999999999917,
+          "allocatedBytes": 187926.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00020025,
+          "cpuSeconds": 0.00020018749999999724,
+          "allocatedBytes": 338874.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001298125,
+          "cpuSeconds": 5.5187500000001416e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000328375,
+          "cpuSeconds": 0.00022418750000000043,
+          "allocatedBytes": 193980.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002585625,
+          "cpuSeconds": 0.0002584375,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.24375e-05,
+          "cpuSeconds": 5.237499999999687e-05,
+          "allocatedBytes": 48380.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001009375,
+          "cpuSeconds": 0.00010087500000000027,
+          "allocatedBytes": 194000.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000241375,
+          "cpuSeconds": 0.00024137499999999854,
+          "allocatedBytes": 337704.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.15625e-05,
+          "cpuSeconds": 5.150000000000293e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0018073125,
+          "cpuSeconds": 0.00018781249999999874,
+          "allocatedBytes": 182522.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001823125,
+          "cpuSeconds": 0.00018218750000000353,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00013725,
+          "cpuSeconds": 9.912500000000199e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0027908125,
+          "cpuSeconds": 0.00025249999999999925,
+          "allocatedBytes": 187410.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001600625,
+          "cpuSeconds": 0.00032756249999999973,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000917375,
+          "cpuSeconds": 0.00011887500000000092,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001568125,
+          "cpuSeconds": 0.00010599999999999846,
+          "allocatedBytes": 194008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0005155625,
+          "cpuSeconds": 0.00041756249999999953,
+          "allocatedBytes": 332156.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.2125e-05,
+          "cpuSeconds": 5.206249999999829e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0002414375,
+          "cpuSeconds": 0.0001656875000000009,
+          "allocatedBytes": 187938.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000194,
+          "cpuSeconds": 0.00019131250000000224,
+          "allocatedBytes": 338874.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 7.675e-05,
+          "cpuSeconds": 7.131249999999673e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000404375,
+          "cpuSeconds": 0.0002030625000000036,
+          "allocatedBytes": 193768.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0013490625,
+          "cpuSeconds": 0.0004886875000000013,
+          "allocatedBytes": 332120.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000135375,
+          "cpuSeconds": 8.237500000000259e-05,
+          "allocatedBytes": 48380.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001395,
+          "cpuSeconds": 0.00010787500000000033,
+          "allocatedBytes": 194128.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0005403125,
+          "cpuSeconds": 0.00029825000000000684,
+          "allocatedBytes": 337744.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.1625e-05,
+          "cpuSeconds": 5.156249999999779e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001571875,
+          "cpuSeconds": 0.0001571875000000028,
+          "allocatedBytes": 182734.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000183625,
+          "cpuSeconds": 0.0001836250000000067,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 12,
+      "batch": 16,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 5.23125e-05,
+          "cpuSeconds": 5.2249999999996743e-05,
+          "allocatedBytes": 48348.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001586875,
+          "cpuSeconds": 0.00015862500000000251,
+          "allocatedBytes": 187226.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000191375,
+          "cpuSeconds": 0.00018793749999999887,
+          "allocatedBytes": 344127.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.88125e-05,
+          "cpuSeconds": 4.8687500000005324e-05,
+          "allocatedBytes": 48673.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001355625,
+          "cpuSeconds": 0.00010768750000000188,
+          "allocatedBytes": 191104.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003268125,
+          "cpuSeconds": 0.0002761874999999969,
+          "allocatedBytes": 340452.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 7.36875e-05,
+          "cpuSeconds": 5.1937500000001635e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.003211,
+          "cpuSeconds": 0.00018418750000000206,
+          "allocatedBytes": 185009.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.007963125,
+          "cpuSeconds": 0.00026981250000000095,
+          "allocatedBytes": 347428.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 7.79375e-05,
+          "cpuSeconds": 5.631250000000254e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001883125,
+          "cpuSeconds": 0.00013149999999999273,
+          "allocatedBytes": 191100.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0005380625,
+          "cpuSeconds": 0.00030493750000000486,
+          "allocatedBytes": 340371.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.60625e-05,
+          "cpuSeconds": 4.606249999999923e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.64375e-05,
+          "cpuSeconds": 9.631250000000785e-05,
+          "allocatedBytes": 190992.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.003636125,
+          "cpuSeconds": 0.0005441875000000013,
+          "allocatedBytes": 346241.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001025625,
+          "cpuSeconds": 5.137500000000628e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0002325,
+          "cpuSeconds": 0.0001835625000000049,
+          "allocatedBytes": 179371.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00037,
+          "cpuSeconds": 0.0002730000000000024,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55625e-05,
+          "cpuSeconds": 4.5625000000000526e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001521875,
+          "cpuSeconds": 0.00015156250000000066,
+          "allocatedBytes": 183860.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00020225,
+          "cpuSeconds": 0.0002021249999999905,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.66875e-05,
+          "cpuSeconds": 4.649999999999793e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.74375e-05,
+          "cpuSeconds": 9.737500000000371e-05,
+          "allocatedBytes": 191188.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002878125,
+          "cpuSeconds": 0.0002876875000000015,
+          "allocatedBytes": 340368.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6125e-05,
+          "cpuSeconds": 4.606249999999923e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001496875,
+          "cpuSeconds": 0.0001497499999999971,
+          "allocatedBytes": 185006.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002025625,
+          "cpuSeconds": 0.0002025000000000013,
+          "allocatedBytes": 347428.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5375e-05,
+          "cpuSeconds": 4.531249999999848e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.50625e-05,
+          "cpuSeconds": 9.499999999999786e-05,
+          "allocatedBytes": 191132.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00043,
+          "cpuSeconds": 0.0004081249999999953,
+          "allocatedBytes": 340371.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5875e-05,
+          "cpuSeconds": 4.581249999999898e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000274375,
+          "cpuSeconds": 0.000250062500000002,
+          "allocatedBytes": 191024.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00056275,
+          "cpuSeconds": 0.0004866250000000044,
+          "allocatedBytes": 346241.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.58125e-05,
+          "cpuSeconds": 4.581250000000592e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001489375,
+          "cpuSeconds": 0.0001488749999999997,
+          "allocatedBytes": 179156.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002003125,
+          "cpuSeconds": 0.00019974999999999854,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55e-05,
+          "cpuSeconds": 4.5437500000002073e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000148,
+          "cpuSeconds": 0.00014793749999999356,
+          "allocatedBytes": 184172.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001985,
+          "cpuSeconds": 0.00019843750000000243,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.70625e-05,
+          "cpuSeconds": 4.6937499999996635e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.4625e-05,
+          "cpuSeconds": 9.462499999999402e-05,
+          "allocatedBytes": 191188.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000264625,
+          "cpuSeconds": 0.00026462500000000444,
+          "allocatedBytes": 340368.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6375e-05,
+          "cpuSeconds": 4.625000000000462e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000152,
+          "cpuSeconds": 0.0001518750000000027,
+          "allocatedBytes": 185006.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000206625,
+          "cpuSeconds": 0.00020656250000000015,
+          "allocatedBytes": 347428.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6e-05,
+          "cpuSeconds": 4.606249999999923e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000231875,
+          "cpuSeconds": 0.00015581249999999797,
+          "allocatedBytes": 190976.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000732,
+          "cpuSeconds": 0.00029837499999999656,
+          "allocatedBytes": 340368.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.58125e-05,
+          "cpuSeconds": 4.574999999999718e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.6375e-05,
+          "cpuSeconds": 9.618750000000426e-05,
+          "allocatedBytes": 190992.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002620625,
+          "cpuSeconds": 0.0002619375000000035,
+          "allocatedBytes": 346241.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.61875e-05,
+          "cpuSeconds": 4.6125000000001026e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000151375,
+          "cpuSeconds": 0.0001512499999999986,
+          "allocatedBytes": 179359.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002035625,
+          "cpuSeconds": 0.00020356249999999715,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55625e-05,
+          "cpuSeconds": 4.5437500000002073e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001495625,
+          "cpuSeconds": 0.00014949999999999686,
+          "allocatedBytes": 183860.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00020075,
+          "cpuSeconds": 0.00020062499999999595,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.60625e-05,
+          "cpuSeconds": 4.5937500000002573e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.475e-05,
+          "cpuSeconds": 9.468750000000276e-05,
+          "allocatedBytes": 191100.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000263,
+          "cpuSeconds": 0.0002629375000000045,
+          "allocatedBytes": 340411.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.7125e-05,
+          "cpuSeconds": 4.700000000000537e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0004456875,
+          "cpuSeconds": 0.0003308124999999995,
+          "allocatedBytes": 185193.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00089,
+          "cpuSeconds": 0.00029099999999999265,
+          "allocatedBytes": 347428.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.54375e-05,
+          "cpuSeconds": 4.5375000000000276e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.4875e-05,
+          "cpuSeconds": 9.487500000000121e-05,
+          "allocatedBytes": 190992.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0006581875,
+          "cpuSeconds": 0.0004761249999999939,
+          "allocatedBytes": 340404.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5625e-05,
+          "cpuSeconds": 4.556249999999873e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.5e-05,
+          "cpuSeconds": 9.4937500000003e-05,
+          "allocatedBytes": 191004.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002564375,
+          "cpuSeconds": 0.0002563749999999962,
+          "allocatedBytes": 346241.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55e-05,
+          "cpuSeconds": 4.5437500000002073e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001489375,
+          "cpuSeconds": 0.00014881250000000484,
+          "allocatedBytes": 179159.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001981875,
+          "cpuSeconds": 0.00019812500000000038,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.53125e-05,
+          "cpuSeconds": 4.5187499999994885e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001494375,
+          "cpuSeconds": 0.0001493750000000002,
+          "allocatedBytes": 184024.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002008125,
+          "cpuSeconds": 0.00020075000000000648,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.59375e-05,
+          "cpuSeconds": 4.581249999999204e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.48125e-05,
+          "cpuSeconds": 9.475000000000455e-05,
+          "allocatedBytes": 191188.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000264125,
+          "cpuSeconds": 0.0002640625000000091,
+          "allocatedBytes": 340368.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.56875e-05,
+          "cpuSeconds": 4.556249999999873e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00014775,
+          "cpuSeconds": 0.0001476874999999933,
+          "allocatedBytes": 185006.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000201625,
+          "cpuSeconds": 0.00020156250000001597,
+          "allocatedBytes": 347428.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.54375e-05,
+          "cpuSeconds": 4.5437499999995135e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.425e-05,
+          "cpuSeconds": 9.418749999999532e-05,
+          "allocatedBytes": 191152.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000260375,
+          "cpuSeconds": 0.00026037500000000713,
+          "allocatedBytes": 340371.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.575e-05,
+          "cpuSeconds": 4.5687499999988446e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.5375e-05,
+          "cpuSeconds": 9.525000000001893e-05,
+          "allocatedBytes": 191024.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002626875,
+          "cpuSeconds": 0.0002625625000000076,
+          "allocatedBytes": 346241.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6e-05,
+          "cpuSeconds": 4.600000000000437e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000150625,
+          "cpuSeconds": 0.00015056249999999272,
+          "allocatedBytes": 179156.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000200875,
+          "cpuSeconds": 0.00020081250000000828,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 12,
+      "batch": 16,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.54375e-05,
+          "cpuSeconds": 4.543750000000901e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00015325,
+          "cpuSeconds": 0.0001531875000000127,
+          "allocatedBytes": 184192.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002449375,
+          "cpuSeconds": 0.0002412499999999984,
+          "allocatedBytes": 352719.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.85e-05,
+          "cpuSeconds": 4.83749999999894e-05,
+          "allocatedBytes": 48673.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.44375e-05,
+          "cpuSeconds": 9.44375000000025e-05,
+          "allocatedBytes": 190964.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00027825,
+          "cpuSeconds": 0.0002781874999999989,
+          "allocatedBytes": 339572.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.8875e-05,
+          "cpuSeconds": 4.881249999999504e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0002605,
+          "cpuSeconds": 0.0002553124999999934,
+          "allocatedBytes": 185006.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000778,
+          "cpuSeconds": 0.0002535000000000037,
+          "allocatedBytes": 346588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55e-05,
+          "cpuSeconds": 4.550000000000387e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.475e-05,
+          "cpuSeconds": 9.474999999999068e-05,
+          "allocatedBytes": 191100.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002645,
+          "cpuSeconds": 0.000264437500000006,
+          "allocatedBytes": 339588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6125e-05,
+          "cpuSeconds": 4.606249999999923e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.60625e-05,
+          "cpuSeconds": 9.5937500000004e-05,
+          "allocatedBytes": 191004.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00028125,
+          "cpuSeconds": 0.00028118749999998804,
+          "allocatedBytes": 345418.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0009674375,
+          "cpuSeconds": 0.00010287500000001615,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00016775,
+          "cpuSeconds": 0.00016768749999999943,
+          "allocatedBytes": 179160.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0001981875,
+          "cpuSeconds": 0.00019806250000001246,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5625e-05,
+          "cpuSeconds": 4.556250000001261e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001530625,
+          "cpuSeconds": 0.00015300000000000036,
+          "allocatedBytes": 184172.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003214375,
+          "cpuSeconds": 0.0003093124999999919,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.60625e-05,
+          "cpuSeconds": 4.600000000000437e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001366875,
+          "cpuSeconds": 9.499999999999786e-05,
+          "allocatedBytes": 191032.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000264,
+          "cpuSeconds": 0.0002639374999999916,
+          "allocatedBytes": 339568.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55e-05,
+          "cpuSeconds": 4.5437499999995135e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00014825,
+          "cpuSeconds": 0.0001481875000000077,
+          "allocatedBytes": 185206.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000201875,
+          "cpuSeconds": 0.00020187500000000413,
+          "allocatedBytes": 346588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001249375,
+          "cpuSeconds": 0.00011531250000000604,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.002617,
+          "cpuSeconds": 0.00027425000000000366,
+          "allocatedBytes": 191004.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.005722375,
+          "cpuSeconds": 0.0006164374999999972,
+          "allocatedBytes": 339612.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.003043875,
+          "cpuSeconds": 0.00013337499999999114,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.54375e-05,
+          "cpuSeconds": 9.531249999999991e-05,
+          "allocatedBytes": 190792.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002580625,
+          "cpuSeconds": 0.00025799999999999434,
+          "allocatedBytes": 345438.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6e-05,
+          "cpuSeconds": 4.5875000000000776e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000155875,
+          "cpuSeconds": 0.00015581249999999103,
+          "allocatedBytes": 179516.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0020515625,
+          "cpuSeconds": 0.00025168750000001405,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5625e-05,
+          "cpuSeconds": 4.5625000000007465e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000269625,
+          "cpuSeconds": 0.00016431249999999953,
+          "allocatedBytes": 184064.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.002574,
+          "cpuSeconds": 0.00029481250000000514,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 6.76875e-05,
+          "cpuSeconds": 4.8437499999998135e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000100875,
+          "cpuSeconds": 9.562500000000196e-05,
+          "allocatedBytes": 191004.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003994375,
+          "cpuSeconds": 0.00027487500000000775,
+          "allocatedBytes": 339612.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0001390625,
+          "cpuSeconds": 0.00011768750000000494,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0039800625,
+          "cpuSeconds": 0.00017781249999999915,
+          "allocatedBytes": 185006.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003036875,
+          "cpuSeconds": 0.00021918749999999543,
+          "allocatedBytes": 346588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000253875,
+          "cpuSeconds": 4.8687500000005324e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00122775,
+          "cpuSeconds": 0.00014224999999999655,
+          "allocatedBytes": 191188.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0006601875,
+          "cpuSeconds": 0.00035593750000001423,
+          "allocatedBytes": 339611.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000183625,
+          "cpuSeconds": 4.8937499999998635e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.5375e-05,
+          "cpuSeconds": 9.518749999999632e-05,
+          "allocatedBytes": 190792.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00249425,
+          "cpuSeconds": 0.00030481250000001514,
+          "allocatedBytes": 345438.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 8.98125e-05,
+          "cpuSeconds": 7.681249999999529e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001360375,
+          "cpuSeconds": 0.0002695624999999868,
+          "allocatedBytes": 179516.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0009254375,
+          "cpuSeconds": 0.00028887500000002175,
+          "allocatedBytes": 351917.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 6.05e-05,
+          "cpuSeconds": 4.9937499999999635e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0002706875,
+          "cpuSeconds": 0.00020749999999999935,
+          "allocatedBytes": 183864.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002875,
+          "cpuSeconds": 0.0002798749999999989,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 6.13125e-05,
+          "cpuSeconds": 4.93749999999904e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0013825625,
+          "cpuSeconds": 0.0001310000000000061,
+          "allocatedBytes": 191188.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0019515625,
+          "cpuSeconds": 0.00044962499999999517,
+          "allocatedBytes": 339568.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.5875e-05,
+          "cpuSeconds": 4.581250000000592e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00053925,
+          "cpuSeconds": 0.0001618125000000109,
+          "allocatedBytes": 185009.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0011188125,
+          "cpuSeconds": 0.00030806250000001145,
+          "allocatedBytes": 346588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000205625,
+          "cpuSeconds": 9.993749999999413e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000111625,
+          "cpuSeconds": 0.0001047499999999868,
+          "allocatedBytes": 191152.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0049624375,
+          "cpuSeconds": 0.00039368749999998953,
+          "allocatedBytes": 339584.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6875e-05,
+          "cpuSeconds": 4.6875000000015654e-05,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0035083125,
+          "cpuSeconds": 0.00012987500000000152,
+          "allocatedBytes": 191024.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0003616875,
+          "cpuSeconds": 0.00029343750000000723,
+          "allocatedBytes": 345422.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0005481875,
+          "cpuSeconds": 9.056249999998822e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001650625,
+          "cpuSeconds": 0.00016493749999998975,
+          "allocatedBytes": 179160.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0019143125,
+          "cpuSeconds": 0.0004509999999999931,
+          "allocatedBytes": 351917.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.6e-05,
+          "cpuSeconds": 4.5937499999995635e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0012673125,
+          "cpuSeconds": 0.0001914374999999885,
+          "allocatedBytes": 184100.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0032374375,
+          "cpuSeconds": 0.000289874999999995,
+          "allocatedBytes": 351917.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.59375e-05,
+          "cpuSeconds": 4.5875000000000776e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007415,
+          "cpuSeconds": 9.756249999999522e-05,
+          "allocatedBytes": 191004.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00026775,
+          "cpuSeconds": 0.0002676874999999884,
+          "allocatedBytes": 339612.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.58125e-05,
+          "cpuSeconds": 4.5687500000002323e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0001490625,
+          "cpuSeconds": 0.00014899999999999636,
+          "allocatedBytes": 185218.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000202125,
+          "cpuSeconds": 0.00020212499999999745,
+          "allocatedBytes": 346588.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00020625,
+          "cpuSeconds": 6.806249999999348e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 9.68125e-05,
+          "cpuSeconds": 9.668749999999782e-05,
+          "allocatedBytes": 190792.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.002729625,
+          "cpuSeconds": 0.0005105000000000109,
+          "allocatedBytes": 339571.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0013479375,
+          "cpuSeconds": 0.00010918750000001032,
+          "allocatedBytes": 45404.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000164125,
+          "cpuSeconds": 0.00010656250000000422,
+          "allocatedBytes": 191152.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00099225,
+          "cpuSeconds": 0.0003130000000000077,
+          "allocatedBytes": 345422.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.575e-05,
+          "cpuSeconds": 4.575000000001106e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0005226875,
+          "cpuSeconds": 0.0001559375000000085,
+          "allocatedBytes": 179372.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0002015,
+          "cpuSeconds": 0.00020131250000000878,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 12,
+      "batch": 16,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 4.55625e-05,
+          "cpuSeconds": 4.550000000000387e-05,
+          "allocatedBytes": 45372.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000253125,
+          "cpuSeconds": 0.0002506874999999853,
+          "allocatedBytes": 183864.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0006219375,
+          "cpuSeconds": 0.00045225000000000126,
+          "allocatedBytes": 351957.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00075825,
+          "cpuSeconds": 0.0007577500000000015,
+          "allocatedBytes": 530980.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00113175,
+          "cpuSeconds": 0.001131250000000028,
+          "allocatedBytes": 451960.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0004175,
+          "cpuSeconds": 0.00041724999999998014,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007365,
+          "cpuSeconds": 0.0007364999999999733,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0020455,
+          "cpuSeconds": 0.001243250000000029,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00220725,
+          "cpuSeconds": 0.0005297499999999955,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00185675,
+          "cpuSeconds": 0.001831000000000027,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0012225,
+          "cpuSeconds": 0.0008130000000000082,
+          "allocatedBytes": 663440.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00122,
+          "cpuSeconds": 0.0011707499999999982,
+          "allocatedBytes": 150340.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0012435,
+          "cpuSeconds": 0.0011047499999999877,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007935,
+          "cpuSeconds": 0.0007929999999999882,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0004155,
+          "cpuSeconds": 0.00041525000000003365,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000737,
+          "cpuSeconds": 0.0007367499999999527,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00126775,
+          "cpuSeconds": 0.0011504999999999987,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000414,
+          "cpuSeconds": 0.0004135000000000111,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00106275,
+          "cpuSeconds": 0.0010627500000000567,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00079475,
+          "cpuSeconds": 0.0007944999999999758,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00041975,
+          "cpuSeconds": 0.00041924999999998214,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00074075,
+          "cpuSeconds": 0.0007402499999999979,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00079425,
+          "cpuSeconds": 0.0007937500000000375,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00077375,
+          "cpuSeconds": 0.000773500000000038,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007355,
+          "cpuSeconds": 0.0007355,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00108625,
+          "cpuSeconds": 0.0010859999999999759,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00041575,
+          "cpuSeconds": 0.0004155000000000131,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007365,
+          "cpuSeconds": 0.0007365000000000288,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007895,
+          "cpuSeconds": 0.0007892500000000746,
+          "allocatedBytes": 663696.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0007215,
+          "cpuSeconds": 0.000721499999999986,
+          "allocatedBytes": 150192.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001927,
+          "cpuSeconds": 0.0017100000000000448,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00079025,
+          "cpuSeconds": 0.0007897500000000335,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00078275,
+          "cpuSeconds": 0.00043400000000004546,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00166825,
+          "cpuSeconds": 0.0010507499999999892,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00118725,
+          "cpuSeconds": 0.0011645000000000127,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00042175,
+          "cpuSeconds": 0.00042125000000003965,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.005217,
+          "cpuSeconds": 0.0011987500000000817,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001266,
+          "cpuSeconds": 0.0009217500000000545,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0010445,
+          "cpuSeconds": 0.0010425000000000018,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007385,
+          "cpuSeconds": 0.0007382499999999403,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00079175,
+          "cpuSeconds": 0.0007915000000000005,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00074,
+          "cpuSeconds": 0.0007399999999999629,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001181,
+          "cpuSeconds": 0.0008212499999999956,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0033125,
+          "cpuSeconds": 0.0012222499999999803,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0004435,
+          "cpuSeconds": 0.0004305000000000003,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000736,
+          "cpuSeconds": 0.000735750000000035,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007875,
+          "cpuSeconds": 0.0007869999999999822,
+          "allocatedBytes": 663872.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001101,
+          "cpuSeconds": 0.0009270000000000667,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00233075,
+          "cpuSeconds": 0.00123950000000006,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00195475,
+          "cpuSeconds": 0.0014029999999999876,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00042775,
+          "cpuSeconds": 0.0004275000000000806,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0012655,
+          "cpuSeconds": 0.001263249999999938,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001118,
+          "cpuSeconds": 0.0011177500000000284,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001355,
+          "cpuSeconds": 0.001039250000000158,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00104925,
+          "cpuSeconds": 0.0010487499999999317,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0013605,
+          "cpuSeconds": 0.0007972499999999716,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00041675,
+          "cpuSeconds": 0.00041624999999989587,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00073375,
+          "cpuSeconds": 0.0007334999999999425,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00078825,
+          "cpuSeconds": 0.0007882500000000459,
+          "allocatedBytes": 663440.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000723,
+          "cpuSeconds": 0.0007227499999999942,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00073675,
+          "cpuSeconds": 0.0007365000000000288,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.013431,
+          "cpuSeconds": 0.0012147499999999312,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0004155,
+          "cpuSeconds": 0.00041524999999997814,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0327055,
+          "cpuSeconds": 0.0010419999999999874,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00215025,
+          "cpuSeconds": 0.001775500000000041,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0036645,
+          "cpuSeconds": 0.0008539999999999104,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001088,
+          "cpuSeconds": 0.001087749999999943,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007905,
+          "cpuSeconds": 0.0007902499999999923,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.03427525,
+          "cpuSeconds": 0.00044149999999998357,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000736,
+          "cpuSeconds": 0.0007362499999999939,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.01239225,
+          "cpuSeconds": 0.0012012499999999315,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00041275,
+          "cpuSeconds": 0.0004122500000000029,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0176715,
+          "cpuSeconds": 0.0011839999999999629,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00091325,
+          "cpuSeconds": 0.0008575000000000665,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00048325,
+          "cpuSeconds": 0.00044999999999995044,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0103085,
+          "cpuSeconds": 0.0008879999999999999,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00846675,
+          "cpuSeconds": 0.0010485000000001188,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.004462,
+          "cpuSeconds": 0.0009622500000000533,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00073825,
+          "cpuSeconds": 0.0007375000000000576,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00292025,
+          "cpuSeconds": 0.0011297499999999294,
+          "allocatedBytes": 283068.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00087025,
+          "cpuSeconds": 0.0007807500000001077,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0012635,
+          "cpuSeconds": 0.0007737499999999065,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0111845,
+          "cpuSeconds": 0.0009049999999999336,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00450825,
+          "cpuSeconds": 0.0008775000000000865,
+          "allocatedBytes": 150180.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00734725,
+          "cpuSeconds": 0.0017565000000000497,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000791,
+          "cpuSeconds": 0.0007907500000000622,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000416,
+          "cpuSeconds": 0.0004155000000000131,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0035075,
+          "cpuSeconds": 0.000839750000000028,
+          "allocatedBytes": 517776.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001132,
+          "cpuSeconds": 0.001131749999999987,
+          "allocatedBytes": 282444.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00042375,
+          "cpuSeconds": 0.00042324999999998614,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "independent",
+      "edges": 48,
+      "batch": 4,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0093585,
+          "cpuSeconds": 0.0012980000000000214,
+          "allocatedBytes": 137148.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.011002,
+          "cpuSeconds": 0.0017585000000001072,
+          "allocatedBytes": 663072.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00099025,
+          "cpuSeconds": 0.0007662500000000794,
+          "allocatedBytes": 539536.0,
+          "activePlans": 1.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00072175,
+          "cpuSeconds": 0.0007210000000001937,
+          "allocatedBytes": 516916.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076225,
+          "cpuSeconds": 0.0007620000000000404,
+          "allocatedBytes": 649216.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00114925,
+          "cpuSeconds": 0.0011487500000000317,
+          "allocatedBytes": 410908.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001276,
+          "cpuSeconds": 0.001175249999999961,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0010875,
+          "cpuSeconds": 0.0010799999999999699,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008295,
+          "cpuSeconds": 0.0008297499999999625,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00146425,
+          "cpuSeconds": 0.0011935000000000695,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076275,
+          "cpuSeconds": 0.0007627500000000342,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.002111,
+          "cpuSeconds": 0.001998999999999973,
+          "allocatedBytes": 392940.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0024325,
+          "cpuSeconds": 0.0013740000000000974,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001576,
+          "cpuSeconds": 0.001367000000000007,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0011835,
+          "cpuSeconds": 0.0009377499999999594,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00103775,
+          "cpuSeconds": 0.0009510000000000352,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0021475,
+          "cpuSeconds": 0.0018730000000000135,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008315,
+          "cpuSeconds": 0.0008307499999999912,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.002201,
+          "cpuSeconds": 0.0011812499999999115,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00106275,
+          "cpuSeconds": 0.0008694999999999675,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001883,
+          "cpuSeconds": 0.001363250000000038,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0008765,
+          "cpuSeconds": 0.0007705000000000073,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00722375,
+          "cpuSeconds": 0.0012325000000000808,
+          "allocatedBytes": 649376.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00487975,
+          "cpuSeconds": 0.0021882499999998917,
+          "allocatedBytes": 392940.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000727,
+          "cpuSeconds": 0.0007260000000000044,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001411,
+          "cpuSeconds": 0.0013444999999999707,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00367725,
+          "cpuSeconds": 0.0016525000000000567,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00185925,
+          "cpuSeconds": 0.0015297499999999964,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.003601,
+          "cpuSeconds": 0.0012177500000000174,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00232525,
+          "cpuSeconds": 0.001882999999999968,
+          "allocatedBytes": 392956.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0010575,
+          "cpuSeconds": 0.0010575000000000445,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001791,
+          "cpuSeconds": 0.0010470000000000201,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00323575,
+          "cpuSeconds": 0.002022999999999997,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0093425,
+          "cpuSeconds": 0.0015002499999999808,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00264275,
+          "cpuSeconds": 0.001806749999999968,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082,
+          "cpuSeconds": 0.0008192499999999381,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00221725,
+          "cpuSeconds": 0.0021455000000000224,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000763,
+          "cpuSeconds": 0.0007627500000000342,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008295,
+          "cpuSeconds": 0.0008287499999999337,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000713,
+          "cpuSeconds": 0.0007127500000000397,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076775,
+          "cpuSeconds": 0.000767749999999956,
+          "allocatedBytes": 649488.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00147425,
+          "cpuSeconds": 0.0012882499999999908,
+          "allocatedBytes": 392952.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00140725,
+          "cpuSeconds": 0.0012842500000000978,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001105,
+          "cpuSeconds": 0.0011044999999999527,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000826,
+          "cpuSeconds": 0.0008255000000000345,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071075,
+          "cpuSeconds": 0.0007105000000000583,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.003316,
+          "cpuSeconds": 0.0007727499999999887,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0011355,
+          "cpuSeconds": 0.0011350000000001081,
+          "allocatedBytes": 392940.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0009995,
+          "cpuSeconds": 0.000999500000000042,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000765,
+          "cpuSeconds": 0.0007647499999998697,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008195,
+          "cpuSeconds": 0.0008192500000000491,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00751675,
+          "cpuSeconds": 0.0012830000000000341,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0021915,
+          "cpuSeconds": 0.001535499999999912,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082275,
+          "cpuSeconds": 0.0008224999999999483,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00105175,
+          "cpuSeconds": 0.001051499999999872,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00080525,
+          "cpuSeconds": 0.0007940000000000724,
+          "allocatedBytes": 649504.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00135925,
+          "cpuSeconds": 0.0008489999999998776,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00224375,
+          "cpuSeconds": 0.001463749999999986,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000774,
+          "cpuSeconds": 0.0007737500000000175,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0018605,
+          "cpuSeconds": 0.001211500000000032,
+          "allocatedBytes": 393100.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00299475,
+          "cpuSeconds": 0.0007267499999999982,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00247925,
+          "cpuSeconds": 0.0012947500000000112,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00181525,
+          "cpuSeconds": 0.0015767499999999046,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071075,
+          "cpuSeconds": 0.0007104999999999473,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00077475,
+          "cpuSeconds": 0.0007740000000000524,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00115575,
+          "cpuSeconds": 0.001155249999999941,
+          "allocatedBytes": 392940.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.006774,
+          "cpuSeconds": 0.0013582500000000053,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000768,
+          "cpuSeconds": 0.000767500000000032,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00081975,
+          "cpuSeconds": 0.000819750000000008,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00530875,
+          "cpuSeconds": 0.0013695000000000235,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00114125,
+          "cpuSeconds": 0.0011407499999999127,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0132305,
+          "cpuSeconds": 0.0014999999999999458,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00100025,
+          "cpuSeconds": 0.001000000000000112,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076425,
+          "cpuSeconds": 0.0007642499999999108,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082375,
+          "cpuSeconds": 0.000823499999999977,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00814925,
+          "cpuSeconds": 0.0010120000000000129,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000775,
+          "cpuSeconds": 0.0007747500000000462,
+          "allocatedBytes": 649648.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00118825,
+          "cpuSeconds": 0.001187750000000043,
+          "allocatedBytes": 392952.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0026525,
+          "cpuSeconds": 0.0007944999999999203,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00109975,
+          "cpuSeconds": 0.001099249999999885,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008295,
+          "cpuSeconds": 0.0008289999999999687,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071325,
+          "cpuSeconds": 0.0007129999999999637,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076875,
+          "cpuSeconds": 0.0007685000000000608,
+          "allocatedBytes": 649632.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.01294275,
+          "cpuSeconds": 0.0015582499999998722,
+          "allocatedBytes": 392940.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0012895,
+          "cpuSeconds": 0.0011102499999998683,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000772,
+          "cpuSeconds": 0.000771500000000036,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.015158,
+          "cpuSeconds": 0.0009597499999999259,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00081275,
+          "cpuSeconds": 0.0008102500000000123,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00112925,
+          "cpuSeconds": 0.0011290000000000466,
+          "allocatedBytes": 302408.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00229275,
+          "cpuSeconds": 0.0022087499999998705,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "recursive",
+      "edges": 48,
+      "batch": 4,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001013,
+          "cpuSeconds": 0.0010125000000000828,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076525,
+          "cpuSeconds": 0.0007652500000000506,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082775,
+          "cpuSeconds": 0.00082749999999987,
+          "allocatedBytes": 765840.0,
+          "activePlans": 2.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 0,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071975,
+          "cpuSeconds": 0.000719499999999984,
+          "allocatedBytes": 517044.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076325,
+          "cpuSeconds": 0.0007630000000000692,
+          "allocatedBytes": 649216.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0011505,
+          "cpuSeconds": 0.0011502499999999083,
+          "allocatedBytes": 410108.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 1,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071225,
+          "cpuSeconds": 0.0007120000000000459,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00105775,
+          "cpuSeconds": 0.0010575000000000445,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000818,
+          "cpuSeconds": 0.0008177500000000615,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 2,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00488475,
+          "cpuSeconds": 0.0007909999999999862,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00077825,
+          "cpuSeconds": 0.0007770000000000277,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00654675,
+          "cpuSeconds": 0.0012299999999999534,
+          "allocatedBytes": 392300.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 3,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.001056,
+          "cpuSeconds": 0.001055750000000022,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00078375,
+          "cpuSeconds": 0.0007829999999999782,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00084,
+          "cpuSeconds": 0.000839499999999993,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 4,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00110725,
+          "cpuSeconds": 0.0007457499999999895,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00218675,
+          "cpuSeconds": 0.0013670000000001181,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0039055,
+          "cpuSeconds": 0.0015667499999999501,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 5,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00535375,
+          "cpuSeconds": 0.0014767500000000267,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00162875,
+          "cpuSeconds": 0.0011782499999999363,
+          "allocatedBytes": 649376.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001574,
+          "cpuSeconds": 0.0010410000000000696,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 6,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0011925,
+          "cpuSeconds": 0.0011895000000000655,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000772,
+          "cpuSeconds": 0.00077174999999996,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00116375,
+          "cpuSeconds": 0.001163249999999949,
+          "allocatedBytes": 392140.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 7,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00092625,
+          "cpuSeconds": 0.0007344999999999713,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00167475,
+          "cpuSeconds": 0.001671499999999937,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00177225,
+          "cpuSeconds": 0.0010617499999999724,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 8,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00115525,
+          "cpuSeconds": 0.0011525000000001118,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001822,
+          "cpuSeconds": 0.0017862499999999892,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001141,
+          "cpuSeconds": 0.0011407499999999127,
+          "allocatedBytes": 392300.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 9,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000999,
+          "cpuSeconds": 0.0009987500000000482,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007645,
+          "cpuSeconds": 0.0007639999999999869,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008195,
+          "cpuSeconds": 0.0008192499999999381,
+          "allocatedBytes": 765200.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 10,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007095,
+          "cpuSeconds": 0.0007092499999999946,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00105775,
+          "cpuSeconds": 0.0010575000000000445,
+          "allocatedBytes": 294460.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082125,
+          "cpuSeconds": 0.0008209999999998496,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 11,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0029475,
+          "cpuSeconds": 0.0012284999999999657,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.01495075,
+          "cpuSeconds": 0.0012535000000000185,
+          "allocatedBytes": 649888.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082325,
+          "cpuSeconds": 0.0008224999999999483,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 12,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000715,
+          "cpuSeconds": 0.0007147499999999862,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076925,
+          "cpuSeconds": 0.0007690000000000197,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00455475,
+          "cpuSeconds": 0.0017415000000000624,
+          "allocatedBytes": 392140.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 13,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00969975,
+          "cpuSeconds": 0.0012575000000000225,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00998625,
+          "cpuSeconds": 0.0014055000000000595,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.001282,
+          "cpuSeconds": 0.0009617499999999835,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 14,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.002063,
+          "cpuSeconds": 0.00082749999999987,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.03201225,
+          "cpuSeconds": 0.001263499999999973,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.015956,
+          "cpuSeconds": 0.0013494999999998925,
+          "allocatedBytes": 392300.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 15,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.019899,
+          "cpuSeconds": 0.0015609999999999236,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000787,
+          "cpuSeconds": 0.0007790000000000852,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008925,
+          "cpuSeconds": 0.0008789999999999631,
+          "allocatedBytes": 765200.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 16,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000718,
+          "cpuSeconds": 0.0007174999999999265,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0066825,
+          "cpuSeconds": 0.0021889999999999965,
+          "allocatedBytes": 294460.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00207625,
+          "cpuSeconds": 0.0016482500000000178,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 17,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00133725,
+          "cpuSeconds": 0.0011319999999999109,
+          "allocatedBytes": 161220.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0128025,
+          "cpuSeconds": 0.0012245000000000728,
+          "allocatedBytes": 649504.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0223955,
+          "cpuSeconds": 0.0008727499999999777,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 18,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00202825,
+          "cpuSeconds": 0.001759499999999914,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00686525,
+          "cpuSeconds": 0.0009167499999999107,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00385,
+          "cpuSeconds": 0.001691750000000103,
+          "allocatedBytes": 392140.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 19,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.005203,
+          "cpuSeconds": 0.0008832500000000021,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.001933,
+          "cpuSeconds": 0.0011959999999999749,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00424175,
+          "cpuSeconds": 0.0014407499999999906,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 20,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00071125,
+          "cpuSeconds": 0.0007110000000000172,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.002048,
+          "cpuSeconds": 0.0011924999999999297,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0022315,
+          "cpuSeconds": 0.0016094999999999304,
+          "allocatedBytes": 392156.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 21,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00103125,
+          "cpuSeconds": 0.0010307499999999692,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.000779,
+          "cpuSeconds": 0.0007782500000000914,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000824,
+          "cpuSeconds": 0.000823750000000012,
+          "allocatedBytes": 765200.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 22,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00218825,
+          "cpuSeconds": 0.0013199999999998768,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00113125,
+          "cpuSeconds": 0.001131250000000028,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.01274825,
+          "cpuSeconds": 0.0016804999999999737,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 23,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00100125,
+          "cpuSeconds": 0.0010010000000000296,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0007655,
+          "cpuSeconds": 0.0007652499999999396,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082475,
+          "cpuSeconds": 0.0008245000000000058,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 24,
+      "order": "ABC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.000711,
+          "cpuSeconds": 0.0007107499999999822,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.002099,
+          "cpuSeconds": 0.0008479999999999599,
+          "allocatedBytes": 649632.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00287325,
+          "cpuSeconds": 0.001714999999999911,
+          "allocatedBytes": 392156.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 25,
+      "order": "ACB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007155,
+          "cpuSeconds": 0.0007150000000000212,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00109625,
+          "cpuSeconds": 0.0010959999999999859,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008515,
+          "cpuSeconds": 0.0008312500000000611,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 26,
+      "order": "BAC",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0007185,
+          "cpuSeconds": 0.0007184999999999553,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00077225,
+          "cpuSeconds": 0.00077174999999996,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00116125,
+          "cpuSeconds": 0.0011609999999999676,
+          "allocatedBytes": 392156.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 27,
+      "order": "BCA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.00102425,
+          "cpuSeconds": 0.0010242499999999488,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076825,
+          "cpuSeconds": 0.000767750000000067,
+          "allocatedBytes": 649008.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.000828,
+          "cpuSeconds": 0.0008252499999999996,
+          "allocatedBytes": 765200.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 28,
+      "order": "CAB",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0093575,
+          "cpuSeconds": 0.0010065000000000213,
+          "allocatedBytes": 503712.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.0059285,
+          "cpuSeconds": 0.0018092499999999845,
+          "allocatedBytes": 294204.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.00082075,
+          "cpuSeconds": 0.0008205000000001128,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    },
+    {
+      "condition": "all-inputs",
+      "edges": 48,
+      "batch": 4,
+      "group": 29,
+      "order": "CBA",
+      "arms": {
+        "solve": {
+          "wallSeconds": 0.0010185,
+          "cpuSeconds": 0.0010182499999999983,
+          "allocatedBytes": 157112.0,
+          "activePlans": 3.0
+        },
+        "fresh-update": {
+          "wallSeconds": 0.00076375,
+          "cpuSeconds": 0.000763500000000028,
+          "allocatedBytes": 649136.0,
+          "activePlans": 3.0
+        },
+        "retained": {
+          "wallSeconds": 0.0008225,
+          "cpuSeconds": 0.0008219999999999894,
+          "allocatedBytes": 765040.0,
+          "activePlans": 3.0
+        }
+      }
+    }
+  ]
+}

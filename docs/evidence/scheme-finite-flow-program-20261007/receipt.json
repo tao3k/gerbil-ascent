@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-07",
+  "parent_commit": "75b42243b6ab0816786fb84ace94094fc09878cd",
+  "sources": {
+    "applications/finite-flow-program.ss": "e74900b3387e6c465014c5e5757bae4c3a90094949c917a640d34d3efc648577",
+    "core/finite-flow.ss": "055d808c06e10ff473eee2fb57229e633123db955b07b72475752cfe1a70bc30",
+    "t/qualification/ascent-finite-flow-program-test.ss": "ae0d1f439ed083bea311a11604bf4f53ee87b6166a2aaf6e6e23f5e42b2c86ff",
+    "t/qualification/ascent-finite-flow-test.ss": "4682b21fad72be34593353c32d7852b143d3f1ebd3f7af29c8904cc940e79aed",
+    "build.ss": "fa5eb03a90a7d087a7dba2db171148a41b7f22deafaadfad7c67fda6f6e076f3",
+    "packages/proofs/lean/FiniteFlowPacking.lean": "988fdedb54ca46ac139cbee9fa08e023e4dacd9fb483f8a610bc11624ca3a06d",
+    "packages/proofs/lean/Tests/FiniteFlowPackingTests.lean": "bdeba78f606ad0812eb4249a61b60c02d504884dad21f280c1552d80e99d2625",
+    "packages/proofs/tla/PositiveNonmembershipSession.tla": "53f5afdb56165a0ff9622ae0c478f4e28bccfa7e41581b8ba29f6136019e7c4b",
+    "packages/proofs/tla/SessionTransaction.tla": "59451973b5516acf3525c4990174cb78da9e30b1cb0a0732af13b86f15ae8822",
+    "packages/proofs/tla/NativeSessionPublication.tla": "272f7cc46a27298f6350662f19fd352f290312fe8beea94d387e3abecefdc29b"
+  },
+  "native_program": {
+    "command": "just test-file t/qualification/ascent-finite-flow-program-test.ss",
+    "cases": 5,
+    "exhaustive_controls": 256,
+    "final_ok": true,
+    "packed_lattice_rows": 2048,
+    "decoded_rows_enumerated_and_checked": 1048576,
+    "gamma_bitmap_payload_bytes": 131072,
+    "payload_excludes": [
+      "integer masks",
+      "Program rows and sources",
+      "indexes",
+      "domain values and ordinal maps",
+      "temporary masks",
+      "garbage collector"
+    ],
+    "session_controls": [
+      "two distinct blocker appends joined by OR and withdraw both propagated bits",
+      "blocker replacement restores propagation",
+      "seed withdrawal removes flow",
+      "old Program and gamma cuts unchanged",
+      "zero-duration provisional cut followed by full retry",
+      "invalid source append refused then valid update succeeds"
+    ],
+    "native_negative": {
+      "first_attempt_exit": 70,
+      "cause": "relation constructor field checkers passed in storage-provider positional slot",
+      "resolution": "explicit canonical Set storage argument before field checkers",
+      "not_accepted_as_pass": true
+    },
+    "exit_code": 0
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 113,
+    "added_theorems": [
+      "maskJoin_associative",
+      "maskJoin_commutative",
+      "maskJoin_idempotent",
+      "gamma_join",
+      "gamma_transfer",
+      "transfer_join",
+      "transfer_monotone",
+      "transfer_blockers_antitone"
+    ],
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "custom_axioms": false,
+    "sorry": false,
+    "scope": "finite-width mask algebra; does not prove Scheme integer extraction, engine scheduling or complete application refinement"
+  },
+  "tla": {
+    "command": "just check-nonmembership-formal",
+    "exit_code": 0,
+    "new_protocol_transitions": false,
+    "model_distinct_states": {
+      "PositiveNonmembershipSession": 72,
+      "SessionTransaction": 1081,
+      "NativeSessionPublication": 306
+    },
+    "mutation_counterexamples": [
+      "native-early",
+      "native-bounded",
+      "native-alias",
+      "early",
+      "stale",
+      "global",
+      "reuse"
+    ],
+    "generation_cutoff": 2,
+    "cutoff_scope": "TLC enumeration only; no runtime generation or fixed point bound",
+    "scope": "existing abstract publication and source transaction models; native refinement is not claimed"
+  },
+  "policy": {
+    "findings": 26,
+    "errors": 0
+  },
+  "architecture": {
+    "representation": "immutable bounded Scheme integer mask per Point; gamma publishes fresh private byte roots",
+    "blocker_dependency": "strict aggregate of OR, including empty-group zero",
+    "session_updates": "existing opaque callback replay from accepted sources",
+    "affected_only_incremental_reuse": false,
+    "lattice_actor_admission": false,
+    "uf_storage_or_recovery_identity": false,
+    "program_budget_unit": "packed rows",
+    "publication_budget_unit": "decoded logical facts",
+    "fact_ordinal_mapping": "caller-retained ordered fact domain; width fixed at Program construction",
+    "supported_source_updates": [
+      "flow_seed",
+      "flow_edge",
+      "flow_block"
+    ]
+  },
+  "acceptance": {
+    "ordinary_program_mask_lattice": true,
+    "session_source_updates_and_old_cuts": true,
+    "million_row_exact_gamma_enumeration": true,
+    "complete_clap_native_application": false,
+    "automatic_compact_downstream_admission": false,
+    "paired_whole_application_benefit": false,
+    "whole_byods_paper_implemented": false,
+    "mrr_integration": false,
+    "new_model_calls": 0
+  },
+  "kernel_regression": {
+    "command": "just test-file t/qualification/ascent-finite-flow-test.ss",
+    "exit_code": 0,
+    "cases": 6,
+    "final_ok": true,
+    "independent_explicit_closure_controls": 256,
+    "independent_polonius_reference_controls": 10,
+    "dense_chain_rows_enumerated_and_checked": 1048576
+  }
+}

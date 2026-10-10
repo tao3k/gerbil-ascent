@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "base_commit": "bef6cafb947350e44c492b8ab5c5eb1f5a222c12",
+  "scope": "Concurrent TLC standard module extraction isolation",
+  "remote_failure": {
+    "run": "https://github.com/tao3k/gerbil-ascent/actions/runs/37552954028",
+    "job": 112572498456,
+    "model": "PositiveNonmembershipSession",
+    "module": "/tmp/TLC.tla",
+    "diagnostic": "Lexical error at line 122, column 64. Encountered EOF",
+    "exit_code": 150,
+    "lean_build_jobs_passed": 90,
+    "transcript_sha256": "cefc70e32221caaf3001e705ad73cb81ff3fdce538151b4f1d4387cec9e49725"
+  },
+  "mechanism": {
+    "source": "https://raw.githubusercontent.com/tlaplus/tlaplus/v1.7.4/tlatools/org.lamport.tlatools/src/util/SimpleFilenameToStream.java",
+    "jar_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "standard_TLC_module_sha256": "944ece590eec81ace059881c2a62064c06041efa81539a788cd40fa7d1da41ce",
+    "behavior": "SimpleFilenameToStream.read extracts by fixed module name, truncates with FileOutputStream and registers deleteOnExit. FilenameToStream.TMPDIR comes from java.io.tmpdir.",
+    "bytecode_checked": true
+  },
+  "repair": {
+    "jvm_property": "java.io.tmpdir",
+    "directory": "Each leaf gate existing mktemp directory",
+    "jvm_backed_leaf_gates": 10,
+    "parallel_lanes": 2,
+    "external_TLC_BIN": "User-supplied launchers manage their own temporary directory",
+    "models_changed": false,
+    "bounds_changed": false,
+    "workers_changed": false,
+    "timeouts_changed": false,
+    "heap_changed": false
+  },
+  "verification": {
+    "command": "ASCENT_TLC_GENERATION_CUTOFF=4 just check-formal",
+    "exit_code": 0,
+    "lean_build_jobs": 90,
+    "positive_state_count_matches": 23,
+    "negative_controls_matched": 48,
+    "observed_private_standard_module_directories": 10,
+    "observed_global_standard_module_paths": 0,
+    "transcript_sha256": "c6af341d0c6eb6633bccce760610d1d42d8d1efeafe02b49b3dcdfa399992bc6"
+  },
+  "source_sha256": {
+    "justfile": "4769288d52bfcda783e93855075fd2c8bdf0d9dedbddbe9e83d9daaa565eafd3"
+  },
+  "new_performance_claim": false
+}

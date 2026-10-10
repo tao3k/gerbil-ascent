@@ -1,0 +1,1390 @@
+#+title: Scheme Coding Style: Compiler and Scheme patterns
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Choose an expression layer from the transformation it owns
+
+The installed Gerbil =1cfb032= compiler shows several complementary forms.
+=compiler/compile.ss= defines =with-primitive-bind+args= with =defrules=:
+the syntax wrapper owns ordered argument traversal and temporary bindings.
+=compiler/method.ss= defines =with-context= with =defrule=, while
+=defcompile-method= uses =syntax-case= and =with-syntax= to generate class
+inheritance, delayed method registration and a parameterized traversal entry.
+=compile-e= dispatches by the normalized AST terminal. These are different
+expression tools with different responsibilities, rather than one object
+pattern to apply throughout a program.
+
+In =program/syntax.ss=, pure declaration and rule forms now use
+=defrule=/=defrules=. Omitted relation, lattice and program arguments normalize
+to a complete form before reaching one constructor expression. Single rule
+heads normalize to the same multiple-head form; facts use the same empty-body
+form. The collector forwards declaration options to their declaration macro
+instead of duplicating its option grammar. This retains source order and
+keeps construction at the declaration boundary.
+
+Identifier-sensitive term classification, macro argument diagnostics and the
+guarded collector still use =syntax-case=. Index and storage providers retain
+their existing generic dispatch, where alternative implementations actually
+share a behavioral contract. Pure graph traversal remains a named algorithm.
+Syntax normalization removes duplicated expansion definitions; it does not
+establish a runtime or end-to-end performance improvement.
+
+The native =std/test= qualification runs the syntax, lattice, aggregate,
+BYODS index, positive rule, binding and equivalence-storage Suites:
+93 Cases pass with final =OK= and exit zero. The syntax Suite also evaluates
+malformed source to check its original expansion diagnostics. Its static
+entry therefore links the expander, calls =gerbil-load-expander!= and resolves
+the installed Gerbil core through =GERBIL_HOME=. Earlier entries without
+these requirements failed; their logs and the successful receipt remain in
+ignored =.cache/ascent/syntax-normalization/=. This is local qualification,
+not a completed remote CI claim.
+
+* Invocation-owned analysis and ordered search
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:24-33= defines =optimizer-info=
+with a constructor that owns its analysis tables. The useful lesson for
+=table/index-sharing.ss= is to make column analysis a complete invocation-owned
+descriptor. Admission now detaches and sorts the requirements; adjacent
+comparison rejects duplicate columns. A private =column-order= carries the
+admitted sets and ordered strict-subset successors. Matching uses =ormap= for
+first-success augmentation, retaining successor order and matching updates.
+Sorted-set inclusion is a flat monotone recurrence. Compiler and search
+metadata do not retain runtime rows or cross an engine's ownership boundary.
+
+The certificate checker independently rebuilds widths and lazy membership
+tables from the original supplied sets. It accepts unsorted admitted sets;
+it cannot depend on the planner's sorted-merge precondition or successor graph.
+One selected membership table is captured before each =andmap= traversal.
+Existing exhaustive partition enumeration checks all 128 subsets of the
+three-column requirement universe, alongside rejected nonmaximum and
+inconsistent certificates.
+
+The complete native layout call improves target chain/split CPU about 95%/88%
+with lower allocation. A branching fixture fails exact layout stability even
+for repeated baseline calls and remains a negative result. Empty input adds
+128 allocated bytes. See [[file:../../t/performance/column-order/README.org][column-order qualification]]
+for the frozen source, fixed gates, controls and scope. These measurements do
+not establish runtime query or solve improvements.
+
+* Buffered protocols and empty-delta proofs
+
+Gerbil =1cfb032= =std/io/bio/types.ss= separates owned byte buffers and
+cursor state. =std/io/bio/input.ss= expresses complete read/fill/retry protocols
+with =defrules __bio-read=, selecting operations at the buffer boundary.
+=core/finite-flow.ss= applies this pattern to bitmap deltas: a hygienic
+=fill-bitmap-delta!= rule owns write/count order, while =fresh-bits!= selects
+the stored/blocked state before the byte loop. The loop contains no per-byte
+presence tests or callbacks.
+
+One invocation lazily owns a scratch bitmap. Equal incoming/total bitmaps
+prove no new facts; the caller consumes only the zero count and never merges
+stale scratch. Every remaining path overwrites all bytes. Budget checks still
+precede root mutation; first insertion copies scratch separately into total
+and pending. Returned frozen views retain roots and domains, never scratch.
+Reentrant cancellation observations and budget-failure retries exercise these
+ownership boundaries alongside the original exhaustive and million-fact tests.
+
+The complete cyclic flow call improves CPU about 44% and allocation about
+34% in 50 matched native pairs. Ordinary dense and blocker-heavy inputs fail
+their fixed 10% CPU improvement gates; small/empty controls pass, with 32 extra
+allocated bytes for empty input. Three consumer Suites pass 31 Cases. See
+[[file:../../t/performance/flow-delta/README.org][flow delta qualification]] for the frozen reference, independent truth,
+rejected and overlapping series, and the limits of these local results.
+
+* Study: expression optimization conditions and compiler output
+
+Study the installed Gerbil compiler directly, including the conditions that
+admit a rewrite and the bindings retained in its output. Surface similarity
+to another Scheme dialect is insufficient evidence for an optimization.
+
+At Gerbil revision =2591dcd=, =compiler/optimize.ss:163-179= collects
+mutators before generating specializers and lifting dispatch lambdas, then
+collects and refines type information to a fixed point. These are distinct
+passes with explicit analysis dependencies. =optimize-call.ss:89-131=
+requires equal arity and immutable arguments/references before substituting
+an immediately applied lambda. Quotes and stable references are substituted;
+other operands retain temporary bindings. =optimize-xform.ss:178-185=
+rejects mutation of an inline substitution.
+
+A project-local compiler probe used =compile-module= with optimization and
+generated Scheme only, without rebuilding the SDK. Its emitted static SCM
+shows the immediate immutable lambda reduced to one =##fx+= expression;
+the lambda with a mutated argument survives the Gerbil pass, and effectful
+operands retain bindings. Source execution separately checks both arithmetic
+results and that each effectful operand runs exactly once. This establishes
+the Gerbil source transform, not the final C compiler's closure allocation
+or a speedup. Probe sources and generated artifacts stay in ignored
+=.cache/ascent/expression-study/=.
+
+For our code, =core/rule-bindings.ss= already has direct calls for admitted
+small arities; =program/operator.ss= uses fixed local helper signatures.
+These require inspection of emitted code before further manual inlining.
+=table/funs.ss= now selects its complete ordered/arbitrary loop once per
+batch. Ordered column positions become immutable forward distances before
+row traversal; =list-tail= advances each cursor. One synchronous
+=hash-update!= operation replaces the separate lookup and set. Its callback
+is shared within one batch and reads a private row slot; stable lexical
+bindings coexist with explicitly owned mutable state. No callback is
+allocated per row, and each insertion creates a fresh bucket spine.
+The native =runtime/table.ss:440-464= expansion hashes and probes the key
+once and calls the updater directly in its hit/insert branches.
+Arbitrary and repeated columns retain their
+original projection. No caller column list is changed or cached across
+batches. This applies the compiler's fixed-shape specialization approach at
+a production boundary where shape metadata is already available; it does
+not assume that the compiler will hoist an arbitrary captured branch.
+Qualification measures the complete physical build/extend/lookup lifecycle;
+it does not establish an end-to-end solve speedup.
+
+Projection-only hoisting improved this lifecycle's CPU by approximately 2%
+and failed the preset 20% gate. Combining it with one native hash update passed
+50 checked wide pairs: median CPU =2335.25 -> 1403.50= microseconds, with 928
+extra allocated bytes per lifecycle. Compact, arbitrary/repeated-column and
+small controls also passed their unchanged regression gates. The bounded
+batch state increases allocation; this is a CPU result. The public ASP fixture,
+frozen current-commit access layer, negative result and full measurement scope
+are documented in [[file:../../t/performance/index-projection/README.org][index projection qualification]].
+
+* Study: descriptor ownership and shared lexical analysis
+
+Structural admission also improves slot-action selection in
+=core/positive-plan.ss=. Its new private projector selects an ordered forward
+cursor, full reverse copy or arbitrary positional vector from column shape,
+removing the 128-column cutoff. Lowering order, action identity and detached
+selected-list spines remain unchanged; engine frames are not retained there.
+The forward cursor's successive =list-tail= intervals are disjoint, so a
+random-access lint advisory does not describe this traversal.
+
+The public ASP benchmark includes cold compilation, fresh frame allocation
+and native four-row indexed traversal. Sparse/reverse/repeated cases improve
+CPU by approximately 65%/78%/79%, while full-forward is 2% slower. A vector-only
+reverse version failed its allocation cap; exact reverse admission removed
+the extra scratch storage without relaxing the gate. Nine shapes pass.
+See [[file:../../t/performance/slot-projection/README.org][slot projection qualification]] for frozen source, controls and scope.
+
+The same invocation-owned pattern applies to stratified proofs.
+=candidate/closure-index.ss= now gives one verified model relation a named
+record containing ordered rows, structural membership and optional source
+occurrence positions. Both producer and checker allocate their own indexes
+after independent finite replay; the original lists retain enumeration order
+and budget charging. Source positions use vectors without collapsing duplicate
+occurrences. Index lookup does not replace proof checking or finite replay.
+
+The public ASP qualification measures the complete producer call, including
+its checker and both replay phases. Source/derived CPU medians improve by
+approximately 62%/54%; small inputs incur four extra microseconds and 7984
+extra bytes. A separate source map failed the small allocation gate; unifying
+relation metadata passed all unchanged gates. Frozen old producer/checker,
+control results and negative measurements are described in
+[[file:../../t/performance/stratified-model/README.org][stratified model qualification]].
+
+Gerbil revision =2591dcd= separates compiler phases into modules. Its
+=compiler/optimize-base.ss:24-29= gives one optimizer-info record ownership
+of identity tables. =std/list/list.ss:24-33= provides linear identity-aware
+deduplication when supplied an eq table, with an explicit first-occurrence
+policy. The applicable lesson is to retain analysis once per compilation
+and distinguish node identity from the number of paths reaching it.
+
+Our former 691-line =program/operator.ss= combined builders, validation,
+scope analysis, lowering, interpretation and counters. Production ownership
+now follows these boundaries:
+
+| Module | Responsibility |
+|--------+----------------|
+| =operator-descriptor.ss= | finite builders and descriptor identities |
+| =operator-analysis.ss= | graph admission, owned rows, free parameter sets |
+| =operator.ss= | lexical instances and rule emission; stable public facade |
+| =operator-reference.ss= | independent bounded set interpretation |
+| =operator-measurement.ss= | public dynamic interpreter counters |
+
+The facade is 299 lines. A shared union DAG formerly duplicated parameter
+entries once per path, and lowering recomputed validation's free lists.
+Analysis now deduplicates parameters by identity in first traversal order;
+lowering retains the same invocation's analysis record. Binding-dependent
+memoization still uses the actual relation handles for every free parameter.
+Every public call revalidates mutable descriptors. No analysis cache crosses
+calls, and no contract checks or row ownership copies are bypassed.
+
+Tests stay in =t/qualification/= and =t/performance/=. Production counters
+remain public reference/change functionality. Deep sharing, escaped bindings,
+pointer cycles, mutable rows and independent transformation instances are
+semantic controls. The frozen matched compile benchmark and its negative
+14-level result are described in
+[[file:../../t/performance/operator-scope/README.org][operator scope qualification]].
+
+* Study: admitted callback arguments and ordered pattern extension
+
+The installed compiler's =optimize-call.ss:90-131= only substitutes lambda
+arguments after proving equal arity and stable bindings; other operands retain
+explicit lexical bindings. =compile.ss:557-628= separately lowers fixed/rest
+case-lambda dispatch. The transferable rule is to specialize a proved calling
+shape while preserving operand evaluation, rather than assuming that =apply=
+or a shorter source expression will disappear in native code.
+
+=core/rule-bindings.ss= applies this at the admitted rule boundary. Zero,
+one and two input names use direct calls; larger callbacks retain =apply= and
+an ordered argument list. All names are resolved before invoking user code,
+missing-name diagnostics retain their first failing input, and a bound =#f=
+is a value. No user callback becomes an unchecked call or a cached value.
+The evaluator shares this operation for guard, binding and generator clauses;
+expressions use the same core owner. Aggregate input tuples still require
+lists and use its ordered projection helper.
+
+The compiler's =generate-meta-define-values%= (=compile.ss:1446-1469=)
+constructs only its owned output and preserves publication order. Our pattern
+operation combines finite output-name traversal, result arity validation and
+fresh binding construction. It produces two fresh pairs per output rather
+than the old map-plus-append's three, retains output order and the caller's
+original environment tail, and never mutates callback-owned tuples. A cyclic
+or improper callback result is bounded by the admitted output count and still
+raises the original pattern diagnostic. Row and aggregate patterns share it.
+
+Baseline =02d84463482a266c9dcc0196a0d2da0c5b5dfb9f= is frozen in
+=t/performance/rule-bindings/=. Runtime functions are verbatim source extraction (final newline normalized);
+the positive runner and full evaluator differ only in import routing to that
+baseline. All mutable relation/index/result machinery is shared symmetrically.
+=just performance-rule-bindings= compiles both graphs and verifies native
+=.ssi= resolution plus =.o1= presence before sampling. Scenario, library prefix
+and ignored receipt path are explicit command arguments.
+
+Final matched native receipts after integration of remote actor-pool changes:
+50 alternating pairs per scenario (300 total),
+CPU user+system and allocation from =##process-statistics=. Warm-up/initial GC,
+program construction and semantic checks are outside each timed batch;
+natural GC remains inside. Complete scenarios time ten full warm-declaration
+solves per batch, including engine state, traversal, storage and result
+publication. Kernels use 512 calls (argument projection) or 64 (pattern binding).
+
+| Scenario | Baseline CPU us | New CPU us | Baseline bytes | New bytes | CPU wins |
+|----------+-----------------+------------+----------------+-----------+----------|
+| Two-input expression | 0.0313 | 0.0195 | 96.4 | 0.4 | 50/50 |
+| Six-input fallback control | 0.0723 | 0.0781 | 480.4 | 480.4 | 8/50 |
+| 64-output pattern binding | 0.4531 | 0.1875 | 9219.3 | 6147.3 | 50/50 |
+| Complete 128-row / 32-guard pipeline | 239.5 | 191.6 | 631332.8 | 207396.8 | 48/50 |
+| Complete 128-row / 64-output pattern | 169.4 | 125.2 | 1257924.8 | 864708.8 | 47/50 |
+| Complete two-row small control | 3.8 | 3.7 | 14804.8 | 14132.8 | 37/50 |
+
+The large gates were fixed before sampling: at least 10% median CPU and
+allocation reduction and 35/50 wins. Controls admit at most 8 KiB and 20 us
+absolute per-call overhead. Every gate passed. The six-input fallback retained
+allocation and was slightly slower; no universal callback speedup is claimed.
+The two complete gains qualify these callback-heavy and pattern-heavy shapes,
+not arbitrary programs, cold analysis or end-to-end application latency.
+
+Native tests compare argument arities 0 through 6, every missing-input prefix,
+false bindings, detached pattern outputs and retained prior tails, malformed
+and cyclic patterns, complete callback traces, aggregate pattern diagnostics,
+wide full solves and concurrent engine ownership. Independent expected rows
+supplement baseline parity. Receipts and the initial fixture syntax failure
+remain in ignored =.cache/ascent/rule-bindings/=; execution logs are not tracked.
+
+Qualification: the selected native actor pool passed six modules / 53 Cases
+with =test-pool auto= resolving the existing core-capacity setting to 12;
+module execution took 2-4 seconds. This includes 512 finite directed graphs,
+slot-frame concurrency and the original binding, aggregate and index consumers.
+The new six-Case Suite also passed independently. Final edits after that pool
+were documentation contracts and source formatting; the complete final native
+A/B graph compiled and all six gates passed again. Selected production policy
+reported =findings=0 errors=0= after repairing an invalid heterogeneous Vector
+type annotation and documenting the finite pattern loop. No suppression was
+added. The initial 300-pair run also passed and remains in ignored receipts;
+its complete CPU gains were 20.8% and 27.5%, versus final 20.0% and 26.1%.
+
+* Exact Gerbil source
+
+The active Homebrew executable is =/opt/homebrew/bin/gerbil=, linked to
+=/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/=.
+Its source root is =2591dcd/src/= under that directory. The tool reports
+=Gerbil 2591dcd on Gambit dcd677c=. The installed release receipt pins
+upstream revision =2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb= and
+patchset =f5cedd8168cb365ba41289327601d9305738c9a0=. Findings
+below refer to this installed source rather than a newer upstream API.
+
+- =gerbil/compiler/optimize.ss:27=: =optimize!= parameterizes pass-local
+  mutation and type tables before loading dependencies and optimizing
+  module code. This is a useful ownership model for keeping our
+  declaration analysis separate from evaluator state.
+- =gerbil/compiler/optimize-xform.ss:16=: =defcompile-method= dispatches
+  explicitly on syntax forms. It is a model for making supported DSL
+  forms visible, but does not justify introducing a generic pass
+  framework into this repository.
+- =gerbil/compiler/compile.ss= and =optimize-call.ss:50=: direct calls are
+  optimized according to resolved procedure information; the call
+  optimizer may emit unchecked calls for known procedures and handles
+  lambda inlining only under binding/side-effect conditions. A shorter
+  source expression is not by itself evidence of faster generated code.
+- =gerbil/core/match.ss= and =more-syntax-sugar.ss=: available match and
+  hygienic syntax mechanisms. Use them where they express a grammar or
+  variant more clearly without changing expansion-time diagnostics.
+- =std/list/list.ss:9,24,259=: =append-map=, =delete-duplicates/hash=,
+  =butlast=, =group-same=, and length predicates are available.
+  =butlast= returns an empty list for empty input, so
+  =gerbil-ascent-lattice-key= checks the nonempty row contract first.
+- =std/iter/macros.ss:34,289= and =api.ss=: =for= and =for/fold= exist in this
+  version. Their iteration order and temporary allocations need a
+  concrete local use case before replacing a named loop.
+- =std/hash/misc.ss:261=: =hash-ensure-modify!= first ensures a default
+  entry and then modifies it. For an empty-list default,
+  =gerbil/runtime/hash.ss:580= also exposes =hash-update!=, which avoids
+  a separate default thunk. It was tried locally and then reverted;
+  a simpler expression alone was not enough reason to replace the
+  established implementation.
+
+Two direct =gxi= checks on this toolchain returned =(8 7)= after
+updating the same hash key with values 7 and 8 using
+=hash-update!=, and raised a pair-expected error for =(last '())=.
+They confirm the small operations, not the whole evaluator.
+
+* Feature: checked scalar calling conventions
+
+=gerbil/compiler/optimize-call.ss:43= resolves procedure information before
+optimizing an application; its treatment of known procedures and lambda calls
+depends on actual bindings and effects. The transferable lesson is to check
+generated calls and measured behavior instead of assuming a source form creates
+the desired calling convention.
+
+The checked language supports unary =even?= and =identity=, and binary =<=
+and =+=. Their operand descriptors are validated at construction and rebuilt
+at admission. The old callback interpreted those descriptors again on every
+row, assembled a reversed argument list and invoked =apply=.
+=program/scheme-checked.ss= now specializes the six variable/literal calling
+conventions at construction. A small hygienic =checked-call= rule expands the
+runtime parameter check into a short list match and calls the already checked
+operator directly. Numeric validation still executes at row time, including
+literal-only operators. The original argument-mismatch error is retained.
+
+An initial =case-lambda= variant was rejected. With its variadic error fallback,
+this installed toolchain generated a rest-argument lambda, a length check and
+=apply=. In the complete paired run it won only 797, 730 and 546 of 1000 pairs
+for right-literal, left-literal and unary-literal inputs. These failed the
+unchanged 900-win admission criterion. The explicit-match variant generates
+pair/null checks followed by the operator call in its successful path.
+
+The native =t/performance/ascent-checked-call-performance-test.ss= freezes the
+old calling convention from =a97762d=. Both implementations are natively
+compiled; each shape uses 1000 alternating old/new pairs of 256 calls, identical
+inputs and type checks, with GC outside timed samples. All six shapes must win
+at least 900 pairs and retain median nonregression. This is a calling-kernel
+benchmark: construction, admission, environment lookup and full solves are
+excluded. It does not measure individual-call tail latency.
+
+#+begin_src sh
+just test-file t/qualification/scheme-relational-test.ss
+just test-file t/performance/ascent-checked-call-performance-test.ss
+#+end_src
+
+The semantic module adds checks for all binary operand shapes, immutable scalar
+identity values including =#f=, incorrect parameter counts and deferred numeric
+errors. Existing admission, descriptor-tampering, captured-value and retained
+session Cases continue to cover the whole checked-language boundary.
+
+Two local native paired runs qualify every shape. Strict wins in source order
+(binary variables, right literal, left literal, both literals, unary variable,
+unary literal) are =995/996/998/1000/998/998= in the first run and
+=997/992/999/999/998/998= in the repeat. Batch medians decrease by 50--63 percent
+in these runs. This is bounded calling-kernel evidence, not a complete-solve
+speedup claim. Raw measurements remain in ignored =.cache/ascent/=.
+
+Local qualification with the pinned cache SDK and =GERBIL_BUILD_CORES=12=
+also passes standard build, the final 42-module policy check (findings=0,
+errors=0), all 50 semantic modules and 400 Cases, and all 17 original SS
+performance scenarios. Each command exits 0. Original SS sample counts,
+thresholds, module deadlines and Case budgets are unchanged. The paired kernel
+Case is an additional explicit native test-file command, not a replacement for
+those gates. Remote CI remains separate evidence.
+
+* Feature: syntax boundaries
+
+=program/syntax.ss= and =program/scheme-language.ss= both lower atoms,
+negation, and reducers. Their generated objects and error paths must
+be compared production by production before sharing code. Keep
+lexical fragment handles hygienic, preserve source locations and
+diagnostics, and never broaden the public checked scalar grammar
+to accept arbitrary callbacks. An extra macro that hides one runtime
+call would make the layer harder to read.
+
+The current =relational-atom= and =relational-atom/lexical= expansions
+look alike but quote a relation spelling versus evaluate a lexical
+handle. That difference is the ownership boundary, so a common
+expander would need to keep it visible. =relational-copy-row= and the
+operator project constructor use =map identity= to copy list spines
+before retention; these are intentional copies, not redundant maps.
+The contract in =docs/native-library-acceptance.org= also keeps the
+historical =ascent= syntax on the test path, so deleting or folding it
+into the native language would be a separate interface change.
+The same snapshot-copy pattern appears in =candidate/reasoning.ss= and
+=program/scheme-admission.ss=. Its presence across those boundaries
+is evidence of an isolation rule, not a reason for a blanket rewrite.
+
+* Study: compiler phase contracts and higher-order normalization
+
+This study reads the installed Gerbil compiler Scheme directly, rather than
+inferring quality from an optimization result. Three concrete structures matter:
+
+- =compiler/optimize-top.ss:21-86= declares separate visitors for top-level
+  types, declarations, expression types, complete type collection and mutators.
+  The operation determines the visitor, while the AST representation stays
+  shared. ASCENT already separates descriptor validation from lowering inside
+  =relational-typed-compile=; the appropriate improvement is to state their
+  different obligations, rather than introduce another visitor framework.
+- =compiler/optimize-base.ss:15-29,492-503= names optimizer, local and path
+  contexts separately. Type lookup searches path facts, then local facts, then
+  the optimizer table; alias resolution delegates to this lookup. The mutable
+  optimizer tables are fresh in the optimizer-info constructor. ASCENT's
+  compile counters, source tables and domain accumulator likewise belong to
+  one invocation. Reified closure environments use descriptor identity and
+  lexical bindings; source-name equality cannot replace that relation.
+- =compiler/optimize-top.ss:182-194,213-268= still visits an expression when its
+  binding type is already known. Lambda and let handling establish the local
+  environment around the body traversal. Known metadata therefore does not
+  authorize skipping traversal or changing scope. In ASCENT, validation,
+  lowering visits and conservative finite-height expansion keep their original
+  budget charges even when source lowering reuses an existing source node.
+
+The complete =program/higher-order.ss= owner now carries adjacent polymorphic
+and domain signatures for all 21 definitions, including its three representation
+constructors. Comments state the distinct relation/arrow field meanings, source
+spine ownership, builder-once construction, identity-based lexical bindings and
+full graph validation before lowering. These signatures describe runtime checked
+contracts; they do not install a static type checker or change function bodies.
+Removing comment lines from the module yields exactly the previous source bytes.
+
+Two independent native regression Cases specify domain publication order across
+three successive compiles and the existing flatmap normalization budget boundary:
+limit five rejects and limit six accepts. They include false and character atoms
+and retain all previous closure, domain, native Session and rollback tests.
+
+A separate candidate replaced repeated accumulated-domain copy/deduplication
+with an invocation-owned table of each atom's latest position and representative,
+then sorted only at publication. Inspecting =std/list/list.ss:21-30= was necessary:
+=delete-duplicates/hash= keeps the latest occurrence by default, so first-seen
+insertion order would silently change observable domain declarations. The candidate
+passes all 17 native higher-order Cases, including the new order and budget goldens.
+
+The frozen native reference is =bf7b75e=. Whole =relational-typed-compile= calls
+are timed; descriptors are constructed outside timing, and published finite
+domains and source-handle count are checked afterwards. The intended fixtures
+use domain widths/depths 2/0, 2/16, 128/16 and 512/32, each with 1000 alternating
+pairs and explicit GC every 20 pairs outside timing. Both normalizers resolve to
+native =.ssi= files. The completed 2/0 control has median old/new 1126/1134
+jiffies, 445 strict wins and p95 57595/155971. Wall-clock tails vary substantially;
+no causal CPU or allocation conclusion is drawn from them. The 2/16 fixture reaches
+100 pairs before the unchanged 180-second deadline, and the invocation exits 124.
+The remaining fixtures are not measured. No sample count or deadline is relaxed.
+This evidence does not justify the extra collector and sorting machinery; the
+candidate is removed completely. Production execution remains unchanged.
+All candidate source, build output and raw diagnostics remain in ignored
+=.cache/ascent/domain-collection/=. The committed work is module-wide contract
+clarification, independently specified regression tests and this compiler study.
+
+After removing the candidate, all 17 higher-order Cases pass again with native,
+module/harness/final success markers and exit 0. The final selected library policy
+audit has =findings=0=, =errors=0= and exit 0, closing the earlier higher-order
+contract warning. Parser-owned diagnostics identified signature prose being
+concatenated into contracts and a malformed multiline optional-arity declaration.
+Explanations now precede complete signatures; the normalization signature states
+its full parameter list, with the default expansion limit explained separately.
+The representation contracts retain explicit type-variable relationships rather
+than =Any= placeholders. Final comment-stripped source still matches =bf7b75e=.
+No full-suite or application performance result is claimed for this study.
+
+* Study: operator traversal and local rule emission
+
+The installed Gerbil compiler's =optimize-top.ss:244-291= uses named local
+=collect-e= procedures inside =collect-type-let-values%= and
+=collect-type-letrec-values%=. The local procedure handles one binding's type;
+the enclosing procedure owns traversal order and the dynamic local environment.
+Ordinary let expressions are compiled before the body environment is installed.
+Recursive bindings are compiled inside their environment, in two explicit
+passes. The useful lesson is to keep scope and ordering visible in the driver
+while moving a separate responsibility into a small local procedure.
+
+=program/operator.ss= now applies this structure to =lower-operator-graph=.
+Named local definitions replace the manual letrec/lambda binding list.
+=emit= owns graph traversal, active lexical bindings, closed-node memoization,
+fixed-point placeholders and projected-join fusion. =emit-operation-rules!=
+receives already lowered inputs and owns ordinary union, join, selection,
+projection and finite mapping rule emission. Both close over one compilation's
+relation/rule/source accumulators; no public interface or shared context is
+added. The public compilation contract is adjacent to its actual definition.
+
+Free-parameter validation still precedes memo lookup. Fixed-point relations
+are allocated before their bodies, transformer input graphs are emitted before
+their bound bodies, and ordinary inputs are lowered before their output and
+private sources are allocated. The operation clauses and scope traversal match
+the preceding revision after whitespace normalization. Rule construction,
+gensym order, final publication reversal and budget enforcement are preserved.
+
+A native Unit Test exercises a shared selection/project/flatmap pipeline consumed
+by nested unions. It checks that private sources are emitted once, explicit
+sources retain traversal order, union rules retain both shared consumers in
+order, and solved rows agree with the independent descriptor interpreter.
+Existing lexical-escape, fixed-point, projected-join, nullary and fragment tests
+remain semantic gates. This is a responsibility refactor; no speedup is claimed.
+
+Before integrating concurrent test-support commits, the complete native
+=just test= invocation exits 0: 57 modules and 491 Cases pass. All 57 module
+logs contain native, module, harness and final success markers, with no Case
+errors. The original 12-worker scheduling, module deadlines and Case budgets
+remain unchanged. Logs stay in ignored =.cache/ascent/operator-lowering/=.
+
+After normal rebase onto concurrent test-support and proof updates, native
+operator, model-closure, artifact-publication and higher-order modules pass,
+with 20, 27, 6 and 18 Cases respectively, including the newly added exhaustive
+lexical closure capture regression. All four have
+complete native/module/harness/final markers and no Case errors. These are
+focused integration checks; the 57-module full-suite result above precedes
+that integration. The selected production-source policy audit exits 0 with
+=findings=0= and =errors=0=; concurrent commits do not change these production
+modules. No AOT application or remote CI qualification is inferred.
+
+* Study: one finite type algebra for symbolic and bounded arithmetic
+
+Gerbil's installed =optimize-xform.ss:17-48= reuses traversal handlers such as
+=apply-body-lambda%=, =apply-body-let-values%= and =apply-operands= across
+expression operations. The mutation collector specializes assignment handling;
+expression substitution supplies reference and assignment handlers on the basic
+transform traversal. The shared structural walk has one owner, while each
+operation supplies its interpretation and state.
+
+ASCENT's higher-order compiler had separate symbolic and bounded implementations
+of finite type cardinality and height. Both described relation powersets and
+pointwise arrow lattices. =type-cardinality= and =type-height= now own those
+structural recursions once. The symbolic height API supplies constructors for
+=expt= and =*= expressions; bounded fixed-point lowering supplies its existing
+saturating power and product operations. These procedures remain private to the
+module that owns the finite type representation.
+
+Relation height remains =domain-size^arity=, relation cardinality remains two
+to that height, arrow cardinality remains output cardinality raised to input
+cardinality, and arrow height remains input cardinality times output height.
+The bounded interpreter retains the expansion-limit-plus-one cap and repeated
+squaring; it does not allocate complete powersets or function spaces. Validation,
+domain accumulation, lexical environments and normalization visit accounting
+are unchanged. No memoization or sample-based termination is introduced.
+
+Native Unit Tests extend the exact symbolic-expression golden to nested arrow
+types. They also solve function fixed points over empty domains at arities zero
+and one, and require the precise height-budget rejection for an arity-128
+two-atom relation. Existing finite-seed closure, recursive function and exact
+normalization-budget checks remain regression gates. This change consolidates
+the mathematical ownership; it makes no performance claim.
+
+Focused native =just test-file= qualification passes the higher-order module's
+20 Cases and model-closure module's 27 Cases. Both invocations exit 0 and have
+complete native/module/harness/final markers, with no Case errors. The selected
+production-source policy audit exits 0 with =findings=0= and =errors=0=.
+Original expansion limits, Case budgets, process deadlines and worker capacity
+are preserved. Logs stay in ignored =.cache/ascent/type-height-algebra/=.
+This is focused local semantic qualification; no new full-suite, performance,
+AOT application or remote CI result is asserted.
+
+* Study: pass-owned symbol maps and whole-cut graph preflight
+
+The installed compiler's =compile.ss:1113-1127= collects runtime imports using
+a local =make-hash-table-eq= and a small =K= continuation. Each context identity
+is handled once before adding its load path. =optimize-spec.ss:121-130= similarly
+allocates method-call and slot-reference tables for one specialization target.
+Collection state has one enclosing owner; the helper handles one identifier.
+
+The installed Gerbil =2591dcd= compiler provides two concrete state lifetimes:
+=optimize-base.ss:24-29= constructs the optimizer's symbol-identity tables,
+while =optimize.ss:27-30= creates fresh mutator/local-type maps at the optimizer
+entry point. Shared optimizer information and per-pass traversal state have
+separate owners. The transferable technique is to choose the map's equality
+from the identifier protocol, and allocate mutable traversal state at its call
+boundary rather than retaining it in source declarations.
+
+ASCENT's temporal solve previously checked every parent edge by recomputing
+reachability from its target. Each reachable level scanned the complete edge
+list and performed list-membership checks. Cycle rejection is a property of
+the whole cut, so the repeated closures did unnecessary work even when the
+root or valid-time window excluded those events.
+
+=temporal/graph.ss= now owns the symbolic-to-dense graph adapter. Its fresh
+=make-hash-table-eq= preserves the existing =memq= symbol identity. Both endpoints
+are interned, including parents without event data. The adapter rejects self
+edges and detects larger cycles via =core/dependency-graph='s SCC traversal.
+After indexing, the graph pass is linear in vertices and edges; expected hash
+lookup cost governs indexing. Source edge lists remain immutable.
+
+=temporal/lens.ss= retains cut selection, time/order checks, rejection priority,
+horizon/frontier publication and evidence binding. The cycle check still runs
+on the entire selected cut before window/root filtering. It does not consult
+the candidate oracle, reuse a receipt, or cache across generations. No measured
+end-to-end speedup follows solely from the traversal change.
+
+Native tests compare all 512 directed three-vertex graphs, including self edges,
+against an independent Boolean matrix closure, repeat with reversed edge order,
+and check long graphs at the 512-parent-edge bound and isolated missing-parent
+cycles. Lens integration covers disconnected/out-of-window cycles, absent event
+data, self loops and preservation of a previously verified answer. Current
+verification results belong in [[file:qualification-history.org][qualification history]].
+
+* Canonical roots and SCC commit ownership
+
+Gerbil's runtime separates a table's iterator from its materialized entry
+list (=runtime/hash.ss:590-603=). In =table/trrel-uf.ss= that lesson exposed a
+larger ownership issue: SCC commit reconstructed every reach table even though
+keys were already canonical component roots. Complete transitive closure makes
+the winner's outgoing table contain every external successor of every absorbed
+root. Preserve that owned table and remove only absorbed keys, using a stable
+root list rather than mutating an iterated hash table.
+
+Recognize structural admission before writing temporary state. If all roots in
+the group enter one SCC, all newly implied component arcs are internal and
+would immediately disappear. Concrete rectangles and budget admission still
+happen in their original order; those temporary hash writes can be omitted.
+The resulting winner releases its obsolete reach array. Partial merges retain
+external keys and preserve existing frontier/member order and winner ties.
+
+=t/performance/uf-commit/= qualifies the complete closing-edge transaction and
+a construction lifecycle control through public ASP benchmarks. Its frozen
+provider is byte-identical to =08c9c7e=. Independent small-graph closure plus
+budget rejection/retry and successive SCC traces check the representation
+invariant. Failed direct-iteration and redundant-union experiments remain in
+ignored cache receipts; neither CPU thresholds nor output semantics are relaxed.
+
+Unrelated components should not inherit cycle-size work. The commit first tests
+whether a surviving root reaches the winner; disconnected roots need no key
+removal. A 64-node SCC with 384 unrelated singleton components qualifies this
+case separately, without changing the original scenario gates.
+
+* Collect temporal facts once and preserve traversal witnesses
+
+Gerbil =compiler/optimize.ss:28-29,164+= scopes mutation/local-type tables to
+one compile invocation and collects facts before applying transformations.
+=optimize-xform.ss:108-113= records binding identity; =optimize-top.ss:17-19=
+queries that table in later passes. Reuse the admitted representation with
+an explicit lifetime.
+
+=temporal/lens.ss= now owns one private node index per detached solve. Records
+hold the first event, cut/window eligibility and traversal state. Sorted lists
+still control validation and diagnostic order. A source-ordered adjacency
+index replaces the repeated all-edge BFS scan. Multi-parent layers select
+minimum original incoming-edge ordinal, then emit reverse ordinal order;
+single-parent layers directly retain reverse first-discovery order. This
+structural admission removes temporary sorting without changing horizon
+witnesses. Records stay private to the call; source coordinates, snapshot
+binding, proof production and replay verification remain unchanged.
+
+=t/performance/temporal-projection/= compares complete native solve calls
+through public ASP benchmarks against byte-identical =068b147= source. Chain,
+fan, complete and empty-window cases use fixed paired CPU/allocation gates.
+Failed depth-scan, adjacency-allocation and rank-sorting experiments remain in
+ignored cache. Independent shortest-distance checks and converging-parent
+frontier tests qualify both ordering and invocation isolation.
+
+Runtime interface internals alone did not establish a performance improvement:
+a one-time =HashTable= cast left native allocation unchanged and failed the
+fan gate. That hypothesis was withdrawn. Checked record access and ordinary
+hash API calls remain. A zero horizon admits a more direct transformation:
+only one root layer can be observed, so one source-ordered pass computes its
+frontier without constructing adjacency. Positive horizons retain the indexed
+traversal and ordered witnesses. Measurements qualify the compiled result.
+
+Fixed private facts benefit from an explicit representation boundary. Generic
+per-edge class descriptors failed allocation qualification and were withdrawn.
+Parent rows retain their existing layout. The private node uses a fixed vector
+with named field macros, so slot positions stay out of consumers. Pure window
+facts are reused only after the whole event-time projection and window have
+been admitted as canonical inert data. Exact point bounds then use direct
+comparisons; supplied callbacks retain their original repeated evaluation.
+Native mutation-order tests qualify that fallback, and source policy has zero
+findings/errors after the field ownership comments are added.
+
+* Prepare absence verification per invocation
+
+Gerbil's mutator analysis owns symbol identity lookup in =optimize!= and
+separates collection from repeated transformation. Lambda substitution in
+=optimize-call.ss= is admitted by arity/immutability checks before eliminating
+work. Apply these principles to finite absence verification:
+
+- Group admitted proof rows once while retaining ordered external declarations.
+- Build an independent verifier index after certificate admission; preserve
+  ordered row enumeration for exact budget accounting.
+- Classify inspected static terms once per reached rule and reuse the pure
+  core row binder, without inventing a fresh-variable assumption.
+- Eliminate a terminal membership check only when an exactly identical positive
+  body atom witnesses the head. Continue traversing and charging every instance.
+
+The relation index alone and subsequent static term lowering failed the fixed
+native performance gates; the retained experiments and complete qualification
+scope are in =t/performance/nonmembership-index/README.org=. Do not infer
+whole-solver or producer performance from a verifier benchmark.
+
+* Separate typed-domain analysis from expression lowering
+
+Gerbil =optimize-source= collects static facts before transformation, and its
+known-call optimizer uses arity, type and lexical scope as admission guards.
+In =program/higher-order.ss=, type-domain comparison now first checks ordered
+equality, then uses an invocation-owned membership table only for permuted
+domains. Mapping validation consumes owned row segments without creating
+intermediate projections. The compiler collects frozen domain chunks and
+normalizes the aggregate once after graph admission and budget charging.
+
+Gerbil =std/list/list.ss:24-30= keeps last duplicate occurrences by default.
+The aggregate's published domain order therefore requires original visitation
+order plus the existing final normalization; a first-occurrence set is not an
+equivalent replacement. Mutable public types also prohibit persistent indexes.
+Native compiler measurements and semantic controls are documented separately
+in =t/performance/typed-domain/README.org=.
+
+Typed lowering also supplies its final finite-domain relation constructor
+to operator emission after graph admission. This avoids constructing a
+temporary ordinary Program and rebuilding every relation a second time.
+The ordinary four-argument compiler and fragment calls keep their default
+representation; the constructor callback is never retained in the runtime IR.
+
+* Keep ordered proof execution separate from lookup metadata
+
+Gerbil's known-call optimizer preserves ordered operand bindings when eliminating
+lambda application. Its =std/list/list-builder.ss= uses an explicitly owned
+head/tail spine to avoid repeated append copying. Apply both ideas to positive
+proof replay: committed relation queues determine grounding order and first
+witnesses; structural membership tables answer only existence. Round-local
+pending tables never become grounding inputs. Queue mutation occurs after a
+round finishes, and published proof lists do not expose that queue spine.
+
+Independent verification prepares its own occurrence vectors and label/fact
+lookup from admitted source and program data. Source duplicates preserve their
+original positions and repeated labels preserve first-match semantics. Shape
+specialization matters: eager tables failed the small allocation gate, so empty
+and singleton lookups stay direct and pending tables are lazy. Complete native
+producer-plus-verifier comparisons and boundary qualification are documented in
+=t/performance/proof-replay/README.org=; these results do not establish solver
+or actor throughput gains.
+
+* Treat expression representation and effects as separate analyses
+
+Gerbil =optimize-call.ss= admits known calls separately from
+=expression-no-side-effects?=, which requires explicit effect information.
+Its lambda substitution also checks mutable bindings and preserves ordered
+operand evaluation. These are separate obligations for our expression plans.
+
+Admitted callback input names now become lexical frame reads, and contiguous
+guard/binding clauses become one ordered continuation segment. Structural recursion with =values=
+separates those segments at atom boundaries; frame state remains engine-owned.
+Index and head expressions still execute at every original call point. The
+plan carries an independent purity flag, which survives head projection and
+controls both actor and SCC admission. Callback results are never memoized.
+
+The complete implementation crosses Core lowering, serial execution, update
+selection and worker admission. Native qualification is documented in
+=t/performance/expression-plan/README.org=. Short scopes failed the original
+20% CPU improvement gate despite allocation reductions; long-scope measurements
+must be reported with that boundary. Prepared tuple matchers/builders were
+withdrawn after failing to establish the intended CPU gain.
+
+Full qualification also covers Actor Session creation, whose admission predicate
+must inspect purity independently of plan availability. It found a separate
+compiler-lifetime boundary: generating the combined test entry after library
+make can retain both phases' contexts. A fresh Scheme compiler process now owns
+entry lowering/linking under the same heap cap, with source-digest admission and
+streamed compiler output. Complete local qualification passed 82 modules/708
+Cases at two-process concurrency. Automatic 12-process combined-entry startup
+still failed the retained progress watchdog; that boundary is recorded separately.
+
+Public callback data adds a second admission boundary: expression payloads and
+borrowed input-name lists can change during execution. A prepared call checks
+its current procedure and tuple before using lexical slots. Changed metadata
+uses the original binding protocol, with the scope visible at that call point.
+Index lookup precedes row matching and therefore needs its own prior-atom scope.
+This applies Gerbil's mutable-binding check to our runtime representation;
+compilation never turns mutable callback metadata into a frozen constant.
+
+The final guarded expression path passed the complete local native pool:
+82 modules and 713 Cases, with explicit success markers and exit 0. Its long
+binding scopes improve CPU and allocation; short scopes still fail the original
+20% CPU gate. GitHub c3bc505 failed during cold library-make under its retained
+heap cap, before Cases, so remote qualification remains independent and open.
+
+* PO compilation behavior and retained factories（2026-10-06）
+
+The pinned LeanPoo =ContextualFactories=, =ObjectDefinition= and
+=MethodDictionary= examples share a useful sequence: compose declarations,
+select behavior using final self, retain the selected functions, then apply
+them to an exact input/context. =program/operator.ss= now follows this path
+in the existing operator compiler. =relational-op-compiler= is a validated PO
+prototype with =.make-relation= and =.compile= slots. The inherited compile
+slot resolves its final receiver's relation constructor once; each call still
+owns its checked graph, lexical handles and emission tables.
+
+=program/higher-order.ss= derives this compiler and overrides only
+=.make-relation= to emit finite-domain source declarations. It inherits the
+same admitted lowering and program budgets. Its source-domain context remains
+local to that typed compilation. =program/interface.ss= exports the prototype
+and contract alongside the existing function. The optional final argument of
+=relational-op-compile= accepts a derived compiler; the original constructor
+procedure API is adapted to the same prototype.
+
+#+begin_src scheme
+(def finite-compiler
+  (.o (:: @ relational-op-compiler)
+      (.make-relation
+       (lambda (name arity rows)
+         (relational-finite-source name arity rows
+                                  (make-list arity '(0 1 2)))))))
+(relational-op-compile graph 32 128 256 finite-compiler)
+#+end_src
+
+This introduces a composable behavior owner in the actual compilation path.
+It does not turn recursive descriptors into lazy self-reads: the existing
+least-closure engine and its admission/termination contracts remain the
+relation semantics. Storage/index providers already use this split between
+shared behavior prototypes and private evaluation state.
+
+** Functional pipeline and subsequent integration boundary
+
+Read the pinned producer's capability-family, preparation-cache,
+indexed-transaction, certified-consumer, context-cache, borrowed-view and
+observed-view contracts as one lifecycle:
+
+1. =Requirements.prepare= / named =factoryAt= choose only declared
+   capabilities. =reindex= binds retained functions to the current source
+   context. FunctionalDependency already uses this source-context contract;
+   the PO compiler now supplies the native behavior-selection counterpart.
+2. =CachedPreparation= retains selected functions and admission proofs/errors.
+   =applyTransactionCached= distinguishes a reusable certificate from freshly
+   prepared data while publishing the entire successful registry transaction.
+   ASCENT's existing Session commits full source updates only after a complete
+   solve. A future typed registry adapter must preserve that same boundary,
+   including unknown-name failures and all-or-nothing publication.
+3. =ContextSlot= retains built data at one exact context. Any ASCENT context
+   must include the admitted source cut and behavior version needed by its
+   claim. A source name or stable graph identity alone cannot justify a hit.
+4. =readView= keeps a broad cache across consumers; =observeProject= retains
+   one narrow public view. ASCENT query/proof readers could share admitted
+   dependency data before projecting requested outputs. The missing bridge is
+   a typed mapping from native snapshots and observations to those certified
+   families, with explicit analytic consequences. This bridge is not part of
+   the present implementation.
+
+These steps distinguish preparation, data construction, publication and public
+observation. They do not infer dependencies from opaque callbacks, grant a
+C4 object a relational fixed point, or establish runtime savings. The current
+code implements the behavior-composition step and uses the existing source
+context refinement; later cache stages need source-bound native qualification
+before adoption. No additional generic proof wrapper is introduced.
+
+** Native qualification
+
+The [[file:../evidence/scheme-po-compiler-20261006/receipt.json][source-bound receipt]] records exit 0 for all 28 operator Cases and
+33 typed higher-order Cases, with MODULE-OK, HARNESS-OK and final OK for both
+modules. The new discriminators cover final-self construction after forcing
+the base method, shared-base C4 selection, independent earlier receivers,
+constructor procedure compatibility, invalid capability rejection and
+budget preflight on a retained method. The complete existing suites qualify
+ordinary graph closure and typed finite-domain behavior through these paths.
+Original harness heap/progress/deadline controls remain in force. These are
+focused local native checks; submitted-head CI is a separate gate.
+
+* Share lexical scope metadata at its consumers
+
+Gerbil =compiler/optimize-call.ss:105-129= prepends lexical substitutions and
+ordered bindings instead of materializing a complete environment per operand.
+Its dispatch specialization at =633-648= also requires the dispatch identity to
+remain in the local scope. =optimize-spec.ss:406-435= collects object references
+only after checking the receiver's lexical identity. These patterns preserve
+identity and execution order before specializing representation.
+
+Our positive-rule compiler previously copied its entire slot map for each
+callback and atom-key scope. A long binding chain therefore built quadratically
+many metadata pairs even though adjacent scopes differ by one binding. Scope
+metadata now materializes once at the first callback consumer. Subsequent
+bindings prepend private pairs and retain immutable tails. Old callbacks keep
+their old scope; a shadowing binding acquires a new slot; index-key expressions
+capture the scope before row terms bind. Pure rules never materialize a scope.
+The slot hash still serves compile-time reads; the persistent chain serves
+runtime fallback after public callback metadata changes. Neither representation
+is a substitute for the existing effect and input-mutation guards.
+
+Native public ASP comparisons against the complete positive-plan source at
+=91d42d4= measure fresh whole-rule lowering, then execute both returned plans
+against independent arithmetic outside timing. They establish compilation CPU
+and allocation gains, not cold engine or solve speed. Long scopes, small calls
+and a 256-column pure rule have separate fixed gates. Evidence and retained
+negative results are in =t/performance/expression-plan/README.org=.
+
+* Prepare guarded column projections before trie insertion
+
+Gerbil =compiler/optimize.ss:163-185= collects mutation and type facts before
+transforming applications. =optimize-call.ss:283-295= separately admits effect
+information: its side-effect predicate accepts only proved pure/allocation
+calls whose operands also qualify. Representation specialization therefore
+needs both stable facts and an explicit effect boundary.
+
+The shared physical index applies this pattern to admitted row fields. Column
+metadata is prepared once into forward cursor steps and physical destination
+slots. A detached vector guards the complete borrowed column sequence before
+each nonempty extension. The index owns its reusable scratch frame; each row
+is gathered afresh and inserted in the original trie permutation. Query keys,
+expression callbacks, insertion ordinals and published result spines keep their
+existing owners and order. Compiled metadata is reusable; row values are not.
+
+Private column ordering uses standard =list-sort!= on newly allocated pairs.
+Tail builders avoid additional construction continuations. Empty batches do
+not allocate a projection. Native build/extend/lookup comparisons against the
+complete frozen source retain negative experiments and small controls in
+=t/performance/index-sharing/README.org=. The measured CPU improvement applies
+to that physical lifecycle, with a bounded metadata allocation increase.
+
+* Specialize invocation after stable call admission
+
+Gerbil =compiler/optimize-call.ss:85-129= checks argument shape and mutable
+bindings before inline rewriting. Its =!lambda= method at =632-650= validates
+arity and the local dispatch identity before introducing a direct call.
+Our positive-plan compiler similarly guards current callback identity and
+borrowed input metadata before using a prepared frame call. The shared factory
+now extends explicit ordered reads to three/four arguments; higher arities
+retain general =apply=. Metadata above two inputs uses a detached vector and
+an elementwise shape check. Neither path caches callback results or shares a
+mutable argument buffer across reentrant calls.
+
+Matched native stable-call measurements and controls are documented in
+=t/performance/callback-plan/README.org=. An attempted tail-builder rewrite
+increased long-plan compilation CPU and allocation and was withdrawn. The
+lesson is to expose proven call facts while measuring the complete chosen
+boundary; a tail-shaped expression alone is not a performance improvement.
+
+* Fuse admitted projection with ordered key construction
+
+Installed Gerbil =1cfb032= =compiler/optimize.ss:163-187= collects shape/type and
+mutation facts before transformation. Its constructor lowering in
+=optimize-call.ss:450-470= records admitted field offsets and constructs ordered
+writes directly. Our atom compiler applies the same separation: calculate the
+immutable width once within admission, then map selected source/slot pairs
+directly into key actions. The private mapper eliminates two temporary selected
+lists and the full-reverse special case. Repeated/arbitrary columns use local
+vectors; increasing columns advance ordered cursors. It neither executes nor
+caches callbacks and leaves the existing prior-scope/payload fallback intact.
+
+Projection factories and separate paired projections failed the fixed sparse
+allocation gate and were withdrawn. The final fused path passes matched native
+whole-rule compilation gates and ordered key/row truth; evidence and scope
+limits are recorded in =t/performance/atom-projection/README.org=. Preparation
+reuse is useful only when the complete chosen path improves under measurement.
+
+* Express private traversal invariants in records and local types
+
+Gerbil =1cfb032= uses =match= / =ast-case= for expression shape and
+=using (klass :- !class)= in =compiler/optimize-call.ss:259= after establishing
+the optimizer's class value. Apply that expression-level discipline to owned
+state: =core/dependency-graph.ss= replaces positional pair frames with a final
+private =graph-frame=, then uses =using= for fields whose constructor provenance
+is known. No caller value becomes a frame. Public adjacency access remains
+checked, and deep DFS still runs through a tail loop over explicit frames.
+
+Separate local =advance=, =finish= and =leave= operations express edge traversal,
+SCC completion and parent return. The loop selects its next frame instead of
+nesting all three operations. One discovery table expresses unseen/active/done,
+avoiding a second boolean table describing the same state. Reachability closes
+through one local enqueue operation that marks before scheduling.
+
+Abstraction must also survive native measurement. Direct nested matches and
+untyped record accesses failed the fixed allocation/CPU gates. The final private
+type-directed record passes all six SCC scenarios, with exact output, immutable
+edges and closure controls. =t/performance/dependency-graph/README.org= records
+negative experiments and the cross-edge CPU regression along with the gains.
+
+* Model construction and publication as one compiler receiver flow
+
+A compilation protocol should carry its extensible construction behavior across
+publication paths. =program/operator.ss= now declares relation, rule, program
+and fragment constructors in one POO contract, with generic program/fragment
+publication through inherited methods. Constructors resolve from final =self=
+once. =program/operator-lowering.ss= owns admitted graph algorithms and fresh
+lexical terms; traversals use the selected procedures rather than repeatedly
+performing prototype dispatch. Fragment publication follows the same receiver.
+
+This follows Gerbil =1cfb032= =compiler/optimize-call.ss:390-440=: constructor
+implementation comes from class metadata before expression emission, with method
+lookup retained for open behavior. It also applies the expression discipline of
+constructing a lexical value once and reusing it: operator atoms share immutable
+POO variable terms, and projections select those terms without rebuilding them.
+The public object protocol, pure graph algorithms and private variable scope
+remain separate owners. =t/performance/operator-flow/README.org= records full
+compiler A/B, independent semantic controls and rejected measurements.
+
+* Separate source admission from persistent atomic publication
+
+Gerbil =1cfb032= =compiler/method.ss= delays shared method registration through
+=delay-atomic=. =core/sugar.ss:1012= expresses that contract as a macro;
+=runtime/control.ss:15= owns mutex protection and unwind-safe release. Apply
+the contract where multiple readers need one immutable result rather than
+recreating thread synchronization in the consumer.
+
+Actor source transactions in =program/source-cut.ss= use private final
+=source-change= records for borrowed admission inputs and =source-slot= records
+for detached owned state. Validate and budget the entire transaction before
+copying rows. Successful appends extend the existing reversed =source-log=;
+ordered header publication is atomic and deferred until observation. A promise
+captures its base and addition roots, never a preceding cut or its cached
+publication. Replacement resets the log and empty append retains its slot.
+This keeps snapshot ownership, historical sharing and concurrency in one flow.
+
+Defer only work whose contract permits it: caller rows are detached before the
+update returns, while ordered header materialization may wait. Preserved cuts,
+duplicate rows, false values and eight simultaneous readers are qualified in
+unit tests. Complete source-workflow A/B includes held-cut publication and an
+observe-every-update control. The latter has a small overhead, documented with
+the batch gains in =t/performance/source-cut-log/README.org=.
+
+* Use constructor ownership to prove local query metadata
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:259= applies =using= after class
+resolution establishes provenance. The expression abstraction belongs at the
+point where the constructor contract supplies the proof; it is not a cast of
+untrusted external values. In UF freeze, final private =frozen-members= captures
+detached members and committed size together. Rectangle cardinalities use that
+metadata instead of rescanning rows, and the source capture is selected once
+for all of its outgoing descriptors. Frozen views retain no mutable UF owner.
+
+A construction traversal can also prove a cheaper membership operation.
+Rectangle routing finishes one bucket before another begins, so any repeated
+member of the active bucket must have that bucket at the head of its hit list.
+Checking only that head replaces scans through unrelated owners and preserves
+the first equal value's identity. Keep the ordering premise next to the
+optimized expression and qualify duplicate members, repeated keys, overlapping
+owners and visitor parity. Complete freeze/publication controls are recorded in
+=t/performance/frozen-routing/README.org=.
+
+* Lower query constraints before constructing output rows
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:390-415= resolves class and
+constructor implementation before expression emission, retaining checked
+dispatch for behavior that remains open. Apply the same staging discipline to
+query geometry: =table/eqrel.ss= checks keys, captures local coordinate
+constraints in final private records, then selects owned members before writing
+rows. =using= applies only to those constructor-owned constraints. The selected
+value is the stored member, including when a caller supplies an equal string.
+
+The abstraction covers a traversal protocol. Compile both coordinate
+constraints, select forward/backward candidates, preserve right-member order
+when both orientations apply, and emit each forward/reverse pair in its original
+sequence. Do not replace an ordered symmetric frontier with two concatenated
+rectangles. Conflicting repeated keys and prefix mismatches admit no rows;
+full export keeps its direct writer. Complete merge-and-query A/B and the
+independent eager ordering controls are in
+=t/performance/eqrel-selection/README.org=, including the small-query overhead.
+
+* Express a synchronous batch protocol with hygienic syntax
+
+Gerbil =1cfb032= =runtime/table.ss:439-465= uses =defrules __table-update!= to
+share hash/probe/update control while binding the caller's algorithm parts.
+The update callback runs synchronously before publication. In ASCENT,
+=table/funs.ss= now owns one =defrule= for batch index insertion. Its row binder
+belongs to the caller's key expression; private slot/callback names are hygienic.
+Each batch owns one callback, each row computes its key before update, and every
+bucket prepend preserves previously returned spines.
+
+=table/access.ss= reuses this protocol for canonical scalar keys; ordered and
+arbitrary composite projections use the same template without a per-row
+projection closure. Open Provider dispatch stays under its existing owner.
+This is a shared construction protocol rather than a collection of copied
+loops. Native syntax controls check evaluation counts, lexical shadowing,
+empty input and held-bucket identity. Complete build/append/query A/B is in
+=t/performance/index-batch/README.org=, including tiny-call allocation cost and
+the arbitrary-column CPU control.
+
+* Consume admitted correspondence and projections directly
+
+Gerbil =1cfb032= =compiler/optimize-top.ss:259-262= traverses identifiers and
+expressions together with multi-list =for-each=; the syntax contract already
+supplies correspondence. =optimize-call.ss:390-415= similarly consumes resolved
+class metadata while emitting constructor calls. Avoid rediscovering information
+that a preceding owned phase has established.
+
+In =program/view-state.ss=, relation declarations and schema positions now move
+through one traversal. Indexed atoms already contain their exact key-term
+projection, so routing reads that projection instead of repeated =list-ref=
+lookups into the original terms. Both publication paths call one private owner
+for journal-backed total/delta metadata. The exporter closes over its frozen cut,
+without retaining live routing state. Populated source/held-cut controls and
+complete publication/routing A/B are in
+=t/performance/view-source-publication/README.org=.
+
+* Specialize complete construction under explicit publication owners
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:89-113,190-232= guards admission
+before shape-directed transformations and shares common transformation owners.
+Use that structure to preserve a full survivor directly; allocate projections
+only when ownership actually splits. In =program/component-plan.ss=,
+=project-component-rule!= and =publish-component-rule!= own this protocol.
+Empty outputs, duplicate heads and shared admitted body metadata retain their
+existing contracts.
+
+Predecessor registration similarly owns first-encounter order and membership.
+The first predecessor stays inline, a second distinct ID admits sparse storage,
+and sufficient occupancy pays for a compact bitmap. Returned execution metadata
+retains neither storage representation. This keeps a private algorithm under
+named functions without adding a public generic dispatch protocol. Complete
+construction A/B and exhaustive finite ordering controls are in
+=t/performance/component-construction/README.org=, including the rejected
+hash-only allocation experiment and final fan-in allocation tradeoff.
+
+* Let the consuming owner decide whether metadata needs materialization
+
+Gerbil =1cfb032= =std/iter/macros.ss:88-127,282-298= specializes native iteration
+and folds; =std/list/list-builder.ss:6-22= owns ordered list construction.
+=std/text/parser/ll1.ss:225-230= uses that builder for a complete parser traversal.
+Use these forms for a synchronous producer/collector flow instead of mapping,
+flattening and filtering lists before the consumer decides it needs them.
+
+In =program/index.ss=, metadata adapters feed one private owner. Admission of
+live physical state precedes traversal. Canonical owners skip unused metadata;
+curried owners deduplicate their own relation/column requirements without
+inspecting expression terms. Collection completes into a fresh ordered spine
+before publication. A failed traversal retains earlier requirements. Deferred
+layout publication visits only relations with admitted requirements.
+=program/component-worker.ss= now registers bodies directly, preserving its
+independent row/frame ownership. The native lifecycle benchmark and failure,
+ordering and expression controls are in
+=t/performance/index-requirements/README.org=, including small-input allocation
+costs and the limited benefit of the initial traversal-only experiment.
+
+* Compile correspondence and specialize cache constructors by admitted domain
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:660-685= uses known keyword signature
+metadata to resolve positions before emitting a specialized call.
+=runtime/hash.ss:385-489= selects storage from explicit equality/hash contracts.
+Use a private compiled gather when repeatedly rediscovering the same correspondence;
+reuse an existing gather protocol rather than duplicate row/value traversal.
+
+=table/index-sharing.ss= now compiles key positions under a final private record,
+guards detached physical prefix facts, and clears scratch after reading each new
+key. The plan table owns column spines and specializes natural ordinal sequences.
+The result table owns tuple spines and compares arbitrary fields with full Scheme
+value equality. Ordered keys keep their direct path and two-column swaps have a
+simple algebraic branch. Provider extensibility remains under existing public
+generics. Complete lifecycle A/B, mutable-header and occurrence controls are in
+=t/performance/shared-key-plan/README.org=, including the initial generic-cache
+regression and the failed intermediate prefix target.
+
+* One syntax contract for ordered callback publication and invocation
+
+The calling convention is an expression-layer responsibility. Gerbil =1cfb032=
+=compiler/compile.ss:319-341= uses =with-primitive-bind+args= to own ordered
+operand traversal and temporary bindings. ASCENT =core/ordered-call.ss= now
+owns hygienic zero-through-four direct reads and the general map/apply fallback.
+The frame compiler supplies a lambda wrapper; runtime bindings supply begin.
+Their readers retain their respective frame/environment ownership. This unifies
+a complete calling protocol without introducing MOP dispatch into a finite
+admitted arity decision or allocating a reader closure per resolved argument.
+
+The syntax recursively binds each operand before invoking user code. Generated
+static SCM retains ordered temporaries and a direct application in small frame
+branches. Multiple values, first failures, false arguments and reentrant frame
+observations remain semantic gates. Both producer paths use the same arity
+boundary; the former binding path's three/four-argument list allocation is
+removed. Pure row algorithms remain named functions.
+
+See [[file:../../t/performance/ordered-call/README.org][ordered callback qualification]] for the frozen sources, native
+matched CPU/allocation results and controls. The syntax abstraction is justified
+by shared calling-convention ownership; its presence alone is not a performance
+claim. Repository documentation remains English, and generated artifacts stay
+under ignored cache/library paths.
+
+* Structural terms and one state-advance contract
+
+Gerbil =1cfb032= =core/match.ss:640-688= implements =match <>= as a
+hygienic unary procedure and =match*= with once-bound operands. Runtime
+=core/rule-bindings.ss= applies these forms across the candidate-binding,
+pattern-extension and head-construction protocol. Tagged terms are matched
+as complete structures instead of repeatedly decomposing their car/cdr and
+nesting tag tests. The existing checked environment reader also owns head
+lookup, preserving the distinction between an absent binding and a false value.
+
+A local =advance= syntax rule owns the three state arguments for row traversal.
+It reads the caller's row and term tails at the continuation boundary, after
+user callbacks. Binding these tails eagerly would change observable mutation
+semantics. Pattern output names likewise remain read after invoking the callback.
+The abstraction introduces no reader or continuation closure per row term.
+The named recursive algorithm remains explicit; syntax expresses its repeated
+continuation contract rather than replacing the algorithm with generic dispatch.
+
+See [[file:../../t/performance/term-matching/README.org][structural term qualification]] for the complete-pipeline CPU and allocation
+controls. This change improves expression ownership and reduces repeated source;
+it does not establish a performance improvement.
+
+* Candidate continuation as a traversal protocol
+
+Gerbil =1cfb032= =std/io/bio/input.ss:35-85= uses =defrules __bio-read=
+to express a complete read/fill/retry protocol with supplied operations.
+The useful abstraction boundary in =core/positive-plan.ss= is likewise a
+protocol: checkpoint, candidate matching, then terminal emission or next atom.
+Local hygienic =accept= and =resume= rules own that sequence for explicit rows,
+frozen row visitors, rectangle parts and exact selected parts. Provider-specific
+selection and matcher choice remain at their original owners. Callback segments
+advance without changing the relation-atom delta ordinal.
+
+All terminal paths share the output getter prepared during plan compilation.
+Previously ordinary rows rebuilt the head-read mapping even when a small bound
+head already had a direct compiled getter. The unified protocol reads each
+current frame and creates a fresh output row at the original emission point;
+it never caches output values. Legacy two-field output records retain the map
+fallback. No runtime continuation closure is introduced per candidate.
+
+See [[file:../../t/performance/positive-traversal/README.org][positive traversal qualification]] for complete candidate traversal A/B,
+provider traces, controls and the limits of the local CPU improvement.
+
+The output compiler shares =dispatch-ordered-call= syntax rather than passing
+=list= through the runtime frame-call helper. The latter intermediate candidate
+failed its speedup gate. Keeping the constructor visible in generated code
+preserves direct list construction while the syntax owns ordered frame reads.
+Generated static SCM for four-slot heads contains ordered temporaries and a
+literal =list= application. This follows =compiler/compile.ss:319-341=, where
+=with-primitive-bind+args= owns operand temporaries without hiding the emitted
+operation. A runtime abstraction and a syntax abstraction are different cost
+choices; the retained A/B failure makes that distinction executable.
+
+* Rule-local read projection and consumer-owned retention
+
+Gerbil =1cfb032= =compiler/base.ss:89-96= makes private state meaning explicit
+with =symbol-table= fields. =compiler/method.ss:35-43= expresses context
+propagation with a hygienic =with-context= rule. =std/list/list-builder.ss:6-26=
+lets an enclosing syntax own a fresh list spine while supplied operations decide
+which values to publish. These are complementary contracts, not reasons to
+replace every named loop or conditional.
+
+=core/rule-semantics.ss= now owns one =for-rule-reads= syntax contract for the
+admitted atom/negation/aggregate projection. Invalidation streams each read into
+successor heads. Stratification prepares private =rule-read (kind source)=
+records once per rule and reuses them across heads. Nonreading clauses are
+filtered before head expansion, instead of rescanned for every head. The local
+=with-rule-reads= wrapper binds the head/read layout once. Descriptors retain
+neither host procedures nor rows and do not cross invocation boundaries.
+
+The two consumers retain their own observable traversal order: successor
+publication is read-before-head; stratum dependencies are head-before-read.
+The existing reverse dependency list still determines the first strict-cycle
+diagnostic. Pure-positive preflight still avoids constructing stratum edges.
+Preparing descriptors for the one-pass successor consumer was an intermediate
+cost regression; the final syntax lets that consumer stream without retaining
+objects. See [[file:../../t/performance/rule-reads/README.org][rule-read qualification]] for controls and complete dependency-planning
+CPU/allocation results. This is not an evaluator-solve speedup claim.
+
+* Coordinate matcher construction as a structural protocol
+
+Gerbil =1cfb032= =core/match.ss:638-672= binds the matched expression once
+and generates structural dispatch. =compiler/compile.ss:319-341= uses a
+=defrules= wrapper to own repeated construction steps while keeping emitted
+operations explicit. In =core/positive-plan.ss=, ordinary and exact-selected
+coordinate matchers now dispatch on the complete lowered term list. Slot IDs
+are captured directly by structural patterns; neither constructor builds a
+transient tag list and then manually extracts the same fields.
+
+A private =parts-matcher= syntax rule owns matcher parameter binding, coordinate
+shape admission and the complete general fallback. The caller supplies the
+parameter identifiers hygienically. Specialized writes and bound comparisons
+remain explicit, left-to-right expressions. Exact-selected matching still
+requires the canonical key proof before omitting comparisons; custom or
+oversupplying providers retain the full matcher. The shared protocol adds no
+reader closure or branch per runtime coordinate.
+
+See [[file:../../t/performance/parts-layout/README.org][coordinate layout qualification]] for complete positive-plan compilation A/B,
+existing semantic consumers and controls. Gains belong to plan construction,
+not complete evaluator solves or query traversal.
+
+* Forward key projection with consumer-owned retention
+
+Gerbil =1cfb032= =core/sugar.ss:933-973= expands =alet= into once-bound
+conditional values. It is useful when a constructor may reject a complete
+layout: =table/funs.ss:forward-column-steps= propagates an unordered suffix
+before publishing any partial distance spine. Structural matching makes the
+finite layout recurrence explicit. Repeated ordered columns use zero distances
+and keep the row cursor at its selected field.
+
+A private =forward-key-step= syntax owns field selection and key publication
+for both retained distances and streamed columns. Single-key callers validate
+and consume columns without retaining distances. Batch extension constructs
+one distance layout; unordered batches select their direct loop once rather
+than invoking public layout classification again for every row. Each consumer
+chooses retention according to its reuse, while both preserve field identity,
+current-call metadata and fresh key/bucket spines.
+
+An intermediate candidate retained distances for every public key and failed
+its allocation gate despite lower CPU. The final protocol retains only batch
+layouts. See [[file:../../t/performance/repeated-columns/README.org][repeated-column qualification]] for complete native index lifecycle A/B,
+negative evidence, controls and semantic coverage. These are physical index
+cycle measurements, not complete evaluator-solve gains.
+
+* Affected output selection with lazy spine ownership
+
+Gerbil =1cfb032= =std/list/list-builder.ss:6-26= makes list ownership explicit:
+the enclosing syntax owns a fresh sentinel and tail, while its local publication
+syntax appends fresh pairs in order. Use that construction only when a consumer
+needs a new spine. Constructing a filtered list merely to discover that every
+element survived spends allocation on a result the caller already owns.
+
+=program/update-selection.ss= now shares a private =select-affected= syntax
+between source heads and compiled outputs. The projection reads invocation-local
+affected bits and immutable relation metadata; it invokes no user callback.
+Before the first rejection, selection scans without constructing a list. Full
+survivors return the original spine. A rejected first item uses ordinary filter
+over the suffix; a later rejection copies the accepted prefix and builds the
+remaining accepted items with =with-list-builder=. Every partial spine is fresh,
+including its tail; order, duplicates and element identities remain intact.
+
+The consumer uses spine identity to distinguish full survivors from projected
+rules. Full rules preserve their compiled plan and engine frame. Partial rules
+share lowered body actions, project output descriptors and receive a fresh
+frame at activation. Unsupported compiled plans retain normal selected-head
+lowering. The syntax owns selection and construction, while activation remains
+responsible for mutable state. This is an ownership protocol, not a mechanical
+replacement of ordinary local bindings or conditionals.
+
+See [[file:../../t/performance/affected-outputs/README.org][affected output qualification]] for the complete selection/activation A/B,
+partial allocation cost and semantic controls. The measured CPU improvement
+belongs to this phase, not complete program evaluation.
+
+* Aggregate input shape and consumer-owned retention
+
+Gerbil =1cfb032= =core/match.ss:638-672= binds and dispatches a structural
+input once. The pinned POO =support/base.ss:10= defines =lambda-match= as a
+unary wrapper over that matcher; it must be imported explicitly rather than
+assumed to be a core identifier. =runtime/util.ss:268-283= shows =foldl='s
+ordered item/accumulator protocol. These mechanisms let tuple admission and
+arithmetic consumption have separate, explicit contracts.
+
+=program/aggregators.ss= now uses =single-column-value= for the shared singleton
+shape boundary. It reads the sole value structurally; an improper or cyclic
+individual tuple is rejected without an unbounded =length= walk. The private
+=with-single-column= syntax binds input once and validates the complete tuple
+batch before arithmetic. A later malformed tuple therefore still precedes an
+earlier nonnumeric value's arithmetic failure.
+
+Sum folds directly over borrowed tuples, with the original =(+ item prior)=
+operand order. Mean uses the same admitted traversal and an invocation-local
+count, converting the completed sum to inexact before division exactly as
+before. Neither consumer retains a copied value column. Min/max retain their
+value list and original multiargument =apply=, preserving numeric coercion,
+NaN, signed-zero and large-exact-number behavior. Count keeps its zero-column
+contract. Inputs are not mutated, memoized or attached to published results.
+
+See [[file:../../t/performance/aggregate-input/README.org][aggregate input qualification]] for complete builtin-call A/B, finite numeric
+comparisons, public aggregate consumers and rejected counter observations.
+Arithmetic speedups here do not establish whole-evaluator throughput gains.
+
+* Multiple-value publication outside a private construction extent
+
+The useful compiler pattern is to check the conditions for reuse before selecting
+an expression representation. Typed traversal admits children under the current
+lexical scope and charges every occurrence; only then can frozen type/child
+identity and owned payload equality establish a reusable copy. Parameters keep
+binding checks, and generated types without matching identity rebuild.
+
+The larger construction cost occurs after lowering. An inert, fully frozen
+operator graph can use the existing private declaration construction owner and
+one complete recursive Program validation before publication. Native
+=call-with-values= separates the dynamically scoped producer from that checked
+consumer. =case-lambda= expresses the two private return contracts directly:
+Candidate publishes one Program; typed compilation publishes Program/output.
+This avoids mutable output capture and keeps ordinary constructor checks restored
+for both success and failure. It is not a public validation cache or an extension
+of the caller-supplied operator compiler protocol. See
+[[file:../../t/performance/typed-sharing/README.org][typed ownership qualification]] for whole compilation measurements and the
+rejected reuse-only experiment.

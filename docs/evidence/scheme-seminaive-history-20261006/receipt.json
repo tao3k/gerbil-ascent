@@ -1,0 +1,116 @@
+{
+  "qualifiedBaseHead": "f8ad9d9f39edfdabad2a14e9edd83985309acc33",
+  "sources": {
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "packages/proofs/lean/AscentProof.lean": "42269e402d05551feb85a17dbb97bcc536ae78d8e3d7cf692e9a9036b846f3f8",
+    "packages/proofs/lean/AscentProofTests.lean": "cc3dce78f34971d3a30ad71b736cd5eae3cd65afc3598611642cf0297c381de5",
+    "packages/proofs/lean/lakefile.lean": "e214971f3fd50b139963f809efab8327e10e1bcde826a6edd6841252760f6cd0",
+    "packages/proofs/tla/ProviderFrontier.tla": "f35ca9033bec6ab1ba8ff4d2b054f24b478df9af7bea9e7476c8493a2cff4e05",
+    "packages/proofs/tla/ProviderFrontier.cfg": "ef00c31e8e9e27e59ec1d87787921e5c8ffca3027ac136387094b1cd77a3f20b",
+    "justfile": "25e4d0f943c190ebb4bf73ccdde1eda95ec0c7971efd68fe771a9acd9c0a3f8c"
+  },
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "section": "3.2, printed pages 7–9; Lemma 3.2 history argument",
+    "reopened": "2026-10-06"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 67,
+    "theorems": [
+      "consequences_partition",
+      "pivot_after_full",
+      "iterations_equal"
+    ],
+    "axioms": {
+      "consequences_partition": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "pivot_after_full": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "iterations_equal": "depends on axioms: [propext, Classical.choice, Quot.sound]"
+    },
+    "range": "Every natural-number iteration; finite positive rule set, concrete Set database, monotone concrete view, exact adjacent-view delta, pure fixed head projection",
+    "dischargedPremise": "All-old head coverage follows from prior full consequence step and iteration induction",
+    "initializationControls": [
+      "Empty-body rule emits in initial fullStep",
+      "Pivot-only initial step fails to emit that fact"
+    ],
+    "doesNotAssume": [
+      "Completed solve",
+      "Termination",
+      "Iteration cutoff"
+    ]
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-provider-frontier-formal",
+    "exitCode": 0,
+    "normalRuns": [
+      {
+        "initialInputs": "empty",
+        "distinctStates": 1376
+      },
+      {
+        "initialInputs": "symbolic node self-edge",
+        "distinctStates": 670
+      }
+    ],
+    "expectedNegativeControls": [
+      "provider-frontier-raw FrontierComplete",
+      "provider-frontier-omit DeliveredExact",
+      "provider-frontier-early ConsumerSnapshot",
+      "provider-frontier-old ConsumerSnapshot",
+      "provider-frontier-initial ConsumerSnapshot"
+    ],
+    "scope": "Initial full consumer publication and staged frontier ownership; finite safety only",
+    "discardedAttempt": {
+      "exitCode": 255,
+      "reason": "TLC cfg does not parse set-of-tuple literal; replaced by SeededInputs operator substitution",
+      "admittedAsProof": false
+    }
+  },
+  "native": {
+    "command": "just test-native t/qualification/ascent-byods-invariants-test.ss",
+    "exitCode": 0,
+    "suiteCases": 12,
+    "regressionPrograms": 81,
+    "sourceUnchangedFromQualifiedBase": true,
+    "runtimeSourceChangesInPatch": false,
+    "executedJustfileSha256": "4a816cd4ebe9c2b23e0e812a40b4c36689c76f4d4415e07854268b85699ddceb",
+    "entryRecipeUnchanged": "test-native; subsequent justfile correction affects Provider formal recipe only",
+    "evidenceKind": "Independent complete-output regressions, not a proof of arbitrary native iteration refinement"
+  },
+  "remaining": [
+    "General abstract lattice join/gamma/injection and gamma-total/delta contracts",
+    "Descriptor finite-height termination",
+    "Combined native slot/binder/index/pivot correspondence",
+    "Unbounded TLA temporal proof and native trace refinement"
+  ],
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "rustRuntimeChanges": false,
+  "postRebaseQualification": {
+    "qualifiedSourceHead": "08879fb92313e10977ae9c7e8316a3e1ef18943d",
+    "rebasedOver": "19db531",
+    "lean": {
+      "exitCode": 0,
+      "buildJobs": 69
+    },
+    "native": {
+      "exitCode": 0,
+      "suiteCases": 12,
+      "regressionPrograms": 81
+    },
+    "sources": {
+      "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+      "packages/proofs/lean/AscentProof.lean": "d24a1447c67be818c91d96386b4a01f806500c5323e8acd7ec36f5fd2a72f9a2",
+      "packages/proofs/lean/AscentProofTests.lean": "7517918a9c54d109715842f82f3363fa18885c86cb1a8e22d1156128fcb6bd14",
+      "packages/proofs/lean/lakefile.lean": "e2cb8702ac9c0bb90d898bf69c645b39c8c24ef37a32f1a3d64471d3f8009b7e",
+      "packages/proofs/tla/ProviderFrontier.tla": "f35ca9033bec6ab1ba8ff4d2b054f24b478df9af7bea9e7476c8493a2cff4e05",
+      "packages/proofs/tla/ProviderFrontier.cfg": "ef00c31e8e9e27e59ec1d87787921e5c8ffca3027ac136387094b1cd77a3f20b",
+      "justfile": "25e4d0f943c190ebb4bf73ccdde1eda95ec0c7971efd68fe771a9acd9c0a3f8c",
+      "t/harness/run.ss": "98a4edb1285b414d32ce0dbfa8becc95aae572450e7abe54acf13f8df92fd2c1",
+      "t/qualification/ascent-byods-invariants-test.ss": "ac2b17a1ecdea6456c5dcd11c1f046f05c7979af2dc601bc8b09213b344e7538"
+    },
+    "tlaSourcesAndGateUnchangedFromSuccessfulFiveControlRun": true,
+    "conflictResolution": "Retained PositiveTraversal and SemiNaive library roots and upstream test roots"
+  }
+}

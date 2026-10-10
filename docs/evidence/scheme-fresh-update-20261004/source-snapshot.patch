@@ -1,0 +1,79 @@
+diff --git a/t/qualification/scheme-session-deletion-test.ss b/t/qualification/scheme-session-deletion-test.ss
+index 898a860..be35a77 100644
+--- a/t/qualification/scheme-session-deletion-test.ss
++++ b/t/qualification/scheme-session-deletion-test.ss
+@@ -15,6 +15,18 @@
+                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
+ (export scheme-session-deletion-test session-benefit-main)
+ 
++;; A fresh update starts from the same immutable declarations and replacement
++;; rows as a retained transaction. POO field names are implicit bindings: a
++;; lexical value named `relations` would become a recursive self-field here.
++(def (fresh-replacement-program base-program replacements)
++  (let (replacement-relations
++        (map (lambda (relation)
++               (let (replacement (assq (.ref relation 'name) replacements))
++                 (.o (:: @ relation)
++                     rows: (if replacement (cdr replacement) (.ref relation 'rows)))))
++             (.ref base-program 'relations)))
++    (.o (:: @ base-program) relations: replacement-relations)))
++
+ ;;; Counterbalanced native samples. Construction, initial session solve, GC
+ ;;; and independent checking are outside each timer. Session replacement keeps
+ ;;; its actual snapshot/admission/publication costs inside the timed operation;
+@@ -49,14 +61,6 @@
+   ;; A complete fresh update starts with the same base declarations and ready
+   ;; replacement rows as Session replacement. Candidate construction belongs
+   ;; inside both update timers. Keep solve-only as a separately named control.
+-  (def (replacement-program program replacements)
+-    (let (relations
+-          (map (lambda (relation)
+-                 (let (replacement (assq (.ref relation 'name) replacements))
+-                   (.o (:: @ relation)
+-                       rows: (if replacement (cdr replacement) (.ref relation 'rows)))))
+-               (.ref program 'relations)))
+-      (.o (:: @ program) relations: relations)))
+   (def (check-result result edges nodes first cold)
+     (check-equal? (.ref result 'finished) #t)
+     (check-set (rows result 'edge) edges)
+@@ -110,9 +114,11 @@
+                            (modulo n 6))))
+                (for-each
+                 (lambda (arm)
++                  (displayln "BENEFIT-MEASURE-START " condition " edges=" nodes " group=" n " arm=" arm)
++                  (force-output)
+                   (case arm
+                     ((fresh) (set! fresh (sample (lambda (_) (gerbil-ascent-evaluate-program prospective)) batch)))
+-                    ((updated) (set! updated (sample (lambda (_) (gerbil-ascent-evaluate-program (replacement-program base replacements))) batch)))
++                    ((updated) (set! updated (sample (lambda (_) (gerbil-ascent-evaluate-program (fresh-replacement-program base replacements))) batch)))
+                     ((retained) (set! retained (sample (lambda (n) (gerbil-ascent-session-replace-sources! (vector-ref sessions n) replacements)) batch)))
+                     (else (error "unknown native measurement arm" arm)))
+                   (displayln "BENEFIT-MEASURED " condition " edges=" nodes " group=" n " arm=" arm)
+@@ -194,6 +200,27 @@
+ 
+ (def scheme-session-deletion-test
+   (test-suite "Native dependency invalidation and source withdrawal"
++    (test-case "fresh replacement reads lexical candidate rows without self-field recursion"
++      (let* ((base (path-program '((0 1) (1 2))))
++             (candidate (fresh-replacement-program
++                         base '((edge (1 2)) (cold (8)))))
++             (updated (gerbil-ascent-evaluate-program candidate)))
++        (check-set (rows updated 'edge) '((1 2)))
++        (check-set (rows updated 'path) '((1 2)))
++        (check-set (rows updated 'cold) '((8)))
++        (check-set (rows updated 'seen) '((8)))
++        (for-each
++         (lambda (field) (check-equal? (.ref candidate field) (.ref base field)))
++         '(rules source-handles max-input-facts max-derived-facts max-output-facts))
++        (let (original (gerbil-ascent-evaluate-program base))
++          (check-set (rows original 'edge) '((0 1) (1 2)))
++          (check-set (rows original 'path) '((0 1) (0 2) (1 2)))
++          (check-set (rows original 'seen) '((7))))
++        (let (empty (gerbil-ascent-evaluate-program
++                     (fresh-replacement-program base '((edge)))))
++          (check-set (rows empty 'edge) '())
++          (check-set (rows empty 'path) '())
++          (check-set (rows empty 'seen) '((7))))))
+     (test-case "source log comparison retains base order, reverse appends, duplicates and nullary facts"
+       (for-each
+        (lambda (fixture)

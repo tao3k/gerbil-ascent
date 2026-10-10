@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "qualifiedDate": "2026-10-05",
+  "sourceBase": "269237599deaa12e97ce8c393ce5eb12da16ee36",
+  "qualifiedSnapshotCommit": "90037cce8aff83c957765f568ae25e642590198e",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "b887ad0f89dc94971ea94b66f8a8e624f43ede02fe7f4dfce36461c08d8331f4",
+    "applyOptions": [
+      "--unidiff-zero"
+    ],
+    "reconstructionVerified": true,
+    "scope": "Shared-key proof and two Scheme test harness owners"
+  },
+  "native": {
+    "artifactSHA256": "692bbe2767debcabfa6cd256c92f6aa6bb297ba8b27490dee1a652278904734c",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "buildElapsedSeconds": 129.66143703460693,
+    "buildClock": "unix",
+    "boundInputCount": 368,
+    "schemeSourceCount": 365,
+    "buildControlsSHA256": {
+      "python/src/ascent_test_support/supervision.py": "c62b7a2fb66fd5cb81e961ea4cbacba8578e2fccad825ebd318737a34a167133",
+      "justfile": "465df5afd0574ed3927e9922c01a264a85bb31c769ace47631695d6fe87139ac",
+      "python/pyproject.toml": "155cf94509ea3b78233450fdeeceb4680d64696d78753384c907461aaee9f0a9"
+    },
+    "sourceMapSHA256": "164e4df7446229726166f2c53c36bad44dac0d900c82b9ff1bc7f689cc6f233e",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "artifactCheckedBeforeAndAfter": true,
+    "counts": {
+      "cases": 69,
+      "suites": 4,
+      "modules": 4,
+      "harnesses": 4,
+      "finalOK": 4
+    },
+    "casesByModule": {
+      "t/qualification/ascent-index-lifecycle-test.ss": 5,
+      "t/qualification/scheme-operator-test.ss": 25,
+      "t/qualification/scheme-operator-retained-test.ss": 6,
+      "t/qualification/scheme-higher-order-test.ss": 33
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "buildCores": 2,
+    "route": "Scheme AOT TestHarness; original Case assertions retained"
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "fa78437bed21928cd42323d00a743b2f5ef189d28b172e0a0c8135c20770afce",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a",
+      "packages/proofs/lean/StratifiedNegation.lean": "a3d1677bea70724b9aefd5bc08312fc53af9016bdbd03105151991528db5156f"
+    },
+    "tlaFilesSHA256": {
+      "packages/proofs/tla/PositiveNonmembershipSession.cfg": "0b6788a5a7514564eda6587b45016901bc8b8e9e5be937f3808807dc1be53408",
+      "packages/proofs/tla/PositiveNonmembershipSession.tla": "8a5327d8788dacbe9ad944f3c2972905a1c60d4c1a05578d34f51e47cd47a2a8",
+      "packages/proofs/tla/SessionTransaction.cfg": "e812dc6a3a5fb3320eb681e2e40d717d2376cdcca258cf473b97b7edb1052490",
+      "packages/proofs/tla/SessionTransaction.tla": "7434cbe55226878be091024ae63f490f920d5459ca67015f99e50aa4a013026b"
+    },
+    "checkScriptSHA256": "34ab8b820f6f8c56f0fe377d2f2125830c39b69f960e95ea2554d1ac670561b0",
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "newTheorems": 8,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "early: AtomicSnapshot",
+      "stale: NoStaleCommit",
+      "global: AtomicSnapshot",
+      "reuse: AtomicSnapshot"
+    ]
+  },
+  "implementationMap": {
+    "ruleModel": "Ascent.Lowering.ProjectedJoinRule",
+    "compilerSeams": [
+      "program/operator.ss join-variables",
+      "program/operator.ss fused project-over-join branch"
+    ],
+    "harnessRepair": "Register index suite in AOT; when requested, prepare the four-module independent reference graph for ordinary and AOT compilation"
+  },
+  "priorAcceptedSubset": {
+    "artifactSHA256": "415382311a69c3d9e218c930609f52306572d32fc42eb08ba7c527888e093a4d",
+    "compilerExit": 0,
+    "buildElapsedSeconds": 529.159276008606,
+    "qualificationExit": 0,
+    "cases": 64,
+    "modules": 3,
+    "scope": "Before harness registration; operator, retained and higher-order only; not final four-module qualification"
+  },
+  "excludedAttempts": [
+    {
+      "phase": "first ordinary index gxtest",
+      "exit": 124,
+      "casesReached": 0,
+      "reason": "Five seconds without output before first Case"
+    },
+    {
+      "phase": "AOT build with index suite only",
+      "exit": 70,
+      "reason": "Static index reference dependency absent; diagnosed by owned verbose build"
+    },
+    {
+      "phase": "direct gxi diagnostic",
+      "exit": 70,
+      "reason": "Probe omitted mandatory supervised build identity; invalid diagnostic"
+    },
+    {
+      "phase": "just diagnostic CLI probe",
+      "exit": 2,
+      "reason": "Option value beginning with dash parsed as an option; no compiler invoked"
+    },
+    {
+      "phase": "owned verbose AOT diagnostic",
+      "exit": 70,
+      "reason": "Cannot find static ascent-index-reference-funs module"
+    },
+    {
+      "phase": "AOT build with direct index references",
+      "exit": 70,
+      "reason": "Cannot find static transitive ascent-positive-plan-reference-analysis module"
+    },
+    {
+      "phase": "ordinary gxtest recheck after complete reference registration",
+      "exit": 124,
+      "casesReached": 0,
+      "reason": "Five-second startup silence persists; not admitted as successful qualification"
+    }
+  ],
+  "remaining": [
+    "Gerbil symbol decoding and gensym freshness/capture correspondence",
+    "Native rule matching/index execution refinement, memoization and recursive feedback",
+    "Operational budget and performance equivalence",
+    "Ordinary gxtest startup under the five-second output gate remains unresolved; AOT route qualified"
+  ],
+  "logsPublished": false,
+  "modelCalls": 0,
+  "performanceClaim": null
+}

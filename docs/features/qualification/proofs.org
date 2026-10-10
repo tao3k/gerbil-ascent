@@ -1,0 +1,167 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Opaque index Session admission and native launch closure (2026-10-06)
+
+The second integrated CI run at =128815e= passed formal and all three Rust
+oracle jobs, but Scheme rejected an opaque lookup fixture that deliberately
+omitted matching rows. Physical index completeness is an admission contract.
+The corrected fixture changes lookup order while returning the complete bucket
+and verifies that an unrelated source update still reruns the opaque lookup
+without completed-result reuse. A separate incomplete-bucket control must fail
+and preserve the previously accepted Session outputs and source snapshot.
+
+The full inventory then exposed launch-chain output watchdog failures under
+twelve-worker admission. Direct native carrier admission replaces the per-task
+recipe/shell/filter chain while retaining every verdict and resource gate.
+The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] describes the ownership boundary and diagnostic limits.
+This correction does not strengthen the algebraic proof coverage or claim
+that all ASCENT/BYODS research obligations have been discharged.
+
+The subsequent integrated full run retained a mistaken row-identity assertion
+in the custom build/extend fixture. =gerbil-ascent-index-row-snapshot= copies
+both the outer and each row list spine; only field objects are borrowed. The
+fixture now uses a shared mutable vector field and requires distinct outer/row
+identities, equal contents and the original field identity. Both failed full
+runs are retained in the native child admission receipt rather than removed
+from the acceptance history.
+
+The completed native inventory at integrated base =7b8b830= passed 83 modules
+and 764 Cases, with 83 native readiness markers, 83 explicit =OK= markers and
+zero output watchdog failures. All 27 three-body producer partitions completed.
+The updated direct-child controls also passed ten Cases and the three registry
+argument rejection controls. The [[file:../../evidence/scheme-native-child-admission-20261006/receipt.json][native child admission receipt]] retains source,
+carrier, registry and transcript digests, plus the earlier failures. This
+inventory result is bound to that source base and must not be relabeled as a
+subsequent revision's CI result.
+
+After integrating =4bcdb4c= (source replay and native graph state protection
+through complete round publication), six affected modules passed 78 Cases:
+storage batches, BYODS invariants, Session deletion, selected activation,
+index construction and Session actors. All six native/explicit completion
+markers were present and no watchdog failed. This focused integration result
+is recorded separately from the earlier full inventory; the latest GitHub
+revision still requires its full CI gates.
+
+
+
+* Completed reuse admission owner and Scheme build gate (2026-10-06)
+
+At =4bcdb4c= the Scheme CI build failed before any tests:
+=GERBIL-SCHEME-MOD-R002= reported 1006 effective lines in
+=program/evaluate.ss=. After integrating latest revision =9eda9fc=, completed
+row seeding moved to =program/reuse.ss= with a private buffer frame. The 43
+algorithm lines, including row order, membership, lattice keys and budget
+checks, were preserved apart from indentation. Engine readiness and complete
+round publication remain in the evaluator.
+
+The final source freeze passed the policy build with zero errors and 52
+native Cases: deletion/reuse 26, storage admission 18, BYODS composition 8.
+Every native command exited zero with =MODULE-OK=, =HARNESS-OK= and explicit
+=OK=. Deletion covers exhaustive three-node dependencies and consecutive
+withdrawals, lattice reused budget and opaque/mutable reuse refusal. The
+[[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][receipt]] binds these checks to source and log digests. These are focused
+local results; full remote CI must be read at the new pushed revision.
+
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] distinguishes concretized total/delta facts from private
+Provider reconstruction. Custom and graph storage do not qualify for completed
+closure reuse. No theorem owner, public Provider protocol or performance
+qualification changed in this slice.
+
+* Initial source admission owner and build gate (2026-10-07)
+
+The =9eda9fc= Scheme CI job rejected =program/evaluate.ss= through
+=GERBIL-SCHEME-MOD-R002= before native tests: storage publication guards
+increased its effective size to 1,006 lines. The complete initial admission
+loop now belongs to =program/initialization.ss=, using one private buffer record
+and two returned count values. Its normalized algorithm text is unchanged.
+The declared native module inventory is 77, and =just check-policy= passes with
+zero errors. Ten affected native modules pass 106 Cases with all native and
+explicit completion markers and no watchdog failure. The [[file:../../evidence/scheme-source-initialization-20261007/receipt.json][source-bound receipt]]
+retains the CI failure and controls. Full CI on the corrected revision remains
+required; previous successful formal/oracle results are not relabeled.
+
+Integration with =df0f716= preserves the independent completed-closure seeding
+owner in =program/reuse.ss=: initial source admission completes first, then
+reuse admits completed rows, then the evaluator coordinates execution. Both
+policy and package build pass again. Six affected native modules pass
+82 Cases with all completion markers and no watchdog failure; source
+hashes and this distinct integration run are retained in the source
+initialization receipt.
+
+
+
+* Formal execution cost and parallel scheduling (2026-10-07)
+
+The previous GitHub formal job took 170 seconds: environment installation
+used 22 seconds and the combined Lean/TLA step 135 seconds. The CI command
+serialized nine independent recipe groups. Lake already tracks proof inputs
+and builds incrementally; the optimization does not skip kernel compilation
+for changed dependencies or cache admission decisions.
+
+At this historical snapshot, =just check-formal= verified the pinned TLC artifact\nbefore launching two
+independent lanes. The contracts lane builds Lean once, then checks actor,
+Session and SCC gates. The other checks ready components, indices, concrete
+frontiers and frozen views. Each leaf recipe retains its configurations,
+properties, mutations, worker count, heap policy and exploration bounds.
+The aggregate waits for both lanes and fails if either fails; synthetic exit
+41 and 42 controls check the join behavior without representing model receipts.
+TLC transcripts and counterexamples are recomputed on every invocation.
+
+A same-environment incremental-build probe measured 94 seconds serial,
+68 seconds with the initial split and 67 seconds with the balanced split.
+The last reduction is 28.72 percent. All 23 positive distinct-state counts
+and 45 negative-control markers match the serial baseline; the complete
+90-job Lean build passes. These sequential single-run observations qualify
+execution scheduling in this environment, not an intrinsic Lean theorem or
+TLC search speedup, statistical result, or a cold GitHub benchmark. Concurrent
+processes use additional resources. The separate native Scheme CI lane remains
+the complete workflow's dominant cost. See [[file:../../evidence/scheme-provider-views-20261007/formal-execution-cost.json][the cost and equivalence receipt]].
+
+
+* Isolated TLC standard module extraction (2026-10-07)
+
+The exact =bef6caf= GitHub formal job failed with exit 150 after the complete
+90-job Lean build passed. =PositiveNonmembershipSession= reported an unexpected
+EOF while parsing =/tmp/TLC.tla=. The concurrent lanes were sharing the JVM's
+default temporary directory. The pinned checker's =SimpleFilenameToStream.read=
+extracts standard modules to =TMPDIR/module-name= with =FileOutputStream= and
+=deleteOnExit=; =FilenameToStream.TMPDIR= reads =java.io.tmpdir=. Concurrent JVMs
+can therefore truncate or delete each other's extracted modules. Source:
+[[https://raw.githubusercontent.com/tlaplus/tlaplus/v1.7.4/tlatools/org.lamport.tlatools/src/util/SimpleFilenameToStream.java][pinned upstream resolver]], verified against the exact pinned jar bytecode.
+
+The repaired historical JVM-backed TLA leaf gates set =java.io.tmpdir= to its existing
+private temporary directory. Its configurations, state directories and standard
+module extraction consequently belong to the same invocation. Sequential JVMs
+inside a leaf share that directory only after the preceding JVM has exited.
+The two verification lanes remain concurrent and their failure join remains
+strict. Historical external =TLC_BIN= implementations retained their own temporary-directory
+responsibility; the standard launcher uses the pinned jar. This changes no
+model, bound, property, worker count, timeout or heap setting.
+
+The [[file:../../evidence/scheme-provider-views-20261007/tlc-extraction-isolation.json][isolation receipt]] binds the observed remote failure, resolver mechanism,
+private extraction paths and complete positive/negative gate results. Earlier
+parallel timing probes are historical measurements and do not establish
+collision-free execution for their old launcher.
+
+
+* Transport soundness behind BYODS acceptance (2026-10-07)
+
+A complete 7abd3d6 CI run exposed a transport failure in the 10,000-pair other
+oracle test, while Scheme, BYODS, scale and formal checks passed. The reader join
+reported Any rather than the original read error. Current evidence proves that
+the transport failed; it does not diagnose EINTR or a Scheme semantic mismatch.
+
+PipeCapture owns universal byte-order/prefix and terminal admission properties.
+OracleTransport owns independent reader/process/request completion and rejects
+early admission, swallowed errors, dropped tail bytes and interruption failures.
+Rust scripted read controls and the actual parallel other-shard rerun connect
+the model to the test adapter. No synthetic progress, widened deadline, retry of
+failed model calls or relaxation of row truth is introduced. Native OS/thread
+extraction and historical failure causality remain explicit boundaries. See
+[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+

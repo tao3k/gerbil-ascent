@@ -1,0 +1,87 @@
+#+TITLE: Grounded support height dependency flow
+
+* Production ownership
+
+=candidate/support-height.ss= owns one height computation over verified private
+support. It indexes premise IDs to rules, seeds source/candidate facts at zero
+and empty rule bodies at one, then wakes dependent rules when a height improves.
+Conjunction uses one plus the maximum premise height; alternatives keep the
+minimum. Missing support has no height. A cycle cannot seed itself.
+
+The dependency table, final rule records, labels and pending spine belong to
+one invocation. The retained owner performs completeness checking, ordered root
+publication and detached row copying. Every read after withdrawal rebuilds its
+labels; compaction cannot retain an obsolete shortest support. User callbacks,
+proof construction and independent certificate verification remain separate.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:24-29= gives an optimizer invocation
+its own identity tables. =core/more-sugar.ss:118-129= provides native =until= for
+condition-driven iteration. Native =andmap= owns short-circuit premise admission;
+Typed final records express rule state. These mechanisms remove repeated
+whole-graph scan control without inventing a new public graph framework.
+
+Initial dependency admission costs O(E+P) for edges and premise occurrences.
+Further work is the sum of activated rule bodies: labels can improve more than
+once, so no universal linear-time claim is made. The public height work counter
+now charges edge/premise admission, queue events, activated edge/premise reads,
+completeness and roots. Its numeric value can differ from the full-scan baseline.
+The same explicit budget bounds the work and exhaustion publishes no table.
+Withdrawal's existing DRed algorithm and work charging are preserved.
+
+* Frozen complete consumer
+
+=reference.ss= freezes =candidate/provenance-maintenance.ss= from
+=452823761010eceb4b1c4520675af8715b925676=, original blob
+=2327892450a7f5d7ac7269c4e7f630d5460d8430=. Only its two relative dependency
+imports are redirected to the same current Candidate modules. All prior
+maintenance, height, compaction and row-copy algorithms remain intact.
+
+Each fixture creates a complete certificate and independently verifies it
+before timing. Reversing the private copied support order preserves every edge
+and premise while exercising dependencies against scan order. Setup uses
+public positive proof production/verification, outside the interval. The
+consumer includes a complete height read, compaction, another complete height
+read, and detached root rows. Independent heights for node i are i+1.
+The withdrawn arm removes one of two duplicate source occurrences before timing;
+the surviving occurrence must preserve all chain heights.
+
+The original 96-edge preparation exhausted the fixed proof budget and did not
+produce a complete certificate. It was rejected before timing. The admitted
+fixture uses 32 edges; the proof budget stays 100000. The failed native log is
+retained. No performance result is admitted without complete proof and independent
+truth checks.
+
+Fixed gates precede measurement: 20 alternating CPU pairs, 20 ASP admissions,
+five dedicated cumulative allocation pairs. Large arms require <=90% old CPU
+and >=16 wins; small permits <=110% CPU +20 us. Allocation permits <=3 times
+baseline +4096 bytes for the invocation-owned dependency index. This is an
+explicit allocation tradeoff, not an allocation reduction claim.
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes | Gate |
+|----------+------------+------------+-----------+-----------+-----------+------|
+| Reverse chain | 455 | 79 | 20 | 66704 | 115728 | pass |
+| After duplicate withdrawal | 463 | 84 | 20 | 69792 | 118816 | pass |
+| One-edge control | 10 | 9 | 16 | 15264 | 25056 | pass |
+
+CPU falls 82.6% and 81.9% for these complete retained height consumers compared
+with the immediately preceding implementation. This does not measure initial
+proof creation, public certificate verification, DRed withdrawal speed, solver
+speed or other platforms. Extra allocation is transient and owned by each read.
+
+Official =gxi :gerbil/tools/gxtest= passes 53 Cases across five modules with final
+=OK=. Controls include all 64 finite graph height truths, source withdrawal,
+conjunctions, held results, rollback, empty bodies, repeated premises, late
+shorter alternatives and every insufficient budget for the small complete read.
+ASP Policy passes the two production owners and native witnesses with zero
+findings. SDK source/configuration and runtime environment options are unchanged.
+
+* Reproduce
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/support-height/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/support-height/runner.ss chain .cache/ascent/support-height/chain-final.ss
+#+end_src
+
+Use =withdrawn= or =small= for the other fixed arms. Run CPU arms sequentially.
+The native project builder checks its source closure before and after compilation.
+All raw receipts, failures and logs stay under ignored =.cache/ascent/support-height/=.

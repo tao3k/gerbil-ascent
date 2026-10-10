@@ -1,0 +1,104 @@
+{
+  "source_sha256": {
+    "core/binary-program.ss": "a92d5c93afe2e2babc0a642695e45d757d562c1752a81818845a059ddf7136e8",
+    "t/performance/general-rounds/README.md": "35dae68d32ba3a4e93861ca64c9838c3698ffd32275a12438ef4a8952274d678",
+    "t/performance/general-rounds/baseline.txt": "11fa6c10adaa80001f81b876ea2aba107e23e375b6d219dfaed799cada316cd5",
+    "t/performance/general-rounds/benchmark.ss": "4b03f7b061a320e76a7426dda91cb0ab145d48a1b1ce24dc1e3cf62c5b494e5c",
+    "t/performance/general-rounds/build.ss": "6183ffe8a89b4ce6e99893fba43281855ee68db07c03e3b90524076c65161a3c",
+    "t/performance/general-rounds/criteria.json": "6dfca60c8ddbc38d4bf421b9ccf75e9dec32c0706db2e994896726c32ddcaf05",
+    "t/performance/general-rounds/oracle.ss": "b2ecceb689fbb02ac12ea41ed7c5380ee646218550d985a8f0126014ebceecf5",
+    "t/performance/general-rounds/production.py": "e0c2c02eeee485723d87c323eaf6ac019bf4592c1652b22b8f70b1e210487fa7",
+    "t/performance/general-rounds/qualify.py": "d8834b307222044d058c8ac40bdce45702da8d7135fcc07c43a98bbd93b25eee",
+    "t/performance/general-rounds/reference-expression.ss": "1265f0d5e7e3a94e872035cec9e77585538673d1d5ddb16f81d01782bd5d729b",
+    "t/performance/general-rounds/reference-program.ss": "ec563bf8f7453e201451221a70d14aca4d3a27606830726064a0c4b66aa813dd",
+    "t/performance/general-rounds/report.py": "d0385f7817b1402c9c15b0c2637137067b7ff32ef421eb776eb5f2b93b2b9c64",
+    "t/performance/general-rounds/verify.py": "884859696c3e4b14a208ef6b23293f29d2dfb0f3b01f62f4715ba2ece1818e88",
+    "t/qualification/ascent-binary-program-test.ss": "847787c263095a84cb0b069f6407fabeb6ab747e835f2fd2ce4c89d6396701b0",
+    "table/expression.ss": "032a061a98b6ad6bae2accb154a9bb1df337bc19c4d505656d5f6813d6a487cd"
+  },
+  "production_git_blobs": {
+    "core/binary-program.ss": "8264a5476097a43b58c7a298259911bde5a6b279",
+    "table/expression.ss": "9e02f86e9adf61633a76ce9d5f090d59b9a0c1e0",
+    "t/qualification/ascent-binary-program-test.ss": "b27950296fb8ca06a83000e4516ef7f2d093266e"
+  },
+  "matched_sources_and_artifacts_verified": true,
+  "production_sources_and_artifacts_verified": true,
+  "external_native_dependencies_verified": 1080,
+  "matched_profiles": 14,
+  "timing_qualified_profiles": 3,
+  "controls_within_bound": true,
+  "allocation_claim": false,
+  "original_gates": [
+    {
+      "name": "policy",
+      "exit": 0,
+      "seconds": 32.24504266701115
+    },
+    {
+      "name": "ascent-table-expression",
+      "exit": 1,
+      "seconds": 83.05108416599978
+    },
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 38.81082583300304
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 18.630643666008837
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 21.233584708999842
+    }
+  ],
+  "recheck_gates": [
+    {
+      "name": "recheck-ascent-table-expression",
+      "exit": 1,
+      "seconds": 114.96103649999714
+    }
+  ],
+  "gates": [
+    {
+      "name": "policy",
+      "exit": 0,
+      "seconds": 32.24504266701115
+    },
+    {
+      "name": "recheck-ascent-table-expression",
+      "exit": 1,
+      "seconds": 114.96103649999714
+    },
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 38.81082583300304
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 18.630643666008837
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 21.233584708999842
+    }
+  ],
+  "original_gates_all_passed": false,
+  "effective_gates_all_passed": false,
+  "remaining_gates": [
+    {
+      "name": "recheck-ascent-table-expression",
+      "exit": 1,
+      "seconds": 114.96103649999714
+    }
+  ],
+  "modules": 48,
+  "cases": 378,
+  "remote_ci_verified": false
+}

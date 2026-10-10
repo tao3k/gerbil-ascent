@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Assurance: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Concrete Set iteration history qualification
+
+[[file:../../../packages/proofs/lean/SemiNaive.lean][SemiNaive]] now derives all-old head coverage from the previous consequence
+step and proves naive/pivot equality for every natural-number round of a finite
+positive rule set over a monotone concrete Set view. Initialization executes
+the full body, including empty-body facts. No completed-solve premise or finite
+iteration cutoff is used. The [[file:../../evidence/scheme-seminaive-history-20261006/receipt.json][qualification receipt]] separates this universal
+algebra result from finite Quint initial/consume publication checks and native
+Provider regressions. General abstract gamma/join/injection contracts,
+descriptor finite-height termination and native combined refinement remain open.
+
+
+* Indexed frontier coverage correction
+
+BYODS section 3.2 properties (1)-(2) require coverage of new concrete facts,
+not disjointness of total and delta. The existing indexed traversal proof now
+uses =DeltaCovers= for row partition and compiled-pivot completeness/soundness.
+Tests remain under =packages/proofs/lean/Tests/= and distinguish legal old-row
+overlap, omitted fresh rows, and foreign rows. ProviderFrontier TLC explores
+exact and overlapping frontiers in the publication/consume protocol; Lean
+proves arbitrary finite-body algebra rather than repeating this state machine.
+See [[file:../../evidence/scheme-frontier-coverage-20261006/receipt.json][qualification receipt]]. General abstract gamma/injection laws and native
+representation/async refinement remain separate obligations.
+
+
+* Provider concretization native correspondence: revoke failed custom reads (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] connects index reads with concretization and
+requires logical indices of one relation to agree. Its formal interface does
+not define exception recovery for effectful Scheme receiver callbacks. This
+implementation gap is ours: build and extend already handle failed mutable
+physical state, but lookup previously left the entry marked as current.
+
+A custom receiver can overwrite a bucket before raising, or return that
+corrupted bucket for boundary rejection. Source rows and their version remain
+unchanged. Retaining the physical entry then authorizes reuse or incremental
+extension of a cache that no longer represents those rows.
+
+The custom lookup branch now catches failures from both receiver dispatch and
+whole-batch admission. It clears the selected entry's version and rethrows the
+same exception. A later read through an equivalent atom rebuilds from the
+committed snapshot; the separate all/delta entry is unaffected. Successful
+custom reads retain cache reuse and callback order. Key expressions are still
+evaluated outside this boundary, after build and once per lookup: an expression
+failure has not dispatched the mutable Provider and does not revoke its entry.
+Canonical and shared engine-owned paths retain their existing dispatch.
+
+Native controls independently inject a raised error, non-list packet, wrong
+arity, foreign row, duplicate enumeration and omitted key group. They check
+original diagnostics, alias recovery without changing source versions,
+revoked-entry extension refusal, successful-hit reuse and reciprocal all/delta
+isolation. Session controls compare recovered materialization with all 32
+independently enumerated source facts. The
+[[file:../../evidence/scheme-provider-lookup-recovery-20261006/receipt.json][receipt]] retains the unrepaired discriminator and qualified source hashes.
+
+No automatic retry occurs inside a failing read. Rebuild can still fail if the
+Provider remains invalid. Nested field stability, host side effects and general
+storage refinement remain open. No Lean/Quint source or performance claim is
+changed by this Scheme repair.
+

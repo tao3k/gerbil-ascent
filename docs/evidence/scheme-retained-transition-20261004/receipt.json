@@ -1,0 +1,110 @@
+{
+  "attempts": [
+    {
+      "accepted": false,
+      "exitStatus": 137,
+      "log": "retained-transition-build.log"
+    },
+    {
+      "accepted": false,
+      "exitStatus": 137,
+      "log": "retained-transition-build-retry.log"
+    },
+    {
+      "accepted": "build only on pre-integration source",
+      "artifactSha256": "a121f760a01b3b6f43487f1d7c4c95b60161d37bf37c4a0281b0640972651c15",
+      "buildElapsedSeconds": 126.06176620900078,
+      "cores": 2,
+      "exitStatus": 0,
+      "log": "retained-transition-build-limited.log"
+    },
+    {
+      "accepted": false,
+      "exitStatus": 124,
+      "log": "retained-transition-native.log",
+      "reason": "5-second startup silence before first completed three-arm group"
+    },
+    {
+      "accepted": false,
+      "exitStatus": 137,
+      "log": "retained-transition-phase-build.log"
+    },
+    {
+      "accepted": false,
+      "exitStatus": 137,
+      "log": "retained-transition-current-build.log",
+      "scope": "integrated 7e0a060 source; no accepted latest binary"
+    },
+    {
+      "accepted": false,
+      "exitStatus": 124,
+      "log": "retained-transition-native-model-progress.log",
+      "reason": "direct gxi/gxtest startup produced no output within 5 seconds; excluded from qualification"
+    },
+    {
+      "accepted": false,
+      "cores": 2,
+      "exitStatus": 137,
+      "log": "retained-transition-module-cache-build.log",
+      "reason": "180-second parent deadline during native executable-object compilation; no finalized artifact",
+      "sourceHead": "7103f87bad072407998fef7c207a4fa2bbf53b41"
+    }
+  ],
+  "bounds": {
+    "buildSeconds": 180,
+    "heap": "1G",
+    "idleSeconds": 5,
+    "moduleSeconds": 120
+  },
+  "ciObservation": {
+    "formal": "success",
+    "oracleByods": "success",
+    "overall": "in_progress at observation; not an accepted whole-CI result",
+    "runUrl": "https://github.com/tao3k/gerbil-ascent/actions/runs/37197666044",
+    "sourceHead": "7103f87bad072407998fef7c207a4fa2bbf53b41"
+  },
+  "compilerEvidence": {
+    "causalAttribution": "not established; parallelism, cache state and host load were not held fixed",
+    "objectCompiler": "/opt/homebrew/bin/gcc-16 fixed in installed SDK gambuild-C",
+    "swapUsedMbAtDiagnostic": 3854.75
+  },
+  "integrationUpstream": "7e0a0602b7f7edd76649ad054d14a548f43ff5a4",
+  "logsSha256": {
+    "retained-transition-build-limited.log": "16236dedfaf8d34235f4a0b673899a7645bf7eca3fbd538cfe42ccd9f5b97da0",
+    "retained-transition-build-retry.log": "de97ef3cc2044e2d564e49af3fd55666bee9c26a82609233b1618a9e206e9742",
+    "retained-transition-build.log": "4d65891461447e7048389625400d7622da403ef66b43a643a227c2a061d596fb",
+    "retained-transition-current-build.log": "388056fa01f3fe61535db91ad6c8ebe263ae359347c16591fe2e3baeb84f59f6",
+    "retained-transition-module-cache-build.log": "6e87cd6d9c9b4e958c11dfe2568ee08efbba654ff229af2ad5d12757e7a9dfb4",
+    "retained-transition-native-model-module.log": "5960a7e1a397a6825652c7d110bfc00af152d1c5b5b3e18b0c34105b0d3ff052",
+    "retained-transition-native-model-progress.log": "0597b809e5ef32ee138ce7371d130870db5b4c50591ebe5bdb53141591885bcc",
+    "retained-transition-native.log": "3c83230c1ceaf9aecabeb4786afbff82aeba487b2fa531c188e6e3e1929c1b82",
+    "retained-transition-phase-build.log": "92abc82f255c8a27f622f9a8b74bce7be36c825cdea6b5c9defbdc4b5bf0226d"
+  },
+  "modelCalls": 0,
+  "modelModuleDiagnostic": {
+    "cases": 24,
+    "elapsedModuleSeconds": 73,
+    "exitStatus": 0,
+    "log": "retained-transition-native-model-module.log",
+    "requiredMarkers": [
+      "NATIVE-MODULES-OK",
+      "MODULE-OK",
+      "HARNESS-OK",
+      "OK"
+    ],
+    "scope": "native dynamic module computation only; whole invocation was not guarded by the 5-second output watchdog",
+    "sourceHead": "7103f87bad072407998fef7c207a4fa2bbf53b41"
+  },
+  "remainingGates": [
+    "latest-source native artifact and whole qualification",
+    "three-arm timing/allocation distributions",
+    "function-valued model tasks accepted AOT preflight and frozen paid plan",
+    "general compiler refinement",
+    "other provenance algebras",
+    "model comprehension and benefit"
+  ],
+  "schema": "ascent.native-retained-transition",
+  "sourceHead": "b8c82a6288f15806787839c043ca1c3bd03430b7",
+  "status": "not accepted: latest source native compilation hit original 180-second deadline",
+  "version": 1
+}

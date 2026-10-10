@@ -1,0 +1,529 @@
+#+title: Scheme Coding Style: Planning and graph algorithms
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Declaration lowering, names, dependency components and stratification. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Study: decide strict dependencies before constructing edge records
+
+Installed Gerbil =2591dcd=, =compiler/optimize-call.ss:822-831=, delays
+compilation of conditional branches until the transformed test is available.
+For a folded constant it forces only the selected branch; an unknown test
+retains both branches. The transferable pattern is to make the admission
+decision before allocating the specialized branch's intermediate data.
+
+=core/rule-semantics.ss= previously built a dependency vector and list header
+for every reading clause/head pair, even when a pure positive declaration
+necessarily had stratum zero. It then discarded those records. Stratification
+now first checks for negation/aggregate reads or lattice-to-relation
+projection. The latter reuses the existing semantic predicate. Without
+strict dependencies it returns fresh zero strata immediately. Otherwise it
+constructs exactly the previous ordered edges and runs the existing SCC,
+cycle-diagnostic and minimum-stratum propagation path. Multihead declarations,
+duplicate heads, nonreading clauses and mixed relation/lattice kinds retain
+their semantics. This decision reads admitted immutable plans, not source
+rows, runtime frames or callbacks. Invalidation successors still retain all
+reading edges; only unused stratification records are omitted.
+
+=just performance-strata-preflight= freezes semantics, planning and evaluator
+at =1de7af462fafc1b90fe475fbfd9b4ed821f79eb1=, changing only module paths and
+redirects among those owners. Both sides share the same current component
+scheduler and other runtime modules. All owners compile to native code with
+exact resolution checks. Seven scenarios use 50 alternating pairs each.
+Initial collection and four warmup checks are outside timing; natural
+collection remains inside. Gates fixed before sampling: the positive kernel
+requires 90% less allocation, 30% less CPU and 35 wins; cold solves require
+10% less allocation. Controls allow 4 KiB extra allocation; nonkernel CPU
+overhead is bounded by 5% + 20 us. Independent strata/output oracles run
+outside timing.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Positive dependency kernel | 5.125 | 1.000 | 132154 | 1482 | 50/50 |
+| Negation kernel control | 24.625 | 24.250 | 237178 | 237146 | 22/50 |
+| Aggregate kernel control | 25.125 | 24.625 | 237178 | 237146 | 28/50 |
+| Lattice projection kernel control | 25.750 | 27.375 | 237178 | 237290 | 11/50 |
+| Cold public solve | 339.500 | 317.000 | 1415672 | 893256 | 44/50 |
+| Cached public solve control | 86.000 | 86.000 | 114776 | 114776 | 25/50 |
+| Small cold public solve control | 19.188 | 19.000 | 68253 | 68237 | 22/50 |
+
+All 350 pairs passed parity and gates. The positive kernel uses four rules
+with 16 heads and 16 reading clauses: allocation falls 98.9% and CPU 80.5%.
+The cold public solve uses four rules with 32 heads and 32 body atoms, one
+source row and 32 independently checked output relations. Base declaration
+construction is outside timing. Every timed cold call creates a fresh POO
+program identity, validates the schema, lowers rules, constructs analysis and
+engine state, closes the actual rule computation, publishes and forces all
+rows. It saves 522416 bytes (36.9%) and observes 6.6% less CPU. This is a
+declaration-heavy cold-start workload, not a general warm-solver throughput
+claim. Cached solving has identical median CPU/allocation. Lattice preflight
+adds 112 bytes and 1.625 us CPU; the negative control remains visible. Logs,
+raw pairs and pre-integration results remain under ignored
+=.cache/ascent/strata-preflight/=.
+
+Native qualification passed ten modules / 86 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-8 seconds. The new Suite
+checks 144 multihead/mixed-clause/storage-kind combinations, nonreading
+clauses, exact competing cycle-error priority and cold/warm public solves.
+The existing SCC Suite independently checks all 512 three-node graphs with
+strict edge and lattice variants against its reference propagation algorithm.
+Positive-plan/component, lattice, aggregate, selected-activation, deletion,
+actor-round and session-actor Suites passed. Selected production policy
+reported zero findings/errors. Frozen-owner normalization and final source
+hashes were checked separately from successful native Suite/module exits.
+
+* Feature: declaration compilation and ordered stratum grouping
+
+The installed compiler makes pass ownership visible in its entrypoints.
+=gerbil/compiler/optimize.ss:27= scopes mutation and local-type tables to one
+=optimize!= invocation; =compile.ss:57= declares the syntax handlers for binding
+collection explicitly. =optimize-base.ss:24= names optimizer metadata with a
+structure instead of spreading its field interpretation across callers.
+These are concrete ways to expose invariants to a reader and to the compiler.
+They do not establish that every upstream implementation is faster.
+For diagnostics, =base.ss:97= passes the current compile context and source
+syntax to =raise-syntax-error=. ASCENT's corresponding boundary keeps the
+rule/body/head or program-dependency path and re-raises the original exception
+after the optional diagnostic callback observes it.
+
+ASCENT now has one declaration compilation entrypoint,
+=gerbil-ascent-prepare-program= in =program/planning.ss=. It accepts relations,
+rules, a validated schema and the diagnostic callback. It resolves atoms,
+checks body/head variable bindings, computes strata and groups active rules.
+It neither reads source rows nor invokes storage or rule callbacks.
+=program/evaluate.ss= requests this result through the existing declaration
+cache, then constructs its own execution metadata, variable frames and timers.
+
+#+begin_example
+relations + rules + validated schema
+                  |
+                  v
+planning: resolve -> bind/check -> strata -> ordered active rules
+                  |
+                  v
+analysis cache: immutable declaration plan
+                  |
+                  v
+engine: owned rows, indexes, variable frames, budgets and timers
+#+end_example
+
+The earlier active-rule construction scanned every rule's heads once per
+stratum. The replacement groups each rule's heads in one traversal, prepends
+the resulting active rule to its stratum, then reverses the accumulators.
+Hash iteration order cannot change rule order: a rule contributes at most one
+group to each stratum, and each stratum reverses the same source-rule traversal.
+Head order and duplicate heads are retained. Delta positions and diagnostic
+paths still use the original lowering functions.
+
+The private plan vector layout and public POO declarations remain identical.
+Source admission still precedes declaration compilation inside engine creation,
+preserving the existing error and provider-callback order. This change removes
+declaration compilation from the large engine closure without moving callbacks
+into a different phase. It does not claim a measured solve-time speedup.
+
+Qualification adds two Cases to the existing =ascent-rule-program-test.ss=:
+storage and guard callbacks remain idle during compilation and execute during
+evaluation; a multi-head rule spanning two strata retains repeated heads,
+source-rule order and the correct delta positions. Existing language diagnostic,
+negation, aggregate, lattice and retained-session tests cover the other seams.
+
+Local validation of this change uses the pinned cache SDK with
+=GERBIL_BUILD_CORES=12=: standard =just build= succeeds; =just check-policy=
+checks 42 modules with findings=0 and errors=0; =just test= passes 50 modules
+and 398 Cases; exclusive =just performance= passes all 17 distinct SS scenarios.
+The commands return exit 0 with the original module deadlines, Case budgets,
+fixture thresholds and 1000-sample performance contracts. Logs remain under
+ignored =.cache/ascent/planning-*.log=. These are local receipts, not remote CI
+or a paired declaration-compilation benchmark.
+
+* Feature: local name indexes throughout declaration lowering
+
+The installed Gerbil compiler's =compile.ss:1115= creates a local
+=make-hash-table-eq= while walking imports. Its continuation records an
+expander context only once and keeps the original traversal order. ASCENT
+can apply that representation to admitted names; compiler context identity
+and ASCENT variable scope remain different semantic contracts.
+
+=program/objects.ss= and =program/planning.ss= now share an admission-local
+membership predicate. Small scopes use =memq=. For scopes with at least 32
+names, the 32nd query builds one identity index. Multiple heads share that
+snapshot after body lowering. A bounded 32-cell probe avoids a full length
+scan. The threshold limits allocation for short query sequences; it is an
+implementation choice, not an optimal threshold proven for every workload.
+
+Wide atoms separately index the growing same-atom scope. Freshness is read
+before inserting the current name; repeated variables and names introduced
+by patterns still compare row values. Physical key eligibility consults
+only the prior clause scope. Pattern-output collision checks retain their
+list representation and remain a second phase after expression-input validation.
+Wide generator and aggregate outputs use indexed collision checks; wide
+aggregate input queries use a variable-only atom index. Checked fixnum
+operations apply only to the probe and query counter bounded by 32.
+
+Custom clause planners still receive the original bound-name list. Result
+vectors, declaration order and diagnostic priority are unchanged. Scratch
+tables and lookup closures disappear after admission; immutable plans retain
+no variable frames, engine rows, global name cache or new metadata fields.
+
+Three binding Cases check 31/32/33/128-name boundaries with uninterned
+symbols, fresh and repeated variables, prior-scope index eligibility,
+callback timing, ordered pattern outputs and expression-error priority over
+pattern collisions. Four whole-program Cases exercise multi-head atoms,
+tuple generators, aggregates, patterns and head expressions, preserving
+=#f= values and ordered output columns across the same boundaries.
+
+#+begin_src sh
+just test-file t/qualification/ascent-binding-test.ss
+just test-file t/qualification/ascent-declaration-scope-test.ss
+just test-file t/performance/ascent-declaration-scope-performance-test.ss
+#+end_src
+
+The explicit research performance module runs the same native fixture on
+frozen =822348c= and this candidate in separate processes, reversing process
+order on repeat. Eight shapes each retain 1000 samples. Direct declaration
+compilation uses one validated schema. Cold engine construction includes
+schema creation, declaration compilation and initial relation state. Each
+sample uses a distinct POO snapshot inheriting an already validated template;
+copying, constructor validation, GC and checks are outside both timers.
+Distinct identity excludes schema and analysis cache hits. Every sample
+checks exact compiled plans, strata and active-rule groups against the cold
+engine's cached analysis; endpoint solves check all expected output rows.
+Fixtures and callbacks are compiled in the same test unit on both revisions.
+
+Exploratory versions that reconstructed and revalidated the full Program
+or solved every sample exceeded the native deadline and are discarded.
+Constructor validation and complete solve throughput are not measured by
+this comparison. The final method preserves the native 120-second module
+deadline, original performance gates and all sample counts. Logs remain in
+ignored =.cache/=; this research module is invoked explicitly rather than
+added to normal semantic qualification or the original SS suite.
+
+The final process order is reference/candidate, then candidate/reference.
+Each cell below is reference/candidate median jiffies; compile and cold are
+separate timed sections over the same 1000 fresh identities per shape.
+
+| Shape (width, heads) | Compile first | Cold first | Compile repeat | Cold repeat |
+|----------------------+---------------+------------+----------------+-------------|
+| Atom (1, 1)          | 3/3           | 13/13      | 3/3            | 14/13       |
+| Atom (8, 1)          | 5/5           | 16/16      | 5/5            | 17/16       |
+| Atom (128, 8)        | 230/208       | 277/256    | 253/206        | 318/254     |
+| Atom (512, 8)        | 1809/809      | 1946/938   | 1893/807       | 2030/943    |
+| Generator (128, 2)   | 117/109       | 132/126    | 119/108        | 135/125     |
+| Aggregate (128, 2)   | 134/96        | 150/114    | 135/97         | 151/114     |
+| Pattern (128, 2)     | 63/61         | 76/75      | 63/61          | 76/75       |
+| Expression (512, 2)  | 477/181       | 494/200    | 481/180        | 501/198     |
+
+The two wide 512-column targets reduce median declaration compilation by
+approximately 55--57% and 62--63%, and cold construction by 52--54% and 60%.
+The 128-column multi-head, generator and aggregate targets also improve
+in both orders. Narrow compilation controls have equal medians; the one-
+or two-jiffy cold-control and pattern differences do not establish meaningful
+gains. A first candidate indexed
+pattern-output collisions too, raising that shape's compile median to 66
+against 62--63 in the reference. That change was removed before the final
+comparison. These measurements cover complete declaration compilation and
+cold engine creation for the declared fixtures, not constructor validation,
+complete solves, production workload distribution or individual-call tails.
+
+Final local qualification uses the pinned cache SDK and
+=GERBIL_BUILD_CORES=12=: standard build, policy over 42 production modules
+(findings=0, errors=0), all 51 semantic modules and 411 Cases, and all 17
+original SS performance scenarios. Every command exits 0. Module deadlines,
+Case budgets, fixture thresholds and original sample counts are unchanged.
+=build.ss= remains 61 lines; the new qualification module joins the reviewed
+parallel list in =t/native/qualification.ss=. These local receipts do not establish
+remote CI closure.
+
+* Feature: explicit SCC traversal state shared by both graph consumers
+
+The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)
+uses a named tail loop with an explicit accumulator and one final reversal.
+The transferable lesson is to state the traversal invariant and retain only
+the state needed by the next step. That source does not implement SCCs;
+Tarjan's lowlink and component ordering remain ASCENT's responsibility.
+
+=program/graph.ss= now represents DFS continuations as invocation-local
+frames: the vertex and the remaining suffix of its adjacency list. Entering
+a child pushes a frame; finishing it propagates its lowlink to its parent.
+Cross edges still use the neighbor's discovery index, and the original SCC
+member stack remains separate from DFS frames. Every traversal transition
+is a tail call. The numeric root loop also removes the =iota= vertex list.
+Caller-owned edge lists are never mutated. Time remains =O(V+E)= and auxiliary
+space =O(V)=; this changes representation and constants, not the algorithm's
+asymptotic complexity. Both relation stratification and rule summaries use
+the same implementation without changing their APIs or diagnostic ordering.
+The frame pair is destructured with native =with= rather than repeated field
+selectors. Checked =fx+=, =fx<=, =fx== and =fxmin= apply only to dense IDs and
+discovery counters bounded by =vector-length=, including the final count
+sentinel. No caller-owned data values are numerically specialized.
+
+Two Cases in the existing SCC summary module compare exact ordered outputs
+for all 512 three-node directed graphs, each with original, reversed and
+duplicated adjacency lists, and qualify 20,000-vertex chains and cycles.
+The recursive reference is frozen from =761dcea= in
+=t/qualification/ascent-graph-fixture.ss=. The existing stratification oracle
+also continues to check minimum strata and concrete strict-cycle diagnostics.
+
+#+begin_src sh
+just test-file t/qualification/ascent-scc-summary-test.ss
+just test-file t/performance/ascent-graph-performance-test.ss
+#+end_src
+
+The explicit performance module compares 1000 alternating pairs of eight
+traversals per shape. A three-vertex control requires median nonregression;
+1024-vertex chain, cycle and branching targets also require 900 strict wins.
+Graph construction and GC are outside the measured intervals. The benchmark
+includes the frozen implementation in its own native compilation unit; the
+existing =just test-file= entrypoint needs no graph-specific rules.
+The first exploratory run loaded that helper
+from source and is discarded; only matched native runs can qualify this slice.
+This measures graph traversal, excluding declaration lowering and full solves.
+Original SS fixtures, budgets and sample counts remain unchanged.
+
+The final two native runs qualify all shapes. Chain, cycle and branching
+targets win =941/973/979= pairs initially and =966/998/997= on repeat.
+Reference/candidate median batch jiffies are =254/140, 255/130, 240/148=
+initially and =252/138, 253/128, 238/146= on repeat, reducing median batch
+time by approximately 38--49%. The small control is =1/1= in both runs,
+at the timer resolution. These are SCC traversal measurements; no full
+solver speedup or individual-call tail improvement is claimed.
+
+* Feature: stratification and dependency cycles
+
+The initial implementation used stratum relaxation and repeated
+reachability searches for strict-cycle diagnostics. The second round
+below replaces it with SCC condensation while preserving minimum
+strata, diagnostic kind, and encountered-edge ordering. The rule
+summary and relation stratifier share Tarjan traversal but retain
+their different vertices and output contracts.
+
+* Second round: SCC stratification and reusable graph analysis
+
+The installed Gerbil Compiler gives three concrete lessons for this
+implementation. =compiler/optimize-xform.ss:16= registers handlers by AST
+form with =defcompile-method=; =compiler/optimize.ss:27= creates pass-local
+mutator and type tables before traversal; =compiler/optimize-call.ss:43=
+specializes calls after resolving their operators and checking safety.
+The applicable pattern is to move declaration work into checked planning
+and keep mutable execution state local. The compiler's method hierarchy
+and unchecked-call machinery are not needed for this graph algorithm.
+
+Previously =program/funs.ss= relaxed every dependency edge until the
+strata stopped changing. A reverse-ordered strict chain required one
+pass per relation, giving worst-case =O(V*E)= work. Cycle diagnostics
+then searched reachability separately for strict edges.
+
+=program/graph.ss= now owns the Tarjan implementation formerly embedded
+in =program/summary.ss=. Both the rule summary and relation stratifier
+use it with their own vertices and edge metadata. A strict edge within
+one SCC is rejected, selecting the first invalid dependency in the old
+ordering to preserve aggregate, negation, and lattice-projection error
+messages. Every positive SCC receives the maximum incoming level; a
+single source-before-consumer pass propagates the minimum strata.
+Graph analysis and propagation take =O(V+E)= work. Programs containing
+only positive dependencies use stratum zero without building SCCs.
+
+The frozen relaxation oracle in
+=t/qualification/ascent-strata-fixture.ss= comes from commit =74f0046=.
+The qualification test compares 6,656 three-node graph configurations,
+including single strict edges, mixed strict kinds, and lattice
+projections. Additional checks cover a positive SCC with a strict
+incoming edge, empty declarations, and duplicate dependencies. All
+strata and concrete cycle diagnostics matched the oracle.
+
+=just strata-benchmark= compiles current planning and the oracle into one
+isolated output directory with identical optimizing =std/make= settings.
+It alternates old/new execution for
+1000 samples per case, checks exact strata outside every timed span,
+and retains all samples plus source hashes. The 32-relation positive
+case batches 32 calls per sample to resolve sub-microsecond differences;
+strict chains use one call per sample. The matched gate requires no
+median regression and at least 900/1000 wins for strict chains.
+
+Two consecutive runs passed all four matched cases. Strict-chain
+planning medians improved from 5 to 3 us at 32 relations, from 59 to
+10 us at 128 relations, and from 235/230 to 20 us at 256 relations.
+Each strict-chain case favored the candidate in 972--985 of 1000
+pairs. The positive-case median also improved.
+=t/performance/strata/README.org= records the
+protocol and links the retained raw samples and source manifests.
+
+These receipts measure planning over prebuilt lowered rules. They
+exclude declaration construction, POO admission, fixed-point solving,
+and process startup. They do not establish a full evaluator speedup.
+The existing =ascent-indexed-joins= SS fixture still uses 1000 samples;
+a local run completed in 28 s with correct rows but p95 =10.372 ms=,
+which failed its unchanged =2 ms= gate under heavy host load.
+
+An earlier experiment cached selected atom terms alongside index
+columns. The literal/expression/variable regression passed, but there
+was no matched full-solve gain, so the production and fixture changes
+were reverted. The retained row-key implementation and index plans
+remain as at =74f0046=.
+
+
+* Feature: compile dependency adjacency with immutable rule analysis
+
+Source baseline: =536c87a=. Gerbil v0.19's =std/make.ss:224-246,338-343=
+creates the completion table once for a build invocation and lets its workers
+consult the shared module dependency metadata; worker readiness and channels
+remain separate state. =gerbil/compiler/optimize-base.ss:24-29= similarly
+places optimizer metadata in a named owner rather than reconstructing it at
+every use. The useful principle here is lifetime: compile declaration facts
+at their owner boundary and keep invocation state out of the cached value.
+This is an architectural inference, not a claim of algorithm parity with make.
+
+ASCENT previously rebuilt every source-to-head edge at each source replacement
+in =program/update-selection.ss=. =program/planning.ss= already constructs and
+caches immutable admitted rule plans. It now also compiles adjacency through
+=core/rule-semantics.ss= and retains it at analysis slot 6. All earlier slots
+keep their meaning. Changing rules creates new analysis; source-only updates
+reuse the original declaration analysis and its graph.
+
+| Owner | Responsibility |
+|-------+----------------|
+| =core/rule-semantics.ss= | Compile atom, negation and aggregate reads to all rule heads |
+| =core/dependency-graph.ss= | Read adjacency and close a caller-owned selection bitmap |
+| =program/planning.ss= | Build graph once with admitted immutable plans |
+| =program/update-selection.ss= | Admit reuse, compare source snapshots and allocate each update's bitmap |
+
+The graph is private planning metadata, read-only after construction. It owns
+only dense relation IDs, never source rows, callbacks, mutable engine frames or
+reuse results. Each traversal owns its queue and marks before enqueue, so
+cycles and duplicate edges cannot revisit a vertex. Traversal order is not an
+observable rule execution order: the result is a Boolean relation selection.
+Positive, negative and aggregate dependencies all invalidate every head;
+guards and bindings do not add an edge.
+
+The existing session-deletion Suite checks every three-node graph and root
+against independent matrix reachability, and now reuses the same adjacency
+across roots while checking it is unchanged. Additional tests cover self-loops,
+duplicate edges, independent invocations, zero vertices and a 4096-node chain.
+Existing retained Session cases cover deletion, negation, aggregates, lattice
+replacement, append logs, failed transactions and subsequent append behavior.
+
+=just performance-update-dependencies= freezes the old selection implementation
+from =536c87a=, with only its relative checked-language import normalized. Both
+implementations run as compiled native modules, with path and object checks,
+on the same admitted program and prepared analysis. Declaration construction
+and graph compilation occur before the timer; the measured boundary is repeated
+source-selection, including eligibility, source comparison and closure. It is
+not a full replacement/solve or cold program-construction measurement. A graph
+adds retained metadata and one upfront edge-building pass; that cost is not
+represented as free. Four cases cover chain/wide dependencies, changed/unchanged
+sources. One initial collection precedes warmup; natural GC remains included.
+100 alternating pairs check exact bitmap parity outside each timed batch.
+Wide graphs must reduce allocation by 20%, CPU median by 10%, and win at least
+75 pairs; chains must not increase allocation or regress CPU by more than 5%.
+These limits are fixed before sampling. Logs remain under ignored
+=.cache/ascent/update-dependencies/=.
+
+** Native paired receipt
+
+All four scenarios complete 100 pairs, exact bitmap parity and their original
+CPU/allocation gates, with final OK per scenario and coordinator exit 0.
+Per-call medians (CPU in microseconds):
+
+| Scenario | Bytes old/new | CPU old/new | CPU wins |
+|----------+---------------+-------------+----------|
+| Chain changed | 20420.8 / 13332.8 | 49.6 / 48.5 | 76/100 |
+| Chain unchanged | 17396.8 / 10308.8 | 50.3 / 48.6 | 72/100 |
+| Wide changed | 823892.8 / 11844.8 | 256.6 / 213.5 | 76/100 |
+| Wide unchanged | 822356.8 / 10308.8 | 264.9 / 220.6 | 77/100 |
+
+Wide selection allocation is 98.6-98.7% lower and CPU medians are 16.7-16.8%
+lower. Chains allocate 34.7-40.7% less; CPU medians are 2.2-3.4% lower, within
+the original regression limit. These results do not qualify cold program
+construction, full source replacement, solve time or wall-clock latency.
+The initial benchmark invocation times out waiting for the existing test-lane
+lock; it contains no performance samples. It is retained as a failed attempt,
+and the benchmark is rerun after the semantic invocation releases the lock.
+Neither lock nor test deadlines are extended.
+
+** Exhaustive oracle ownership
+
+The first positive-plan module invocation fails its existing POO Case duration
+budget inside the 512-graph corpus and then its module process deadline. This
+is not accepted as qualification. That corpus already computes independent
+matrix closure, but additionally replayed the unchanged historical evaluator
+for every graph. It now compares the current result directly with the matrix
+oracle, explicitly requiring completion and unchanged ordered source rows,
+exact closure cardinality and every expected edge. The 512 inputs and all
+oracle assertions are retained; other focused Cases still compare old/new
+evaluators. Every eight completed, checked graphs emit a real progress marker.
+No duration or process deadline is increased. The failed invocation remains
+under =.cache/ascent/update-dependencies/ascent-positive-plan.log=.
+
+** Final native semantic receipt
+
+Four module invocations pass 56 distinct Cases: session deletion (13), rule
+programs (14), positive plans (17), and timeout/recovery (12). The final
+positive-plan invocation checks all 512 graphs and passes in 83 seconds under
+the unchanged 60-second Case and 120-second module deadlines. Every final
+module has MODULE-OK, HARNESS-OK, OK and supervising exit 0. The changed
+production owners pass the policy scan with zero findings and zero errors.
+The initial failed positive-plan invocation is not included in this receipt.
+The incoming remote revision =c5df1ac= changes formal proofs and CI configuration,
+with no changes to these Scheme production or qualification sources. Local
+qualification remains distinct from current-head remote CI and static AOT.
+
+* Declaration summary: admission before dependency expansion
+
+Gerbil =1cfb032= =std/list/list.ss:24-32= makes distinct publication a
+membership operation around an explicit consumer. =std/struct/dag.ss:36-47=
+keeps visited and visiting state local to one traversal. These are useful
+construction contracts even though the DAG walker itself cannot accept our
+cyclic dependency graphs. The existing native Tarjan partition remains intact.
+
+=program/summary.ss= previously indexed every repeated head, expanded every
+repeated reading clause against those producers, and then deduplicated each
+complete adjacency list. The private =for-summary-relations= syntax now owns
+relation-name admission for both producer indexing and reading-clause expansion.
+The item projection runs once per declaration item; atom, negation and aggregate
+reads remain admitted, while guard/binding clauses never read a relation slot.
+An inline first symbol handles zero/one-name layouts. A construction-local
+identity table is created only on the second distinct name. No membership state
+or projected name spine survives the invocation.
+
+Consumers publish in rule order. Every edge for a given consumer is contiguous
+in its producer adjacency list, so =publish-summary-edge!= needs only to inspect
+the current list head before publishing a fresh pair. This removes duplicate
+edges before allocation and removes the final graph-wide deduplication pass.
+Reverse consumer order, exact SCC order, sorted rule/name descriptors and
+self-loop detection retain their existing semantics. Public descriptors stay
+POO objects; this pure planning protocol does not introduce runtime inheritance,
+execution frames or source-row state.
+
+The fixture also exposed a POO construction mistake: =(rules rules)= recursively
+references the slot rather than an identically named outer value. The pinned
+POO =object.ss:489-495= expands slot identifiers through a local syntax scope;
+=object.ss:314-318= documents slot construction forms, including the single-name
+form for an outer binding. The fixture now uses a distinct =declarations=
+binding. Its failed startup and the separately corrected isolated-component
+oracle remain in cache. Neither failure changes a performance gate.
+
+See [[file:../../t/performance/declaration-summary/README.org][declaration summary qualification]] for complete native summary construction
+and descriptor consumption, independent controls and finite ordered-graph
+comparisons. Duplicate-heavy construction gains are not public solve gains.
+
+* Declaration lookup: own the index and preserve observation order
+
+Gerbil compiler =optimize.ss:28-35= creates mutator/type tables inside the
+compilation invocation. Pinned POO =object.ss:196-205= memoizes a slot's first
+successful value on its instance. Together these support a construction-owned
+declaration membership predicate: keep a private remaining cursor and observed
+name table, advance only until the current request matches, and reuse observed
+names for subsequent requests. Eagerly collecting every name would force slots
+beyond an earlier success or invalid handle. The predicate owns lookup mechanics;
+the caller keeps symbol, duplicate and declaration checks in their original order.
+
+For Fragment exports, ordered admission finishes before publishing a resolver.
+Store immutable label/handle symbols in a private identity table rather than
+retain mutable caller pairs. Each constructor starts fresh. This separates
+admission, lookup and publication without adding a runtime dispatch hierarchy
+to a pure lookup operation. Public POO validation still checks the complete root.
+
+See [[file:../../t/performance/declaration-names/README.org][declaration lookup qualification]] for matched full consumers, callback traces,
+diagnostic precedence and mutation controls. Allocation costs on small/empty
+inputs remain explicit; lookup complexity alone is not a performance receipt.

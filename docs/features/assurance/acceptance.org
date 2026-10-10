@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Assurance: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Native SCC union-find implementation follow-up (2026-10-05)
+
+[[file:../../scheme-trrel-uf-design.org][Implementation design]] and [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][qualification receipt]] supersede the previously
+identified missing UF representation. That historical receipt remains immutable;
+this follow-up closes the implementation gap, not all Provider concretization formal/performance gaps.
+
+The subsequent rebased union-find snapshot passes 76 native modules and 648
+Cases with successful parent final verification. It has native SCC compression
+and matched 32-node Provider CPU improvements, but allocation regresses in both
+DAG and cycle controls. This closes the missing storage implementation slice;
+allocation, full native refinement, index sharing and paper application gates
+remain open. The earlier full run with a parent heap failure is not admitted.
+
+
+* Keyed replacement projection closure (2026-10-07)
+
+LatticeProjection closes the stated keyed update/staging/publication algebra and
+last-column row encoding component. The settled min-map transaction has seven
+discriminating Quint faults; native tests check actual false/true multi-field keys,
+multiple same-key inputs in both orders, improved/ineffective updates, source
+replacement and immutable earlier projections. Superseded tuple values must not
+remain in the ordinary relation.
+
+The projection model covers one finite transaction, not arbitrary convergence
+or asynchronous joins. User join laws/purity and universal native hash/vector/SCC extraction remain
+refinement gates. StrictDependencies and PendingKeys close the stated typed
+weighted-edge and functional roster components below.
+This is distinct from ProviderIteration's monotone-gamma admission contract.
+See [[file:../../scheme-trrel-uf-design.org][the design]] and
+[[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
+
+
+
+* Canonical admission and complete application rule progress (2026-10-07)
+
+The [[file:../steensgaard/design.org::*Canonical admission boundary and Steensgaard application (2026-10-07)][integrated follow-up]] closes a discovered native capability-dispatch defect:
+custom or nested mixed view parts cannot enter the canonical selected matcher
+solely because an outer private visitor record exists. It also adds maximum
+packed vertex/group controls and the complete Steensgaard allocation, assignment
+and load/store rule program, with explicit and implicit variants.
+
+The application's native retained/cancellation controls and Rust explicit,
+eqrel and independent graph comparisons connect application rule behavior to
+the library lifecycle. They do not qualify the full OpenJDK experiment or its
+linear-space argument. At the time of this receipt Scheme eqrel emitted
+explicit pairs into engine buffers. The subsequent compressed equivalence
+publication section supersedes that representation limitation; universal native
+ownership/recovery correspondence remains an explicit bridge obligation.
+The [[file:../../evidence/scheme-application-admission-20261007/openjdk-source.json][pinned OpenJDK source manifest]] binds four original blobs, their SHA256s,
+47,069 TSV facts and arities. The complete Rust implicit application and an
+independent partition model both count 440,438,706 pairs. This admits source
+identity, shape and full-input aggregate cardinality agreement in the reference;
+it does not admit full Scheme solving or full tuple-by-tuple data comparison.
+
+The other oracle failure at 9cd4897 requires a launch-boundary repair and a
+fresh exact-head CI result. Restoring blocking inherited standard streams is
+qualified by actual Gerbil/Rust backpressure; the missing original CI panic
+text prevents attributing its exact historical syscall. Case-level truth and
+transport admission remain distinct. The theorem thread retains Lean/Quint
+ownership; universal native extraction and the other paper applications remain
+on the closure matrix.
+
+Local qualification for this slice admits 825 native Cases in 86 modules,
+67 other-oracle tests and 11 BYODS tests, with source-view and policy gates
+passing. The [[file:../../evidence/scheme-application-admission-20261007/receipt.json][source-bound receipt]] preserves actual paired costs and exclusions.
+The warmed complete application at 1,088 output pairs has median implicit /
+explicit CPU and serial allocation ratios of 0.081 and 0.144. These are local
+fixture results; worker allocation and full-data Scheme memory are not admitted.
+
+Integration onto =c30f057= preserves all 555 Scheme source hashes and both
+threads' research sections. The native artifact was rebuilt for the changed
+=justfile= source binding. Updated local gates admit 68 other-oracle tests,
+11 BYODS tests, Clippy, the full-data Rust model unit test and 18 Python support
+tests. Valid/stale artifact controls respectively succeed and reject before
+result output. Remote final-revision CI remains separate from these receipts.
+

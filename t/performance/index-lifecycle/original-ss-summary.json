@@ -1,0 +1,312 @@
+{
+  "entries": 17,
+  "passed": 8,
+  "failed": 9,
+  "uninterrupted_batch_pass": false,
+  "results": [
+    {
+      "name": "ascent-byods-trrel",
+      "exit": 1,
+      "log": "original-ss.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT BYODS trrel exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "442000"
+        ],
+        "p95Ns": [
+          "1548000"
+        ],
+        "max_total": [
+          "1000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-session-update",
+      "exit": 0,
+      "seconds": 18.5732348330057,
+      "log": "remaining-ss/ascent-session-update.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-session-update p95=692us semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-ten-thousand-appends",
+      "exit": 1,
+      "seconds": 51.15390958399803,
+      "log": "remaining-ss/ascent-ten-thousand-appends.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-ten-thousand-appends p95=127.844ms"
+      ],
+      "failures": [
+        "[Error]: ASCENT ten-thousand-append latency exceeded the unchanged 50 ms bound"
+      ],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-nonpositive-session-update",
+      "exit": 0,
+      "seconds": 10.518652750004549,
+      "log": "remaining-ss/ascent-nonpositive-session-update.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-nonpositive-session-update p95=737us semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-rule-clauses",
+      "exit": 1,
+      "seconds": 9.039469457995438,
+      "log": "remaining-ss/ascent-rule-clauses.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT rule clauses exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "377000"
+        ],
+        "p95Ns": [
+          "1293000"
+        ],
+        "max_total": [
+          "1000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-var-points-to",
+      "exit": 0,
+      "seconds": 8.487162291996356,
+      "log": "remaining-ss/ascent-var-points-to.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-var-points-to p95=633us semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-upstream-examples",
+      "exit": 1,
+      "seconds": 7.760544207994826,
+      "log": "remaining-ss/ascent-upstream-examples.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT Fibonacci exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "288000"
+        ],
+        "p95Ns": [
+          "1054000"
+        ],
+        "max_total": [
+          "1000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-product-session",
+      "exit": 1,
+      "seconds": 15.258965166998678,
+      "log": "remaining-ss/ascent-product-session.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT product session exceeded benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "503000"
+        ],
+        "p95Ns": [
+          "3719000"
+        ],
+        "max_total": [
+          "2000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-mutual-recursive-heads",
+      "exit": 0,
+      "seconds": 23.78056108400051,
+      "log": "remaining-ss/ascent-mutual-recursive-heads.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-mutual-recursive-heads p95=664us semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-derived-aggregate",
+      "exit": 1,
+      "seconds": 26.473972041996603,
+      "log": "remaining-ss/ascent-derived-aggregate.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT derived aggregate exceeded benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "164000"
+        ],
+        "p95Ns": [
+          "1121000"
+        ],
+        "max_total": [
+          "1000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-indexed-joins",
+      "exit": 1,
+      "seconds": 13.444052792001457,
+      "log": "remaining-ss/ascent-indexed-joins.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT indexed joins exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "345000"
+        ],
+        "p95Ns": [
+          "3803000"
+        ],
+        "max_total": [
+          "2000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-byods-eqrel",
+      "exit": 1,
+      "seconds": 13.452033624998876,
+      "log": "remaining-ss/ascent-byods-eqrel.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT BYODS eqrel exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "411000"
+        ],
+        "p95Ns": [
+          "2985000"
+        ],
+        "max_total": [
+          "1000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 9.558544583000185,
+      "log": "remaining-ss/ascent-binary-program.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-binary-program p95=1.047ms"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 8.005752208999183,
+      "log": "remaining-ss/ascent-reachability-closure.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-reachability-closure p95=537us pairs=190 semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-table-expression",
+      "exit": 1,
+      "seconds": 42.07173079200584,
+      "log": "remaining-ss/ascent-table-expression.log",
+      "receipts": [],
+      "failures": [
+        "[Error]: ASCENT relation projection exceeded the benchmark budget"
+      ],
+      "failed_statistics": {
+        "p50Ns": [
+          "877000"
+        ],
+        "p95Ns": [
+          "3654000"
+        ],
+        "max_total": [
+          "2000us"
+        ]
+      }
+    },
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 10.841206333003356,
+      "log": "remaining-ss/ascent-table-expression-membership.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-membership baseline-p95=2.301ms candidate-p95=463us semanticEquivalent=#t"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    },
+    {
+      "name": "ascent-shortest-candidates",
+      "exit": 0,
+      "seconds": 7.002622917003464,
+      "log": "remaining-ss/ascent-shortest-candidates.log",
+      "receipts": [
+        "[gerbil-ascent-benchmark] ascent-shortest-candidates p95=1.596ms"
+      ],
+      "failures": [],
+      "failed_statistics": {
+        "p50Ns": [],
+        "p95Ns": [],
+        "max_total": []
+      }
+    }
+  ]
+}

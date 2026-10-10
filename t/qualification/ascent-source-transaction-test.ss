@@ -1,0 +1,146 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+        (only-in :std/error Error-message)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
+        (rename-in (only-in :gerbil-ascent/t/performance/source-materialization/reference-evaluate
+                           gerbil-ascent-make-engine)
+                   (gerbil-ascent-make-engine frozen-engine)))
+(export ascent-source-transaction-test)
+
+(def (rows-of result name) ((.ref result 'rows-of) name))
+(def (run engine) ((.ref engine '.run)))
+(def (replace! engine name rows) ((.ref engine '.replace-source!) name rows))
+(def (append! engine name row) ((.ref engine '.append-source!) name row))
+(def (failure thunk) (with-catch Error-message (lambda () (thunk) #f)))
+
+;;; Qualify through complete engines and independent expected observations.
+;;; Every implementation gets fresh declarations, callbacks and borrowed lists.
+(def ascent-source-transaction-test
+  (test-suite "Retained source transactions prepare solve and commit together"
+    (test-case "replacement then eager append preserves held results and duplicates"
+      (for-each
+       (lambda (maker)
+         (let* ((program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 1 '((1)))) [] 8 8 8))
+                (engine (maker program #t)) (held (run engine)))
+           (replace! engine 'input '((2) (2)))
+           (let (replaced (run engine))
+             (append! engine 'input '(3))
+             (check (rows-of held 'input) => '((1)))
+             (check (rows-of replaced 'input) => '((2) (2)))
+             (check (rows-of (run engine) 'input) => '((2) (2) (3)))
+             (check ((.ref engine '.recomputed?)) => #t))))
+       (list frozen-engine gerbil-ascent-make-engine)))
+    (test-case "failure inside fresh admission retains the accepted source cut"
+      (for-each
+       (lambda (maker)
+         (let* ((ticks 0) (fail-at #f)
+                (predicate (lambda (_)
+                             (set! ticks (+ ticks 1))
+                             (when (equal? ticks fail-at) (error "fresh admission refused")) #t))
+                (input (.o (:: @ (gerbil-ascent-relation 'input 1 []))
+                         rows: '((1)) field-predicates: (list predicate)))
+                (program (.o (:: @ (gerbil-ascent-program [] [] 8 8 8))
+                           relations: (list input)))
+                (engine (maker program #t)) (held (run engine))
+                (additions (.ref engine '.source-additions))
+                (overrides (.ref engine '.source-overrides)))
+           ;; Replacement preflight succeeds; the fresh candidate's next field
+           ;; check raises before any accepted source state can be changed.
+           (set! fail-at (+ ticks 2))
+           (check (failure (lambda () (replace! engine 'input '((2)))))
+                  => "fresh admission refused")
+           (check (eq? (run engine) held) => #t)
+           (check (vector-ref additions 0) => [])
+           (check (vector-ref overrides 0) => #f)
+           (check ((.ref engine '.recomputed?)) => #f)
+           (set! fail-at #f)
+           (append! engine 'input '(3))
+           (check (rows-of (run engine) 'input) => '((1) (3)))
+           (replace! engine 'input '((4)))
+           (check (rows-of (run engine) 'input) => '((4)))
+           (check (rows-of held 'input) => '((1)))))
+       (list frozen-engine gerbil-ascent-make-engine)))
+    (test-case "failed eager append keeps the accepted override and occurrence budget"
+      (for-each
+       (lambda (maker)
+         (let* ((ticks 0) (fail-at #f)
+                (predicate (lambda (_)
+                             (set! ticks (+ ticks 1))
+                             (when (equal? ticks fail-at) (error "eager append refused")) #t))
+                (input (.o (:: @ (gerbil-ascent-relation 'input 1 []))
+                         rows: '((1)) field-predicates: (list predicate)))
+                (program (.o (:: @ (gerbil-ascent-program [] [] 2 8 8))
+                           relations: (list input)))
+                (engine (maker program #t)) (_ (run engine)))
+           (replace! engine 'input '((1)))
+           (let* ((held (run engine)) (overrides (.ref engine '.source-overrides))
+                  (accepted (vector-ref overrides 0)))
+             (set! fail-at (+ ticks 2))
+             (check (failure (lambda () (append! engine 'input '(2))))
+                    => "eager append refused")
+             (check (eq? (run engine) held) => #t)
+             (check (eq? (vector-ref overrides 0) accepted) => #t)
+             (set! fail-at #f)
+             (append! engine 'input '(3))
+             (check (rows-of (run engine) 'input) => '((1) (3)))
+             (check (failure (lambda () (append! engine 'input '(4))))
+                    => "ASCENT session input fact budget exceeded"))))
+       (list frozen-engine gerbil-ascent-make-engine)))
+    (test-case "replacement charges duplicates and buffered sources before evaluation"
+      (for-each
+       (lambda (maker)
+         (let* ((program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 1 '((1)))
+                                (gerbil-ascent-relation 'other 1 '((5)))) [] 3 8 8))
+                (engine (maker program #t)) (_ (run engine)))
+           (append! engine 'other '(6))
+           (let* ((held (run engine))
+                  (additions (.ref engine '.source-additions))
+                  (other-log (vector-ref additions 1)))
+             (check (failure (lambda () (replace! engine 'input '((2) (2)))))
+                    => "ASCENT session input fact budget exceeded")
+             (check (eq? (run engine) held) => #t)
+             (check (eq? (vector-ref additions 1) other-log) => #t)
+             (replace! engine 'input '((2)))
+             (check (rows-of (run engine) 'input) => '((2)))
+             (check (rows-of (run engine) 'other) => '((5) (6)))
+             (check (failure (lambda () (append! engine 'input '(3))))
+                    => "ASCENT session input fact budget exceeded"))))
+       (list frozen-engine gerbil-ascent-make-engine)))
+    (test-case "borrowed source headers are recounted even when root identity is unchanged"
+      (for-each
+       (lambda (maker)
+         (let* ((source-rows (list (list 1)))
+                (input (.o (:: @ (gerbil-ascent-relation 'input 1 [])) rows: source-rows))
+                (program (.o (:: @ (gerbil-ascent-program [] [] 2 8 8))
+                           relations: (list input (gerbil-ascent-relation 'other 1 '((5))))))
+                (engine (maker program #t)) (held (run engine)))
+           (set-cdr! source-rows '((2)))
+           (check (failure (lambda () (replace! engine 'other '((6)))))
+                  => "ASCENT session input fact budget exceeded")
+           (check (eq? (run engine) held) => #t)
+           (check (rows-of held 'input) => '((1)))
+           (replace! engine 'other [])
+           (check (rows-of (run engine) 'input) => '((1) (2)))
+           (check (rows-of (run engine) 'other) => [])))
+       (list frozen-engine gerbil-ascent-make-engine)))
+    (test-case "failed replacement after replay cannot retire the current override"
+      (for-each
+       (lambda (maker)
+         (let* ((program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 1 '((1)))) [] 2 8 8))
+                (engine (maker program #t)) (_ (run engine)))
+           (replace! engine 'input '((2)))
+           (let* ((held (run engine)) (overrides (.ref engine '.source-overrides))
+                  (accepted (vector-ref overrides 0)))
+             (check (failure (lambda () (replace! engine 'input '((3) (3) (3)))))
+                    => "ASCENT session input fact budget exceeded")
+             (check (eq? (vector-ref overrides 0) accepted) => #t)
+             (check (eq? (run engine) held) => #t)
+             (append! engine 'input '(4))
+             (check (rows-of (run engine) 'input) => '((2) (4)))
+             (check (rows-of held 'input) => '((2))))))
+       (list frozen-engine gerbil-ascent-make-engine)))))

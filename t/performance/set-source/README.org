@@ -1,0 +1,84 @@
+#+title: Direct built-in Set source initialization
+
+The exact built-in Set storage extension returns =(list row)=. Source
+initialization now sends that row directly to a small initialization module,
+without the temporary list and per-source callback. Custom storage expansions
+still execute in source order through their original Provider callbacks.
+
+=program/admission.ss= owns row validation, membership insertion, source budget
+checking and insertion into the constructing engine's buffers. It does not
+retain state or allocate a closure per relation. Initial duplicates remain
+individual rows and consume budget. Row object identity, both field validations
+and the order observed by custom extensions are preserved. Lattice
+initialization and retained append admission follow their existing paths.
+
+The compiled baseline is exactly =baf50c2:program/evaluate.ss= with only public
+export names changed and relative imports relocated. No dependency code or
+pins change. Both implementations run in the same private compiled library,
+with the original 1 GiB heap fence. =just set-source-allocation= records source
+hashes before compiling the admission module, evaluator and frozen reference.
+
+Allocation receipts
+-------------------
+
+The cumulative allocated-byte counter is Gambit =##process-statistics= slot 7,
+previously calibrated in =t/performance/set-emit/counter-calibration.sexp=.
+This measures bytes allocated during complete solves, not peak memory or
+latency. Each of 1000 alternating old/new pairs checks ordered goldens and
+original row identities outside the observed interval, after 20 warmups.
+Every dense workload requires >=900 strictly lower-allocation pairs; controls
+require median non-regression. Tiny controls average 20 complete solves;
+dense workloads and larger chains use one solve per sample.
+
+| workload | old p50 bytes, both runs | new p50 bytes, both runs | lower pairs, run 1 / run 2 |
+|----------+-------------------------+-------------------------+---------------------------|
+| recursive chain 16 | 47984 | 47168 | 938 / 938 |
+| recursive chain 256 | 636464 | 624128 | 995 / 995 |
+| recursive chain 1024 | 2479952 | 2430752 | 979 / 979 |
+| empty source | 11296 | 11296 | 51 / 53 |
+| one source row | 11440 | 11392 | 938 / 936 |
+| two duplicate source rows | 11584 | 11488 | 943 / 946 |
+| 10000 unique source rows | 2503424 | 2023424 | 986 / 986 |
+| 10000 source rows, 16 values | 1454400 | 974400 | 982 / 982 |
+
+Both dense workloads allocate 480000 fewer bytes per solve: reductions of
+19.2 and 33.0 percent respectively. Empty input remains flat. The measured
+saving is 48 bytes per initial row on this runtime, including duplicate rows.
+No speedup claim follows from these byte counts.
+
+The initial per-relation helper and its dense allocation receipts are retained
+as =candidate-per-relation-helper.ss= and =initial-allocation*=. The final
+implementation removes that additional closure instead of charging its cost
+to small sources. The private builder's missing-module registration error is
+retained in =missing-admission-build*=; both private and package builders now
+explicitly register the admission module.
+
+Semantic coverage
+-----------------
+
+The focused fixture compares against the frozen baseline. It enumerates all
+121 three-symbol source logs of lengths zero through four, checking ordered
+values and row identities. Additional Cases preserve source/stored field
+check counts and errors, duplicate budget charging, custom Provider callback
+snapshots and expansion budgets, nullary multiplicities, and derived checks.
+
+Final-source gates
+------------------
+
+The final-source build and unchanged ASP policy pass for all 38 selected
+production modules (findings=0, errors=0). The full semantic entrypoint passes
+43 modules and 345 Cases at GERBIL_BUILD_CORES=12: seven admitted process
+workers and 36 exclusive modules. Native per-module logs, source manifests,
+compiled module-resolution proof and a machine-readable summary are retained.
+The new fixture's initial unbound append-map error and failed suite are
+preserved; its fixed 14 Cases passed both a focused check and the final full
+suite. Production code remained unchanged during that test-fixture repair.
+
+The original just performance entrypoint fails at its first BYODS trrel
+scenario. Its unchanged 1000-sample p95 is 1563000 ns against the
+1000000 ns limit; p50=453000 ns and max=99557000 ns.
+The failure and exit=1 are retained. Remaining entries were not run after the
+fail-fast gate. No SS latency qualification or causal explanation for the tail
+failure follows from this slice. Dependency pins, heap fence and original SS
+budgets and GC profiles remain unchanged. Remote CI has not been run; no
+remote push is included.

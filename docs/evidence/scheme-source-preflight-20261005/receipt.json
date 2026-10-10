@@ -1,0 +1,90 @@
+{
+  "schema": "ascent.actor-source-preflight-qualification",
+  "version": 1,
+  "qualifiedBaseHead": "efafa5091a8d184e53f805d2bb8217240ec8298d",
+  "command": "gerbil env gxi -:max-heap=1G,debug=q t/harness/run.ss test-pool 2 t/qualification/ascent-actor-session-test.ss t/qualification/scheme-library-contract-test.ss",
+  "parentExitStatus": 0,
+  "nativeModules": 2,
+  "caseOkCount": 17,
+  "sourceBinding": {
+    "baselineReceipt": "docs/evidence/scheme-trrel-uf-20261005/receipt.json",
+    "baselineReceiptSha256": "fe90848eb45623489e2892cc78a55748de51e8dc2d782c446a18abfb6a7e5323",
+    "sourceSha256Overrides": {
+      "program/source-cut.ss": "545b4b1b4f43079ffcd6543fec2be16df838d6dce90cff4dc308b3878f5d4c9e",
+      "t/qualification/ascent-actor-session-test.ss": "98db65d5d1eb5a89b4dc2f0376ed3167d506d04507b80abbb10bb6cfd6855585",
+      "t/qualification/scheme-library-contract-test.ss": "c3c8a5838439ee2e7abbe6495b44a56ee0f0bdaf4d0dad00f17ac5e307229c2c"
+    },
+    "sourceFileCount": 458,
+    "sameSourcePathSet": true,
+    "nativeRunnerCheckedBeforeAndAfter": true
+  },
+  "carrierSha256": {
+    ".cache/ascent/native-library/test-pool": "d628aa410a4e1b0e4389245ab788cad2916b70aaa47dc06bf78705a0ed8df669",
+    ".cache/ascent/native-library/test-pool.ss": "8588664da03b0ad2d339537eb8167851576a049a4e4f4d62e32929ab1baaa4d1"
+  },
+  "resourceObservations": [
+    {
+      "operation": "replace",
+      "smallRows": 10000,
+      "largeRows": 20000,
+      "inputLimit": 2,
+      "smallAllocatedBytes": 101984.0,
+      "largeAllocatedBytes": 101984.0
+    },
+    {
+      "operation": "append",
+      "smallRows": 10000,
+      "largeRows": 20000,
+      "inputLimit": 2,
+      "smallAllocatedBytes": 101984.0,
+      "largeAllocatedBytes": 101984.0
+    }
+  ],
+  "semanticDiscriminators": [
+    "whole-batch shape validation before duplicate and budget errors",
+    "duplicate source before budget error",
+    "input multiplicity included in budget",
+    "old rows and untouched source preserved after refusal",
+    "exact-limit retry accepted",
+    "accepted copied row spines detached from caller",
+    "existing actor cancel/drain/publication cases",
+    "complete composed Library lifecycle replay"
+  ],
+  "formal": {
+    "leanBuildJobs": 64,
+    "theorems": [
+      "Ascent.NativePublication.source_count_balance",
+      "Ascent.NativePublication.refused_source_budget",
+      "Ascent.NativePublication.admitted_source_budget"
+    ],
+    "axioms": {
+      "source_count_balance": [
+        "propext",
+        "Quot.sound"
+      ],
+      "refused_source_budget": [
+        "propext"
+      ],
+      "admitted_source_budget": [
+        "propext"
+      ]
+    },
+    "sourceSha256": {
+      "packages/proofs/lean/NativeSessionPublication.lean": "221f39c9bcc8e70403368da4dc7855f8a42f16583db8e421967f5c93bbd18db3",
+      "packages/proofs/lean/AscentProofTests.lean": "d485b67b0d54de2ccb1df926c386e417853e2e3c49734e817c2a580d58f4085f",
+      "packages/proofs/tla/ActorSession.tla": "4d1d4bbef1fa4c5058ac027e99b3855ef7f0f8f578ca102c0fd4fc1ca3eefefc",
+      "packages/proofs/tla/ActorSession.cfg": "e662dd44829f9adadbd1779f9a316323f3d5793c8ea372ed4694adccd6e06fed"
+    },
+    "tlcDistinctStates": 162,
+    "negativeControls": [
+      "actor-session-stale NoStalePublication",
+      "actor-session-early DrainedClose"
+    ],
+    "boundary": "Cached counts, unique replacement slots and native transition correspondence are premises; no theorem proves native heap allocation. Rejected preparation stutters in the existing protocol model; generation exploration is not a runtime ceiling."
+  },
+  "correctedProofBuild": "Initial accepted-count proof split before reducing its let binding; failed build discarded, final 64-job build succeeded.",
+  "scope": "Budget-refusal allocation discriminator only. No CPU speedup, live-heap or production-scale benefit claim. Concurrent-pool lifecycle timing does not supersede the prior focused receipt.",
+  "modelCalls": 0,
+  "rustRuntimeIntegrated": false,
+  "finalHeadGitHubCI": "pending after push"
+}

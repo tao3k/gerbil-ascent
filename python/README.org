@@ -1,0 +1,45 @@
+#+TITLE: ASCENT test support
+
+This Python package provides the =ascent_engine= CFFI client and shared-library
+linker, provider HTTP/SSE byte IO, frozen request receipts, and process supervision.
+Scheme owns query semantics, typed admission, source updates and execution.
+Python adapts inert JSON and compares results through the Scheme engine; it does
+not implement a separate semantic oracle.
+
+Scheme owns artifact admission in =t/native/artifact-admission.ss= and inert prediction
+projection in =t/model/response-projection.ss=. Native Cases cover staged compilation
+failure, owner/source/binary changes, prediction ambiguity, size and nesting
+bounds, and rejection of executable expressions. Those Cases run in Scheme qualification.
+Python tests additionally exercise the actual public C ABI and replay the frozen
+Lean/Quint movie observations through CFFI. =engine_tests/test_engine.py= requires a
+built shared library and =ASCENT_ENGINE_WIRE= exported by the Scheme movie test's
+=wire= operation. These tests intentionally fail when qualification inputs are absent.
+
+Build Gerbil modules with the normal package build first, then link the engine:
+
+#+begin_src sh
+PYTHONPATH=python/src python3 -m ascent_engine.build --output .gerbil/lib/libascent.dylib
+#+end_src
+
+Use =libascent.so= on Linux. The linker honors =GERBIL_BUILD_CORES= for missing C
+objects and uses the same SDK's compiler, headers and runtime. See =bindings/c/README.org=
+for ownership, lifecycle and supported operators.
+
+Run provider/supervision tests from =python/tests=; run the shared-library
+qualification from =python/engine_tests= after building and exporting its wire
+input. The Scheme CI job runs the latter on Ubuntu; the formal CI job runs
+provider tests without requiring a Scheme runtime.
+
+From the repository root, use the captured environment:
+
+#+begin_src sh
+PYTHONPATH=python/src python3 -m ascent_test_support.model_study --help
+python3 -m unittest discover -s python/tests -v
+#+end_src
+
+The repository defaults to the working directory; set =ASCENT_REPOSITORY= to
+use an explicit checkout when running the installed package elsewhere.
+Producer receipts hash the actual loaded Python modules, not an assumed
+installation path. The package has standard pyproject metadata and a src layout. Model calls still
+require a newly frozen plan and explicit source/cost authorization. Package
+migration does not reuse an older approval or establish a new model score.

@@ -1,0 +1,434 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Positive Evaluation: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Positive component least closure
+
+[[file:../../../packages/proofs/lean/ComponentClosure.lean][ComponentClosure]] now proves the pure semantic decomposition behind SCC
+execution. Ground positive rules define =Derivable= independently of a runner.
+A component-local full step adds only heads it owns; =iterate_frame= proves
+other components unchanged. =stable_closed= derives local closure from an
+observed stable iteration. =preserve_closed= uses the absence of backward read
+edges to retain earlier closures. =least_closure= then covers arbitrary finite
+component plans and natural iteration counts, assuming each selected local
+iteration is stable and every rule head is covered. =least_model= places the
+result inside every closed model covering the seed. =orders_equal= proves equal
+results for alternative admitted component orders.
+
+This is a ground positive Set semantics theorem. Ground-rule completeness,
+native Tarjan/head projection and representation are not inferred. General
+non-ground and lattice termination are not inferred.
+=IndexedIteration= remains the compiled binder/history theorem; composing its
+operator with this ground presentation is now constructed in =GroundedBinding=
+for frozen finite admitted rows; native encoding still needs refinement. Quint owns the unchanged ready/credit protocol. Lean tests live in
+=Tests/ComponentClosureTests.lean=, including a recursive diamond, independent
+component swap, premature successor and insufficient local rounds. The native
+same-case qualifier checks exact seed/left/right/output rows under both relation
+orders and 1/2/4 workers. See [[file:../../evidence/scheme-component-closure-20261006/receipt.json][source-bound receipt]].
+
+** Derived local termination
+
+=local_stabilizes= derives a stable local full iteration from the finite list
+of ground rules. =headRank= counts known rule-head occurrences; any genuine
+step change admits a fresh head and strictly increases that bounded rank.
+Duplicate heads are allowed, seed facts need no finite enumeration, and the
+proof requires neither a finite =Fact= type nor a supplied stable round.
+The witness satisfies =n <= rules.length=. This derived bound is not a Runtime
+cutoff or a generation constant.
+
+=planned_stable= selects these proved witnesses for each component, and
+=topological_least= computes exactly =Derivable= with only complete head
+coverage and no backward read dependency as plan premises. =planned= is a
+noncomputable semantic witness, not an extracted native scheduler. Tests under
+=Tests/= qualify both recursive-diamond orders without a supplied =StablePlan=,
+duplicate heads and empty rules. The existing premature-successor and short
+iteration controls remain. See [[file:../../evidence/scheme-component-termination-20261006/receipt.json][termination qualification receipt]].
+
+** Constructed binder grounding
+
+[[file:../../../packages/proofs/lean/GroundedBinding.lean][GroundedBinding]] constructs a finite clause list by traversing actual ordinary
+=AtomicBinding.bind= successes over frozen admitted row lists. Each clause body
+retains all read tuples; failed matches disappear. Repeated heads and multiple
+heads remain in the list. =ground_exact= proves equivalence with the ordered
+binder body for every database; faithful enumeration admits precisely those
+domain rows present in that database. This does not supply the desired answer.
+
+=compiled_ground_exact= composes that construction with =IndexedIteration.full_run_exact=,
+using the existing schema, frame and emitter validity obligations. =program_exact=
+and =closed_exact= lift it to programs and closed models. =binder_least_model=
+transports the finite ground component result into every closed binder model
+covering the seed, using proved termination instead of a supplied stable plan.
+This is pure semantic construction, not Gerbil code extraction. Native scalar
+encoding, mutable row enumeration, SCC ownership and asynchronous refinement
+remain open. Lean tests live in =Tests/GroundedBindingTests.lean=; the matching
+native fixture combines repeated variables, a constant, a shared-key join,
+duplicate heads and a zero-arity head. See [[file:../../evidence/scheme-binder-grounding-20261006/receipt.json][source-bound receipt]].
+
+** Relation projection and component dependency contract
+
+[[file:../../../packages/proofs/lean/ComponentProjection.lean][ComponentProjection]] maps every finite ground clause to a relation rule with
+one head and an atom read for each body fact. =reads_exact= establishes exact
+direct source-to-head edges, including repeated reads. =depends_exact= lifts
+these relation edges through relation ownership to the fact-level =Depends=
+premise. =topological_of_projection= derives the closure theorem's topological
+order from unique component ordering and absence of backward projected edges.
+This connects semantic graph metadata to =ComponentClosure=; it does not prove
+the native Tarjan implementation universally correct.
+
+Native qualification independently enumerates all 512 directed graphs on
+three relations, including self edges, isolated roots and cycles. An independent
+Floyd closure checks exact SCC equivalence; projected plans check single owner
+coverage, head multiplicity, exact immediate predecessor sets and source-before-
+target order. The existing multi-head qualifier covers head splitting. Lean
+controls distinguish direct edges from transitive reachability, detect an omitted
+required dependency and reject reversed order. Tests remain under =Tests/=.
+See [[file:../../evidence/scheme-component-projection-20261006/receipt.json][projection receipt]]. Arbitrary-size native graph extraction, relation encoding
+and asynchronous execution refinement remain open.
+
+** Completed snapshot merge algebra
+
+[[file:../../../packages/proofs/lean/SnapshotClosure.lean][SnapshotClosure]] supplies the pure semantic frame required when a worker
+finishes on an older snapshot. =Relevant= includes the component's own facts
+and every fact read by its owned rules. =iterate_agrees= proves local iterations
+agree whenever those facts agree. =merge_exact= admits only completed owned
+facts into the current database and equals local evaluation on that current
+database. =stable_transfers= and =completed_closed= transport actual stability
+and closure through this merge. =unrelated_iteration_agrees= derives the frame
+from owned writes by a different component with no read edge into this one.
+This removes an externally assumed read-equality condition for that concrete
+unrelated-write case; changed predecessors still invalidate the frame.
+
+The proof is database algebra, with no mailbox, credit, scheduler or publication
+state. Quint retains readiness and complete terminal delivery. The native actor
+fixture freezes the left snapshot, allows right to complete and publish first,
+then admits both left rows and checks all writes survive. Existing 32+1 terminal
+tail and successor-overlap controls are retained. Tests under =Tests/= qualify
+stable recursive left merge, retained right facts and a changed predecessor
+that invalidates old stability. General native trace-to-semantic-step extraction,
+intermediate chunk refinement, mutable representation and cancellation remain
+separate obligations. See [[file:../../evidence/scheme-snapshot-closure-20261006/receipt.json][snapshot closure receipt]].
+
+** Candidate batches and terminal completeness
+
+=SnapshotClosure.publish= folds owned Set admission over any finite list of
+candidate batches. =publish_exact= characterizes its membership as retained
+current facts plus delivered owned candidates. =publish_ext= proves invariance
+under arbitrary regrouping, duplicates and reordering with equal membership.
+=published_iteration_sound= derives soundness of any partial publication from
+local evaluation soundness and inclusion of its candidates in that evaluation.
+It makes no intermediate closure claim.
+
+=terminal_publish_exact= accounts for both retained snapshot facts and delivered
+candidates, and composes the batch fold with completed snapshot rebasing.
+=terminal_publish_closed= therefore gives current component closure after
+complete delivery and actual snapshot stability. No replay of seed rows is
+required. The ordinary 32-row credit size is not a semantic round limit.
+
+Lean tests qualify duplicate and empty chunks, regrouping, foreign candidate
+filtering, current unrelated facts and a missing terminal candidate. Native
+qualification delivers 65 candidates with 17 distinct values through two full
+credit batches and a terminal tail, deduplicates in the owner callback, and
+admits a successor only after all candidates have been seen. The existing
+terminal-tail/stale-snapshot controls remain. Quint checks delivery/credit order
+separately. The native worker-to-candidate trace certificate, cancellation,
+and complete mutable representation refinement remain open. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
+
+
+* Monotonicity and finite domain boundary
+
+=denotation_monotone= proves preservation of a type-indexed logical relation.
+Relations use inclusion; arrows relate outputs for every pair of related
+arguments. =closed_function_monotone= specializes it to ordinary relation-to-
+relation functions, without assuming the conclusion as a compiler premise.
+Higher-order arguments must themselves satisfy the logical relation. An opaque
+nonmonotone host procedure does not become admissible by having an arrow label.
+
+This calculus excludes fixed-point syntax from its expression grammar. Its
+separate unrolling theorem preserves each finite iterate but does not establish
+that an arbitrary iteration count is sufficient. Existing rank/leastness laws
+must still be connected to the concrete finite signatures and feedback compiler.
+The mathematical source/table predicates and column maps are frozen denotations,
+not executable Scheme effect checks or a new public callback API.
+
+The tuple representation =Fin width → Fin atoms= states an admitted finite
+domain explicitly. =concatenate_left/right/parts= establish a bijective layout
+between a pair of such tuples and their concatenation, including empty tuple
+widths. It supports =join_tuple_encoding= over every encoded row. Encoding
+actual immutable Scheme scalars into that finite universe is a remaining bridge;
+the Lean lemma does not establish their runtime hash/equality implementation.
+
+
+* Positive primitive row-domain laws
+
+The next R1 slice in =RowRepresentation= establishes five local row-domain
+laws against =program/higher-order.ss='s existing constructor contracts.
+
+| Constructor | Mathematical law | Required premise |
+|-------------+------------------+------------------|
+| =relational-typed-union= | =union_preserves_domain= | Both inputs have the same admitted arity/domain |
+| =relational-typed-join= | =join_tuple_preserves_domain= | Both rows inhabit the common domain; output arity is their sum |
+| =relational-typed-project= | =projection_preserves_domain= | Every selected index is in bounds; duplicates/reordering/zero columns are allowed |
+| =relational-typed-select-eq= | =selection_preserves_domain= | Input rows are admitted; selection only removes rows |
+| =relational-typed-flatmap= | =finite_mapping_preserves_output_domain= | Every frozen table output inhabits the declared output domain and arity |
+
+The join law concerns concatenated rows. Matching keys restricts which pairs
+appear, so it cannot invalidate the common-domain law. The projection model
+uses =Fin row.length= indices corresponding to the constructor's bounds check;
+it does not require a permutation or nonempty result. The selection theorem's
+mathematical predicate is only a subset operation; native admission continues
+to accept equality descriptors, not arbitrary predicate callbacks.
+
+=finiteMapRows= models table matching and suffix output as a list of complete
+input/output pairs. Its output-domain premise must hold for *every* table
+entry. The input and output domains may differ, as the Scheme constructor
+allows. This is a law for a frozen validated table, not a theorem that arbitrary
+retained mutation of a pooled helper source preserves the original term type.
+Set normalization can compose with the existing membership/admission laws.
+
+These local laws make the premises of the remaining descriptor/emitter proof
+explicit. They do not establish the actual Scheme graph-to-rule translation,
+native equality, helper-table mutation contract or recursive fixed-point
+refinement. No runtime source changes or new performance/model claims occur.
+The native operator rerun checks existing complete-row tests, including
+zero-arity/repeated-column projected joins and combined positive operators;
+its current counts and source binding are recorded separately in the
+[[file:../../evidence/scheme-primitive-domains-20261005/receipt.json][primitive-domain receipt]]. Historical higher-order constructor qualification
+remains in the preceding receipts. Lifecycle TLA models are unchanged.
+
+
+* Projection descriptor to one positive rule
+
+=Lowering.ProjectionRule= models the ordinary =project= branch of
+=lower-operator-graph= in =program/operator.ss=. The exact implementation seams
+are =fresh-variables=, =variable-atom= and the =project= case in the primitive
+emitter. The input body pattern contains all distinct column variables in
+order; the head pattern selects those variables by the checked column list.
+
+The model uses =Fin arity= for variable identities, a finite assignment for
+their values, and =evaluatePattern= for atom arguments. =bindRow= constructs
+an assignment from a proper row with the declared length. Three bridge laws
+prove complete body length, lookup and reconstruction. The emitted rule means
+there exists an assignment whose instantiated body is an input row and whose
+instantiated head is the output. The descriptor independently means selecting
+the checked columns of an input row of the correct arity.
+
+=emitted_projection_sound= and =emitted_projection_complete= prove both
+directions; =emitted_projection_iff_descriptor= records their equivalence.
+The theorem does not require nonempty columns, unique head columns or an
+inhabited scalar type. It covers repeated/reordered/zero columns and nullary
+inputs. An invalid-arity row is outside both interpretations; the proof must
+not be used to admit malformed native source data by silently ignoring it.
+
+This is a rule-level mathematical model closer to the emitted syntax than the
+previous generic projection IR law. Actual Gerbil descriptor decoding,
+=gensym= freshness and capture avoidance, symbol-to-variable identity mapping,
+native rule matching and incremental execution are still correspondence
+obligations. The optimized projected-join branch has two body atoms and is
+outside this one-body proof. No claim of whole-compiler verification follows.
+
+The [[file:../../evidence/scheme-projection-rule-20261005/receipt.json][projection-rule receipt]] records the current formal gate and the immutable
+prior native evidence. This slice changes no Scheme source and runs no new
+native module. The relevant emitter and operator test bytes are compared
+against the preceding native snapshot; those comparisons preserve the scope
+of that evidence and do not qualify newer unrelated source changes. No model
+calls, performance claim or published log is added.
+
+
+* Shared-key projected join rule
+
+=Lowering.ProjectedJoinRule= models =join-variables= and the optimized
+=project= over =join= branch of =lower-operator-graph=. Left column identities
+inhabit one finite variable bank. Non-key right identities inhabit a disjoint
+bank; the right key is replaced by the left key identity. The head selects
+from the concatenation of these two patterns, exactly as the emitter does.
+
+Eight theorems establish the shared-key alias, equality of instantiated body
+keys, reconstruction of a matching right row, head projection of instantiated
+bodies, rule soundness, rule completeness, their equivalence, and equivalence
+of the descriptor to the existing join-then-project relational IR. Completeness
+constructs one assignment from the two input rows; key equality is necessary
+to recover the right key. Soundness obtains key equality from variable sharing,
+rather than assuming a separate runtime filter. The head can reorder/repeat
+columns or select none; no head injectivity or nonempty projection is required.
+
+This adds a rule-pattern account of the fusion used by the native compiler.
+It proves membership equivalence, not equality of intermediate relation counts,
+resource budgets or work. The optimized path can omit an intermediate join
+relation, and those operational observations are not covered by the theorem.
+Both keys have =Fin= bounds, so a join with a nullary input has no admissible
+key. A zero-column *output* remains valid. Scalar values are generic; native
+equality and symbol identity are separate implementation obligations.
+
+Finite variable banks express the required freshness/capture premises. Their
+correspondence to native =gensym= symbols, atom decoding, matching/index
+execution, memoization and recursive feedback remain open. The new proof is
+not an extraction of Scheme source. The ordinary one-body projection proof
+remains separate, while this slice covers the two-body optimized branch.
+
+The [[file:../../evidence/scheme-projected-join-rule-20261005/receipt.json][projected-join receipt]] binds the formal snapshot and refreshed native
+qualification after the upstream index lifecycle change. Rejected build or
+qualification attempts, if any, remain excluded. Quint lifecycle models are
+unchanged; no model calls or performance claim is added.
+
+Native qualification exposed an entry-path issue while integrating the index
+suite. The standalone gxtest path produced no Case before the five-second
+silence gate and was excluded. The suite is now registered in the AOT entry.
+Static linking then identified omitted independent reference modules, including
+their transitive analysis dependency. =prepare-test-library!= now compiles the
+complete four-module reference graph whenever the index lifecycle suite is
+requested, for both ordinary and AOT module preparation. No semantic assertion
+or watchdog bound was relaxed. The receipt distinguishes the prior accepted
+three-module artifact, failed startup/build attempts and the final four-module
+AOT qualification. It does not claim universal gxtest startup guarantees.
+Rechecking the ordinary gxtest entry after the dependency repair still trips
+the five-second silence gate before its first Case. That startup failure stays
+open; the missing-static-module diagnosis explains the AOT link failure, not
+this remaining ordinary-entry delay. No native semantic failure was observed
+by that rejected entry, since it never reached a Case.
+
+Artifact =sourceCount= denotes all bound inputs, not exclusively Scheme files.
+The final snapshot has 365 Scheme sources plus =justfile=, the supervision
+module and its package metadata: 368 inputs. Historical receipt hashes and
+counts remain intact; the lifecycle narrative above corrects this count's
+description without expanding its qualification scope.
+
+
+* Positive traversal to consequence bridge（2026-10-06）
+
+[[file:../../../packages/proofs/lean/PositiveConsequence.lean][PositiveConsequence]] connects the slot traversal and iteration artifacts,
+instead of treating their separate successes as a combined refinement.
+
+Declared atoms retain source keys and ordinary binder terms. =instantiate=
+supplies frozen finite rows to PositiveTraversal; =transition= describes a
+successful AtomicBinding witness from those same rows. =reference_membership=
+proves that ordered row traversal, observed as membership, equals the arbitrary
+positive-body path relation. =precompiled_membership= composes this with the
+dirty-frame/precompiled traversal proof and a represented pure singleton head.
+
+Repeated sources and variables, empty bodies, failed partial writes and
+duplicate outputs are included. Full ordered-list refinement remains in
+PositiveTraversal; Set membership deliberately forgets multiplicity only at
+the consequence boundary. Multiple heads can be considered per pure head;
+this bridge does not prove the native head decoder.
+
+A fixed admitted finite tuple domain supplies a mathematical row enumerator.
+=admitted_rows_faithful= proves its completeness within that domain, and
+=enumerated_view_monotone= derives the concrete view premise from enumeration
+and successful binder witnesses. =admitted_binder_iterations_equal= then applies
+the all-Nat iteration theorem to this concrete row/binder view. No infinite
+database enumeration, native generation cap or termination premise is used.
+
+Native scalar/row encoding, descriptor and head lowering, index lookup
+completeness, actual pivot positions, mutable row admission, general Provider
+gamma/injection and asynchronous trace refinement remain open. The mathematical
+enumerator is not emitted Scheme code or a performance claim.
+
+Tests now live exclusively under =packages/proofs/lean/Tests/=, including the
+new [[file:../../../packages/proofs/lean/Tests/PositiveConsequenceTests.lean][bridge qualification]]. The =AscentProofTests= Lake library remains the
+existing acceptance target and explicitly names the =Tests.*= roots. Proof
+modules import no test modules. Historical JSON receipts retain original
+paths and hashes; [[file:../../evidence/scheme-positive-consequence-20261006/receipt.json][the current qualification receipt]] binds the relocated sources.
+
+
+* Complete finite-vector traversal (2026-10-06)
+
+The finite matcher now feeds =PositiveTraversal.scanVector= and
+=runBodyVector=, rather than leaving recursive continuation behavior outside
+the vector bridge. =scan_vector_refines= relates the complete candidate scan
+through both success and partial-write rejection. =body_vector_refines= composes
+that correspondence through every atom and the final emitter. Returned vectors
+represent every in-range cell of the actual dirty function-frame result;
+ordered outputs and duplicate multiplicity are preserved together.
+
+=compile_body_length= and =compile_body_bounds= derive the complete precompiled
+body extent. The final =finite_precompiled_refines= theorem accepts every
+capacity at least that extent, composes the existing ordinary binder traversal,
+and returns ordered reference-output equality, complete vector correspondence
+and preservation of the original environment for every extension value outside
+the vector. It requires no caller-supplied completion premise for this finite
+list traversal. It is not a termination theorem for native recursive solving.
+
+=PositiveSlots.observeVectorSlots= reads heads directly from the finite vector.
+=vector_head_observations= proves correspondence with the existing head reader
+when the name prefix fits the capacity; =vector_represents= transports ordinary
+bindings to the actual vector extension. The multihead qualification emitter
+uses this reader, discharging its output correspondence with that theorem.
+Wildcard/unbound observations remain explicit =none=; native head admission
+still rejects those cases according to its existing contract.
+
+Executable controls stay in =Tests/PositiveTraversalTests.lean=: arbitrary dirty
+initial cells, a nonempty false-valued initial binding, complete nine-emission
+nested traversal, repeated traversal on the actual returned vector, zero-atom
+and zero-arity duplicate emissions, a larger vector's untouched tail, nested
+bounds refusal, and corruption of a parent's slot by a continuation. Direct
+kernel-checked evaluation replaced two inefficient =decide= examples that hit
+the default heartbeat limit; the limit was not raised, and no native-evaluation
+axiom or custom axiom was introduced. Axiom reports stay under =Tests/=.
+
+The [[file:../../evidence/scheme-vector-traversal-20261006/receipt.json][vector traversal receipt]] records the proof boundary and exact source hashes.
+The next connected obligation is actual Scheme action/key/head and scalar/name
+decoding, followed by Provider snapshot/frontier instances and constructed
+least-model output. Callback execution, native scalar/hash conformance and
+arbitrary custom Provider laws remain separate. No duplicate Quint vector model
+is added: scheduling and publication keep their existing temporal owner.
+
+
+* Constructed canonical Set frontier and ground model (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]] section 3.1 recovers ordinary relations through singleton injection and
+identity concretization. Section 3.2 equations (1)-(2) additionally require
+total/delta coverage and prohibit new facts from skipping delta. The canonical
+Set instance is now constructed in the existing =ProviderFrontier= and
+=GroundedBinding= owners rather than supplied as an enumeration premise.
+
+=ProviderFrontier.SetBatch.admit= consumes oldest-first candidates and retains
+newest-first accepted rows. =admitted_exact= characterizes precisely pending
+membership absent from the prior Set; =admitted_unique= and =published_unique=
+establish duplicate freedom. =published_exact= establishes singleton-injection
+union, =frontier_exact= equates accepted membership with the entire concrete
+Set difference, and =repeated_batch_empty= proves that replay adds nothing.
+These contracts preserve source occurrence logs separately from fact identity.
+
+=sourceAdmit= constructs the staged newest-first source-prefix path.
+=source_admitted_exact= excludes rows outside that prefix. =admit_disjoint= and
+=unique_whole_log= prove that unique whole logs produce exactly their original
+ordered value list, agreeing with the native shared-spine fast path. Native
+descriptor admission owns the bounded-count precondition; the model's =take=
+operation is not a native out-of-range validator. Pointer identity and hash
+key equality remain native representation obligations.
+
+=GroundedBinding.snapshotRows= constructs a finite admitted-universe filter.
+=snapshot_rows_faithful=, =snapshot_rows_admitted= and =snapshot_rows_monotone=
+derive enumeration and monotonicity. =snapshot_delta_exact= supplies the exact
+compiled-body frontier instance. =snapshot_compiled_ground_exact= connects the
+compiled binder to constructed ground witnesses without caller-supplied
+enumeration faithfulness. =snapshot_indexed_history= derives correspondence
+for every natural-number round, with no generation or iteration cutoff.
+
+=snapshot_component_least= equates the constructed finite ground component
+solver with membership in every ordinary-binder closed model covering the
+seed. Its existing ground planner constructs local stabilization; callers
+supply head coverage and topology, not a completed answer or stable-result
+premise. This theorem does not identify the native actor's completion with
+that planner. The finite universe, symbol/scalar interpretation, native SCC
+projection and credit/publication extraction remain necessary bridges.
+
+Executable examples and axiom reports remain in =Tests/GroundedBindingTests=.
+They include staged prefixes, false values, missing delta, duplicate seed
+heads, an indexed literal-key consumer, all-round history and one-component
+least-model instantiation. The existing native Set-batch suite now checks 640
+finite retained-state cases plus two false/nullary controls against independent
+list membership. Every new row enters delta, the union is complete, and replay
+uses the actual returned membership root. Existing 3282 prefix comparisons,
+first-occurrence identity and large shared/duplicate-log controls remain.
+The [[file:../../evidence/scheme-set-frontier-20261006/receipt.json][source-bound receipt]] records both verification collections.
+
+This closes the canonical finite Set model instance and qualifies its native
+batch observations. It does not instantiate arbitrary lattice/custom Provider
+concretizations or prove universal Gambit hash extraction. No production
+Scheme runtime behavior changes here. Quint retains publication, ownership,
+cancellation and failure sequencing; no duplicate Set algebra model is added.
+

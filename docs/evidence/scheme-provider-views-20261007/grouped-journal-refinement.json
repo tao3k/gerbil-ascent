@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "184843ea5cf619890e8d3cd2fabb91f9adb62ba8",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 3.3, Theorem 3.5; Section 5.4",
+    "interpretation": "New implied facts must enter delta; Scheme export order is an additional library contract, not a DLDS requirement"
+  },
+  "source_sha256": {
+    "packages/proofs/lean/ProviderEncoding.lean": "a416c5324930ae494648a08244814243991c4a17d0159b85367ee5f227299a0c",
+    "packages/proofs/lean/Tests/ProviderEncodingTests.lean": "818767a5db8cfdacc7dc40bdb86af9d8b1a39656b79b61af59ed67948ce6d945",
+    "packages/proofs/lean/ProviderRectangles.lean": "809a0f0a181bb90a8b1151e6293547bc5c3bbf7ca0392b169a8467c95e63e3c6",
+    "packages/proofs/lean/lakefile.lean": "41d38f6be346372e3994567b20948211c354ac03e6c825af26c2e114a1e5a1b1",
+    "packages/proofs/tla/ProviderReplay.tla": "0b6531df38b69d5759a2301054c09e9a5265902badc3894590c9b982f5e68736",
+    "packages/proofs/tla/ProviderReplay.cfg": "95e684a5413472fbde2c324f0bfb30153de6ce9ba1b02543e6c3830ed05bfb62",
+    "table/trrel-uf.ss": "e8a1644af080c34f002110c38d98fea8bcd39f1998fec5b227bbdcc2a72166a2",
+    "core/relation-view.ss": "af876cddddba296ec687dd38fce893c7eebb59461515a6a4ffcfb978e36351fc",
+    "program/view-state.ss": "f4541aeefa1f111eae948e25a5408ffe3dec0d42c5c2168ac8d0e32c0a1daa92",
+    "t/qualification/ascent-provider-views-test.ss": "9733feb0ae0409969277b2dd54484d5a1abf92142a6d684d63f411ebe229b2b1",
+    "justfile": "9f1f0f894b24ae57efe881628f13b70b0529e05498069cb7388d9b6857ab8220"
+  },
+  "lean": {
+    "new_theorems": 11,
+    "build_jobs": 93,
+    "test_examples": 7,
+    "test_owner": "packages/proofs/lean/Tests/ProviderEncodingTests.lean",
+    "laws": [
+      "decode_encode",
+      "encode_injective",
+      "scopes_disjoint",
+      "encoded_member",
+      "encoded_nodup",
+      "encoded_count",
+      "encoded_frontier",
+      "root_plan_encoded_exact",
+      "orient_member",
+      "orient_count",
+      "orient_nodup"
+    ],
+    "strongest_boundary": "root_plan_encoded_exact derives encoded delta from constructed root/member plan, coverage and SCC equivalence; no Exact or candidate encoding premise",
+    "axiom_boundary": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "tla": {
+    "command": "just check-provider-replay-formal",
+    "model": "ProviderReplay",
+    "nodes": [
+      0,
+      1
+    ],
+    "scopes": [
+      0,
+      1
+    ],
+    "scope_meaning": {
+      "0": "ungrouped",
+      "1": "false group"
+    },
+    "input_population": "four non-self edges, each admitted once",
+    "semantic_generation_limit": false,
+    "generated_states": 28211,
+    "distinct_states": 23972,
+    "independent_truth": "Expected closes input edges independently of constructed predecessor/successor Step and journal Replay",
+    "faults": {
+      "scope": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant PublishedExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "phase": "\"idle\"",
+          "inputs": "{<<1, 0, 1>>}",
+          "event": "[row |-> <<1, 0, 1>>, kind |-> \"derived\"]",
+          "journal": "<<[row |-> <<1, 0, 1>>, kind |-> \"derived\"]>>",
+          "total": "{<<0, 0, 0>>, <<0, 0, 1>>, <<0, 1, 1>>}",
+          "ordered": "<<<<0, 1, 1>>, <<0, 0, 1>>, <<0, 0, 0>>>>",
+          "held": "FALSE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "FALSE"
+        }
+      },
+      "early": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant JournalExact is violated",
+        "witness_states": 2,
+        "final_state": {
+          "phase": "\"pending\"",
+          "inputs": "{}",
+          "event": "[row |-> <<0, 0, 1>>, kind |-> \"derived\"]",
+          "journal": "<<[row |-> <<0, 0, 1>>, kind |-> \"derived\"]>>",
+          "total": "{}",
+          "ordered": "<<>>",
+          "held": "FALSE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "FALSE"
+        }
+      },
+      "drop": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant JournalExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "phase": "\"idle\"",
+          "inputs": "{<<0, 0, 1>>}",
+          "event": "[row |-> <<0, 0, 1>>, kind |-> \"derived\"]",
+          "journal": "<<>>",
+          "total": "{<<0, 0, 0>>, <<0, 0, 1>>, <<0, 1, 1>>}",
+          "ordered": "<<<<0, 1, 1>>, <<0, 0, 1>>, <<0, 0, 0>>>>",
+          "held": "FALSE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "FALSE"
+        }
+      },
+      "kind": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant OrderExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "phase": "\"idle\"",
+          "inputs": "{<<0, 0, 1>>}",
+          "event": "[kind |-> \"derived\", row |-> <<0, 0, 1>>]",
+          "journal": "<<[kind |-> \"source\", row |-> <<0, 0, 1>>]>>",
+          "total": "{<<0, 0, 0>>, <<0, 0, 1>>, <<0, 1, 1>>}",
+          "ordered": "<<<<0, 1, 1>>, <<0, 0, 1>>, <<0, 0, 0>>>>",
+          "held": "FALSE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "FALSE"
+        }
+      },
+      "cut": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant HeldExact is violated",
+        "witness_states": 4,
+        "final_state": {
+          "phase": "\"idle\"",
+          "inputs": "{<<0, 0, 1>>}",
+          "event": "[row |-> <<0, 0, 1>>, kind |-> \"derived\"]",
+          "journal": "<<[row |-> <<0, 0, 1>>, kind |-> \"derived\"]>>",
+          "total": "{<<0, 0, 0>>, <<0, 0, 1>>, <<0, 1, 1>>}",
+          "ordered": "<<<<0, 1, 1>>, <<0, 0, 1>>, <<0, 0, 0>>>>",
+          "held": "TRUE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "FALSE"
+        }
+      },
+      "reject": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant RefusalAtomic is violated",
+        "witness_states": 2,
+        "final_state": {
+          "phase": "\"idle\"",
+          "inputs": "{}",
+          "event": "[row |-> <<0, 0, 1>>, kind |-> \"source\"]",
+          "journal": "<<[row |-> <<0, 0, 1>>, kind |-> \"source\"]>>",
+          "total": "{}",
+          "ordered": "<<>>",
+          "held": "FALSE",
+          "heldJournal": "<<>>",
+          "heldTotal": "{}",
+          "heldOrder": "<<>>",
+          "refused": "TRUE"
+        }
+      }
+    },
+    "exit_code": 0
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "positive_configurations": 24,
+    "counterexample_controls": 58,
+    "exit_code": 0,
+    "marker": "ALL-FORMAL-CHECK-OK",
+    "concurrent_lanes": 2,
+    "default_jvm_extraction_isolated_leaf_gates": 11
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-provider-views-test.ss",
+    "exit_code": 0,
+    "case_ok": 9,
+    "module_ok": 1,
+    "final_ok": true,
+    "graphs": 512,
+    "graph_orders": [
+      "forward",
+      "reverse"
+    ],
+    "new_controls": [
+      "Ungrouped/false/true scopes remain distinct across false-group rejection and cycle",
+      "Newest-first source/derived/source journal export preserves a held cut across later SCC merge",
+      "Caller input and public returned row-spine mutations do not alter journal cuts",
+      "Two-input derived batch reverses all seven new rows together"
+    ],
+    "grouped_physical_counts": {
+      "nodes": 6,
+      "components": 5,
+      "arcs": 2
+    },
+    "public_order_seam": "gerbil-ascent-view-rows invokes the captured journal export callback; descriptor visitor order is not this contract",
+    "initial_fixture_errors_corrected": [
+      "Quoted input rows are immutable; mutation fixture now constructs fresh lists",
+      "Generic row visitor bypasses ordered export; assertions now call the public export seam"
+    ],
+    "native_provider_defect_found": false
+  },
+  "remaining_obligations": [
+    "Universal refinement of mutable native storage/replay for arbitrary histories",
+    "TLA abstracts provider enumeration and explores one held cut; multi-reader ownership remains ProviderViews",
+    "TLA events have one input each; native control checks multi-input derived batching",
+    "Nested Scheme fields require stable equality; detached spines do not deep-copy fields",
+    "Presentation journal is not the authoritative source log or arbitrary deletion recovery",
+    "Full BYODS custom-provider/lattice admission, application replication and matched scale/benefit evidence"
+  ],
+  "new_performance_claim": false,
+  "new_paid_llm_calls": 0
+}

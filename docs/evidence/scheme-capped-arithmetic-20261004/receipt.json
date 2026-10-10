@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "sourceBase": "d7feba024cd94e8d30bd9c76511242aa6f6e0491",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "de041c474bba9b74789bcf9d003215dd4fd829392f536399112323a7af9b54a6"
+  },
+  "native": {
+    "artifactSHA256": "2545c27dd498ce68461374ce135854962e8289720caa8b4cda9a4f046d59edc7",
+    "sourceCount": 354,
+    "sourceMapSHA256": "decd5ccefd0f9f2ed0ca23e409c96bf9b46d5e7ba1623071e0b4e95b989c4caa",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 209.9214460849762,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-higher-order",
+      "scheme-model-closure"
+    ],
+    "counts": {
+      "cases": 49,
+      "suites": 2,
+      "modules": 2,
+      "harnesses": 2,
+      "modelTaskNativeTruthChecks": 24,
+      "finalOK": 2
+    },
+    "independentArithmeticTriples": 4913,
+    "arithmeticTruth": "Unbounded integer product via apply * / make-list, compared with capped native power and product",
+    "hugeExponent": "10^100",
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    }
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/FiniteHeight.lean": "5f95e899e66d75b440d0d0c5c56d0572b939f79257f09c8aa8157120a33734ea",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 15,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "implementation": {
+    "owner": "program/finite-arithmetic.ss",
+    "integration": "higher-order bounded-height uses native capped product and power",
+    "cap": "expansion-limit + 1, caller normalization budget sentinel",
+    "claims": [
+      "Natural capped product and power agree with exact values below cap",
+      "Clipped exponents preserve final capped powers",
+      "Nested product/power expressions, cardinality expressions and height expressions preserve exact formula saturation"
+    ],
+    "remaining": [
+      "Semantic sufficiency of type height and cardinality as an inhabitant bound",
+      "Concrete descriptor/binder to typed lexical calculus translation",
+      "Scoped recursive IR and native delta-plan preservation",
+      "Complete compiler refinement"
+    ]
+  },
+  "excludedAttempts": [
+    {
+      "stage": "native build",
+      "exit": 70,
+      "cause": "Test imported nonexistent :std/srfi/1; use existing prelude iota"
+    },
+    {
+      "stage": "native build",
+      "exit": 70,
+      "cause": "Test variable expt generated unresolved native _pow; independent truth now uses unbounded exact integer products"
+    },
+    {
+      "stage": "Lean development",
+      "exit": 1,
+      "cause": "Input clipping induction left a clipped accumulator obligation; discharged using cap_mul_left"
+    }
+  ],
+  "previousHeadCI": {
+    "head": "d7feba024cd94e8d30bd9c76511242aa6f6e0491",
+    "run": "https://github.com/tao3k/gerbil-ascent/actions/runs/37204754980",
+    "checks": [
+      "formal",
+      "scheme",
+      "oracle (byods)",
+      "oracle (other)",
+      "native-and-oracle"
+    ],
+    "conclusion": "success",
+    "scope": "Previous head only, not CI for this patch"
+  },
+  "modelCalls": 0,
+  "performanceClaim": null
+}

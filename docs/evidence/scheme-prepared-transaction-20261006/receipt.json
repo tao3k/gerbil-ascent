@@ -1,0 +1,86 @@
+{
+  "qualifiedBaseHead": "80f1af48393738f8550ac0af4c88e48083d51ec1",
+  "scope": "Session-bound prepared source selection with full atomic data publication and retained operator replacement consumer.",
+  "producerReference": {
+    "repository": "https://github.com/tao3k/lean-poo",
+    "revision": "247d1d6094b6af1bb873f69564b271bc978730ed",
+    "document": "docs/contracts/preparation-cache.org",
+    "role": "Ownership design reference; native source updates are not LeanPoo registry edits"
+  },
+  "sources": {
+    "program/scheme-session.ss": "f58f89521bc8e9d7504f810111dbf036cf6ddcb95869812eb8834eea8d0d6ed6",
+    "program/scheme-admission.ss": "db09bdc8bc60a3b7bdc37dacdafb07619bedecc8a9c6d8c49ddee15c9f7ac002",
+    "program/scheme-language.ss": "e23651ed52d145ed0abcb9410d686c16ff047aa9eab46c9293b3e61113ba7b3e",
+    "program/operator-session.ss": "b4aad46bb3af920e5f2000526590d2f2df4589ff1acb50c18387a5127718b5dc",
+    "program/scheme-query.ss": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "t/qualification/scheme-operator-retained-test.ss": "4102173ac456244d2ac7edd40c40c08cbc4a8d5cd6f09b23a9f02ee8d50eb9d7",
+    "t/qualification/scheme-native-integration-test.ss": "dff850485283aa1b1ecd48b3f9657ee0d866f76ee75fec8843146ca5c0ce7bbc",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "d915a4db3ff81c1fca21d7d7a2c6c33ed5a5031a7f6eafadf859cbca1f11edca",
+    "program/evaluate.ss": "6d0617497367f2ea002596f7cb1db905e43be93be696f87c22f43b8cfd277d01",
+    "program/component-worker.ss": "d980c1453431108a054157c39bc506389f10a66911b51494c31ab89d97bdcaa5",
+    "program/index.ss": "e481190f08110a883abe1887cb1584002487fa1caf1b856f765f14a1eaac8da9",
+    "table/provider.ss": "2b5d250f0c3d2ff72dbb438833e2919d3e18029e0991e540a8507c40a14483aa",
+    "table/index-sharing.ss": "a84672835ec42129857f8faef031b859cc112c442d218f8bf31bff7e31dd1944"
+  },
+  "trackedSchemeSourceCount": 532,
+  "trackedSchemeSourceDigest": "3481af353f16afd57854a89962b947778f04ab65a100a71646c931fc3cb89cf2",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-operator-retained-test.ss",
+      "exitCode": 0,
+      "suiteCases": 10,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "1728effe883ef903aa991a36c9cf7b28dcbfaf3356f0d99c8afdd26fa9def29d"
+    },
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-native-integration-test.ss",
+      "exitCode": 0,
+      "suiteCases": 1,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "52986fe60a0b8302016e4056589a730aab89b048834b6153facf6145837d61c2"
+    }
+  ],
+  "discriminators": [
+    "Preparation fixes ordered source handles and the exact receiving Session without committing rows",
+    "Unknown, foreign, derived and duplicate source selections are rejected",
+    "Caller selection mutation cannot expand or retarget source authority",
+    "Every invocation validates complete batch count, row arity and owned scalar rows before native commit",
+    "Late bad rows and native budget failure preserve the prior result; capability works after recovery",
+    "Independent Sessions over the same declarations stay separate",
+    "Five-fragment integration preserves finite view, negation, reduction and lattice semantics",
+    "Prepared transactions remain usable after intervening dynamic transactions and earlier snapshots remain stable",
+    "Existing finite graph and retained delta suites exercise the migrated replacement consumer"
+  ],
+  "developmentFailure": {
+    "kind": "New test assumed closure row sorting",
+    "resolution": "Compare closure against independent finite set oracle; retain exact source batch order checks",
+    "qualification": "Only corrected final native runs qualify this revision"
+  },
+  "performanceClaim": false,
+  "remaining": [
+    "No typed LeanPoo registry bridge",
+    "No formal native/LeanPoo refinement proof"
+  ],
+  "modelCalls": 0,
+  "concurrentIntegration": "Both final native runs include remote index-sharing and withdrawal-proof updates at the qualified base.",
+  "subsequentIntegration": {
+    "baseHead": "3002cccc9cd772c13a7cb2b4ca6e5aa1fba35b3e",
+    "changedPaths": [
+      "docs/evidence/scheme-founded-recovery-20261006/receipt.json",
+      "docs/evidence/scheme-founded-recovery-20261006/receipt.json.license",
+      "docs/scheme-design-framework.org",
+      "docs/scheme-research-proof-audit.org",
+      "packages/proofs/lean/ComponentClosure.lean",
+      "packages/proofs/lean/Tests/ComponentClosureTests.lean",
+      "t/qualification/scheme-provenance-graph-test.ss"
+    ],
+    "scope": "Proofs, documentation and unrelated provenance test only; all explicitly qualified source files retain their recorded hashes. Aggregate Scheme digest describes the native qualification base."
+  }
+}

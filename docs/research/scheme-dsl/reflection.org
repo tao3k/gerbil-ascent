@@ -1,0 +1,146 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL: research reflection and comparison plan
+#+STATUS: design hypotheses; no comparative superiority result
+#+DATE: 2026-09-30
+#+FILETAGS: :research:scheme-dsl:reflection:
+
+* Claim discipline
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-reflection
+:END:
+
+The proposed [[file:../../scheme-relational-language-design.org][Gerbil Scheme
+language]] is a new design, not a claim to have surpassed its sources.
+For each decision, separate what the authors established, what we
+learned, our departure for Gerbil, and evidence that could reject it.
+The [[file:index.org][source ledger]] preserves the primary PDFs and
+individual readings.  Results from those implementations do not
+transfer numerically to ours.
+
+* Source-by-source reflection
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-source-reflection
+:END:
+
+#+NAME: scheme-dsl-reflection-ledger
+| Source | Established in the source | Lesson and our proposal | Limit of transfer |
+|--------+---------------------------+-------------------------+-------------------|
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent rule planning]], [[file:rule-planning.org][note]] | Rust macro embedding with relational planning, indexes, semi-naive evaluation and lattice examples; selected workload measurements | Retain inspectable rules, dependencies and delta planning while designing Scheme syntax independently | We have not matched its scale, diagnostics, or expressivity; Rust spelling is no design baseline |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun functional fixed points]], [[file:functional-fixed-points.org][note]] | A typed calculus distinguishes discrete and monotone dependencies and reasons about fixed points over finite-height structure | Distinguish fixed parameters from changing relations; require a termination argument separate from monotonicity | A declared Gerbil descriptor has no Datafun typing proof |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun higher-order change]], [[file:higher-order-change.org][note]] | A typed higher-order change translation, proof and evaluation | Specify an inspectable relation operator IR and reference change semantics before optimizing | Our finite structural insertion interpreter is narrower and has no transferred type or correctness proof |
+| [[https://arxiv.org/pdf/2203.16684][DBSP incremental view maintenance]], [[file:incremental-view-maintenance.org][note]] | Stream-based incremental view maintenance, including recursive programs | Compare a retained native rule Session with fresh materialization, with explicit startup and memory costs | We implement no DBSP stream circuit or general signed update transformation |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix fragment composition]], [[file:fragment-composition.org][note]] | First-class constraint values and row-polymorphic composition checks, including stratification | Construct first-class fragments and check the assembled program | Runtime admission is weaker than Flix's static assurance over possible compositions |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix program lifecycle]], [[file:program-lifecycle.org][note]] | Program values, private predicates, inject/query, functional predicates and effects in the implemented language | Give each fragment invocation fresh private handles and separate lifecycle stages | We have not matched its type/effect guarantees, examples or ergonomics |
+| [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren relational kernel]], [[file:relational-kernel.org][note]] | A small Scheme relational kernel with user-level forms and interleaved stream search | Keep a small semantic kernel beneath Scheme abstractions | Stream fairness, answer order and partial answers differ from bottom-up completion |
+
+These papers address different semantics and workloads.  An aggregate
+“better DSL” ranking would conceal those differences.  When a common
+task cannot be specified, state a trade-off instead of forcing an A/B.
+
+* Our departures and their costs
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-departures
+:END:
+
+#+NAME: scheme-dsl-departure-ledger
+| Departure | Hypothesized benefit | Cost or counterargument | Required evidence |
+|-----------+----------------------+-------------------------+-------------------|
+| Scheme =(rule ...)= with =?variables= | Explicit logic-variable scope within Gerbil composition | New macro may have poor error locations or more verbose authoring | Native macro prototype, invalid-scope cases and paired authoring tasks |
+| Fragment functions with fresh private handles | Parameterized reuse without accidental relation capture | Flix already supports first-class constraints and private names with stronger checks | Two-instance composition, signature conflict and late negative-cycle tests |
+| Checkable operator IR with fixed/changing contexts | Planner can see dependencies and admission can reject hidden reads | Small IR may exclude useful Scheme and cost more to evaluate | Written semantics, sound admission argument, independent finite model and workload coverage |
+| Frozen finite view table (implemented); general callback (proposed) | Visible modes and frozen finite input/output mapping | General callbacks still require purity, stability, effects and termination obligations | Frozen-capture/replay tests; infinite-successor and domain-failure discriminators |
+| Separate =compose=, =admit=, =solve= and =query= | Program identity and completion become observable | Extra stages may burden users | Snapshot/source-replacement tests and paired API usability tasks |
+
+“Fits Scheme better” and “is easier to use” remain hypotheses.  A
+shorter example does not establish usability.  Borrowing an algorithmic
+idea does not improve upon its original proof or implementation.
+
+* Evidence ladder
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-evidence
+:END:
+
+#+NAME: scheme-dsl-evidence-ladder
+| Claim | Minimum evidence | Cannot establish alone |
+|-------+------------------+------------------------|
+| Semantic correctness | Written meaning, independent finite model, generated cases and counterexamples | General termination or host-function purity |
+| Static assurance | A sound admission rule over a stated IR | Datafun/Flix-level type safety without their systems |
+| Performance | Same semantics, pinned versions, matched inputs, operation counts and time/memory distributions | General speed across other workloads or hardware |
+| Ergonomics | Paired tasks, comparable training, counterbalanced order, scored correctness/time/errors | Runtime performance or formal assurance |
+| LLM usefulness | Fixed model, actual Scheme source/tasks, invocation and budget; no preset semantic guidance; score raw acceptance, semantic correctness and actual feedback separately | Changes to model weights or general reasoning ability |
+
+Before a comparison, register the claim, baseline, treatment, common
+semantic subset, primary outcome, task split, sample count, exclusion
+rule and failure threshold.  Preserve exact commits, tool versions,
+hardware, source data, commands, seeds, raw output and analysis script.
+Report uncertainty, individual failures and adverse results.  Use
+paired inputs where possible; counterbalance order for human tasks.
+
+* Preregistered A/B questions
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-ab-protocol
+:END:
+
+#+NAME: scheme-dsl-preregistered-comparisons
+| ID | Baseline A | Proposal B | Primary outcome | Interpretation limit |
+|----+------------+------------+-----------------+----------------------|
+| E1 semantics | Independent finite-set/lattice model | Scheme DSL reference evaluator | Exact complete fact sets and explicit rejection/failure | Conformance, not paper superiority |
+| E2 authoring | Current Scheme surface on a common positive-rule subset | Proposed native Scheme grammar | Correct solutions and located mistakes per fixed task | Old surface is a local control, not a proxy for Flix users |
+| E3 composition | Direct duplicated declarations in current Scheme | Fragment constructor with fresh handles | Capture/collision errors and complete outputs | Flix already offers typed composition |
+| E4 delta | Naive evaluator of the same admitted operator IR | Transformed evaluator | Exact equivalence, then operation count and scale | No transfer of Datafun higher-order change's measured gain |
+| E5 engine | Current Scheme evaluator on a common logical subset | New Scheme evaluator | Time/memory distributions after exact-output check | No Rust/Flix ranking without matched runnable tasks |
+| E6 later LLM | Same model and evidence without Library result | Same model/evidence with checked Library result | Answer correctness and unsupported claims | Outside the first DSL design gate |
+
+The current local implementation in E2/E5 is an experimental control,
+not a compatibility requirement.  If result semantics differ, restrict
+the comparison to an explicit common subset or report two separate
+outcomes.  Direct Ascent, Flix or Datafun comparisons require runnable
+pinned implementations and matched tasks.  Otherwise report only our
+measurements and the published context.  Preserve inconclusive and
+negative results and revise the hypothesis.
+
+The [[file:../../scheme-relational-language-design.org::#scheme-language-first-code][native code gate]]
+exercises E1 across 64 finite reachability graphs: independent graph
+closure, a separate operator reference interpreter, direct rule
+lowering, composed operator fragments and the inert candidate path
+produce equal complete sets. Another 64 growth cases compare reference
+change and structural delta propagation with the independent
+before/after set difference. The combined
+fixture includes recursion, finite view, negation, grouped count, max
+lattice and source withdrawal. E1 remains open for generated programs
+beyond this grammar, finite lattice law evidence and larger domains.
+E4 now has a [[file:e4-positive-change.org][bounded paired local receipt]]: exact sets match
+an independent model; join probes and fixed-point body evaluations
+favor structural change on chain and star cases. One small chain case
+has worse median wall time, and larger timings contain outliers. A
+general or asymptotic performance result remains open. E2, E3, E5 and
+E6 have no measured A/B result.
+
+The [[file:e4-retained-session.org][retained Session receipt]] adds an operational comparison within
+E4: the same transformer is admitted once and receives a checked
+source insertion, versus a fresh materialization on the grown source.
+All 64 finite three-node graphs match an independent closure through
+insertion, duplicate insertion and withdrawal. The single-update
+probe has one adverse chain-12 median and noisy individual samples.
+A separate chain-24 lifecycle case includes startup and eleven updates;
+its two run medians favor retained, with overlapping samples. This is evidence for
+this implementation and workload, not a typed change theorem or a
+general optimizer ranking.
+
+* Decision gate
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-reflection-gate
+:END:
+
+Each proposed construct needs a source lesson, admitted IR node,
+failure mode and independent test before implementation.  Build the
+smallest native grammar and reference evaluator before tuning.  Add
+optimized evaluation only after E1.  Do not call this DSL superior to a
+paper system while a semantically matched comparison is absent.
+
+[[file:index.org][Research index]];
+[[file:../../scheme-relational-dsl-design.org][overview]].
+
+See [[file:../../scheme-design-framework.org][the acceptance matrix]] for implemented boundaries and open research gates.

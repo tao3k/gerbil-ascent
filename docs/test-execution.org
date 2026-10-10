@@ -1,0 +1,337 @@
+#+TITLE: Native build and test entrypoints
+#+AUTHOR: tao3k team and Contributors
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Ownership
+=gerbil build= owns the production build and =gerbil test= owns ordinary
+Suite discovery, module loading and Case execution. =just build= and
+=just check-policy= invoke the production build directly; the latter enables
+=ASP_GERBIL_SCHEME_POLICY=1=. =just test= and =just test-file= invoke Gerbil's
+standard test command, with verdict checks in the recipe. The full ordinary
+suite invokes Gerbil once per module to release source expansion contexts; a
+single all-source process exhausted the unchanged 1 GiB heap during validation. They do not prepare
+an alternate library, fingerprint the toolchain or link a test executable.
+
+=t/native/= contains the separate compiled qualification machinery:
+=t/native/qualification.ss= prepares the library and immutable executable
+for =just test-native= and =just test-native-suite=. =std/make= owns compilation
+and currentness. Native actor scheduling applies only to this explicit gate.
+Just invokes Scheme processes directly, with module deadlines and verdict checks.
+The Python package is separate model-provider and paper-data IO; Scheme
+=std/test= owns assertions. =t/model/= contains the model study.
+There is no project-owned general test runner or forwarding gxtest adapter.
+
+* Compilation and isolation
+Explicit native qualification invokes =t/native/qualification.ss= through =gerbil env gxi= so native Gerbil selects the
+project dependency environment before resolving build imports. An explicit
+=GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
+=gerbil deps --install= into the project's =.gerbil/= directory; this was the
+first failure in the remote Scheme jobs for commit =53e6691=.
+
+Production and selected =*-test.ss= modules compile through the test entrypoint into
+=.cache/ascent/native-library/lib=. Native =gxtest= directly loads the compiled
+=.ssi= test module and executes the original exported Suites and Cases.
+The compiled library comes before the checkout in =GERBIL_LOADPATH=; otherwise
+source modules can be interpreted and invalidate performance comparisons.
+The table-expression paired fixture's baseline is compiled alongside production.
+=std/make= checks source dependencies on preparation misses. Content receipts
+admit reuse of the native executable; they do not replace the production build graph.
+
+A native =std/os/flock= lease protects a complete package invocation. The parallel
+module pool finishes before exclusive modules start. Native qualification and
+performance commands use the same lease; production builds use Gerbil locks. Children call the private Just recipes without
+acquiring a nested lease. Independent invocations therefore cannot contaminate
+timed Cases. No standalone scheduler tests are added: validation runs ASCENT's
+actual modules and Cases.
+
+* Commands
+#+begin_src sh
+just build
+just check-policy
+just test                    # standard gerbil test discovery
+just test-native-suite 12     # explicit compiled qualification pool
+just test-native-serial
+just test-file t/qualification/ascent-rule-program-test.ss
+just test-native-parallel
+just performance-scenario ascent-table-expression
+just performance
+#+end_src
+
+Module deadlines and Case budgets are unchanged. Every native test must produce
+CASE-OK, MODULE-OK, HARNESS-OK and final OK with a successful process exit.
+Failure markers, missing markers, overflows and nonzero exits fail the command.
+Pool logs and temporary output stay under ignored =.cache/ascent/=.
+
+* Evidence boundary
+The first replacement-entrypoint run passed 46 parallel modules; the interpreted
+retained-operator test module exceeded its original 120-second deadline. That
+failed log is preserved in the cache. Native =gxtest= subsequently executed the
+compiled version of that unchanged test module successfully with the same
+deadline. This is an isolated result; the full compiled suite requires its own
+completed run.
+
+The final package-entrypoint run passed all 50 modules and 396 Cases, with
+zero error markers and process exit 0. It used =GERBIL_BUILD_CORES=12=, compiled
+test modules, and the unchanged module deadlines and Case budgets. Its logs are
+local cache artifacts; this is local validation, not remote CI evidence.
+A speculative contract-union optimization failed its paired Program admission
+criterion and was withdrawn. No production speedup is claimed from that study.
+
+Historical Python study collectors referring to the removed runners are archived
+experiments. Use the native Just commands above for current qualification.
+
+Earlier local checks: the binary-program performance module passed, and the
+ordered-relations native comparison completed twice (10 scenarios, 1000 pairs
+per scenario per run). The table-expression SS scenario exceeded its original
+120-second module deadline in that earlier environment.
+
+The subsequent timeout investigation restored the pinned dependency environment
+under ignored =.cache/ascent/sdk/= and rebuilt ASP =v0.1.2.2=. The unchanged
+table-expression benchmark completed: 1000 baseline measurements took about
+17.5 seconds and 1000 candidate measurements about 1.7 seconds; the complete
+test module passed in 34 seconds under its original 120-second deadline.
+Phase diagnostics are outside the measured benchmark thunks. The earlier
+temporary environment is no longer available, so this result does not establish
+the cause of its timeout or a production algorithm speedup.
+
+The CI dependency-context failure was reproduced locally: bare =gxi= failed to
+resolve ASP's core-capacity module, while =gerbil env gxi= returned capacity 12
+from the same project environment. This validates the entrypoint correction;
+remote CI for the corrected commit still requires its own result.
+
+In that restored environment, =just test= completed all 50 modules and 396 Cases
+with zero error markers and exit 0. The subsequent exclusive =just performance=
+completed all 17 distinct SS scenarios with exit 0. Table-expression completed
+in 31 seconds in the suite (baseline about 23.8 seconds, candidate about 3.3
+seconds, candidate p95 836 microseconds). All original sample counts, module
+deadlines, Case budgets and fixture assertions were retained. These are local
+results; logs remain under ignored =.cache/ascent/=.
+
+* Declaration-scope lowering qualification
+
+The declaration-scope slice adds one independent qualification module and
+extends the binding oracle: 48 modules run in parallel, followed by the same
+3 exclusive modules. Final native qualification passes all 51 modules and
+411 Cases, policy over 42 production modules with findings=0/errors=0, and
+all 17 original SS scenarios. Native module deadlines, Case budgets and SS
+sample counts remain unchanged. =build.ss= remains 61 lines.
+
+The explicit declaration-scope research benchmark lives under =t/performance/=
+and is not part of normal semantic or original SS execution. It compares
+1000 samples per shape on frozen =822348c= and the candidate using the same
+compiled fixture and SDK, with reversed process order on repeat. See
+=docs/coding-style/planning-and-graphs.org= for the scope invariants and
+measurement boundaries. All generated artifacts and logs stay in =.cache/=.
+
+* DSL closure discriminator
+
+=just build-dsl-closure= reuses std/make's current production Library and
+compiles the seven known exported Suites into =t/model/study.ss='s
+AOT entry. It uses std/test directly, including its standard Case verdicts,
+MODULE-OK/HARNESS-OK markers and failure propagation. This is a fixed semantic
+qualification entry, not a replacement for general gxtest discovery or the
+full repository suite. the compiler output-dir option selects the current Library static output
+before any older installed ASCENT artifact.
+
+=just check-dsl-closure= checks source/artifact hashes, the seven-module inventory,
+heap limit, five-second genuine-output watchdog and the existing 120-second module cap per Suite.
+The seven known Suites run in separate serial processes; the five-second idle
+limit is unchanged and the total limit matches _test-file. No timer
+messages count as progress. Python hashes bytes and supervises the native
+process; it owns no Case evaluation, expectation or DSL semantics. A failed
+one-shot solve cannot be reclassified as complete by this entry.
+
+The ordinary interpreter entry remains separately measurable. Passing the
+AOT gate does not retroactively pass a silent interpreter startup, qualify
+remote CI or establish application/model/performance benefit.
+
+* AOT interrupted-build recovery
+
+The AOT entry uses Gerbil's compile-module/compile-exe API with invoke-gsc,
+static closure and parallel compilation explicitly enabled. Pending compiler
+jobs must drain successfully before byte binding. Output-dir still selects
+the current Library. Under the exclusive test lane, it clears only the
+lane-owned static cache's .o.lock files left by a terminated process group.
+It never clears dependency-prefix locks or the advisory lane lock. All writers
+to this cache must use the test lane. The previous executable is removed
+before compilation so a no-op or failed build cannot bind an older binary.
+The 180-second build, five-second genuine-test-output watchdog and 120-second
+module bounds remain unchanged. The recovery receipt records a real abandoned
+candidate/reasoning object lock and the subsequent six-Suite qualification.
+
+* Names and executable reuse
+
+The project-owned =t/native/= directory contains compiled artifact qualification. =qualification.ss= prepares explicit compiled qualification,
+=native-registry.ss= freezes Suite bindings, =compile-entry.ss= compiles the
+entry, =artifact-admission.ss= binds source and executable identities, and
+=module-process.ss= validates module process receipts. Model-specific study
+and inert response projection belong in =t/model/=, separately from running
+ordinary tests. Gerbil's actual =TestHarness= type and =HARNESS-OK= protocol
+marker retain their upstream names. Historical JSON evidence retains the
+paths and hashes at its recorded commit.
+
+=entry-cache.ss= admits reuse of the last executable for each entry mode
+(single module or module pool), under the repository lane lock. Generated entry
+content, repository source digests, compiled library inputs, selected build
+environment, compiler executable identities and executable bytes must match.
+The generated entry's own compiled files are excluded from dependency inputs;
+they are covered by its source digest and final executable digest. A missing,
+malformed or mismatching receipt forces a rebuild. Failed compilation removes
+prior admission before rebuilding; a fresh receipt is published atomically
+only after successful compilation and unchanged source, interface and toolchain
+checks. Native object and optimizer files are compiler outputs on a miss: the
+completed object digests are bound after compilation, then checked on reuse.
+The existing lane lock serializes preparation and execution.
+
+This cache retains one executable per entry mode, rather than an unbounded
+collection of per-module binaries. Switching the selected module remains a miss. An unchanged focused request
+also bypasses the three fresh library-check compiler processes after the
+compiled library and requested registry key have passed content admission. It caches
+build artifacts only: every invocation still runs all Cases, setup and cleanup,
+with the existing deadlines, output supervision and final verdict checks.
+
+* Content admission IO and repeated scans
+
+The coordinator loads its own Scheme source. Its previous Gambit port read loop
+made content admission expensive even when no compiler ran: an initial probe using the default user package prefix inventoried
+11,375 inputs and took 26.13 seconds on the development host. Upstream compiled
+=call-with-file-reader= and =digest-from-reader!= reduced that inventory to
+13.84 seconds while retaining SHA256 over every byte and bounded buffers.
+
+A focused cache hit now carries the admitted input snapshot from library
+preparation into entry preparation under the same lane lock. Entry generation
+and module import do not compile library outputs. The entry source and binary
+are still checked against their receipt; source and executable identities are
+checked around actual execution. A library miss returns no reusable snapshot;
+compilation binds a fresh inventory of completed outputs. This eliminates the
+second full inventory on a hit without retaining input snapshots across commands
+or using file timestamps as content identity.
+
+=ASP_GERBIL_SCHEME_POLICY=1= enables policy checking. =GERBIL_BUILD_CORES=
+controls compilation parallelism. The measured environment inherited 12 build
+cores. Accepted project tests use the project dependency prefix; the initial
+default-prefix probe failed to resolve its ASP build dependency and is not an
+accepted test run. Policy checking is not the measured cache-scan bottleneck and its gate
+remains enabled in =check-policy=. The justfile command definitions apply the
+MRR environment boundary on macOS, clearing Nix compiler flags and SDK variables
+for builds, standard tests and explicit compiled qualification. No manual shell
+cleanup is required.
+
+Direct execution of the unchanged six-Case finite-flow native entry took
+0.20 seconds and ended in =OK=. This is execution time only, separate from
+preparation, content admission and linking. These focused measurements do not
+establish a stable whole-CI speedup or explain every earlier long invocation.
+
+* Focused repeated-run observations
+
+The unchanged six-Case finite-flow module took 103.81 seconds before reuse.
+The final implementation took 169.47 seconds for its first build, followed by
+29.36 and 40.76 seconds for two complete repeated invocations. Both repeats
+started zero library-check compiler processes and zero entry compiler/link
+processes; all six Cases still ran, including every million-row pair check.
+The test module and production semantic sources are byte-identical to the
+baseline. These are one baseline and two warm samples on a shared host, not
+stable whole-suite or CI performance qualification. Earlier development
+observations include a 315.36-second cold build and a 158.47-second repeat;
+those negative timing observations are retained in the structured receipt.
+Cold build, dependency fingerprint IO and full-pool preparation remain further
+optimization targets. No deadline, heap bound or semantic assertion was relaxed.
+
+* Standard command boundary qualification
+
+The ordinary finite-flow module passed all six Cases through =just test-file=
+in 24.80 seconds before the Just-owned environment cleanup and 10.56 seconds
+with that cleanup. Both invocations executed the million-row verification;
+neither launched library preparation or executable linking. These observations
+were collected on a shared host and are not a stable matched speedup claim.
+The artifact Suite passed seven Cases, including upstream Reader buffer
+boundaries; response projection passed 27 Cases without model API calls.
+The Python framework passed 21 tests. Ordinary setup, Case, cleanup and empty
+Suite controls all failed the recipe as required, including upstream errors
+that otherwise could leave a successful dispatcher exit status.
+
+A single all-source =gerbil test t/qualification= process exhausted the unchanged
+1 GiB heap after 25 successful Cases. The ordinary full-suite recipe therefore
+calls =gerbil test= separately for each discovered module. This uses the same
+upstream test API and per-module deadline without a project runtime dispatcher.
+The full isolated source inventory is not qualified by the focused results;
+CI retains the explicit compiled full-suite gate.
+
+The explicit native actor pool passed ten Cases and its missing, unknown and
+extra registry argument controls each returned exit 70. Setup, Case and cleanup
+controls returned exit 42; the native empty-Suite control returned exit 70.
+The first native rebuild failed with Nix SDK headers; removing only SDKROOT
+exposed partial compilation artifacts left by that failed build. Cleaning only
+the generated =t/native= and retired =t/runner= cache namespaces and using the
+Just-owned environment boundary produced the accepted native pool result.
+No production cache, source checkout, heap bound or test timeout was widened.
+
+The explicit one-Case native cache-admission module was compiled successfully
+and repeated in 12.82 seconds. The repeat emitted both library and entry cache
+hits, started no compiler process, executed its Case and ended in =OK=. Its
+admitted snapshot is reused only during the current lane-owned preparation.
+See [[file:evidence/scheme-test-entrypoints-20261007/receipt.json][the structured receipt]] for source identity, accepted controls, rejected
+attempts and measurement limits.
+
+* Complete acceptance follow-up
+
+The first exact-head CI for =e5191d9= rejected two environment gaps: the native
+cache inventory used =rg= without installing =ripgrep=, and source-view loading
+used bare =gxi= without the declared project dependency environment. Both
+Scheme and oracle jobs now install ripgrep; the Just-owned gxi command enters
+=gerbil env=. The macOS compiler environment cleanup remains in that same
+command boundary. Source views qualified both frozen cuts and callback-engine
+behavior after this repair. CI also exercises the ordinary actor Session Suite.
+
+Full source inventory execution found an allocation-mode mismatch in the actor
+Session Suite. The semantic source-budget, validation-order and immutable-row
+checks remain in =t/qualification/ascent-actor-session-test.ss=. The unchanged
+4096-byte growth bound for rejected 10,000/20,000-row batches now belongs to
+=t/performance/ascent-source-cut-allocation-test.ss= and is always appended to
+the explicit compiled full-suite inventory. It requires native admission and
+checks the actual compiled production module. Both append and replacement
+measurements allocated 101,888 bytes for both batch sizes in the focused native
+qualification. Neither the production implementation nor the bound changed.
+
+* Direct Just and Scheme execution
+
+The Scheme build, native tests, oracle row recipes and Rust differential gate
+no longer launch Python. Native children use =std/misc/process= directly.
+Just retains the unchanged 120-second test and 90-second row deadlines,
+1 GiB runtime heap and mandatory Case/module/final verdict checks. Native
+source, dependency and executable identity checks remain Scheme-owned.
+The former five-second Python output watchdog and CPU watcher are removed;
+a quiet process is not treated as dead before its existing runtime deadline.
+Build completion is determined by =std/make= and compiler exit status, followed
+by source/owner/binary admission. No synthetic progress messages are introduced.
+Historical watchdog receipts above describe their original execution policy.
+
+Cargo starts directly from the recipe shell on blocking standard streams.
+A separate =gerbil env gxi= query selects =GERBIL_PATH= without making Cargo a
+Gambit child. The unused Python blocking-stdio adapter and its adapter-only
+tests are removed. Model-provider and paper-data IO remain separate consumers.
+
+The component-index, actor-credit and union-find matched measurement Cases
+now live in =t/performance/= and remain mandatory in the compiled full suite.
+Their independent truths, fifty timing pairs and ten allocation pairs are
+unchanged. Ordinary =gerbil test= modules retain semantic assertions without
+running native allocation contracts or benchmark sampling loops through the
+source interpreter. The first three moved modules passed four native Cases. Steensgaard retains
+twelve representation pairs and six worker pairs in a fourth measurement module.
+
+The dependency-prefix query isolates all three standard descriptors. Otherwise
+Gambit can change the shell's shared pipe flags even when stdout is captured.
+The standalone Cargo recipe also uses fresh pipes after its Gerbil build
+prerequisite. This preserves blocking Rust logging without a language adapter.
+
+Acceptance of the direct command boundary covered 89 ordinary modules, seven
+artifact controls, ten native actor-pool Cases and all native lifecycle/argument
+failure controls. The native DSL gate passed 203 Cases across fifteen modules.
+The direct Cargo oracle passed 79 differential/IO tests with one existing ignored
+scale test, plus its separate ASP gate. No model API calls were made. The moved
+Steensgaard Case passed all twelve representation and six worker pairs under
+its original budget. These focused receipts do not replace exact-head CI.
+
+See [[file:evidence/direct-test-commands-20261007/receipt.json][the direct command acceptance receipt]] for module Case counts,
+failure controls, retired dependencies and evidence limits.

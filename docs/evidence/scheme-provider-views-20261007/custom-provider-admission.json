@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "e4065842467b1a2fa9964f9590f1bc706551da85",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 3.3 equations (1) and (2); Section 4 index interfaces",
+    "interpretation": "Delta must include newly concretized facts; total/delta may overlap. Physical custom lookup additionally preserves admitted matching occurrence counts."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/ProviderAdmission.lean": "a218885cbd2f48285393ba88ffb120f15b6863fa4cbf4939fc4afaf6a316bb88",
+    "packages/proofs/lean/Tests/ProviderAdmissionTests.lean": "57732487a57088244d08129dc798ee9450b35727e7a41653508f2cb983cf80cb",
+    "packages/proofs/lean/IndexedPositiveTraversal.lean": "3b5c577215c7e8b852132a1338f6672e14f4a3f58152fcc958910a127cc6060b",
+    "packages/proofs/lean/ProviderFrontier.lean": "37903a63a66f3f63b3be59947dcd46a5726f33233466e8635d8d9238a53645a8",
+    "packages/proofs/lean/lakefile.lean": "237c2a1f227c8a3d81d6416d4164e3a3038b6eebf4358f1e4f658c9139597d01",
+    "packages/proofs/tla/ProviderAdmission.tla": "78d739e8a354c5f0e61b39530176316af551d32c5c7c10c7f35396569cd329f9",
+    "packages/proofs/tla/ProviderAdmission.cfg": "79ec5e90b2e80be30d10abe85e04626d053cff6ca5e1b82bda94e15b281c6d63",
+    "program/index.ss": "6b4be45db048e7c7f15057776333f373df4dd0183a30b75888ef578a3f25847f",
+    "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "t/qualification/ascent-index-entry-test.ss": "cd3fb28862e1a1b54520a10890fb7075215f2064185544cd51bed81929d1b5d1",
+    "justfile": "9e07acc9f27535feaaa8ee01ccffe4b77219be3876360efa7d2ed562dd27f6f0"
+  },
+  "lean": {
+    "new_theorems": 12,
+    "build_jobs": 95,
+    "test_examples": 6,
+    "test_owner": "packages/proofs/lean/Tests/ProviderAdmissionTests.lean",
+    "laws": [
+      "mass_le",
+      "cap_and_mass_exact",
+      "key_occurrences_exact",
+      "foreign_occurrences_zero",
+      "old_visible_preserved",
+      "delta_sound",
+      "tau_sound",
+      "fresh_cannot_skip_delta",
+      "pivots_complete",
+      "pivots_sound",
+      "provider_body_partition",
+      "domain_body_partition"
+    ],
+    "axiom_boundary": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "strongest_boundary": "Any finite positive body under conditional abstract Domain laws, including repeated relation occurrences and overlapping delta; not a full abstract iteration, injection or termination proof."
+  },
+  "tla": {
+    "command": "just check-provider-admission-formal",
+    "model": "ProviderAdmission",
+    "rows": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "keys": [
+      0,
+      1
+    ],
+    "total": [
+      0,
+      0,
+      1,
+      2
+    ],
+    "delta": [
+      0
+    ],
+    "foreign_row": 3,
+    "packet_count_range": [
+      0,
+      5
+    ],
+    "semantic_generation_limit": false,
+    "generated_states": 41528,
+    "distinct_states": 20807,
+    "depth": 8,
+    "invariants": [
+      "CountCaps",
+      "MatchingExact",
+      "OutputExact",
+      "DetachedPacket",
+      "NoEarlyCallbacks",
+      "FailedCacheRevoked"
+    ],
+    "faults": {
+      "nocap": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant MatchingExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "FALSE",
+          "wanted": "1",
+          "approved": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 1)",
+          "packet": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 1)",
+          "lane": "\"all\"",
+          "phase": "\"admitted\"",
+          "retried": "FALSE",
+          "callbacks": "0",
+          "cacheLive": "TRUE"
+        },
+        "transcript_sha256": "f7f54cda8a1605a5ce87dd3f74919a6c0fec631534142b45820bb3b8227daf5e"
+      },
+      "set": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant MatchingExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "FALSE",
+          "wanted": "0",
+          "approved": "(0 :> 1 @@ 1 :> 1 @@ 2 :> 0 @@ 3 :> 0)",
+          "packet": "(0 :> 1 @@ 1 :> 1 @@ 2 :> 0 @@ 3 :> 0)",
+          "lane": "\"all\"",
+          "phase": "\"admitted\"",
+          "retried": "FALSE",
+          "callbacks": "0",
+          "cacheLive": "TRUE"
+        },
+        "transcript_sha256": "07219f9321162b5be64b116fd982aed07c209402df5b0a6af0ca3b83e70f6fc3"
+      },
+      "allwitness": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant CountCaps is violated",
+        "witness_states": 3,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "FALSE",
+          "wanted": "1",
+          "approved": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 1 @@ 3 :> 0)",
+          "packet": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 1 @@ 3 :> 0)",
+          "lane": "\"delta\"",
+          "phase": "\"admitted\"",
+          "retried": "FALSE",
+          "callbacks": "0",
+          "cacheLive": "TRUE"
+        },
+        "transcript_sha256": "785fe1b218dc448b746e14591959d81e381b288c24d5c4e5b9184c16b6be6074"
+      },
+      "early": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant NoEarlyCallbacks is violated",
+        "witness_states": 3,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "FALSE",
+          "wanted": "0",
+          "approved": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "packet": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "lane": "\"all\"",
+          "phase": "\"failed\"",
+          "retried": "FALSE",
+          "callbacks": "1",
+          "cacheLive": "FALSE"
+        },
+        "transcript_sha256": "755bc95ff27f8ba9a2b30382f71e26afd560f930d9cfc8efcb87b7c53487b730"
+      },
+      "borrow": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant DetachedPacket is violated",
+        "witness_states": 5,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "TRUE",
+          "wanted": "1",
+          "approved": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 1 @@ 3 :> 0)",
+          "packet": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "lane": "\"all\"",
+          "phase": "\"done\"",
+          "retried": "FALSE",
+          "callbacks": "1",
+          "cacheLive": "TRUE"
+        },
+        "transcript_sha256": "c5ee9a611e0d8c17d896df4fc8b2a8ba7f98b857d271bb24d97fc636ee7cdcf9"
+      },
+      "retain": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant FailedCacheRevoked is violated",
+        "witness_states": 3,
+        "final_state": {
+          "result": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "mutated": "FALSE",
+          "wanted": "0",
+          "approved": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "packet": "(0 :> 0 @@ 1 :> 0 @@ 2 :> 0 @@ 3 :> 0)",
+          "lane": "\"all\"",
+          "phase": "\"failed\"",
+          "retried": "FALSE",
+          "callbacks": "0",
+          "cacheLive": "TRUE"
+        },
+        "transcript_sha256": "1f1a375929479445e93df11846c07394871f456fdb6a40e65c02dde7156b03ef"
+      }
+    }
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-index-entry-test.ss",
+    "exit": 0,
+    "passing_cases": 25,
+    "final_marker": "OK",
+    "all_rows": 34,
+    "delta_rows": 32,
+    "index_threshold": 32,
+    "controls": [
+      "explicit reordered packet with repeated false-valued rows and legal overselection",
+      "compensated omission: same matching mass and Set, unequal per-row quotas",
+      "missing occurrence",
+      "total packet passed to narrower delta witness",
+      "recovery after failure in both lanes"
+    ],
+    "initial_fixture_failures": "Corrected a bracket error and a four-row fixture that selected the scan path rather than the actual custom index. Neither is asserted as a native runtime defect."
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "exit": 0,
+    "lean_jobs": 95,
+    "positive_configs": 25,
+    "negative_controls": 64,
+    "marker": "ALL-FORMAL-CHECK-OK"
+  },
+  "found_gap": "The ordered index proof documentation suggested Set observation for custom reorderings. Set equality loses admitted duplicate occurrences and cannot prove aggregate multiplicity; corrected to an occurrence-count contract.",
+  "remaining": [
+    "Native hash/key witness extraction and stable field equality refinement",
+    "Full general abstract-lattice iteration and injection theorem",
+    "General custom storage concurrency and rollback refinement",
+    "Complete paper application datasets and matched cost/memory evidence"
+  ],
+  "scope": {
+    "new_model_calls": 0,
+    "rust_runtime_integration": false,
+    "raw_logs_committed": false
+  },
+  "checker_cost": {
+    "change": "Hoist the already-required idle phase guard before the Submit packet existential; no transition, property, exploration bound, worker count or heap limit change.",
+    "command": "java -XX:+UseParallelGC -cp <pinned TLC jar> tlc2.TLC -workers 1 -fp 0 -seed 1 -config packages/proofs/tla/ProviderAdmission.cfg -metadir <private> <before/after module>",
+    "jvm_temp_isolation": true,
+    "control_source_sha256": "39c4e29a1df0caef57d2b3ff13adf1172e76fd55ebdeaf4571ac59eb8b2d6eb0",
+    "candidate_source_sha256": "78d739e8a354c5f0e61b39530176316af551d32c5c7c10c7f35396569cd329f9",
+    "jar_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "order": "A/B/A",
+    "runs": [
+      {
+        "variant": "before",
+        "wall_seconds": 30.81,
+        "user_seconds": 12.88,
+        "system_seconds": 1.35,
+        "generated_states": 41528,
+        "distinct_states": 20807,
+        "transcript_sha256": "a0692f721e827bb6eaa6327e2610f66e6acd703d026996d884a617f6e835c33d"
+      },
+      {
+        "variant": "after",
+        "wall_seconds": 2.71,
+        "user_seconds": 2.53,
+        "system_seconds": 0.15,
+        "generated_states": 41528,
+        "distinct_states": 20807,
+        "transcript_sha256": "f5557d6a298888175447711e8e8a905131652476f909f884a4daa53674a1ff04"
+      },
+      {
+        "variant": "before-repeat",
+        "wall_seconds": 27.94,
+        "user_seconds": 11.87,
+        "system_seconds": 0.67,
+        "generated_states": 41528,
+        "distinct_states": 20807,
+        "transcript_sha256": "fd465cc6b746fda394cc2c55aff13b90f077de0d8fcbacacaea24745b44081f0"
+      }
+    ],
+    "scope": "Isolated ProviderAdmission checker cost only, after our native/formal/fault runs completed. Host background load is not controlled; no whole-CI or Scheme runtime speedup claimed."
+  }
+}

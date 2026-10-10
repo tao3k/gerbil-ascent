@@ -5,13 +5,24 @@
 ;;; Per-relation transitive closure state. Index emitted reachability pairs so
 ;;; a new edge combines its known predecessors and successors directly.
 
+(import (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-extension))
+
 (export gerbil-ascent-trrel-state
         gerbil-ascent-trrel-extension
         gerbil-ascent-trrel-uf-extension)
 
-(def (gerbil-ascent-trrel-state)
-  (vector (make-hash-table) (make-hash-table) (make-hash-table)))
+;;; The public constructor returns an opaque provider state. Its private
+;;; record names the membership and directional indexes; each run owns all
+;;; three tables and extension functions alone update their contents.
+(defstruct trrel-state (known predecessors successors))
 
+;; : (-> TransitiveClosureState)
+(def (gerbil-ascent-trrel-state)
+  (make-trrel-state (make-hash-table) (make-hash-table) (make-hash-table)))
+
+;;; A loose product bound admits the common path without a planning table.
+;;; The uncertain path preflights all rows before mutating retained indexes.
+;; : (-> TransitiveClosureState Row Nat Boolean Rows)
 (def (gerbil-ascent-trrel-extend state row budget reflexive?)
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))
@@ -20,10 +31,10 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair))
          (right (cadr pair))
-         (known (vector-ref state 0))
+         (known (trrel-state-known state))
          (new-edge? (not (hash-get known row)))
-         (predecessors (vector-ref state 1))
-         (successors (vector-ref state 2))
+         (predecessors (trrel-state-predecessors state))
+         (successors (trrel-state-successors state))
          (added [])
          (planned #f)
          (planned-count 0)
@@ -91,8 +102,6 @@
       (for-each commit-fact! added))
     (reverse added)))
 
+;; : (-> TransitiveClosureState Rows Rows Row Nat Rows)
 (def (gerbil-ascent-trrel-extension state _all _pending row budget)
   (gerbil-ascent-trrel-extend state row budget #f))
-
-(def (gerbil-ascent-trrel-uf-extension state _all _pending row budget)
-  (gerbil-ascent-trrel-extend state row budget #t))

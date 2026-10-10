@@ -3,225 +3,136 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Bounded binary-relation expression. The input is an official persistent
-;;; UIntTrieSet snapshot; the indexed join uses local Scheme containers and
-;;; publishes a canonical, distinct list of encoded pairs.
+;;; POO demand and source-slot adapter for the core binary relation kernels.
 
 (import (only-in :clan/poo/object .o .ref .call)
+        (only-in :gerbil-ascent/core/ordered-pair-set gerbil-ascent-ordered-pair-set)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :clan/poo/support/base until))
+        (only-in :gerbil-ascent/core/binary-relation
+                 relation-view
+                 native-relation-view?
+                 relation-source-visitor
+                 relation-compose
+                 relation-delta-step
+                 relation-closure
+                 relation-projection
+                 relation-shortest-distance-projection
+                 native-path-distances native-sparse-distance-analysis
+                 build-native-path-layout
+                 compute-native-path-analysis
+                 path-projection
+                 path-distance-projection))
 
-(export gerbil-ascent-table-expression-prototype
-        gerbil-ascent-relation-closure-bounded)
+(export gerbil-ascent-table-expression-prototype)
 
-(def (relation-index pairs radix)
-  (unless (and (exact-integer? radix) (> radix 1))
-    (error "Ascent table radix must be an integer greater than one" radix))
-  (let (index (make-vector radix []))
-    (.call UIntTrieSet .foldl
-           (lambda (pair _)
-             (let ((source (quotient pair radix))
-                   (target (modulo pair radix)))
-               (when (>= source radix)
-                 (error "Ascent table pair exceeds the declared radix" pair))
-               (vector-set! index source
-                            (cons target (vector-ref index source)))))
-           (void) pairs)
-    ;; The vector and its mutable lists stay private behind a visitor.
-    (lambda (source visit)
-      (for-each visit (vector-ref index source)))))
+;; : (-> RelationExpression (-> SourceVisitor NeighborVisitor (Maybe NeighborRows) Result) Result)
+;; : (forall (a) (-> RelationExpression (-> SourceVisitor NeighborVisitor (Maybe NeighborRows) a) a))
+(def (with-relation-view self consume)
+  (let* ((view (.ref self 'indexed-source)) (neighbors (.ref self 'right-index)))
+    (consume (vector-ref view 0) neighbors
+             (and (eq? neighbors (vector-ref view 2)) (vector-ref view 1)))))
 
-(def (relation-projection left neighbors-of radix include-source?)
-  (let* ((dense? (<= radix 512))
-         (bits (and dense? (make-u8vector (* radix radix) 0)))
-         (sparse (and (not dense?) (make-hash-table)))
-         (unique []))
-    (def (add-pair! pair)
-      (if dense?
-        (when (= (u8vector-ref bits pair) 0)
-          (u8vector-set! bits pair 1)
-          (set! unique (cons pair unique)))
-        (unless (hash-get sparse pair)
-          (hash-put! sparse pair #t)
-          (set! unique (cons pair unique)))))
-    (.call UIntTrieSet .foldl
-           (lambda (pair _)
-             (let ((source (quotient pair radix))
-                   (middle (modulo pair radix)))
-               (when (>= source radix)
-                 (error "Ascent table pair exceeds the declared radix" pair))
-               (when include-source? (add-pair! pair))
-               (neighbors-of
-                middle
-                (lambda (target)
-                  (add-pair! (+ (* source radix) target))))))
-           (void) left)
-    (.o (contains?
-         (lambda (pair)
-           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                (if dense? (= (u8vector-ref bits pair) 1)
-                    (hash-get sparse pair)))))
-        (pairs (list-sort < unique)))))
+;; distance-closure-projection
+;; : (forall (p) (-> (NativePathDistances p) (PairProjection p)))
+;; : (-> NativePathDistances PairProjection)
+;; | doc m%
+;;     Publish reachability from this snapshot's already complete path analysis.
+;;     Membership returns a boolean while the retained distance query stays exact.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (distance-closure-projection complete-distances)
+;;     ;; => ordered pairs and a read-only membership query
+;;     ```
+;;   %
+(def (distance-closure-projection (analysis :- native-path-distances))
+  (let ((ordered analysis.pairs) (distance analysis.distance))
+    (.o (pairs (append ordered [])) (contains? (lambda (pair) (and (distance pair) #t))))))
 
-(def (relation-compose left neighbors-of radix include-source?)
-  (.ref (relation-projection left neighbors-of radix include-source?) 'pairs))
+;; distance-snapshot-projection
+;; : (forall (p) (-> (NativePathDistances p) (DistanceProjection p)))
+;; : (-> NativePathDistances DistanceProjection)
+;; | doc m%
+;;     Detach the published row spine from private shared path analysis.
+;;     Editing one public projection cannot change another projection's rows.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (distance-snapshot-projection complete-distances)
+;;     ;; => independently owned ordered pairs and an exact distance query
+;;     ```
+;;   %
+(def (distance-snapshot-projection (analysis :- native-path-distances))
+  (let ((ordered analysis.pairs) (distance analysis.distance))
+    (.o (pairs (append ordered [])) (distance-of distance))))
 
-;;; Compose one frontier and retain only pairs absent from the accumulated
-;;; relation. The caller owns repetition, bounds, and completion.
-(def (relation-delta-step frontier accumulated neighbors-of radix)
-  (let* ((candidates
-          (.call UIntTrieSet .<-list
-                 (relation-compose frontier neighbors-of radix #f)))
-         ;; V19 Set .diff omits operands in its Table .merge forwarding.
-         (delta
-          (.call (.ref UIntTrieSet 'Table) .merge
-                 (lambda (_ left right) (and (not right) left))
-                 candidates accumulated))
-         (combined (.call UIntTrieSet .union accumulated delta)))
-    (.o (new-pairs delta) (all-pairs combined))))
-
-;;; The finite-domain transitive closure for this binary relation, using the
-;;; library's until combinator and set operations. This is a specific rule
-;;; evaluation, not a second generic prototype fixed-point implementation.
-(def (relation-closure source neighbors-of radix (max-pairs #f))
-  (when (and max-pairs
-             (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
-    (error "invalid ASCENT closure pair budget" max-pairs))
-  (let* ((dense? (<= radix 512))
-         (bits (and dense? (make-u8vector (* radix radix) 0)))
-         (sparse (and (not dense?) (make-hash-table)))
-         (frontier [])
-         (all [])
-         (count 0))
-    (def (add-pair! pair)
-      (if dense?
-        (if (= (u8vector-ref bits pair) 1)
-          #f
-          (begin
-            (when (and max-pairs (>= count max-pairs))
-              (error "ASCENT derived pair budget exceeded" max-pairs))
-            (u8vector-set! bits pair 1)
-            (set! count (+ count 1))
-            (set! all (cons pair all))
-            #t))
-        (if (hash-get sparse pair)
-          #f
-          (begin
-            (when (and max-pairs (>= count max-pairs))
-              (error "ASCENT derived pair budget exceeded" max-pairs))
-            (hash-put! sparse pair #t)
-            (set! count (+ count 1))
-            (set! all (cons pair all))
-            #t))))
-    (.call UIntTrieSet .foldl
-           (lambda (pair _)
-             (when (add-pair! pair)
-               (set! frontier (cons pair frontier))))
-           (void) source)
-    (until (null? frontier)
-      (let (next [])
-        (for-each
-         (lambda (pair)
-           (let ((origin (quotient pair radix))
-                 (middle (modulo pair radix)))
-             (neighbors-of
-              middle
-              (lambda (target)
-                (let (candidate (+ (* origin radix) target))
-                  (when (add-pair! candidate)
-                    (set! next (cons candidate next))))))))
-         frontier)
-        (set! frontier next)))
-    (.o (pairs (list-sort < all))
-        (contains?
-         (lambda (pair)
-           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                (if dense? (= (u8vector-ref bits pair) 1)
-                    (hash-get sparse pair))))))))
-
-(def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
-  (relation-closure source (relation-index source radix) radix max-pairs))
-
-;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
-;;; paths by minimum distance. The frontier contains only newly discovered or
-;;; improved pairs, and private storage is published through read-only slots.
-(def (relation-shortest-distance-projection source neighbors-of radix)
-  (let* ((dense? (<= radix 512))
-         (distances (and dense? (make-vector (* radix radix) #f)))
-         (sparse (and (not dense?) (make-hash-table)))
-         (frontier [])
-         (discovered []))
-    (def (lookup-distance pair)
-      (if dense? (vector-ref distances pair) (hash-get sparse pair)))
-    (def (improve! pair depth)
-      (let (previous (lookup-distance pair))
-        (if (and previous (<= previous depth))
-          #f
-          (begin
-            (unless previous (set! discovered (cons pair discovered)))
-            (if dense? (vector-set! distances pair depth)
-                (hash-put! sparse pair depth))
-            #t))))
-    (.call UIntTrieSet .foldl
-           (lambda (pair _)
-             (when (improve! pair 1)
-               (set! frontier (cons pair frontier))))
-           (void) source)
-    (until (null? frontier)
-      (let (next [])
-        (for-each
-         (lambda (pair)
-           (let ((from (quotient pair radix))
-                 (via (modulo pair radix))
-                 (depth (lookup-distance pair)))
-             (neighbors-of
-              via
-              (lambda (to)
-                (let (candidate (+ (* from radix) to))
-                  (when (improve! candidate (+ depth 1))
-                    (set! next (cons candidate next))))))))
-         frontier)
-        (set! frontier next)))
-    (.o (pairs (list-sort < discovered))
-        (distance-of
-         (lambda (pair)
-           (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                (lookup-distance pair)))))))
-
+;;; Open POO prototype: source-pairs and radix belong to each snapshot.
+;;; This signature describes extending source slots with .mix, not a direct
+;;; Scheme call of the prototype value.
+;; : (-> RelationSourceSlots RelationExpressionSlots)
 (def gerbil-ascent-table-expression-prototype
   (.o (:: self [] source-pairs radix)
-      (right-index (relation-index source-pairs radix))
+      (indexed-source (relation-view source-pairs radix))
+      (right-index (vector-ref (.ref self 'indexed-source) 2))
+      (native-path-layout (build-native-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
+      (native-path-analysis (let (layout (.ref self 'native-path-layout))
+                              (and layout (compute-native-path-analysis layout #f #t))))
+      ;; Only the canonical private adjacency may share full path analysis.
+      ;; Callback replacements and explicitly bounded calls keep their own work.
+      (native-sparse-analysis
+       (and (exact-integer? radix) (> radix 512)
+            (let ((view (.ref self 'indexed-source)) (neighbors (.ref self 'right-index)))
+              (and (native-relation-view? view) (eq? neighbors (vector-ref view 2))
+                   (native-sparse-distance-analysis view radix)))))
       (compose-left
        (lambda (left-pairs)
-         (relation-compose left-pairs (.ref self 'right-index) radix #f)))
+         (with-relation-view self
+           (lambda (visit-source neighbors native-neighbors)
+             (relation-compose
+              (if (eq? left-pairs source-pairs) visit-source (relation-source-visitor left-pairs))
+              neighbors radix #f native-neighbors)))))
       (delta-step
        (lambda (frontier accumulated)
-         (relation-delta-step frontier accumulated
-                              (.ref self 'right-index) radix)))
+         (with-relation-view self
+           (lambda (visit-source neighbors native-neighbors)
+             (relation-delta-step
+              (if (eq? frontier source-pairs) visit-source (relation-source-visitor frontier))
+              accumulated neighbors radix native-neighbors)))))
       (closure-projection
-       (relation-closure source-pairs (.ref self 'right-index) radix))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+         (if layout
+           (path-projection (vector-ref (.ref self 'native-path-analysis) 0) radix)
+           (let (analysis (.ref self 'native-sparse-analysis))
+             (if analysis
+               (distance-closure-projection analysis)
+               (with-relation-view self
+                 (cut relation-closure <> <> radix #f <>)))))))
       (closure-bounded
        (lambda (max-pairs)
-         (relation-closure source-pairs
-                           (.ref self 'right-index) radix max-pairs)))
-      (closure-pairs
-       (.ref (.ref self 'closure-projection) 'pairs))
-      (closure-contains?
-       (.ref (.ref self 'closure-projection) 'contains?))
-      (closure-set
-       (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
+         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+           (if layout
+             (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+             (with-relation-view self
+               (cut relation-closure <> <> radix max-pairs <>))))))
+      (closure-pairs (.ref (.ref self 'closure-projection) 'pairs))
+      (closure-contains? (.ref (.ref self 'closure-projection) 'contains?))
+      (closure-set (gerbil-ascent-ordered-pair-set (.ref self 'closure-pairs)))
       (shortest-distance-projection
-       (relation-shortest-distance-projection
-        source-pairs (.ref self 'right-index) radix))
-      (shortest-distance-pairs
-       (.ref (.ref self 'shortest-distance-projection) 'pairs))
-      (shortest-distance-of
-       (.ref (.ref self 'shortest-distance-projection) 'distance-of))
-      (two-hop-pairs
-       ((.ref self 'compose-left) source-pairs))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+         (if layout
+           (path-distance-projection (.ref self 'native-path-analysis) radix)
+           (let (analysis (.ref self 'native-sparse-analysis))
+             (if analysis
+               (distance-snapshot-projection analysis)
+               (with-relation-view self
+                 (cut relation-shortest-distance-projection <> <> radix <>)))))))
+      (shortest-distance-pairs (.ref (.ref self 'shortest-distance-projection) 'pairs))
+      (shortest-distance-of (.ref (.ref self 'shortest-distance-projection) 'distance-of))
+      (two-hop-pairs ((.ref self 'compose-left) source-pairs))
       (at-most-two-hop-projection
-       (relation-projection source-pairs (.ref self 'right-index) radix #t))
-      (at-most-two-hop-contains?
-       (.ref (.ref self 'at-most-two-hop-projection) 'contains?))
-      (at-most-two-hop-pairs
-       (.ref (.ref self 'at-most-two-hop-projection) 'pairs))))
+       (with-relation-view self
+         (cut relation-projection <> <> radix #t <>)))
+      (at-most-two-hop-contains? (.ref (.ref self 'at-most-two-hop-projection) 'contains?))
+      (at-most-two-hop-pairs (.ref (.ref self 'at-most-two-hop-projection) 'pairs))))

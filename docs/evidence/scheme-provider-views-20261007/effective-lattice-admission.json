@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "25aee43ac381ac975dccfa99c00e419c30c33a9c",
+  "qualified_runtime_base": "5c6057c5ea485f5f56278b37a82a9d9b4da1d733",
+  "integration": {
+    "head": "25aee43ac381ac975dccfa99c00e419c30c33a9c",
+    "delta": "Three concurrent documentation/evidence commits; no runtime, proof or gate-consumed source changes between the qualified runtime base and integrated head.",
+    "preserved_paths": [
+      "docs/scheme-trrel-uf-design.org",
+      "docs/evidence/scheme-view-runtime-closure-20261007/TlcProgress.java",
+      "docs/evidence/scheme-view-runtime-closure-20261007/receipt.json",
+      "docs/evidence/scheme-view-runtime-closure-20261007/receipt.json.license"
+    ]
+  },
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 5.6 pointwise map lattice injection; Section 3 semantic admission boundary",
+    "interpretation": "An effective keyed update implementation must refine the full map update; replacement tuples do not automatically meet monotone-gamma premises."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/LatticeAdmission.lean": "6c6ba20181f1623f4e82b0b1ad90f240619ee5c7134f0541387168f8530ba4d3",
+    "packages/proofs/lean/Tests/LatticeAdmissionTests.lean": "88150ff89349164decd19a685e8379528e1d38c5d67d3be0889b111e318bd699",
+    "packages/proofs/lean/PendingKeys.lean": "74fc94773c27bbf671c21560891823f3dc6a6785268b67b73a3bc5f6a4161c85",
+    "packages/proofs/lean/LatticeProjection.lean": "66485cbe79f7072c8d2b77c17162b29bef8e281707b041b69cc1af9161ae3e40",
+    "packages/proofs/lean/lakefile.lean": "a7fd73c6d2e9491f00f98a1465d8579f0a41fed2896781279443db093285d551",
+    "packages/proofs/tla/LatticeProjection.tla": "6a038e4a40beb7deb9e4d3cf882d0caa9cff543f89802a2f75c44b76d1e9167d",
+    "packages/proofs/tla/LatticeProjection.cfg": "184c18254879ff321d0f4104347ae710d85f7a7a72b28f470840a28bf9ae7b5a",
+    "program/evaluate.ss": "503bf331950a9dbfbf857a65ad38c2246616a67f2fd66b8f81a88f61aee617dd",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "program/initialization.ss": "271a048edc41a5c629ced2f0b5dd3eacb2dbd32195a6b9b90016d65257fe6dae",
+    "core/rule-semantics.ss": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+    "t/qualification/ascent-lattice-program-test.ss": "432b49f50262c6cba23350bee3e3ce6317d83ba9c8d8d1aba706da2c1889903c",
+    "justfile": "385f6a9c9ac7fcdfeec2a67cb7f4bd59ac211a8bedd645b2af7a590cd80e20fe"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "module": "LatticeAdmission",
+    "new_theorems": [
+      "empty_overlay",
+      "pending_priority",
+      "committed_fallback",
+      "admit_covered",
+      "overlay_write",
+      "ineffective_unchanged",
+      "admission_update_exact",
+      "collection_covered",
+      "collection_stage_exact",
+      "empty_collection_stage_exact",
+      "publication_exact",
+      "collection_publication_exact",
+      "ineffective_cost_zero",
+      "repeated_key_cost_zero",
+      "fresh_effective_cost_one",
+      "cost_support_exact",
+      "collection_inflationary"
+    ],
+    "test_owner": "packages/proofs/lean/Tests/LatticeAdmissionTests.lean",
+    "examples": 13,
+    "build_jobs": 105,
+    "axiom_boundary": [
+      "propext",
+      "Quot.sound"
+    ],
+    "added_axioms": false,
+    "sorry": false,
+    "closes": [
+      "Pending-before-committed lookup and unchanged-write suppression refine full keyed update.",
+      "Arbitrary finite admitted histories refine full update fold without a generation cutoff.",
+      "Roster coverage is derived through effective admission, rather than supplied after selecting writes.",
+      "Effective-key publication equals the full staged map.",
+      "Zero/one pending-slot cost follows fresh effective key support, not event-list length.",
+      "Abstract growth separately requires JoinLaws."
+    ],
+    "premises": [
+      "Stable mathematical merge/equality; native Scheme callback purity, hash/key equality and field-check extraction remain separate.",
+      "Native visited-table emitted-list ordering and deduplication remain representation premises.",
+      "Pending cost is per-round additional staged keys; prior cumulative derived work and source materialization are external to the ledger."
+    ]
+  },
+  "tla": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "positive_configurations": 28,
+    "typed_fault_controls": 77,
+    "final_marker": "ALL-FORMAL-CHECK-OK",
+    "projection": {
+      "command": "just check-lattice-projection-formal",
+      "exit_code": 0,
+      "resource_configurations": [
+        {
+          "remaining": 2,
+          "generated": 1651,
+          "distinct": 858,
+          "exit_code": 0
+        },
+        {
+          "remaining": 0,
+          "generated": 457,
+          "distinct": 441,
+          "exit_code": 0
+        },
+        {
+          "remaining": 1,
+          "generated": 1249,
+          "distinct": 777,
+          "exit_code": 0
+        }
+      ],
+      "fault_controls": 12,
+      "new_faults": [
+        {
+          "mutation": "budget-skip",
+          "invariant": "BudgetBound",
+          "exit_code": 12,
+          "remaining": 1,
+          "trace_states": 4,
+          "generated": 466,
+          "distinct": 268,
+          "final_state": [
+            "/\\ dirty = {0, 1}",
+            "/\\ applied = {<<0, 0>>, <<1, 0>>}",
+            "/\\ rows = {<<0, 2>>, <<1, 2>>}",
+            "/\\ held = {<<0, 2>>, <<1, 2>>}",
+            "/\\ current = (0 :> 0 @@ 1 :> 0)",
+            "/\\ phase = \"collecting\"",
+            "/\\ cut = {<<0, 0>>, <<1, 0>>}",
+            "/\\ refusedCost = 0"
+          ],
+          "classification": "Injected specification fault; current native implementation passed the corresponding controls."
+        },
+        {
+          "mutation": "budget-events",
+          "invariant": "RefusalSound",
+          "exit_code": 12,
+          "remaining": 1,
+          "trace_states": 4,
+          "generated": 266,
+          "distinct": 266,
+          "final_state": [
+            "/\\ dirty = {0}",
+            "/\\ applied = {<<0, 0>>, <<0, 1>>}",
+            "/\\ rows = {<<0, 2>>, <<1, 2>>}",
+            "/\\ held = {<<0, 2>>, <<1, 2>>}",
+            "/\\ current = (0 :> 0 @@ 1 :> 2)",
+            "/\\ phase = \"refused\"",
+            "/\\ cut = {<<0, 0>>, <<0, 1>>}",
+            "/\\ refusedCost = 1"
+          ],
+          "classification": "Injected specification fault; current native implementation passed the corresponding controls."
+        },
+        {
+          "mutation": "refusal-publish",
+          "invariant": "RefusalStable",
+          "exit_code": 12,
+          "remaining": 1,
+          "trace_states": 4,
+          "generated": 270,
+          "distinct": 268,
+          "final_state": [
+            "/\\ dirty = {0, 1}",
+            "/\\ applied = {<<0, 0>>, <<1, 0>>}",
+            "/\\ rows = {<<0, 0>>, <<1, 0>>}",
+            "/\\ held = {<<0, 2>>, <<1, 2>>}",
+            "/\\ current = (0 :> 0 @@ 1 :> 0)",
+            "/\\ phase = \"refused\"",
+            "/\\ cut = {<<0, 0>>, <<1, 0>>}",
+            "/\\ refusedCost = 2"
+          ],
+          "classification": "Injected specification fault; current native implementation passed the corresponding controls."
+        }
+      ],
+      "invariants": [
+        "MapExact",
+        "SnapshotExact",
+        "PrivateStable",
+        "HeldStable",
+        "KeyCoverage",
+        "BudgetBound",
+        "RefusalSound",
+        "RefusalStable"
+      ],
+      "scope": "One finite min-map transaction. Resource capacity is parameterized; finite key/value populations are not runtime generation caps. Refusal may leave private buffers modified but cannot publish.",
+      "does_not_prove": [
+        "Arbitrary callback physical rollback.",
+        "General lattice convergence, native hash behavior or asynchronous custom-lattice execution.",
+        "Native retry protocol: reconstruction is checked separately against fresh evaluation."
+      ],
+      "development_checker_exception": {
+        "exit_code": 75,
+        "reason": "Unparenthesized conditional absorbed an action conjunction; repaired before acceptance.",
+        "accepted_as_counterexample": false
+      }
+    }
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-lattice-program-test.ss",
+    "exit_code": 0,
+    "cases": 14,
+    "final_ok": true,
+    "new_cases": [
+      "Repeated effective lattice updates consume one pending key slot in two source orders.",
+      "Pending lattice budget refusal preserves held results and permits source replacement/reconstruction."
+    ],
+    "independent_truth": [
+      "Min of 7,2,4 is 2; three same-key inputs complete with one derived slot.",
+      "Two distinct effective keys exceed one derived slot and must produce ASCENT derived fact budget exceeded.",
+      "Held two-key seed rows remain 9 after refusal and reconstruction.",
+      "Retry with one improved key matches a fresh solve for source and lattice rows."
+    ],
+    "new_native_defect_found": false
+  },
+  "delivery": {
+    "pr": "https://github.com/tao3k/gerbil-ascent/pull/1",
+    "documents_language": "English",
+    "runtime_changes": 0,
+    "new_model_calls": 0,
+    "new_rust_integration": false,
+    "raw_logs_committed": false
+  },
+  "remaining": [
+    "Universal native hash/equality/field/callback and SCC/vector extraction.",
+    "Native emitted list ordering/deduplication and arbitrary callback rollback.",
+    "Asynchronous custom-lattice execution and full paper application/time/memory replication."
+  ]
+}

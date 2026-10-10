@@ -1,0 +1,1061 @@
+{
+  "bounds": {
+    "arityConfigurations": 4,
+    "arityGraphs": 512,
+    "aritySeconds": 90,
+    "buildSeconds": 180,
+    "heap": "1G",
+    "idleSeconds": 5,
+    "moduleSeconds": 120
+  },
+  "buildElapsedSeconds": 161.41053875000216,
+  "compilerExitStatus": 0,
+  "excludedRuns": [
+    {
+      "exitStatus": 124,
+      "log": "retained-benefit-integrated-regression.log",
+      "reason": "retained operator Suite hit unchanged 120-second wall deadline; not whole-gate acceptance"
+    },
+    {
+      "diagnosticCpuSeconds": 9.46,
+      "diagnosticWallSeconds": 35.59,
+      "exitStatus": 1,
+      "log": "retained-benefit-integrated-retained-focused.log",
+      "reason": "std/test native Suite finished in 35.59 seconds with final OK; /usr/bin/time -l failed on protected sysctl; diagnostic only"
+    }
+  ],
+  "host": "macOS-26.6.1-arm64-arm-64bit-Mach-O",
+  "integrationUpstream": "f01c7b0875a7206f7ede2e3598011552f89955a9",
+  "logsSha256": {
+    "retained-benefit-integrated-build.log": "d444f359226da9512a89b81a1d8184d3e19cc7ed55257081a7f90e360ebb9898",
+    "retained-benefit-integrated-native.log": "3f2ecd38820b9e0781b5e672454494b79de8403b533fd09b4cb1d62229ae2d75",
+    "retained-benefit-integrated-regression-retry.log": "c94f6a35ebbfafd253400a5d41077540ab760f81b721728bb1fda9f5ad03116f",
+    "retained-benefit-integrated-regression.log": "982ee8511f0aec13279eda5b825111a629bc83159c3ccab8cb4dcc3ca1dd5158",
+    "retained-benefit-integrated-retained-focused.log": "af21e3105ae826ed9d84ba48abbee168f6a2fd10a4e97bf2c963fe0caa87806d"
+  },
+  "measurement": {
+    "activePlanCountIsNotInvocationCount": true,
+    "exitStatus": 0,
+    "independentlyVerifiedMeasuredResults": 120,
+    "pairs": 60,
+    "samples": [
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0003080000000000027,
+          "wallSeconds": 0.000378
+        },
+        "order": "AB",
+        "pair": 0,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.0004019999999999996,
+          "wallSeconds": 0.003718
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.199999999999262e-05,
+          "wallSeconds": 6.3e-05
+        },
+        "order": "BA",
+        "pair": 1,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00016800000000000148,
+          "wallSeconds": 0.00017
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.399999999999462e-05,
+          "wallSeconds": 6.5e-05
+        },
+        "order": "AB",
+        "pair": 2,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015599999999998948,
+          "wallSeconds": 0.000157
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.0999999999991616e-05,
+          "wallSeconds": 6.1e-05
+        },
+        "order": "BA",
+        "pair": 3,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00016300000000001036,
+          "wallSeconds": 0.000163
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00010499999999999399,
+          "wallSeconds": 0.000111
+        },
+        "order": "AB",
+        "pair": 4,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00020599999999999785,
+          "wallSeconds": 0.000208
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.1000000000005494e-05,
+          "wallSeconds": 6.2e-05
+        },
+        "order": "BA",
+        "pair": 5,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00016800000000000148,
+          "wallSeconds": 0.000171
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.0999999999991616e-05,
+          "wallSeconds": 6.2e-05
+        },
+        "order": "AB",
+        "pair": 6,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015700000000000436,
+          "wallSeconds": 0.000157
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.9999999999990616e-05,
+          "wallSeconds": 6.1e-05
+        },
+        "order": "BA",
+        "pair": 7,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.0001789999999999986,
+          "wallSeconds": 0.000182
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.20000000000065e-05,
+          "wallSeconds": 6.3e-05
+        },
+        "order": "AB",
+        "pair": 8,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015400000000000136,
+          "wallSeconds": 0.000154
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.8000000000002494e-05,
+          "wallSeconds": 6e-05
+        },
+        "order": "BA",
+        "pair": 9,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015300000000000036,
+          "wallSeconds": 0.000153
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.0000000000004494e-05,
+          "wallSeconds": 6.2e-05
+        },
+        "order": "AB",
+        "pair": 10,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015099999999999836,
+          "wallSeconds": 0.000152
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.9000000000003494e-05,
+          "wallSeconds": 6e-05
+        },
+        "order": "BA",
+        "pair": 11,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00015300000000000036,
+          "wallSeconds": 0.000153
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.0000000000004494e-05,
+          "wallSeconds": 6.1e-05
+        },
+        "order": "AB",
+        "pair": 12,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00014899999999999636,
+          "wallSeconds": 0.00015
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.499999999999562e-05,
+          "wallSeconds": 6.6e-05
+        },
+        "order": "BA",
+        "pair": 13,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.0002289999999999931,
+          "wallSeconds": 0.000234
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00032300000000000384,
+          "wallSeconds": 0.019196
+        },
+        "order": "AB",
+        "pair": 14,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.0004280000000000117,
+          "wallSeconds": 0.016278
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.40000000000085e-05,
+          "wallSeconds": 6.5e-05
+        },
+        "order": "BA",
+        "pair": 15,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00019500000000000073,
+          "wallSeconds": 0.000196
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 7.40000000000185e-05,
+          "wallSeconds": 7.6e-05
+        },
+        "order": "AB",
+        "pair": 16,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00017899999999998473,
+          "wallSeconds": 0.000428
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.8000000000002494e-05,
+          "wallSeconds": 5.8e-05
+        },
+        "order": "BA",
+        "pair": 17,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.0001569999999999766,
+          "wallSeconds": 0.000158
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00010600000000000886,
+          "wallSeconds": 0.00307
+        },
+        "order": "AB",
+        "pair": 18,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00018899999999999473,
+          "wallSeconds": 0.000191
+        }
+      },
+      {
+        "condition": "independent",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.60000000000105e-05,
+          "wallSeconds": 6.7e-05
+        },
+        "order": "BA",
+        "pair": 19,
+        "retained": {
+          "activePlans": 1,
+          "cpuSeconds": 0.00023200000000000998,
+          "wallSeconds": 0.000236
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 9.200000000000874e-05,
+          "wallSeconds": 9.5e-05
+        },
+        "order": "AB",
+        "pair": 0,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017800000000001148,
+          "wallSeconds": 0.00018
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.2999999999997494e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "BA",
+        "pair": 1,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017200000000000548,
+          "wallSeconds": 0.000174
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 8.900000000000574e-05,
+          "wallSeconds": 9.2e-05
+        },
+        "order": "AB",
+        "pair": 2,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0004969999999999974,
+          "wallSeconds": 0.000603
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.60000000000105e-05,
+          "wallSeconds": 6.7e-05
+        },
+        "order": "BA",
+        "pair": 3,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00047399999999997444,
+          "wallSeconds": 0.000789
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.8000000000002494e-05,
+          "wallSeconds": 6e-05
+        },
+        "order": "AB",
+        "pair": 4,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017799999999998373,
+          "wallSeconds": 0.000179
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.1999999999996493e-05,
+          "wallSeconds": 5.2e-05
+        },
+        "order": "BA",
+        "pair": 5,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00016900000000000248,
+          "wallSeconds": 0.00017
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.2999999999997494e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "AB",
+        "pair": 6,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00016299999999999648,
+          "wallSeconds": 0.000164
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00014599999999997948,
+          "wallSeconds": 0.000148
+        },
+        "order": "BA",
+        "pair": 7,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00039300000000000446,
+          "wallSeconds": 0.000619
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00012399999999998523,
+          "wallSeconds": 0.000207
+        },
+        "order": "AB",
+        "pair": 8,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017800000000001148,
+          "wallSeconds": 0.000179
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.099999999999549e-05,
+          "wallSeconds": 5.2e-05
+        },
+        "order": "BA",
+        "pair": 9,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017300000000000648,
+          "wallSeconds": 0.000174
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.2999999999997494e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "AB",
+        "pair": 10,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00016800000000000148,
+          "wallSeconds": 0.000168
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.9000000000003494e-05,
+          "wallSeconds": 5.9e-05
+        },
+        "order": "BA",
+        "pair": 11,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0005249999999999977,
+          "wallSeconds": 0.000689
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00022500000000003073,
+          "wallSeconds": 0.004587
+        },
+        "order": "AB",
+        "pair": 12,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0007169999999999954,
+          "wallSeconds": 0.015372
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.899999999997574e-05,
+          "wallSeconds": 6e-05
+        },
+        "order": "BA",
+        "pair": 13,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0002650000000000152,
+          "wallSeconds": 0.000359
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.399999999998074e-05,
+          "wallSeconds": 6.8e-05
+        },
+        "order": "AB",
+        "pair": 14,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00018300000000001648,
+          "wallSeconds": 0.000185
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00010199999999999099,
+          "wallSeconds": 0.005569
+        },
+        "order": "BA",
+        "pair": 15,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017500000000000848,
+          "wallSeconds": 0.000178
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0002750000000000252,
+          "wallSeconds": 0.011907
+        },
+        "order": "AB",
+        "pair": 16,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0005280000000000007,
+          "wallSeconds": 0.000531
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.799999999997474e-05,
+          "wallSeconds": 5.9e-05
+        },
+        "order": "BA",
+        "pair": 17,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.0002500000000000002,
+          "wallSeconds": 0.000255
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.6000000000000494e-05,
+          "wallSeconds": 5.8e-05
+        },
+        "order": "AB",
+        "pair": 18,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017100000000000448,
+          "wallSeconds": 0.000173
+        }
+      },
+      {
+        "condition": "recursive",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.099999999999549e-05,
+          "wallSeconds": 5.2e-05
+        },
+        "order": "BA",
+        "pair": 19,
+        "retained": {
+          "activePlans": 2,
+          "cpuSeconds": 0.00017300000000000648,
+          "wallSeconds": 0.000174
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00030400000000002647,
+          "wallSeconds": 0.000311
+        },
+        "order": "AB",
+        "pair": 0,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0005170000000000452,
+          "wallSeconds": 0.00052
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.60000000000105e-05,
+          "wallSeconds": 6.7e-05
+        },
+        "order": "BA",
+        "pair": 1,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0005529999999999979,
+          "wallSeconds": 0.000666
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.7000000000001494e-05,
+          "wallSeconds": 5.9e-05
+        },
+        "order": "AB",
+        "pair": 2,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017799999999998373,
+          "wallSeconds": 0.000179
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.099999999999549e-05,
+          "wallSeconds": 5.2e-05
+        },
+        "order": "BA",
+        "pair": 3,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017900000000001248,
+          "wallSeconds": 0.00018
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.7000000000001494e-05,
+          "wallSeconds": 5.9e-05
+        },
+        "order": "AB",
+        "pair": 4,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017000000000000348,
+          "wallSeconds": 0.00017
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.099999999997774e-05,
+          "wallSeconds": 6.1e-05
+        },
+        "order": "BA",
+        "pair": 5,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00026799999999999047,
+          "wallSeconds": 0.000274
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 9.599999999998499e-05,
+          "wallSeconds": 9.8e-05
+        },
+        "order": "AB",
+        "pair": 6,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00021299999999999097,
+          "wallSeconds": 0.000214
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.3999999999998494e-05,
+          "wallSeconds": 5.5e-05
+        },
+        "order": "BA",
+        "pair": 7,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00018300000000001648,
+          "wallSeconds": 0.000186
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.699999999997374e-05,
+          "wallSeconds": 5.8e-05
+        },
+        "order": "AB",
+        "pair": 8,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017300000000000648,
+          "wallSeconds": 0.000175
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.2999999999997494e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "BA",
+        "pair": 9,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017100000000000448,
+          "wallSeconds": 0.000172
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 9.299999999998199e-05,
+          "wallSeconds": 9.6e-05
+        },
+        "order": "AB",
+        "pair": 10,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0005510000000000237,
+          "wallSeconds": 0.02186
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.7000000000001494e-05,
+          "wallSeconds": 5.7e-05
+        },
+        "order": "BA",
+        "pair": 11,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00020199999999997997,
+          "wallSeconds": 0.000207
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00018699999999999273,
+          "wallSeconds": 0.000193
+        },
+        "order": "AB",
+        "pair": 12,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0005750000000000199,
+          "wallSeconds": 0.003702
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 7.90000000000235e-05,
+          "wallSeconds": 8e-05
+        },
+        "order": "BA",
+        "pair": 13,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.0006400000000000017,
+          "wallSeconds": 0.023012
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.70000000000115e-05,
+          "wallSeconds": 7e-05
+        },
+        "order": "AB",
+        "pair": 14,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00018799999999999373,
+          "wallSeconds": 0.000189
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 6.999999999998674e-05,
+          "wallSeconds": 7e-05
+        },
+        "order": "BA",
+        "pair": 15,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017399999999997973,
+          "wallSeconds": 0.000176
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.6000000000000494e-05,
+          "wallSeconds": 5.7e-05
+        },
+        "order": "AB",
+        "pair": 16,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017300000000000648,
+          "wallSeconds": 0.000172
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.1999999999996493e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "BA",
+        "pair": 17,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017100000000000448,
+          "wallSeconds": 0.000172
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.4999999999999494e-05,
+          "wallSeconds": 5.6e-05
+        },
+        "order": "AB",
+        "pair": 18,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017000000000000348,
+          "wallSeconds": 0.000171
+        }
+      },
+      {
+        "condition": "all-inputs",
+        "fresh": {
+          "activePlans": 3,
+          "cpuSeconds": 5.2999999999997494e-05,
+          "wallSeconds": 5.3e-05
+        },
+        "order": "BA",
+        "pair": 19,
+        "retained": {
+          "activePlans": 3,
+          "cpuSeconds": 0.00017200000000000548,
+          "wallSeconds": 0.000173
+        }
+      }
+    ],
+    "semanticOwner": "Scheme",
+    "summaries": {
+      "all-inputs": {
+        "fresh": {
+          "cpuSeconds": {
+            "max": 0.00030400000000002647,
+            "median": 5.7000000000001494e-05,
+            "min": 5.099999999999549e-05
+          },
+          "wallSeconds": {
+            "max": 0.000311,
+            "median": 5.9e-05,
+            "min": 5.2e-05
+          }
+        },
+        "retained": {
+          "cpuSeconds": {
+            "max": 0.0006400000000000017,
+            "median": 0.00018100000000001448,
+            "min": 0.00017000000000000348
+          },
+          "wallSeconds": {
+            "max": 0.023012,
+            "median": 0.000183,
+            "min": 0.00017
+          }
+        },
+        "wallRatioOfMedians": 3.1016949152542375
+      },
+      "independent": {
+        "fresh": {
+          "cpuSeconds": {
+            "max": 0.00032300000000000384,
+            "median": 6.199999999999956e-05,
+            "min": 5.8000000000002494e-05
+          },
+          "wallSeconds": {
+            "max": 0.019196,
+            "median": 6.3e-05,
+            "min": 5.8e-05
+          }
+        },
+        "retained": {
+          "cpuSeconds": {
+            "max": 0.0004280000000000117,
+            "median": 0.00016800000000000148,
+            "min": 0.00014899999999999636
+          },
+          "wallSeconds": {
+            "max": 0.016278,
+            "median": 0.00017050000000000002,
+            "min": 0.00015
+          }
+        },
+        "wallRatioOfMedians": 2.706349206349207
+      },
+      "recursive": {
+        "fresh": {
+          "cpuSeconds": {
+            "max": 0.0002750000000000252,
+            "median": 5.8999999999989616e-05,
+            "min": 5.099999999999549e-05
+          },
+          "wallSeconds": {
+            "max": 0.011907,
+            "median": 6e-05,
+            "min": 5.2e-05
+          }
+        },
+        "retained": {
+          "cpuSeconds": {
+            "max": 0.0007169999999999954,
+            "median": 0.00017800000000001148,
+            "min": 0.00016299999999999648
+          },
+          "wallSeconds": {
+            "max": 0.015372,
+            "median": 0.0001795,
+            "min": 0.000164
+          }
+        },
+        "wallRatioOfMedians": 2.9916666666666667
+      }
+    }
+  },
+  "modelCalls": 0,
+  "native": {
+    "cases": 125,
+    "elapsedSeconds": 225.53,
+    "exitStatus": 0,
+    "finalOkMarkers": 12,
+    "harnessMarkers": 12,
+    "log": "retained-benefit-integrated-regression-retry.log",
+    "moduleMarkers": 12,
+    "processSystemSeconds": 1.32,
+    "processUserSeconds": 44.74,
+    "suites": 12
+  },
+  "nativeArtifact": "f7a520571fba124356ffce2e29aadc76f9cdd0ad6ab934624b1221313d97bec0",
+  "remainingGates": [
+    "larger workloads and reliable cost crossover",
+    "per-operation memory/allocation distributions",
+    "isolated-host replication",
+    "actual Scheme compiler mechanical refinement",
+    "additional provenance algebras",
+    "fresh source plan and explicit paid model authorization"
+  ],
+  "schema": "ascent.native-retained-benefit",
+  "scope": "pre-batching source with integrated immutable activation cache; twelve native Suites accepted on complete rerun; no separate Rust oracle rerun at this intermediate snapshot",
+  "sourceHead": "05a192139dcc72835b2362fa3911e7e1579382b0",
+  "sourceReconstruction": {
+    "base": "f01c7b0875a7206f7ede2e3598011552f89955a9",
+    "patch": "source-snapshot.patch",
+    "patchSha256": "9940187467f270ef003a4dc52406252ce8bf83f43d8edcd23eb78d615db2300a",
+    "reason": "source commit was rebased over subsequent owner changes; published base plus patch reconstructs every native artifact source digest"
+  },
+  "timingBoundary": "base program, completed session initialization, GC and semantic verification outside timer; admission, snapshot work, native solve and publication inside respective API timing",
+  "version": 1
+}

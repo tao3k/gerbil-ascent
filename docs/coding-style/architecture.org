@@ -1,0 +1,413 @@
+#+title: Scheme Coding Style: Architecture and responsibility
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Current module boundaries and algorithm ownership. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Feature names connect research and implementation
+
+Name research notes, document headings, index entries and test descriptions after
+the implementation responsibility, such as =scoped-witness=, =candidate-feedback=
+and =provider-concretization=. Use the same name in the Scheme implementation,
+Lean/Quint correspondence and acceptance links where that responsibility exists.
+Each research note retains the full paper title, authors, venue and primary-source
+link. Publication years belong in the source citation. An unimplemented research
+mechanism must keep its pending status visible.
+
+* Runtime bindings have one core owner
+
+=core/rule-bindings.ss= owns environment projection, callback invocation,
+ordered pattern extension and head construction over admitted terms.
+=core/rule-semantics.ss= owns dependency planning and lattice row semantics;
+its original binding exports remain compatibility forwards. =positive-plan=
+imports the binding owner directly. The public evaluator delegates guard,
+binding, generator, expression and aggregate-pattern operations to that owner.
+No core module depends on public POO declarations or engine relation storage.
+
+This separation removes the evaluator's duplicate argument-list reader and
+aggregate pattern builder. The runtime module does not cache callback values,
+share an environment across solves or alter callback admission. Numeric slot
+frames still belong to each engine; this change concerns the general callback
+path. Namespace migration itself carries no performance claim.
+
+* Source picture
+
+#+begin_example
+checked language
+program/scheme-language --> program/scheme-admission (public facade)
+                                |
+              +-----------------+-----------------+
+              v                 v                 v
+       scheme-admit        scheme-query      scheme-session
+              |          detached results         |
+              +------> scheme-snapshot <----------+
+              |          checked copies           |
+              v                                   v
+       native evaluate                       native session
+
+syntax                    declaration analysis        execution
+program/syntax.ss -------> program/planning.ss ------> program/evaluate.ss
+program/scheme-language.ss        |                          |
+                                 v                          v
+                        core/positive-plan            table/access
+                        core/rule-semantics           table/storage
+                        core/rule-bindings
+                        core/dependency-graph
+
+table/expression --------> core/binary-relation <------ core/binary-program
+POO demand adapter         binary relation algorithms  bounded evaluation
+
+temporal/lens -----------> temporal/projection ------> temporal/graph ---> core/dependency-graph
+proof and composition       invocation graph facts      cut adapter          dense SCC traversal
+       |                          |
+       +----> temporal/value <----+
+              inert contracts and canonical capture
+
+candidate/program --------> candidate/datum <--------- candidate/reasoning
+candidate/types ----------> inert bounds and pair copy <--- proof/provenance
+
+candidate/finite-evidence ----> candidate/certificate-limits <---- candidate/nonmembership
+                         ----> candidate/program-identity   <----
+exact finite replay            material bounds and identity       inductive invariant
+#+end_example
+
+The two syntax surfaces have different contracts. The historical
+=ascent= form admits general Scheme expressions and patterns and is
+kept for the Rust-oracle qualification path. It is not re-exported by
+=program/interface.ss=. The native public =relational-program= form has
+a checked scalar grammar and an admission boundary. Shared machinery
+must preserve that distinction. =program/analysis.ss= caches immutable
+declaration plans, while =program/evaluate.ss= owns mutable relation
+state and retained-session behavior.
+
+* Study: separate component planning, assigned state and owner publication
+
+This change concerns production SCC execution. The former 142-line
+=program/positive-components.ss= mixed immutable planning, each worker's
+fixed-point state and global admission/publication. For every rule it visited
+every SCC and filtered all heads, then lowered the same body for each projected
+head group. Every worker copied its admitted root vector again, counted all
+relations and rebuilt membership for external inputs and unrelated outputs.
+
+Installed Gerbil =2591dcd=, =compiler/optimize-base.ss:24-29=, names optimizer
+state and identity-keyed tables with =optimizer-info=. Its
+=optimize-top.ss:244-268= separates per-binding type collection from the
+outer binding/body traversal, which owns local scope. These examples guide
+explicit state ownership. They do not suggest that mutable execution state
+belongs in an immutable declaration cache.
+
+| Production owner | Responsibility | Data lifetime |
+|------------------+----------------+---------------|
+| =program/component-plan.ss= | Eligibility, weak Analysis identity cache, SCC grouping and output projection | Immutable admitted metadata |
+| =program/component-worker.ss= | One SCC's frames, indexes, deltas, pending rows and output membership | One assigned worker |
+| =program/positive-components.ss= | Global unique-row merge, ready snapshots and predecessor completion | One coordinator invocation |
+
+The coordinator is now 64 lines. Its public exports remain available, including
+the remote cache and eligibility entrypoints. =build.ss= lists the two new
+production owners. It contains no new test dispatch or configuration switches.
+The existing native component Suite is extended; A/B freezes only the former
+142-line component owner rather than copying the entire evaluator.
+
+Planning groups compiled outputs by SCC in one head pass, instead of scanning
+every SCC for every rule. It preserves duplicate/literal outputs, predecessor
+order and reverse source-rule order. Body slot actions and slot counts come
+from the existing admitted plan. A full survivor retains plan identity;
+partial projections allocate only ordered output headers and a plan header.
+This is valid because body lowering precedes output lowering and head safety
+was already checked. Mutable variable frames are still created per assignment.
+
+Ready admission captures separate root/size vectors on the owner. Each pair
+is transferred to one worker; the owner retains an opaque reference and never
+reads or mutates those vectors afterwards. Persistent row roots are borrowed
+read-only. Sizes are maintained once by the global merge owner instead of
+recounting all rows in each worker. Workers create membership tables only for
+their SCC's output relations. External inputs still use private physical
+indexes. The global owner retains all-relation membership for unique charging;
+it admits successors only after terminal join and credited predecessor merges.
+Cancellation, budget failure and worker draining keep the existing actor-round
+protocol. The metadata cache retains no rows, frames or snapshots.
+
+** Matched qualification and measurement correction
+
+=just performance-component-scope= freezes the component owner at
+=f2d41a3018425c9eb103c1242177ebc2d4cb7daf=, changing only its two relative
+imports. Both sides share the current actor/index/runtime owners and compile
+to native code with exact module checks. Planning calls the uncached compile
+entry on both sides. Coordinator runs warm each side's independent immutable
+cache before measurement. Ordered metadata is compared completely; closures
+also check independent per-relation expected rows.
+
+Five scenarios use 50 alternating CPU pairs and a separate 50 alternating
+allocation pairs each. CPU user+system timing retains natural GC. The initial
+actor allocation metric was rejected: processor-local counter deltas included
+negative values. Gambit's =lib/_kernel.scm= assigns counter 7 from
+=___bytes_allocated(___PSPNC)=; =lib/mem.c='s =determine_occupied_words=
+sums processor allocation counters into =latest_gc_alloc=. The separate
+allocation lane reads that VM total after completed collections before/after
+each batch and rejects negative deltas. Those forced collections are outside
+the CPU lane. The original raw counters and failed forecasts remain under
+ignored =.cache/ascent/component-scope/=; actor processor-local medians are
+not allocation evidence.
+
+| Scenario | Old CPU us | New CPU us | Old VM bytes | New VM bytes | CPU wins |
+|----------+------------+------------+--------------+--------------+----------|
+| 128 independent rule projections | 572.250 | 165.500 | 3394476 | 465708 | 49/50 |
+| One rule with 128 heads | 430.250 | 129.250 | 1565676 | 120472 | 50/50 |
+| Complete coordinator closure, one worker | 4521.000 | 2121.000 | 3967568 | 3228672 | 48/50 |
+| Complete coordinator closure, four workers | 4080.000 | 2151.000 | 3792560 | 3140832 | 50/50 |
+| One-output closure control | 5.000 | 5.000 | 37104 | 36240 | 16/50 |
+
+Cold planning saves 86.3% / 92.3% allocation and 71.1% / 70.0% CPU. It
+uses 128 outputs and 32 body atoms with one source row. The complete cached
+coordinator fixture has 16 independent outputs reading 256 source rows.
+It measures SCC planning cache access, ready snapshots, worker creation,
+private closure, credited merging, terminal joins and canonical row forcing.
+It observes 53.1% / 47.3% less CPU and 18.6% / 17.2% less VM allocation.
+Initial POO admission/analysis and the public evaluator's final publication
+are outside this interval. These figures qualify this component execution
+path, not whole public Session throughput. The small control has unchanged
+median CPU. Planning admission requires 70% less allocation, 30% less CPU
+and 35 wins. Cached-baseline execution admission requires 40% less CPU,
+35 wins and allocation nonincrease. The separate original 30% allocation
+forecast was missed in both closures and remains explicitly false in receipts.
+
+Native qualification passed nine modules / 88 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-8 seconds. The component
+Suite verifies admitted body/action identity, full-plan identity, complete
+frozen metadata, duplicate/literal heads, source-root stability, independent
+frames, recursive truth, exact unique budgets, cancellation and draining.
+Existing actor/session, positive-plan, selected-activation, BYODS index and
+invariant, lattice and deletion Suites passed. Selected production policy
+reported zero findings/errors. The frozen owner matches the declared Git
+revision after its two import redirects; source hashes identify the qualified
+production and both benchmark graphs.
+
+* Study: core kernel ownership and program coordination
+
+The installed compiler's =optimize-top.ss:244-268= defines a small local
+=collect-e= handler inside =collect-type-let-values%=. Its outer traversal owns
+binding order and the body environment; the helper owns one binding's type
+collection. =optimize-xform.ss:202-223= similarly separates body/let traversal
+from reference matching. The transferable structure is an explicit algorithm
+owner and an adapter that supplies scope and traversal, rather than a generic
+"core" bucket containing unrelated public interfaces.
+
+ASCENT previously put only the specialized binary evaluator in =core/=, while
+generic graph, rule-semantics and positive-plan algorithms lived alongside POO
+declarations, language compilation and Session coordination in =program/=.
+The three generic kernels consume private numeric/vector/list data and have no
+POO declaration or Session dependencies. They now belong to a coherent core layer:
+
+| Module | Responsibility | State owner |
+|--------+----------------+-------------|
+| =core/dependency-graph= | Dense-ID SCC traversal | Each traversal |
+| =core/rule-semantics= | Stratification, row binding, expression/head semantics | Caller environment and local traversal |
+| =core/positive-plan= | Immutable positive plans and ordered slot execution | Shared immutable plans; fresh frames per engine |
+| =core/binary-program= | Existing bounded binary evaluator | Each evaluation |
+| =program/planning= | Validate POO declarations and adapt them to lowered plans | One admitted schema/Analysis |
+| =program/evaluate= | Coordinate admitted sources, providers and fixed-point execution | One engine |
+| =program/session= | Update transaction and retained result lifecycle | One Session |
+| =table/*= | Physical indexes and storage providers | Evaluator-owned storage |
+
+Imports migrate directly to the new module identities. No compatibility wrapper
+or second algorithm copy remains in =program/=. The public =program/interface=
+entry point and exported function names remain unchanged. Build entries, native
+qualification references, temporal imports and executable benchmark module paths
+are updated together. Existing frozen local performance implementations and
+historical evidence retain their original internal source structure.
+
+The dependency-graph file is byte-identical to the former graph module.
+Rule-semantics and positive-plan are byte-identical after their sole sibling
+import substitutions. The change adds no cache, layout field, budget exception,
+callback or scheduling policy. Generic core imports have no reverse dependency
+on =program/=. Core organization follows algorithm and state ownership; it does
+not imply that every application rule, public declaration or proof adapter is a
+core concern. No performance improvement is claimed from namespace migration.
+
+The complete native =just test= invocation passes 57 modules and 490 Cases,
+with 53 parallel modules, four exclusive modules and 12 workers. Every module
+log has native, module, harness and final success markers; no Case errors or
+budget exceptions are present, and the invocation exits 0. Generated core =.ssi=
+files confirm =positive-plan -> rule-semantics -> dependency-graph= imports.
+The selected library-source policy audit exits 0 with =findings=0= and
+=errors=0=. Original Case budgets and module timeouts remain unchanged.
+All logs stay in ignored =.cache/ascent/core-ownership/=. This is a namespace
+and responsibility refactor; no new SS or AOT performance qualification is
+asserted from the semantic suite or the existing pre-migration measurements.
+
+* Study: binary relation kernels across core and table boundaries
+
+This study surveys production modules under =core/=, =table/=, =candidate/=,
+=interface/= and =temporal/=, then follows one complete dependency chain.
+Gerbil's =compiler/optimize.ss:15-40= separates its optimization entry point
+from the base, traversal, type, specialization, annotation and call passes.
+The entry point establishes fresh mutation and local-type state; individual
+algorithms own their work. ASCENT's corresponding issue was a reversed owner:
+=core/binary-program= imported =table/expression= for bounded closure, while
+the table expression module contained both the algorithms and the POO adapter.
+
+=core/binary-relation= now owns encoded-pair composition, closure, shortest
+distance, bitmaps and dense path propagation. Its private adjacency and
+frontier state belongs to each invocation or prepared view. The existing POO
+persistent-set input and canonical projection protocol are retained by this
+specialized binary kernel. Generic graph/rule/positive-plan kernels remain
+independent of POO declarations and Session state.
+
+=table/expression= owns the source slots and demand-driven expression adapter:
+it chooses which view to demand, preserves overridden neighbor callbacks, and
+materializes a persistent result set when requested. =core/binary-program=
+calls the kernel directly; no core module imports the table namespace.
+The extracted algorithm forms are unchanged from the preceding revision;
+newly exported view and analysis helpers receive adjacent contract examples.
+The adapter uses Gerbil's =cut= to specialize repeated visitor callbacks.
+Native snapshot provenance checks, private state, publication order and
+budget failure paths are unchanged.
+
+Build ownership and consumers move together: the library list, binary dispatch
+oracle and benchmark native-resolution checks, and materialization benchmark
+build/source fingerprints include the new kernel. Frozen reference algorithms
+are untouched. Direct bounded-closure imports migrate to the new module; no
+compatibility copy of the algorithms remains in the table adapter.
+
+The native table Unit Test adds a budget-isolation check for dense-bitmap and
+sparse relation domains. A failed tight-budget kernel invocation and a failed
+demanded bounded closure must leave subsequent complete projections and
+membership queries intact. Existing callback, distance, dense-path and binary
+program budget tests exercise both consumers of the shared kernel.
+
+The candidate survey retains its independent finite replay and certificate
+checking boundary; it does not redirect that semantic oracle through the
+production evaluator. Interface projection and temporal ownership are separate
+concerns. This change establishes the core/table dependency direction and makes
+no performance claim from moving algorithm code.
+
+The first native pass rejected a missed direct bounded-closure import in the
+materialization test. The next pass exposed self-field recursion in the new
+budget-isolation test: POO implicitly binds the field name in =(radix radix)=.
+The lexical argument is now named =pair-radix= and the field explicitly reads
+that argument. Both failures were repaired without changing kernel bodies or
+budgets; failed logs remain separate from final qualification evidence.
+
+The current local verification boundary is recorded in
+[[file:qualification-history.org::*Binary kernel ownership and Coding Style organization][the qualification history]].
+
+* Study: one coordinated checked-runtime lifecycle boundary
+
+Gerbil's =compiler.ss:8-13= is a public aggregation module. It imports driver
+and base owners, reexports the driver's selected entry points and names two
+additional operations explicitly. =compiler/driver.ss:8-13= coordinates the
+expander, base environment, code generation and optimization stages;
+=compiler/compile.ss:8-12= owns code generation. The expander similarly groups
+its internal stages in =expander.ss:16-38=. A facade and a phase owner have
+separate roles in these sources.
+
+The checked ASCENT runtime previously concentrated four lifecycle phases in
+=program/scheme-admission.ss=: reconstructing caller declarations, preparing and
+running an admission, reading detached completed results, and admitting retained
+source updates. Native =evaluate=, =session= and =result= already own distinct
+engine mechanics. The checked public layer now has explicit stage owners that
+coordinate those mechanics without mixing their public contracts:
+
+| Owner | Responsibility | State and dependency boundary |
+|-------+----------------+-------------------------------|
+| =scheme-snapshot= | Reconstruct checked scalar terms, operators, relations and rules | No evaluator or Session construction; rejects host callbacks and forged descriptors |
+| =scheme-admit= | Inert composition, whole-program preparation, diagnostic reports, single-shot solve | Owns admission records and ready/running/failed/complete state; depends on snapshot and native evaluator |
+| =scheme-query= | Resolve fragment exports and read detached completed rows | Owns solved-result records and row copying; constructs no evaluator or Session |
+| =scheme-session= | Checked source append/replacement and atomic transaction admission | Owns checked session handles and source arities; native Session owns rollback and solve state |
+| =scheme-admission= | Preserve the existing public checked-runtime interface | Explicit original export list; imports phase owners, contains no implementation or mutable state |
+
+This batch separates the complete checked lifecycle. It introduces no generic
+runtime utility module or extra state registry. Internal solved-result
+constructors are exported only by their owner for admission/Session producers;
+the public facade does not expose them. Diagnostic records belong to admission,
+source-handle records to Session, and solved-result records to query publication.
+Their fields are unchanged; their private struct namespaces move with their
+owners. Recompiled consumers use the same public procedures and accessor names.
+
+The native POO =program/admission.ss= continues to own row/budget admission.
+The native evaluator owns mutable solve state, =program/session.ss= accepted
+source snapshots and rollback, and =program/result.ss= persistent row publication.
+These semantics remain distinct from checked declaration reconstruction and the
+public source/query interface.
+
+A Scheme reader compares the source forms before and after the migration: all
+37 function/record definitions are structurally equal, and the facade's complete
+export form is equal to the original. Whole-program composition order, planner
+path observation, single-shot failure behavior, complete-result checks,
+copy-before-update and all-source validation-before-transaction order are
+therefore retained in the moved definitions. This source audit cannot qualify
+module linking or record identity across modules; native consumer qualification
+is required as the second gate. The four admission entry points also gain
+explicit lifecycle contract documentation.
+
+BuildSpec adds the four library owners; the build procedure is unchanged.
+Research and verification are recorded as one lifecycle batch. No performance
+or compile-time improvement is claimed from the module split.
+
+** Local verification and remaining budget gate
+
+The source comparison starts from =778fccd=. The intervening =3abb8bc= and
+=f820081= change README and research documentation only. The Scheme source audit preserves all 37 definitions
+and the public export form. The selected native Scheme policy run completes with
+zero errors and three existing warnings (finite arithmetic R009/R013 and
+candidate datum R013); this batch introduces no new warning.
+
+The existing =just test= entry compiles the production owners and all consumers.
+With =GERBIL_BUILD_CORES=12=, its plan is 53 independent parallel modules and
+seven exclusive modules. The first run exits 70: 48 parallel modules pass, four
+hit their original 120-second process deadline, and positive-plan hits its Case
+duration budget. The exclusive lane is consequently skipped. This is a failed
+whole-suite run, not a successful concurrency qualification.
+
+The five failed modules subsequently pass individually against the same native
+library, source fingerprints and original budgets: positive-plan, temporal lens,
+language contract, operator and provenance graph. Six exclusive modules also
+pass, including artifact publication and retained operator updates. Thus 59 of
+the 60 inventory modules have complete native pass evidence across these runs.
+
+The remaining =ascent-rule-program-test= exits 42 during the exclusive recovery:
+the mixed ternary Case exceeds its 2000-millisecond budget and the source
+withdrawal Case exceeds its 5000-millisecond budget. These Cases invoke the
+unchanged native evaluator rather than the checked snapshot/admit/query/Session
+procedures. This narrows the affected execution path, but does not establish the
+cause or qualify the remaining budget gate. No timeout or Case budget is relaxed;
+the whole suite remains unqualified. No semantic assertion or module-linking
+failure is reported in these runs.
+
+All pass evidence requires the existing runner's real exit propagation,
+=NATIVE-MODULES-OK=, =MODULE-OK=, =HARNESS-OK= and final =OK= checks. Logs, baseline
+source, source fingerprints and the inert Scheme reader audit stay under ignored
+=.cache/ascent/checked-runtime-boundaries=; the first parallel-run module logs
+remain under =.cache/ascent/native-library/test.sK4Wo7=. Synthetic pool status
+messages are not Case progress or pass evidence. The public build procedure,
+native test scheduling and testing implementations are unchanged by this batch.
+Final staged review removes three redundant trailing blank lines only; the
+Scheme reader audit is rerun and still preserves every definition and export.
+
+* Temporal construction, projection and evidence have separate owners
+
+=temporal/value.ss= owns public POO value construction, checked inert coordinates,
+canonical sorting, invocation-local uniqueness admission and detached projections.
+=temporal/projection.ss= consumes detached coordinates; native =defstruct= records
+name graph state and a compact projection result. Gerbil =with= binds the two
+coordinate shapes together. Node indexes remain local to projection; the result
+exposes edges, ordered diagnostics and first rejection without graph internals.
+=temporal/lens.ss= retains snapshot content binding, native receipt production,
+replay verification and solve/fork/compare composition. The public facade reexports
+the same constructors; no transitional public wrapper model is introduced.
+
+This follows Gerbil =core/match.ss:672-689= for structural bindings and
+=compiler/optimize.ss:28-35= for invocation-owned facts. Public extensibility uses
+POO; private finite graph state uses named records; pure algorithms remain named
+procedures. Adding generic dispatch to every graph field would obscure ownership.
+
+Constructor uniqueness replaces quadratic suffix =member= scans with one value
+hash traversal, retaining caps, duplicate errors and source evaluation order.
+=t/performance/temporal-contract/= freezes the previous complete module and
+measures both constructors plus detached projections with ASP Scheme's API.
+50 matched pairs qualify 9001 ->806 us at 256 events/512 edges and 609 ->191 us
+at 64 events/128 edges. Allocation rises 2.8%/10.1%; fixed small/empty and allocation
+gates pass. These constructor measurements do not qualify a whole-solve gain.
+Earlier indexed horizon and cycle algorithms remain in the projection owner;
+module separation itself carries no CPU-speedup claim.

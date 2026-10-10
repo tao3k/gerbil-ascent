@@ -1,0 +1,63 @@
+{
+  "qualifiedBaseHead": "36220a272e2045e5d8fa16245d5304d17ebd5f48",
+  "sources": {
+    "program/index.ss": "05408894570b9dd1ebc5812f7cb3929f0bf2bf4c38b30ef7ab4608700e64055d",
+    "program/evaluate.ss": "938f5ec1c9ed6f240fb0a9f32ea742486b80d3dd47ee524d9323822dde723e79",
+    "table/access.ss": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "table/provider.ss": "9f8e43858ac76f5edebf55b0c9d7feb9ce2331d053152b1c387f7ac7484062fe",
+    "t/qualification/ascent-index-entry-test.ss": "fd4cfa608e6e6aa1a428eb9694cf8f6101a751133d7cf26468d7485f85bcd2d7",
+    "t/qualification/ascent-component-index-test.ss": "3c180cd7008b9ae7488a3b1d6a744627e071c4f6f5e307f400bb0999865a79da",
+    "t/performance/index-entry/reference.ss": "36fa0da1be32e9ef6845405050651b6af9b819bd27a1ece06bfbc8bc3a04ef3f",
+    "packages/proofs/lean/IndexedPositiveTraversal.lean": "eb8c319a5acf5c74dc5f3973690d69d8dbe3fb03863508598657272c7b3ad6a0",
+    "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "5fa49a5779324b04f58e7af97a63288e07782f0248f331e91157561f1e066ed1",
+    "packages/proofs/tla/ComponentIndex.tla": "85fa3425b57fff86602fc789ec87df3e26a1dbfcab82cd76f5c1578eeb100dce",
+    "packages/proofs/tla/ComponentIndex.cfg": "3dd430df1e3c34509846866198362acdbf654b2a36ac8827c1c5de91cf785f98",
+    "justfile": "e47162e52c54dd4f89d0d9cc77675b7fd221e878b32b593e61e0fb0f60a3b0ac"
+  },
+  "rootCause": "An in-place provider extension could mutate a cached lookup and then raise while its old committed version remained valid. Equivalent atom identity hits could reuse the poisoned lookup.",
+  "correction": "Revoke entry validity before provider extension; publish the returned lookup and prospective version only on success. Failed entries are rebuilt from committed rows on the next indexed read.",
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 73,
+    "proofChanges": false,
+    "scope": "Unchanged indexed traversal algebra assumes current-snapshot candidates. Recovery protocol belongs to TLA+ and native checks."
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-component-index-formal",
+    "exitCode": 0,
+    "normalDistinctStates": 16,
+    "expectedNegativeControls": [
+      "component-index-order Consistent",
+      "component-index-early Consistent",
+      "component-index-failed Consistent"
+    ],
+    "scope": "Finite two-owner single-bucket extension/install, failed mutation invalidation and rebuild/retry. No general native refinement or liveness claim."
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-index-entry-test.ss t/qualification/ascent-component-index-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 11,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "faultControl": "Frozen prior index implementation returns injected (0 999) after mutate-then-raise; corrected implementation excludes it.",
+    "qualifications": [
+      "Failed extension reconstructs committed total rows",
+      "Equivalent atom alias resolves the shared revoked entry",
+      "Delta cache and source rows/version remain unchanged by total failure",
+      "Successful retry installs the intended next rows",
+      "Successful path preserves callback/row order; failure path adds one rebuild",
+      "Recursive scalar/composite indexes match independent truth for workers 1, 2 and 4"
+    ]
+  },
+  "actorOwnership": "Source inspection: positive actor workers construct private indexes over frozen row/size/version vector copies. No shared worker cache added.",
+  "remaining": [
+    "Native encoding/equality/vector ownership refinement",
+    "General cache/provider and asynchronous execution trace refinement",
+    "General abstract gamma/injection and termination contracts"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

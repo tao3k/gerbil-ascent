@@ -1,0 +1,181 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL closure contract
+#+STATUS: current semantic contract; focused qualification recorded separately
+#+DATE: 2026-10-04
+
+* Decision and ownership
+
+The native language is relational-program and relational-fragment, built as
+Scheme program values and checked at admission. Rust Ascent fixtures are
+historical differential research, not the language specification. No new
+parser, JSON DSL, version suffix or runtime bridge is introduced here.
+Scheme construction is trusted host computation. Its functions may build
+programs but are not thereby proved pure or terminating. Untrusted candidate
+input stays inert data within candidate/reasoning.ss's declared subset.
+
+* Four distinct guarantees
+
+| Guarantee | Current basis | Limit |
+|-----------+---------------+-------|
+| Grammar and composition | One lowering to inspectable program values; fresh private handles; whole-program modes and dependencies | Independently admitted pieces need not compose into an admissible whole |
+| Fixed-point meaning | Positive strata use least closure; strict negative/reduction/lattice-projection dependencies read completed lower strata | Completion is relative to the admitted program and supplied snapshot |
+| Termination | Finite positive operator graphs copy finite sources and mappings and cannot synthesize new scalar atoms | Checked scalar arithmetic and integer lattice refinement do not generally have finite height |
+| Explanation | Finite replay and bounded founded proofs check the exact program, query and snapshot | Source authentication, source completeness, candidate intent and real-world causation remain outside the claim |
+
+For a fixed positive operator graph, collect all frozen scalar values from
+sources, mappings and fixed selection constants into U. Each relation has a
+fixed arity a and can contain at most |U|^a rows (arity zero has one possible
+row). Union, join, selection, projection and finite mapping preserve that
+universe. Scoped function application and fix lower to the same positive
+operations. Thus monotonically growing relation state has finite height.
+Operational limits may still reject a large finite computation; finite height
+does not guarantee that a particular budget is sufficient.
+
+General checked rules can produce new exact integers through compute +.
+The rule n(x+1) <- n(x), starting at n(0), is monotone and binding-safe yet
+has no finite closure. A max lattice with one key can also improve forever.
+A finite number of keys is not finite height. Such a program may pass admission
+but must fail its solve on the work/fact bounds; no truncated relation may
+be published as complete. A failed one-shot admission stays failed.
+
+No generic Datafun monotonicity, finite-type or lattice-law proof is claimed.
+The current max/min join descriptors specify the operation, not a bound on
+all recursive integer values. Any future domain declaration must check every
+source and derived row and reject violations, rather than clamp values.
+A general higher-order extension requires declared domains, binding modes,
+visible captures/dependencies, effects and a separate termination argument.
+
+* Composition, snapshots and observations
+
+admit checks the assembled program after composition. Negative, reduction and
+lattice-projection cycles reject, even when each contributing fragment alone
+is valid. Private relation identities remain local to fragment instances.
+
+Compatible pure fragment composition is compared by complete result sets.
+Set equivalence does not promise equal row order, diagnostic order, timing,
+partial snapshots or resource use. Scalar captures and source row spines are
+frozen at construction/admission; checked scalar atoms are immutable.
+Host construction side effects are outside the relational algebra laws.
+
+Completed query APIs require finished results. Timeout snapshots belong to
+the lower-level Session API and cannot be silently promoted into a completed
+native query. Existing complete, partial, bounded, unsupported and failure
+statuses retain their owning APIs; they are not interchangeable.
+
+* Updates and evidence
+
+Positive insertion may reuse the existing Session. Single-source replacement
+preserves committed-round timeout and replay semantics. Explicit batch
+replacement/withdrawal computes a prospective snapshot and publishes only after
+completion; failure preserves the last completed result and admitted source.
+For checked native programs, replacement invalidates the transitive downstream
+dependency closure and rederives affected components, reusing independent
+completed relations. Opaque providers and callbacks require full recomputation.
+The grounded DRed support kernel is a separate facility; it does not replace
+the Session evaluator. See the native deletion contract for independent graph
+and status discriminators. Skipped rule work does not establish a wall-time
+benefit; that requires a matched recomputation experiment.
+
+Why-Not means ground absence in an exact completed finite model, under its
+source/program/query binding. It is not a claim that the real world has no
+such fact. Proof truncation or exhausted verification budget cannot validate
+an absence or a completed proof. A founded witness is not all provenance.
+
+* Falsifiable qualification
+
+| Discriminator | Expected observation | Existing/new entrypoint |
+|---------------+----------------------+-------------------------|
+| Bounded integer successor | Exactly rows 0 through 4 | scheme-closure-contract-test.ss |
+| Unbounded successor | Solve fails; a second solve cannot publish partial rows | scheme-closure-contract-test.ss |
+| One-key increasing max lattice | Refinements consume budget and solve fails | scheme-closure-contract-test.ss |
+| Two individually valid negative fragments | Each solves alone; their composition rejects dependencies | scheme-closure-contract-test.ss |
+| Finite operator graph and scoped fix | Complete sets match independent finite closure; escaped parameters reject | scheme-operator-test.ss |
+| Joint direct/fragment/candidate semantics | Complete recursion, negation and reduction sets agree with independent model | scheme-library-contract-test.ss |
+| Replacement/withdrawal and failed transaction | Fresh-model equivalence and old snapshot stability | scheme-operator-retained-test.ss |
+| Finite evidence and ground absence | Binding changes, tampering and exhausted bounds cannot verify | ascent-finite-evidence-test.ss, ascent-positive-nonmembership-test.ss |
+
+Build the known twelve-Suite AOT entry with =just build-dsl-closure=, then run
+=just check-dsl-closure=. Compilation uses the same std/make Library/currentness
+owner; the compiler output-dir option makes its current static output take precedence over an older
+installed ASCENT. Native execution uses std/test's TestModule/TestHarness,
+Case implementations and verdicts; it introduces no second evaluator or oracle.
+The executable's source and artifact hashes are checked before each run;
+source changes during compilation or after binding invalidate qualification.
+Scheme hashes bytes and admits the executable. Just launches it directly.
+Runtime is heap-fenced with the existing 120-second module cap per Suite in
+separate serial processes. Compilation follows std/make completion and exit status. Ordinary individual
+modules remain available through =just test-file=. Require MODULE-OK, HARNESS-OK and final OK with no error/overflow
+markers. Record exact source head/hashes, dependency environment and raw logs.
+Existing receipts do not qualify new edits or the primary checkout's dirty
+planner changes. Model benefit and performance require separate paired runs.
+
+* Paper correspondence
+
+- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun functional fixed points]], section 2: monotonicity and finite-height obligations are distinct.
+  Our finite graph supports a structural argument, not its general type theorem.
+- [[https://plg2.cs.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix fragment composition]], sections 1 and 4: first-class constraints and stratification.
+  Our whole-program runtime admission differs from its static analysis.
+- [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun higher-order change]], sections 4 onward: higher-order changes require their own
+  semantics. Our positive finite insertion subset is narrower.
+- [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][DBSP]], sections 4.1 and 4.3: signed changes and stateful maintenance.
+  Current replacement recomputation does not implement that transformation.
+
+* Remaining research gates
+
+1. General typed higher-order operators and finite-domain/lattice-height admission.
+2. Incremental deletion with multi-support and cyclic support correctness.
+3. Complete recursive provenance semantics and scalable certificate production.
+4. Broader composition/domain corpora and matched scale/cost experiments.
+5. Real model comprehension and measured real-time feedback transfer without
+   preset semantic guidance. Native correctness cannot establish model benefit.
+
+These remain open explicitly. MRR Rust integration follows the native contract
+and model-validation gates; this work changes no Rust runtime or authority owner.
+
+
+* 2026-10-04 focused native qualification
+
+The [[file:evidence/scheme-closure-20261004/receipt.json][receipt]] records six distinct modules, 51 CASE-OK entries, six
+HARNESS-OK and six final OK markers, exit 0 and no failure/overflow markers.
+The native gate retained five-second real-output progress and the existing
+120-second per-module deadline. Four new termination/composition Cases check
+the exact budget failure and failed-admission behavior. The finite-evidence
+64-graph loop now flushes progress only after completed assertions.
+
+Earlier silent interpreter startup and AOT aggregate/45-second-cap failures
+are preserved in the raw archive. They are not reclassified as passes. AOT
+execution is a separate delivery path; this receipt does not qualify the
+interpreter startup, the primary checkout's newer declaration-scope changes,
+full repository CI, incremental deletion, general higher-order typing or
+real model benefit. The source/ABI path adds no prompts or model calls.
+
+The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.
+
+* Indexed traversal of a published result
+
+A result provides =visit-rows(name, columns, key, consume)= alongside =rows-of=.
+Columns are zero-based schema ordinals and must have one matching key value
+per ordinal. Unknown relations, negative/out-of-range ordinals and mismatched
+key lengths are rejected before traversal. An empty key visits the whole
+published relation; keyed frozen views retain their native selection routes.
+Enumeration order depends on the frozen representation. Ordered export uses
+=rows-of=.
+
+The callback receives an invocation-owned row spine. Traversal does not mutate
+or retain a cursor in the Provider, force ordered Cartesian export, or observe
+subsequent Session updates. Field values follow the existing immutable scalar
+contract. Explicit rows use checked filtering; indexed frozen views use their
+frozen read capability. Callback exceptions propagate to the caller without
+changing the published cut. A complete equivalence partition can therefore be
+observed by selecting one row key per as-yet-unseen active component, including
+its full member roster, instead of enumerating every implied pair.
+
+The mathematical obligation is complete member and active-roster equality, not
+aggregate cardinality equality. =component_squares_exact= constructs the square
+semantics of a component roster; =component_squares_partition_equal= proves that
+matching component lists determine all concrete pairs. Native member extraction
+remains checked by independent application comparisons. ProviderViews Quint
+continues to own frozen reads, publication and reader lifetime; these pure
+partition laws belong to Lean.

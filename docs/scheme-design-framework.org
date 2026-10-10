@@ -1,0 +1,501 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme DSL design framework and acceptance matrix
+#+DATE: 2026-10-04
+#+STATUS: implemented subset specified; research obligations remain explicit
+
+* Acceptance rule
+
+Advance one usable native lifecycle across admission, solve, source updates,
+publication and evidence, then qualify its application costs. Current ASCENT
+library closure covers R1--R5. R6 remains a separate model-comprehension study;
+R7 consumer integration is deferred outside this library acceptance scope.
+
+This matrix defines the scope of design closure. An implemented interface,
+a semantic argument, a passing discriminator and measured application benefit
+are separate obligations. A row closes only the claim stated in that row.
+The [[file:scheme-closure-contract.org][closure contract]] supplies the semantic limits; the
+[[file:native-library-acceptance.org][Library acceptance contract]] supplies the general execution gates.
+Historical receipts bind their own sources and do not certify later commits.
+
+* Current closure plan (2026-10-06)
+
+The [[file:features/closure-plan/proofs.org::#current-closure-plan][current integrated design audit]] supersedes historical next-step wording
+in dated sections below. It retains the R1-R5 library acceptance scope and the full
+[[file:scheme-paper-closure.org][ASCENT/BYODS closure matrix]]. The immediate mainline is native acceptance,
+admitted compiler/row/execution refinement, then Provider/index and actor
+contracts, update/evidence semantics, higher-order changes and complete
+application measurements. Model validation requires its own frozen-source and
+paid-call authorization. MR/MRR integration is a separate future research task,
+not a prerequisite or a deliverable of current ASCENT library closure. The
+pinned Rust ASCENT oracle remains a library differential reference.
+
+The [[file:evidence/scheme-index-sharing-20261006/receipt.json][current native receipt]] binds Scheme source =77fbabe= to 82 modules, 731
+Cases and explicit successful exits, after the latest retained transaction
+preparation update. The [[file:evidence/scheme-higher-order-20261004/receipt.json][typed-change receipt]] binds the later =6efc911=
+Lean source to an 84-job build and axiom-free application/composition laws.
+No Scheme source changed between those revisions. Final-head GitHub checks
+remain an independent release gate. Earlier compiler heap, package-policy and
+progress failures remain historical rejected results in their own receipts.
+
+* Implemented framework
+
+| ID | Boundary and owner | Guarantee and limit | Implementation | Discriminator |
+|----+--------------------+---------------------+----------------+---------------|
+| C1 | Scheme construction | First-class programs/fragments; host construction remains trusted computation | [[file:../program/interface.ss][interface]], [[file:../program/objects.ss][objects]] | [[file:../t/qualification/scheme-library-contract-test.ss][library contract]]: complete sets against an independent model |
+| C2 | Whole-program admission | Fresh private identities, binding modes and strict dependency checks after composition; valid fragments can form an invalid whole | [[file:../program/scheme-admission.ss][admission]], [[file:../program/planning.ss][planning]] | [[file:../t/qualification/scheme-closure-contract-test.ss][closure]]: individually valid negative fragments reject together |
+| C3 | Checked scalar/view boundary | Frozen immutable scalar captures and finite view tables; no opaque user callback inside checked rules | [[file:../program/scheme-checked.ss][checked descriptors]] | [[file:../t/qualification/scheme-library-contract-test.ss][library contract]]; capture and admission cases remain separate from host purity |
+| C4 | Finite positive operator graph | Fixed arities and finite scalar universe imply finite relation height; resource bounds may still reject | [[file:../program/operator.ss][operator]] | [[file:../t/qualification/scheme-operator-test.ss][operator]]: finite closure and scoped parameter rejection |
+| C5 | General arithmetic/lattice recursion | Binding safety does not imply termination; exhausted bounds fail and cannot publish completed rows | [[file:../program/scheme-checked.ss][scalar operations]], [[file:../t/qualification/scheme-closure-contract-test.ss][closure discriminator]] | Bounded successor returns 0..4; unbounded successor and one-key max fail with exact budget errors |
+| C6 | Retained source lifecycle | Positive insertion reuse; checked replacement/withdrawal invalidate affected native components and atomically publish; opaque providers/callbacks fully recompute | [[file:scheme-session-deletion-design.org][native deletion]], [[file:../t/qualification/scheme-session-deletion-test.ss][qualification]] | 64 graphs and 192 withdrawals against matrix closure and fresh native solve; failed publication rolls back; independent fixture selects 2 of 3 native plans |
+| C7 | Finite evidence and Why-Not | Replay checks exact program/query/snapshot; ground absence requires a completed finite closed model; bounded/unsupported is not absence | [[file:../t/qualification/ascent-finite-evidence-test.ss][finite evidence]], [[file:../t/qualification/ascent-positive-nonmembership-test.ss][nonmembership]] | Tampered binding and exhausted verification bounds reject; founded witness is not all provenance |
+| C8 | Native execution and byte binding | Scheme owns Case verdicts, prediction projection, DSL semantics and artifact admission; the Python package owns separate provider byte IO | [[file:../t/model/study.ss][native entry]], [[file:../t/native/artifact-admission.ss][native artifact binding]], [[file:../python/README.org][IO package]] | Thirteen native Suites including artifact failure controls and the original timeout lifecycle; explicit exit status, MODULE-OK/HARNESS-OK/final OK, 120s module bounds |
+
+C4's finite universe argument applies to fixed sources, mappings and selection
+constants. It does not extend to C5's integer generation. A finite lattice key
+set is insufficient when values can improve forever. C7 binds supplied data;
+it does not authenticate a producer or establish real-world completeness.
+
+* Research decisions and remaining closure conditions
+
+The Python/native testing boundary was corrected after rebasing the concurrent
+834ff8c core ownership migration. Artifact admission and bounded inert Scheme
+prediction parsing now live in the native test harness; their nine failure and
+discriminator Cases run through std/test in the AOT entry. Remaining provider
+byte IO and process supervision form the =python/= package with pyproject/src
+layout. No Python entry remains in =tools/=. On source 0e1141e, the
+[[file:evidence/scheme-native-framework-integrated-20261004/receipt.json][integrated native qualification]] passed thirteen Suites / 138 Cases with exit 0,
+and five Python IO controls passed. This closes this testing ownership migration,
+not the open research and model-benefit conditions in the table below. No real
+model call or new accuracy/benefit score belongs to this migration.
+
+| ID | Design decision | Required falsifiable evidence | Status / dependency |
+|----+-----------------+-------------------------------+---------------------|
+| R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Nested monotone arrows, lexical descriptors and native lowering implemented; operator monotonicity, nested application and relation fixed-point laws checked in Lean alongside finite-rank termination; finite-height function-valued fix natively qualified; [[file:scheme-compiler-proof-bridge.org][native budget arithmetic and nested formula saturation proved]]; [[file:scheme-compiler-proof-bridge.org][scoped positive recursive IR preservation proved]]; native mutable descriptors revalidated with owned row snapshots and identity-scope laws proved; abstract finite-signature cardinality/height sufficiency proved; typed admission returns owned canonical graphs; native scalar/row/descriptor interpretation and concrete memo/rule refinement remain open |
+| R2 | Finite-domain declarations must validate inputs and every derived value, never silently clamp | Unbounded successor and increasing one-key lattice become admission rejection or explicit domain failure; complete in-domain closure agrees with oracle | Explicit finite domains enforced at admission and every native row boundary, including replacement; no generic finite-height lattice declaration theorem |
+| R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Implemented native dependency invalidation for the checked DSL; custom providers and opaque callbacks recompute |
+| R4 | Complete provenance needs an explicit recursive provenance algebra and certificate cost bounds | Independent witness enumeration on finite models, cyclic cases, tamper and size limits | Complete finite stratified alternative graph implemented and independently rebuilt; negative/group observations included; arbitrary numeric semiring valuations and lattice-join histories remain separate obligations |
+| R5 | Architecture benefit must be measured separately from correctness | Same semantics, input set, dependency versions and budgets; operation counts and time/memory distributions | Partial: historical solve-boundary samples and 17,280 batched results independently checked; native allocation counters implemented; fresh-update POO self-field recursion corrected; integrated b8c695d plus published patch passed 141 native Cases and [[file:scheme-retained-benefit.org][180 three-arm groups with 5,400 independent verdicts]]; only the 48-edge independent-source condition reduced all measured costs; general benefit remains open |
+| R6 / separate research | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
+| R7 / future consumer research | MR/MRR integration | A future consumer study must preserve library statuses, identity, resources and Scheme semantic authority | Outside current ASCENT library acceptance; no consumer binding or Rust runtime work is scheduled |
+
+R1 now includes the [[file:scheme-compiler-proof-bridge.org][typed lexical lowering proof slice]]: universal normalization
+preservation for the stated positive grammar, logical monotonicity, finite tuple
+join encoding and every finite unrolling iterate. Scoped relation feedback and
+capped height/saturation arithmetic also have abstract proofs. Concrete native
+descriptor interpretation, feedback execution and compiler-step refinement
+remain open implementation bridges.
+Native qualification binds its exact artifact; no abstract theorem substitutes
+for actual source-bound execution or closes R5/R6.
+
+The [[file:features/representation/proofs.org::#cross-layer-refinement][cross-layer refinement audit]] distinguishes binding identity, public semantic
+equivalence, ordered certificate identity, source occurrences, pending work and
+committed observations. R1/R3/R4 acceptance must preserve those distinctions;
+paper algorithms cannot be transferred by treating all of them as row equality.
+
+The [[file:scheme-compiler-proof-bridge.org][scalar/row representation slice]] now proves proper list-row admission,
+complete tuple enumeration, faithful encoding for admitted rows, duplicate/union
+laws and rank/height correspondence. Native scalar equality/hash conformance
+and actual descriptor/step refinement keep their separate R1 obligations.
+
+Its [[file:evidence/scheme-row-representation-20261004/receipt.json][source-bound acceptance]] covers 109 Cases across six native modules,
+16 new Lean laws and the existing Quint controls. A bare-source typed result now
+receives an explicit derived set view; raw source occurrences and budgets remain
+observable. Named checked Sessions accept derived query relations and restrict
+mutation to admitted source handles. Rejected duplicate-result and Session
+constructor artifacts remain failures, not acceptance evidence.
+
+The later [[file:evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle-owner integration]] preserves the upstream snapshot/admit/query/session
+split and requalifies all six modules (109 Cases) on =84ba4ac=. Source-only
+checked mutation now belongs to =program/scheme-session.ss=; the public facade
+keeps its existing exports. Formal sources are byte-identical to the checked
+parent receipt; source/binary binding is independently refreshed.
+
+The [[file:scheme-compiler-proof-bridge.org][source-root materialization refinement]] adds eight Lean theorems connecting
+ordered checked columns, complete tuple reconstruction, set membership,
+encoding and admission to the source-only IR branch and closed lexical lowering.
+Its [[file:evidence/scheme-identity-materialization-20261005/receipt.json][acceptance receipt]] separates the current 33-Case higher-order rerun from
+the historical 109-Case qualification. It establishes this mathematical step;
+the native rule emitter, equality/hash implementation and exact per-term domains
+still require their own correspondence proofs. Quint lifecycle behavior is unchanged.
+
+The [[file:scheme-compiler-proof-bridge.org][positive primitive domain slice]] adds local row-domain laws for union,
+join, arbitrary checked projection, selection and finite mapping. Each law
+states its own arity/domain premise; mapping may change domains and requires
+validity of every frozen output entry. These are prerequisites for the concrete
+descriptor/emitter induction, whose implementation correspondence remains open.
+The [[file:evidence/scheme-primitive-domains-20261005/receipt.json][current receipt]] records formal results and the native operator gate,
+including any rejected supervised runs rather than inheriting a historical pass.
+
+The [[file:scheme-compiler-proof-bridge.org][ordinary projection rule slice]] adds six Lean theorems for body-variable
+reconstruction and soundness/completeness of one emitted positive rule against
+checked column selection. It models the existing emitter's variable patterns;
+native symbol decoding/freshness, actual rule execution and the optimized
+two-body projected-join branch remain separate obligations. The
+[[file:evidence/scheme-projection-rule-20261005/receipt.json][receipt]] distinguishes current formal acceptance from prior native evidence.
+
+The [[file:scheme-compiler-proof-bridge.org][shared-key projected join slice]] extends the rule model to the optimized
+two-body branch. Eight new theorems connect shared variable identity, body-key
+equality, complete assignment reconstruction and projected output to the
+join-then-project IR. Membership equivalence does not imply budget/work equality
+or certify native freshness, decoding and index execution. Its
+[[file:evidence/scheme-projected-join-rule-20261005/receipt.json][receipt]] records the refreshed native artifact and exact formal snapshot.
+
+R5 now also has [[file:scheme-retained-benefit.org][initialization-inclusive composed lifecycle evidence]]:
+the same checked program and evidence path cross nine source cuts, with all
+eight native relation sets checked independently. This finite workflow result
+does not close general benefit or the actor/Provider performance obligations.
+
+* Explicit curried physical representation
+
+The [[file:scheme-research-proof-audit.org][current research audit]] and [[file:evidence/scheme-index-sharing-20261006/receipt.json][source-bound receipt]] qualify an explicit
+=gerbil-ascent-curried-index-provider= choice. Compatible logical column
+requirements share engine/worker-owned physical chains; lazy ordered views
+preserve occurrence order, expression evaluation order and old publications.
+The admitted rule/compiler metadata supplies the requirements, including actual
+SCC and actor Session execution. Default hash and custom Provider representations
+remain available. Every selected matching is independently checked against a
+constructed tight endpoint cover before any layout is returned. The checker
+also rejects inconsistent endpoints and incomplete or repeated chain coverage.
+Lean proves the cover bounds every competing matching and constructs adjacency
+edges from arbitrary nonempty, distinct-node chain partitions, deriving both
+matching validity and the edge/chain balance. This establishes the mathematical
+minimum-chain criterion; extraction of native column graphs and trie execution
+into those premises and full paper application costs retain separate obligations.
+
+The 82-module, 717-Case native qualification and separate Lean/Quint collection
+establish this implementation boundary. Existing default-path performance gates
+passed; the shared complete-solve fixture did not establish a CPU/allocation
+benefit. Reduced physical root count is not a speed or peak-memory claim.
+
+* Model interface policy
+
+Why might an invocation contain text? Actual source, the user's task and a
+transport request identify the computation being evaluated. They are not
+permission to provide prewritten semantic explanations, expected answers,
+few-shot examples or hidden correction rules. This work adds no such prompts.
+A guard must expose the actual computation/status at response time rather
+than teach a predetermined solution. The evaluation target is the model's
+understanding of Scheme logic and its own reasoning ability. Any transport
+format acceptance failure must remain visible separately from semantic accuracy.
+A post hoc extraction result cannot replace the raw-interface acceptance rate.
+Native correctness cannot establish R6 model comprehension. R6 and future
+MR/MRR integration do not replace the library semantic and release gates.
+
+* Evidence and integration
+
+The [[file:evidence/scheme-closure-20261004/receipt.json][original six-module receipt]] records 51 passing Cases on its frozen
+source. It remains immutable. This branch integrates the declaration-scope
+baseline 53980e47681d095b30400cefc745d90b5509e8be; acceptance on that integrated
+source requires a new artifact binding and run. GitHub CI is a separate gate
+whose result must be checked against the submitted head.
+
+The [[file:evidence/scheme-closure-integration-20261004/receipt.json][integration receipt]] records two builds of submitted source 8c2d746:
+both reached the unchanged 180-second compilation deadline during AOT static
+compilation/linking (exit 124). Neither started the six-Suite semantic run.
+This is an open build-delivery gate, not a semantic failure or a qualified
+integrated artifact. GitHub CI runs the same gate; its exact-head verdict
+must be recorded independently. Previous 51-case results cannot substitute.
+
+The [[file:evidence/scheme-closure-recovery-20261004/receipt.json][AOT recovery receipt]] supersedes the build-delivery failure on its own
+frozen source: the abandoned reasoning.o.lock was recovered under the exclusive
+lane, native compilation/linking completed under 180 seconds, and all six
+Suites / 51 Cases passed with unchanged test bounds. A source-mutation control
+was rejected. An exploratory API attempt that omitted invoke-gsc and rebound
+a prior binary was interrupted and excluded; deleting the prior binary and
+requiring successful native job draining now prevents that path. GitHub CI
+and the four broader research obligations still require their own evidence.
+
+The [[file:scheme-support-graph-design.org][support-graph contract]] records the new complete finite positive derivation
+graph and grounded DRed kernel. Its qualification includes 64 initial graphs
+and 192 withdrawals against both independent matrix closure and native solve.
+Native retained Session integration now invalidates affected positive, negative,
+reduction and lattice dependencies. Complete stratified recursive graphs also
+record exact absence and reduction observations. Other numerical valuations
+and lattice-join histories remain separate algebra obligations. The Lean rank and restricted-deletion theorems provide
+checked abstract premises, not an implementation correctness certificate.
+The submitted AOT recovery head 1d0ce1eb95038696a03b743c1f41dd4b56fc23fd passed
+all four GitHub checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37173937141][its exact-head CI run]]. This does not qualify later edits.
+
+The [[file:scheme-higher-order-design.org][higher-order contract]] adds nested function inputs and results through
+checked lexical descriptors and beta lowering into native positive IR.
+Finite-domain declarations survive admission and source replacement.
+Function-valued fixed points now use conservative full-height compiler expansion;
+normalization budget rejection and native acceptance remain explicit. Lean now also proves
+finite Boolean-table strict rank growth and inflationary relation termination;
+the Scheme compiler-to-semantics bridge remains a separate obligation.
+
+The [[file:scheme-session-deletion-design.org][native deletion contract]] and [[file:scheme-stratified-provenance-design.org][stratified graph contract]] describe
+the new integration, independent components, callback authority, atomic
+publication, frozen result metadata and complete recursive alternatives.
+
+The [[file:evidence/scheme-model-native-20261004/receipt.json][combined native receipt]] records 11 Suites and 106 Cases on the
+source-bound artifact, including the shared positive-key changes, 24 real
+model-task computations and 10 inert native scorer controls. The [[file:scheme-model-closure-study.org][paired model
+study contract]] specifies reasoning, history and actual computed feedback
+comparisons. Model calls remain zero in this receipt; R6 is pending measurement.
+
+The subsequent submitted head =49aea42= failed [[https://github.com/tao3k/gerbil-ascent/actions/runs/37178866880][its exact-head CI]].
+The Scheme package stopped at the 1000-effective-line module policy; four
+retained oracle fixtures exposed a changed replacement diagnostic, and the
+original 512-graph arity corpus exceeded its 90-second deadline. Formal and
+the separate BYODS shard passed. These results supersede no historical receipt;
+they require fresh qualification of the repairs. Selection now has a separate
+Scheme module, source snapshots retain admitted immutable declarations, and
+replacement diagnostics have one Scheme owner. The original retained and
+arity fixtures run through the native entry with unchanged protocols and bounds.
+
+Artifact acceptance additionally requires supervised compiler success within
+180 seconds. Compiler staging cannot publish an accepted manifest; the
+successful parent command finalizes it after the compiler exits. Exact entry
+object locks are recovered under the existing exclusive build lane. Failure
+controls reject staged-only, foreign-run, expired, changed-source and changed
+binary artifacts. This is a byte-publication guarantee, not a semantic proof.
+
+* Historical integrated acceptance (2026-10-04)
+
+The [[file:evidence/scheme-ci-repair-20261004/receipt.json][integrated repair receipt]] binds source =e732b2b= to a compiler-exit-zero
+artifact built in 149.4 seconds. All twelve native Suites / 121 Cases, the five
+original Rust differentials (including 512 graphs in four configurations),
+and eleven byte/publication controls passed under unchanged limits. Historical
+failures and interrupted exploratory runs remain explicitly excluded.
+
+Runtime head =e8e833d= passed all checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37184330679][its GitHub CI run]]. The submitted
+evidence/import-progress head requires its own CI result. The model plan has
+24 native tasks, eight actual compiler import roots and ten scorer controls;
+zero new paid model calls have been made. Native acceptance does not close
+R1 compiler refinement, R4 other provenance algebras, R5 measured runtime
+benefit or R6 real-model benefit, and does not authorize R7 integration.
+
+* Function fixed-point acceptance
+
+The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] binds source =b505370= and all source/
+artifact/proof hashes. Twelve native Suites / 125 Cases, five original Rust
+differentials and three Lean files pass. Seven new lemmas connect pointwise
+bottom, ascending iteration, finite function-table ranks, full-height
+stationarity and leastness. The captured-environment build completes in
+150.7 seconds under the original 180-second gate; three earlier deadline
+failures are excluded. This is no matched speedup claim.
+
+The function implementation head =6a0d802= passed [[https://github.com/tao3k/gerbil-ascent/actions/runs/37192350292][its exact-head GitHub CI]].
+The submitted final head, including the compiler-environment change and
+ascending-orbit lemma, requires independent CI. Concrete compiler refinement,
+other provenance algebras, controlled runtime benefit, real-model benefit and
+subsequent MRR Rust integration remain open. The former model-plan digest
+cannot authorize a changed source payload; zero new model calls were made.
+
+* Research and proof synchronization (2026-10-04)
+
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.
+
+
+The [[file:features/closure-plan/proofs.org::#joint-research-design-implementation][joint research/design/implementation sequence]] connects each paper premise
+with its Scheme owner, formal obligation and independent native discriminator.
+The later type, finite-signature, row and source-root slices below supersede
+that first work item. The next R1 bridge is the concrete scalar/identity decoder,
+descriptor-to-typed-grammar translation and emitted rule/index/delta execution.
+Existing finite-height laws must be instantiated for those actual steps before
+native compiler closure is claimed.
+
+* Native single-module test carrier (2026-10-05)
+
+=just test-file= and =just test-native= now discover the requested module's
+Suite exports during the locked build phase and compile a dedicated Scheme
+entry. That entry binds the original Suite objects and module setup/cleanup
+procedures and executes them through =std/test= at verbosity 5. The general
+gxtest command-line parser and runtime metadata discovery are absent from this
+execution phase. The module pool still uses its existing gxtest route.
+
+The build removes the previous executable, drains compiler jobs, checks the
+generated entry digest and checks the repository's bound source inputs before
+execution. Execution uses the existing five-second output supervisor and the
+120-second module deadline. Source, generated entry and executable identities
+are checked again after execution. Python owns process supervision; Scheme
+owns every test assertion, callback and verdict. Builds retain their separate
+real-output/CPU-progress supervision and have no total 180-second deadline.
+
+The [[file:evidence/scheme-native-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
+four injected failure controls and integrated proof check. Startup admission,
+native semantic conformance, proof-model validity and measured application
+benefit remain separate evidence. The research/proof sequence above continues
+to require concrete compiler refinement and controlled real-model benefit.
+
+* Actor runtime and ordinary atom binding (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime decision]] places preparation, test dispatch, Session ownership,
+frozen positive rounds, candidate merge, cancellation draining and publication
+in one architecture. The native actor test carrier now provides a frozen AOT
+registry, bounded admission/output credits, monitored exits and failure draining.
+The concurrent solver round implementation and measured parallel benefit remain
+separate gates.
+
+=AtomicBinding.lean= adds soundness and completeness of the admitted ordinary
+variable/literal/wildcard binder against simultaneous substitution, preservation
+of preexisting bindings, known-column key soundness and indexed atom equivalence
+under the physical bucket membership premise. The native exhaustive assignment
+and bucket discriminators extend =ascent-index-lifecycle-test.ss=. Private fresh
+variables, the positive slot machine, callbacks, scalar/identity decoding and
+actual hash/cache representation remain separate bridges.
+
+=ActorRound.qnt= owns work-key rejection, duplicate/stale replies, cancellation,
+frozen frontiers, drain and publication protocol checks. =RoundAdmission.lean=
+retains checkpoint-distance arithmetic, immutable cache identity and bucket
+extension equations. It contains no matching actor state machine. Neither
+collection alone establishes native worker liveness or VM correspondence.
+
+The [[file:evidence/scheme-actor-binding-20261005/receipt.json][actor/binding receipt]] binds source snapshot =bb2edaf=, the seven-Case
+native module, four normal TLA models and ten counterexample controls. Raw
+development failures stay excluded. Native actor execution, parallel benefit
+and model comprehension retain their separate gates; this round uses no model
+calls.
+
+* Native actor module pool qualification (2026-10-05)
+
+The [[file:evidence/scheme-actor-pool-20261005/receipt.json][actor pool receipt]] records 63 native modules and 560 successful Cases from
+source =8ce6412= (55 parallel-lane modules, 8 exclusive, 2 workers). The affected
+single-module SDK mode reset and registry control gate are independently checked
+at source =b37e903=: two pooled modules/eight Cases, six actor lifecycle Cases,
+the original single Suite's two positive Cases, four native failure controls and
+three invalid registry controls. Source, generated entry and executable hashes
+are bound separately for each invocation. No raw logs are committed.
+
+The two typed macro diagnostic failures in the earlier AOT attempt are retained
+as rejected evidence. The carrier initializes the real Gerbil expander for this
+module; native generation does not substitute expected diagnostics or assertions.
+This historical qualification used LeanPoo =9e16095=. The current dependency
+and consumer migration are recorded in [[file:scheme-compiler-proof-bridge.org][the compiler proof bridge]].
+The current Lean library and concrete tests build with LeanPoo =247d1d6=.
+=ActorTestPool.qnt= checks capacities 1/2/3 and rejects premature return. This is
+protocol safety over a finite exploration, not worker liveness or a native
+refinement theorem. Existing unbounded solver round laws remain unchanged.
+
+The next implementation gate is the positive set SCC worker protocol: immutable
+frontiers, private batches, a single merge owner, a complete round barrier and
+cancellation draining. Provider/lattice/negative semantics retain their existing
+ownership until matched semantic tests and concrete refinement close their gates.
+No model calls or Rust integration occurred; parallel speedup remains unmeasured.
+
+The first GitHub run at =964feb3= passed 57 modules before its zero-budget
+observability control failed on the native Linux entry. The fixed POO Core
+uses Gambit's latest-GC heap/live counters. An AOT cold start must not be assumed
+to have the same prior collection history as interpreted imports. The negative
+control now requests actual collection, checks positive observed heap and emits
+its real before/collected heap/live values; the zero heap/live-growth budgets and
+25 ms duration-interruption control are unchanged. The affected native module's
+two Cases pass in the rebased full registry at =a0c5aa7=; the rejected CI run remains recorded, not promoted.
+Latest-GC memory observations are not equivalent to instantaneous RSS or live
+heap accounting. That representation boundary remains explicit in runtime claims.
+
+The final rebased registry also includes =a890b99='s canonical
+=core/rule-bindings.ss= callback/row environment owner. Source =a0c5aa7= passes
+64 modules/566 Cases (56 parallel-lane modules, 8 exclusive, 2 workers), including
+the six complete callback binding controls and corrected real-memory control.
+The receipt binds this snapshot separately from both earlier accepted runs and
+the rejected GitHub head. No performance speedup is inferred from worker count.
+
+* Positive Set actor round implementation update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the rule planning round/SCC and Provider concretization concretization
+premises to actual =program/actor-round.ss= integration: frozen frontiers,
+private frames/indexes, credit-bounded candidates, one owner merge and terminal
+drain before commit. Native tests and Lean/Quint gates cover this admitted pure
+Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
+publication and matched performance remain separate obligations. No whole-runtime
+closure, model gain or MRR integration is asserted.
+
+* Cancelable positive Set Session actor update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
+compute worker. Cancel increments generation, refuses old publication and waits
+for assigned worker/monitor drain; failure restores committed sources. Native
+lifecycle tests and Quint publication/drain checks accompany the code. incremental view maintenance's
+outer/inner natural time distinction motivates generation versus round; rule planning's
+ready-SCC dependency scheduling remains a next implementation obligation.
+The actor constructor uses fresh engines, not retained incremental reuse. No
+performance gain or whole-runtime closure is asserted.
+
+* Ready positive Set SCC implementation update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps canonical dependency SCCs and multi-head
+projection to actual native component workers. Completed predecessors release
+successors without waiting for unrelated active SCCs; each SCC retains local
+round completion, one owner charges global unique-row budgets, and the complete
+cut remains the Session publication unit. Native independent truth/rendezvous
+Cases and Quint prerequisite/drain gates accompany this slice. rule planning's SCC
+order/local state is implemented for pure Set cuts; Provider concretization Provider concretization
+remains a separate contract. A matched exploratory native timing probe retains
+serial and SCC 1/2/4 observations without asserting general multicore speedup.
+
+* Component metadata cache qualification (2026-10-05)
+
+Immutable analysis identity now keys a weak component-plan cache. SCC admission
+policy is owned by the component module, repairing the prior CI module-size
+failure without changing its threshold. Runtime rows/frames/indexes remain
+solve-private. Native exact-identity and fresh-versus-cached projection controls,
+pure Lean identity/cache-construction equations, and replayed Quint scheduling safety are
+recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
+claim. Remaining gates include persistent worker/index reuse, large SCC
+partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
+
+* SCC worker incremental index ownership (2026-10-05)
+
+The worker now extends valid total indexes against the old version before
+installing admitted row roots and next versions; delta stays round-local.
+Reverse batch traversal preserves rebuilt bucket order. Native independent
+closure, input immutability and single/composite key controls accompany Lean
+ordered extension laws and Quint private extension/install safety with negative
+controls. [[file:evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
+real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
+concurrency, large SCC partitioning and persistent worker reuse remain open.
+
+* Execution owner composition
+
+Immutable logical lookup metadata is registered by the index owner from admitted
+rules or compiled actions. Mutable physical all/delta roots remain private to
+one engine or worker. =actor-round.ss= owns the pure/canonical Provider capability
+predicate; the evaluator owns options, frozen source cuts and final publication.
+This extraction preserves callback eligibility, ordering and source ownership,
+and passes the actual ASP package policy without changing its threshold.
+
+* Next native compiler correspondence
+
+The [[file:features/closure-plan/proofs.org::#native-compiler-correspondence][connected native compiler obligation]] now fixes the next implementation
+order: complete finite-vector traversal, actual Scheme action/key/head and
+scalar/name decoding, Provider snapshot/frontier instances, then constructed
+least-model output and completed publication. It separates pure logical plans,
+sequential host effects and closure storage semantics. This extends the current
+library architecture; MR/MRR remains future consumer research.
+
+* Initial source admission ownership (2026-10-07)
+
+=program/initialization.ss= owns the complete initial source admission loop.
+=program/evaluate.ss= supplies one fresh engine's buffers and receives the
+input/materialized counts through Scheme multiple values before retained
+component seeding and rule execution. A private =initial-source-state= record
+names the row, frontier, size, storage, membership and lattice buffers. It
+introduces no public compatibility protocol or shared mutable declaration.
+
+The original loop is retained verbatim except indentation. It preserves field
+callback order, duplicate input accounting, output limits, storage admission
+and last-source-update lattice materialization. =build.ss= declares the native
+module before evaluator consumers; package build and ASP policy admit all 77
+modules without errors. This repairs the 1,006-effective-line evaluator owner
+rejection without changing the policy threshold or deleting documentation.
+
+The [[file:evidence/scheme-source-initialization-20261007/receipt.json][source initialization receipt]] records the failed GitHub revision, exact
+algorithm relocation, source hashes, policy result and ten affected native
+modules. This source ownership change adds neither a Lean theorem nor a TLA+
+protocol transition. The existing algebra/lifecycle responsibility split is
+retained, and the final GitHub revision must pass its full inventory gates.
+
+* Current test command boundary
+
+Ordinary tests use =just test= / =just test-file= and upstream =gerbil test=.
+Explicit native qualification uses Scheme compilation and receipt admission;
+its children and Just build/oracle recipes launch directly without Python.
+The five-second output supervisor described in historical receipts is retired.
+Runtime deadlines, heap limits, lifecycle failures and source binding remain
+mandatory. Matched native measurements are in =t/performance/= and appended
+to the compiled suite; ordinary source tests own semantic conformance.
+See [[file:test-execution.org][test execution]] for the current acceptance boundary.

@@ -1,0 +1,90 @@
+[
+  {
+    "name": "cold-projection-256",
+    "old-p50-bytes": 307472,
+    "new-p50-bytes": 242944,
+    "paired-wins": 996,
+    "old-p50-ns": 567000,
+    "new-p50-ns": 328000,
+    "old-p95-ns": 1294000,
+    "new-p95-ns": 731000,
+    "time-paired-wins": 984
+  },
+  {
+    "name": "complete-snapshot-16",
+    "old-p50-bytes": 271088,
+    "new-p50-bytes": 181168,
+    "paired-wins": 998,
+    "old-p50-ns": 133000,
+    "new-p50-ns": 86000,
+    "old-p95-ns": 323000,
+    "new-p95-ns": 213000,
+    "time-paired-wins": 995
+  },
+  {
+    "name": "complete-fanout-32",
+    "old-p50-bytes": 1057392,
+    "new-p50-bytes": 586544,
+    "paired-wins": 991,
+    "old-p50-ns": 1981000,
+    "new-p50-ns": 1056000,
+    "old-p95-ns": 4334000,
+    "new-p95-ns": 2248000,
+    "time-paired-wins": 981
+  },
+  {
+    "name": "closure-chain-32",
+    "old-p50-bytes": 215264,
+    "new-p50-bytes": 128960,
+    "paired-wins": 998,
+    "old-p50-ns": 86000,
+    "new-p50-ns": 68000,
+    "old-p95-ns": 208000,
+    "new-p95-ns": 115000,
+    "time-paired-wins": 997
+  },
+  {
+    "name": "distance-chain-32",
+    "old-p50-bytes": 238288,
+    "new-p50-bytes": 159392,
+    "paired-wins": 998,
+    "old-p50-ns": 92000,
+    "new-p50-ns": 77000,
+    "old-p95-ns": 224000,
+    "new-p95-ns": 189000,
+    "time-paired-wins": 979
+  },
+  {
+    "name": "sparse-projection-513",
+    "old-p50-bytes": 57144,
+    "new-p50-bytes": 58168,
+    "paired-wins": 1,
+    "old-p50-ns": 15000,
+    "new-p50-ns": 16000,
+    "old-p95-ns": 17000,
+    "new-p95-ns": 17000,
+    "time-paired-wins": 205
+  },
+  {
+    "name": "external-compose-256",
+    "old-p50-bytes": 144928,
+    "new-p50-bytes": 145184,
+    "paired-wins": 1,
+    "old-p50-ns": 254000,
+    "new-p50-ns": 254000,
+    "old-p95-ns": 578000,
+    "new-p95-ns": 578000,
+    "time-paired-wins": 273
+  },
+  {
+    "name": "cold-index-256",
+    "old-p50-bytes": 63312,
+    "new-p50-bytes": 63920,
+    "paired-wins": 0,
+    "old-p50-ns": 248000,
+    "new-p50-ns": 247000,
+    "old-p95-ns": 575000,
+    "new-p95-ns": 572000,
+    "time-paired-wins": 337
+  }
+]

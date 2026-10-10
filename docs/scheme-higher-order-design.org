@@ -1,0 +1,201 @@
+#+TITLE: Finite higher-order relational descriptors
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Language and authority
+
+=program/higher-order.ss= admits finite relation types and arbitrarily nested
+arrow types. Functions can accept and return functions. A builder runs once
+at construction and produces a lexical data closure. Native evaluation never
+calls that builder. Application is checked beta lowering into the existing
+positive operator IR; no second query interpreter is authoritative.
+
+Fixed points admit endofunctions on finite relation and nested arrow types.
+Relation fixed points retain native recursive evaluation. Arrow fixed points
+start at the constant pointwise bottom and undergo the full conservative
+finite-height number of compiler applications. Every application uses the
+reified lexical closure; user builders are not called again. The resulting
+relation observation lowers to the same positive operator IR.
+
+The height is |input semantic domain| times the codomain height. Cardinality
+counts all finite functions, giving a conservative bound for monotone functions.
+Saturating arithmetic prevents enormous powers from allocating enormous exact
+integers. A height larger than the remaining normalization budget rejects;
+expansion itself also consumes that budget. No function-identity comparison,
+observed-argument sample or truncated approximation can certify a fixed point.
+Empty codomains have height zero and keep their unique bottom. Function equality
+and unrestricted Scheme procedure recursion remain outside this language.
+
+* Native finite domains
+
+Sources, mapping inputs and mapping outputs are checked against declared
+immutable scalar domains. Compilation annotates native relations with inert
+finite-domain declarations. Derived relations use the union of the finite
+atom universes actually present in the typed term; named sources retain their
+own declared universe. A normalization budget covers both type traversal and
+beta expansion. Cycles and escaped binders reject.
+
+Admission copies the domain data and reconstructs native membership predicates;
+an incoming predicate procedure is never treated as the finite-domain proof.
+The native evaluator checks inserted, computed, joined and stored rows. A
+value outside a declared domain raises, rather than being clamped or omitted.
+Retained source replacement carries the domain descriptor and reconstructed
+field checks into its new snapshot. Failed replacement retains prior input.
+
+* Termination argument and proof boundary
+
+For each relation of arity a over a finite universe U, the set of possible
+rows is U^a. Positive union, join, selection, projection and fixed finite
+mapping are monotone. Their least fixed point is reached by inflationary set
+admission. A nonstationary round admits a previously absent tuple. Thus the
+sum of materialized relation cardinalities is a bounded increasing rank.
+Nested function application disappears during the checked compiler phase;
+recursive relation feedback remains in the native IR.
+
+=packages/proofs/lean/FiniteHeight.lean= proves bounded-rank stabilization,
+finite Boolean-table rank monotonicity and strict growth, and stabilization
+of an inflationary relation step within its admitted tuple count. It also
+bounds product and finite function-table ranks. These are checked semantic
+lemmas. The bridge from every Scheme compiler branch to the mathematical
+semantics is an explicit implementation obligation; these lemmas do not
+prove compiler correctness or unrestricted Scheme normalization.
+
+=packages/proofs/lean/FiniteOperators.lean= now discharges the operator
+premises: union, selection, projection, join and a fixed finite mapping are
+monotone. Recursive type-indexed pointwise order admits nested arrow inputs
+and results; abstraction and application preserve that order when their
+function/body premises hold. Least fixed points are closed and fixed under
+a monotone step. Enlarging captured input enlarges the least fixed point.
+Inflationary native union admission has exactly the same closed models and
+least fixed point as the original positive step. No negation or opaque
+runtime callback is introduced into this typed vocabulary.
+
+This separates three proof obligations: typed descriptor/binder checking,
+denotational operator laws, and finite native convergence. The latter two
+have checked Lean lemmas. The Scheme lexical checker and lowering are still
+implementation code, qualified by native discriminators rather than claimed
+as a mechanically verified extraction of the Lean model.
+
+The [[file:scheme-compiler-proof-bridge.org][lexical compiler proof slice]] now adds a typed source calculus, separate
+relational IR and a universal lowering-preservation theorem with related
+environments, higher-order arguments and returned closures. It also proves
+positive logical monotonicity, finite tuple join encoding and preservation of
+every finite function-unrolling iterate. The concrete descriptor checker,
+relation-feedback compilation and finite-height calculation remain bridges;
+the proved kernel must not be described as the whole Scheme compiler.
+
+Resource exhaustion is failure, not a partial least fixed point. A finite
+semantic universe does not guarantee success under a smaller operational
+budget. Neither an absent output after failure nor a truncated derivation is
+a termination certificate.
+
+* Qualification
+
+The native Suite covers function inputs and returned closures, repeated
+instantiation without capture aliasing, nested signature mismatch, frozen
+data, finite mapping, escaped parameters, callback rejection, expansion
+limits, native insertion/replacement rollback, rejection of computed values
+outside the universe, and independent admission reconstruction of predicates.
+Acceptance requires the source-bound AOT artifact and unchanged watchdog,
+heap and module deadlines; GitHub checks must match the submitted head.
+
+The [[file:evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] records 11 native Cases with unchanged bounds,
+source hashes, formal source hash, and excluded 180-second build failures.
+No model calls are included.
+
+The actual-source model study now uses function-valued recursion in both
+finite-fix tasks: self is an arrow, recursion changes its relation argument,
+and the transfer changes the finite mapping. Native preflight must match the
+independent two-node reachable-set bit masks before freezing a new paid plan.
+The model receives actual implementation and expression source, with no
+expected datum, tutorial, examples added for the study or semantic recipe.
+This bounded family is not a compiler-refinement theorem.
+
+* Function fixed-point proof and acceptance
+
+FiniteHeight.lean adds pointwise function-table rank monotonicity and strict
+growth, ascending bottom orbits, stationary-tail, bounded-orbit full-height
+stationarity, and
+bottom-iterate leastness lemmas. FiniteOperators.lean proves that recursively
+constructed pointwise bottom is below every nested typed value. Orbit rank growth is the correct premise:
+a monotone function from bottom need not be globally inflationary. The actual
+Scheme compiler-to-denotation bridge and concrete type-cardinality and compiler refinement
+remain explicit obligations, not conclusions from these abstract lemmas.
+
+Native discriminators include every seed of a two-node cycle where recursion
+changes the argument, recursive nested returned functions, a function-valued
+input, zero-height empty codomain, builder invocation count, and bounded
+rejection of an infeasible function space. Compiled source lifecycle must also
+preserve the declared domains of compiler-created bottom sources.
+
+The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] records the new source and formal hashes,
+excluded watchdog/timing diagnosis and three final-source deadline failures,
+then the accepted 150.7-second captured-environment build. All twelve native
+Suites / 125 Cases, the focused fifteen-Case higher-order Suite, five original
+Rust differentials, all three Lean files and the native compiler-source probe
+passed. Prior source or diagnostic results
+cannot qualify this implementation. No paid model calls were made.
+
+* Captured compiler environment
+
+When GERBIL_PATH is explicitly captured, the AOT build uses gxi directly and
+prepends the package bin directory exactly as the SDK gxpkg env-exec does.
+The existing root/source load path and captured dependency prefix remain in
+force. Without an explicit package environment, the SDK gerbil env initializer
+remains responsible for it. Compilation, source binding, compiler exit and
+parent finalization still share the original 180-second acceptance bound.
+The first final-source attempts are recorded as excluded deadline failures;
+a cached build satisfying that bound is delivery evidence, not a controlled
+measurement of compiler speedup or application benefit.
+
+* Typed change boundary and exact frontier extraction
+
+The [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change paper]], sections 4.2--4.3 and figure 10, gives a function change
+both its base input and that input's change. Its base input is discrete;
+monotonicity in the input change does not imply monotonicity in the base.
+The existing native arrow descriptors admit the positive monotone grammar.
+A new derivative compiler must specify this variance boundary, lexical capture
+translation and changed higher-order inputs before selecting an optimization.
+
+=LexicalLowering.exact_frontier_not_positive_arrow= proves a concrete boundary:
+no closed positive Nat-relation arrow represents exact insertion difference for
+all bases even with the fixed insertion ={0}=. The empty base emits 0, whereas
+base ={0}= emits nothing, contradicting monotonicity. This does not rule out
+positive derivatives: valid insertion changes may overlap the old value.
+Exact frontier extraction stays outside the positive arrow grammar unless an
+explicit discrete/base contract is added. An imperative difference operation
+in =operator-change.ss= is not a typed higher-order compiler transformation.
+
+The next preserving transformation must distinguish value/update meaning from
+exact frontier accounting, carry both base and input change through application,
+and preserve fresh lexical identities. Relation-valued fixed points and the
+existing function-valued fixed-point extension require their own statements;
+the higher-order change recursion rule and discreteness cannot be transferred by name. Native
+complete recomputation is the reference, not evidence of an implemented
+higher-order derivative. Examples and axiom reports remain under =Tests=.
+
+* Base-dependent typed change composition
+
+=Operators.InsertionChange= recursively defines relation insertion changes
+and arrow changes for the existing semantic signatures. A relation change
+relates the next value to the union of its base and insertion; an arrow change
+accepts both a base input and a valid input change. The application law allows
+the function and its argument to change simultaneously. The composition law
+constructs the output change as =dg (f base) (df base change)=, preserving the
+old intermediate value instead of replacing it with bottom or the next value.
+Its statement includes arbitrarily nested input, intermediate and output arrows.
+
+The tests under =Tests.AscentProofTests= discriminate a changed outer function
+that exposes an existing fact with no argument insertion: discarding the base
+intermediate provably loses that fact. A separate universally quantified
+contract exposes a change at input position 37, rather than treating a sampled
+input as function equality. Both generic application and composition theorems
+use no axioms.
+
+These are validity/composition laws conditional on the supplied changes. They
+do not construct a derivative for every arbitrary semantic function, establish
+change monotonicity or erase the discrete-base variance obligation. No native
+derivative compiler, changed lexical closure translation, fixed-point change
+transformation or performance gain follows from this semantic interface alone.
+The Scheme model study remains frozen independently of these Lean-only changes.

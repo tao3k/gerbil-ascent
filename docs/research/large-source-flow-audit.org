@@ -1,0 +1,807 @@
+#+title: Large Scheme source flow audit
+#+date: 2026-10-10
+
+* Scope and evidence
+
+Audited revision =189a6919cd74e43e2274dc2e483ecc97d9aad25d=.
+The six focal modules contain 3477 lines: =program/evaluate.ss= (989),
+=candidate/reasoning.ss= (567), =program/syntax.ss= (555),
+=program/higher-order.ss= (486), =program/objects.ss= (482), and
+=candidate/program.ss= (398). Audit scope is their construction, inspection,
+lowering, update and observation flows, with supporting admission, initialization,
+snapshot and proof boundaries traced. This is a flow audit, not an assertion
+that every line or every remaining production module has been reviewed.
+
+Findings below separate observed growth, architectural coupling and hypotheses
+that need measurement. No production refactor or CPU gain is delivered by this
+audit. Existing temporal constructor gains do not establish gains in these flows.
+
+* Priority and coordinated work units
+
+| Work unit | Source owners | Finding | Evidence | Priority |
+|-----------+---------------+---------+----------+----------|
+| Candidate admission to receipt | candidate/program, candidate/reasoning | Repeated schema/variable scans, repeated fact selection, whole-edge graph scans | Direct loop structure; graph scan counts below | First |
+| Retained engine transaction lifecycle | program/evaluate, program/source-state, program/admission, program/initialization, program/session | Source provenance now has one owner and eager updates one commit boundary; execution/publication recovery remains in the engine | Source transaction study below; named lifecycle paths | Second |
+| Typed descriptor admission and lowering | program/higher-order | Validation and rebuilding repeat before descriptor reuse | Scoped traversal and budget contract; benefit unmeasured | Separate qualified study |
+| Public declaration construction | program/objects, program/types | Some construction lookups repeatedly scan declaration lists | Source-handle and fragment export loops | Include when profiling admission |
+| Macro expansion | program/syntax | Large module with explicit grammar owners | Native syntax dispatch already expresses major forms | No demonstrated runtime hotspot |
+
+* Candidate admission and lowering
+
+** Repeated schema resolution: candidate/program.ss:129,256
+
+=candidate-inspect= builds source and combined alist schemas. =atom-check= uses
+=assq= for every head/body/query atom. Facts independently search the source
+schema, and heads independently search derived declarations. Worst-case schema
+lookup work is proportional to atom/fact references times relation declarations.
+A source/derived/all schema frame could resolve names once per inspection while
+keeping distinct write authority and arity checks. Arity zero is a valid value;
+absence must have an explicit representation.
+
+The admitted schema cannot be retained blindly across mutable snapshots.
+Duplicate-relation diagnostics precede fact and rule diagnostics; head admission
+precedes body binding diagnostics. Keep those order contracts.
+
+** Variable scope grows with occurrences: candidate/program.ss:146,193-253
+
+Positive body atoms cons every logical-variable occurrence into =bound=, including
+already-bound variables. =memq= then scans that occurrence list for negation,
+operators, freshness and head admission. The relevant size is variable occurrences,
+not distinct bindings. For Q membership reads and B accumulated occurrences,
+worst-case scope work is O(Q*B). Repeated uses can enlarge B without extending
+the logical scope.
+
+A private rule-local symbol set should own membership and binding extension.
+Positive atoms bind; negation/operators only read; computation/reduction bind
+fresh output names. Wildcard, duplicate-binding and first located diagnostic
+behavior must remain exact. No arbitrary function or candidate callback runs
+at this inert inspection stage.
+
+** Facts are repartitioned for every source: candidate/program.ss:353-367
+
+For each source declaration, =candidate-program= filters the complete candidate
+fact list, maps matching rows, then appends them to original source rows. With
+R sources and F candidate facts, relation-name selection performs R*F checks,
+plus temporary filtered lists. At R=64/F=128 that is 8192 name comparisons
+(the count is derived from loop structure, not a timed measurement).
+
+Partition admitted facts once in original order. Preserve source rows before
+candidate rows, duplicate occurrences and candidate labels in all evidence.
+Lowered inputs containing candidate facts do not confer source authority. The
+public POO relation/rule/program construction contracts remain the consumer.
+
+* Candidate evidence construction
+
+** Whole-edge BFS scans: candidate/reasoning.ss:233-264
+
+=candidate-graph-walk= visits each reachable vertex once, but its inner loop scans
+all records each time. Work is O(V_reachable*E), even when each vertex has one
+outgoing edge. Support paths share tails; path copying is not the principal
+issue in this chain case. The search must continue after finding the target
+because it also returns the complete reachable cut.
+
+A Scheme audit probe extracts this current private algorithm and adds one counter
+at each record visit. It verifies shortest support length and independent chain
+reachability before accepting the count. It runs without Python or a new harness.
+The receipt is ignored =.cache/ascent/large-flow-audit/graph-scan.log=:
+
+| Vertices | Edges | Observed record probes |
+|----------+-------+------------------------|
+| 32 | 31 | 992 |
+| 64 | 63 | 4032 |
+| 128 | 127 | 16256 |
+| 256 | 255 | 65280 |
+
+An invocation-owned ordered adjacency index can reduce record selection to one
+construction pass plus reached out-edges. Its allocation cost and small/empty
+controls still require A/B qualification. Preserve shortest nonempty support,
+source-first ties, hypothetical edge labels, repeated source occurrences and
+reachable-cut order. In particular origin=target does not automatically prove
+a nonempty path. Temporal horizon-frontier semantics differ from this support/
+cut protocol; their walkers must not be merged merely because both use BFS.
+
+** Receipt stages and repeated trust boundaries: candidate/reasoning.ss:343-567
+
+=reasoning-attempt= interleaves inspection, native admission, solve, query,
+evidence and optional positive/absence/stratified proof production in one deep
+control tree. Failure classification depends on its stage. These stages warrant
+named result records and explicit publication policy, coordinated with candidate
+schema/scope/fact preparation rather than separate cosmetic rewrites.
+
+Receipt verifiers recheck mutable snapshot content binding and reinspect candidate
+data. Proof producers/verifiers have their own current-snapshot checks. These are
+real public trust boundaries, not automatically removable duplicate work.
+An internal owned admission context might amortize preparation within one call;
+measure its construction/copy cost and preserve budget charging. Do not cache
+validation across calls or let one producer's proof stand in for independent
+verification. Current source/proposal/certificate mutation controls stay mandatory.
+
+* Retained engine execution and update ownership
+
+=program/evaluate.ss:91-981= binds schema, all/delta rows, versions, index owners,
+storage owners, lattice state and counters inside one construction closure.
+Nested owners cover =commit-view!=, staged Set flush, row emission, body execution,
+retained fixed point, result publication and source append/replacement/recovery.
+=program/initialization.ss= already names initialization buffers; use that existing
+ownership pattern rather than introduce a second generic engine framework.
+
+=append-source!= at lines 799-904 also chooses update policy. For negation,
+aggregation, lattice interaction or a previously replayed engine, it copies source
+rows, rebuilds source declarations, constructs an engine and runs it before
+publishing the append. Repeated updates can therefore pay repeated whole solves.
+Positive Set appends already use a buffered persistent log and batch admission.
+
+The eager path preserves immediate errors and atomic publication. Simply delaying
+it to =run!= would change failure timing and accepted state. Work should separate
+update preparation, candidate execution and publication, with explicit state and
+recovery ownership. Bulk behavior requires a defined transaction contract and a
+matched workload; a module move alone cannot claim CPU improvement. Native row
+loops should borrow their state once, rather than pay record access/dispatch per
+field just to shorten the coordinator.
+
+* Typed compilation and public declarations
+
+=program/higher-order.ss:296-486= combines type freezing, scoped term validation,
+finite-domain collection and beta/fixed-point lowering. Term copies are reused
+only after children, lexical scope and rebuilt signatures are checked. This can
+repeat rebuilding for shared descriptors, but early memoization keyed only by node
+identity would skip scope checks. Every visit is also budgeted. The type snapshotter
+already checks/charges before reuse; retain that contract. A measured next design
+would separate scoped validation from owned representation reuse while preserving
+all budget boundaries and escaped-parameter rejection.
+
+=program/objects.ss:426-468= scans prior exports for duplicate detection and scans
+all declarations per source handle. These are real construction costs, but their
+frequency and contribution to a full admitted program are unmeasured. Its clause
+planning already uses POO generic dispatch and bounded/lazy symbol indexes.
+Keep that public extension axis. A large scope should not be represented by a
+new fixed arbitrary cutoff without evidence about scope lifetime and read reuse.
+
+=program/syntax.ss= uses =defsyntax=/=defrules= for major grammar forms. File size
+alone does not justify rewriting macro dispatch or claiming runtime gains.
+Expansion cost needs an expansion workload, not a runtime-only solve benchmark.
+
+* Source patterns and next batch acceptance
+
+Installed Gerbil =1cfb032= =compiler/optimize.ss:28-35= allocates invocation-owned
+mutation/type facts; =optimize-xform.ss:108-113= records resolved identifier facts
+before descending further. =core/match.ss:672-689= supplies structural bindings.
+The application here is a checked construction flow with owned indexes and
+explicit stages, not a generic method for every list field.
+
+First implementation batch: the complete Candidate inspection/lowering/receipt
+path. Carry source/derived schema authority, rule-local membership, ordered fact
+partitioning and graph-evidence preparation through named private owners. Preserve
+public POO construction and independent evidence verification. Separate inert
+language admission, private preparation and receipt publication responsibilities.
+
+Freeze the current complete consumers before changes. Qualify exact located
+errors, source/candidate ordering, duplicate occurrences, callback boundaries,
+mutable snapshot/candidate/certificate rejection, witness and cut order, and
+proof budget outcomes. ASP Scheme A/B must include complete Candidate admission
+and lowering and complete =reasoning-attempt= controls, not only a fast adjacency
+helper. Report execution-only and proof-producing cases separately. Set CPU and
+allocation gates before timing, retain failures, and keep all logs under =.cache=.
+
+Second batch: retained engine update/publication flow, with positive buffered and
+nonmonotone replay controls. Typed scoped lowering remains a separate budgeted
+study. This audit supplies a bounded work queue; it does not establish improvement
+percentages for any unimplemented change.
+
+* First implementation follow-through
+
+The Candidate work unit is implemented in the subsequent construction and receipt
+flow study: [[file:../../t/performance/candidate-flow/README.org][Candidate construction and execution flow]]. The audit's evidence and revision
+above remain historical. The implementation also addresses repeated recursive
+POO construction validation, a larger measured cost than the initial lookup work.
+Retained engine transactions and scoped typed compilation remain separate work
+units; this Candidate batch does not claim gains in those paths.
+
+* Retained source preparation follow-through
+
+The second batch introduces one private persistent source-snapshot owner used
+by Session transaction/recovery/timeout preparation and engine eager replay.
+It shares unchanged row-bound POO declaration views and adopts a prospective
+cut only after the existing evaluation/acceptance boundary succeeds. It preserves
+fresh source admission, provider checks, immediate errors and solver budgets.
+[[file:../../t/performance/source-snapshot/README.org][Matched complete update/publication consumers]] report five passing A/B scenarios,
+61 native Cases and three production files with zero policy findings. Wide
+transaction, populated unchanged-source and eager replay CPU medians decrease
+by about 62.0%, 49.4% and 67.4% respectively.
+
+This addresses repeated declaration construction across retained source cuts.
+Fresh nonmonotone evaluation still solves immediately; retained row admission,
+storage, per-rule execution and their publication responsibilities remain in the
+engine. It introduces no deferred transaction semantics or new public bulk API.
+Scoped typed compilation remains a separate budget-preserving study; no gains
+are claimed for those unimplemented units.
+
+* Follow-through: typed finite-domain admission
+
+The next coherent typed flow separates scoped traversal, checked node rebuilding
+and structural lowering, with one owner for the exact expansion counter.
+=check-domain!= selects an invocation-local membership predicate for the whole
+row segment, replacing repeated finite-domain scans in source and mapping
+construction and compiler rebuilding. Public mutable domains are freshly read;
+scoped visits and constructor checks still precede owned-copy reuse.
+
+Frozen complete native construction/compilation consumers reduce wide source
+CPU 57.8% and mapping CPU 62.8%, with 20/20 wins each. Small/empty and allocation
+regression gates pass; allocation slightly increases. This does not establish
+solve-speed improvement. See [[file:../../t/performance/typed-admission/README.org][typed admission receipts]] for the matched
+reference, fixed gates and remaining evidence boundaries. Shared descriptor
+reconstruction still occurs after each scoped visit; safely removing that work
+requires a separate validation/reuse design and remains open.
+
+The two independent native Suites pass 40 Cases in 10.05 seconds, and the
+production file passes ASP Policy with zero findings. This completes the
+finite-domain admission unit; it leaves shared-descriptor reuse and the other
+unmeasured audit flows open.
+
+* Follow-through: scoped owned copies and checked typed publication
+
+The shared-descriptor unit now admits every scoped occurrence before reusing
+an owned representation. Reuse requires frozen type/child identity and equal
+owned payloads; parameters retain their lexical checks and all visits retain
+expansion charges. Typed lowering then uses the existing private inert
+construction owner and validates the complete Program before publication.
+Native multiple-value dispatch preserves Candidate's single-Program producer
+and typed compilation's Program/output producer without a mutable output carrier.
+
+The complete shared source/mapping compilation consumers reduce CPU 62.0%/47.1%
+and allocation 62.0%/60.4%. Single and small controls pass the fixed regression
+gates. The initial representation-reuse-only source experiment failed its 10%
+CPU gate (about 2% improvement); it remains a negative result, demonstrating the
+larger contribution of repeated declaration construction validation. A mapping
+fixture exceeded the unchanged output budget before measurement; reducing its
+shared depth admitted the intended workload without changing budgets or gates.
+See [[file:../../t/performance/typed-sharing/README.org][scoped ownership and checked publication]] for the matched source and boundaries.
+
+Public declaration contracts, source/derived rule multiplicity and fresh engine
+admission remain intact. No early node-only memoization or environment-blind
+lowered-operator sharing is introduced. Generated types without matching owned
+identity conservatively rebuild. Public fragment export/source-handle indexing
+and other unmeasured engine flows remain separate audit work.
+
+* Follow-through: construction-owned declaration names
+
+The public declaration-name unit now has one invocation-owned membership cursor
+and one frozen Fragment export resolver. The cursor reads POO name slots only
+as far as each handle requires, preserving first-force order and earlier invalid
+or duplicate handle diagnostics. It reuses already observed names within that
+construction; fresh constructors inspect fresh declarations. Export admission
+remains ordered, copies immutable symbol values, and publishes a private lookup
+table without retaining the caller's mutable association spine. Public root
+validation remains immediate.
+
+Frozen complete consumers show Program construction CPU decreasing 16.1% and
+export-dense Fragment construction/resolution CPU decreasing 28.8%. All five
+fixed A/B gates pass in 15.90 seconds. Cold evaluation is a control; these results
+do not establish a general solver improvement. Cold, small and empty allocation
+increases remain recorded within the unchanged regression gates. See
+[[file:../../t/performance/declaration-names/README.org][declaration names receipts]] for scale, frozen source identity and full measurements.
+
+Three independent native Suites run concurrently and pass 18 Cases in 39.62
+seconds, including Candidate's 512-graph corpus. Cases preserve lazy name-slot
+observation, first errors, caller mutation isolation and ordered complete outputs.
+The production owner passes ASP Policy with zero findings. This closes the
+public export/source-handle indexing unit; retained engine execution ownership
+and the other unmeasured audit flows remain open.
+
+* Follow-through: lattice admission and ordered round publication
+
+This unit spans initial source admission, derived staging and round publication
+in =program/initialization.ss=, =program/evaluate.ss= and the private
+=program/lattice-frontier.ss=. It replaces repeated key-event spines and
+publication-time visited tables with one node per key and exact last-update
+sequence. Unique arrivals need no sorting; a revisit triggers ordered
+materialization at publication. Untouched lattices allocate no frontier.
+Native Gerbil's =src/std/struct/lru.ss= supplies the compact final-record and
+typed field ownership idioms. Joining, checks, charging and publication remain
+with their original engine owners. Source occurrences and effective derived
+changes retain their different order contracts.
+
+The final matched direct-gxi qualification compares complete consumers against
+frozen evaluator and initializer commit
+=8722780bb191e9c81fbfe2093b3c410f9e863df2=. Descriptors are prepared before clocks;
+fresh engine admission and complete outputs are measured, including twelve
+retained publications for sparse/Set. Twenty alternating CPU pairs, twenty ASP
+benchmark admissions and five allocation pairs pass all seven fixed gates:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Sparse retained updates | 3022 | 1855 | 20 | 26364208 | 26233456 |
+| Repeated derived keys | 988 | 922 | 16 | 963184 | 862448 |
+| Repeated initial source keys | 520 | 588 | 1 | 431136 | 332848 |
+| Distinct derived keys | 2025 | 1841 | 18 | 1884528 | 1781552 |
+| Cold sparse engine | 430 | 284 | 20 | 778016 | 400448 |
+| Small retained engine | 108 | 107 | 15 | 316768 | 311168 |
+| Set control | 305 | 309 | 9 | 1113680 | 1113712 |
+
+Sparse CPU improves 38.6%, but its final allocation improvement is only 0.5%.
+The preceding 71% allocation observation does not qualify the final code and
+is superseded. Initial source CPU increases 68 us (13.1%) while allocation
+falls 22.8%; it passes the unchanged 110% plus 20 us control gate. Set CPU
+slightly increases. These controls preclude a universal solver speedup claim.
+The first linked-node implementation failed the repeated-key CPU gate; that
+negative receipt remains in =.cache/ascent/lattice-frontier/=.
+
+Native =gxi :gerbil/tools/gxtest= passes 44 Cases across three Suites in 14.41
+seconds. The runner contains no custom process scheduler. Cases exhaust all
+729 six-event traces and preserve initial occurrence order, callback and first
+error order, field/budget admission, held snapshots, resume and custom storage.
+The source-order test initially expected private instead of public projection
+order; native testing caught the oracle error and the corrected independent
+expectation agrees with both engines. ASP Policy passes the three production
+owners with zero findings. Root =build.ss= adds only module registration.
+
+Allocation qualification discovered nonmonotone static-executable samples,
+including dedicated-counter samples. Those receipts were rejected; no SDK
+root cause has been established. Direct gxi with the compiled project libraries
+qualifies =##get-bytes-allocated!= around each complete consumer, rejecting
+negative differences. The earlier candidate-flow, source-snapshot,
+typed-admission, typed-sharing and declaration-names allocation claims/gates
+are withdrawn pending qualification of their corrected runners. Their CPU
+and semantic results remain separate evidence. They were not rerun in this unit.
+
+See [[file:../../t/performance/lattice-frontier/README.org][lattice frontier qualification]] for entry points, frozen source blobs,
+fixed gates and measurement boundaries. This closes this lattice flow unit;
+other engine and compiler audit flows remain open.
+
+* Follow-through: accepted source cut through native publication seeding
+
+This unit now spans six production owners: =source-snapshot=, =session=,
+=evaluate=, =update-selection=, =reuse= and =result=. Source snapshots retain
+exact persistent log roots, ordered materializations and pure scalar facts.
+Preparation stays provisional; the existing Session transaction publishes only
+after candidate execution and acceptance. Field/provider/rule eligibility and
+every fresh input row/budget check remain authoritative. Exact candidate/log/row
+identity avoids re-comparing an unchanged source; foreign/stale evidence uses
+complete ordered comparison. Pure scalar classification never admits an opaque
+field predicate. No global cache or new runtime option is introduced.
+
+The larger consumer cost was native reuse reading public =rows-of=, detaching
+all row spines and then admitting source-only rows twice. Result production now
+returns the public POO Result and an internal publication capsule with =values=.
+The engine retains its latest capsule; Session passes it to reuse admission.
+Only exact completed Result identity admits the internal read-only row reader.
+Public methods still return detached rows, and stale/foreign capsules use the
+public protocol. A retired eager-replay engine revokes its old capsule; held
+results/explicit prior readers retain their own immutable published cut.
+
+Native seeding keeps fresh admission for an unaffected canonical Set relation
+only if no rule head writes it and its occurrence count equals the matching
+native publication count. Source admission already checked every occurrence
+and built this engine's membership. Any written relation, lattice, absent
+capsule or duplicate-count disagreement keeps complete seeding. Equal counts
+alone are insufficient: the executable duplicate-source/derived-fact example
+would lose a derived fact under that shortcut. The immutable writer fact is
+prepared from the complete Analysis, including inactive/self-writing rules.
+
+Gerbil =1cfb032= compiler invocation-owned facts and native final-record/typed
+field idioms guide these boundaries. =:std/func @compose1= expands Analysis-to-
+activation composition as direct calls; =alet= expresses optional admission.
+Each pure fact remains attached to its actual owner and consumer, instead of
+being a generic shortcut in the construction or build entry.
+
+The complete final consumers compare six frozen owners at
+=75b1d2dc7a3fc712eb92dbdaeb4ec6f7d236e131=. Each performs four full cuts and
+reads every ordered source/output row. Eight source logs each contain 1024 base
+rows plus one append. Preparation is outside clocks; transactions, candidate
+execution and public reads are inside. Twenty alternating CPU pairs, twenty ASP
+admissions and five cumulative allocation pairs use the original fixed gates:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes | Fixed gate |
+|----------+------------+------------+-----------+-----------+-----------+------------|
+| Accepted retained cuts | 14774 | 5933 | 20 | 22034992 | 11375152 | pass |
+| Rejected prospective cuts | 13868 | 6141 | 20 | 20429104 | 11982448 | pass |
+| Native eager replay | 6066 | 5547 | 15 | 13441904 | 11334768 | fail |
+| Small retained control | 410 | 420 | 2 | 1171504 | 1185840 | pass |
+
+Accepted transactions improve CPU 59.8% and allocation 48.4%; rejected
+transactions improve CPU 55.7% and allocation 41.3%. Eager replay remains
+unqualified for CPU: its 8.6% median decrease and 15 wins miss the unchanged
+10%/16-win target. Its allocation falls 15.7%. Small CPU increases 10 us and
+allocation increases 14336 bytes within the unchanged control limits. These
+receipts do not establish a general solver or compiler speedup. The retained
+transaction handoff is qualified; eager replay performance remains open.
+
+The materialization-only, equality-only and scalar-only implementations failed
+CPU targets. Their full measurements remain in =.cache= and in
+[[file:../../t/performance/source-materialization/README.org][accepted-cut qualification]]. No failed gate was widened or converted to a
+pass. The complete producer/consumer handoff accounts for the measured gain.
+
+Final official =gxi :gerbil/tools/gxtest= passes 76 Cases across seven modules
+in 23.96 seconds, with final =HARNESS-OK= and =OK=. Tests cover source/row identity,
+foreign/stale evidence, caller mutation isolation, derived/count counterexamples,
+rejected acceptance, provider recovery, graph withdrawal, timeouts and budgets.
+Six production owners pass ASP Policy with zero findings. Root =build.ss= has no
+change from this unit; all logs and scalar receipts remain ignored in =.cache=.
+
+* Relation-specialized fresh admission
+
+The eager source replacement path still constructs and solves a fresh candidate
+before adoption. Its initialization selected lattice, native view, canonical Set
+and custom expansion behavior again for every row, including exact provider/index
+identity checks and repeated row-buffer access. The revised
+=program/initialization.ss= selects the algorithm once per relation. A private
+=source-admission-loop= form owns ordered shape validation, field checking and
+source occurrence budget charging; each algorithm retains its own expansion,
+merge and materialized budget boundaries. No callback result is cached.
+
+An exact Set with no field callback now collects a fresh reversed row spine
+locally and writes the relation buffer once after admission. Membership insertion
+still precedes the materialized output budget check. Duplicates retain their row
+identity, order and budget charge. Callback-bearing Set rows retain the second
+shape/field validation because the first callback may mutate the source row.
+Custom expansion and native view state acceptance retain their original order;
+lattice sources still stage every accepted occurrence. Complexity remains linear
+in admitted source/expansion rows; this work removes repeated dispatch and buffer
+operations rather than changing the solver's algorithm or eager error timing.
+
+Gerbil =1cfb032= =compiler/compile.ss:319-337= demonstrates a declarative traversal
+form that owns its ordering and lexical bindings. The admission form applies
+that boundary to runtime row traversal. Its state carrier is a private final
+record, borrowed once through native =using= slot access. It introduces no new
+public methods, build entry protocol or runtime environment options.
+
+The frozen initialization from =75b1d2d= is attached to the existing frozen
+complete evaluator. Native tests additionally compare independent full engine
+construction, callback/expansion traces, callback mutation rejection, duplicate
+source quota, prior expansion's materialized quota, Set multiplicity, lattice
+merge and graph closure. Full consumer timing retains the original four workloads
+and fixed gates. These are comparisons with the original =75b1d2d= flow, not an
+isolated attribution of the earlier publication changes to this new unit.
+
+An initial syntax-owned counter triggered ASP's
+=GERBIL-SCHEME-AGENT-POLICY-013=: the parser treats any =set!= in a macro datum
+as global macro state. A runtime-checker variant removed that finding but failed
+the fixed small-consumer CPU control (870 -> 1135 us). Gerbil's native =foldl=
+(runtime/util.ss:268-273) removes the extra checker closure and returns the
+occurrence total through its accumulator. It prefetches the next list node,
+whereas the original native =for-each= reads it after the callback. The executable
+borrowed-source-header control exposed that semantic difference.
+
+The final syntax has two closed modes. =pure= applies only to exact Set with no
+field callback and returns the functional count; =callbacks= preserves native
+=for-each= and runtime checker state for field, storage and lattice callbacks.
+The checker is allocated only in callback modes. Both keep their original quota
+and materialization order. The final owner report passes with zero findings;
+no dependency or gate is changed. The header control checks both frozen and
+current engines against independent ordered rows and callback traces.
+
+The final complete consumers retain 20 alternating CPU pairs, 20 ASP benchmark
+admissions and five dedicated cumulative allocation pairs against =75b1d2d=.
+All original CPU/allocation gates pass:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Accepted retained cuts | 17326 | 4921 | 20 | 22034992 | 11382896 |
+| Rejected prospective cuts | 14699 | 5150 | 20 | 20429104 | 11990192 |
+| Native eager replay | 6102 | 4220 | 19 | 13441904 | 11342512 |
+| Small retained control | 457 | 444 | 9 | 1171504 | 1187952 |
+
+Eager replay now qualifies the fixed >=10% CPU / >=16-win gate: the complete
+consumer CPU median falls 30.8%, with allocation down 15.6%. Accepted and rejected
+consumer CPU medians fall 71.6% and 65.0%. These compare the combined production
+flow with the fixed original baseline; they do not isolate this unit's incremental
+speedup or establish wall-clock/other-platform/general-solver improvements.
+The full eager solve and its immediate errors remain in place.
+
+The final official =gxi :gerbil/tools/gxtest= run passes 126 Cases in 12 modules,
+with final =OK=, wall time 73.50 s and CPU user time 16.63 s. The previous 123/125
+Case receipts and earlier CPU failures remain in ignored =.cache=; they are not
+substituted for this final source qualification. Complete final receipts are
+=.cache/ascent/source-materialization/*-traversal-final.log= and =.ss=, plus
+=gerbil-test-traversal-final.log= and =policy-traversal-final.log=.
+
+* Retained source transaction ownership
+
+The next coordinated unit separates source provenance from evaluation buffers.
+=program/source-state.ss= owns original row roots, reversed additions, accepted
+replacement roots and the current prepared snapshot in one private final record.
+Native typed slot access follows Gerbil =1cfb032= =std/struct/lru.ss:15-61=:
+private state has a concrete lifetime and its mutations stay with its owner.
+Public extensible Session declarations keep their existing POO contract.
+
+Both eager append and replacement now enter one =replay-source!= boundary in
+=program/evaluate.ss=: prepare a provisional source cut, admit its budget, run
+the complete fresh engine, then commit source provenance and retire incremental
+publication state. Failed preparation or fresh evaluation cannot adopt the cut.
+Replacement recounts every prospective declaration, including buffered duplicates
+and borrowed source headers; exact root identity does not certify a count.
+Append retains its original counter charge after fresh callbacks. Replacement
+alone clears the publication failure marker. The engine still owns storage,
+indexes, source admission counters and publication recovery; those lifetimes
+have not been hidden inside the source record.
+
+Source preparation fills its log vector directly through native =for/in-range=.
+It removes the eager update's temporary index list and mapped log list. The
+necessary log pairs, prospective snapshot and complete source validation remain.
+This is a linear preparation flow and an explicit ownership improvement;
+no incremental CPU speedup is attributed to this unit alone.
+
+Six native transaction Cases run frozen and current complete engines against
+independent expected rows, error messages and accepted log roots. They cover
+held results, duplicate budgets, buffered sources, failed fresh admission,
+failed eager append, borrowed-header recounting and failure after replay.
+The 13-module regression passes 131 Cases with final =OK=; the completed six-Case
+transaction Suite supersedes its initial five-Case receipt. ASP Policy passes
+with zero findings for the production owners and their native witnesses.
+
+The unchanged complete consumer gates all pass against fixed =75b1d2d=:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Accepted retained cuts | 15133 | 4407 | 20 | 22034992 | 11382896 |
+| Rejected prospective cuts | 12669 | 4604 | 20 | 20429104 | 11990192 |
+| Native eager replay | 5656 | 4030 | 19 | 13442160 | 11338800 |
+| Small retained control | 426 | 428 | 6 | 1171504 | 1187952 |
+
+These qualify the accumulated production flow against the original frozen
+baseline. Small-consumer timing supports nonregression only. Receipts remain
+in =.cache/ascent/source-materialization/*-transaction-final.log= and =.ss=;
+additional boundaries use =gerbil-test-transaction-boundaries.log=.
+
+CI for =1cd47ac= passed formal, all three oracle jobs and its native Scheme
+qualification, then failed the C ABI consumer's movie wire import: the test
+module had been run as source and was absent from the compiled module library.
+The workflow now invokes the existing Scheme file's =main= directly with gxi,
+using the established production library and source load paths. This native
+entry locally generated six Cases' 36 wire contracts with =MOVIE-WIRE-OK=.
+The C ABI consumer itself still requires the next exact-head CI result.
+
+* Grounded support height flow
+
+The retained support owner had another complete-flow hotspot:
+=candidate-provenance-heights= relaxed every edge on every pass. Reverse-ordered
+chains repeat unrelated source/rule reads until all predecessor labels arrive.
+The new =candidate/support-height.ss= separates dependency admission, founded
+seed publication and dependent rule wakeups from maintenance's completeness
+and ordered root publication. Its private final rule records and invocation
+identity tables follow Gerbil's explicit state ownership; native =until= and
+short-circuit =andmap= own queue and conjunction control.
+
+Every invocation rebuilds its dependency/height state after a subcut. Source and
+candidate facts seed zero, empty rules seed one, a conjunction adds one to its
+maximum premise height, and alternatives lower the retained minimum. Unfounded
+cycles remain absent. Repeated premises and a late shorter alternative propagate
+correctly. The counter charges actual edge/premise admission and wakeups; its
+numeric value changes with the algorithm. Exhaustion returns no partial table.
+The DRed withdrawal and its existing budget/result contracts remain intact.
+
+[[file:../../t/performance/support-height/README.org][Complete height/compaction consumers]] freeze the immediately preceding
+=4528237= maintenance owner. All three fixed gates pass: reverse-chain CPU
+455 -> 79 us (82.6% lower), after duplicate withdrawal 463 -> 84 us (81.9%
+lower), and one-edge control 10 -> 9 us. The large arms win all 20 pairs.
+Allocation rises 66704 -> 115728 / 69792 -> 118816 bytes for invocation-owned
+indexes, within the preset 3x+4096 bound. No allocation reduction, full solver
+or certificate verification speedup is claimed. The initial 96-edge fixture
+failed complete proof production under the unchanged proof budget; it was
+reduced to an admitted 32-edge fixture before timing, with failure retained.
+
+Five native modules pass 53 Cases with final =OK=, including the existing all-64
+graph truth, source/cycle/shortest-height/conjunction controls and withdrawal
+budget rollback. New Cases additionally cover repeated premises, empty bodies,
+late shorter support, frozen complete lifecycle equality and insufficient height
+budgets. The two production owners and native witnesses pass ASP Policy with
+zero findings. Receipts stay under =.cache/ascent/support-height/=.
+
+The preceding source-transaction commit =4528237= is now independently qualified
+by all six completed exact-head GitHub CI jobs in run =38032841056=.
+
+* Grounded withdrawal lifecycle
+
+The next full-flow hotspot was DRed's repeated whole-graph overdeletion and
+restoration scans. =candidate/support-cut.ss= now admits one invocation-owned
+dependency index, propagates ordered source seeds, retires affected tentative
+membership and restores only founded support. Native =until= and short-circuit
+=andmap= express propagation and conjunction admission. Withdrawal and height
+share a private final rule protocol in =candidate/support-dependencies.ss=;
+the retained owner still owns validation, copied memberships and atomic ordered
+root publication. Indexes and labels never survive a cut.
+
+Work accounting follows actual admission, queue events, edge/premise inspection,
+affected retirement and root publication. Numeric withdrawal counters change;
+budgets and exhaustion atomicity remain intact. Existing budget tests are
+unmodified. An unsupported cycle cannot self-restore, while remaining source,
+candidate fact or empty-rule support can seed restoration.
+
+[[file:../../t/performance/support-cut/README.org][Frozen complete retained consumers]] cover state creation, preview withdrawal,
+accept/discard, compaction, complete heights and detached rows. Public proof
+construction and independent verification precede timing. Both arms share the
+current height implementation, isolating DRed against preceding =ee2c6ef=.
+All gates were fixed before timing and pass: withdraw CPU 122 -> 86 us,
+alternate-source restoration 306 -> 128 us, discarded preview 154 -> 115 us,
+each winning 20/20 pairs. Allocation falls 18.2%, 27.5% and 14.4%. The small
+control worsens 12 -> 14 us and 36176 -> 40592 bytes, within preset tolerances.
+This is not a whole-solver or public certificate speedup claim.
+
+The three existing height consumers also pass unchanged gates after the shared
+protocol migration. They retain the previously documented transient allocation
+tradeoff. Six native modules pass 56 Cases and final =OK=; the four production
+files and three native witnesses pass ASP Policy with zero findings. SDK build
+options are unchanged. Raw receipts remain under =.cache/ascent/support-cut/=.
+Initial support admission, public certificate construction/verification and
+broader solver execution remain separate audit work; this unit closes retained
+withdrawal propagation and its complete lifecycle controls.
+
+* Positive evidence expression preparation
+
+The next complete evidence flow still classified terms inside every row match
+and rendered heads from their syntax at every conclusion. This affected positive
+proof saturation, final query matching and complete grounded alternative
+enumeration. =candidate/grounding-plan.ss= now owns one invocation's final
+rule/clause records and prepared expression closures. Native =foldr= composes
+ordered matching continuations; vector =with= and typed =using= express admitted
+layout. Plans retain no rows or mutable bindings and do not survive the call.
+
+Gerbil's guarded substitution in =compiler/optimize-call.ss:89-125= motivates
+separating admitted expression preparation from repeated execution. Independent
+positive proof verification retains direct syntax interpretation. Graph opening
+still reconstructs the entire graph before copying state. Actual probe order,
+unsuccessful matches, scalar work, round visibility, node IDs, labels, duplicate
+selection, material caps and exact budget outcomes remain unchanged.
+
+[[file:../../t/performance/grounding-plan/README.org][Complete frozen evidence consumers]] compare preceding =c7da281= proof, graph
+and maintenance owners with independent chain rows/heights. All fixed gates pass:
+proof generation plus independent verification CPU 864 -> 759 us (12.2%, 19/20
+wins), graph generation plus verified opening and heights 2031 -> 1826 us
+(10.1%, 20/20 wins). Allocation increases 1.6%/1.4%. Small proof CPU is 26 ->
+26 us with 1376 additional bytes. Plan preparation is included in each interval.
+No solver throughput or asymptotic probe reduction is claimed.
+
+The initial mixed-record frozen consumer failed before timing. A subsequent
+proof measurement loaded a stale production artifact because the native builder
+omitted the changed proof module; it failed and was rejected. Both failures are
+retained. The builder now explicitly compiles all changed production owners.
+All six modules were rerun against the corrected artifact before timing; the
+same gates and sample counts remained fixed.
+
+Six native modules pass 50 Cases with final =OK=, including unchanged exhaustive
+recursive/budget controls and 4096 direct matching combinations. ASP Policy
+passes three production owners and the new Suite with zero findings. Logs and
+receipts stay under =.cache/ascent/grounding-plan/=. SDK/source builds remain
+unchanged. The preceding =c7da281= withdrawal unit now has six successful
+exact-head CI jobs in run =38034820309=.
+
+* Occupied-domain closure support flow
+
+The adjacent binary closure consumer =candidate/closure.ss= retained a domain
+size cost across source indexing, shortest-support state and ordered publication.
+Publication scanned every target for every origin, including empty origins.
+Thus an empty domain still paid O(radix^2) selection work. This complete-flow
+audit extends the original graph focus to the public source-labelled closure API.
+
+One admission now validates source labels/IDs, sorts occupied IDs, reuses its
+membership table as a local ID-to-offset map and prepares compact adjacency.
+Shortest paths use dense local offsets and native vectors. Native list-builder
+publication maps back to exact original IDs in numeric order. No density cutoff
+or environment setting is introduced. Canonical shortest/tied supports, nonempty
+cycles, occupied-count squared pair budgets and complete closure before truncation
+remain intact. Selection/storage follows occupied nodes rather than radix holes;
+tie comparisons, POO publication and complete output size remain real costs.
+
+[[file:../../t/performance/sparse-closure/README.org][Frozen complete closure qualification]] uses byte-identical preceding =ac46b62=
+source and independently specified chain candidates. Fixed gates pass: sparse
+CPU 3865 -> 1982 us (48.7%, 17/20 wins), truncated publication 1110 -> 92 us
+(91.7%, 20/20 wins), empty domain 1041 -> 12 us. Sparse/truncated allocation
+falls 2.2%/17.4%. The dense control passes with only 13/20 faster pairs; small
+CPU rises 9 -> 11 us and allocation rises 8880 bytes within preset tolerances.
+No general solver, bridge or downstream throughput claim follows.
+
+Initial radix 65536 semantic baseline stalled and was stopped. The admitted
+fixture uses 1024, chosen before timing without changing budgets or gates.
+The initial per-origin hash implementation failed the fixed 16-win gate; the
+compact-offset revision resolved the concrete lookup/allocation overhead, then
+was requalified. Failures remain alongside successful receipts in ignored cache.
+
+Nine Cases in two native GxTest modules pass final =OK=, including all 512 tiny
+graphs at two domain widths, nonempty reflexive/tie controls, truncation, budget
+rejection and a new 2^64-domain exact-ID Case. ASP Policy passes the production
+owner and new Suite with zero findings. Gerbil invocation-owned tables and native
+ordered builders motivate this whole admission/traversal/publication boundary.
+The preceding =ac46b62= evidence unit now has six successful exact-head CI jobs
+in run =38035720855=.
+
+* Finite evidence admission, expression execution and publication
+
+The finite model consumer repeated relation-name association searches, head/atom
+classification and scalar syntax dispatch inside every probe and saturation
+round. The producer also deep-copied a closure whose admitted rows and private
+entry/frontier spines were already detached. External uniqueness hashing preceded
+row grammar admission, exposing structural hashing to malformed external rows.
+
+The complete production unit introduces invocation-owned typed final rule/clause
+plans. Relations resolve once into replay-private references; head, atom and fixed
+scalar expressions are prepared before repeated execution. Plans borrow no rows
+or frozen frontiers. Each verification independently prepares and executes its
+own replay. Ordered probes, unsuccessful work, absence charging, full reduction
+scans, strata/round visibility and exact budgets remain unchanged. Publication
+transfers the already detached closure after replay owners end. External row
+width/scalars are admitted before structural uniqueness hashing.
+
+[[file:../../t/performance/finite-plan/README.org][Frozen complete finite consumers]] include generation, every closure entry and independent
+verified replay. Against preceding =71ac687=, wide CPU falls 4244 -> 3560 us
+(16.1%, 17/20 wins), allocation 4130912 -> 3210592 bytes (22.3%). Reduction
+CPU falls 1107 -> 910 us (17.8%, 20/20 wins). Negation is essentially unchanged;
+small CPU rises 38 -> 40 us with 5680 additional bytes. All fixed gates pass.
+The initial plan-only variant failed wide and remains recorded; the production
+ownership/scalar revision was requalified without changing gates or samples.
+
+Seven native modules pass 61 Cases with final =OK=, including exact budget
+comparisons, malformed external rows, publication isolation and unchanged finite,
+stratified and positive controls. ASP Policy passes changed production owners and
+the new Suite with zero findings. Learning from Gerbil's invocation-local identity
+tables, native typed bindings and ordered expression composition is applied to
+this entire evidence boundary. Solver planning, bridge/session execution and
+general workload performance remain separate audit work. Preceding =71ac687=
+now has six successful exact-head CI jobs in run =38036942726=.
+
+* Native binary relation admission, analysis and persistent publication
+
+This audit extends to =core/binary-relation.ss= and =table/expression.ss=.
+Sparse closure/distance membership already used hashes, but source adjacency still
+allocated every radix slot. Simultaneous closure/distance demands repeated whole
+path traversal. Final Set publication then rebuilt persistent Trie paths by
+inserting each already ordered result. The costs span admission through public
+observation, not just one graph helper.
+
+Sparse views now own occupied adjacency. Canonical analysis maps exact external
+IDs to local offsets, traverses private vector frontiers and reuses invocation
+visitation stamps. A typed final record carries complete private rows/distance
+queries into independent POO projections. Native provenance and neighbor identity
+guard sharing; custom visitor packets and bounded calls keep separate execution.
+Public row spines stay detached. The new =core/ordered-pair-set.ss= composes the
+official UIntTrieSet Table constructors to publish sorted outputs in bulk; default
+Set admission remains for unsorted, duplicate or invalid input.
+
+[[file:../../t/performance/sparse-view/README.org][Frozen complete binary consumers]] include fresh POO construction, composition, closure,
+distances, delta/bounded steps, persistent publication and complete reads. Against
+=c90f272=, sparse CPU falls 2615 ->1137 us (56.5%, 20/20 wins) and allocation
+2863168 ->406368 bytes (85.8%). Dense CPU falls 1200 ->388 us (67.7%), boundary
+1362 ->497 us (63.5%). Empty and callback controls pass. Small adds 1904 bytes;
+closure-only adds 17112 bytes with essentially unchanged CPU. All seven preset
+scenario gates pass; isolated helper gains are not promoted to solver throughput.
+
+The admission-only variant failed stability; private POO analysis failed the
+closure-only allocation control; the record revision still failed full-consumer
+CPU. Those receipts remain alongside excluded overlapping and intermediate
+measurements. The ordered persistent publication revision closes the measured
+flow under unchanged gates. Thirty-five Cases in three native modules pass final
+=OK=, including exhaustive independent path truth, Set validation/operations,
+callback traces/counts, exact budgets, publication isolation and 2^80 keys.
+ASP Policy passes all changed production owners and the new Suite with zero
+findings. The preceding =c90f272= unit has six successful exact-head CI jobs in
+run =38038056373=. Broader engine/bridge execution remains separate audit work.
+
+* Temporal verification through composed consumers
+
+The wider module audit found repeated production work in =temporal/lens.ss=:
+=temporal-verify= regenerated a complete solve and its certificates before
+independently replaying the supplied receipt. =temporal-fork= and
+=temporal-compare= repeatedly traversed that same sequence.
+
+The coordinated flow now names invocation-local binding preparation,
+independent receipt replay and complete answer projection. Private final
+records express field ownership; public POO values and historical wire lists
+retain their extension/projection contracts. Verification rebuilds the current
+cut and content digest rather than trusting retained snapshot metadata.
+Certificate replay checks exact closure/query truth, founded evidence for
+nonempty answers, and the engine's total output budget. Rejected/open cuts,
+forged coordinate projections, absent evidence and mutated receipts retain
+explicit rejection. Composed consumers still enter that verified boundary.
+
+[[file:../../t/performance/temporal-replay/README.org][Temporal replay qualification]]
+freezes the complete prior module and specifies seven complete public operations,
+independent expected truth and fixed CPU/allocation gates. Measurements cover
+verification/comparison/fork consumers; they do not claim faster initial solve
+or general actor throughput.
+
+The seven original gates pass in one exclusive native process. Complete
+verification improves median CPU 14306 -> 497 us, comparison 25613 -> 510 us,
+and fork 57779 -> 10516 us; verification allocation falls 24269864 -> 458456
+bytes. Cold solve is a regression control, not a promoted speedup: 10/20 CPU
+wins and 320 extra allocated bytes. Open-cut verification has no material CPU
+change. Two competing-compiler diagnostics remain excluded in the cache.
+No proof work budget or performance gate changed after sampling.

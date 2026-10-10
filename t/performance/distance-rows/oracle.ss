@@ -1,0 +1,113 @@
+;;; Independent positive-path Floyd-Warshall oracle for the research kernels.
+(import (only-in :clan/poo/object .o .mix .ref .call)
+        (only-in :clan/poo/trie UIntTrieSet)
+        :gerbil-ascent/core/binary-relation :gerbil-ascent/table/expression
+        :gerbil-ascent/t/performance/distance-rows/reference)
+(def (expression prototype edges width)
+  (.mix prototype (.o (source-pairs (.call UIntTrieSet .<-list edges)) (radix width))))
+(def (same left right)
+  (unless (equal? left right) (error "research kernel mismatch" left right)))
+(def (matrix edges radix)
+  (let (result (make-vector (* radix radix) #f))
+    (for-each (lambda (edge) (vector-set! result edge 1)) edges)
+    (for-each
+     (lambda (via)
+       (for-each
+        (lambda (from)
+          (for-each
+           (lambda (to)
+             (let ((left (vector-ref result (+ (* from radix) via)))
+                   (right (vector-ref result (+ (* via radix) to)))
+                   (old (vector-ref result (+ (* from radix) to))))
+               (when (and left right (or (not old) (< (+ left right) old)))
+                 (vector-set! result (+ (* from radix) to) (+ left right)))))
+           (iota radix))) (iota radix))) (iota radix))
+    result))
+(for-each
+ (lambda (mask)
+   (let* ((edges (filter (lambda (pair) (bit-set? pair mask)) (iota 9)))
+          (truth (matrix edges 3))
+          (rows (filter (lambda (pair) (vector-ref truth pair)) (iota 9))))
+     (for-each
+      (lambda (prototype)
+        (let ((candidate (expression prototype edges 3)) (reference (expression distance-rows-reference-prototype edges 3)))
+          (same (.ref candidate 'closure-pairs) rows)
+          (same (.ref candidate 'shortest-distance-pairs) rows)
+          (for-each
+           (lambda (slot) (same (.ref candidate slot) (.ref reference slot)))
+           '(two-hop-pairs at-most-two-hop-pairs))
+          (for-each
+           (lambda (pair)
+             (same ((.ref candidate 'closure-contains?) pair) (and (vector-ref truth pair) #t))
+             (same ((.ref candidate 'shortest-distance-of) pair) (vector-ref truth pair))) (iota 9))
+          (for-each
+           (lambda (budget)
+             (same (with-catch (lambda (e) (error-message e))
+                     (lambda () (.ref ((.ref candidate 'closure-bounded) budget) 'pairs)))
+                   (if (< budget (length rows)) "ASCENT derived pair budget exceeded" rows))) (iota 10))))
+      (list gerbil-ascent-table-expression-prototype)))
+   (when (zero? (modulo (+ mask 1) 32))
+     (displayln "ORACLE " (+ mask 1) "/512") (force-output))) (iota 512))
+(for-each
+ (lambda (radix)
+   (let* ((edges (list 0 1 (- radix 1) (+ radix 1) (- (* radix radix) 1)))
+          (reference (expression distance-rows-reference-prototype edges radix)))
+     (for-each
+      (lambda (prototype)
+        (let (candidate (expression prototype edges radix))
+          (for-each
+           (lambda (slot) (same (.ref candidate slot) (.ref reference slot)))
+           '(two-hop-pairs at-most-two-hop-pairs closure-pairs shortest-distance-pairs))
+          (for-each
+           (lambda (pair)
+             (same ((.ref candidate 'shortest-distance-of) pair) ((.ref reference 'shortest-distance-of) pair)))
+           (append (.ref reference 'closure-pairs) (list -1 (* radix radix) 1/2)))))
+      (list gerbil-ascent-table-expression-prototype)))
+   (displayln "BOUNDARY " radix) (force-output)) '(16 17 31 32 61 62 63 64 65 511 512))
+;; A longest positive simple cycle crosses every distance-row boundary.
+(for-each
+ (lambda (width)
+   (displayln "CYCLE START " width) (force-output)
+   (let* ((edges (map (lambda (from) (+ (* from width) (modulo (+ from 1) width))) (iota width)))
+          (value (expression gerbil-ascent-table-expression-prototype edges width))
+          (lookup (.ref value 'shortest-distance-of)))
+     (for-each
+      (lambda (from)
+        (for-each (lambda (to)
+          (let (depth (modulo (- to from) width))
+            (same (lookup (+ (* from width) to)) (if (zero? depth) width depth)))) (iota width)))
+      (list 0 (- width 1))))
+   (displayln "CYCLE OK " width) (force-output)) '(512 513))
+;; Force an old snapshot before source override; its published distances survive.
+(for-each
+ (lambda (width)
+   (let* ((edges (list 1 (+ width 2) (+ (* width 2) 3)))
+          (initial (expression gerbil-ascent-table-expression-prototype edges width))
+          (before (.ref initial 'shortest-distance-pairs))
+          (lookup (.ref initial 'shortest-distance-of))
+          (withdrawn (.mix (.o (source-pairs (.call UIntTrieSet .<-list (cdr edges)))) initial))
+          (replacement (.mix (.o (source-pairs (.call UIntTrieSet .<-list '(2)))) initial)))
+     (same (.ref withdrawn 'shortest-distance-pairs)
+           (.ref (expression distance-rows-reference-prototype (cdr edges) width) 'shortest-distance-pairs))
+     (same (.ref replacement 'shortest-distance-pairs) '(2))
+     (same (lookup 3) 3)
+     (same ((.ref withdrawn 'shortest-distance-of) 3) #f)
+     (same (.ref initial 'shortest-distance-pairs) before))
+   (displayln "SNAPSHOT " width) (force-output)) '(8 512 513))
+;; Custom callbacks keep their trace and the existing encoded-pair behavior,
+;; including a target that aliases another origin in the finite pair domain.
+(let ((calls []) (edges '(0)) (width 3))
+  (def (run prototype)
+    (let* ((base (expression prototype edges width))
+           (value (.mix (.o (right-index (lambda (node visit)
+             (set! calls (cons node calls))
+             (cond ((= node 0) (visit 4)) ((= node 1) (visit 2)))))) base))
+           (rows (.ref value 'shortest-distance-pairs))
+           (lookup (.ref value 'shortest-distance-of)))
+      (list rows (map lookup rows))))
+  (let* ((before (run distance-rows-reference-prototype)) (trace calls))
+    (set! calls [])
+    (same (run gerbil-ascent-table-expression-prototype) before)
+    (same calls trace)))
+(displayln "CALLBACK OK")
+(displayln "OK")

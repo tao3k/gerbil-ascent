@@ -1,0 +1,570 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scheme framework research, proof audit and implementation sequence
+#+DATE: 2026-10-04
+#+STATUS: audited plan; abstract contracts checked; implementation refinement open
+
+* Audit decision
+
+At this audit's baseline, the [[file:research/scheme-dsl/index.org][DSL source ledger]] contained eight papers:
+rule planning, functional fixed points, relational kernel, fragment composition, higher-order change and program lifecycle concerned the language/kernel; deletion rederivation and
+incremental view maintenance added deletion and incremental-maintenance constraints. Later Provider concretization, monotone containers,
+recursive physical planning and first-class facts readings add Provider, physical-plan and nested-fact
+questions without extending the audited proof coverage. These are
+distinct from the separate
+[[file:research/agent-inference/index.org][agent-inference collection]]. The next step is to connect paper assumptions
+to admitted Scheme IR and observable transactions. Adding syntax, quoting a
+paper or passing an abstract proof is insufficient for design closure.
+
+The current checked subset has a coherent division: Scheme constructs program
+values; admission exposes domains, lexical captures and dependencies; the native
+core owns evaluation; retained Sessions own source/result publication; bounded
+evidence binds a specific program and snapshot. No paper establishes the safety
+of arbitrary host closures. Therefore unrestricted callback admission, silent
+domain clamping and hidden dependencies are excluded from the checked subset.
+Trusted host construction remains outside the proof boundary.
+
+Audit baseline: GitHub PR #1 head =bb4f58a826ac37e85974c66ce504ba1a7c7b57da=.
+The 13-Suite / 138-Case receipt binds native source =0e1141e=; its later
+documentation child does not expand that semantic scope. Historical negative
+performance results and the failed three-arm measurement remain failures or
+negative evidence. They do not become benefit claims through this proof audit.
+
+* Paper-to-code-to-proof obligations
+
+Primary sources were re-opened on 2026-10-04. Section locators are retained in
+the individual notes. The following transfer decisions are our design synthesis,
+not results the authors established for Gerbil.
+
+| Paper and primary source | Transfer and current implementation | Remaining proof and discriminator |
+|--------------------------+-------------------------------------+-----------------------------------|
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning Ascent]], §3–4 | Visible atoms, modes, SCCs and indexes: =program/planning.ss=, =core/dependency-graph.ss=, =core/rule-semantics.ss= | Relate admitted atoms and selected delta plans to the immediate-consequence operator; complete rows, strata and timeout statuses must agree with the pinned oracle |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][functional fixed points Datafun]], §4–5 | Discrete/stable captures versus monotone recursive inputs; finite domains: =program/scheme-checked.ss= and =program/higher-order.ss= | Prove descriptor typing and domain/cardinality laws supply Lean rank premises. Finite output per call and fact budgets are not termination proofs; reject successor escape and increasing one-key lattice |
+| [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][relational kernel µKanren]], §3–5 | Small semantic kernel with Scheme constructors/macros above it: =program/interface.ss= | Scope/hygiene and expanded-IR preservation. Do not transfer stream interleaving/fairness into bottom-up saturation; cyclic answer sets do not prove search equivalence |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][fragment composition first-class constraints]], typing/composition/stratification | Assemble inert fragments, check the whole dependency graph: =program/scheme-admission.ss= | Mechanize assembled schema and strict negative-edge validation; two valid fragments forming a negative cycle must reject. Current runtime admission is weaker than Flix static typing |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change higher-order semi-naive]], §4.2–4.3, §6–7 | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][program lifecycle Flix design]], §3.7–3.9 / §4 | Fresh private predicate identities, explicit construct/admit/solve/query: =program/objects.ss=, =program/result.ss= | Alpha-renaming/generativity and lexical substitution theorem; repeated constructors and reordered composition must preserve public observations. Purity alone does not establish totality |
+| [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][deletion rederivation DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
+| [[https://arxiv.org/abs/2203.16684][incremental view maintenance DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
+
+* Current proof ownership
+
+Lean and Quint have disjoint acceptance claims. Lean owns universally quantified
+semantic and algebraic laws; Quint owns reachable protocol states, interleavings,
+cancellation, draining and publication. Native execution remains a third
+independent implementation discriminator, not a theorem from either collection.
+
+| Concern | Lean claim | Quint claim |
+|---------+------------+------------|
+| Language and evaluation | Typing, lexical lowering, monotonicity, least fixed points and finite-height laws | No duplicate language/fixed-point calculus |
+| Source updates | Dependency/certificate frames and exact source-count arithmetic in SourceUpdateFrame | Session transaction, provisional/bounded work, failure and publication traces |
+| Actors | Checkpoint-distance arithmetic; no mailbox or task state machine | Work-key admission, stale/duplicate replies, ready dispatch, credits, cancel/drain/close |
+| Indexes and caches | Immutable identity lookup and ordered bucket extension equations | Private staged installation, version/root alignment and visible-state isolation |
+| Providers / SCCs | Abstract frontier, closure and quotient laws | Concrete finite injection/consume/merge/remap/refusal sequences; semantic oracles are checks on those sequences, not extra universal algebra proofs |
+| Evidence | Certificate/closed-model absence validity and dependency reuse | Receipt generation/source binding across changes and provisional/bounded status |
+
+The Lean SessionPublication and NativeSessionPublication transition replicas,
+RoundAdmission protocol state and ReadyComponents task-completion state have
+been removed. Source-count laws remain in SourceUpdateFrame. The publication
+wrapper theorem in SourceCertificates was removed; typed patch/certificate
+laws remain. Quint models and their negative controls retain protocol ownership.
+Historical receipts still certify their original sources, not the current set.
+Removing those Lean replicas retires their universal protocol-trace claims;
+finite TLC exploration does not inherit them. A future unbounded temporal
+claim needs a Quint proof/refinement, not another Lean state-machine copy.
+
+The [[file:evidence/scheme-proof-ownership-20261005/receipt.json][ownership qualification receipt]] records the ownership split before the
+=RuleBodyFrame= addition: Lean's
+62 build jobs pass, and all existing Quint gates across eleven models and
+23 negative controls pass. Runtime code and historical receipts are unchanged.
+
+* Formal coverage and what this patch adds
+
+| Artifact | Checked statement | Uncovered implementation obligation |
+|----------+-------------------+-------------------------------------|
+| [[file:../packages/proofs/lean/FiniteOperators.lean][FiniteOperators]] | Positive primitives, pointwise nested arrows, application and relation least-fixed-point laws | Concrete descriptor validation, lexical environments, compiler branch correctness and native plan execution |
+| [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] | Typed positive lexical grammar lowers to a distinct relational IR with semantic preservation; source-root materialization, logical monotonicity, finite join tuple encoding, each finite unrolling iterate, ordinary one-body projection and shared-key two-body projected join soundness/completeness under explicit finite variable interpretation | Descriptor-to-typed-grammar translation, native variable decoding/freshness, integration with scoped relation feedback, semantic height sufficiency, list/scalar encoding, actual rule matching/index execution and operational budgets. [[file:scheme-compiler-proof-bridge.org][Branch correspondence]] keeps these open |
+| [[file:../packages/proofs/lean/FiniteHeight.lean][FiniteHeight]] | Boolean/table ranks and bounded stationarity; complete nested table/tuple enumeration, injective full-input function encoding and signature cardinality/height correspondence; 20 added theorems instantiate full-height leastness | Native scalar/domain/row representation, descriptor semantics and actual step monotonicity, memo/rule refinement and remaining-work budget accounting; abstract exhaustive signature enumeration/height now proved |
+| [[file:../packages/proofs/lean/DescriptorScope.lean][DescriptorScope]] | Free identity closure iff lexical scope validity; context extension, binder capture and escaped shared-child rejection; 7 theorems | Native graph-to-tree identity mapping, shape/arity checks, DFS cycle detection and owned snapshot acquisition are independently tested, not mechanized extraction |
+| [[file:../packages/proofs/lean/RecursiveLowering.lean][RecursiveLowering]] | Row-typed scoped relation feedback, nested captured environments, monotonicity, lowering preservation, least closure and actual completed accumulation; 14 theorems | Higher-order elimination into this grammar, concrete binder translation, memo/rule/delta refinement and finite termination remain open |
+| [[file:../packages/proofs/lean/CappedArithmetic.lean][CappedArithmetic]] | Natural capped product/power, optimized exits, clipped exponents and entire nested cardinality/height expressions preserve the exact formula below the cap; 15 theorems | Concrete descriptor-to-formula correspondence, semantic height sufficiency and native compiler refinement; [[file:scheme-compiler-proof-bridge.org][native arithmetic bridge]] has independent finite regression |
+| [[file:../packages/proofs/lean/PositiveNonmembership.lean][PositiveNonmembership]] | Closed-model absence and restricted deletion; new input-inclusion and deletion-preserves-absence lemmas | Executable certificate coverage, exact source/program binding, founded support reconstruction |
+| [[file:../packages/proofs/lean/RuleGraphClosure.lean][RuleGraphClosure]] | Abstract compiler adjacency iff positive/negative/aggregate rule-read edge; completed mark-before-enqueue worklist equals least reachability closure; this supplies the closed affected-set premise to the completed fixed-point frame theorem | Native lowered-vector correspondence, concrete bitmap/list refinement, source snapshot identity and evaluator locality remain separate obligations; the independent matrix oracle checks bounded native graphs |
+| [[file:../packages/proofs/lean/NativeGraphWorklist.lean][NativeGraphWorklist]] | List-based mark-before-enqueue scan refines the abstract transition; valid dense-key runs cannot requeue a popped ID, have at most =count= pops, and the executable =count + 1= driver reaches exact compiled read closure | Still requires a Gerbil vector/bitmap/list-to-Lean state refinement, in-range admitted IDs, source snapshot identity and native evaluator locality; native finite graph and long-chain tests are independent checks, not extraction |
+| [[file:../packages/proofs/lean/NativeBitmapWorklist.lean][NativeBitmapWorklist]] | Fixed-length Boolean vector and LIFO list each simulate the list machine's enqueue, full scan, pop and fuel driver; exact compiled closure and affected-set closure follow for typed in-range IDs | Gerbil's mutable vector/list steps, raw ID admission, seed enumeration, snapshot identity and evaluator locality still need a concrete refinement; Lean's functional vector update is not source extraction. Native qualification compares 64 non-self-edge graph masks and all eight seed subsets against a matrix oracle |
+| [[file:../packages/proofs/lean/SourceUpdateFrame.lean][SourceUpdateFrame]] | Old base plus reverse-chronological appends versus candidate rows yields exact changed seeds; compiled bitmap closure selects changed or reachable heads; with self-reads or explicit body reads and completed fixed points, all unselected completed values agree across different round counts | Native =equal?= refinement, raw ID/vector refinement, evaluator read correspondence and completion remain premises. A 512-cut native matrix checks actual three-relation positive-rule Session results, fresh results, independent reachability rows and reuse names together. A second 64-cut matrix checks recursive path, negative filtering, weight computation and aggregation across all eight relations against independent finite rows, fresh evaluation and hand-derived reuse names. These bounded matrices do not establish native-to-Lean refinement. Opaque indexed lookups and field callbacks outside exact immutable-scalar checkers are excluded. Reuse admits only scalar source values and literals, and Session returns copied public row spines. Red/green counterexamples show stale results from nested Core values and public result mutation before those gates. Arbitrary Core values may still mutate during fresh evaluation |
+| [[file:../packages/proofs/lean/RuleBodyFrame.lean][RuleBodyFrame]] | Explicit full-row atom/negation/aggregate interpretation, pure guard/binding, ordered multi-head emission and self-row admission derive semantic locality; source-log/bitmap closure then frames differently timed completed results without an external =readsMatch= premise. An eight-relation recursive/negative/aggregate example and completed stale-result controls for omitted negative/aggregate reads compile in [[file:../packages/proofs/lean/Tests/RuleBodyFrameTests.lean][RuleBodyFrameTests]] | This is a pure typed semantic interpreter. Native plan/scalar/matcher decoding, closed-procedure registry, index fidelity, delta/slot optimization, mutable row admission and actor scheduling must refine it. Completion remains assumed; no general termination, Gerbil extraction or temporal protocol claim is added |
+| [[file:../packages/proofs/lean/PositiveSlots.lean][PositiveSlots]] | Dense first-occurrence lowering and a slot matcher agree with ordinary binding on equal-arity rows; success represents extended bindings and preserves ordered head observations. All candidates preserve the initialized prefix, so failed partial writes require no rollback; emitted IDs fit the final extent. [[file:../t/qualification/ascent-positive-plan-test.ss][Native qualification]] checks 125 term combinations, 27 candidate rows, four dirty starts and a repeated traversal against the ordinary binder, plus a missing-fresh-overwrite fault | A total frame function abstracts a sufficiently large mutable vector. Native symbol/hash-map decoding, lawful scalar equality, vector ownership, physical indexes and semi-naive pivots remain separate refinements; raw-row finite comparisons are bounded evidence, not extraction |
+| [[file:../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal]] | Precompiled finite raw-row multi-atom traversal produces the same entire ordered emissions as ordinary association-list binding. Failed partial writes and successful suffix returns preserve the parent prefix; the returned dirty frame admits a repeated traversal. Lean qualifiers retain duplicate and reversed heads, literals, zero-arity bodies and a parent-prefix corruption fault. Native three-atom qualification compares 81 emissions and provider visit counts across four stale starts and repeated dirty returns | Equal-arity admission, fixed finite raw row lists and an emission function respecting the represented environment. The following IndexedPositiveTraversal composes physical row selection and delta pivots with this traversal. Native decoding/vector ownership and scheduling remain separate refinements; no extraction or whole-engine claim |
+| [[file:../packages/proofs/lean/IndexedPositiveTraversal.lean][IndexedPositiveTraversal]] | Once-compiled indexed slot plans preserve complete ordered ordinary-binding emissions for every position-selected delta pivot. Known column reads are actual bound/literal actions; partial/reordered/repeated keys and the 32-row threshold preserve matching candidates. Concrete row-coverage partition, permitting old/delta overlap, covers every new head through at least one compiled indexed pivot; every pivot head belongs to the full next solve. Native qualification makes 480 ordered comparisons across layouts, relation aliases, pivots, dirty starts, custom probes and canonical scalar/composite retained caches, with wrong-pivot and dropped-candidate faults | Fixed snapshots, admitted equal arity/known columns, old-row inclusion, complete new-row delta coverage and no delta rows outside the current snapshot. Exact differences satisfy this contract via =exact_covers=. Canonical bucket order is modeled as ordered filtering; custom provider membership alone promises no order. Native decoding, lawful equality, vector ownership and mutable cache version publication remain representation obligations. Overlapping pivots require authoritative deduplication |
+| [[file:../packages/proofs/lean/IndexedIteration.lean][IndexedIteration]] | Complete compiled indexed initialization and dirty-return pivot batches compose into synchronous multi-rule Set history. Every natural-number round equals full ordinary-binding iteration; all-old head coverage is derived from the preceding step. Duplicate heads are retained by traversal and deduplicated by Set admission. Returned seed-prefix frames remain valid and give identical pivot streams; observed stability persists forever. Native twelve-round chain/clique qualification retains physical indexes and actual frames, agrees per round with a full-scan oracle, and matches an independent 102-path Floyd closure; missing full initialization is a negative control | Schema arity/known-column admission and faithful finite row enumeration derive the premises. Semantic history uses a representative prefix-valid frame, justified by returned-frame invariance. Stable-result transport is conditional on observed stability, not a native termination/cutoff claim. Native encoding, mutable cache publication and actor scheduling remain separate representation/protocol obligations |
+| [[file:../packages/proofs/quint/PositiveNonmembershipSession.qnt][Certificate lifecycle]] | In explored states, no stale published/used certificate across source swaps | Exact program/query identity, replay of concrete rule instances, consumer ownership and nonfinite liveness |
+| [[file:../packages/proofs/quint/SessionTransaction.qnt][Transaction publication]] | In explored states, atomic source/result pairing, no stale commit and abort preservation; early/stale fault variants must produce counterexamples | ResultOf is a symbolic two-row surrogate, not a rule solver. Transaction interruption and all concrete mutation locations need Scheme-to-model mapping |
+
+Generation has no maximum in either protocol's =Init/Next/Spec=. It ranges over
+=Nat= and can keep increasing. =ExplorationDepth= and =ExplorationBound= exist
+only for TLC state-space exploration; configuration values do not limit runtime
+or constitute an all-generations theorem. Repeated source cuts are allowed,
+so a stale job cannot become current merely because source bytes return to an
+earlier value (ABA). The removed Lean publication replicas no longer supply
+unbounded generation/trace claims. Current finite Quint checks neither inherit
+those claims nor establish Gerbil trace refinement.
+
+Safety is not liveness. Neither Quint model claims a solver eventually finishes,
+or a transaction eventually wins against continuous competing publication.
+A fairness/termination claim needs an explicit scheduling assumption and a
+separate proof. Abort preservation is encoded as a required action contract;
+model checking does not establish that native exceptions implement it.
+
+Previously GitHub's =formal= job ran Lean only. It now executes the common
+[[file:../justfile][Justfile proof gate]], including the Quint models and intentional faults. TLC is
+pinned to the official 1.7.4 jar and verified by SHA256. The gate accepts
+=ASCENT_FORMAL_GENERATION_CUTOFF= independently of protocol semantics; GitHub
+uses 4, the default exploration configuration uses 2. Counterexample checks
+require both TLC's violation exit code and the expected violated property;
+parse/tool crashes cannot count as successful fault detection.
+
+* Integrated Runtime mainline acceptance correction
+
+This round identified and corrected the incompatibility between actual owner
+intermediate publications and the previous =Agrees= premise.
+=SnapshotClosure.ExternalAgrees= preserves external reads while published owned
+facts may be contained in the completed local closure.
+=credited_terminal_closed= handles the credited prefix and terminal tail.
+=GroundedBinding.credited_compiled_closed= connects valid compiled binders,
+actually constructed finite ground clauses and complete publication into one
+output closure statement. =completed_compiled_least= connects sound publication,
+seed coverage and compiled closure to whole-result least-model equality.
+Tests explicitly show that the old premise fails and the new terminal theorem
+applies to credited publication.
+
+All native modules, all formal targets and the pinned oracle jointly qualify
+this round. The actual SCC worker's emission checks over all 512 three-node
+graphs, plus cancellation and merge-failure drain controls, supply new executable
+implementation correspondence evidence. The [[file:scheme-paper-closure.org][global closure matrix]] retains all
+paper functionality and application gates. Passing selected compiler tests does
+not establish full replication. See the [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated source receipt]].
+
+
+* Feature modules
+
+Detailed design, proof and acceptance records are maintained by feature.
+Do not append cross-feature implementation history to this overview.
+
+- [[file:features/actor-scheduling/proofs.org][Actor Scheduling: proofs]]
+- [[file:features/assurance/proofs.org][Assurance: proofs]]
+- [[file:features/closure-plan/proofs.org][Closure Plan: proofs]]
+- [[file:features/compiler-lowering/proofs.org][Compiler Lowering: proofs]]
+- [[file:features/equivalence/proofs.org][Equivalence: proofs]]
+- [[file:features/index-admission/proofs.org][Index Admission: proofs]]
+- [[file:features/lattices/proofs.org][Lattices: proofs]]
+- [[file:features/positive-evaluation/proofs.org][Positive Evaluation: proofs]]
+- [[file:features/provider-admission/proofs.org][Provider Admission: proofs]]
+- [[file:features/provider-iteration/proofs.org][Provider Iteration: proofs]]
+- [[file:features/provider-views/proofs.org][Provider Views: proofs]]
+- [[file:features/qualification/proofs.org][Qualification: proofs]]
+- [[file:features/representation/proofs.org][Representation: proofs]]
+- [[file:features/shared-indexes/proofs.org][Shared Indexes: proofs]]
+- [[file:features/source-lifecycle/proofs.org][Source Lifecycle: proofs]]
+- [[file:features/steensgaard/proofs.org][Steensgaard: proofs]]
+- [[file:features/transitive/proofs.org][Transitive: proofs]]
+
+* Eqrel publication integration onto 6a03012 (2026-10-08)
+
+This integration retains the current native Gerbil/GxTest build and test
+commands, Polonius work, Quint protocols and feature assurance layout. The
+older custom test coordinator and its Python launch regressions belong only
+to the historical local receipts; they are not restored into this revision.
+
+Canonical Eqrel/hash now aggregates checked injection frontiers as private
+count tickets and publishes immutable total/minus-origin delta cuts. Budget
+preflight, failed-owner refusal, old cuts, accumulated source-delta origins,
+group/width isolation and ordered export are covered by the dedicated Eqrel
+Suite. The eager public extension retains its noncanonical checked protocol.
+The frozen eager kernel is a qualification input, not a runtime dependency.
+Performance remains in the native performance Suite; its measurement marker
+declares exactly one solve/export followed by validation of exported rows.
+
+The [[file:evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
+source bindings from before this integration. Their results do not qualify
+the current revision. The complete OpenJDK partition agreed for all 51,022
+active members in 12,688 components, representing 440,438,706 pairs. Current
+revision gates and GitHub CI are verified separately; universal native
+refinement and asymptotic live-space laws remain distinct obligations.
+
+* Absence certificate construction budget (2026-10-09)
+
+The [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning paper]], §2.1, defines positive evaluation by the least fixed point of
+the immediate-consequence operator. Our absence verifier uses an independently
+checked finite inductive invariant: it contains the supplied seeds, is closed
+under every admitted rule instance, and excludes the ground target. Exhausting
+a work or material budget establishes none of these conditions.
+
+The [[https://kmicinski.com/assets/byods.pdf][Provider concretization paper]], §3 and §5.1, separates relation concretization from its physical
+representation; an equivalence class can represent quadratically many tuples.
+This motivates auditing downstream consumers as well as the Provider. It does
+not establish that our explicit proof-node or certificate representation is
+compressed. These conclusions are our design analysis, not paper claims about
+Gerbil certificates.
+
+=candidate/provenance.ss= now reserves each distinct source or pending derived
+row before copying an absence proof node. The existing certificate limits count
+both kinds together: 4096 rows, 32768 cells and 1024 cells per row. The producer
+also rejects a combined source/candidate schema over 64 relations before replay.
+On exhaustion, it publishes =bounded= with no nodes or closure. The final
+certificate shape check and independent rule-instance verifier remain active.
+Ordinary positive witnesses keep their admitted derived-fact budget.
+
+The native =std/test= source qualification includes exact row/cell boundaries,
+both overruns, duplicate seeds/clauses, exact/overflowing row arities,
+a 65-relation combined schema and a 5120-node ordinary positive
+witness. Exact-boundary certificates independently verify as =valid=. Restoring
+the previous producer through an isolated load path makes the new node-status
+assertion fail. This is a discriminator for early reservation, not a universal
+heap bound: indexes, terms, input references and temporary joins have separate
+costs. Large compressed Provider results still require a separately designed
+compressed invariant certificate; they are not admitted by raising these limits.
+
+* Shared material reservation: Scheme, Lean and Quint (2026-10-09)
+
+Finite stratified replay had the same late-size-check gap as absence proof
+construction. =candidate/certificate-limits.ss= now owns a private invocation
+row/cell budget. Both =candidate/provenance.ss= (absence only) and
+=candidate/finite-evidence.ss= reserve each distinct row before copying it into
+their private index. Source and derived rows share the quota; duplicate
+membership is checked first. Finite replay rejects an oversized combined schema
+before installing seeds. Final shape and independent semantic verification
+remain separate gates. A refusal preserves the helper's counters; each producer
+then enters its terminal =bounded= path and returns no partial material.
+
+| Native responsibility | Lean correspondence | Quint discriminator |
+|-----------------------+---------------------+---------------------|
+| Check arity, rows and cells before copying | =reserve= and =accepted_bounds= | =UsageBounds= and =ReservedBeforeCopy=; late-copy fault |
+| Count distinct seed and derived reservations | =accepted_exact= and =successful_trace_exact= | =CountExact=; omitted-seed fault |
+| Preserve counters on refusal | =refused_unchanged= and =refused_iff= | Reservation precedes copying; native refusal/retry control |
+| Bound every successful finite trace | =successful_trace_bounds=, assuming admitted initial counters | Exact-width finite state exploration |
+| Stop failed producers; publish no partial closure | =trace_append= and =blocked_trace_stays_blocked= reject every suffix after any failed prefix | =FailureTerminal= and =NoPartialPublication=; resume/partial-publication faults |
+
+[[file:../packages/proofs/lean/CertificateMaterial.lean][Lean]] quantifies over natural caps and arbitrary finite width traces. Native
+decoding, scalar equality and deduplication supply those widths; the theorem
+does not prove these representation assumptions. [[file:../packages/proofs/quint/CertificateMaterial.qnt][Quint]] uses four row identities
+(including zero-width and over-arity rows), a two-row quota and a three-cell
+quota. Its reachable state set has 30 distinct states; all four faults violate
+their designated invariants. =Complete= assumes the independently established
+replay fixed point. Existing Session models retain generation/ABA ownership.
+There is no unbounded liveness, general heap or extraction claim.
+
+Native =std/test= checks finite replay's exact/overflowing total rows and cells,
+independent verification of exact-boundary certificates, and atomic refusal
+followed by legal zero-width reservation at fully consumed cell capacity.
+These checks complement the earlier absence and ordinary-witness controls.
+rule planning least-fixed-point semantics and Provider concretization concretization motivate the architecture;
+resource refusal is our policy, not a new deductive consequence or a compressed
+certificate theorem.
+
+* Frozen negative probes: witness stopping and charged absence (2026-10-09)
+
+Re-reading [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][fragment composition]], §4.7, confirms the lower-stratum premise: negative
+dependencies refer strictly to earlier completed strata. Our transfer is to
+probe a frozen relation for one matching binding. A matching row rejects the
+negative clause immediately; proving absence still requires all rows. This is
+our implementation decision, not a cost theorem from the paper. rule planning's positive
+immediate-consequence semantics (§2.1) does not itself justify negation.
+
+=candidate/finite-evidence.ss= previously kept scanning after a witness, which
+could turn an already decided negative clause into =bounded=. It now stops at
+the first witness or budget refusal. The existing final absence-continuation
+step remains charged, and refusal never supplies an absence continuation.
+The stratum scheduler, binding function and independent verifier are unchanged.
+
+[[file:../packages/proofs/lean/StratifiedNegation.lean][StratifiedNegation]] adds seven laws for the budgeted probe: completed
+truth equals =List.any=, remaining fuel decreases, absence costs exactly the
+row count plus one, a first witness ignores any suffix, row count plus one is
+sufficient, binding truth agrees with =matchingRow=, and completed probes
+preserve the existing negative-clause environment semantics. Eight compile-time
+examples discriminate first/last witnesses, refusal and the extra absence step.
+Rows and binding outcomes are supplied; frozen relation enumeration and native
+binding correctness remain explicit representation obligations.
+
+[[file:../packages/proofs/quint/NegativeProbe.qnt][NegativeProbe]] owns the finite probe/refusal protocol. It checks witness
+and absence soundness, terminal failure and position/fuel bounds. Intentional
+early-absence, refusal-as-absence and resume-after-refusal variants must violate
+their designated invariants. The finite input lists and budgets are exploration
+controls, not general liveness or source-publication claims.
+The correct model has 40 reachable states; all three fault controls produce
+the expected invariant counterexample.
+
+Native controls use a 1024-row relation. A first-row witness completes with
+one charged probe; a last-row witness needs 1024. Absence needs 1025 per
+evaluation and 2050 across the two actual fixed-point passes; 2049 refuses.
+An empty relation similarly needs two charged continuations across both passes.
+Every completed certificate is independently verified at the same budget.
+These exact operation controls establish removed probes, not a wall-clock or
+whole-engine speedup. No semantic, material or work limit is increased.
+
+* Streaming count over completed logical rows (2026-10-09)
+
+Re-reading [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3, keeps tuple enumeration separate from the physical
+representation: its concretization supplies logical tuples. Our count transfer
+therefore counts matching frozen rows, not storage entries or representatives.
+The paper's core positive calculus does not prove our aggregate or budget policy.
+Count remains a strict lower-stratum read under the existing admission rules.
+
+=candidate/finite-evidence.ss= now accumulates count in one integer instead of
+consing a marker for each matching row and traversing that temporary list again.
+Every probe still charges the original work budget, unmatched rows contribute
+zero, and exhausted scans publish no partial count or closure. All reducer
+scans stop traversing when the budget refuses; sum/min/max retain their existing
+value-list semantics. No new provider cardinality shortcut is admitted.
+
+[[file:../packages/proofs/lean/CountReduction.lean][CountReduction]] proves five pure laws: filtered-list count equivalence,
+prefix composition, unmatched-row preservation, exact suffix contribution and
+the cardinality of rows selected by an arbitrary Boolean binding predicate.
+Five compile-time examples retain empty groups, nonzero initial counts and
+mixed matching outcomes. Lawful native binding and complete distinct row
+enumeration remain representation premises, not an extraction claim.
+
+[[file:../packages/proofs/quint/CountProbe.qnt][CountProbe]] explores 47 states for frozen input lists and budgets. Prefix
+counts, exact complete publication, unpublished refused state, terminal failure
+and position bounds hold. Counting unmatched rows, early completion, publishing
+a refused prefix and resuming failure each produce the designated counterexample.
+An empty scan completes without an extra probe; this differs deliberately from
+the negative-clause continuation charge. No general liveness claim is made.
+
+The native control initializes 1024 source rows, filters 1023 weight rows to
+512 matches, and agrees with the actual completed native count. Both fixed-point
+passes finish at 2048 work steps; 2047 is bounded in generation and independent
+verification and returns no partial closure. Existing count/sum/min/max and
+empty-group controls remain; a mixed symbolic-scalar control also agrees with
+the native count and independent verifier. This removes a temporary list and its length pass;
+there is no measured wall-clock or whole-engine performance claim.
+
+* Numeric streaming folds and absorbing type failure (2026-10-09)
+
+Re-reading [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3, keeps the concretized relation as the semantic
+input. Its total/delta coverage can overlap; adding aggregate results from
+overlapping pivot batches would double-count. This implementation instead reads
+the complete frozen, deduplicated replay relation after the lower stratum has
+finished. The paper's positive calculus does not certify our numeric reducers.
+
+=candidate/finite-evidence.ss= now streams sum/min/max as well as count. Sum
+starts at exact integer zero; extrema start without a value and use the first
+matching integer as their seed. A noninteger matching value permanently disables
+the numeric result for that scan. Remaining row probes still consume the same
+budget, so a type failure does not hide a later resource refusal. No reducer
+retains a list of matching values. This removes that list, its type pass and its
+final numeric pass; it does not establish a general heap or wall-clock bound.
+
+[[file:../packages/proofs/lean/NumericReduction.lean][NumericReduction]] proves eight laws: seeded and unseeded sum/min/max agree
+with integer-list sum and optional extrema; every noninteger in an arbitrary
+finite prefix/suffix suppresses the completed result; empty sum is zero and
+empty extrema have no result. Eight examples cover signs, zero, invalid values
+and exact arithmetic at =2^100=. =none= input represents a noninteger. The pure
+function determines the result of a completed scan; its immediate invalid-input
+return does not model native work accounting, which remains in Quint.
+
+[[file:../packages/proofs/quint/NumericProbe.qnt][NumericProbe]] checks 150 reachable states across sum/min/max, empty and
+signed inputs, noninteger tags and budget refusal. Typed prefixes, exact scalar
+accumulation, completed publication and unpublished bounded scans hold. Skipping
+a type failure, inventing an empty extreme, seeding an extreme with zero,
+publishing early and publishing a refused scan each violate the designated
+invariant. =999= is an abstract noninteger tag in this finite model; it does not
+exclude the native integer 999. Binding, deduplication and source-generation
+protocols remain owned by their existing implementation/models.
+
+Native tests compare legal numeric results and independent certificate replay
+against the actual completed engine for positive/negative extrema, zero and
+=2^100=. Separate inspected-replay controls place a noninteger first, middle
+and last: all completed scans yield no aggregate row, while one missing work
+step returns =bounded= with no partial closure. Those controls supply a completed
+empty native answer to exercise replay; they do not claim the engine admits
+nonnumeric arithmetic. Existing empty-group, count, negative-probe and all
+64 graph controls remain in the same 16-Case native Suite.
+
+* Shared-key integration correction (2026-10-09)
+
+The subsequent shared-key revision exposed two independent CI gaps. Source
+loading failed at =table/index-sharing.ss= because a primitive-only import
+expanded to an empty runtime import. Removing that redundant import uses the
+existing default =equal?-hash= binding; the source-view gate and corresponding
+native ownership tests pass.
+
+The next CI correctly rejected the sparse lifecycle allocation result:
+=2,008,672 -> 2,055,632= bytes exceeds its unchanged 32,768-byte allowance.
+Key-plan compilation now resolves first-occurrence positions by scanning the
+logical spine instead of allocating a temporary ordinal hash table and entries.
+This compilation has quadratic worst-case column comparisons, occurs once per
+cached plan, and preserves the existing gathered lookup operations and detached
+metadata ownership. Its local sparse result is =2,008,672 -> 2,033,568= bytes,
+inside the original allowance; all five original lifecycle gates and all seven
+new shared-key gates pass. These complete construction/query/extension controls
+retain CPU and allocation admission together. No threshold or semantic contract
+was relaxed; local performance evidence alone does not establish final-head CI.
+
+* Terminal replay traversal (2026-10-09)
+
+Provider concretization sections 1 and 3 distinguish logical fact enumeration from its concrete
+representation ([[https://kmicinski.com/assets/byods.pdf][Bring Your Own Data Structures to Datalog]]).
+We retain that boundary in independent certificate replay: enumerated rows are
+frozen logical inputs, while resource refusal is an invocation-owned operational
+state. The paper does not establish our certificate budget or stopping policy.
+This implementation refinement makes refusal terminal for actual traversal,
+not just for the final unpublished result.
+
+Previously, a finite positive join used =for-each=: after a nested branch
+exhausted work, enclosing rows still invoked =step!=. Seed installation also
+continued membership checks after material refusal. Positive provenance guarded
+callbacks but still traversed the tail; source position labels additionally
+allocated an =iota= list before any refusal. All those paths now use
+=certificate-for-each-while= with the same invocation liveness predicate.
+A duplicate insertion returning false remains a live callback; return values
+never decide resource admission. Positive source labels increment while visiting
+and retain the same one-based position in each relation. Reservation limits,
+probe costs, completed results, and unpublished bounded results are unchanged.
+
+=TerminalTraversal.lean= proves five laws for an operational callback trace:
+an initially stopped traversal visits nothing; trace length is bounded by input
+length; concatenation propagates invocation liveness; any refused prefix absorbs
+arbitrary suffixes; fully live input is traversed exactly. Booleans describe
+post-callback liveness, not callback return values. This abstraction assumes
+frozen finite enumeration and faithful propagation of invocation state; it does
+not prove row binding, certificate soundness, or elapsed-time/heap limits.
+
+=TerminalTraversal.qnt= exhausts 11 states. Bounds, failure-frozen position and
+completed enumeration hold. Four faults (tail scanning, resumption, ignored
+refusal, premature completion) each violate their designated invariant. Existing
+material, negation and aggregate models continue to own their admission rules.
+
+Native tests use an unread improper tail as a traversal sentinel, verifying
+initial refusal, refusal after one callback and nested refusal without inspecting
+that tail. This is an internal traversal control, not admission of malformed
+certificates. Live callbacks returning false still enumerate all inputs. A
+separate two-by-two join checks completed native output, independent finite
+verification, source proof labels and positive DAG verification. Both replays
+complete at 12 charged probes; budgets 1, 2, 5 and 11 refuse without partial
+publication. Existing material-cap, reducer, graph and nonmembership controls
+remain active. Removing suffix work and eager source ordinals is a structural
+optimization; no end-to-end speedup is inferred from these correctness receipts.
+
+* Bounded positive proof shape admission (2026-10-09)
+
+rule planning section 2.1 defines ground predicate tuples and Horn-clause antecedents
+([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Those semantic shapes motivate
+checking the admitted relation arity and positive-atom dependency count before
+replaying an externally held DAG. The paper does not specify certificate parsing,
+root quotas, hostile list spines, or our resource admission policy.
+
+=candidate-verify-positive-proof= previously checked =list?= and then computed
+complete node/input lengths. It admitted an unbounded root spine and recalculated
+=(length nodes)= for each root. It now bounds nodes by the caller's =max-nodes=
+and roots by the admitted node count before allocating the node vector. Every
+node row must have exactly its inspected relation arity; every rule dependency
+spine must have exactly the rule's positive-atom count before dependency replay.
+Unknown relations and malformed, cyclic or overlong spines are rejected. Source
+and candidate nodes still require empty dependencies. Earlier-node IDs, source
+positions, rule replay, query binding, and completed-answer equality retain their
+existing semantic checks. Root ID range checks reuse the admitted count, removing
+repeated full-node-list traversal; this is a structural cost improvement, not a
+measured end-to-end speed claim.
+
+The ordinary positive witness budget remains distinct from absence-certificate
+material limits: a real 5120-node proof verifies at 5120 and is rejected at 5119.
+Generated proofs have at most one query root per node; the new root bound applies
+this producer shape to external proofs. Existing completed-answer cardinality
+checks still reject duplicate roots against a unique native answer.
+
+=BoundedSpine.lean= proves seven universal laws for finite payload-erased spines:
+the recursive checker equals proper-length admission, acceptance reports the
+exact width within the cap, improper inputs are rejected, exact-cap inputs are
+accepted, oversized inputs are rejected, admission is monotone in the cap, and
+pair advances never exceed the cap. Cyclic mutable Gerbil pointers and payload
+semantics are outside this finite inductive model and have independent native
+controls. =ProofShapeAdmission.qnt= exhausts 260 states for node/root preflight,
+index allocation and publication; four faults (early allocation, root budget
+substitution, improper admission, refused publication) violate their designated
+invariants. Its publication step assumes successful semantic validation; it does
+not replace the DAG verifier or prove certificate soundness.
+
+Native controls mutate node/root spines, dependency lists and row spines to
+cyclic, improper and overlong forms. Exact small-cap admission, one-less rejection,
+completed native joins, source positions, retained proof DAGs and the 5120-node
+ordinary witness remain checked alongside the finite replay and absence suites.
+
+* Validated positive DAG prefix and semantic soundness (2026-10-09)
+
+rule planning section 2.1 defines immediate consequences using substitutions whose body
+facts are already present ([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Positive
+proof verification must therefore establish a grounded predecessor for every
+antecedent. This is distinct from complete native query agreement: agreement
+checks the output, while independently replayed dependencies justify its rows.
+A certificate witness proves membership, not absence or provenance completeness.
+
+The Scheme verifier previously populated its private vector from the entire
+external node list before validating nodes. Strict earlier-ID checks already
+rejected forward/self references. The vector now starts with false entries;
+only a successfully validated node is installed at its sequential ID. Subsequent
+rule replay and completed roots resolve only this validated prefix. Source,
+candidate and rule checks, structural preflight, root equality and node budgets
+remain active. This refines index ownership without adding another execution
+backend or changing completed proof results. No performance win is claimed.
+
+=ProofDag.lean= supplies eight universal semantic laws. A resolved predecessor
+is in the known prefix; out-of-range lookup fails; all resolved dependencies
+belong to that prefix; a checked node is derivable under sound source/rule
+checkers; verification preserves derivability for every accumulated node;
+resolved roots are derivable; the complete empty-prefix verification followed
+by root resolution is sound; and every derivable row belongs to every relation
+containing the sources and closed under the admitted rules. The final law
+connects finite witnesses to the positive consequence/least-model boundary.
+It does not prove witness completeness. The abstract Row may include relation
+identity and tuple values; native encoding, label authentication, scalar equality,
+atom binding and fixed-clause-to-rule-checker refinement remain premises. This
+is universal derivation algebra, not a duplicate temporal protocol state machine.
+
+=ProofPrefix.qnt= exhausts 18 states over grounded, forward-reference,
+self-reference and invalid-source controls. Exact private-prefix ownership,
+grounded exposure and publication only after completion hold. Four mutations
+(early index insertion, forward admission, invalid-source acceptance and partial
+failure publication) each violate the designated invariant. Its finite source
+and rule controls do not supply the Lean checkers' universal soundness premises.
+
+Native tests retain completed positive joins and DAG replay, and reject an
+in-range future predecessor, a self dependency, an out-of-range ID, a negative
+ID and an inexact numeric ID. Finite replay and absence suites retain their
+independent controls; the 5120-node ordinary proof still verifies at its exact
+capacity. These tests connect the actual mutable-vector implementation to the
+stated contract independently of Lean and Quint, without claiming extraction.
+
+* README coverage correction and IRIS transfer (2026-10-09)
+
+The [[file:research/paper-coverage.org][27-paper audit]] separates dedicated readings, screens, implemented transfers
+and published workload replication. The BYODS built-in engineering baseline
+is qualified; old related-work wording about intermittent 20-edge failures
+has been replaced with current ownership and acceptance links. Complete
+Steensgaard partition and upstream Polonius reference acceptance differ from
+the still-open full native clap-rs, PageRank and LLVM application comparisons.
+Keep accepted mechanisms under regression while advancing the head papers.
+
+The new [[file:research/agent-inference/taint-paths.org][IRIS reading]] connects its section 3.1 path definition to
+[[file:../applications/taint-paths.ss][an ordinary Scheme Program]]. Each recursive extension preserves sanitizer
+exclusion at the intermediate vertex. Six UnsanitizedPaths Lean laws and the
+existing SessionTransaction Quint checks align semantics and replacement/
+publication. Three native Cases include 512 independent finite graph comparisons.
+This closes the finite path transfer, with graph extraction, model-generated
+specifications and real-Java benchmark evidence retained as distinct next gates.
+
+* candidate execution feedback finite execution feedback transfer, 2026-10-09
+
+[[file:features/candidate-feedback/acceptance.org][Candidate feedback]] connects the dedicated candidate execution feedback reading to native snapshot-bound
+complete row differences, independent held-out graph controls, five Lean laws
+and a 128-state Quint publication gate with four rejected fault variants.
+This transfers the finite discriminator; model synthesis and the released
+Souffle benchmark remain separate open experiments.
+
+* BRINK evidence-preserving snapshot transfer, 2026-10-09
+
+[[file:features/withholding/acceptance.org][Whole-batch withholding]] connects the dedicated BRINK method reading to
+Scheme snapshot copying, global head/body conflict rejection and existing
+complete-answer feedback. Six Lean laws, a 28-state Quint model with four
+faults and native cut/composition controls cover this finite transfer.
+Rule mining, real-KG/model experiments and source authority remain separate.

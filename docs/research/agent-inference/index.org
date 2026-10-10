@@ -1,0 +1,186 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Deployment-time LLM reasoning Library research index
+#+STATUS: research synthesis; no LLM-facing API implemented by this document
+#+DATE: 2026-09-30
+#+FILETAGS: :research:llm:inference:
+
+Dedicated [[file:withholding.org][BRINK method reading]] connects whole-batch evidence protection to
+[[file:../../features/withholding/acceptance.org][native snapshot withholding and finite qualification]].
+
+The [[file:repository-evidence-study.md][Fresh Repository Evidence Study]] applies
+SWE-rebench and LiveCodeBench collection methods to recent public changes,
+records executable source qualification, and specifies the matched evidence
+retention comparison. The [[file:real-repository-experiment-report.md][real repository experiment report]]
+records actual model calls, cumulative thinking, hidden acceptance and repair cost.
+
+* Question and scope
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-research
+:END:
+
+How should a reusable *deployment-time* Library improve an LLM's
+reasoning without changing model weights?  Search can supply current
+evidence; Datalog can check relational consequences; other checkers
+may test arithmetic, code, plans or hypotheses.  The common path is
+an attempt with a named input, candidate proposal, checker observation,
+bounded explanation, and possible revision.  The
+[[file:../../scheme-relational-dsl-design.org][Scheme DSL overview]] describes the internal relational language;
+this ledger studies the *interaction protocol* around the Library.
+The sources below use different logics and workloads.  Their results
+are design evidence, not proof that our Library already has the API.
+The [[file:reasoning-language-formal-agenda.org][reasoning-language and formal agenda]] ranks the ASCENT/PL language
+papers, maps the MRR boundary, and states the remaining Lean/Quint gates.
+The [[file:wikidata-scoped-exclusion.org][Wikidata scoped exclusion finite KG fixture]] pins Wikidata entity revisions and tests
+branch-scoped exclusion against an independent set walk; it has no
+model-generated proposal yet.
+The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
+composition, tool selection and runtime handoff.
+The implementation priority is the direct Library contract for LLM
+candidate reasoning alongside the internal Datalog core.  Serving
+adapters such as [[file:serving-sglang-vllm.org][SGLang/vLLM]] follow that
+contract; they are lower priority than its executable Scheme fixture.
+
+#+NAME: agent-source-ledger
+| Feature | Primary source | Our note | Applicable question |
+|-----+----------------+----------+---------------------|
+| scoped witness execution | [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic, ICML 2026]] | [[file:scoped-witness.org][reading]] | Can model-specified graph negation keep its branch scope and witness through execution? |
+| candidate execution feedback | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:candidate-feedback.org][reading]] | Can LLM-written recursive rules pass execution tests, not just parsing? |
+| recursive physical planning | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/recursive-physical-planning.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
+| Provider concretization | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/provider-concretization.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
+| monotone containers | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:../scheme-dsl/monotone-containers.org][reading]] | Can first-class container observations preserve a finite fixed point after lowering? |
+| taint path qualification | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:taint-paths.org][dedicated reading and finite transfer]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
+| why/why-not explanation | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:why-not-explanations.org][reading]] | What is a bounded why/why-not explanation? |
+| weighted provenance | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:weighted-provenance.org][reading]] | What extra semantics would a differentiable training integration require? |
+| Serve | [[https://docs.sglang.io/docs/advanced_features/tool_parser][SGLang]] / [[https://docs.vllm.ai/en/latest/features/tool_calling/][vLLM]] official docs | [[file:serving-sglang-vllm.org][interface study]] | How does a deployed model call and observe the Library? |
+
+* Cross-source inference
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-synthesis
+:END:
+
+The [[file:2026-logic-ai-screen.org][code-anchored research screen]] joins the Ascent, BYODS and Datafun
+lineage to real knowledge-graph questions, candidate-rule synthesis and
+the actual Scheme owners. It puts semantic scope, independent results
+and workload quality before publication year.
+
+The first model comparison preserves the raw, frozen =propose= output,
+then measures =inspect=, =execute= and =explain= as separate outcomes.
+A later revision is a separate experimental condition, not evidence
+that the model understood the rule on its first attempt. The general
+workflow can use =observe -> propose -> check -> explain -> choose
+another step or stop=. This is our synthesis, not an API these papers
+jointly prescribe. candidate execution feedback shows that fixing syntax and declarations can
+still leave recursive semantic errors; scoped witness execution shows that executable
+constraints can also be specified with the wrong scope.
+why/why-not explanation shows why explanations are a separate query over provenance rather
+than a natural-language retelling of the returned row.
+The Library supplies evidence and checks at inference time; model
+judgment remains distinct from a checker result. Preserve the raw first
+proposal before evaluating any optional follow-up attempt. No model
+retraining or modification to its learned reward mechanism is claimed.
+
+#+NAME: agent-library-contract-draft
+| Stage | Library input | Library output | Limit of the claim |
+|-------+---------------+----------------+--------------------|
+| Inspect | Candidate declarations plus named source snapshot | Structured syntax, schema, mode, dependency and bound diagnostics | A valid program can still express the wrong intent |
+| Execute | Accepted candidate program, exact snapshot and budget | Complete rows or typed partial/failure status | Completion proves the declared program's result only |
+| Explain | Result/goal, snapshot, rule program and bounds | Supporting witness or finite-graph absence/cut with status | One witness is not all provenance; general recursive Why-Not needs explicit semantics |
+| Revise | New candidate against same or explicitly changed snapshot | New diagnostics and result, linked to attempt | No automatic promotion to source authority |
+
+Other reasoning modes use the same attempt/result envelope, but each
+checker declares its own semantics, supported goal types, bounds and
+explanation limits.  Datalog is the first backend, not a claim that
+every model thought has a Datalog encoding.
+
+The response must distinguish =rejected=, =complete=, =partial=,
+=unknown=, and =unsupported=.  Every returned answer or explanation
+names its input snapshot, program identity, limits, and whether its
+support is complete.  In =gerbil-ascent= these are *candidate* facts
+and explanations.  MRR retains semantic admission and canonical lineage;
+POO Flow owns caller context and effect handoff.  The Library does not
+ask a model to mutate the fixed-point state during one solve.
+
+* First executable discriminator
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-gate
+:END:
+
+Use one graph task with two source generations and an LLM-like
+proposal transcript: (1) a valid base + recursive reachability rule,
+(2) an invented undeclared helper relation, (3) a wrong recursive join
+that compiles, (4) a query for present and absent pairs, and (5) a
+source edge withdrawal.  Check field-specific diagnostics; exact
+complete rows against an independent finite graph model; one
+supporting path and, after complete closure, finite-graph absence/cut
+evidence; unchanged
+old snapshots; and no candidate-to-admitted promotion.  Record
+repair turns, token-sized feedback, wall time and model-independent
+semantic outcomes separately.  Only a later model experiment can
+claim that the interface is friendly to LLMs.
+
+For that later experiment, freeze the same model, task corpus, search
+index, source revisions and tool budget.  Compare =search + model=
+against =search + Library inspect/execute/explain + model=.  Score
+answer correctness, cited-source coverage, unsupported conclusions,
+why/why-not fidelity, abstention, repair turns, latency and cost.
+Do not infer a change to the model's learned reward function from an
+improved deployed answer: the intervention is external evidence and
+feedback at inference time.
+
+* POO Flow workflow and optional framework connection
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-workflow
+:END:
+
+POO Flow already separates workflow declarations and strategy/runner
+execution through POO objects.  Its tutorial includes a composed
+TensorFlow train/infer *external task descriptor*, which shows a
+workflow can carry training tasks without making Scheme the trainer.
+For our deployment-time case, a proposed POO Flow workflow would:
+
+#+NAME: agent-reasoning-workflow
+| Step | Owner | Output |
+|------+-------+--------|
+| Select task, capability, budget and sources | POO Flow | Scoped request |
+| Search or observe | Source/tool owner | Versioned candidate evidence |
+| Propose a reasoning step | LLM/model caller | Candidate facts, rules, query, plan or hypothesis |
+| Inspect and execute | Gerbil Ascent for relational case; other named checkers otherwise | Typed diagnostic, bounded result, completion status |
+| Explain and decide next step | Checker returns witness/gap; model caller judges; POO Flow routes | Revised attempt, abstention or bounded answer |
+| Admit or hand off | MRR/source owner and separate runtime policy where needed | Admitted evidence or authorized effect receipt |
+
+This is a workflow *proposal*, not an implemented cross-repository
+integration.  It does not turn the Library into a model-step scheduler or
+the training framework.  If a training/inference framework is chosen,
+first test a discrete adapter that consumes complete, bounded candidate
+outputs and explanations under exact source/program identities.  A
+differentiable layer is a separate research path: [[file:weighted-provenance.org][Scallop]] shows
+why weighted provenance and gradient semantics would be required.
+An FFI or tensor conversion alone does not supply those semantics.
+
+For the SGLang/vLLM serving ecosystem, the first path is an external
+tool adapter in the POO Flow application loop.  Both servers expose
+tool-call proposals through their OpenAI-compatible chat interfaces;
+the application executes the Library call and returns its observation.
+The [[file:serving-sglang-vllm.org][serving interface study]] records official
+documentation, owner boundaries and an experiment that compares the
+same candidate protocol on both backends.  Model-serving support does
+not itself validate LLM-proposed facts, rule meaning or evidence admission.
+
+* Reading order
+
+Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:scoped-witness.org][scoped witness execution]] for real-KG
+scope and witnesses, then [[file:candidate-feedback.org][candidate execution feedback]] for generated rule correctness. Read
+[[file:../scheme-dsl/provider-concretization.org][Provider concretization]] and [[file:../scheme-dsl/recursive-physical-planning.org][recursive physical planning]] beside the Scheme Provider, planner and Session
+code, followed by the [[file:../scheme-dsl/functional-fixed-points.org][functional fixed points]]/[[file:../scheme-dsl/higher-order-change.org][higher-order change]] functional boundary. The
+[[file:../scheme-dsl/monotone-containers.org][monotone containers]] reading tests whether a first-class container can preserve that boundary.
+[[file:why-not-explanations.org][why/why-not explanation]] gives the separate explanation semantics; [[file:weighted-provenance.org][weighted provenance]]
+frames the optional training-framework question.
+For an actual deployed-model interface, read
+[[file:serving-sglang-vllm.org][SGLang/vLLM serving research]].
+
+* Minimum-height proof fragment reading
+
+The [[file:proof-height.org][proof height method study]] distinguishes minimal-height annotations and
+fragments from current witnesses, complete ground graphs and natural counts.

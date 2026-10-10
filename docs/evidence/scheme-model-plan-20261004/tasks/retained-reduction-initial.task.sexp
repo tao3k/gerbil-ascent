@@ -1,0 +1,3 @@
+(import :std/test :gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object)
+(define result (let* ((program (relational-program (relation weight (key value) '((1 2) (1 5))) (relation root (key) '((1))) (relation total (key value) '()) (rule (total ?k ?n) (root ?k) (reduce ?n (sum ?v) (weight ?k ?v))) (limits 32 256 512))) (session (gerbil-ascent-open-session program)) (old (gerbil-ascent-session-run session))) (gerbil-ascent-session-replace-source! session 'weight '((1 2))) (let (new (gerbil-ascent-session-run session)) (list (cadar ((.ref old 'rows-of) 'total)) (cadar ((.ref new 'rows-of) 'total))))))
+(check-equal? result '?)

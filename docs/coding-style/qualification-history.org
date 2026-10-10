@@ -1,0 +1,410 @@
+#+title: Scheme Coding Style: Qualification history
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Historical local receipts and measurement boundaries; each section describes its own revision. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Local qualification status
+
+** Current checked binding slice
+
+The retained changes are the atom-plan binding slot, the private
+=fresh-variable= binder case, and three evaluator binding calls.
+The experimental Set storage shortcut was reverted.
+
+- Explicit =GERBIL_BUILD_CORES=12= with
+  =GERBIL_PATH=/private/tmp/ascent-v0121-gerbil= passed =just build=
+  in 137 s and =just check-policy= in 92 s. The policy selected
+  37 modules and reported =findings=0 errors=0=; both processes exited 0.
+- =just test-file t/qualification/ascent-binding-test.ss= passed
+  99,999 finite comparisons and the pattern/expression/false/error
+  goldens in 36 s. =ascent-source-admission-test.ss= passed all
+  12 Provider, callback, duplicate, mutation, and budget Cases in 36 s.
+- =ascent-binding-program-test.ss= passed in 31 s: all 15 mixed-rule
+  relations match the frozen raw-binding evaluator, including exact
+  row order, and independent goldens. This covers repeated variables,
+  recursion, generators, dependent inputs, expressions, and negation.
+  These new tests use the compiled reference/candidate benchmark
+  library; its production source hashes match the retained sources.
+- The installed-prefix =ascent-index-program-test.ss= passed in
+  40 s; aggregate and lattice modules passed in 28 s and 29 s.
+  =scheme-operator-retained-test.ss= passed in 94 s, including both
+  64-graph append/withdrawal and nested-source replacement matrices.
+  =ascent-strata-test.ss= passed its 6,656 reference comparisons and
+  goldens in 16 s.
+  Each successful module has =MODULE-OK=, =HARNESS-OK=, final =OK=,
+  and process exit 0.
+- Two final =just binding-benchmark= runs passed all six paired
+  1000-sample gates. Both source manifests match this implementation.
+  The 16/32-column kernels qualify approximately 2.5x/3.9x median
+  gains. The individual solves qualify only median nonregression.
+  Raw samples and experiment failures are in
+  [[file:../../t/performance/binding/README.org][the binding receipt index]].
+
+The original rule-program module failed its first mixed-ternary Case
+with =PooFlowDebugDurationAnomaly= at the unchanged 2000 ms budget.
+A standalone serial repeat failed the same boundary during Core
+contract validation. Its other Cases completed without check failures.
+The independent mixed-program comparison above establishes semantics
+under Core's default profile; it does not qualify the 2000 ms gate.
+The complete qualification suite and SS performance suite remain
+unqualified. The SS experiment also retained its original 2 ms p95
+limit and failed at 28.703 ms; no cause is inferred from that result.
+
+** Ancestry cache root-cause experiment
+
+Core's native responsibility checks repeatedly call POO ancestry lookup.
+At the pinned POO commit =099b381588360a8a49fd772f666a1a00351366f5=,
+=compute-precedence-list!= creates an active hash table before examining
+its cached precedence list. A local upstream candidate moves the valid-heads
+cache hit before that allocation and leaves cold traversal unchanged.
+The patch, review snapshots, hashes, both raw 1000-pair runs, and logs are
+[[file:../../t/performance/poo-cache/README.org][retained in the POO cache receipt index]].
+ASCENT's dependency pin and the original installed dependency are unchanged.
+
+Both matched runs qualify 3.2--3.9x median cached-path gains and about
+0.9 percent cold median regression, within the prespecified 5 percent
+cold allowance. All 1536 three-node graph/root comparisons, cache identity,
+malformed heads, and explicit slot uninstantiation pass. This establishes
+the ancestry-function boundary, not full solve latency or source authority.
+
+The unchanged indexed-joins SS gate still fails with the candidate:
+1000 samples, median 0.547 ms, p95 14.889 ms, 2 ms p95 limit.
+The earlier 28.703 ms failure used a different experimental source state;
+there is no matched end-to-end speedup claim from these two values.
+Core's forced-collection profile also shows long pauses in the clock/memory
+probe; =:std/time/precise= and the existing jiffy clock agree on those spans.
+No timing or memory budget was relaxed. The final-source rule-program
+module fails its unchanged duration Cases in both concurrent and serial
+repeats. An earlier candidate pass does not establish stable integration
+closure. Existing POO object/MOP suites and all three ASCENT responsibility
+admission Cases pass under the final candidate library.
+
+** Native test scheduling
+
+The installed std/test runs modules, suites and Cases synchronously;
+Core's independent watchdog sampler does not parallelize assertions.
+The repository now has explicit shared semantic and exclusive measurement
+process lanes. Unknown modules remain exclusive. Original profiles and
+budgets are unchanged. The admitted parallel modules, nested-lease rules,
+coordination boundary and scheduling checks are documented in
+[[file:../test-execution.org][the test execution policy]].
+
+** Discovered-Case harness gate
+
+=just test-file= and the batched =just test= now reject a =MODULE-OK=
+receipt when that module discovered zero =CASE= records. A real fixture-only
+module previously emitted =MODULE-OK=, =HARNESS-OK= and =OK= without executing
+a Case. The new guard rejects that run and a mixed positive/empty batch;
+it accepts the positive captured harness log. This closes an empty-suite
+receipt gap; it does not qualify the complete test suite.
+
+** Current SCC slice
+
+The final =program/graph.ss= folds each adjacency list to its lowlink
+and writes that node's lowlink once. The DFS stack and visit tables
+remain invocation-local; this preserves the original traversal order.
+
+- =GERBIL_BUILD_CORES=12 GERBIL_PATH=/private/tmp/ascent-v0121-gerbil
+  just build= passed with process exit 0 after the final graph change.
+- The same explicit 12-core environment passed =just check-policy=:
+  37 selected modules, =findings=0 errors=0=, and process exit 0.
+- =just test-file t/qualification/ascent-strata-test.ss= passed the
+  6,656 oracle comparisons and additional goldens, all harness markers,
+  and process exit 0 in 19 s.
+- =just test-file t/qualification/ascent-scc-summary-test.ss= passed
+  after the shared traversal change, all harness markers, and exit 0
+  in 21 s. The two independent final module checks ran concurrently.
+- The existing =ascent-invalid-program-test.ss= passed its dependency
+  and safety error checks with all markers and exit 0. The final
+  exhaustive graph comparison rechecks concrete cycle diagnostics.
+- Two final =just strata-benchmark= runs passed their unchanged
+  1000-sample matched gates, final =OK=, and process exit 0. Both
+  retained source manifests identify the SCC slice before subsequent
+  binding edits; they were verified against that source state.
+
+The full qualification suite and full performance suite are not marked
+green for this slice. Their earlier timing failures below remain
+separate from these focused correctness and planning measurements.
+
+** Earlier slices and environment findings
+
+- The initial =just test-file t/qualification/ascent-index-program-test.ss=
+  attempt could not load =:core/observability/testing-case= in the
+  default Gerbil package environment. The isolated
+  =/private/tmp/ascent-v0121-gerbil= environment contains the pinned
+  =poo-flow-core= commit =e85fd45303b208b23e5957fd316e7004994109a4=
+  and =asp-gerbil-scheme= tag =v0.1.2.1=.
+- With =GERBIL_PATH= set to that environment, =just build= passed and
+  =just test-file t/qualification/ascent-index-program-test.ss= passed
+  all cases, =MODULE-OK=, =HARNESS-OK=, and final =OK=.
+- A full =just test= run reached =ascent-rule-program-test.ss= after
+  passing earlier batches, then failed its first Case with
+  =PooFlowDebugDurationAnomaly= under the Case's 2000 ms budget.
+  Standalone repeats failed the same Case before and after reverting
+  the =hash-update!= experiment. The first Case uses ordinary
+  relations, so it does not exercise the lattice helper change.
+  This is a local timing gate failure, not a semantic mismatch receipt.
+- =just check-policy= completed with 36 selected modules and
+  =findings=0 errors=0=.
+- The subsequent =just test-file= runs passed the SCC summary,
+  stratified proof, syntax, table expression, timeout, timing,
+  Scheme library contract, native integration, native language,
+  native reduction, and relational qualification modules. The
+  retained operator module exceeded the default 120-second process
+  timeout after 30 of 64 checks; the ordinary operator module was
+  interrupted while stopping the slow sequential run. Neither has
+  a complete local receipt from this pass.
+
+The =justfile= sets =GERBIL_BUILD_CORES= (defaulting to the detected
+processor count) for =build= and =check-policy=. Its =test= recipe
+deliberately resets Gerbil between sequential batches of two and
+runs four exhaustive modules alone. =ASCENT_GXTEST_TIMEOUT= controls
+each test process deadline; it does not enable parallel test batches.
+Use the repository's =just= entrypoints and their receipt checks for
+future work, and report the first failing batch instead of launching
+a long serial list of individual retries.
+
+After the first code-quality commit, the finite selection and admission
+experiment passed =just build= with the default detected 12 cores. The
+new admission isolation case passed within
+=just test-file t/qualification/scheme-relational-test.ss=, including
+=MODULE-OK=, =HARNESS-OK=, final =OK=, and process exit 0. The new
+experimental selection case and the remaining =scheme-operator-test.ss= cases all
+printed =CASE-OK= with final =OK=, but that process returned 124 at the
+recipe's 120-second deadline during exit. Its full file recipe is not
+a passing receipt. =just check-policy= passed with 36 selected modules,
+=findings=0=, and =errors=0=. A corrected =just selection-probe= run
+completed two sizes, four warm-ups, and 16 alternating samples with
+the expected rows; its negative timing signal caused the selection
+rewrite and dedicated probe to be removed. The retained code change
+is the single-copy admission, replacement, and append boundary.
+
+For the retained boundary change, the final local =just build= passed
+with the repository's detected 12-core default. =just test-file
+t/qualification/scheme-relational-test.ss= passed after the direct
+single-row copy change, including the mutable Core declaration,
+replacement rollback, append isolation, all 64 finite graph cases,
+=MODULE-OK=, =HARNESS-OK=, final =OK=, and exit 0. =just check-policy=
+then passed with 36 selected modules, =findings=0=, =errors=0=, and
+exit 0. The full =just test= timing gate described above has not been
+rerun for this slice, so this is not a whole-suite qualification claim.
+
+** Empty second-atom frontier pruning
+
+The evaluator previously traversed historical rows of a variable-only
+first atom even when the second atom's selected delta was empty.
+=program/evaluate.ss= now skips that single branch when the first two
+clauses are atoms, the first has no index columns or non-variable terms,
+and delta position 1 has zero rows. The old branch dispatches no Provider
+callback and cannot reach subsequent clauses or emit rows. Other prefix
+forms retain their existing path. Ordinary cardinality maintenance is
+unchanged; its separate candidate failed paired admission and was removed.
+
+Two final compiled whole-solve comparisons against the frozen pre-slice
+evaluator pass 1000 alternating pairs per shape. Both small controls
+retain median nonregression; the 1024-edge chain has 980 and 977 strict
+wins, exceeding the unchanged 900-pair gate. Medians are 20.702/31.009 ms
+for the reference and 1.846/1.917 ms for the candidate (11.2x/16.2x).
+The reference includes the previously retained binding and SCC changes.
+This gain is qualified only for the constructed chain workload.
+
+Seven semantic Cases pass exact ordered snapshots and sizes, duplicate
+source rows, all two-node graphs with both roots, retained-session updates,
+Provider build/lookup counts, guard/generator callback counts, lattice key
+replacement, and timeout resumption. Full-suite and SS latency closure
+remain separate gates. Raw samples, source manifests, logs, and the rejected
+count experiment are [[file:../../t/performance/frontier/README.org][indexed here]].
+
+Final-source integration checks also pass =just build= and
+=just check-policy= (37 modules, findings=0, errors=0), plus 32 existing
+index, BYODS, lattice and source-admission Cases. Two unchanged indexed-joins
+SS runs pass all 1000 samples with p95=563/634 us, below the original
+2000 us gate, and semanticEquivalent=#t. Each native module has
+=MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0. This updates the local
+indexed-joins result only; the complete SS suite and prior Core duration
+failures were not rerun for this slice. No dependency pin or budget changed.
+
+** Multiple empty-frontier pivots
+
+After committing the earlier slices as =98a96ca=, the next evaluator
+candidate generalizes pruning across contiguous variable-only atoms without
+index columns. An empty pivot uses the raw-row path. Any indexed atom,
+non-variable term or other clause ends the safely bypassable prefix.
+Each engine precomputes relation-index metadata in local active-rule copies;
+the shared immutable analysis retains its original layout. This avoids
+repeated per-round term checks and preserves old/new analysis cache sharing
+and retained-session replacement behavior.
+
+The first per-round recursive-check candidate gained on the three-atom
+shape but regressed the two-atom control by about 1.5 percent. It was
+rejected. The retained candidate passes two full compiled comparisons
+against the frozen committed =98a96ca= evaluator: 1000 alternating pairs
+per shape, 20 warmups, independent ordered-row goldens outside timing.
+Both two-atom controls retain median nonregression. The 256-edge three-atom
+shape with four independent gate rows improves 5.20x/5.06x, with 973/989
+strict wins against the unchanged >=900 gate. Nine semantic Cases pass,
+including observable indexed-prefix callbacks before an empty third atom.
+Raw samples, source hashes and rejected-candidate logs are
+[[file:../../t/performance/multi-frontier/README.org][indexed here]]. These gains
+are separate from the preceding chain workload and are not multiplied.
+
+Final-source build and policy pass (37 modules, findings=0, errors=0).
+All 44 existing index, BYODS, lattice, source-admission and rule-program
+Cases pass, including unchanged rule duration profiles. The indexed-joins
+SS scenario passes 1000 samples at p95=460 us versus the original 2000 us
+limit. All native modules include =MODULE-OK=, =HARNESS-OK=, final =OK=
+and exit 0. Source manifests match the final files; the frozen reference
+matches committed =98a96ca= after import relocation and export alpha-renaming.
+The complete qualification and SS suites and remote CI remain unrun for
+this slice. No gate or dependency pin changed.
+
+** Built-in Set cardinality after frontier pruning
+
+The next slice is measured against committed =d918a35=. It computes each
+pending batch size once and advances historical cardinality by that count
+only for exact built-in Set storage with exact built-in hash indexing.
+Lattice and custom storage/index Providers retain full historical recounts.
+Source duplicates and retained-session source update accounting are unchanged.
+This removes another repeated historical scan after frontier pruning has
+reduced the previous join traversal work.
+
+Both final matched whole-solve runs pass 1000 alternating pairs per shape,
+with 20 warmups and independent exact ordered-row checks outside timing.
+The 1024-edge chain improves 1.492x/1.493x: reference medians
+1.732/1.723 ms versus candidate 1.161/1.154 ms, with 924/942 strict wins
+against the unchanged >=900 gate. Both 16- and 256-edge controls retain
+median nonregression. The reference is byte-for-byte committed =d918a35=
+after import relocation and export alpha-renaming. These results are
+separate from the earlier unrestricted count experiment that failed admission.
+
+Ten semantic Cases pass, including custom storage expansion and exact
+callback observations, multi-atom gates, Provider callback counts, duplicate
+source rows, two-node graph goldens, retained-session updates, lattice
+replacement and timeout resumption. Final-source =just build= and
+=just check-policy= pass (37 modules, findings=0, errors=0).
+The complete =just test= passes all 40 modules and 315 Cases with
+=GERBIL_BUILD_CORES=12=: seven admitted modules use separate processes,
+33 remaining modules use the exclusive lane. Every module has
+=MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0.
+Raw samples, hashes and full module logs are
+[[file:../../t/performance/set-size/README.org][retained here]]. Remote CI remains unrun.
+
+The original complete =just performance= entrypoint passes all 17
+entries with exit 0; the log contains 21 benchmark summaries.
+All original fixtures, 1000-sample counts, timing and memory budgets remain
+unchanged. This is one full local SS pass, not remote CI or a repeated
+whole-suite stability qualification. The raw log and suite source manifest
+are retained alongside the paired receipts.
+
+** Source-order Set batch admission
+
+The batch-admission slice compares against the exact function from committed
+=a76305a=, with only an exported name change. Unique-prefix detection now
+uses one insertion and private table cardinality rather than hashing each
+row twice. On the first duplicate the private table is cleared and reused
+for source-order admission. A direct recursive fallback replaces the
+mutable accumulator and per-row closure. Accepted row/key identities and
+unique whole-log spine sharing are preserved; the public API is unchanged.
+
+Two final compiled comparisons pass 1000 alternating pairs per shape and
+20 warmups, with independent ordered-row/membership goldens outside timing.
+The 10000-row duplicate workloads (one or 16 distinct values) improve
+1.66--1.68x with 970/972 and 975/976 strict wins, exceeding the unchanged
+>=900 gate. The unique control improves about 1.38x; existing-membership
+controls retain median nonregression. These are batch-admission kernel
+results, not a public ten-thousand-append session speedup claim. The earlier
+candidates that failed control medians are retained with their raw samples.
+
+Finite validation covers 3282 log/prefix/sharing/initial-membership
+configurations against independent list goldens, including row identities,
+membership-key identities and table ownership. Additional Cases cover
+nullary/heterogeneous rows, large duplicate logs and unique spine sharing.
+The complete final-source qualification suite passes 41 modules and
+319 Cases. Build and policy pass (37 modules, findings=0, errors=0).
+Every native module has =MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0.
+Logs and source hashes are [[file:../../t/performance/set-batch/README.org][retained here]].
+Remote CI remains unrun.
+
+The two complete SS attempts are not passes: the first stops at rule-clauses
+(p95=1.208 ms versus 1 ms; a focused repeat passes at 484 us), and the second
+stops at BYODS trrel (p95=1.223 ms versus 1 ms). The unchanged original
+=a76305a= storage module, loaded from a verified private control library,
+also fails trrel at p95=1.362 ms. These separate diagnostics do not establish
+a matched timing causation. Both workloads use non-session engines and do
+not invoke the changed staged Set batch function. Remaining SS entries were
+collected individually: nine pass, while Fibonacci (1.101 ms), eqrel
+(1.047 ms) and table-expression (2.901 ms) exceed their original time gates.
+All original fixtures and limits remain unchanged. The qualified batch
+kernel and complete semantic suite are distinct from unresolved whole-SS
+tail stability. Failed receipts and corrected baseline loading evidence
+are retained; remote CI remains unrun.
+* Binary kernel ownership and Coding Style organization
+
+This study separates the core binary relation algorithms from the table's POO
+source/demand adapter. The ownership rationale and compiler source reference
+are in [[file:architecture.org][architecture and responsibility]]. Kernel forms are unchanged after
+excluding adjacent comments; four adapter callbacks use native =cut= partial
+application. Public view/layout/analysis helpers receive typed contract examples.
+
+The pre-integration native sweep covers 58 modules and 505 unique Cases.
+57 modules exit successfully in that sweep. The retained operator module prints
+its six successful Cases and final markers, but its process reaches the original
+120-second timeout before exit; the complete coordinator exits 70. This invocation
+is a failure. A focused recheck of the retained module subsequently exits 0 in
+106 seconds, with the same timeout and Case budgets. Together these runs provide
+successful process exits for each module, rather than a successful whole-suite
+invocation. They do not qualify later upstream production edits.
+
+The subsequent checks pass nine native table Cases and sixteen binary program
+Cases, each with a successful process exit. The production source policy before
+upstream integration reports =findings=0 errors=0=. Newly exported helper documentation
+and repeated visitor specialization address its original two warnings; the policy
+rules remain enabled. Final integration checks are recorded separately below.
+Generated execution logs remain in ignored =.cache/ascent/binary-kernel-ownership/=.
+
+The former 2022-line Code Quality document is reorganized as the 38-line
+[[file:../scheme-coding-style.org][Scheme Coding Style index]] and nine topic files. All 30 original top-level
+sections are retained. Static checks verify paired Org blocks and existing local
+file links. Qualification history and rejected experiments remain explicit topics.
+This change makes no new SS, performance, AOT application or remote CI claim.
+
+Normal rebase incorporates upstream =17af39c= and =60955af= without conflicts.
+The integrated production policy reports =findings=2 errors=0=: both warnings
+belong to upstream's unchanged =program/finite-arithmetic.ss= (pure-transform
+loop and adjacent typed-contract documentation). The core and table adapter
+warnings remain resolved. The earlier whole-suite receipts do not qualify
+these new upstream arithmetic and lowering implementations.
+
+The integrated =scheme-higher-order= and =scheme-operator= native Unit Tests
+each pass 22 Cases and exit 0, in 29 and 82 seconds respectively. These focused
+checks cover the upstream arithmetic and recursive-lowering integration; they
+do not replace an integrated whole-suite run or establish performance gains.
+* Whole-cut temporal graph preflight
+
+Source baseline: =a093838=. The implementation replaces per-edge reachability
+checks with a fresh symbolic graph adapter and one dense SCC traversal. See
+[[file:compiler-patterns.org::*Study: pass-owned symbol maps and whole-cut graph preflight][the compiler source study]] for =compile.ss= and optimizer state-ownership
+patterns. Only the cycle predicate changes in the temporal solve; cut selection,
+frontier order, rejection priority, horizon, snapshots and receipt checking
+retain their existing code. =build.ss= adds the production module declaration.
+
+Native =ascent-temporal-graph-test= passes all three Cases and exits 0 in eight
+seconds. The independent matrix model covers all 512 directed three-vertex
+graphs, with 1024 cycle verdict comparisons after reversing edge order. Scale
+controls include 512-edge graphs, disconnected cycles, isolated symbol maps
+and unchanged source edges. These are semantic and bound checks, not matched
+wall-time speedup evidence.
+
+Production source policy exits 0 with =findings=2 errors=0=; both existing
+warnings remain in =program/finite-arithmetic.ss=. Neither temporal module
+introduces a warning. Org blocks, local Coding Style links and diff formatting
+pass static checks. Logs stay in ignored =.cache/ascent/temporal-cut-graph/=.
+No whole-suite, original SS, AOT application or remote CI result follows from
+these focused local checks.
+
+Native =ascent-temporal-lens-test= also passes all eleven Cases and exits 0,
+including the new whole-cut cycle gate and the existing interval, receipt,
+cut/knowledge/window and 64 ordered-graph/source-order controls. Original
+timeouts, evidence limits and horizon semantics remain unchanged.

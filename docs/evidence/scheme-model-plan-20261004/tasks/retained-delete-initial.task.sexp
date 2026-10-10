@@ -1,0 +1,3 @@
+(import :std/test :gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object)
+(define result (let* ((program (relational-program (relation edge (from to) '((0 1) (1 2))) (relation path (from to) '()) (relation cold (n) '((7))) (relation seen (n) '()) (rule (path ?x ?y) (edge ?x ?y)) (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z)) (rule (seen ?n) (cold ?n)) (limits 32 256 512))) (session (gerbil-ascent-open-session program))) (gerbil-ascent-session-run session) (let (result (gerbil-ascent-session-replace-sources! session (list (cons 'edge '((0 1)))))) (list (length ((.ref result 'rows-of) 'path)) (.ref result 'active-rule-count) (length (.ref result 'reused-relations))))))
+(check-equal? result '?)

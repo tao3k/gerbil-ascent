@@ -1,0 +1,113 @@
+{
+  "schema": "ascent.application-semantic-admission",
+  "application": "Polonius",
+  "reference": {
+    "crate": "polonius-engine",
+    "version": "0.13.0",
+    "algorithm": "Naive",
+    "dump_enabled": true,
+    "upstream_commit": "741e6095fe50f468982d4d253e842eb7d12ed9d3"
+  },
+  "baseline_commit": "451279a0160a267b8a293fb122ac698f220a9f1d",
+  "source_bindings": [
+    {
+      "path": "applications/polonius.ss",
+      "sha256": "bd08557e98b5fa7d5038600cd403c1a15c0c86469bee7da172ebef7d1ccc2dec"
+    },
+    {
+      "path": "t/qualification/ascent-polonius-test.ss",
+      "sha256": "60f95f426abeb33202b1c0648753e3707f3a366316a14579226be7e94c1c3074"
+    },
+    {
+      "path": "t/qualification/fixtures/polonius/controls.sexp",
+      "sha256": "d9fcabe17ea5606738f84f99c614ec97343f16a494b513e651f51a482ef266b1"
+    },
+    {
+      "path": "rust/ascent-oracle/examples/polonius_data_truth.rs",
+      "sha256": "a6778618900098aff1475601e366b917ae4a569dbbfffebe4b3cd28d568637d7"
+    },
+    {
+      "path": "rust/ascent-oracle/examples/polonius_data_truth/controls.rs",
+      "sha256": "75ead387febc988044e7ef11a2c52fe4e602f86ecd56df57c6d31a9f06991d50"
+    },
+    {
+      "path": "rust/ascent-oracle/Cargo.lock",
+      "sha256": "a28f533536f53ada3e98723a3a482f87595ace812ed8baff4b2df641a2da25c6"
+    },
+    {
+      "path": "packages/proofs/lean/PoloniusInitialization.lean",
+      "sha256": "5efb777e3f6897a3dc922b738e7636c643e9ec522494c16eba34d7b7877ab77c"
+    },
+    {
+      "path": "packages/proofs/lean/Tests/PoloniusInitializationTests.lean",
+      "sha256": "2e03abaf1db9f109d33f9d94bfdc7c7272820d9df2227567e8b40444cca8a920"
+    }
+  ],
+  "native": {
+    "command": "just test-file t/qualification/ascent-polonius-test.ss",
+    "cases": 4,
+    "workers": [
+      1,
+      2
+    ],
+    "controls": 10,
+    "computed_observations": 13,
+    "primary_exact_set_comparisons": 260,
+    "checks": [
+      "finished",
+      "row set membership and cardinality",
+      "visitor set membership and cardinality",
+      "held result after source replacement",
+      "actor cancellation then full retry",
+      "raw input admission"
+    ],
+    "exit_code": 0,
+    "final_marker": "OK"
+  },
+  "rust": {
+    "command": "cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth",
+    "tests": 5,
+    "exit_code": 0,
+    "fixture_replay": "All eighteen raw sources reloaded; all thirteen computed observations regenerated and compared byte for byte for each of ten controls.",
+    "clippy": "all-targets -D warnings passed"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "build_jobs": 111,
+    "exit_code": 0,
+    "theorems": [
+      "flow_iff_seed_path",
+      "blocked_target_iff_seed",
+      "no_seeds_no_flow",
+      "blockers_antitone"
+    ],
+    "axioms": [],
+    "scope": "Finite-path initialization relation laws; no native extraction, complete borrow-checker correctness or compact-storage bound claimed."
+  },
+  "tla": {
+    "scope": "Existing actor/Session protocols reused unchanged; this application introduces no new publication protocol.",
+    "new_models": 0,
+    "verification": "Existing exact baseline-head formal CI passed. New-head complete CI must independently run the unchanged models."
+  },
+  "negative_finding": {
+    "control": "dead-origins",
+    "relation": "subset_errors",
+    "original_native_rows": 3,
+    "reference_rows": 0,
+    "cause": "placeholder_origin was mistakenly sourced from placeholder instead of universal_region.",
+    "repair": "Derive placeholder_origin from universal_region; retain the original independent truth.",
+    "original_exit_code": 70
+  },
+  "excluded_reference_carrier": "loan_invalidated_at: upstream Output carrier is unpopulated; actual raw source relation retains Point/Loan order.",
+  "acceptance": {
+    "complete_naive_rule_implementation": true,
+    "matched_small_input_semantics": true,
+    "full_clap_native_admission": false,
+    "compact_finite_domain_storage": false,
+    "native_compiler_extraction_proof": false,
+    "paired_full_application_benefit": false,
+    "whole_byods_paper_implemented": false,
+    "new_llm_calls": 0,
+    "mr_integration": false
+  }
+}

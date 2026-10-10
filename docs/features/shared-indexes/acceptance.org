@@ -1,0 +1,147 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Shared Indexes: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Constructed index histories and ReadAll (2026-10-07)
+
+Package 3 now has a constructed dictionary boundary: prependRow/prependBatch
+model native head insertion, fresh bucket reversal derives ordered builds, and
+arbitrary finite replay derives exact newest-first cuts. ReadAll occurrence
+counts are derived from complete unique semantic key enumeration; repeated keys
+and omitted keys have explicit negative examples. Ten new Lean laws connect
+construction, extension, key encoding, selected-coordinate routing and read-all
+history without assuming that built buckets were already complete.
+
+The native discriminator covers all 256 three-column Boolean input sets,
+eleven logical layouts and three subsequent batches. Every keyed output agrees
+with independent full scanning, including duplicates, missing keys, false keys,
+row identity and unchanged held pre-update buckets. The full native module pool
+is qualified independently of the formal algebra.
+
+ComponentIndex separately owns staged installation, failed mutation/rebuild,
+cross-owner isolation and a held reader through multiple input batches. Its
+Inputs constant is configured by operator substitution; no runtime generation
+cap is introduced. Seven faults include second-batch reset and held-reader
+mutation. Finite TLC safety is not an unbounded native trace or liveness proof.
+
+The [[file:../../evidence/scheme-provider-views-20261007/index-construction-history.json][source-bound receipt]] retains successful gates and rejected preparation /
+configuration attempts. Native equality/hash/encoding and optimized projection /
+curried visitor extraction remain obligations. Package 3 and the ten-package
+library delivery are not declared complete by this constructed index boundary.
+No application speedup, peak-memory benefit or paid model study is claimed.
+
+The integration entry rebases this boundary onto =1fdc900=, preserving the
+canonical parts capability correction and native Steensgaard application.
+Both independently authored research sections are retained. The final combined
+gates pass 86 native modules / 826 Case verdicts, 109 Lean build jobs, 30 positive
+TLC models and 87 named counterexample controls. Pre-integration qualification
+is retained separately in the receipt. Steensgaard has complete small-input
+fixtures and pinned 47,069-row OpenJDK source admission; full Scheme dataset
+solving and continuous peak-memory admission remain open. Final GitHub CI is
+still a separate commit-specific gate.
+
+** Connected equivalence representation implementation (2026-10-07)
+
+Work packages 2, 3, 6 and 9 now share a canonical =eqrel= component-view path:
+exact implicit frontiers, frozen totals, keyed rectangular reads and actor
+worker eligibility. The engine no longer retains the eager equivalence pair
+list on that canonical path. Ordered public export remains explicit and
+custom dispatch remains checked. The associated Lean construction laws and
+existing Quint publication controls have distinct responsibilities; native
+truth and full-suite qualification are recorded with source bindings.
+
+All ten package acceptance criteria remain active. In particular this
+representation change does not admit the full OpenJDK application or its
+performance and peak-memory claims. See the Provider concretization research section and the
+compressed-equivalence evidence receipt for the exact tested boundary.
+
+The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][compressed equivalence receipt]] records 86 native modules / 829 Cases,
+109 Lean jobs, 30 positive TLC models and 87 named negative controls. A
+supplementary compiled-engine probe reports 1,000,000 logical pairs with one
+total descriptor; a separate application probe agrees with independently
+listed truth at worker capacities 1, 2 and 4. These probes are not additional
+registered Cases. The twelve alternating small Steensgaard solve/export pairs
+have median paired implicit/explicit CPU ratio 0.0631 and serial allocation
+ratio 0.1792. The explicit-rule worker comparison retains its regression sample.
+Neither measurement establishes full-source or peak-memory benefits.
+
+Pinned Rust differential acceptance also passes: one unit test and 79 integration
+tests, zero failures. The existing opt-in =trrel_uf_full_rust_scale_oracle=
+(10,000 edges) remains ignored by the default command and is not admitted by
+this receipt. The compiler SDK setup failures are retained as rejected build
+attempts; no timeout, heap or semantic admission gate was widened.
+
+
+* Constructed column projection acceptance (2026-10-08)
+
+Package 3 now connects native forward column gaps to direct selection and
+constructed ordered buckets over arbitrary finite histories. The public key
+function shares the ordered batch cursor and recomputes gaps for caller-owned
+columns. Repeated/reordered columns retain direct selection. Nine Lean laws
+cover the ordered algorithm, dispatcher and bounds; Quint owns declared-layout
+publication and old-reader lifetime, with three discriminating layout faults.
+Independent native truth checks 96-field projections, value identities,
+mutable helper inputs, callback header isolation, 256 retained histories and
+compiled self joins. See [[file:proofs.org::*Provider concretization constructed column projection and index layout lifetime (2026-10-08)][the proof/implementation bridge]] and
+[[file:../../evidence/scheme-column-projection-20261008/receipt.json][the acceptance receipt]].
+
+This closes the stepped-projection algebra obligation recorded on 2026-10-07.
+Package 3 still requires universal native hash/value and curried trie/ordinal/
+rectangle visitor correspondence. No whole-application speedup or physical
+memory reduction is inferred. All ten packages retain their acceptance gates;
+full paper replication and MR/MRR integration are not closed by this slice.
+
+
+* Curried collector and ordinal restoration acceptance (2026-10-08)
+
+Package 3 now connects finite trie record enumeration to ordered occurrence
+restoration. The native collector threads a tail across children and avoids
+ancestor copies of collected subtrees. Lean derives collector equality and
+list-copy accounting, constructs fresh insertion labels, proves order/bounds
+through arbitrary finite batch histories, and restores exact values from any
+permutation of those occurrences. Duplicate row values retain distinct labels.
+Native strict sorting is connected through its explicit primitive contract;
+no Gambit sorting or hash-table implementation proof is inferred.
+
+Quint adds query cache admission independently of old held readers. Extension,
+failed mutation and wrong rebuild views have their own =ViewConsistent= fault
+controls. Native tests cover six physical permutations and every prefix depth
+across 64 retained histories, independent direct-column truth, frozen reference,
+cache identity and held spines. The [[file:proofs.org::*Provider concretization curried collection, ordinal restoration and cached views (2026-10-08)][implementation/proof bridge]] and
+[[file:qualification.org::*Curried collection qualification][feature qualification]] record the exact source and evidence boundaries.
+
+Constructed logical key search and physical-prefix adaptation now have six
+executable Lean laws in =IndexedPositiveTraversal.SharedIndex=. The
+[[file:proofs.org::*Provider concretization constructed logical key adaptation (2026-10-08)][adapter bridge]] derives the physical comparison from the supplied logical
+field function and prefix coverage; distinct-column positional lookup also
+admits arbitrary values. Native malformed-key tests protect cold, warm and
+extended views. Quint retains exclusive ownership of the lifecycle protocol.
+
+Native trie/hash extraction, complete native adapter extraction, rectangle
+visitor correspondence and complete paper application benefits retain their
+gates. The existing benchmark compares a cumulative lifecycle against its older
+frozen reference; it does not attribute all observed gains to this change.
+
+The [[file:proofs.org::*Provider concretization constructed curried trie and prefix occurrences (2026-10-08)][constructed trie bridge]] adds nine laws: single insertion equals recursive
+grouping, finite batch histories preserve that representation, nested collection
+preserves occurrence counts, prefix reads implement direct filtering, and fresh
+ordinal insertion histories restore the exact ordered result. This derives the
+previously assumed enumeration permutation inside the functional map model.
+Native extraction of per-node child inventories and coherent hash operations
+remains explicit. Tests retain missing/duplicate inventory controls and native
+sparse layouts at depths one through five; these fixture depths are not runtime
+limits. Quint continues to own cache and publication lifecycle separately.
+
+* Per-node dictionary and protocol acceptance (2026-10-08)
+
+The constructed per-node inventory obligation now has eight Lean laws and
+native heterogeneous-key conformance in the existing index-entry Suite.
+The exact law, primitive correspondence and measured command boundaries are
+recorded in [[file:proofs.org::*Provider concretization materialized per-node inventories (2026-10-08)][the construction bridge]] and [[file:qualification.org::*Materialized dictionary qualification][qualification]].
+Shared-root lifecycle authoring has moved to Quint, with the same invariants
+and defect controls. The [[file:../qualification/quint.org][migration inventory]] distinguishes this completed model
+from the remaining protocol sources. This does not close arbitrary native hash
+implementation correspondence or establish a whole-application speedup.

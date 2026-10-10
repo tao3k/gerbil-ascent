@@ -1,0 +1,116 @@
+{
+  "baseHead": "4b14edb8c88083d322d66dddb58ee29544391320",
+  "boundary": "No production Scheme runtime source changed. Native finite closure probes are separate from universal semantic theorems. The semantic finite-head bound is not a runtime admission limit or complexity/performance claim.",
+  "changedModules": {
+    "packages/proofs/lean/GroundedBinding.lean": "6860a6c6b29db0713211ea591ebf0481b49c8f5f42ff69307b0a45d320007cb2",
+    "packages/proofs/lean/Tests/GroundedBindingTests.lean": "f486a18e2d3ac69c9ff16285ca7fdf33d5740a445223c82e15a4392bb64c6580",
+    "t/qualification/ascent-positive-components-test.ss": "69f350cc11102ceaa846016398588bde0c2d089c6ac871c34dd837cbe04622af"
+  },
+  "controls": [
+    "Independent Floyd closure and exact per-owner emissions for all 512 graphs",
+    "Fresh full worker initialization from actual completed private roots",
+    "No emitted missing consequence and unchanged root identity after completion recheck",
+    "Existing terminal tail, credited batches, readiness, failure drain and one/two/four-worker controls",
+    "Duplicate-seed and literal-key indexed fixture reaches declarative derivability",
+    "Finite stabilization bound derived from actual constructed ground-rule length",
+    "Every later natural round remains least; no hardcoded generation or runtime cap"
+  ],
+  "integratedNativeCompilerSource": {
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441"
+  },
+  "integration": "Preserves the concurrent prior-prefix native key admission checks. Both audit additions retained; complete Lean and native SCC qualification repeated on the combined source.",
+  "modelCalls": 0,
+  "mr": "Deferred future library consumer.",
+  "nativeWorkerSource": {
+    "program/actor-round.ss": "93a21cf4238c6375357facb80412037dc371b35d6ff9e6997a3deded46ca259e",
+    "program/component-worker.ss": "bd47c1f33b65d11bd57bbbdef7796bd0ab34a4eae1fc44622b164adaafb8e608"
+  },
+  "previousNativeVerification": {
+    "qualifiedBaseHead": "4b14edb8c88083d322d66dddb58ee29544391320",
+    "verification": {
+      "cases": 21,
+      "command": "just test-file t/qualification/ascent-positive-components-test.ss",
+      "compilerHeap": "1G",
+      "completedWorkerFullReinitialization": "Every completed private component for all 512 graph inputs must emit nothing and retain every row root.",
+      "executionSeconds": 10,
+      "exitStatus": 0,
+      "explicitOK": 1,
+      "graphInputs": 512,
+      "idleSeconds": 5,
+      "logSha256": "a774b0af59a36bef6238e749f7fa830ba875fe686bd4c4b1c2301713eab17797",
+      "modules": 1,
+      "nativeModulesOK": true,
+      "sourceCount": 547,
+      "sourceInventorySha256": "fae47efee80d7dd2095001d4bb029ed4efcd015684d3465cc3a29da7c641a949",
+      "startupSeconds": 5
+    }
+  },
+  "proofOwnership": "Lean owns operator/iteration/stabilization/least-model algebra. Existing TLA+ retains readiness, work identity, credits, terminal delivery, failure and publication; no temporal model duplication.",
+  "qualifiedBaseHead": "e01949a1370b614b8143ccb1f4a903135b9b073a",
+  "rejectedChecks": [
+    "The fixture bound initially used an ambiguous bind identifier. The corrected control derives the rule-list length by definitional equality; no proof limit was raised."
+  ],
+  "remaining": [
+    "Universal native component-loop and terminal-event extraction to semantic iteration",
+    "Native SCC projection, descriptor/name/scalar and equality/hash interpretation",
+    "Complete credit/tail publication trace correspondence",
+    "Non-Set/custom lattice Provider instances and host callback refinement"
+  ],
+  "schema": "ascent.indexed-least-qualification",
+  "scope": "Constructed canonical indexed stabilization and declarative least result, including every later natural round; native completed SCC full-reinitialization closure controls.",
+  "theorems": {
+    "snapshot_indexed_least": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_indexed_stays_least": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_naive_ground": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_rounds_spec": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_step_ground": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "verification": {
+    "lean": {
+      "command": "just check-lean-proofs",
+      "exitStatus": 0,
+      "jobs": 84,
+      "logSha256": "596a2e68efcfe3552808b4c9859fed4d51d22184ff4c655c5011788e4f17af18",
+      "sourceCount": 43,
+      "sourceInventorySha256": "4db8c28f4e1b2a5b3358cb98775c0833dca4b39e8e29d351069b69ef54ebd9dc"
+    },
+    "native": {
+      "cases": 21,
+      "command": "just test-file t/qualification/ascent-positive-components-test.ss",
+      "compilerHeap": "1G",
+      "completedWorkerFullReinitialization": "Every completed private component for all 512 graph inputs must emit nothing and retain every row root.",
+      "executionSeconds": 15,
+      "exitStatus": 0,
+      "explicitOK": 1,
+      "graphInputs": 512,
+      "idleSeconds": 5,
+      "logSha256": "6f6d9e09b0976befc279f303ccd176d686e1afdcc34f1384243c0309da306210",
+      "modules": 1,
+      "nativeModulesOK": true,
+      "sourceCount": 547,
+      "sourceInventorySha256": "145bc69791bd26d95e8c6e766619644c3241f6b4f012c0d684cb6df4d8ff600a",
+      "startupSeconds": 5
+    }
+  },
+  "version": 1
+}

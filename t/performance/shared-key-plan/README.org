@@ -1,0 +1,96 @@
+#+title: Shared index query key planning
+
+* One query/cache flow
+
+=table/index-sharing.ss= compiles logical-to-physical key positions once per
+ordered column sequence. A private final =key-projection= owns detached physical
+prefix facts, gather writes and scratch. It reuses the insertion projection's
+=column-writes= / =fill-column-frame!= protocol. Before reuse, the current
+physical prefix must match its snapshot. Cache keys own logical column spines;
+mutating borrowed logical metadata cannot corrupt the plan table.
+
+Every query reads fresh caller values after arity admission. Materialization
+clears scratch before any result-cache hashing/equality, so metadata does not
+retain earlier expression values. Ordered prefixes bypass projection. The only
+nonidentity two-column permutation is a swap, expressed directly without a
+plan or scratch allocation. A failed compilation publishes no new plan.
+
+Two hash constructor contracts express the admitted domains. Column sequences
+use numeric sequence equality and Gerbil's native structural hash, including
+large exact ordinals. No custom numeric hash algorithm remains. Result keys are proper tuples:
+compare the spine linearly and use full Scheme =equal?= for each arbitrary field,
+with the original =equal?-hash=. Rows and nested field values keep their existing
+semantics. Result cache publication owns key spines on the ordered fast path too.
+One extension invalidates result aliases; column plans remain guarded metadata.
+Old row bucket spines stay immutable and prefix occurrences retain ordinal order.
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:660-685= resolves argument positions
+from known keyword signature metadata before emitting the specialized call.
+=runtime/hash.ss:385-489= selects table representations from explicit test/hash
+constructor contracts. Here the private gather and two table contracts follow
+those ideas without changing public Provider dispatch or adding runtime knobs.
+
+* Matched native lifecycle A/B
+
+=reference.ss= exactly freezes
+=1fce4ea93b6322f1365e65476aab41e67dd91e78:table/index-sharing.ss=.
+Both implementations are compiled symmetrically. Timed intervals include build,
+256 queries (four for tiny controls), extension, repeated queries, and retained
+old buckets. Inputs and an independent direct row-projection/filter oracle are
+prepared outside timing. Eight rows include colliding projected values while
+retaining distinct complete tuples. Every pair compares exact ordered results.
+
+Public =:asp-gerbil-scheme/benchmark-api= generates =benchmark.ss=, validates its
+contract and runs 50 alternating pairs through =benchmark-run/result=. GC
+precedes each interval; measurements are process user+system CPU and root-
+processor cumulative allocated bytes. No build or qualification lane is
+launched by this run during timing. Values below are medians, not wall latency.
+
+| Shape | Old CPU us | New CPU us | Old bytes | New bytes | Wins/50 |
+|-------+------------+------------+-----------+-----------+---------|
+| Width 128, reversed full keys | 7212 | 2321 | 5422024 | 4217504 | 50 |
+| Width 64, alternating logical aliases | 2870 | 1486 | 2796384 | 2170128 | 50 |
+| Width 64, fresh equal column lists per query | 2988 | 1074 | 2217792 | 2133408 | 50 |
+| Width 128, reversed 32-column prefixes | 1577 | 1000 | 3370464 | 1942480 | 50 |
+| Width 128, ordered keys | 1957 | 867 | 3792432 | 986960 | 50 |
+| Two-column swapped keys | 8 | 9 | 15040 | 15824 | 19 |
+| Empty keys, three-column index | 20 | 15 | 27056 | 27072 | 18 |
+
+The four nonordered large shapes require >=20% CPU reduction and >=35 wins.
+Controls permit 10% CPU regression plus 20us resolution allowance. Every shape
+permits <=10% allocation growth plus 4096 bytes. All seven final gates pass.
+Small keys pay 784 additional bytes; empty keys pay 16 bytes. Tiny CPU values
+do not establish a speedup. These are complete shared-index lifecycle results,
+not whole worker, actor scheduling or solver improvements.
+
+The initial projection cache used generic structural metadata comparison and
+failed the unchanged prefix gate: 1670 -> 2546us, 3373408 -> 4966080 bytes.
+Specializing only the column hash still failed: 1589 -> 2321us, same allocations.
+Specializing metadata equality removed the regression but missed the 20% target:
+1632 -> 1609us, 3373408 -> 3430416 bytes. The final tuple comparison contract
+improved the entire query-cache flow. Restoring native structural hashing still
+passed all seven gates, so the custom rolling hash was removed. All intermediate receipts remain in ignored
+cache; none is presented as a successful target result.
+
+* Native verification and reproduction
+
+The focused Suite checks all permutations of every four-column prefix, exact
+occurrences/row identities, held buckets across duplicate insertion, borrowed
+logical/physical metadata guards, ordered and permuted key-spine mutation, and
+large exact column ordinals beyond fixnum range. Existing index-entry,
+index-lifecycle and positive-component Suites cover heterogeneous nested values,
+invalid prefixes, logical aliases, Provider failures, sessions and real workers.
+
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/shared-key-plan/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/shared-key-plan/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/shared-key-plan/runner prefix .cache/ascent/shared-key-plan/prefix.sexp
+#+end_src
+
+Run all seven shapes sequentially. Build the =qualify= lane using the same entry,
+then require successful Cases, =test-result-ok?=, final =OK= and exit zero.
+Use the installed SDK and canonical =.gerbil/lib=; do not rebuild the SDK.
+Binaries, logs and paired raw receipts stay in ignored =.cache/ascent/shared-key-plan/=.
+
+Final local qualification: four Suites, 63 successful Cases, final =OK= and
+exit zero. Source-inventory admission passed for the final native build. The
+production policy roster reports 30 findings, zero errors and =POLICY-NATIVE-OK=.

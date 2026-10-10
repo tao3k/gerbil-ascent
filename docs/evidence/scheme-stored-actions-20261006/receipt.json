@@ -1,0 +1,78 @@
+{
+  "baseHead": "0c042d4a014fd7251dae95eb63b736d8f6c298d1",
+  "boundary": "Native finite representation checks are distinct from universal model proofs. Private native compiler assumes admitted heads; modeled wildcard/fresh refusal is not a new native validator. No production runtime change or new performance claim.",
+  "changedModules": {
+    "packages/proofs/lean/IndexedPositiveTraversal.lean": "7edc31f9802f1c29fad2f35bf7aa2e67c163492a37bd591142c746fb01824619",
+    "packages/proofs/lean/PositiveSlots.lean": "7d6315cae915411c1be88eeaf708961739422c93b794fc8fe7932eb2bed13a20",
+    "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "2030c0ecce935e633e552677e9d37e3a12b420d88115fd8c775ca600c75304ca",
+    "packages/proofs/lean/Tests/PositiveSlotsTests.lean": "4b4a5885ce8a8d33ce696e64f2b4b151d638da09ed7db56251cd3b24c6dc22e1",
+    "t/qualification/ascent-positive-plan-test.ss": "9490ec1672e8964af6d8213f023c4eb80e9e579ba5905c85868dacf9e4d1df02"
+  },
+  "controls": [
+    "Six native ordered selected-column layouts, including empty and repeated columns",
+    "Actual native tagged pairs, outputs, pure flag and dense slot extent",
+    "Independent ordinary association-list key values",
+    "Literal and bound Boolean false",
+    "Duplicate ordered heads and two traversals of actual dirty returned frame",
+    "Unbound native head compilation unsupported",
+    "Lean wildcard/unbound head grammar refusal and missing finite cells",
+    "Inadmissible fresh-key counterexample retains dirty-value disagreement"
+  ],
+  "modelCalls": 0,
+  "mr": "Future library consumer; deferred.",
+  "nativeImplementation": {
+    "core/positive-plan.ss": "c5159fc10870952c4ed1cf1360892f5feb95c1667366f6f2d157e8fae06bb7b5",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206"
+  },
+  "proofOwnership": "Lean owns action/head/key algebra. Existing TLA+ scheduling, ownership and publication models are unchanged; no duplicate vector model.",
+  "remaining": [
+    "Universal Scheme descriptor and action decoding, scalar equality/hash and symbol identity correspondence",
+    "Callback/host closure refinement",
+    "Concrete Provider concretization/frontier instances",
+    "Native completed-component stable-result and least-model correspondence"
+  ],
+  "schema": "ascent.stored-actions-qualification",
+  "scope": "Stored pure literal/bound head lowering and finite selected-key correspondence; actual Scheme compiled plan representation qualification.",
+  "theorems": {
+    "compiled_head_binding_refines": [
+      "propext",
+      "Quot.sound"
+    ],
+    "compiled_head_vector_refines": [
+      "propext",
+      "Quot.sound"
+    ],
+    "compiled_vector_key_refines": [
+      "propext",
+      "Quot.sound"
+    ],
+    "vector_action_value": [
+      "propext"
+    ]
+  },
+  "verification": {
+    "lean": {
+      "command": "just check-lean-proofs",
+      "exitStatus": 0,
+      "jobs": 84,
+      "logSha256": "f5be114484c616fd6195a925942d12428ca46dcd379722ab1824be6471b10491",
+      "sourceCount": 43,
+      "sourceInventorySha256": "5781d63a2278d45b4a18935cda3d836fc6afdbbcc5c34c4d9a0558bacdeb3bae"
+    },
+    "native": {
+      "cases": 25,
+      "command": "just test-file t/qualification/ascent-positive-plan-test.ss",
+      "compilerHeap": "1G",
+      "executionSeconds": 20,
+      "exitStatus": 0,
+      "explicitOK": 1,
+      "graphFamily": 512,
+      "idleSeconds": 5,
+      "logSha256": "cc50adf559aec053fcbe22936184bd6db5e0381a6cd0bab7d19f3bfcf07b9662",
+      "modules": 1,
+      "nativeModulesOK": true,
+      "startupSeconds": 5
+    }
+  },
+  "version": 1
+}

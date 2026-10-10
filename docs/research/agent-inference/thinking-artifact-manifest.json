@@ -1,0 +1,3553 @@
+{
+  "schema": "ascent.thinking-artifact-manifest.v1",
+  "phases": [
+    {
+      "phase": "compound",
+      "cacheRoot": ".cache/ascent/movie-study/compound-thinking-real-20261010",
+      "planSha256": "31064b09bcaa269c7852b0577e55fdb9dc0065b3289811cac4767e4691d7a2c5",
+      "resultSha256": "0ad3facb74456c240ec693ae868ff1532f9f224ca82c5b915a5ff87e2f96d30b",
+      "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+      "producers": [
+        {
+          "path": "python/src/ascent_test_support/iterative_inference_study.py",
+          "sha256": "2fadb2985992e9b9c6dfc175e52f97abd743d2026fceebf3c2829c13b4c908f3",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/iterative_inference_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/inference_reuse_study.py",
+          "sha256": "0a77a71780666dac35711a971fea080bae09ca087c27dff509d9403327c8c159",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/inference_reuse_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/inference_effort.py",
+          "sha256": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/inference_effort.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/complex_inference_workload.py",
+          "sha256": "f3b03617187a261e79ec2b39eb21c8a290c3e38ae68100938435e9ae8527e18f",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/complex_inference_workload.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/model_study.py",
+          "sha256": "3c4bb43f62bf3094b826550edd39c3578d464857428d2b079ddd2e7d92326948",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/model_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/movie_study.py",
+          "sha256": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/movie_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/query_contract.py",
+          "sha256": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_test_support/query_contract.py"
+        },
+        {
+          "path": "python/src/ascent_engine/evidence.py",
+          "sha256": "5bbc08a2006a7b25f2b97d0958ff01443a9dad14890d78aa1989225a3e5ac9e9",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_engine/evidence.py"
+        },
+        {
+          "path": "python/src/ascent_engine/__init__.py",
+          "sha256": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d",
+          "verifiedAt": ".cache/ascent/movie-study/compound-thinking-qualified-plan-20261010/producer-snapshot/python/src/ascent_engine/__init__.py"
+        }
+      ],
+      "files": [
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-1.request.json",
+          "sha256": "d6941e3b034c81b786dc307abd169c142561d42aefb63e3f219bc6bd64375c9c",
+          "bytes": 3859
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-1.response.json",
+          "sha256": "7e39d267f16a3bc691bbc322987745009a15c43f51b3d1523a4aef05dd2e3a62",
+          "bytes": 4973,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 693,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 373,
+            "output_tokens_details": {
+              "reasoning_tokens": 337
+            },
+            "total_tokens": 1066
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-2.raw.txt",
+          "sha256": "c4010f6101dfb0f758d026c8c2539e0154c6d4b6176dd4fdc2791d26b5fd1806",
+          "bytes": 120
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-2.request.json",
+          "sha256": "12998a2b0948a0e7e96ac53a32b24fcca5a3783d80f03db429c5c7651f600bf3",
+          "bytes": 21699
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning-2.response.json",
+          "sha256": "8dbb114a9138bbcae35ffb23be0fdb102c85125c7ea94aba2bebf27813179c9b",
+          "bytes": 110240,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8247,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 43217,
+            "output_tokens_details": {
+              "reasoning_tokens": 43161
+            },
+            "total_tokens": 51464
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-1.request.json",
+          "sha256": "c325b2fd83b2b34379d6d647e2b89aa295f50d3dd9124730349afe83f28ac58e",
+          "bytes": 10860
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-1.response.json",
+          "sha256": "604f3a5b2a62754a823329ed02e9c90ed9c391704f0dfd884c72acca9e5f8406",
+          "bytes": 12072,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1256,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 330,
+            "output_tokens_details": {
+              "reasoning_tokens": 294
+            },
+            "total_tokens": 1586
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-2.raw.txt",
+          "sha256": "1b42acb9902d8fb17f303b814309a6d7ee446b12fe9a7c0d3766177cfbaf85cc",
+          "bytes": 2291
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-2.request.json",
+          "sha256": "e7be0d5173fd50ccb61c4f8cc2e6266b8b71d6a2e3d05902760334dffb0439fc",
+          "bytes": 28700
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-2.response.json",
+          "sha256": "9710f517ed9768c07df2c53d1fc634ea2f545b609b6155e60bc8d16f3c29387e",
+          "bytes": 21432,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8810,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 2646,
+            "output_tokens_details": {
+              "reasoning_tokens": 1791
+            },
+            "total_tokens": 11456
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-3.raw.txt",
+          "sha256": "6f0c154095c75809b05e09868b2838f18d650b476f286b91924af39eec323e25",
+          "bytes": 2305
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-3.request.json",
+          "sha256": "032169fe231285ad1781c4b632f709f5ddae63c69d269053292f906109d17c61",
+          "bytes": 31536
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-3.response.json",
+          "sha256": "0c1c8ba7ee5ea7c7d0e042f825e0d54f03199d30bbdbfe2ffd51ca1b22934c5b",
+          "bytes": 14823,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9688,
+            "input_tokens_details": {
+              "cached_tokens": 8320
+            },
+            "output_tokens": 1134,
+            "output_tokens_details": {
+              "reasoning_tokens": 261
+            },
+            "total_tokens": 10822
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-4.raw.txt",
+          "sha256": "b2b2ab87d5d82eebeb72a3b04907cb2cbb550a255d18ac5ec1d142afd016af1d",
+          "bytes": 120
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-4.request.json",
+          "sha256": "87e0b48386ebcadbb9808196d7d7b0951356e502ea5705965e6f7bae7b4872b0",
+          "bytes": 37216
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence-4.response.json",
+          "sha256": "eafc39845055411d1c9446929f948735fc81665972892bb3659c812c9d854181",
+          "bytes": 64878,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 11834,
+            "input_tokens_details": {
+              "cached_tokens": 9216
+            },
+            "output_tokens": 21175,
+            "output_tokens_details": {
+              "reasoning_tokens": 21119
+            },
+            "total_tokens": 33009
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-1.request.json",
+          "sha256": "d6941e3b034c81b786dc307abd169c142561d42aefb63e3f219bc6bd64375c9c",
+          "bytes": 3859
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-1.response.json",
+          "sha256": "ff89691d73cfd4b5040925b072a993c33438bab4d1a25dcc5a36830663e7f091",
+          "bytes": 5010,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 693,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 365,
+            "output_tokens_details": {
+              "reasoning_tokens": 329
+            },
+            "total_tokens": 1058
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-2.raw.txt",
+          "sha256": "dd71cf51eb16855059300a91d967186f88431286ef10ef40d758737e228891cb",
+          "bytes": 120
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-2.request.json",
+          "sha256": "12998a2b0948a0e7e96ac53a32b24fcca5a3783d80f03db429c5c7651f600bf3",
+          "bytes": 21699
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning-2.response.json",
+          "sha256": "937f1fc307c62e74154682248ea940ac4ad6c1d1d5abbc5f61a2e0c88fc50da7",
+          "bytes": 91376,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8247,
+            "input_tokens_details": {
+              "cached_tokens": 8064
+            },
+            "output_tokens": 41644,
+            "output_tokens_details": {
+              "reasoning_tokens": 41588
+            },
+            "total_tokens": 49891
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-1.raw.txt",
+          "sha256": "06e1329caba44733b9051caebe59c7ce6a324f61ff278a5c0e8cd0482f45a5c0",
+          "bytes": 125
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-1.request.json",
+          "sha256": "c325b2fd83b2b34379d6d647e2b89aa295f50d3dd9124730349afe83f28ac58e",
+          "bytes": 10860
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-1.response.json",
+          "sha256": "f704150921b58e4ebc9bdf2ea52c1be4ef2220e76aab3087fe1cf890b5bbf380",
+          "bytes": 11862,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1256,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 296,
+            "output_tokens_details": {
+              "reasoning_tokens": 260
+            },
+            "total_tokens": 1552
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-2.raw.txt",
+          "sha256": "c4010f6101dfb0f758d026c8c2539e0154c6d4b6176dd4fdc2791d26b5fd1806",
+          "bytes": 120
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-2.request.json",
+          "sha256": "950a0fb91b42cf0047d9496882b1fb395fc92e6fd71a71f897b1702fe18daa4d",
+          "bytes": 28700
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence-2.response.json",
+          "sha256": "dd1b24b2e9994ea2ac7033d0db136c977e6237726b34fb9864ada5bd473d7c0f",
+          "bytes": 138756,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8810,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 54734,
+            "output_tokens_details": {
+              "reasoning_tokens": 54678
+            },
+            "total_tokens": 63544
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-1.raw.txt",
+          "sha256": "74a93e09a878f59a45569187f0dee0df09eec43b35e8dbc87e4b3d0d368b0244",
+          "bytes": 125
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-1.request.json",
+          "sha256": "133467d7706cb08bcd0c9df46dfbef8798786610f59c1b988bc7b2e08f48c23d",
+          "bytes": 3700
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-1.response.json",
+          "sha256": "80f47c6642978ae3d0074edc0d3c1179b8684b49461aafbb1b23527df4c58b0e",
+          "bytes": 5088,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 681,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 388,
+            "output_tokens_details": {
+              "reasoning_tokens": 352
+            },
+            "total_tokens": 1069
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-2.raw.txt",
+          "sha256": "a7df018d8fa94078bf3601ee2114e2b72dec763a8bc5b6bd4ef57b48733b38f0",
+          "bytes": 582
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-2.request.json",
+          "sha256": "dd5aed4bfe0f6dde1a8e34c041cfe69e3604517ce8606a3a40c298f5adfc9a2d",
+          "bytes": 21540
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning-2.response.json",
+          "sha256": "658e625e817cd0fde198e3b1374c07e5063e4c91506a8868707d0e4a4eed123a",
+          "bytes": 97131,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8376,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 41606,
+            "output_tokens_details": {
+              "reasoning_tokens": 41312
+            },
+            "total_tokens": 49982
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-1.request.json",
+          "sha256": "dbbcb1a8b7cf6cbc4b1610d546772a0501686d5e90cb14399622f4a80ce27d7f",
+          "bytes": 10701
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-1.response.json",
+          "sha256": "03342b34594313953f24ee84031c73a61b104cc1eed325e6646b1ff60da26685",
+          "bytes": 15107,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1244,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 1071,
+            "output_tokens_details": {
+              "reasoning_tokens": 1035
+            },
+            "total_tokens": 2315
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-2.raw.txt",
+          "sha256": "19df85b91eb2379f2ac0bddc5baeb4f36a86322055e3d3ea77f3d1e4b7dbf571",
+          "bytes": 1715
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-2.request.json",
+          "sha256": "6ac7f01796bef4ccec6c41a902ad5e8d49bf503695af92c8c216c7a624d40bdd",
+          "bytes": 28541
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-2.response.json",
+          "sha256": "28a96af5894e750ee61af352fc57972758053f669e663e2179d5760c146c74ce",
+          "bytes": 39017,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8939,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 9429,
+            "output_tokens_details": {
+              "reasoning_tokens": 8876
+            },
+            "total_tokens": 18368
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-3.raw.txt",
+          "sha256": "76cba34774e9d68cfc703d5ab78fe6e0b76688cb46e81f813a0cb8241377fb57",
+          "bytes": 582
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-3.request.json",
+          "sha256": "2aa902b541653a43ce9985ff5a5077772470b90763398f4dc28658654aed459e",
+          "bytes": 40282
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence-3.response.json",
+          "sha256": "e977281ec0bab8cab40547165f3b14651aef4a9a44411f7ed2115de630551125",
+          "bytes": 41685,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 13877,
+            "input_tokens_details": {
+              "cached_tokens": 8448
+            },
+            "output_tokens": 13375,
+            "output_tokens_details": {
+              "reasoning_tokens": 13081
+            },
+            "total_tokens": 27252
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-1.request.json",
+          "sha256": "133467d7706cb08bcd0c9df46dfbef8798786610f59c1b988bc7b2e08f48c23d",
+          "bytes": 3700
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-1.response.json",
+          "sha256": "781eee88d9ec0ee855bca29a42eea25c9e8213de3781379b4795776f68062a75",
+          "bytes": 4740,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 681,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 315,
+            "output_tokens_details": {
+              "reasoning_tokens": 279
+            },
+            "total_tokens": 996
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-2.raw.txt",
+          "sha256": "cb26065888288f7cbedb94c69d980aa6ce88aadd3977501fae8e8e4f6e0b57ba",
+          "bytes": 597
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-2.request.json",
+          "sha256": "0b5b032a9553a3356171e0ab84fc2fce68be33dc732f5d365db38c96777d21b9",
+          "bytes": 21540
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-2.response.json",
+          "sha256": "37140eee000b8e783113a4c9365854b710369b4b1f7e6785746812d8e097e716",
+          "bytes": 95740,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8376,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 42440,
+            "output_tokens_details": {
+              "reasoning_tokens": 42154
+            },
+            "total_tokens": 50816
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-3.raw.txt",
+          "sha256": "e92cc356b8586fc69c0d20b15f5fa536f9d28d616002dc0853ae16fca1624803",
+          "bytes": 582
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-3.request.json",
+          "sha256": "3c6bd257f25c3ecfcad25e0b98b5fc21c1bd0373d88b8501ce5a901aced612dc",
+          "bytes": 22294
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning-3.response.json",
+          "sha256": "945b324128171673c18cf6c4edeef8680072aef6dd5a5dd3c7fd45b0ac67ccbc",
+          "bytes": 81866,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8705,
+            "input_tokens_details": {
+              "cached_tokens": 7936
+            },
+            "output_tokens": 35271,
+            "output_tokens_details": {
+              "reasoning_tokens": 34977
+            },
+            "total_tokens": 43976
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-1.raw.txt",
+          "sha256": "87854d9ca45f14bdab76b8ef27cfaa7b788becc9ae64868492f8dbb7dbfe4d56",
+          "bytes": 125
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-1.request.json",
+          "sha256": "dbbcb1a8b7cf6cbc4b1610d546772a0501686d5e90cb14399622f4a80ce27d7f",
+          "bytes": 10701
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-1.response.json",
+          "sha256": "a4977fb5758621b5e4a616fb72789a03930494d7db1ca707adf51ef406e81c7f",
+          "bytes": 11490,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1244,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 215,
+            "output_tokens_details": {
+              "reasoning_tokens": 179
+            },
+            "total_tokens": 1459
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-2.raw.txt",
+          "sha256": "2e636ec4a5c2a6120952522924886a47b1fba2d762295bad58c191a6986ffd10",
+          "bytes": 2105
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-2.request.json",
+          "sha256": "64cdb9396908dfa842e09751fa588b2644c8a71c1edc9819a3cff0f2d2e78bca",
+          "bytes": 28541
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-2.response.json",
+          "sha256": "309b2ee09c2a5c02b7526272e84805390074039734be8fa313343a40988d62e8",
+          "bytes": 153409,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8939,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 64425,
+            "output_tokens_details": {
+              "reasoning_tokens": 63648
+            },
+            "total_tokens": 73364
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-3.raw.txt",
+          "sha256": "cc7005c29c7921e85591555275055e329efb4982cdbe956c3640bef7fb6f359f",
+          "bytes": 1771
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-3.request.json",
+          "sha256": "ef80905f2f4201f030ae1712aa8a3c0ba67f33a8f16754bd9245de664ef498a3",
+          "bytes": 31139
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-3.response.json",
+          "sha256": "c31f00d66fbf3830b9a647cee3cdaa02ffe9823672c63b9d406c8994ae9569d5",
+          "bytes": 15540,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9734,
+            "input_tokens_details": {
+              "cached_tokens": 8448
+            },
+            "output_tokens": 1267,
+            "output_tokens_details": {
+              "reasoning_tokens": 600
+            },
+            "total_tokens": 11001
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-4.raw.txt",
+          "sha256": "ae624d3059543341010493a2b98696324b0095246b7691a82775edf241dca4fe",
+          "bytes": 1775
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-4.request.json",
+          "sha256": "5d8d873969addb28ed08ff187c722666d7bd3cbd51e931ea788ae3a69a6d3d21",
+          "bytes": 33341
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-4.response.json",
+          "sha256": "1421da0104d218d6da8db140ca9522b43ac4e535cfce53321871ee448db8823d",
+          "bytes": 13654,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 10419,
+            "input_tokens_details": {
+              "cached_tokens": 9344
+            },
+            "output_tokens": 772,
+            "output_tokens_details": {
+              "reasoning_tokens": 102
+            },
+            "total_tokens": 11191
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-5.raw.txt",
+          "sha256": "76cba34774e9d68cfc703d5ab78fe6e0b76688cb46e81f813a0cb8241377fb57",
+          "bytes": 582
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-5.request.json",
+          "sha256": "d2d7aa41d27d3cd5b8312572a1b5a610a0ecfb677ee266cd569298985fdf3ef8",
+          "bytes": 61545
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence-5.response.json",
+          "sha256": "91899c84313b69f65aaf0882d899300281e3c1174722ed4f9c1496df985393a6",
+          "bytes": 13585,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 22764,
+            "input_tokens_details": {
+              "cached_tokens": 9984
+            },
+            "output_tokens": 875,
+            "output_tokens_details": {
+              "reasoning_tokens": 581
+            },
+            "total_tokens": 23639
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-1.raw.txt",
+          "sha256": "ca05321483242ac431c25f5f07a5b36debc5340fe0341ea29dc960a0aace75bc",
+          "bytes": 110
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-1.request.json",
+          "sha256": "1664423c4e6fb9dd21854e26e839ad8d95bb236872673217ce762c7e8e811bd6",
+          "bytes": 3653
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-1.response.json",
+          "sha256": "0dc82c2806c706064fe0f3409365b17d42b03f6043653468d19afcad5755a0cb",
+          "bytes": 5474,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 661,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 502,
+            "output_tokens_details": {
+              "reasoning_tokens": 470
+            },
+            "total_tokens": 1163
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-2.raw.txt",
+          "sha256": "422263a62086f6947afe2efafae74e6a1994510bb73c787dfc689b8705833266",
+          "bytes": 1710
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-2.request.json",
+          "sha256": "aa2715e06bffc1ba172a9aba8a77e23d6b3143bb80079f3d3f60f8228f6b9218",
+          "bytes": 18959
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning-2.response.json",
+          "sha256": "caa8b5781fe6ae041c0eec7249a4307172d5ad00b4859253fca8852765516d92",
+          "bytes": 117701,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 7246,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 46833,
+            "output_tokens_details": {
+              "reasoning_tokens": 46018
+            },
+            "total_tokens": 54079
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-1.raw.txt",
+          "sha256": "6b5c70d594a450a9bbf422517eae4caf6f12bdce7b08f0b15832f0cb5174ff2e",
+          "bytes": 125
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-1.request.json",
+          "sha256": "bc615a2d04acd4a137e6442876cb4f513fe6f831605d23115489f7f62a72781a",
+          "bytes": 10654
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-1.response.json",
+          "sha256": "bacbd037a16723afd3f345204d8355af16968a3637547af69e92209f27b4d5d5",
+          "bytes": 12235,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1224,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 373,
+            "output_tokens_details": {
+              "reasoning_tokens": 337
+            },
+            "total_tokens": 1597
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-2.raw.txt",
+          "sha256": "ab5f58ecd122da09b0d2ba2e966002532da27b71fbeb7451f355c5506f2ec48d",
+          "bytes": 1962
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-2.request.json",
+          "sha256": "d56d8f7ebf307a79157584e6f620edd353fefdc448fa4194ce60e7fe12755471",
+          "bytes": 28494
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-2.response.json",
+          "sha256": "311b4418e75af071d6db376fb2a1e0cff7d66cc75dd5806df9d64ee464694013",
+          "bytes": 40937,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8884,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 10955,
+            "output_tokens_details": {
+              "reasoning_tokens": 10205
+            },
+            "total_tokens": 19839
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-3.raw.txt",
+          "sha256": "241c91edecf282f027271a63bfadbd5d6934ca12ac6c40bac6b97dcc0f0ff71f",
+          "bytes": 1792
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-3.request.json",
+          "sha256": "5e495597d6db02c3449a7672b5b5fbaa65ae50cdfa098c506cab025e5cad6e8c",
+          "bytes": 35729
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence-3.response.json",
+          "sha256": "adbcde05c29422bc1de50d73d6da6d16a51a574d61d6e30d53993ce0dd64f8dc",
+          "bytes": 80879,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 11765,
+            "input_tokens_details": {
+              "cached_tokens": 8448
+            },
+            "output_tokens": 29797,
+            "output_tokens_details": {
+              "reasoning_tokens": 28901
+            },
+            "total_tokens": 41562
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-1.raw.txt",
+          "sha256": "87854d9ca45f14bdab76b8ef27cfaa7b788becc9ae64868492f8dbb7dbfe4d56",
+          "bytes": 125
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-1.request.json",
+          "sha256": "1664423c4e6fb9dd21854e26e839ad8d95bb236872673217ce762c7e8e811bd6",
+          "bytes": 3653
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-1.response.json",
+          "sha256": "8b758ca38bd7000e1e7bce2823a454759914b17a38cb76fa43f672ed1ab47df8",
+          "bytes": 5491,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 661,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 490,
+            "output_tokens_details": {
+              "reasoning_tokens": 454
+            },
+            "total_tokens": 1151
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-2.request.json",
+          "sha256": "a964135de3d543c7cca80c1f8de8a6c878e8009fd1ca1af9c99f11204e74e7fb",
+          "bytes": 21493
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-2.response.json",
+          "sha256": "9f3d5295528f53232c29f4d2eac6775e13660a01138d2f4e769010460855fc14",
+          "bytes": 148041,
+          "model": "deepseek-flash",
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 8321,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 65536,
+            "output_tokens_details": {
+              "reasoning_tokens": 65536
+            },
+            "total_tokens": 73857
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-1.request.json",
+          "sha256": "bc615a2d04acd4a137e6442876cb4f513fe6f831605d23115489f7f62a72781a",
+          "bytes": 10654
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-1.response.json",
+          "sha256": "a5b8b524a65b8e07f579eaf70474ea3e0f19cc1909267603e3cea5370eb1c78c",
+          "bytes": 12704,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1224,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 463,
+            "output_tokens_details": {
+              "reasoning_tokens": 427
+            },
+            "total_tokens": 1687
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-2.raw.txt",
+          "sha256": "c653a83cbe13c0e9b886362764ba5a2c346b8b6088a69be5f7021fc4a9e23100",
+          "bytes": 1710
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-2.request.json",
+          "sha256": "15cae9db2afd239fd5954e433228911c145575265cc4c08586d86b04a32bbd1e",
+          "bytes": 28494
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence-2.response.json",
+          "sha256": "5db57e2dc38ef1d139ae98167379e51e2cb97c8934522b976df8d5811e19bd39",
+          "bytes": 104463,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8884,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 41754,
+            "output_tokens_details": {
+              "reasoning_tokens": 40939
+            },
+            "total_tokens": 50638
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-1.raw.txt",
+          "sha256": "550e5c3b0dabe4f111ac735a6375b7a7df71e9a60bf7d8c9508cba85de7bd915",
+          "bytes": 135
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-1.request.json",
+          "sha256": "5ffb18be3089f64d72a3e8019ce7a4b6cad211866857b41bf822a12714df72af",
+          "bytes": 3863
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-1.response.json",
+          "sha256": "4540cdad297484ddedbb106d8e4bfe07c4329f285093ee248788965006122b64",
+          "bytes": 4382,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 702,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 250,
+            "output_tokens_details": {
+              "reasoning_tokens": 205
+            },
+            "total_tokens": 952
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-2.request.json",
+          "sha256": "2623c7da666a4fc1c981d771d92f580d431a9c5d3bc9a27f8c2a63552cce16ad",
+          "bytes": 21703
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-2.response.json",
+          "sha256": "9223bd30095c691a60c10456aff466a3561d838dde7d9530283ffa1e07c0fe3e",
+          "bytes": 141721,
+          "model": "deepseek-flash",
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 8297,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 65536,
+            "output_tokens_details": {
+              "reasoning_tokens": 65536
+            },
+            "total_tokens": 73833
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-1.request.json",
+          "sha256": "1313a3f36e2265dca03058e4f74cd45f24a2311392d5640b3ada29c18cc5a8cc",
+          "bytes": 10864
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-1.response.json",
+          "sha256": "7e1ddbd3735526a30b188db5c0c97cf4aab833238ced15dde555938804d4cd18",
+          "bytes": 12312,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1265,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 393,
+            "output_tokens_details": {
+              "reasoning_tokens": 357
+            },
+            "total_tokens": 1658
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-2.request.json",
+          "sha256": "5fa82b126e3ec7f197df40c6ac030a3922bbcd6816df1b65f7f63dc37cd8fc6e",
+          "bytes": 28704
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-2.response.json",
+          "sha256": "7c5125b2ccdf56f4e87a6133bcfda862c4f97dffb87e0dce938cb1332db6e99c",
+          "bytes": 157119,
+          "model": "deepseek-flash",
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 8860,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 65536,
+            "output_tokens_details": {
+              "reasoning_tokens": 65536
+            },
+            "total_tokens": 74396
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-1.raw.txt",
+          "sha256": "c5c5a21df7eb1ac1afa7cbc370f9a9686003f5e76acf3a7370589a8778952529",
+          "bytes": 125
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-1.request.json",
+          "sha256": "5ffb18be3089f64d72a3e8019ce7a4b6cad211866857b41bf822a12714df72af",
+          "bytes": 3863
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-1.response.json",
+          "sha256": "cf14a109cf65c4c28d9bb51fe4b3e7dfe0c4d5240fe122be8a2007da41fcf3dd",
+          "bytes": 5548,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 702,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 483,
+            "output_tokens_details": {
+              "reasoning_tokens": 447
+            },
+            "total_tokens": 1185
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-2.request.json",
+          "sha256": "b82b15cd40f6cbe6526078f43777eae6723a1c93f53d8ae91f9cff4705f6f815",
+          "bytes": 21703
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-2.response.json",
+          "sha256": "fd9ff5997bb34ecfdb39db555b7d37cc9a70c1d96ac78b034de284a26daa86b6",
+          "bytes": 141207,
+          "model": "deepseek-flash",
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 8297,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 65536,
+            "output_tokens_details": {
+              "reasoning_tokens": 65536
+            },
+            "total_tokens": 73833
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-1.raw.txt",
+          "sha256": "620a9d0bfd6f4736e557266b97f438a0e09316e9813442e3644a30e21dc4968a",
+          "bytes": 125
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-1.request.json",
+          "sha256": "1313a3f36e2265dca03058e4f74cd45f24a2311392d5640b3ada29c18cc5a8cc",
+          "bytes": 10864
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-1.response.json",
+          "sha256": "df8e7989eebb4cb7d38c54c8c89c0a4530d34481b064943bae1390c07ddb0712",
+          "bytes": 18554,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1265,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 1704,
+            "output_tokens_details": {
+              "reasoning_tokens": 1668
+            },
+            "total_tokens": 2969
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-2.raw.txt",
+          "sha256": "40e234c12ebee3004f411556ad8adcea25505840ba1c04426d8650cf52d593ec",
+          "bytes": 2664
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-2.request.json",
+          "sha256": "5fa82b126e3ec7f197df40c6ac030a3922bbcd6816df1b65f7f63dc37cd8fc6e",
+          "bytes": 28704
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-2.response.json",
+          "sha256": "b1deb422b240b2c1bdd787a2e5918147840f064f394e5dd4860df8271ec54220",
+          "bytes": 99147,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8860,
+            "input_tokens_details": {
+              "cached_tokens": 8704
+            },
+            "output_tokens": 39609,
+            "output_tokens_details": {
+              "reasoning_tokens": 38742
+            },
+            "total_tokens": 48469
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-3.raw.txt",
+          "sha256": "14e64e59a69e3f9563c884cf760f04678cae6c72f30dad58b23cc63ab854415e",
+          "bytes": 3094
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-3.request.json",
+          "sha256": "46aee5425d8a67fdf7c7cc34616afeda1ab358f2b8c2f99a88847d90170565c7",
+          "bytes": 32314
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-3.response.json",
+          "sha256": "e493e5476ed4128552f19cba502b939c9b0fd5853909f08982c089daa7202ab4",
+          "bytes": 16943,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9999,
+            "input_tokens_details": {
+              "cached_tokens": 8448
+            },
+            "output_tokens": 1750,
+            "output_tokens_details": {
+              "reasoning_tokens": 584
+            },
+            "total_tokens": 11749
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-4.raw.txt",
+          "sha256": "e170f7278f63ed27fb5d79caef2ada65e0b349723b315b34ab9f30ab8f0deccb",
+          "bytes": 2975
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-4.request.json",
+          "sha256": "98f17d1b3fdbb3f81d0980a33500b4bdcec26f19d8cf24d56d0cf6f81ee4a687",
+          "bytes": 37234
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-4.response.json",
+          "sha256": "3e0662e1ec7af1ec836b1d3cb48a2c0bcc7eb4626c3b00fbcefe2d67092198d2",
+          "bytes": 23535,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 11339,
+            "input_tokens_details": {
+              "cached_tokens": 9472
+            },
+            "output_tokens": 3591,
+            "output_tokens_details": {
+              "reasoning_tokens": 2449
+            },
+            "total_tokens": 14930
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-5.raw.txt",
+          "sha256": "a498a9cd8fc7fa9da557ae5c550f19508dfb20ee545920e89b8068a9a3c0f91f",
+          "bytes": 1748
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-5.request.json",
+          "sha256": "262f1cb42d97032ad0783ca4cc6c712df25d541c8776d315e3083094d20c666d",
+          "bytes": 53053
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence-5.response.json",
+          "sha256": "6bc0d5713e65eb9474fabef3b31b8e4375c46d50a6f2a25f3aa4e12cc99a8162",
+          "bytes": 44870,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 17813,
+            "input_tokens_details": {
+              "cached_tokens": 10880
+            },
+            "output_tokens": 13835,
+            "output_tokens_details": {
+              "reasoning_tokens": 12966
+            },
+            "total_tokens": 31648
+          },
+          "error": null
+        }
+      ],
+      "historyChecks": []
+    },
+    {
+      "phase": "tool",
+      "cacheRoot": ".cache/ascent/movie-study/compound-thinking-tools-validated-real-20261010",
+      "planSha256": "d89ad9716e76298cf03b0fd410aa5eb8dd7f92e1955068e185c61c47fc173ac4",
+      "resultSha256": "4acb569a186b86163241732baae2da07445e9ff78779b07247db817e48534b52",
+      "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+      "producers": [
+        {
+          "path": "python/src/ascent_test_support/iterative_tool_inference_study.py",
+          "sha256": "0072faa5ef2b7eff1cf755f767044cc9db82ac4f7197f1bdd7cc8cc59a378a6b",
+          "verifiedAt": "python/src/ascent_test_support/iterative_tool_inference_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/iterative_inference_study.py",
+          "sha256": "2fadb2985992e9b9c6dfc175e52f97abd743d2026fceebf3c2829c13b4c908f3",
+          "verifiedAt": "python/src/ascent_test_support/iterative_inference_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/inference_reuse_study.py",
+          "sha256": "0a77a71780666dac35711a971fea080bae09ca087c27dff509d9403327c8c159",
+          "verifiedAt": "python/src/ascent_test_support/inference_reuse_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/complex_inference_workload.py",
+          "sha256": "f3b03617187a261e79ec2b39eb21c8a290c3e38ae68100938435e9ae8527e18f",
+          "verifiedAt": "python/src/ascent_test_support/complex_inference_workload.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/inference_effort.py",
+          "sha256": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
+          "verifiedAt": "python/src/ascent_test_support/inference_effort.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/model_study.py",
+          "sha256": "69e19658d5da399d81a0e7f989123fe9466aff800ff724f09be6861f606cf7aa",
+          "verifiedAt": "python/src/ascent_test_support/model_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/movie_study.py",
+          "sha256": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
+          "verifiedAt": "python/src/ascent_test_support/movie_study.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/query_contract.py",
+          "sha256": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+          "verifiedAt": "python/src/ascent_test_support/query_contract.py"
+        },
+        {
+          "path": "python/src/ascent_test_support/complex_movie_study.py",
+          "sha256": "ad70937810023689a731d30476f884fa98e55a85d4e0d7923eaf3377054f52a3",
+          "verifiedAt": "python/src/ascent_test_support/complex_movie_study.py"
+        },
+        {
+          "path": "python/src/ascent_engine/conversation.py",
+          "sha256": "975a4c0518ce207a513ff23c6479ed900521bb2c8da8720ffcc11e1320672045",
+          "verifiedAt": "python/src/ascent_engine/conversation.py"
+        },
+        {
+          "path": "python/src/ascent_engine/evidence.py",
+          "sha256": "5bbc08a2006a7b25f2b97d0958ff01443a9dad14890d78aa1989225a3e5ac9e9",
+          "verifiedAt": "python/src/ascent_engine/evidence.py"
+        },
+        {
+          "path": "python/src/ascent_engine/__init__.py",
+          "sha256": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d",
+          "verifiedAt": "python/src/ascent_engine/__init__.py"
+        }
+      ],
+      "files": [
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/1.request.json",
+          "sha256": "ea6060e6e58c85be413e57b3c24ecb845d515d3e9a62dd6957f313cf292a08da",
+          "bytes": 3456
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/1.response.json",
+          "sha256": "f0abc7d15f67d6f87e9a62d59eafc8add17160a58a83bd61f850dddbfe9b9cd0",
+          "bytes": 6025,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 796,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 399,
+            "output_tokens_details": {
+              "reasoning_tokens": 327
+            },
+            "total_tokens": 1195
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/2.request.json",
+          "sha256": "c9d06ec15972c8eedeefb0149a21cb62ba1d3c41b9044363e22a5c18bdad485c",
+          "bytes": 22280
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-raw-fact-reasoning/2.response.json",
+          "sha256": "a5a8ac0cdb3858cfd7f68a39bf4ba9223ef4a5f292f7dc903b7fd06daace9360",
+          "bytes": 92528,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8367,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 33122,
+            "output_tokens_details": {
+              "reasoning_tokens": 33040
+            },
+            "total_tokens": 41489
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/1.request.json",
+          "sha256": "9c9a8283ad60b4dc5c60dc2415bc389ea539db2ac84b4b3071a1b502c40c5d06",
+          "bytes": 10006
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/1.response.json",
+          "sha256": "ef73de8912addb2c35b75267051e3aa9277a91235afe7c5820edbb9dd39c91ee",
+          "bytes": 12352,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1409,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 273,
+            "output_tokens_details": {
+              "reasoning_tokens": 201
+            },
+            "total_tokens": 1682
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/2.request.json",
+          "sha256": "0c92ad225c77540a7ccd94a944b16b6a637a86235d615ff8ac1a6d4ee0041e0f",
+          "bytes": 28224
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/2.response.json",
+          "sha256": "b1a6e8acfec6f19f00ad4bae2e86f034e813ed0aa28eb102bcf1ca61c3260d58",
+          "bytes": 20620,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8854,
+            "input_tokens_details": {
+              "cached_tokens": 1664
+            },
+            "output_tokens": 2396,
+            "output_tokens_details": {
+              "reasoning_tokens": 1619
+            },
+            "total_tokens": 11250
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/3.request.json",
+          "sha256": "dc046dbc612245012f0d40384516600b96edf359e8da8f69198ec070fe0feeca",
+          "bytes": 40916
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/3.response.json",
+          "sha256": "d676fb63b67fcf74b57106fed7744a4413dea126befc6bc56ed7c2ca50683aec",
+          "bytes": 31101,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 12423,
+            "input_tokens_details": {
+              "cached_tokens": 11136
+            },
+            "output_tokens": 7434,
+            "output_tokens_details": {
+              "reasoning_tokens": 7014
+            },
+            "total_tokens": 19857
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/4.request.json",
+          "sha256": "f54cf51c6e8c0fe086e600b99d376e2f4b54257e04d4222df3dfd21bf8baae7c",
+          "bytes": 68728
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-0-scheme-evidence/4.response.json",
+          "sha256": "84d43aef731597cc94f906769b0fa7af511acc379bbcd246465843e841c8aaf3",
+          "bytes": 37361,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 23039,
+            "input_tokens_details": {
+              "cached_tokens": 19840
+            },
+            "output_tokens": 9426,
+            "output_tokens_details": {
+              "reasoning_tokens": 9344
+            },
+            "total_tokens": 32465
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/1.request.json",
+          "sha256": "ea6060e6e58c85be413e57b3c24ecb845d515d3e9a62dd6957f313cf292a08da",
+          "bytes": 3456
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/1.response.json",
+          "sha256": "bf2daebbbb5e2685386d96c8fdca91119741a395871c2cca627e9d4aa111a4ae",
+          "bytes": 4727,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 796,
+            "input_tokens_details": {
+              "cached_tokens": 640
+            },
+            "output_tokens": 111,
+            "output_tokens_details": {
+              "reasoning_tokens": 39
+            },
+            "total_tokens": 907
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/2.request.json",
+          "sha256": "d48cd457568e5f96626dcb601143ebaa650993c52215f75f569ace49d8a8777f",
+          "bytes": 20985
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-raw-fact-reasoning/2.response.json",
+          "sha256": "fc7bd15577466ff9deb6edfe53bccdefe4903e30bfdd71aef8e5587d183c3ee9",
+          "bytes": 135594,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8079,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 57318,
+            "output_tokens_details": {
+              "reasoning_tokens": 57236
+            },
+            "total_tokens": 65397
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/1.request.json",
+          "sha256": "9c9a8283ad60b4dc5c60dc2415bc389ea539db2ac84b4b3071a1b502c40c5d06",
+          "bytes": 10006
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/1.response.json",
+          "sha256": "839a5f00bd5db25b3b427bd2b7fe3c14c1f1eefe9f6bbad45cfa0c229106b584",
+          "bytes": 12932,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1409,
+            "input_tokens_details": {
+              "cached_tokens": 1275
+            },
+            "output_tokens": 394,
+            "output_tokens_details": {
+              "reasoning_tokens": 322
+            },
+            "total_tokens": 1803
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/2.request.json",
+          "sha256": "648631d5808dea70aef30b6c0ac64bb0421cc299cf33c80d1b9c6d135e35c1b9",
+          "bytes": 28804
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/2.response.json",
+          "sha256": "5d5ed62e93e14c59a7cc860459b0c2153ac8f626f28645339dec5f149132df01",
+          "bytes": 41885,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8975,
+            "input_tokens_details": {
+              "cached_tokens": 1792
+            },
+            "output_tokens": 11794,
+            "output_tokens_details": {
+              "reasoning_tokens": 11037
+            },
+            "total_tokens": 20769
+          },
+          "error": null
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/3.request.json",
+          "sha256": "460d7064dff3372df5fe4b027a7074e085d532b3f473876850aafb1ad486e93e",
+          "bytes": 300441
+        },
+        {
+          "path": "all-targets-positive-reach-seed-20261313-rep-1-scheme-evidence/3.response.json",
+          "sha256": "180af6251d0cffe9e492f1dcfee1ebd85a3f2836cb11647c168e28616d668f90",
+          "bytes": 34846,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 126117,
+            "input_tokens_details": {
+              "cached_tokens": 20736
+            },
+            "output_tokens": 8598,
+            "output_tokens_details": {
+              "reasoning_tokens": 8516
+            },
+            "total_tokens": 134715
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/1.request.json",
+          "sha256": "5fd4d0e51645a6f705f2e055583ad0b45ff2a0958a5a7be934051392d6620a9a",
+          "bytes": 3297
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/1.response.json",
+          "sha256": "af656a7164a4868009183f20c6b7eeff263afe1afc0d85b1c6ade884867904b1",
+          "bytes": 5540,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 782,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 319,
+            "output_tokens_details": {
+              "reasoning_tokens": 247
+            },
+            "total_tokens": 1101
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/2.request.json",
+          "sha256": "8516c04f6feddfaff8706d1b316dc7a4f1b3fcf048f0fe60263f3e1cbd7fca58",
+          "bytes": 21639
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/2.response.json",
+          "sha256": "0055064fb764d6b0814132cefc68c90bcc8b25656bd372ee1d4a29b200d8b0bc",
+          "bytes": 128679,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8414,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 54767,
+            "output_tokens_details": {
+              "reasoning_tokens": 54488
+            },
+            "total_tokens": 63181
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/3.request.json",
+          "sha256": "0b11369cc228a5c67e39c4115842d45cd2e99b94fc43bf9c74d53d3c607fd338",
+          "bytes": 146689
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/3.response.json",
+          "sha256": "9383896b7c3bf7feed2355b4732795665f3b27cfff46cc4dc1e6e3db246a356a",
+          "bytes": 101382,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 63201,
+            "input_tokens_details": {
+              "cached_tokens": 62976
+            },
+            "output_tokens": 39644,
+            "output_tokens_details": {
+              "reasoning_tokens": 39445
+            },
+            "total_tokens": 102845
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/4.request.json",
+          "sha256": "66da705137a85c12f00ff6b80fda82f422604aa3d02eca34437fb6f39dfdb42e",
+          "bytes": 244397
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/4.response.json",
+          "sha256": "8c65df50255f19ff77a66d3d83b356fdaaaafb3d83a4eba2b8597d7eb8bc57d9",
+          "bytes": 5587,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 102865,
+            "input_tokens_details": {
+              "cached_tokens": 102656
+            },
+            "output_tokens": 563,
+            "output_tokens_details": {
+              "reasoning_tokens": 411
+            },
+            "total_tokens": 103428
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/5.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/5.request.json",
+          "sha256": "d20b3b0e88a85c28c6cb30e02fc78af4753b2a25e99fda4ff11df2fafa7b812e",
+          "bytes": 246264
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/5.response.json",
+          "sha256": "aed4c6857c4f38bd32a4846e83fc9aeb1c89e989df4899da83f190761709011a",
+          "bytes": 6608,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 103448,
+            "input_tokens_details": {
+              "cached_tokens": 103296
+            },
+            "output_tokens": 867,
+            "output_tokens_details": {
+              "reasoning_tokens": 721
+            },
+            "total_tokens": 104315
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/6.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/6.request.json",
+          "sha256": "eae0b10b24fbcfdd9175cb342288846e3d37e8b0294e6fd9de3a4d1ad4f1b8cf",
+          "bytes": 249152
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-raw-fact-reasoning/6.response.json",
+          "sha256": "2b777e133409b899457fea2f47a66cf2529b6adc4c360f916885223c523acd4a",
+          "bytes": 43634,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 104335,
+            "input_tokens_details": {
+              "cached_tokens": 104192
+            },
+            "output_tokens": 13976,
+            "output_tokens_details": {
+              "reasoning_tokens": 13656
+            },
+            "total_tokens": 118311
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/1.request.json",
+          "sha256": "1e9b1a8adf2b2fd3311761cd444b696df457eb04535f71a645aa8977b1618453",
+          "bytes": 9847
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/1.response.json",
+          "sha256": "6b22661646d6e3acc7ef132ac91093e80996517e9e07eb17f91904db671ecaf3",
+          "bytes": 13155,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1395,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 461,
+            "output_tokens_details": {
+              "reasoning_tokens": 389
+            },
+            "total_tokens": 1856
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/2.request.json",
+          "sha256": "250aad4a8c7cfd7ccf82cb4b3d05149363836ca2a4df15a48677067044bf8ff6",
+          "bytes": 28871
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/2.response.json",
+          "sha256": "249b96a8c0ba3206772f787b9593b22ed4d069869d396fedff7b8b661a1aaa2e",
+          "bytes": 19074,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9169,
+            "input_tokens_details": {
+              "cached_tokens": 1792
+            },
+            "output_tokens": 2008,
+            "output_tokens_details": {
+              "reasoning_tokens": 1402
+            },
+            "total_tokens": 11177
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/3.request.json",
+          "sha256": "e8ebd5080eb50fb74f93f4fe216ffacff14abdfa8189b98e03b42a07a230cbec",
+          "bytes": 37308
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/3.response.json",
+          "sha256": "26b274243239ee6e9e79dbab8bf6cc1c25f69cbf7f9c5cb3e02afb1883f47430",
+          "bytes": 14732,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 11200,
+            "input_tokens_details": {
+              "cached_tokens": 11008
+            },
+            "output_tokens": 996,
+            "output_tokens_details": {
+              "reasoning_tokens": 382
+            },
+            "total_tokens": 12196
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/4.request.json",
+          "sha256": "5afd0d5eb0cadec006e8a60b2fdd412efc6467d7ca0f02ddbef115e911ba60cf",
+          "bytes": 44631
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-0-scheme-evidence/4.response.json",
+          "sha256": "313a5f9f6d607103f68da7568689e1cc7c488a6c87552f04237c426c480f1afd",
+          "bytes": 64838,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 13608,
+            "input_tokens_details": {
+              "cached_tokens": 12160
+            },
+            "output_tokens": 22328,
+            "output_tokens_details": {
+              "reasoning_tokens": 22008
+            },
+            "total_tokens": 35936
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/1.request.json",
+          "sha256": "5fd4d0e51645a6f705f2e055583ad0b45ff2a0958a5a7be934051392d6620a9a",
+          "bytes": 3297
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/1.response.json",
+          "sha256": "e36215bdb26fed78fe4919c30cd6cbfafa6fe2ef9a17fd5d30d50307ae8efc3f",
+          "bytes": 5924,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 782,
+            "input_tokens_details": {
+              "cached_tokens": 640
+            },
+            "output_tokens": 413,
+            "output_tokens_details": {
+              "reasoning_tokens": 341
+            },
+            "total_tokens": 1195
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/2.request.json",
+          "sha256": "300b12860ed8a91f4256c6f6aa2839866447b5de10e724fa306cabc38d17354d",
+          "bytes": 22020
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/2.response.json",
+          "sha256": "c5938ca2099b9effcdd18bf15fd6dba96a7f300bc392cb50693e6b6c372e94b0",
+          "bytes": 74739,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8508,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 32674,
+            "output_tokens_details": {
+              "reasoning_tokens": 32334
+            },
+            "total_tokens": 41182
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/3.request.json",
+          "sha256": "61e768d4199930e7fe850b0bf3ba52929a3bc5f7471a3e0dbd1eecfac21006c3",
+          "bytes": 93040
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-raw-fact-reasoning/3.response.json",
+          "sha256": "585d92585bf627e1af924ec24cf53e4dce33535db28375b23121d802ac489826",
+          "bytes": 137884,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 41202,
+            "input_tokens_details": {
+              "cached_tokens": 40960
+            },
+            "output_tokens": 51948,
+            "output_tokens_details": {
+              "reasoning_tokens": 51628
+            },
+            "total_tokens": 93150
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/1.request.json",
+          "sha256": "1e9b1a8adf2b2fd3311761cd444b696df457eb04535f71a645aa8977b1618453",
+          "bytes": 9847
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/1.response.json",
+          "sha256": "7b0fa504b824d20d5f4c4bf567ec04cdf35b75c1b4bc5ec6a63f6daded4ec800",
+          "bytes": 14594,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1395,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 761,
+            "output_tokens_details": {
+              "reasoning_tokens": 689
+            },
+            "total_tokens": 2156
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/2.request.json",
+          "sha256": "d0a8d53c0c97980ce5397c02d1b586e908424376680855ece6968b76e62d9198",
+          "bytes": 30310
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/2.response.json",
+          "sha256": "d86fc7bc87c6d2d0e9449f9a8f8bd8b050cc15e28d0f008202c69930fdca09fc",
+          "bytes": 16956,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9469,
+            "input_tokens_details": {
+              "cached_tokens": 2048
+            },
+            "output_tokens": 1399,
+            "output_tokens_details": {
+              "reasoning_tokens": 849
+            },
+            "total_tokens": 10868
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/3.request.json",
+          "sha256": "2e9644e50d306e6642ab1883a0e83e5bf3821baabd7c0e8a2055292daf2089a6",
+          "bytes": 36631
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/3.response.json",
+          "sha256": "745074b78ffcc72a67d6be8c489472c9d8e63c243745d69ecbdf053e0b720327",
+          "bytes": 13476,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 10891,
+            "input_tokens_details": {
+              "cached_tokens": 10752
+            },
+            "output_tokens": 672,
+            "output_tokens_details": {
+              "reasoning_tokens": 116
+            },
+            "total_tokens": 11563
+          },
+          "error": null
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/4.request.json",
+          "sha256": "5640c1631260436e21bbc27353320eb5242e5374c92966f8755e1346b038b2fc",
+          "bytes": 48232
+        },
+        {
+          "path": "four-hop-shared-witness-seed-20261010-rep-1-scheme-evidence/4.response.json",
+          "sha256": "bbf1a8ab43da1b9bf0cdee5cf2d357a5ed784ee397046b7dd7759cc41fd4fd11",
+          "bytes": 56047,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 15362,
+            "input_tokens_details": {
+              "cached_tokens": 11520
+            },
+            "output_tokens": 15920,
+            "output_tokens_details": {
+              "reasoning_tokens": 15600
+            },
+            "total_tokens": 31282
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/1.request.json",
+          "sha256": "64110a24cf134da2e9ec5b22f6f6e25215e4244bd802a8024585918266b0a65b",
+          "bytes": 3250
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/1.response.json",
+          "sha256": "5c0bd92a210a360abacef849ad4f435398070088b6695cbb57cc0a90a5b0d18d",
+          "bytes": 5339,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 760,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 237,
+            "output_tokens_details": {
+              "reasoning_tokens": 165
+            },
+            "total_tokens": 997
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/2.request.json",
+          "sha256": "93c9f1c4cd947c2aab277c1cd761f1af82f56d4a5252a5b0b7f530b4c6782970",
+          "bytes": 21389
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-raw-fact-reasoning/2.response.json",
+          "sha256": "bdf0394760dcab9542399da31687bbb15343969841cd15c59228c36efda67f84",
+          "bytes": 73536,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8275,
+            "input_tokens_details": {
+              "cached_tokens": 896
+            },
+            "output_tokens": 27787,
+            "output_tokens_details": {
+              "reasoning_tokens": 26865
+            },
+            "total_tokens": 36062
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/1.request.json",
+          "sha256": "62640f83611d2b1d9f28e1339dda1ce65e205056568814604df6fd4b8ab413d8",
+          "bytes": 9800
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/1.response.json",
+          "sha256": "f5484a7e1274030b690e7f8b9fda09b3526d91dcfac8009b8655d5d61d448e9a",
+          "bytes": 12024,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1373,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 189,
+            "output_tokens_details": {
+              "reasoning_tokens": 117
+            },
+            "total_tokens": 1562
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/2.request.json",
+          "sha256": "c51e8d2194884c8e80ce87a0593a16644e1a8a644bb85b45ce8dead24afb5dce",
+          "bytes": 27690
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/2.response.json",
+          "sha256": "69557762a7f7487914b066ce9b41cc42695fd4037439fbddb156a44f31420b68",
+          "bytes": 22617,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8840,
+            "input_tokens_details": {
+              "cached_tokens": 1536
+            },
+            "output_tokens": 2804,
+            "output_tokens_details": {
+              "reasoning_tokens": 2225
+            },
+            "total_tokens": 11644
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/3.request.json",
+          "sha256": "b259390611184abec2672973855c5098bb9fd75017e8c4db4dc7f4a6067549c3",
+          "bytes": 44271
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-0-scheme-evidence/3.response.json",
+          "sha256": "407836a7c14649499a95a8d01a688d0350f6b4b9a7cede19f10b0c69a15ae5ff",
+          "bytes": 91548,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 13657,
+            "input_tokens_details": {
+              "cached_tokens": 11520
+            },
+            "output_tokens": 31705,
+            "output_tokens_details": {
+              "reasoning_tokens": 30783
+            },
+            "total_tokens": 45362
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/1.request.json",
+          "sha256": "64110a24cf134da2e9ec5b22f6f6e25215e4244bd802a8024585918266b0a65b",
+          "bytes": 3250
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/1.response.json",
+          "sha256": "f3dd8b0d93f7f20e73c8d74973638fea06cde9e858f46c5d36332b855cc844fa",
+          "bytes": 6241,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 760,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 445,
+            "output_tokens_details": {
+              "reasoning_tokens": 373
+            },
+            "total_tokens": 1205
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/2.request.json",
+          "sha256": "427f700687d75196e44c9c1f4842b10c0e104629c7d3085bf1e35cba8685d3e6",
+          "bytes": 22291
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning/2.response.json",
+          "sha256": "05c85151e9aea93b9f627143851c8c0326456866986695198fe31ac9998d33b6",
+          "bytes": 145240,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8483,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 56696,
+            "output_tokens_details": {
+              "reasoning_tokens": 55774
+            },
+            "total_tokens": 65179
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/1.request.json",
+          "sha256": "62640f83611d2b1d9f28e1339dda1ce65e205056568814604df6fd4b8ab413d8",
+          "bytes": 9800
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/1.response.json",
+          "sha256": "29e1236288187f256855becd58187d3a6511962eca0544187112bd65c6818bcc",
+          "bytes": 12972,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1373,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 405,
+            "output_tokens_details": {
+              "reasoning_tokens": 333
+            },
+            "total_tokens": 1778
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/2.request.json",
+          "sha256": "c5292c45320dffe92e0bffdfff8e6da1a5baca806bd3f69a9aa0adf243555680",
+          "bytes": 28638
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/2.response.json",
+          "sha256": "70e8ef008dccc2f5fe589aa3293b78ef695a12ac7e8b3fbeb1857140704b4862",
+          "bytes": 28245,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9056,
+            "input_tokens_details": {
+              "cached_tokens": 1664
+            },
+            "output_tokens": 5627,
+            "output_tokens_details": {
+              "reasoning_tokens": 4889
+            },
+            "total_tokens": 14683
+          },
+          "error": null
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/3.request.json",
+          "sha256": "5da5be9edebdbabf0cb4b4189055a3d219659f2b921623b14fa53bf717c759ee",
+          "bytes": 57723
+        },
+        {
+          "path": "recursive-clean-bridge-seed-20261111-rep-1-scheme-evidence/3.response.json",
+          "sha256": "30b30a59d2a59b5415a4c9dc777ac28595375fb0c6bd9d71a74458beaea14454",
+          "bytes": 75657,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 19654,
+            "input_tokens_details": {
+              "cached_tokens": 14592
+            },
+            "output_tokens": 26094,
+            "output_tokens_details": {
+              "reasoning_tokens": 25172
+            },
+            "total_tokens": 45748
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/1.request.json",
+          "sha256": "5239d0344593dfca904d637a4a32806bea346795ab64f62f9855b323f4cc4e25",
+          "bytes": 3460
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/1.response.json",
+          "sha256": "2a0e2b678cb1cb31945a102074b646a29db17e47438396567e2c9c1dc4124321",
+          "bytes": 6448,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 805,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 502,
+            "output_tokens_details": {
+              "reasoning_tokens": 430
+            },
+            "total_tokens": 1307
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/2.request.json",
+          "sha256": "71dc0670678f74028371ff6af66e43381520b59ffadf18be452c2875fc44261f",
+          "bytes": 22707
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning/2.response.json",
+          "sha256": "9f5f62e6fdf73def9ffeb53ee7936fa0fd7c19192c76f7d0dc589a13d3617bb1",
+          "bytes": 146943,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8520,
+            "input_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "output_tokens": 62355,
+            "output_tokens_details": {
+              "reasoning_tokens": 61460
+            },
+            "total_tokens": 70875
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/1.request.json",
+          "sha256": "08872dda6c0f9981ce405f1c1316385fc78b34e87af73d78c8d58138ac2f0c4e",
+          "bytes": 10010
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/1.response.json",
+          "sha256": "38b4a947ce3243cd8887bff5679ee9b6f94ed97557297a26f010c7028af9cda8",
+          "bytes": 13648,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1418,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 565,
+            "output_tokens_details": {
+              "reasoning_tokens": 493
+            },
+            "total_tokens": 1983
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/2.request.json",
+          "sha256": "a67c1e149cab036635cabd0e19d8eb01894b88a7fc4eeda3a5ed84515ee359dd",
+          "bytes": 29526
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/2.response.json",
+          "sha256": "52fa451774c12b71bc547132b5fff3106c509ff9460e75c8ba1db250f9726ffd",
+          "bytes": 17153,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 9196,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 1421,
+            "output_tokens_details": {
+              "reasoning_tokens": 1084
+            },
+            "total_tokens": 10617
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/3.request.json",
+          "sha256": "642d58e4893e8078bf14d1f38ee6359f01b8023e2444bb3416df514c6dfe72f5",
+          "bytes": 36044
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/3.response.json",
+          "sha256": "9ac391796b0a30fcd545cb1381fae605af991286587b4a45cb2b758a5d94ec34",
+          "bytes": 12994,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 10640,
+            "input_tokens_details": {
+              "cached_tokens": 10496
+            },
+            "output_tokens": 497,
+            "output_tokens_details": {
+              "reasoning_tokens": 156
+            },
+            "total_tokens": 11137
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/4.request.json",
+          "sha256": "00d2ef2c6ecd4307ee54bcef971fcfbae4b6ea7bbf0fc2465f14974b207ec4d4",
+          "bytes": 42739
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/4.response.json",
+          "sha256": "0f7c46a5b9bafd8c07422a179a8681a61613ff370d1a1fd6eb152fe3004d8833",
+          "bytes": 16048,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 12997,
+            "input_tokens_details": {
+              "cached_tokens": 11136
+            },
+            "output_tokens": 1298,
+            "output_tokens_details": {
+              "reasoning_tokens": 599
+            },
+            "total_tokens": 14295
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/5.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/5.request.json",
+          "sha256": "b191e59dafd9a5fd60f44491bb4bd69cce428d60c2a27b2f89862ebb6dee198a",
+          "bytes": 66202
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/5.response.json",
+          "sha256": "31865836911f3c6b90a78363c994f3e375b9267d692ea0e4d387cbabac4aec30",
+          "bytes": 13752,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 22035,
+            "input_tokens_details": {
+              "cached_tokens": 14208
+            },
+            "output_tokens": 737,
+            "output_tokens_details": {
+              "reasoning_tokens": 230
+            },
+            "total_tokens": 22772
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/6.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/6.request.json",
+          "sha256": "a00c7aafa3a27e4e6aded3c4c7bc0e1e20925aa18f4359049d863171f61a9a8e",
+          "bytes": 77906
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/6.response.json",
+          "sha256": "35d76c20c7ba7123f2e233ba0ce4d360e253bbe4585004a536d7be914f11663c",
+          "bytes": 34569,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 26462,
+            "input_tokens_details": {
+              "cached_tokens": 22656
+            },
+            "output_tokens": 7577,
+            "output_tokens_details": {
+              "reasoning_tokens": 6354
+            },
+            "total_tokens": 34039
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/7.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/7.request.json",
+          "sha256": "fa56ec67645c76de3ef6490c050c93474ef03da66b565e2dc30b83db34121b18",
+          "bytes": 106396
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence/7.response.json",
+          "sha256": "7ff9ca8892a5dbaf7b425d219bcf94ebd5d252c4e12d036ce5c450de590a0b12",
+          "bytes": 54877,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 36013,
+            "input_tokens_details": {
+              "cached_tokens": 33920
+            },
+            "output_tokens": 16636,
+            "output_tokens_details": {
+              "reasoning_tokens": 15741
+            },
+            "total_tokens": 52649
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/1.request.json",
+          "sha256": "5239d0344593dfca904d637a4a32806bea346795ab64f62f9855b323f4cc4e25",
+          "bytes": 3460
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/1.response.json",
+          "sha256": "64776baca847e01fee156869bc5ef4e6d190c178c9b8e1b838325de11b4d069d",
+          "bytes": 5925,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 805,
+            "input_tokens_details": {
+              "cached_tokens": 640
+            },
+            "output_tokens": 362,
+            "output_tokens_details": {
+              "reasoning_tokens": 290
+            },
+            "total_tokens": 1167
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/2.request.json",
+          "sha256": "c77f9c329e49b3a94fd4ffe3b6a6a5e86244753b516954c8aa1526c977e9a3b8",
+          "bytes": 22184
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning/2.response.json",
+          "sha256": "227f26f24d089b7729a455af7cacb3b050a4ad16a55cbfa591de197b38dc9b33",
+          "bytes": 302891,
+          "model": "deepseek-flash",
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 8380,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 131072,
+            "output_tokens_details": {
+              "reasoning_tokens": 131072
+            },
+            "total_tokens": 139452
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/1.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/1.request.json",
+          "sha256": "08872dda6c0f9981ce405f1c1316385fc78b34e87af73d78c8d58138ac2f0c4e",
+          "bytes": 10010
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/1.response.json",
+          "sha256": "667e24717da7028d13a5279a441bd5963be2863194d2a1f28c09711d67ac9a86",
+          "bytes": 11790,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 1418,
+            "input_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "output_tokens": 142,
+            "output_tokens_details": {
+              "reasoning_tokens": 70
+            },
+            "total_tokens": 1560
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/2.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/2.request.json",
+          "sha256": "3687f1b47db84f2a116c2441c9b3f30547dfb186347b9fa63055176f0d28e004",
+          "bytes": 27667
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/2.response.json",
+          "sha256": "b29062703d0e8a7dc059c93c310c5d05b79c153b9921c87ab73d18f85e384373",
+          "bytes": 51899,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 8773,
+            "input_tokens_details": {
+              "cached_tokens": 1536
+            },
+            "output_tokens": 16134,
+            "output_tokens_details": {
+              "reasoning_tokens": 15037
+            },
+            "total_tokens": 24907
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/3.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/3.request.json",
+          "sha256": "2974340473dedda9ef61ad0de2e0af936fd2626263af2f8f7232cc7233a0b749",
+          "bytes": 68969
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/3.response.json",
+          "sha256": "05b120bd1a5cf5c9493024438fcd15eca86eee8cf0f930cd564a35f7a20cf305",
+          "bytes": 15138,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 24930,
+            "input_tokens_details": {
+              "cached_tokens": 24704
+            },
+            "output_tokens": 1208,
+            "output_tokens_details": {
+              "reasoning_tokens": 91
+            },
+            "total_tokens": 26138
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/4.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/4.request.json",
+          "sha256": "603bd8ec2e9206a898832dfd49af5c609a5d0772a081fbea69d17defc669372c",
+          "bytes": 80900
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/4.response.json",
+          "sha256": "ff16cfbb78d77a1a871546b1b8c8b6d02669b8d3ff5bce63a1674ce6b8f6facf",
+          "bytes": 38611,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 29315,
+            "input_tokens_details": {
+              "cached_tokens": 26112
+            },
+            "output_tokens": 10022,
+            "output_tokens_details": {
+              "reasoning_tokens": 8795
+            },
+            "total_tokens": 39337
+          },
+          "error": null
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/5.raw.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/5.request.json",
+          "sha256": "4bd5acf8d02c86d711ad0390653d264984e3f985e98948f25567805e811f9791",
+          "bytes": 113450
+        },
+        {
+          "path": "scoped-union-recursive-branch-seed-20261212-rep-1-scheme-evidence/5.response.json",
+          "sha256": "157477cc473335a22a315a8b8f27faeb4ff841958a24176de657000b4a433195",
+          "bytes": 36906,
+          "model": "deepseek-flash",
+          "status": "completed",
+          "usage": {
+            "input_tokens": 41302,
+            "input_tokens_details": {
+              "cached_tokens": 39296
+            },
+            "output_tokens": 9003,
+            "output_tokens_details": {
+              "reasoning_tokens": 8108
+            },
+            "total_tokens": 50305
+          },
+          "error": null
+        }
+      ],
+      "historyChecks": [
+        {
+          "case": "all-targets-positive-reach-seed-20261313",
+          "repetition": 0,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "all-targets-positive-reach-seed-20261313",
+          "repetition": 0,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "all-targets-positive-reach-seed-20261313",
+          "repetition": 1,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "all-targets-positive-reach-seed-20261313",
+          "repetition": 1,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "four-hop-shared-witness-seed-20261010",
+          "repetition": 0,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            },
+            {
+              "turn": 5,
+              "priorReasoningItems": 4,
+              "retainedOutputItems": 8,
+              "pairedToolOutputs": 4,
+              "verified": true
+            },
+            {
+              "turn": 6,
+              "priorReasoningItems": 5,
+              "retainedOutputItems": 10,
+              "pairedToolOutputs": 5,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "four-hop-shared-witness-seed-20261010",
+          "repetition": 0,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "four-hop-shared-witness-seed-20261010",
+          "repetition": 1,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "four-hop-shared-witness-seed-20261010",
+          "repetition": 1,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "recursive-clean-bridge-seed-20261111",
+          "repetition": 0,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "recursive-clean-bridge-seed-20261111",
+          "repetition": 0,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "recursive-clean-bridge-seed-20261111",
+          "repetition": 1,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "recursive-clean-bridge-seed-20261111",
+          "repetition": 1,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "scoped-union-recursive-branch-seed-20261212",
+          "repetition": 0,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "scoped-union-recursive-branch-seed-20261212",
+          "repetition": 0,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            },
+            {
+              "turn": 5,
+              "priorReasoningItems": 4,
+              "retainedOutputItems": 8,
+              "pairedToolOutputs": 4,
+              "verified": true
+            },
+            {
+              "turn": 6,
+              "priorReasoningItems": 5,
+              "retainedOutputItems": 10,
+              "pairedToolOutputs": 5,
+              "verified": true
+            },
+            {
+              "turn": 7,
+              "priorReasoningItems": 6,
+              "retainedOutputItems": 12,
+              "pairedToolOutputs": 6,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "scoped-union-recursive-branch-seed-20261212",
+          "repetition": 1,
+          "arm": "raw-fact-reasoning",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            }
+          ]
+        },
+        {
+          "case": "scoped-union-recursive-branch-seed-20261212",
+          "repetition": 1,
+          "arm": "scheme-evidence",
+          "checks": [
+            {
+              "turn": 1,
+              "priorReasoningItems": 0,
+              "retainedOutputItems": 0,
+              "pairedToolOutputs": 0,
+              "verified": true
+            },
+            {
+              "turn": 2,
+              "priorReasoningItems": 1,
+              "retainedOutputItems": 2,
+              "pairedToolOutputs": 1,
+              "verified": true
+            },
+            {
+              "turn": 3,
+              "priorReasoningItems": 2,
+              "retainedOutputItems": 4,
+              "pairedToolOutputs": 2,
+              "verified": true
+            },
+            {
+              "turn": 4,
+              "priorReasoningItems": 3,
+              "retainedOutputItems": 6,
+              "pairedToolOutputs": 3,
+              "verified": true
+            },
+            {
+              "turn": 5,
+              "priorReasoningItems": 4,
+              "retainedOutputItems": 8,
+              "pairedToolOutputs": 4,
+              "verified": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recovery": {
+    "resultSha256": "9572f20b16f1b3d2a4a664db2923e899a5218ea7d682f097c65352229088858c",
+    "files": [
+      {
+        "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-recovery-1.raw.txt",
+        "sha256": "039ce8cfb72a96d3c8120026ca4c5ea5bc358540da04a53e0f0d7c5979da95c7",
+        "bytes": 1792
+      },
+      {
+        "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-recovery-1.request.json",
+        "sha256": "91a246e3169402a0608f6e80e3faafe1c3b42eb9c50a56446562adc6fafc4f6c",
+        "bytes": 21778
+      },
+      {
+        "path": "recursive-clean-bridge-seed-20261111-rep-1-raw-fact-reasoning-recovery-1.response.json",
+        "sha256": "f7e1b13aef6757688c4672eda12bd4838526756ffb9a02b0159fc2b20857d2c9",
+        "bytes": 135521
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-recovery-1.raw.txt",
+        "sha256": "0990b174113f305c7d004d613d8dfacf3855be4cd9da86d089a167b8d1219390",
+        "bytes": 1748
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-recovery-1.request.json",
+        "sha256": "72ad0de2615802839c8d214788b37b9c7ea9c97ed0d09dcdaf589fd815654cf2",
+        "bytes": 21988
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-raw-fact-reasoning-recovery-1.response.json",
+        "sha256": "1509092340a053102597e6d7ff0a7d92d03a93acfcb1314ecd1fe5bec231b1c1",
+        "bytes": 242707
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-1.raw.txt",
+        "sha256": "80428ffbdde01ef401c6880ec2a33f03d6418b464b73749a75716a6b4ee91ade",
+        "bytes": 2276
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-1.request.json",
+        "sha256": "1936fcbad1fbf5d9f4035140da3f00dbb68c5f150f886513fc961f8d7b72cc96",
+        "bytes": 28989
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-1.response.json",
+        "sha256": "9588dd4dec681ef432d6ee5aab89c1661de2f087f593be5bd2249492e908bdfc",
+        "bytes": 39108
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-2.raw.txt",
+        "sha256": "abed68b146035c6439cf64d26c9e970427ef9fcdcd7021accdfb29349d1bbb71",
+        "bytes": 1748
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-2.request.json",
+        "sha256": "bb5fb10769e402079455bfd8de91a5fe98ea6b7e969fd80aec5e6d04631fe547",
+        "bytes": 44305
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-0-scheme-evidence-recovery-2.response.json",
+        "sha256": "5dcdbd19aa389997cb7430beb38ae93cf280843fe065975000bc98e463608536",
+        "bytes": 23421
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-recovery-1.raw.txt",
+        "sha256": "96896d5423307019e204f4c390e3098292e80a41d400f6d8c52476e060f122c6",
+        "bytes": 1668
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-recovery-1.request.json",
+        "sha256": "0453cb7f155c2c317f93602f95562fbfd98b39176b3986c55c3996e334c6d875",
+        "bytes": 21988
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-raw-fact-reasoning-recovery-1.response.json",
+        "sha256": "c2e02be8b57ce05c28242bdcc301f8eca226307d26fd59f8c69860251a8ebb1a",
+        "bytes": 159870
+      }
+    ]
+  },
+  "toolRecovery": {
+    "resultSha256": "96ef3b801c28781849d21f0c7299d695b1429b089ad337dc86020b0735d27414",
+    "files": [
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-1.raw.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-1.request.json",
+        "sha256": "f1d3de07a5e86d40074ad30067ca81d95acf5ea76fd2b2834b4a386ac7b9c5a6",
+        "bytes": 321575
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-1.response.json",
+        "sha256": "ff10ff95d85b2b0a9adf3cef1a464455799c3bf10ad53742c6d0ea00c3392a8d",
+        "bytes": 41910
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-2.raw.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-2.request.json",
+        "sha256": "cb9f9f56fb5642c32c70bfe65c7aa5eb1162f71b93e512cf32e529ec8ca06a2c",
+        "bytes": 359794
+      },
+      {
+        "path": "scoped-union-recursive-branch-seed-20261212-rep-1-recovery-2.response.json",
+        "sha256": "701cde3e79335a01753f1bb451380129f05e8aae17c7eccc632e93787eaa9ddc",
+        "bytes": 56463
+      }
+    ]
+  }
+}

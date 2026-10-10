@@ -1,0 +1,127 @@
+{
+  "qualifiedSourceHead": "2a0951333c3f0851bf7352b2db6c667601c17457",
+  "rebasedOver": "5cb4d83",
+  "sources": {
+    "packages/proofs/lean/PositiveConsequence.lean": "f19e72ab251f4ef43612dc93ef6c564c3b5dae4416b47dca25f5fadce97a0598",
+    "packages/proofs/lean/AscentProof.lean": "5cf658275ee995531fd8fd0c73cd44c6c95db47da8cfd8a8bce48c8dba041fd2",
+    "packages/proofs/lean/lakefile.lean": "6576a70bce9b634aaa93d260d8be2713599412e5fb227e7ac729ad9dd6689ccf",
+    "packages/proofs/tla/ProviderFrontier.tla": "f35ca9033bec6ab1ba8ff4d2b054f24b478df9af7bea9e7476c8493a2cff4e05",
+    "packages/proofs/tla/ProviderFrontier.cfg": "ef00c31e8e9e27e59ec1d87787921e5c8ffca3027ac136387094b1cd77a3f20b",
+    "justfile": "7873c8ad1601294dbcada23b3a33e6b2c6748b71d7a825417969f9fafd0b738a",
+    "t/qualification/ascent-positive-plan-test.ss": "c4afae95b3315ced740cd4ed3bb8055037fa69f786f03ac8811638abfe873ff7",
+    "t/qualification/ascent-byods-invariants-test.ss": "ac2b17a1ecdea6456c5dcd11c1f046f05c7979af2dc601bc8b09213b344e7538",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "c906dccfd58e05b190f19f834b949a0c224edcfee4df066ce52f1a09f33af80b",
+    "packages/proofs/lean/Tests/PositiveConsequenceTests.lean": "d71bf7fd592620aa47cc056b90161c9f9510002bf55e22d38f778f95fb513743",
+    "packages/proofs/lean/Tests/PositiveSlotsTests.lean": "7dc9f722c1abbc6852f88e2c96b2f6a2cfe8802ed428f0fef0a13254a75a8b7f",
+    "packages/proofs/lean/Tests/PositiveTraversalTests.lean": "1b62d46e8b940d6f9fee0ae8ea8b053f54c33a5034c53283b90e94b931a0ca61",
+    "packages/proofs/lean/Tests/RuleBodyFrameTests.lean": "97be50f0f7c5dd4a99386dc92bd9fb9a81cc803e36adec5852986349c25efada"
+  },
+  "papers": [
+    {
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "section": "3.2 / 4; consequence witnesses, concretization and index interaction",
+      "reopened": "2026-10-06"
+    }
+  ],
+  "testMigration": {
+    "directory": "packages/proofs/lean/Tests",
+    "files": [
+      "packages/proofs/lean/Tests/AscentProofTests.lean",
+      "packages/proofs/lean/Tests/PositiveConsequenceTests.lean",
+      "packages/proofs/lean/Tests/PositiveSlotsTests.lean",
+      "packages/proofs/lean/Tests/PositiveTraversalTests.lean",
+      "packages/proofs/lean/Tests/RuleBodyFrameTests.lean"
+    ],
+    "moved": {
+      "packages/proofs/lean/AscentProofTests.lean": {
+        "newPath": "packages/proofs/lean/Tests/AscentProofTests.lean",
+        "bodyPreserved": true
+      },
+      "packages/proofs/lean/RuleBodyFrameTests.lean": {
+        "newPath": "packages/proofs/lean/Tests/RuleBodyFrameTests.lean",
+        "bodyPreserved": true
+      },
+      "packages/proofs/lean/PositiveSlotsTests.lean": {
+        "newPath": "packages/proofs/lean/Tests/PositiveSlotsTests.lean",
+        "bodyPreserved": true
+      },
+      "packages/proofs/lean/PositiveTraversalTests.lean": {
+        "newPath": "packages/proofs/lean/Tests/PositiveTraversalTests.lean",
+        "bodyPreserved": true
+      }
+    },
+    "libraryTarget": "AscentProofTests",
+    "roots": "Tests.*",
+    "proofModulesImportTests": false,
+    "historicalReceiptsChanged": false
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 71,
+    "bridgeTheorems": [
+      "reference_membership",
+      "precompiled_membership",
+      "enumerated_view_monotone",
+      "binder_iterations_equal",
+      "admitted_rows_faithful",
+      "admitted_binder_iterations_equal"
+    ],
+    "axioms": {
+      "reference_membership": "depends on axioms: [propext, Quot.sound]",
+      "precompiled_membership": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "enumerated_view_monotone": "depends on axioms: [propext]",
+      "binder_iterations_equal": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "admitted_rows_faithful": "depends on axioms: [propext, Classical.choice, Quot.sound]",
+      "admitted_binder_iterations_equal": "depends on axioms: [propext, Classical.choice, Quot.sound]"
+    },
+    "premises": [
+      "Equal-arity frozen finite row lists",
+      "Represented slot/ordinary environments",
+      "Pure singleton head emitted consistently by both representations",
+      "Faithful enumeration within admitted finite tuple domain; supplied mathematical enumerator proves this property"
+    ],
+    "scope": "Raw-row traversal membership to positive consequence, derived binder-view monotonicity and all-Nat iteration equality; not actual Scheme extraction"
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-provider-frontier-formal",
+    "exitCode": 0,
+    "modelUnchanged": true,
+    "normalDistinctStates": [
+      1376,
+      670
+    ],
+    "expectedNegativeControls": [
+      "provider-frontier-raw FrontierComplete",
+      "provider-frontier-omit DeliveredExact",
+      "provider-frontier-early ConsumerSnapshot",
+      "provider-frontier-old ConsumerSnapshot",
+      "provider-frontier-initial ConsumerSnapshot"
+    ],
+    "scope": "Finite Provider initialization/consume/publication protocol; no duplicate Lean state machine"
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-plan-test.ss t/qualification/ascent-byods-invariants-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 32,
+    "modules": [
+      "ascent-positive-plan-test",
+      "ascent-byods-invariants-test"
+    ],
+    "runtimeChangesInPatch": false
+  },
+  "discardedProofAttempts": [
+    "Example arity decide lacked a Decidable instance; corrected by explicit simplification",
+    "Reserved Lean universe identifier in new finite-domain parameters; renamed tupleDomain"
+  ],
+  "remaining": [
+    "Native row equality/encoding, descriptor/head decoder and tuple-domain admission",
+    "Actual index lookup completeness and delta/pivot selection",
+    "Native mutable row admission and async trace refinement",
+    "General Provider gamma/injection contracts and descriptor termination"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

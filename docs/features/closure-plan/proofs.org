@@ -1,0 +1,528 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Closure Plan: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Current design audit and ordered closure plan (2026-10-06)
+:PROPERTIES:
+:CUSTOM_ID: current-closure-plan
+:END:
+
+** Current library scope and evidence
+
+ASCENT is the native Scheme library under acceptance. MR/MRR is a future
+consumer research task: do not schedule its Rust runtime, binding or ABI
+integration in this mainline, and do not require it to declare library closure.
+The original Rust ASCENT oracle remains a semantic differential reference;
+that comparison is distinct from an MR consumer runtime. Existing R7 records
+retain their historical scope but are not an active library gate.
+
+The current Scheme receipt binds =77fbabe= to 82 modules / 731 Cases with
+explicit successful exits and package-policy qualification. Later =6efc911=
+changes only Lean/proof documentation and qualifies the 84-job proof build,
+including typed insertion-change application/composition with no axioms. See
+[[file:../../evidence/scheme-index-sharing-20261006/receipt.json][index and native acceptance]] and [[file:../../evidence/scheme-higher-order-20261004/receipt.json][higher-order evidence]]. Final-head CI remains
+independent. These results do not close concrete native representation bridges,
+full higher-order change compilation or complete paper application benefits.
+
+The active sequence is the six library milestones below. R6 model study is
+separate research: its frozen plan remains pending explicit source/fee
+authorization and is not a dependency of these implementation/proof milestones.
+No new paid model call is authorized by this scope revision.
+Historical MR scheduling statements below are superseded by this library scope.
+
+Primary sources reopened for this scope revision are [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]],
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change]], [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][deletion rederivation]], and the [[https://arxiv.org/abs/2203.16684][incremental view maintenance record]] with
+its [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][2023 published DBSP paper]]. This is a design synthesis for the library,
+not a transfer of their implementation results or formal verification claims.
+
+The immediate research question is how actual admitted descriptors, finite
+scalar/row representations and emitted native actions discharge the premises
+of the existing consequence/lowering theorems. Close that representation bridge
+before counting additional abstract theorems as compiler verification. Provider concretization
+Theorem 3.5 also needs the actual concretization and total/delta contracts;
+index optimality alone does not provide them. higher-order change requires an executable typed
+change transformation with discrete base inputs; the newly proved composition
+interface is necessary evidence, not the transformation itself. deletion rederivation support
+counts and incremental view maintenance signed streams require separate algorithm decisions before
+optimizing the existing founded-recovery baseline.
+
+
+** Historical source and acceptance baseline (superseded)
+
+This audit binds GitHub PR #1 implementation head
+=665f57c88f907a4ae7064ce6b4eb94fbf8ece6c6=. Its [[https://github.com/tao3k/gerbil-ascent/actions/runs/37426004971][exact-head CI run]] passed the
+formal and regular BYODS jobs during this audit. The Scheme job then failed
+with a compiler heap overflow; other and full-scale oracle jobs were still
+running at the later observation. Overall acceptance is blocked. A subsequent
+documentation commit needs its own final-head check; earlier CI is historical
+source evidence, not a verdict on an unseen commit.
+
+The [[file:../../evidence/scheme-integrated-closure-20261006/receipt.json][integrated receipt]] distinguishes the historical 80-module/698-Case full run,
+the rebased 84-job Lean build, unchanged Quint contracts, the Release full-scale
+oracle, and rejected rebased full-native runs. The automatic 12-process run
+failed four progress controls. A four-process run found an actual Actor Session
+eligibility regression after expression-plan compilation; the fix passed the
+existing Actor Session rejection control. A later full run still failed the
+five-second progress gate. Partial passing modules cannot close full acceptance.
+Host contention was observed, but its causal role has not been established.
+
+The completed Scheme CI job =112145690875= reports =Heap overflow= in
+=std/make#make-build= worker threads while =prepare-test-library!= compiles the
+qualification/support dependency closure. The invocation uses
+=-:max-heap=1G,debug=q= and exits 70 before the native module pool starts. This
+is a compiler/build-organization failure, distinct from the progress failures
+in the rebased runs. Investigate required dependency closure size, compiler
+retention and measured heap use. Compiler capacity, process-pool capacity and
+Runtime actor capacity are separate controls. Preserve complete fixture coverage
+when restructuring builds; neither dropping modules nor increasing timeouts
+closes this gate. A memory-limit change requires measured justification and a
+separate stated build resource contract.
+
+** Audit findings and architecture decisions
+
+1. Compilation and worker eligibility are different contracts. A compiled
+   positive plan can contain expressions or callbacks. Both Session admission
+   and component dispatch must use explicit purity and Provider capabilities;
+   plan existence cannot authorize concurrent execution. Check every consumer
+   whenever the admitted plan representation changes.
+2. =credited_compiled_closed= and =completed_compiled_least= connect useful
+   semantic laws, but faithful native row enumeration, valid rules, external
+   read framing, actual credit/tail completeness and local stability remain
+   premises. Discharge these through representation and execution refinement
+   for the admitted grammar. Additional abstract lemmas alone do not close R1.
+3. Ordinary Set iteration is proved for every Nat round in =SemiNaive=.
+   Arbitrary Provider gamma/injection and total/delta contracts, user lattices
+   and higher-order change higher-order function changes remain separate obligations.
+4. Ready-component scheduling and credit/drain publication are implemented for
+   pure canonical Set components. Preserve dependency cuts and terminal
+   completeness while removing global waiting. General Provider concurrency
+   and partitioning one large SCC require explicit new protocols and evidence.
+5. Existing TLC models have unbounded Nat semantics but finite exploration;
+   =Spec= alone establishes neither invariance nor liveness. Unbounded temporal
+   proof and native event correspondence remain Quint responsibilities.
+6. A physical index cache is not Provider concretization index sharing. Sharing requires a layout
+   and selection algorithm that covers logical lookup requirements, then
+   application measurements. Provider fixture gains cannot establish whole
+   application or real-model benefits.
+7. Historical append-only sections retain their original source boundaries.
+   The current plan below supersedes historical next-step wording. The removed
+   Lean SessionPublication replica must not reappear as a planned dependency.
+
+** Connected delivery milestones
+
+Each milestone joins a paper premise, implementation owner, formal obligation
+and independent executable discriminator. This is the existing R1-R5 library
+closure scope; it introduces no new language version, namespace or wrapper framework.
+
+| Order / existing scope | Paper and concrete implementation deliverable | Formal responsibility | Acceptance gate |
+|------------------------+----------------------------------------------+-----------------------+-----------------|
+| 0 / release evidence | Current native package, harness and pinned oracle; preserve the qualified compiler-layer ownership, complete registry and actual process/module progress controls; earlier heap/progress failures remain rejected historical evidence | Existing proofs and temporal controls remain independent evidence | Full native module registry, explicit Cases/OK/exit propagation, all oracle shards including full scale, formal and final-head CI pass on the same source; retain rejected runs and watchdog limits |
+| 1 / R1-R2 admitted compiler | rule planning section 4, functional fixed points section 5.3, relational kernel kernel boundary, fragment composition/program lifecycle composition: connect higher-order descriptors, lexical captures, finite domains, row equality, generated actions, indexes and complete positive component output; owners: program/higher-order.ss, program/operator.ss, core/positive-plan.ss, program/component-worker.ss | Lean: compose DescriptorScope, LexicalLowering, RecursiveLowering, FiniteHeight, PositiveSlots, IndexedIteration and GroundedBinding with actual representation obligations. Derive terminal premises from admitted execution rather than assume native completion | Shared captures, fresh identities, empty/zero-arity domains, nested arrows, duplicate rows, repeated variables, host expressions and impurity discriminators; independently computed output equals the least model for the admitted finite subset. Budget failure remains distinct from proved termination |
+| 2 / R1-R3 Provider and indexes | Provider concretization sections 3-4 and 5.5: specify gamma, injection, total/delta enumeration and lookup contracts; implement shared physical index layout/selection from actual logical requirements; owners: table/storage.ss, table/provider.ss, program/index.ss | Lean: establish Provider contract instances and semantic lookup/frontier preservation; prove sharing coverage and representation equivalence. Quint: staged root installation and version visibility only | Independently enumerate represented rows and every emitted frontier; repeated/grouped/producer interactions, failed insertion and rollback pass. Shared layouts cover every required lookup and reduce physical structures on a discriminating workload; minimal layout and runtime benefit are separate claims |
+| 3 / R3 actor execution | Preserve ready SCC dispatch, immutable reads, one merge owner and credited tail completion. Define partitioning for a large SCC and explicit custom Provider/lattice ownership before enabling either; owners: program/component-plan.ss, positive-components.ss, actor-round.ss, actor-session.ss | Lean: finite computation and merge/index algebra. Quint: work identity, dependency cuts, stale replies, cancellation, drain, close and native event refinement; state fairness assumptions for any progress claim | Independent truth under reordered/delayed/duplicate completion and failures; bounded capacity and no incomplete publication; demonstrate successor dispatch before unrelated work finishes. Claim multicore benefit only after matched measurements |
+| 4 / R3-R4 updates and evidence | deletion rederivation sections 3-4 and incremental view maintenance: retain source occurrences separately from derived facts; connect affected-component rederivation, complete alternatives and founded witnesses; owners: program/source-log.ss, update-selection.ss, reuse.ss, candidate provenance/support | Lean: FunctionalDependency, SourceUpdateFrame and founded/stratum-relative evidence laws. Quint: source/result transaction, pending/resume, ABA and failed publication | Fresh recomputation after every accepted update agrees; final-support removal, multiple supports, unrooted cycles, lower-stratum changes, interrupted updates, tampering and exhaustion retain exact status. DRedc and DBSP names require their actual algorithms, not equivalent final rows alone |
+| 5 / R1-R5 higher-order change semantics | higher-order change sections 4.2-4.3 and 6-7: define typed insertion changes for admitted relation/arrow types and implement an actual preserving compiler transformation; owners: program/higher-order.ss, operator.ss and lowering | Lean: recursive insertion-change validity and base-dependent application/composition laws now exist; connect an actual compiler transformation to that relation, including discrete-base variance and changed lexical captures. Ordinary Set body pivots are not function derivatives; deletion is a separate contract | Compare transformed and full evaluation on shared/captured/nested functions and fixed points. Report semantic equality before operation counts or speed. Full finite lowering preservation precedes optimization of function changes |
+| 6 / R5 full application acceptance | Provider concretization section 5: complete Scheme Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with pinned input identity; qualify lattice/concurrency prerequisites for workloads that need them | Reuse completed semantic/protocol contracts; add a proof only for a concrete new obligation exposed by the application | Complete outputs and reproducible datasets; paired identical-input/semantic controls with alternating order; admission, planning, invalidation, solve and publication cost boundaries; work, CPU, wall, allocation and peak memory reported separately. Retain regressions and upstream differences |
+| Separate research / R6 actual model comprehension | Freeze current actual Scheme module/task bytes only after compiler/publication stabilization; native scoring owns truth, Python owns byte transport | No theorem certifies model understanding. Native inert normalization and truth computation remain independent controls | Newly approved exact-source paid batch; no semantic instructions, tutorials, examples, answer-prefill, repairs or truth-guided selection. Compare raw interface acceptance, semantic correctness, reasoning and genuine post-response feedback against history-only control; include every timeout/rejection in denominators |
+
+Milestone 0 is the release gate, not a reason to stop useful design/proof work.
+Milestone 1 is the immediate semantic implementation priority. The finite-frame
+sub-obligation is now represented by =PositiveSlots.vector_frame_rep=,
+=vector_run_refines= and =compiled_vector_refines=: compiler-derived bounds cover
+all capacities at least the compiled extent, including dirty cells after failed
+candidates. The native public entry enforces that extent before effects.
+This discharges the slot-container boundary only; concrete scalar/list decoding,
+descriptor lowering and whole-component least-model correspondence still need
+composition, as detailed in [[file:../../scheme-compiler-proof-bridge.org][the compiler bridge]]. Provider laws and
+shared index design can progress alongside it using an explicit interface, but
+release claims require the integrated path. Milestone 3 must respect milestone
+2's capabilities; adding threads does not make a custom Provider safe.
+Milestone 4 can advance on the existing admitted grammar. higher-order change changes and
+application optimizations must not redefine semantics silently.
+
+Library closure requires every adopted paper obligation to identify its exact
+location, native owner, semantic/protocol theorem and independently executed
+falsifier. rule planning owns the consequence/compiler boundary; Provider concretization owns Provider
+concretization, emitted frontiers and physical layout; higher-order change owns typed changes
+and variance. deletion rederivation support maintenance and incremental view maintenance signed-stream circuits are
+different algorithms: snapshot equality alone cannot qualify either name.
+Complete application outputs and measured cost remain milestone 6; no MR
+adapter or model score can discharge these library obligations.
+
+** Native compiler correspondence: next connected design obligation
+:PROPERTIES:
+:CUSTOM_ID: native-compiler-correspondence
+:END:
+
+The 2026-10-06 rereading of rule planning section 4, Provider concretization section 3.3 and section
+5.5, and higher-order change sections 4.2-4.3 selects the admitted callback-free compiler
+path as the next connected obligation. This is a library obligation. MR/MRR
+bindings and model comprehension cannot establish it.
+
+rule planning generates nested rule loops and an SCC evaluation path. Its clause-order
+restriction is a binding prerequisite, not a proof that arbitrary Scheme
+callbacks commute. Provider concretization equations (1)-(2) require total/delta concretizations
+to cover represented facts and include all newly implied facts in delta;
+raw inserted rows are insufficient for closure Providers. higher-order change defines an
+arrow change using both the old argument and its change; existing rule pivots
+are not a derivative of a higher-order closure. These premises constrain
+separate native owners, even when all three eventually produce relation rows.
+
+*** One semantic path, three implementation correspondences
+
+1. Relate the actual admitted descriptors and compiler metadata to the existing
+   semantic terms/rules. Variable symbols need an injective identity map into
+   Lean names, separate from symbol-valued scalar encoding. Fresh allocation
+   order, repeated occurrences and lexical capture must commute with lowering.
+2. Lift the finite-vector matcher to the complete candidate scan and recursive
+   multi-atom traversal, including ordered emissions and the returned dirty
+   vector. Relate the actual stored actions, selected keys and head readers to
+   that traversal. A matcher theorem alone does not cover a continuation's
+   reads, head slots, or recursion through the same mutable vector.
+3. Connect full/pivot traversals to actual Provider enumeration and the existing
+   constructed ground-rule model. Then discharge finite domain/rank and
+   completed execution premises to obtain the least model. Semantic stability,
+   budget refusal, pending execution and committed publication remain distinct.
+
+Reuse =PositiveSlots=, =PositiveTraversal=, =IndexedPositiveTraversal=,
+=IndexedIteration= and =GroundedBinding=; do not introduce another runtime,
+serialized proof format or parallel semantic interpreter. Native Scheme owns
+admission and execution. Inspection for independent qualification belongs to
+existing native Suites; it must not become a per-row production revalidator.
+
+*** Concrete contract and falsifier map
+
+| Boundary / native owner | Required correspondence | Existing formal owner to extend | Independent falsifier |
+|-------------------------+-------------------------+---------------------------------+-----------------------|
+| Owned admitted graph: higher-order.ss / operator-descriptor.ss | Decode owned types, captures and descriptor identity into the scoped IR; each lowering step preserves its denotation | DescriptorScope, LexicalLowering, RecursiveLowering | Shared captures, same printed name with distinct binding identity, escaped dependency, nested fixed points; caller mutations cannot alter an admitted snapshot |
+| Scalars and rows: scheme-checked.ss | Exactly integers, Booleans, symbols and characters; proper owned row spines of declared arity; equality and hash lookup respect the same encoding | RowRepresentation and AtomicBinding | false versus zero, symbol-valued literals versus variable identities, large exact integers, character distinctions, duplicate occurrences, improper/cyclic rows |
+| Compiled plan: core/positive-plan.ss | Decode actual output/action vectors and slot extent; first writes precede bound reads, keys use only the earlier prefix, heads use defined slots | PositiveSlots and IndexedPositiveTraversal | Fresh/bound interchange, missing overwrite, out-of-range head/key slot, row-local key reads, repeated/reversed selected columns; short frame rejected before effects |
+| Complete finite traversal: core/positive-plan.ss | Every recursive return threads the actual vector; acceptance, ordered duplicate emissions and all in-range returned cells agree | PositiveTraversal using the finite-vector matcher | A rejected candidate writes before failure; later candidate overwrites it; nested success leaves deeper slots dirty; zero-atom/zero-arity and multihead output |
+| Physical lookup: program/index.ss / table/provider.ss | Complete matching candidates, lawful selected-key encoding, unchanged relation meaning; frozen snapshot/version agrees with roots | IndexedPositiveTraversal, SharedIndex | Missing bucket, stale extension, key permutation, accidental shared mutable roots, failed extension; an over-return is filtered by the binder |
+| Storage and frontier: table/storage.ss / closure Providers | Concrete represented rows equal the stated closure; emitted delta covers every newly represented row, including implications across producers | ProviderFrontier and SemiNaive algebra; Quint visibility/install protocol | Two producers merge components and a newly implied pair feeds another join; raw-only frontier, foreign fact, omitted batch, budget refusal before mutation |
+| Completed component: component-worker.ss / actor-round.ss | Constructed rules and finite stable result agree; credits and dependency cuts authorize only complete publication | GroundedBinding / ComponentClosure for algebra; existing Quint scheduling and publication | Early completion, stale/duplicate reply, failed worker, pending successor, unrooted support cycle and exhausted budget; no partial result admitted as a least model |
+
+=PositiveSlots.compiled_vector_refines= proves bounds for the Lean compiler's
+callback-free grammar and all sufficiently large vectors. It does not itself
+prove that the native Scheme plan decoder produces those actions or that every
+native head/key access is covered. Each row of this map must discharge a
+premise consumed by the next row; extra abstract lemmas without that connection
+are not closure evidence.
+
+*** Effects, finite height and optimization permission
+
+Plan existence is an execution representation decision. Purity is a separate
+permission: the compiler sets =pure?= false for host calls, and actor admission
+also checks storage/index capabilities. =relational-stable= records a caller
+contract; it is not a theorem of callback monotonicity, totality, termination or
+commutation. Keep sequential callback observations and mutable-payload fallback
+controls in their existing owner. Extending the pure proof to callbacks requires
+an explicit mathematical function interpretation and an independently stated
+effect contract; the pure least-model theorem must not quantify over arbitrary
+host procedures.
+
+Finite signature admission derives a bound from the actual declared domain and
+type. A resource budget can interrupt a computation; it cannot prove semantic
+termination. TLC exploration cutoffs bound checker work, not native generation
+semantics. No fixed generation constant is introduced by this correspondence.
+
+Provider concretization's minimum physical-index count permits several layouts with different
+lookup costs. Representation minimality, allocation reduction and whole solve
+CPU/peak-memory benefit therefore remain separate gates. higher-order change optimization
+must wait for an actual typed compiler transformation preserving changed
+captures and fixed-point meaning; insertion validity algebra alone is not
+that transformation. Deletion/support maintenance continues under its own
+deletion rederivation/incremental view maintenance contracts rather than being renamed an arrow delta.
+
+*** Immediate implementation order
+
+The finite-vector scan/recursive traversal is now composed with the existing
+dirty-frame and ordinary-binding laws in =finite_precompiled_refines=; direct
+finite head observation discharges the qualification emitter correspondence.
+The [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] records its precise model/native boundary.
+The [[file:../representation/compiler.org::*Equality-preserving scalar representation][scalar encoding laws]] now compose ordinary binding, slot allocation, dirty
+execution and ordered key/head observations for faithful value representations.
+Their noninjective counterexample makes the equality premise falsifiable.
+Next establish native action/key/head decoding and scalar/name correspondence
+on the same admitted pure plan. Next instantiate Provider
+snapshot/frontier contracts and connect constructed component output to the
+least-model result. Retain the existing full native registry, original ASCENT
+oracle shards and exact-head CI as release gates. Do not gate this work on MR
+or paid model calls. Lean tests and axiom reports remain under =Tests/=; Quint
+models stay responsible for temporal execution and publication only.
+
+** Paper coverage and proof ownership
+
+The [[file:../../research/scheme-dsl/index.org][source ledger]] now lists twelve sources. This audit reopened rule planning, Provider concretization,
+functional fixed points, relational kernel, fragment composition, higher-order change, deletion rederivation, incremental view maintenance and program lifecycle primary sources. Existing locators remain
+in their paper notes. monotone containers, recursive physical planning and first-class facts retain screened transfer questions;
+they are not promoted to implemented or proved coverage by this audit.
+
+- rule planning: preserve rule/planner information and composition. Its original
+  parallelization discussion is future work; Gerbil actor correctness is our
+  own engineering obligation.
+- functional fixed points: finite-height and monotonicity justify termination for the admitted
+  fixed-point domain. Resource caps and finite output per callback do not
+  establish these premises.
+- relational kernel, fragment composition and program lifecycle: small kernel, explicit binding identity and checked
+  whole-program composition. Search-stream fairness and Flix static guarantees
+  do not transfer automatically to this native bottom-up/runtime admission.
+- Provider concretization: connect abstract relation meaning and emitted delta before physical
+  optimization; full replication includes index sharing and application gates
+  retained in [[file:../../scheme-paper-closure.org][the closure matrix]].
+- higher-order change: typed function-change translation requires a separate preservation
+  argument. Existing concrete Set iteration history covers its stated subset.
+- deletion rederivation and incremental view maintenance: founded deletion and incremental circuit algebra are distinct
+  designs. A fresh-equivalent retained update is semantic evidence, not proof
+  of a DRedc or signed-weight circuit implementation.
+- monotone containers/recursive physical planning/first-class facts: monotone container observations, logical/physical planning and
+  nested fact identity respectively require explicit capability, equivalence
+  and termination contracts before language expansion.
+
+Lean owns universal algebra and semantics. Quint owns temporal invariance,
+interleavings, progress under stated fairness and implementation event
+refinement. Finite TLC/mutation runs validate model instances; they do not
+supply the missing unbounded proof. Lean examples, regression cases and axiom
+inspection stay in =packages/proofs/lean/Tests/=. No protocol-state replica is
+added to Lean to compensate for missing temporal proof.
+
+** Required closure dossier
+
+Every milestone produces one joined dossier: paper locator and transfer scope,
+actual source/pin, admitted capabilities, theorem premises and conclusions,
+Quint actions/refinement and exploration bounds where relevant, independent truth,
+positive/negative execution outcomes, resource/status behavior and cost scope.
+No raw execution logs are committed. English documentation and structured
+receipts carry both positive and negative results. A milestone closes only
+when its implementation discharges the stated premises and final-head gates;
+the number of lemmas, Cases or green jobs is not itself the closure criterion.
+
+
+* Closure report requirements
+
+For each work package publish: exact source identity, admitted grammar, paper
+premise used, theorem/model identifier, executable discriminator, raw outcome,
+counterexample controls, cost boundary and remaining obligations. Abstract Lean
+success, bounded TLC success, native semantic qualification, remote CI and real
+model benefit are separate entries. No new real-model call belongs to this audit.
+
+The [[file:../../scheme-design-framework.org][acceptance matrix]] remains the closure authority. This plan refines R1–R7;
+it does not mark them all closed. The [[file:../../evidence/scheme-proof-audit-20261004/receipt.json][formal receipt]] records this patch's proof and
+model-checker results and identifies the checked files and toolchain. Execution
+logs are excluded under the [[file:../../evidence/README.org][evidence publication policy]].
+
+
+* Joint research, design and implementation sequence
+:PROPERTIES:
+:CUSTOM_ID: joint-research-design-implementation
+:END:
+
+This is a refinement of the existing R1–R7 matrix, not a new language version
+or namespace. Each work package must carry one connected argument: a precisely
+located paper premise, our explicit transfer decision, the actual Scheme
+representation and algorithm, a matching formal statement, and an independent
+native discriminator. No leg alone marks the work package closed.
+
+On 2026-10-04 all eight primary sources above were reopened. higher-order change change
+structures are in §4.2–4.3 (PDF pp. 10–11), not §5. functional fixed points §5.3 Lemma 4
+requires a monotone map on a finite-height pointed poset. These are the next
+semantic prerequisites, not evidence of our implementation's correctness.
+
+** Connected work packages
+
+| Package and paper premise | Architecture decision and Scheme owner | Proof obligation and executable discriminator |
+|---------------------------+----------------------------------------+-----------------------------------------------|
+| Finite signatures and termination: functional fixed points §5.2–5.3, Lemma 4 | =program/higher-order.ss= admits explicit finite relation and arrow types. Stable captured atoms, arity and arrow structure must be validated before normalization; =program/finite-arithmetic.ss= only evaluates capped formulas | Connect semantic inhabitants, relation rank and pointwise function rank to =FiniteHeight= and =CappedArithmetic=. Independently enumerate tiny domains, including empty domain / zero arity, repeated atoms, nested arrows and budget boundaries. Malformed or cyclic type/term descriptors must reject before recursive analysis |
+| Binding and compilation: relational kernel §3/§5, program lifecycle §3.7/§4.3, rule planning §4 | Keep Scheme construction above a small inspectable kernel. =program/operator.ss= owns descriptor identity and environment-sensitive memoization; =program/higher-order.ss= owns captured lexical values and elimination | Relate accepted concrete descriptors to =DescriptorScope=, =LexicalLowering= and =RecursiveLowering=, then emitted rules to the consequence operator. Shared node under different bindings, same printed name under distinct identities, repeated constructors and capture substitution are discriminators |
+| Whole-program composition: fragment composition §4.2, Definitions 4.3–4.6 / Theorem 4.8; program lifecycle §4.2 | =program/scheme-admission.ss= checks the assembled dependency graph before explicit solve. Our runtime admission is a different assurance from Flix's compile-time analysis | Prove valid admitted strata satisfy positive nonstrict / negative strict dependency inequalities. Compose individually valid fragments into a negative cycle and require rejection; reorder valid composition and compare public observations |
+| Transaction and deletion: deletion rederivation §3–4; incremental view maintenance recursive circuits | =program/session.ss= and reuse/update selection maintain source logs and invalidate affected components. Keep explicit source facts separate from derived facts; current recomputation is not DRedc or DBSP | Map dependency and source-count premises to =SourceUpdateFrame= / =FunctionalDependency=, and private work/publication to the Quint models. Independent fresh recomputation after each transaction must match; two supports, final-support removal, unrooted cycle, ABA, stale publication and interrupted budget/domain failure preserve their stated visible-state contracts |
+| Complete finite evidence: deletion rederivation support distinction; rule planning inspectable rule instances | Support/provenance owners represent alternative rule instances and founded witnesses separately; absence refers to a completed closed stratum and exact program/source identity | Test independently enumerated alternatives, cyclic support, duplicate witnesses, negative/group observations, tampering and size exhaustion. Numeric semirings and lattice histories require their own algebra, not a renamed graph |
+| Change semantics and measured benefit: higher-order change §4.2–4.3/§6–7; incremental view maintenance | Specify a typed insertion change for every admitted type before implementing higher-order deltas. A function change depends on both base input and input change; deletion remains outside that insertion contract | State and prove application/change and lowering preservation before comparing optimized and full evaluation. Use the same semantics, dependency versions, inputs and lifecycle cost boundary; report work counts, CPU, wall and allocation separately, including negative outcomes |
+
+The support/provenance package specifies our finite evidence product; deletion rederivation's
+maintenance algorithm is not itself a complete provenance algebra. The change
+package uses higher-order change's logical change relation as its reference. Do not assume an
+ordinary pointwise function delta or a simple monoid action automatically
+implements that relation. incremental view maintenance's signed-weight circuit is a separate design.
+
+** Historical first slice: type representation to semantic height
+
+The existing native formulas are:
+
+- Relation with =d= distinct atoms and arity =a=: tuple universe size =d^a=,
+  inhabitant cardinality =2^(d^a)= and rank bound =d^a=.
+- Arrow =A -> B=: cardinality upper bound =card(B)^card(A)= and pointwise
+  rank bound =card(A) * height(B)=.
+
+Our design decision is to retain these as conservative bounds. For arrows,
+=card= counts the full finite function space; it need not be the exact number
+of monotone inhabitants. Finite exhaustive enumeration belongs in small native
+truth models and semantic proofs; production normalization must continue using
+saturating arithmetic rather than allocate the full function space.
+
+The first slice has four connected deliverables, in dependency order:
+
+1. Revalidate the actual exposed type/typed-term graph before height analysis.
+   Own admitted domain/row spines and reject malformed arity/domain/children,
+   cycles and escaped captures. The relation-operator preflight does not by
+   itself validate =relational-type= or =relational-typed-term=.
+2. Define the semantic relation/arrow inhabitants and their representation
+   relation. Prove tuple-universe completeness and cardinality bounds,
+   pointwise order/rank boundedness and strict progress. State scalar equality,
+   duplicate elimination and zero-arity empty-tuple conventions explicitly.
+3. Discharge =bounded_bottom_least_fixed= premises for this interpretation;
+   relate exact semantic bounds to capped formula evaluation. A cap rejection
+   is a resource outcome, never a proof of semantic nontermination. A bound on
+   iterations does not by itself bound compiler-node expansion: retain the
+   independent actual work counter and fail without publishing partial output.
+4. Qualify the actual lowering against a Scheme-owned exhaustive truth model
+   on tiny signatures, including nested functions and delayed changes at
+   unsampled arguments. Publish source identity, proof hashes, complete rows,
+   rejection outcomes and original budgets. Neither finite samples nor a
+   historical receipt substitutes for the universal semantic theorem.
+
+Exit condition: all four deliverables agree for the explicitly admitted
+subset. Typed normalization, concrete rule execution, transaction refinement,
+provenance algebras and general benefit keep separate open obligations until
+represented and tested. No arbitrary host callback inherits these proofs.
+
+** Model and integration follow-through
+
+After compiler and publication stabilization, freeze current Scheme source,
+tasks and native truth. Evaluate raw interface acceptance separately from
+semantic correctness and timeout status. Model reasoning and genuine native
+feedback after a response need controlled conditions; no preset semantic
+prompt, tutorial, answer prefill, repair or oracle-selected response extraction.
+New paid calls require a fresh source/cost authorization. MRR Rust integration
+follows those gates and preserves exact ABI bytes/statuses and Scheme semantic
+authority. No model call or runtime change was made by this research-plan edit.
+
+Latest delivery observed for this plan: PR #1 =43fd04d= has =formal= success;
+Scheme and both oracle jobs are still in progress. The 58-Case descriptor
+receipt binds =4412371= after the binary-kernel rebase; it does not qualify the
+subsequent temporal-graph integration or close any of the packages above.
+
+
+The [[file:../../scheme-compiler-proof-bridge.org][finite-signature and typed-admission slice]] implements the next package above:
+scoped native validation returns owned canonical descriptor snapshots, and Lean
+now instantiates rank/height sufficiency for exhaustively represented finite
+signatures. Native scalar/list encoding and actual compiler-step monotonicity
+remain required before those semantic theorems certify accepted Scheme graphs.
+
+
+* Rebased implementation sequence (2026-10-05)
+
+This continuation rebases onto PR revision
+=b622b50a7c36f036ac304268d1cb5725bc763aab=, retaining the new
+=DependencyInvalidation=/=FunctionalDependency= proofs and complete-provenance
+index implementation. The earlier first-slice plan above is historical: owned
+type admission, abstract signature/height, scalar/row laws and source-root
+materialization already have their stated receipts. Their remaining concrete
+decoding and compiler-step bridges are the active R1 gate.
+
+| Priority | Next owner slice | Falsifiable completion condition |
+|----------+------------------+----------------------------------|
+| 1 | Native actor test carrier and Session protocol | Separate build preparation and execution; unique source-bound native entries; actor-owned task state; failure, cancel/late/duplicate reply controls; existing progress and verdict gates retained |
+| 2 | Descriptor, binder, index and positive slot/delta refinement | Connect actual admitted source identities, scalar equality and plan steps to semantic substitution/consequence; every completed public result equals independent native truth |
+| 3 | Session trace and dependency/evidence correspondence | Map batch and provisional/resume behavior separately; prove native read-graph completeness; compare each deletion/publication with fresh solve and independent support enumeration |
+| 4 | Typed changes and measured actor/runtime benefit | Define the actual change algebra before optimization; matched serial/parallel and fresh/retained cost boundaries; retain negative results |
+| 5 | Source-frozen model study, then Rust binding | Raw Scheme comprehension with independent truth and genuine after-response feedback; fresh paid-call authorization; exact ABI statuses and identity conformance only after acceptance |
+
+The [[file:../../scheme-actor-runtime-design.org][actor protocol decision]] is the required architecture gate before parallel
+solver mutation. =AtomicBinding= closes ordinary callback-free binder/key laws
+at the modeled level. =ActorRound= owns work-key, cancellation and publication
+protocol checks; Lean retains the separate checkpoint and index algebra. These scopes stay
+distinct from the future native actor implementation and a performance receipt.
+
+The twelve DSL ledger sources were revisited at their current owner seams:
+rule planning/Provider concretization for binder, index and frontier completeness; functional fixed points/higher-order change for monotonicity,
+finite height and typed changes; fragment composition/program lifecycle/relational kernel for composition, private identity
+and Scheme construction; deletion rederivation/incremental view maintenance for source deletion and transaction/iteration
+separation; monotone containers/recursive physical planning/first-class facts for container, physical-plan and nested-fact boundaries.
+FlowLog's publisher PDF could not be fetched this round; its
+[[https://arxiv.org/pdf/2511.00865][author preprint]] supplies the logical/physical IR reading. No source is taken
+as proof of Gerbil actor scheduling, multicore execution or model benefit.
+
+The subsequent [[file:../../scheme-compiler-proof-bridge.org][scalar/row slice]] defines =RowRepresentation.admitted=,
+=tuples= and =encode= and proves the list-to-Boolean-table interpretation laws.
+This advances the type/value package for relation rows. Runtime scalar decoding
+and equality/hash equivalence, captured closures and actual step preservation
+remain required; neither the abstract lawful-equality model nor native samples
+close those universal obligations.
+
+The native discriminators exposed and repaired two concrete gaps: a bare-source
+typed result leaked occurrence multiplicity, and the named Session constructor
+rejected a program containing a readonly derived output. Typed compilation now
+materializes the source result as a derived set; checked named Session mutations
+continue to use only admitted source handles. Complete result membership,
+source occurrence counts and actual materialization budgets are separate checks.
+
+The [[file:../../evidence/scheme-native-entry-20261005/receipt.json][single-module carrier receipt]] connects native test admission to the current
+proof snapshot: compile-time Suite binding, unchanged native callbacks and
+verdicts, strict output/deadline gates, and four independently injected
+lifecycle failures. It records integrated Lean/Quint checks separately from
+the index Suite's independent native reference assertions. Abstract compiler
+refinement, module-pool startup, controlled runtime benefit and actual model
+comprehension remain explicit subsequent gates. No new model calls accompany
+this carrier slice.
+
+
+* Full ASCENT/BYODS closure audit (2026-10-05)
+
+The [[file:../../scheme-paper-closure.org][current closure matrix]] lists every core feature family, BYODS protocol,
+index-sharing/lattice/application obligations and remaining native refinement
+seams. =ProviderFrontier= adds local concrete partition, required new-fact
+emission and binary-join partition laws plus finite injection/consumer and
+mutation controls. It does not complete Provider concretization Theorem 3.5. Bounded native graph
+frontier traces are checked at each insertion rather than only at final closure.
+Overall replication remains open until the listed implementation and proof gaps
+are closed; previous passing suite counts are not full-paper coverage evidence.
+
+
+* Connected library delivery and constructed indexes (2026-10-07)
+
+The ten authorized library packages are now enumerated in the existing
+[[file:../../scheme-paper-closure.org][closure matrix]], with implementation owners and falsifiable completion
+conditions. Their count describes acceptance packages, not absent capabilities.
+The support boundary is precise: finite positive recursive Boolean provenance
+and finite stratified recursive derivation provenance already exist. The latter
+includes exact negative and reduction observations. The open maintenance work
+is retained Session integration, changed-model observation validity and further
+valuation contracts; it is not an absence of all recursive/stratified evidence.
+
+ProviderRouting now derives bucket completeness from the functional counterpart
+of native prepend/build/reverse operations. Ten additional laws cover exact
+build, extension and arbitrary finite history, injective semantic key encoding,
+constructed coordinate routing and occurrence-count preservation through
+ReadAll. No bucket-coverage premise is supplied to the build theorem. Native
+hash equality, mutable table extraction, stepped column projection and curried
+trie/rectangle visitor correspondence remain distinct obligations. Key encoding
+injectivity does not require collision-free hashing: native tables must resolve
+collisions using lawful equality, rather than treat hash values as keys.
+
+ReadAll requires complete unique semantic keys; duplicate keys multiply the
+occurrence count, and omitted keys remove rows. Bucket enumeration order is not
+assumed to match source order. This complements ordered keyed reads, rather
+than imposing an unsupported ordered ReadAll contract on BYODS.
+Occurrence counts and stored object identity are additional ASCENT consumer
+contracts; they must not be attributed to the paper's extensional Set semantics.
+
+ComponentIndex now checks two input batches per owner, partial private install,
+failed extension/reconstruction, aliases and foreign owners. A captured initial
+reader remains stable through both installations. New reset and held mutations
+must violate Consistent and HeldStable respectively. The finite input fixture
+does not impose a runtime generation limit; no unbounded temporal or callback
+liveness claim is made. Lean owns constructed index algebra; Quint owns these
+protocol interleavings.
+
+The native index construction Suite adds all 256 three-field Boolean row sets,
+eleven scalar/composite/empty/repeated/reordered layouts and three accepted
+batches, including an empty batch. An independent direct list-ref scan checks
+every selected key and absent keys after every batch. Stored row identities,
+duplicate occurrences and a retained pre-update bucket are checked separately.
+These checks strengthen package 3; they do not close all ten packages or supply
+whole-application speed/memory evidence.
+

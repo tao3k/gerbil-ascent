@@ -1,0 +1,75 @@
+#+title: Declaration dependency summary qualification
+
+* Frozen source and protocol
+
+Baseline =f92b768b9410a9cf83a8299ce40dd747bbe71fbc=.
+Original and unchanged frozen =program/summary.ss= blob:
+=f740a19f0dc52cc4df05cc8882bfbdfce61b5e18=.
+
+Gerbil =1cfb032= =std/list/list.ss:24-32= supplies the explicit
+membership/publication pattern; =std/struct/dag.ss:36-47= keeps scratch
+membership inside one traversal. The private =for-summary-relations= syntax
+shares declaration-name admission between producer registration and reading
+clause expansion. Its first symbol stays inline; only a second distinct symbol
+creates a table. =publish-summary-edge!= uses contiguous consumer publication
+to reject duplicate edges before allocating pairs. The final adjacency-list
+deduplication pass is removed. Existing Tarjan and POO descriptor construction
+retain exact observable order and shape.
+
+* Native complete summary construction
+
+ASP Scheme benchmark API runs 50 alternating old/new pairs. Declaration objects
+are outside measurement. Every call constructs producer indexes, unique edges,
+SCCs and public POO descriptors, then consumes all rule indexes, dynamic names
+and recursion flags. Both implementations must equal a separately specified
+ordered descriptor oracle in every sample. All descriptors are forced inside
+measurement; no lazy result is credited as complete construction.
+
+GC precedes each sample. CPU uses process user/system counters; memory uses
+Gambit allocated bytes. Builds and qualification do not overlap timing lanes.
+Before execution, repeated declarations require CPU <=80% of baseline and at
+least 40 faster pairs. Controls allow 110% CPU +20 microseconds; allocation
+allows 110% +4096 bytes. No gate was relaxed.
+
+| Scenario | Rules | Heads/rule | Reads/rule | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-------+------------+------------+------------+------------+-----------+-----------+--------------|
+| repeated name | 16 | 16 | 32 | 9871 | 133 | 12738224 | 92544 | 50 |
+| dense, 8 names | 16 | 8 | 16 | 338 | 120 | 519008 | 174640 | 49 |
+| chain | 128 | 1 | 0 or 1 | 1084 | 1045 | 2356864 | 2227888 | 41 |
+| isolated, guard only | 128 | 1 | 0 | 1180 | 1142 | 2338576 | 2221792 | 37 |
+| small repeated | 1 | 1 | 2 | 12 | 11 | 34896 | 33744 | 31 |
+| empty | 0 | 0 | 0 | 5 | 5 | 16624 | 16576 | 20 |
+
+Duplicate-heavy CPU falls about 98.7% and allocation about 99.3%; this fixture
+deliberately exposes repeated producer/read expansion. The dense control lowers
+CPU about 64.5% and allocation about 66.4%. Sparse controls pass, but their small
+CPU differences are not promoted to general throughput claims. These results
+cover declaration summary construction, not complete public program solves.
+Logs, receipts, binaries and startup stack samples stay under ignored
+=.cache/ascent/declaration-summary=. Root =build.ss= is unchanged.
+
+* Semantic qualification and rejected attempts
+
+Two Suites, seven Cases pass with final =OK= and exit zero. Added qualification
+compares all 512 three-rule graphs in three declaration layouts (1536 comparisons)
+against the frozen complete summary. Duplicate heads, repeated/reordered reads,
+atom/negation/aggregate kinds, nonreading clauses, multihead shared producers,
+missing producers, no-head rules and invocation-local metadata changes are
+explicit controls. Existing SCC qualification independently compares graph
+partitions and exact order, including 20000-node chains/cycles and public DSL
+declarations.
+
+The first benchmark attempt stalls before samples because the fixture uses
+POO =(rules rules)=, recursively referring to its own slot. The fixture is
+repaired to capture a distinctly named outer binding. An isolated-component
+oracle initially expects ascending order; both implementations return the
+existing reverse isolated order. That oracle is corrected and all final
+scenarios rerun. These are failed fixture attempts, not performance samples;
+their logs and process stack sample are retained. Fixed gates remain unchanged.
+
+Final native policy has 30 advisories and zero errors. This repository is not
+claimed warning-free; local receipts do not establish completed remote CI.
+The source-loaded public DSL declaration/summary pipeline also passes. A
+diagnostic source-load attempt with a 100M heap cap exhausts the heap; its log
+is retained. The final source check uses the existing 3G source-tooling setting.
+This diagnostic cap is not a timing, allocation or qualification gate.

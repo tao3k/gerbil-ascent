@@ -1,0 +1,18 @@
+{
+  "requested": [
+    "ascent-table-expression-membership",
+    "ascent-shortest-candidates"
+  ],
+  "results": [
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 8.394830208002531
+    },
+    {
+      "name": "ascent-shortest-candidates",
+      "exit": 0,
+      "seconds": 5.13358458300354
+    }
+  ]
+}

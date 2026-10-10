@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Evaluate the complete upstream var_points_to rule graph with Scheme wildcards, field joins and two recursive relations.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-var-points-to/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-var-points-to)
+ (optimizationFocus . "cached POO relation schema and reusable semi-naive rule plan")
+ (inputShape . "one assignment, three allocations, one load and one store")
+ (expectedOutcome . "four alias rows and five points-to rows")
+ (expectedRepair . "preserve the POO declaration boundary while reducing repeated program preparation")
+ (baseline . "re-read relation schema and Provider method slots on every evaluation")
+ (candidate . "cache validated relation schema and immutable rule plan by program identity")
+ (measurementPhases candidate-points-to assert-semantic-gate assert-time-gate)
+ (tags poo ascent wildcard recursion joins performance))

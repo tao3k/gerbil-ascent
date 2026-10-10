@@ -1,0 +1,45 @@
+#+TITLE: Complete finite stratified recursive provenance
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Complete grounded equations
+
+=candidate/stratified-provenance.ss= enumerates every successful grounded rule
+instance over an independently verified complete finite closure. Source leaves
+retain occurrence positions, so duplicate input occurrences remain distinct.
+Fact nodes are relation-tagged and may have several alternatives. Recursive
+references, including self-cycles, remain finite equations rather than being
+expanded into an infinite list of trees.
+
+Each positive atom records its fact-node reference. A negative clause records
+its grounded pattern, preserving wildcards, and is justified by the exact
+completed lower-stratum model. A reduction records the entire distinct matched
+group, including an empty group for count and sum. Empty min/max groups produce
+no alternative. Fixed computations and filters use inspected closed operators.
+
+The checker independently rebuilds all nodes, alternatives and query roots and
+compares their source generation, snapshot digest and inspected program binding.
+Missing alternatives, extra alternatives, mutated roots, caller-owned cycles,
+noncomplete native results and resource exhaustion cannot verify as complete.
+An empty query can have a complete graph with no roots; this is not a general
+Why-Not or source-authentication claim.
+
+* Scope and representation
+
+This is complete derivation provenance for the admitted finite stratified rule
+language, with recursive positive components and exact negative/reduction
+observations. It describes a frozen completed model. Counterfactual deletion
+must update that model; absence and reduction observations cannot be reused
+blindly under changed source facts. Native Session invalidation handles that
+update boundary. Numerical valuations in other semirings and lattice-join
+histories require their own algebra and observation contract.
+
+Qualification includes independently counted alternatives on all 64 directed
+three-node graphs, duplicate sources, recursive cycles, wildcard negation,
+empty queries/groups, exact reductions, missing-edge and cycle tampering,
+source-generation changes and independent resource caps. Runtime deadlines,
+heap fences and genuine progress requirements remain unchanged.
+
+The [[file:evidence/scheme-stratified-closure-20261004/receipt.json][source-bound receipt]] records both seven-Case Suites, raw logs,
+independent corpora, fixed bounds and excluded failed runs.

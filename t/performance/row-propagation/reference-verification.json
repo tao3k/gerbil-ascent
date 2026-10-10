@@ -1,0 +1,9 @@
+{
+  "commit": "10288b75a7355c6caac73f96335ba253e4868d76",
+  "verified": true,
+  "source_sha256": "95a16012510220d79a329074a44bfac7b4b611e315173126869e1748ce69ba05",
+  "reference_sha256": "b2eaf5d6e038c3d9656eb47018bce26e3c2bd54eb3da3f1b32e9f70ae9ae2e56",
+  "adaptations": [
+    "two exported names alpha renamed"
+  ]
+}

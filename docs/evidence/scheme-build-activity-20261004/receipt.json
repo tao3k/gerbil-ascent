@@ -1,0 +1,46 @@
+{
+  "artifactSha256": "b333c7ab159d106daf2a6567a40fa7fe937487302ca24829ff5d1434b49b5733",
+  "buildElapsedSeconds": 297.47279016700486,
+  "causalSpeedupClaim": false,
+  "compilerExitStatus": 0,
+  "configuredBuildCores": 4,
+  "controls": {
+    "artifactPublicationTests": 6,
+    "buildSupervisorTests": 3
+  },
+  "filesSha256": {
+    "artifact.json": "f52ccdede3a0ae24d88c8a0b9fe973d1f2a3ee8ace53a5204c1e2f6914bfd98d",
+    "build.log": "b78afa8efb564d04e8c1a01e1b4c4bb75682cb1c543c2f91da7c0e771c69a20b",
+    "native-qualification.log": "ef985ae8b7f3ccf03e95d68599132eb868ccbe8f37bc8da694977c38b930f546",
+    "processes.json": "2cedc2bf0d3a492a6e746c9e6ad18fb17f4840d734cade8a8b45d94bf809f444",
+    "retained-benefit.log": "d5072ca43bfdf74a350e7bc8caaad325e8ae40022ab9731013cbf42f8690f49f"
+  },
+  "modelCalls": 0,
+  "observedConcurrentGscProcesses": 4,
+  "policy": {
+    "buildNoOutputOrCpuAdvanceSeconds": 60,
+    "buildTotalDeadlineSeconds": null,
+    "heap": "1G",
+    "runtimeModuleSeconds": 120,
+    "runtimeOutputIdleSeconds": 5
+  },
+  "qualification": {
+    "cases": 127,
+    "exitStatus": 0,
+    "finalOkMarkers": 12,
+    "harnessMarkers": 12,
+    "log": "native-qualification.log",
+    "modules": 12,
+    "suites": 12
+  },
+  "retainedBenefit": {
+    "accepted": false,
+    "completedGroups": 0,
+    "exitStatus": 124,
+    "log": "retained-benefit.log",
+    "reason": "5 seconds without output inside first retained timing batch after fresh arm completed; no BENEFIT-OK"
+  },
+  "schema": "ascent.native-build-activity",
+  "sourceHead": "99208d748a978ffd8c25aadfa8bbf355827532f6",
+  "version": 1
+}

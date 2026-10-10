@@ -1,0 +1,88 @@
+#+TITLE: UF closure admission and local reverse index retirement
+
+* Production flow
+=table/trrel-uf.ss= now dispatches an already reachable pair before predecessor
+sorting and the predecessor/successor product. Both endpoints must already be
+installed: a new reflexive node still requires budget and commit. Negative
+budgets still reject even an empty frontier.
+
+The insertion planning/commit branch is private =insert-components!=, receiving
+one final =uf-insertion= record with its group, row and resolved endpoint owners. Budget
+preflight remains read-only. Cyclic merging retires absorbed reverse keys before
+clearing any component storage, preserving external predecessor and successor
+keys of the winner. Complete transitive closure already contains all external
+winner edges, so a local merge no longer rebuilds unrelated reverse adjacency.
+The reverse-index activation path still performs its one initial rebuild.
+
+* Gerbil source applied
+SDK 1cfb032 =src/gerbil/runtime/table.ss:444-487= expresses table update/deletion
+as explicit dispatch on key state, with a single mutation owner. Here admission
+and commit are likewise separated by the existing graph invariant; identity
+hash tables remain native. This is a private algorithm protocol rather than a
+new public generic or inheritance hierarchy. No SDK build or runtime dependency
+was introduced.
+
+* Evidence contract
+=reference.ss= is exactly =695ac3255d5a1896acd58eba65c93540195d59d1:table/trrel-uf.ss=
+(blob =20cc0b50ac7190f95cb7dd200d34f48693163a74=). Both lanes use the same
+static compilation, native process CPU and root allocation counters. Fifty
+alternating pairs measure complete graph construction, insertion batches and
+ordered frontier materialization. Every frontier is checked against an independent
+incremental matrix closure outside timing; the frozen baseline supplies ordered
+occurrence semantics. Benchmark contracts are generated with the public ASP
+=make-benchmark-fixture= API and measured with =benchmark-run/result=.
+
+Duplicate interior arcs, interior transitive arcs and local SCC merging require
+at least 20% CPU reduction and 35 paired wins. New edges, endpoint transitive
+facts, tiny and empty graphs are controls (110% plus 20us). Allocation budgets
+are 110% plus 4096 bytes. This run launches no concurrent build or qualification
+lane during timing. Global machine isolation is not asserted.
+
+The first endpoint-only transitive experiment measured 3140 -> 3080us and failed
+the initial 20% improvement gate (29/50 wins). Its raw receipt remains ignored
+in =.cache/ascent/uf-admission/transitive-endpoint-failed.ss=. It shows that full
+construction dominates a single-predecessor/successor query. The endpoint shape
+is retained explicitly as a control, and a distinct interior transitive workload
+exercises a nontrivial predecessor/successor product.
+
+* Reproduce
+Use canonical =.gerbil/lib= and the installed SDK, not a rebuilt compiler.
+
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/uf-admission/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/uf-admission/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/uf-admission/runner duplicate .cache/ascent/uf-admission/duplicate.ss
+#+end_src
+
+Repeat separately for transitive, endpoint, merge, new, small, empty. Compile
+=qualify= with the same builder only after timing completes. Binary, receipts,
+fixture generator and logs live in ignored =.cache=.
+
+* Final native results
+| Full workflow | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|---------------+------------+------------+-----------+-----------+----------|
+| Duplicate interior edge | 16765 | 2949 | 6309464 | 5099224 | 50/50 |
+| Interior transitive fact | 9480 | 2937 | 5928536 | 5099224 | 50/50 |
+| Endpoint transitive control | 2964 | 2908 | 5142104 | 5099224 | 28/50 |
+| Local SCCs beside unrelated DAG | 12667 | 3090 | 18966040 | 5379224 | 50/50 |
+| New edges control | 2464 | 2433 | 4227712 | 4240128 | 27/50 |
+| Tiny duplicate control | 8 | 7 | 19168 | 18976 | 34/50 |
+| Empty control | 1 | 1 | 1312 | 1312 | 22/50 |
+
+All final fixture gates passed after compiling the final private insertion record.
+New-edge allocation increased 0.3%; endpoint CPU is effectively flat. Main CPU
+reductions are 82.4%, 69.0% and 75.6%; local merge allocation falls 71.6%. These
+are complete provider insertion workflows, not whole-program solve timings or
+claims of universal speedup. The earlier pre-record run remains in ignored
+=final-*.ss= receipts; its new-edge CPU increased 0.8%.
+
+* Qualification
+Final native qualification passed five Suites, 41 Cases (including all 512
+three-node edge subsets), final =OK= and exit 0. Indexed partial SCC merges
+verify exact ordered frontiers, unrelated DAG preservation, reverse adjacency
+invariants, rejection/retry and held snapshots after every edge. Existing
+reflexive/transitive facts retain negative-budget rejection.
+
+Direct source loading and execution of 72 chain edges, an interior SCC merge,
+validation and duplicate admission passed =SOURCE-UF-OK=. Static qualification
+is a separate receipt. Production policy completed with 29 findings, zero
+errors, =POLICY-NATIVE-OK= and exit 0; warnings remain outside this change.

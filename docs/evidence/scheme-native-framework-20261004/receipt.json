@@ -1,0 +1,52 @@
+{
+  "build": {
+    "artifactSha256": "f3c0b71d5fe72a3da56fab1635542785886906e5c3bf7fd8f3f3c6c76de393d6",
+    "clock": "unix",
+    "configuredCores": 4,
+    "elapsedSeconds": 229.57258892059326,
+    "exitStatus": 0
+  },
+  "filesSha256": {
+    "artifact.json": "0e54cfcdbcd2bf6ed4a812db81b83fc70dab75bff27861d2a67cc5bc3f26e37f",
+    "build.log": "cba08a7c1db88bf536a22831ece5ec5f35409ff4e8396fd07120cd971805d00d",
+    "io-smoke.json": "39d80c0e2cfac25b191cfedd0e39b0ee502e8c8cd3fce5a878736639b47e04c5",
+    "io-smoke.log": "53b07612f9031f27ae6209418175cf2f823c907d713f1883d47fc15563cfbc9a",
+    "python-io.log": "69e6a126fbe84ece64f93b2e24b306e81a45d9bd27d060dbf3517753c60c102f",
+    "qualification.log": "f2914aeb59837d6e19fd6b9e8702bc9ac33a53adb394774c6f33606d17804520",
+    "rejected-fixture-env.log": "b6150ccb6a309017ddb83303f3c9102dd55150a000108b3dc64ed2e7e280843d",
+    "rejected-json-writer-build.log": "79a5f6d1330bb5a71937214a506f35ea424f807f7722415da51ec4dc38aa5cb1",
+    "rejected-static-module-build.log": "c3698074cfb05865e27696f10f31fae0614b03b05e411ebd3a00fbc345b54ca8",
+    "source-snapshot.patch": "69ff5b543605205cc471b283aecba265205106a296c7eb5f3b41f354d6fa2427"
+  },
+  "ioSmoke": {
+    "exitStatus": 0,
+    "fixtureOnly": true,
+    "modelCalls": 0
+  },
+  "modelCalls": 0,
+  "pythonIoTests": {
+    "cases": 5,
+    "exitStatus": 0
+  },
+  "qualification": {
+    "cases": 138,
+    "exitStatus": 0,
+    "finalOkMarkers": 13,
+    "harnessMarkers": 13,
+    "modules": 13,
+    "suites": 13
+  },
+  "rejectedAttempts": [
+    "initial native JSON writer argument order",
+    "fixture environment restoration with unsupported false value",
+    "missing explicit AOT helper targets"
+  ],
+  "schema": "ascent.native-framework-migration",
+  "scope": "before integration of concurrent core ownership migration 834ff8c; does not qualify that later source",
+  "sourceHead": "21d82abc43b1212535e6dc117cf09590aeac67a7",
+  "sourceReconstruction": {
+    "base": "c34be1a9b561e8100a118011c771a611b22acbf1",
+    "patch": "source-snapshot.patch"
+  },
+  "version": 1
+}

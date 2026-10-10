@@ -1,0 +1,116 @@
+#+TITLE: Source-only Scheme model closure study
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Computation and authority
+
+The Scheme fixture compiles and quotes the same task expression. It executes
+24 actual tasks across 12 families: function inputs, returned functions,
+independent closure instances, finite mapping, finite fixed points, runtime
+domains, retained deletion, negation, reduction, lattice changes, recursive
+alternatives and stratified provenance. Independent fixture data is checked
+against every native computation. No fixture answers enter model requests.
+
+The Gerbil compiler computes runtime import closure. Requests include complete
+ASCENT module sources and the actual task with its expected datum missing.
+The actual compiler probe is compiled into the source-bound native entry;
+each emitted dependency record follows a completed compiler computation. It
+uses the same 1G heap, 5-second real-output watchdog and 120-second module gate.
+Its completion marker follows all requested roots. Python does not infer the
+module graph or replace a failed compiler scan with a hand-written inventory.
+The installed core/types compiler interface and lowered Scheme implementation
+are included explicitly; they are not presented as the original source.
+Other framework modules are listed as assumed dependencies. The model task
+fixture, its private assertions and qualification tests are excluded.
+
+Python performs bounded byte IO, source hashing, provider transport and report
+aggregation. Scheme computes truth and scores inert data. Model text is never
+evaluated, admitted as a rule, repaired or chosen by comparison with truth.
+
+* Why is there text in the request?
+
+Source and task text identify the real computation. There is no system prompt,
+semantic tutorial, few-shot example, answer prefill, tool instruction or repair
+loop. The target is understanding of actual Scheme and the model's reasoning.
+A placeholder in the actual assertion asks for the missing result, rather than
+teaching a predetermined derivation. Real native feedback appears only after
+the initial response, when the follow-up task is submitted.
+
+* Frozen paired design
+
+The [[file:evidence/scheme-model-plan-requalified-20261004/receipt.json][historical requalified public plan]] binds 35 actual ASCENT modules and three
+actual lowered =core/types= files to source head =e732b2b= and a supervised
+native artifact. Its SHA256 is
+=bd7aba6a2eaf22251bb7771a7c0edddada636d6a64cdc2359e149fd6470339f5=.
+All 24 independent native computations, eight compiler import roots, ten native
+scorer controls and offline validation pass. Completed compiler imports emit
+their actual module IDs; no startup heartbeat or replacement inventory is used.
+This snapshot made zero paid calls. Subsequent function-valued fixed-point
+changes supersede it for latest-source validation. Its digest must not authorize
+a changed source payload. Fresh native qualification and fee/source disclosure
+authorization are required before a new live experiment.
+
+Each family has an initial and a changed task. Five conditions yield 60 calls:
+
+| Arm | Calls | Reasoning | Context |
+|-----+-------+-----------+---------|
+| initial-none | 12 | none | Source and initial task |
+| initial-high | 12 | high | Identical source and initial task |
+| transfer-fresh | 12 | high | Source and changed task |
+| transfer-history | 12 | high | Initial source/task, actual initial-high answer, changed task |
+| transfer-feedback | 12 | high | Same history plus actual post-answer native observation |
+
+Family order is fixed; initial order alternates and transfer arm order rotates
+and reverses. Calls have zero retries. Feedback is the fresh native result
+and actual acceptance/correctness observation, with no corrective instruction.
+Matched wins and losses separate reasoning, history and computed feedback.
+Twelve families provide bounded observed evidence, not a population guarantee.
+
+* Acceptance and economics
+
+Raw acceptance and native correctness remain separate from byte normalization.
+Normalization removes only unique literal/assertion transport wrappers; conflicting
+asserted data reject. All raw outputs and provider events remain available.
+Primary correctness requires a completed provider response and a correct native
+score. Failures, timeouts and incomplete outputs remain in the scheduled
+denominator even when their partial text contains a correct datum.
+
+Reports include native scoring time, provider time, first visible text time,
+observed token usage, matched accuracy gains and a peak-price cost upper bound.
+Missing usage is unknown; actual invoice cost is not inferred from token usage.
+No gain is promised before measurement, and zero or negative gain is retained.
+
+The proposed frozen bounds are 655360 serialized input bytes, 8192 output
+tokens including reasoning and a 45-second observable-progress/network idle
+deadline. An actively progressing response has no absolute wall cutoff.
+Native checks retain 1GB heap, 5-second progress and
+120-second module bounds. Peak uncached input USD 0.30/M and output USD 1.20/M
+give a conservative USD 12.404736 bound including 1024 framing tokens per call;
+the requested batch ceiling is USD 13. Pricing source:
+[[https://api-docs.deepseek.com/quick_start/pricing/][official DeepSeek pricing]].
+The provider contract is the [[https://api-docs.deepseek.com/api/create-response/][official Responses endpoint]].
+
+A frozen plan binds task bytes, private truth bytes, native artifact, compiler
+source closure and producer hashes. Exclusive claim and attempt ledgers prevent
+replaying a paid batch. The plan must pass native and offline checks before
+new source-exfiltration and fee authorization. No live calls are part of the
+native receipts. Real model benefit and MRR integration remain pending until
+this measurement and its acceptance are complete.
+
+* Observable provider progress
+
+The former 180-second wall cutoff could terminate an actively computing stream.
+The transport now renews its idle deadline only for actual response lifecycle,
+reasoning and text events. SSE keepalive comments and unknown events do not renew
+it. A partial response, missing terminal event or idle failure remains a failed
+scheduled attempt even if partial text happens to contain the right datum.
+This changes byte-transport liveness; it supplies no semantic instructions,
+correction, retries or native scoring authority to Python.
+
+Four offline byte-context/progress controls pass, including a virtual 220-second
+active reasoning stream and silent/unknown keepalive rejection. No external model
+calls or fees are part of this qualification. Frozen plans must be regenerated
+because producer hashes and the timeout contract changed. The [[https://api-docs.deepseek.com/quick_start/pricing/?tab=case-studies][official peak prices]]
+were rechecked on 2026-10-06 and retain the conservative USD 13 batch ceiling.
+See the [[file:evidence/scheme-provider-progress-20261006/receipt.json][source-bound transport receipt]].

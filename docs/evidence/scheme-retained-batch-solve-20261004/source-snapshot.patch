@@ -1,0 +1,211 @@
+diff --git a/justfile b/justfile
+index a007f61..2cf227c 100644
+--- a/justfile
++++ b/justfile
+@@ -708,6 +708,13 @@ build-dsl-closure:
+     fi
+     timeout --signal=KILL 180s bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
+ 
++# Counterbalanced measurements with independent Scheme truth; no speed threshold.
++check-retained-benefit:
++    #!/usr/bin/env bash
++    set -euo pipefail
++    python3 tools/dsl-closure-artifact.py check
++    python3 t/harness/watch_output.py -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
++
+ # Run the known Suites through std/test in serial AOT processes with strict progress.
+ check-dsl-closure:
+     #!/usr/bin/env bash
+diff --git a/t/harness/dsl-closure.ss b/t/harness/dsl-closure.ss
+index 0ac6104..62a1515 100644
+--- a/t/harness/dsl-closure.ss
++++ b/t/harness/dsl-closure.ss
+@@ -23,7 +23,7 @@
+                  scheme-higher-order-test))
+ 
+ (import (only-in :gerbil-ascent/t/qualification/scheme-session-deletion-test
+-                 scheme-session-deletion-test))
++                 scheme-session-deletion-test session-benefit-main))
+ 
+ (import (only-in :gerbil-ascent/t/qualification/scheme-stratified-provenance-test
+                  scheme-stratified-provenance-test))
+@@ -45,6 +45,7 @@
+ 
+ (def (main . args)
+   (match args
++    (["--retained-benefit"] (session-benefit-main) (exit 0))
+     (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
+     (["--oracle" name]
+      (case (string->symbol name)
+diff --git a/t/qualification/scheme-model-closure-test.ss b/t/qualification/scheme-model-closure-test.ss
+index 0263bb9..797f719 100644
+--- a/t/qualification/scheme-model-closure-test.ss
++++ b/t/qualification/scheme-model-closure-test.ss
+@@ -74,17 +74,19 @@
+         (bits (solve mapped)))
+       6)
+     (study-case finite-fix initial
+-      (let* ((r (relational-relation-type 2 '(0 1 2 3)))
+-             (edge (relational-typed-source 'edge r '((0 1) (1 2))))
+-             (seed (relational-typed-source 'seed r '((0 1))))
+-             (function (relational-typed-function r
+-               (lambda (path) (relational-typed-union seed
+-                 (relational-typed-project (relational-typed-join path edge 1 0) '(0 3))))))
++      (let* ((r (relational-relation-type 1 '(0 1)))
++             (seed (relational-typed-source 'seed r '((0))))
++             (function (relational-typed-function (relational-arrow-type r r)
++               (lambda (self) (relational-typed-function r
++                 (lambda (input) (relational-typed-union input
++                   (relational-typed-apply self
++                     (relational-typed-flatmap input r '(((0) (1)) ((1) (0)))))))))))
+              (solve (lambda (term)
+              (let-values (((program output) (relational-typed-compile term 32 256 512)))
+                (relational-query-name (relational-solve (relational-admit program)) output)))))
+-        (length (solve (relational-typed-fix function))))
+-      2)
++        (foldl (lambda (row mask) (+ mask (expt 2 (car row)))) 0
++               (solve (relational-typed-apply (relational-typed-fix function) seed))))
++      3)
+     (study-case domain-runtime initial
+       (let-values (((program output) (relational-typed-compile
+                       (relational-typed-source 'input (relational-relation-type 1 '(0 1)) '((0))) 32 256 512)))
+@@ -210,17 +212,19 @@
+         (bits (solve mapped)))
+       24)
+     (study-case finite-fix transfer
+-      (let* ((r (relational-relation-type 2 '(0 1 2 3)))
+-             (edge (relational-typed-source 'edge r '((0 1) (1 2) (2 3))))
+-             (seed (relational-typed-source 'seed r '((0 1))))
+-             (function (relational-typed-function r
+-               (lambda (path) (relational-typed-union seed
+-                 (relational-typed-project (relational-typed-join path edge 1 0) '(0 3))))))
++      (let* ((r (relational-relation-type 1 '(0 1)))
++             (seed (relational-typed-source 'seed r '((0))))
++             (function (relational-typed-function (relational-arrow-type r r)
++               (lambda (self) (relational-typed-function r
++                 (lambda (input) (relational-typed-union input
++                   (relational-typed-apply self
++                     (relational-typed-flatmap input r '(((1) (0)))))))))))
+              (solve (lambda (term)
+              (let-values (((program output) (relational-typed-compile term 32 256 512)))
+                (relational-query-name (relational-solve (relational-admit program)) output)))))
+-        (length (solve (relational-typed-fix function))))
+-      3)
++        (foldl (lambda (row mask) (+ mask (expt 2 (car row)))) 0
++               (solve (relational-typed-apply (relational-typed-fix function) seed))))
++      1)
+     (study-case domain-runtime transfer
+       (let-values (((program output) (relational-typed-compile
+                       (relational-typed-source 'input (relational-relation-type 1 '(0 1)) '((0))) 32 256 512)))
+diff --git a/t/qualification/scheme-session-deletion-test.ss b/t/qualification/scheme-session-deletion-test.ss
+index 6b7fdcd..d3f49b3 100644
+--- a/t/qualification/scheme-session-deletion-test.ss
++++ b/t/qualification/scheme-session-deletion-test.ss
+@@ -12,7 +12,106 @@
+         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
+                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
+                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
+-(export scheme-session-deletion-test)
++(export scheme-session-deletion-test session-benefit-main)
++
++;;; Counterbalanced native samples. Construction, initial session solve, GC
++;;; and independent checking are outside each timer. Session replacement keeps
++;;; its actual snapshot/admission/publication costs inside the timed operation;
++;;; fresh evaluation includes engine admission and publication. No speed gate.
++(def (session-benefit-main)
++  (def allocations (make-f64vector 2 0.0))
++  ;; Verified against the installed Gambit dcd677c _kernel.scm:
++  ;; get-bytes-allocated! writes the native allocator counter into this buffer.
++  ;; The buffer and result vector are allocated outside each timing boundary.
++  (def (sample thunk batch)
++    (let* ((results (make-vector batch #f)) (indices (iota batch))
++           (wall (current-jiffy)) (cpu (cpu-time)))
++      (##get-bytes-allocated! allocations 0)
++      (for-each (lambda (n) (vector-set! results n (thunk n))) indices)
++      (##get-bytes-allocated! allocations 1)
++      (let ((cpu-seconds (- (cpu-time) cpu))
++            (wall-seconds (/ (- (current-jiffy) wall) (jiffies-per-second)))
++            (bytes (- (f64vector-ref allocations 1) (f64vector-ref allocations 0))))
++        (unless (>= bytes 0) (error "native allocation counter regressed"))
++        (vector results (/ wall-seconds batch) (/ cpu-seconds batch) (/ bytes batch)))))
++  (def (benchmark-program edges cold)
++    (relational-program
++     (relation edge (from to) edges) (relation path (from to) '())
++     (relation cold (value) cold) (relation seen (value) '())
++     (rule (path ?x ?y) (edge ?x ?y))
++     (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
++     (rule (seen ?x) (cold ?x))
++     (limits 128 8192 262144)))
++  (def (check-result result edges nodes first cold)
++    (check-equal? (.ref result 'finished) #t)
++    (check-set (rows result 'edge) edges)
++    (check-set (rows result 'cold) cold)
++    (check-set (rows result 'seen) cold)
++    ;; Independent chain model: first <= x < y <= nodes, no duplicates, and
++    ;; the complete triangular cardinality. Membership plus cardinality implies
++    ;; exact closure, without a quadratic membership scan of every result.
++    (let ((seen (make-hash-table test: equal?)) (count (+ (- nodes first) 1)))
++      (for-each
++       (lambda (row)
++         (unless (and (list? row) (= (length row) 2)
++                      (integer? (car row)) (integer? (cadr row))
++                      (<= first (car row)) (< (car row) (cadr row))
++                      (<= (cadr row) nodes) (not (hash-get seen row)))
++           (error "independent native chain model rejected row" row))
++         (hash-put! seen row #t)) (rows result 'path))
++      (check-equal? (hash-length seen) (/ (* count (- count 1)) 2))))
++  (for-each
++   (lambda (workload)
++    (let ((nodes (car workload)) (batch (cadr workload)))
++     (for-each
++      (lambda (condition)
++       (let* ((edges (map (lambda (x) (list x (+ x 1))) (iota nodes)))
++            (edge-change? (not (eq? condition 'independent)))
++            (cold-change? (not (eq? condition 'recursive)))
++            (next-edges (if edge-change? (cdr edges) edges))
++            (next-cold (if cold-change? '((8)) '((7))))
++            (replacements
++             (append (if edge-change? (list (cons 'edge next-edges)) [])
++                     (if cold-change? (list (cons 'cold next-cold)) [])))
++            (base (benchmark-program edges '((7))))
++            (prospective (benchmark-program next-edges next-cold)))
++       (let loop ((n 0))
++         (when (< n 20)
++           (let ((sessions
++                  (list->vector
++                   (map (lambda (_)
++                          (let* ((session (gerbil-ascent-open-session base))
++                                 (initial (gerbil-ascent-session-run session)))
++                            (check-result initial edges nodes 0 '((7)))
++                            session)) (iota batch)))))
++             (##gc)
++             (let-values (((fresh retained)
++                           (if (even? n)
++                             (let* ((a (sample (lambda (_) (gerbil-ascent-evaluate-program prospective)) batch))
++                                    (b (sample (lambda (n) (gerbil-ascent-session-replace-sources! (vector-ref sessions n) replacements)) batch)))
++                               (values a b))
++                             (let* ((b (sample (lambda (n) (gerbil-ascent-session-replace-sources! (vector-ref sessions n) replacements)) batch))
++                                    (a (sample (lambda (_) (gerbil-ascent-evaluate-program prospective)) batch)))
++                               (values a b)))))
++               (for-each
++                (lambda (a b)
++                  (check-result a next-edges nodes (if edge-change? 1 0) next-cold)
++                  (check-result b next-edges nodes (if edge-change? 1 0) next-cold)
++                  (check-equal? (.ref a 'active-rule-count) 3)
++                  (check-equal? (.ref b 'active-rule-count)
++                                (case condition ((independent) 1) ((recursive) 2) (else 3))))
++                (vector->list (vector-ref fresh 0)) (vector->list (vector-ref retained 0)))
++               (write (list 'BENEFIT condition nodes batch n (if (even? n) 'AB 'BA)
++                            (list 'fresh (vector-ref fresh 1) (vector-ref fresh 2) (vector-ref fresh 3)
++                                  (.ref (vector-ref (vector-ref fresh 0) 0) 'active-rule-count))
++                            (list 'retained (vector-ref retained 1) (vector-ref retained 2) (vector-ref retained 3)
++                                  (.ref (vector-ref (vector-ref retained 0) 0) 'active-rule-count))))
++               (newline) (force-output)))
++           (loop (+ n 1))))))
++       '(independent recursive all-inputs))))
++   '((12 128) (48 16)))
++  (displayln "BENEFIT-OK pairs=120 independent-native-verdicts=17280")
++  (force-output))
+ 
+ (def (rows result name) ((.ref result 'rows-of) name))
+ (def (check-set actual expected)

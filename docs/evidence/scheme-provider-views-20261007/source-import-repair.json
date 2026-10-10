@@ -1,0 +1,39 @@
+{
+  "schema": "ascent.relation-view-public-import-repair",
+  "version": 1,
+  "baseCommit": "9f668c39c3abac73a6993d5f794f1f7b4e36d5aa",
+  "failedUpstreamCommit": "9fd161f9a1477a56899d6f1c540276f47fc86016",
+  "failedUpstreamRun": "https://github.com/tao3k/gerbil-ascent/actions/runs/37516930584",
+  "firstRootCause": "Unexpected import at core/relation-view.ss line 6; redundant take-only import evaluates as empty import",
+  "repair": "remove redundant import; take is provided by the default Gerbil prelude",
+  "qualification": {
+    "freshPublicImport": "passed",
+    "ufChainExpectedRows": 6,
+    "ufChainFixture": "passed",
+    "rustByods": {
+      "exitCode": 0,
+      "passed": 11,
+      "ignored": 1,
+      "filteredOut": 63,
+      "ignoredScope": "pre-existing pinned Ascent trrel-uf 10,000-edge slow full-scale gate, executed separately by the CI byods-scale shard"
+    },
+    "policy": {
+      "exitCode": 0,
+      "errors": 0,
+      "advisoryFindings": 18
+    }
+  },
+  "sourceHashes": {
+    "core/relation-view.ss": "af876cddddba296ec687dd38fce893c7eebb59461515a6a4ffcfb978e36351fc",
+    "docs/scheme-trrel-uf-design.org": "6d0d7a026aa62d6d955ff0372f9404be093ede47ac353a6e7d540a81be957b41"
+  },
+  "transcriptHashes": {
+    "shared-reader-native-import-fix": "657f0f1f69c65862bf77c5c7c50a351197618abf6e36cb4b742e00014d643d81",
+    "shared-reader-byods-oracle": "62f9bf0c15976bb0dc223ebfd789f7040c5ff70097583b377c06323b4faddc7d",
+    "shared-reader-import-policy": "44ec6eee1006b91226ac0a55dc45669ba7fc552cc7b2ca37c6ec06418abab75d"
+  },
+  "excludedEvidence": [
+    "first manual fixture invocation consumed shell stdin instead of a Scheme request; rerun with explicit request"
+  ],
+  "modelCalls": 0
+}

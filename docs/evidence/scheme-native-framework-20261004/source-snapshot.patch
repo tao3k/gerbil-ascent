@@ -1,0 +1,1075 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 322aa7b..11ba84d 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -41,7 +41,7 @@ jobs:
+       - name: Measure native retained replacement against fresh evaluation
+         run: just check-retained-benefit
+       - name: Qualify actual native compiler source closure
+-        run: gerbil env python3 tools/model-closure-study.py probe .cache/ascent/model-source-probe
++        run: PYTHONPATH=python/src gerbil env python3 -m ascent_test_support.model_study probe .cache/ascent/model-source-probe
+       - name: Qualify ASCENT SS scenarios
+         run: just performance
+   oracle:
+@@ -105,8 +105,8 @@ jobs:
+           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/PositiveNonmembership.lean
+           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/FiniteHeight.lean
+           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/FiniteOperators.lean
+-      - name: Reject invalid artifact publication and model byte contexts
+-        run: python3 -m unittest tools/test_dsl_artifact.py tools/test_build_activity.py tools/test_model_closure_study.py -v
++      - name: Qualify Python byte IO and process supervision
++        run: python3 -m unittest discover -s python/tests -v
+   native-and-oracle:
+     if: ${{ always() }}
+     needs: [scheme, oracle, formal]
+diff --git a/docs/scheme-design-framework.org b/docs/scheme-design-framework.org
+index 72b8a47..8c9317e 100644
+--- a/docs/scheme-design-framework.org
++++ b/docs/scheme-design-framework.org
+@@ -25,7 +25,7 @@ Historical receipts bind their own sources and do not certify later commits.
+ | C5 | General arithmetic/lattice recursion | Binding safety does not imply termination; exhausted bounds fail and cannot publish completed rows | [[file:../program/scheme-checked.ss][scalar operations]], [[file:../t/qualification/scheme-closure-contract-test.ss][closure discriminator]] | Bounded successor returns 0..4; unbounded successor and one-key max fail with exact budget errors |
+ | C6 | Retained source lifecycle | Positive insertion reuse; checked replacement/withdrawal invalidate affected native components and atomically publish; opaque providers/callbacks fully recompute | [[file:scheme-session-deletion-design.org][native deletion]], [[file:../t/qualification/scheme-session-deletion-test.ss][qualification]] | 64 graphs and 192 withdrawals against matrix closure and fresh native solve; failed publication rolls back; independent fixture selects 2 of 3 native plans |
+ | C7 | Finite evidence and Why-Not | Replay checks exact program/query/snapshot; ground absence requires a completed finite closed model; bounded/unsupported is not absence | [[file:../t/qualification/ascent-finite-evidence-test.ss][finite evidence]], [[file:../t/qualification/ascent-positive-nonmembership-test.ss][nonmembership]] | Tampered binding and exhausted verification bounds reject; founded witness is not all provenance |
+-| C8 | Native execution and byte binding | Scheme owns Case verdicts and DSL semantics; Python only checks hashes and genuine output progress | [[file:../t/harness/dsl-closure.ss][native entry]], [[file:../tools/dsl-closure-artifact.py][artifact binding]] | Twelve known Suites including the original timeout lifecycle, explicit exit status, MODULE-OK/HARNESS-OK/final OK, 5s silence and 120s module bounds |
++| C8 | Native execution and byte binding | Scheme owns Case verdicts, prediction projection, DSL semantics and artifact admission; the Python package owns provider byte IO and process supervision | [[file:../t/harness/dsl-closure.ss][native entry]], [[file:../t/harness/artifact.ss][native artifact binding]], [[file:../python/README.org][IO package]] | Thirteen native Suites including artifact failure controls and the original timeout lifecycle; explicit exit status, MODULE-OK/HARNESS-OK/final OK, 5s silence and 120s module bounds |
+ 
+ C4's finite universe argument applies to fixed sources, mappings and selection
+ constants. It does not extend to C5's integer generation. A finite lattice key
+diff --git a/docs/scheme-retained-benefit.org b/docs/scheme-retained-benefit.org
+index db92d93..ce698a1 100644
+--- a/docs/scheme-retained-benefit.org
++++ b/docs/scheme-retained-benefit.org
+@@ -5,8 +5,9 @@
+ Does checked dependency reuse reduce native work and elapsed time relative to
+ a fresh solve of the identical prospective input? Run =just build-dsl-closure=
+ then =just check-retained-benefit=. The native entry uses the same compiler,
+-dependency prefix, DSL and evaluator for both paths. Python verifies source
+-and binary hashes and supervises genuine output; it decides no semantic truth.
++dependency prefix, DSL and evaluator for both paths. Scheme verifies source
++and binary hashes and admits the artifact. The Python IO package supervises
++genuine process activity; it decides no semantic truth.
+ The unchanged bounds are 1G heap, 5 seconds without actual output and 120
+ seconds for the complete measurement process. Compilation and parent artifact
+ finalization no longer have a 180-second total deadline, following the user's
+diff --git a/justfile b/justfile
+index faa6566..0d8c8b0 100644
+--- a/justfile
++++ b/justfile
+@@ -308,8 +308,8 @@ byods-lattice-rows:
+     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
+ 
+ byods-lattice-session-rows:
+-    @python3 tools/dsl-closure-artifact.py check >/dev/null
+-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
++    @gxi t/harness/artifact.ss check >/dev/null
++    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
+ 
+ byods-lattice-scale-rows:
+     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
+@@ -414,8 +414,8 @@ scc-order-rows:
+     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
+ 
+ arity-repetition-rows:
+-    @python3 tools/dsl-closure-artifact.py check >/dev/null
+-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
++    @gxi t/harness/artifact.ss check >/dev/null
++    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
+ 
+ clause-composition-rows:
+     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
+@@ -448,16 +448,16 @@ divisibility-lattice-rows:
+     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
+ 
+ multi-source-session-rows:
+-    @python3 tools/dsl-closure-artifact.py check >/dev/null
+-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
++    @gxi t/harness/artifact.ss check >/dev/null
++    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
+ 
+ byods-session-rows:
+-    @python3 tools/dsl-closure-artifact.py check >/dev/null
+-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
++    @gxi t/harness/artifact.ss check >/dev/null
++    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
+ 
+ grouped-eqrel-session-rows:
+-    @python3 tools/dsl-closure-artifact.py check >/dev/null
+-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
++    @gxi t/harness/artifact.ss check >/dev/null
++    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
+ 
+ oracle:
+     #!/usr/bin/env bash
+@@ -696,8 +696,10 @@ _test-temporal:
+ build-dsl-closure:
+     #!/usr/bin/env bash
+     set -euo pipefail
+-    export ASCENT_DSL_BUILD_TOKEN="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+-    export ASCENT_DSL_BUILD_STARTED="$(python3 -c 'import time; print(time.monotonic())')"
++    mkdir -p .cache/ascent/tmp
++    export ASCENT_DSL_BUILD_TOKEN="$(mktemp .cache/ascent/tmp/build-owner.XXXXXX)"
++    trap 'rm -f "$ASCENT_DSL_BUILD_TOKEN"' EXIT
++    export ASCENT_DSL_BUILD_STARTED="$(date +%s)"
+     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+     compiler=(gerbil env gxi)
+     if [[ -n "${GERBIL_PATH:-}" ]]; then
+@@ -706,29 +708,29 @@ build-dsl-closure:
+         export PATH="$GERBIL_PATH/bin:$PATH"
+         compiler=(gxi)
+     fi
+-    python3 t/harness/watch_output.py --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
++    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; gxi t/harness/artifact.ss finalize' build-dsl-closure "${compiler[@]}"
+ 
+ # Counterbalanced measurements with independent Scheme truth; no speed threshold.
+ check-retained-benefit:
+     #!/usr/bin/env bash
+     set -euo pipefail
+-    python3 tools/dsl-closure-artifact.py check
+-    python3 t/harness/watch_output.py -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
++    gxi t/harness/artifact.ss check
++    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
+ 
+ # Run the known Suites through std/test in serial AOT processes with strict progress.
+ check-dsl-closure:
+     #!/usr/bin/env bash
+     set -euo pipefail
+-    python3 tools/dsl-closure-artifact.py check
++    gxi t/harness/artifact.ss check
+     test -x .cache/ascent/native-library/dsl-closure
+     mkdir -p .cache/ascent/tmp
+     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
+     trap 'rm -f "$output_file"' EXIT
+-    for module in scheme-closure-contract scheme-provenance-graph scheme-higher-order scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
+-        python3 t/harness/watch_output.py -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
++    for module in scheme-closure-contract scheme-artifact scheme-provenance-graph scheme-higher-order scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
++        PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
+     done
+     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+     awk -f tools/assert-test-cases.awk "$output_file"
+-    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 12
+-    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 12
+-    test "$(grep -cx 'OK' "$output_file")" -eq 12
++    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 13
++    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 13
++    test "$(grep -cx 'OK' "$output_file")" -eq 13
+diff --git a/python/README.org b/python/README.org
+new file mode 100644
+index 0000000..7eb4c01
+--- /dev/null
++++ b/python/README.org
+@@ -0,0 +1,25 @@
++#+TITLE: ASCENT test support
++
++This Python package owns provider HTTP/SSE byte IO, frozen request receipts,
++and process supervision. It does not parse Scheme model predictions, determine
++DSL correctness, publish native artifacts, or implement a semantic oracle.
++
++Scheme owns artifact admission in =t/harness/artifact.ss= and inert prediction
++projection in =t/harness/prediction.ss=. Native Cases cover staged compilation
++failure, owner/source/binary changes, prediction ambiguity, size and nesting
++bounds, and rejection of executable expressions. Those Cases run in the AOT
++DSL harness. Python tests cover only process activity and request byte context.
++
++From the repository root, use the captured environment:
++
++#+begin_src sh
++PYTHONPATH=python/src python3 -m ascent_test_support.model_study --help
++python3 -m unittest discover -s python/tests -v
++#+end_src
++
++The repository defaults to the working directory; set =ASCENT_REPOSITORY= to
++use an explicit checkout when running the installed package elsewhere.
++Producer receipts hash the actual loaded Python modules, not an assumed
++installation path. The package has standard pyproject metadata and a src layout. Model calls still
++require a newly frozen plan and explicit source/cost authorization. Package
++migration does not reuse an older approval or establish a new model score.
+diff --git a/python/pyproject.toml b/python/pyproject.toml
+new file mode 100644
+index 0000000..2a45bf6
+--- /dev/null
++++ b/python/pyproject.toml
+@@ -0,0 +1,15 @@
++# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++[build-system]
++requires = ["setuptools>=68"]
++build-backend = "setuptools.build_meta"
++
++[project]
++name = "ascent-test-support"
++version = "1"
++description = "Provider byte IO and process supervision for native Scheme tests"
++requires-python = ">=3.10"
++dependencies = []
++
++[tool.setuptools.packages.find]
++where = ["src"]
+diff --git a/python/src/ascent_test_support/__init__.py b/python/src/ascent_test_support/__init__.py
+new file mode 100644
+index 0000000..ccb8e58
+--- /dev/null
++++ b/python/src/ascent_test_support/__init__.py
+@@ -0,0 +1,3 @@
++# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++"""Process and byte IO only; Scheme owns parsing, admission and truth."""
+diff --git a/tools/model-closure-study.py b/python/src/ascent_test_support/model_study.py
+similarity index 94%
+rename from tools/model-closure-study.py
+rename to python/src/ascent_test_support/model_study.py
+index 1d1fcf4..7448a59 100644
+--- a/tools/model-closure-study.py
++++ b/python/src/ascent_test_support/model_study.py
+@@ -13,11 +13,10 @@ import time
+ import http.client
+ import statistics
+ import shutil
+-from model_prediction_transport import prediction_from_output
+ 
+-ROOT = Path(__file__).resolve().parents[1]
++ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
+ BINARY = ROOT / '.cache/ascent/native-library/dsl-closure'
+-HARNESS = [sys.executable, str(ROOT/'t/harness/watch_output.py'), '--', 'timeout', '120s']
++HARNESS = [sys.executable, '-m', 'ascent_test_support.supervision', '--', 'timeout', '120s']
+ RUNTIME = [str(BINARY), '-:max-heap=1G,debug=q']
+ PRICE_URL = 'https://api-docs.deepseek.com/quick_start/pricing/'
+ MAX_INPUT_BYTES = 655360
+@@ -32,9 +31,12 @@ def digest(data):
+ 
+ 
+ def producer_hashes():
+-    paths = [Path(__file__), ROOT/'tools/model_prediction_transport.py',
+-             ROOT/'tools/model-source-closure.ss']
+-    return {str(path.relative_to(ROOT)): digest(path.read_bytes()) for path in paths}
++    from . import supervision
++    paths = {'python/src/ascent_test_support/model_study.py': Path(__file__),
++             'python/src/ascent_test_support/supervision.py': Path(supervision.__file__),
++             't/harness/prediction.ss': ROOT/'t/harness/prediction.ss',
++             'tools/model-source-closure.ss': ROOT/'tools/model-source-closure.ss'}
++    return {name: digest(path.read_bytes()) for name, path in paths.items()}
+ 
+ 
+ def module_path(name):
+@@ -97,7 +99,7 @@ def source_closure(imports, log):
+ 
+ 
+ def probe(output):
+-    subprocess.run([sys.executable, str(ROOT/'tools/dsl-closure-artifact.py'), 'check'], cwd=ROOT, check=True)
++    subprocess.run(['gxi', str(ROOT/'t/harness/artifact.ss'), 'check'], cwd=ROOT, check=True)
+     output.mkdir(parents=True, exist_ok=False)
+     text = native(HARNESS + RUNTIME + ['t/qualification/scheme-model-closure-test.ss'], output/'preflight.native.log')
+     cases = [json.loads(line.removeprefix('STUDY-CASE ')) for line in text.splitlines() if line.startswith('STUDY-CASE ')]
+@@ -198,7 +200,7 @@ def validate(preview, approved):
+         plan['maxInputBytes']!=MAX_INPUT_BYTES or plan['maxOutputTokens']!=MAX_OUTPUT_TOKENS or
+         plan['producerHashes']!=producer_hashes()):
+         raise ValueError('frozen producer/budget contract changed')
+-    subprocess.run([sys.executable,str(ROOT/'tools/dsl-closure-artifact.py'),'check'],cwd=ROOT,check=True)
++    subprocess.run(['gxi',str(ROOT/'t/harness/artifact.ss'),'check'],cwd=ROOT,check=True)
+     if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()):
+         raise ValueError('native artifact changed after preparation')
+     for name, sha in plan['modules'].items():
+@@ -278,6 +280,13 @@ def provider(request, api_key, destination):
+     return raw, metadata
+ 
+ 
++def native_projection(raw_path, directory):
++    text = native(HARNESS + RUNTIME + ['--study-project', str(raw_path)], directory/'projection.native.log')
++    projected = json.loads(next(line.removeprefix('NATIVE-PROJECTION ') for line in text.splitlines()
++                                if line.startswith('NATIVE-PROJECTION ')))['prediction']
++    return projected if isinstance(projected, str) else None
++
++
+ def native_score(id, candidate, directory):
+     directory.mkdir()
+     path=directory/'candidate.sexp';path.write_text(candidate if candidate is not None else '')
+@@ -347,8 +356,8 @@ def live(preview,output,approved):
+                 ledger.write(json.dumps(attempt)+'\n');ledger.flush();os.fsync(ledger.fileno())
+             print(f'CALL {index+1}/60 {item["family"]} {item["arm"]} ',end='',flush=True)
+             raw,response=provider(request,key,destination/'response.json');(destination/'raw-output.txt').write_text(raw)
+-            canonical=prediction_from_output(raw)
+-            start=time.monotonic();raw_score=native_score(item['case'],raw,destination/'raw')
++            start=time.monotonic();canonical=native_projection(destination/'raw-output.txt',destination)
++            raw_score=native_score(item['case'],raw,destination/'raw')
+             observation=native_score(item['case'],canonical,destination/'normalized')
+             truth=(preview/'private'/f'{item["case"]}.sexp').read_text().strip()
+             if observation['nativeDatum']!=truth or raw_score['nativeDatum']!=truth:
+diff --git a/t/harness/watch_output.py b/python/src/ascent_test_support/supervision.py
+similarity index 100%
+rename from t/harness/watch_output.py
+rename to python/src/ascent_test_support/supervision.py
+diff --git a/tools/test_model_closure_study.py b/python/tests/test_model_context.py
+similarity index 65%
+rename from tools/test_model_closure_study.py
+rename to python/tests/test_model_context.py
+index c39eb60..3aada9b 100644
+--- a/tools/test_model_closure_study.py
++++ b/python/tests/test_model_context.py
+@@ -1,34 +1,16 @@
+ # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+ # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+ """Byte transport and provider-context discriminators; no semantic oracle."""
+-import importlib.util
+ import json
+ from pathlib import Path
+ import sys
+ import tempfile
+ import unittest
+ 
+-TOOLS=Path(__file__).resolve().parent
+-sys.path.insert(0,str(TOOLS))
+-from model_prediction_transport import prediction_from_output
+-spec=importlib.util.spec_from_file_location('closure_study',TOOLS/'model-closure-study.py')
+-study=importlib.util.module_from_spec(spec);spec.loader.exec_module(study)
+-
+-class ByteTransport(unittest.TestCase):
+-    def test_literal_assertions_and_quotes_are_inert(self):
+-        for text in ['2',"'2",'(check-equal? result 2)',"(check-equal? result '(1 2))"]:
+-            self.assertEqual(prediction_from_output(text),text)
+-        self.assertIsNone(prediction_from_output('(check-equal? result (+ 1 2))'))
+-        self.assertIsNone(prediction_from_output("(check-equal? result '?)"))
+-
+-    def test_conflicting_explicit_data_is_rejected_without_private_truth(self):
+-        self.assertIsNone(prediction_from_output("(check-equal? result '2)\n```scheme\n'3\n```"))
+-        self.assertIsNotNone(prediction_from_output("(check-equal? result '2)\n```scheme\n'2\n```"))
+-
+-    def test_size_and_nesting_are_bounded(self):
+-        self.assertIsNone(prediction_from_output('x'*65537))
+-        self.assertIsNone(prediction_from_output('('*65+'2'+')'*65))
++sys.path.insert(0, str(Path(__file__).parents[1] / 'src'))
++from ascent_test_support import model_study as study
+ 
++class ProviderByteContext(unittest.TestCase):
+     def test_request_context_difference_is_only_real_computed_feedback(self):
+         with tempfile.TemporaryDirectory() as temp:
+             root=Path(temp)
+diff --git a/tools/test_build_activity.py b/python/tests/test_supervision.py
+similarity index 92%
+rename from tools/test_build_activity.py
+rename to python/tests/test_supervision.py
+index cc0f768..1f15e30 100644
+--- a/tools/test_build_activity.py
++++ b/python/tests/test_supervision.py
+@@ -10,7 +10,7 @@ import unittest
+ class BuildActivity(unittest.TestCase):
+     def run_child(self, code):
+         return subprocess.run(
+-            [sys.executable, str(Path(__file__).parents[1] / 't/harness/watch_output.py'),
++            [sys.executable, str(Path(__file__).parents[1] / 'src/ascent_test_support/supervision.py'),
+              '--cpu-progress', '--startup-seconds', '2', '--idle-seconds', '2',
+              '--', sys.executable, '-c', code],
+             capture_output=True, text=True, timeout=15)
+diff --git a/t/harness/artifact.ss b/t/harness/artifact.ss
+new file mode 100644
+index 0000000..4f126ee
+--- /dev/null
++++ b/t/harness/artifact.ss
+@@ -0,0 +1,94 @@
++;;; -*- Gerbil -*-
++;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++;;; Native artifact admission; never evaluates model data or DSL verdicts.
++(import :std/encoding/json :std/encoding/hex :std/crypto/digest
++        :std/misc/process :std/misc/ports)
++(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json)
++(def cache ".cache/ascent/native-library/")
++(def (file name) (string-append cache name))
++(def (clock) (time->seconds (current-time)))
++(def (artifact-digest path)
++  (hex-encode (sha256 (call-with-input-file path read-all-as-u8vector))))
++(def (artifact-read-json path)
++  (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
++    (call-with-input-file path read-json)))
++(def load-json artifact-read-json)
++(def (save-json path value)
++  (call-with-output-file [path: path truncate: #t]
++    (lambda (out) (display (json->string value) out) (newline out))))
++(def (artifact-sources)
++  (let* ((text (run-process '("git" "ls-files" "-z" "--cached" "--others" "--exclude-standard" "--" "*.ss")))
++         (paths (string-split text #\nul))
++         (result (make-hash-table)))
++    (for-each (lambda (path)
++                (unless (string=? path "") (hash-put! result path (artifact-digest path))))
++              (append paths '("justfile" "python/src/ascent_test_support/supervision.py" "python/pyproject.toml")))
++    result))
++(def (artifact-matching-sources? left right)
++  (and (= (hash-length left) (hash-length right))
++       (andmap (lambda (entry) (equal? (cdr entry) (hash-get right (car entry))))
++               (hash->list left))))
++(def (finite-nonnegative? value)
++  (and (real? value) (>= value 0) (< value +inf.0)))
++(def (artifact-main mode)
++  (run-process/batch (list "mkdir" "-p" cache))
++  (let* ((current (artifact-sources))
++         (manifest (file "dsl-closure.json")) (pending (file "dsl-closure-pending.json"))
++         (run-path (file "dsl-closure-run.json")) (freeze (file "dsl-closure-sources.json"))
++         (binary (file "dsl-closure"))
++         (token (getenv "ASCENT_DSL_BUILD_TOKEN" #f)))
++    (cond
++     ((string=? mode "freeze")
++      (let (started (string->number (getenv "ASCENT_DSL_BUILD_STARTED" "")))
++        (unless (and token (not (string=? token "")) (finite-nonnegative? started)
++                     (<= started (clock)))
++          (error "missing or invalid supervised build identity"))
++        (for-each (lambda (path) (when (file-exists? path) (delete-file path))) (list manifest pending))
++        (save-json run-path (hash ("token" token) ("started" started)))
++        (save-json freeze current)
++        (displayln "DSL-SOURCE-FROZEN")))
++     ((string=? mode "bind")
++      (let (run (load-json run-path))
++        (unless (equal? token (hash-ref run "token")) (error "compile staging owner mismatch"))
++        (unless (artifact-matching-sources? current (load-json freeze))
++          (error "source changed during native DSL compilation"))
++        (let (digest (artifact-digest binary))
++          (save-json pending
++            (hash ("schema" "ascent.dsl-closure-artifact") ("version" 1)
++                  ("artifactSha256" digest) ("sources" current)
++                  ("buildRun" token) ("buildStarted" (hash-ref run "started"))
++                  ("buildClock" "unix")))
++          (displayln "DSL-ARTIFACT-STAGED " digest))))
++     ((string=? mode "finalize")
++      (let* ((receipt (load-json pending)) (elapsed (- (clock) (hash-ref receipt "buildStarted"))))
++        (unless (equal? token (hash-ref receipt "buildRun")) (error "compile finalization owner mismatch"))
++        (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
++                     (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
++          (error "staged native artifact changed before finalization"))
++        (unless (finite-nonnegative? elapsed) (error "invalid native build elapsed time"))
++        (hash-put! receipt "compilerExitStatus" 0)
++        (hash-put! receipt "buildElapsedSeconds" elapsed)
++        (save-json pending receipt)
++        (rename-file pending manifest #t)
++        (displayln "DSL-ARTIFACT-BOUND " (hash-ref receipt "artifactSha256"))))
++     ((string=? mode "check")
++      (let (receipt (load-json manifest))
++        (unless (and (equal? (hash-get receipt "schema") "ascent.dsl-closure-artifact")
++                     (equal? (hash-get receipt "version") 1)
++                     (equal? (hash-get receipt "compilerExitStatus") 0)
++                     (finite-nonnegative? (hash-get receipt "buildElapsedSeconds")))
++          (error "invalid native DSL artifact binding"))
++        (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
++                     (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
++          (error "stale or changed native DSL artifact"))
++        (displayln "DSL-ARTIFACT-VERIFIED " (hash-ref receipt "artifactSha256"))))
++     (else (error "expected freeze, bind, finalize or check" mode))))
++  (force-output))
++(def (main . args)
++  (with-catch
++   (lambda (failure)
++     (displayln "DSL-ARTIFACT-REJECTED " failure) (force-output) (exit 1))
++   (lambda ()
++     (unless (= (length args) 1) (error "expected one artifact operation"))
++     (artifact-main (car args)))))
+diff --git a/t/harness/dsl-closure.ss b/t/harness/dsl-closure.ss
+index 62a1515..853e2ba 100644
+--- a/t/harness/dsl-closure.ss
++++ b/t/harness/dsl-closure.ss
+@@ -14,6 +14,8 @@
+         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
+         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
+ (export main)
++(import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
++(import (only-in :gerbil-ascent/t/harness/prediction prediction-main))
+ (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
+ 
+ (import (only-in :gerbil-ascent/t/qualification/scheme-provenance-graph-test
+@@ -57,6 +59,7 @@
+        (else (error "unknown native differential fixture" name)))
+      (exit 0))
+     (["--study-compute" id] (model-closure-compute id) (exit 0))
++    (["--study-project" path] (prediction-main path) (exit 0))
+     (["--study-score" id path] (model-closure-score id path) (exit 0))
+     (else (run-suites args))))
+ 
+@@ -64,6 +67,7 @@
+   (let* ((entries
+           (list
+                 (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
++                (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
+                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
+                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
+                 (cons "t/qualification/scheme-session-deletion-test.ss" scheme-session-deletion-test)
+diff --git a/t/harness/prediction.ss b/t/harness/prediction.ss
+new file mode 100644
+index 0000000..934d7b1
+--- /dev/null
++++ b/t/harness/prediction.ss
+@@ -0,0 +1,112 @@
++;;; -*- Gerbil -*-
++;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++;;; Inert model-response projection; no evaluation, oracle or repair.
++(import :std/encoding/json (only-in :std/list/list take))
++(export read-prediction read-prediction-text project-prediction prediction-main)
++;;; Bounded inert data reader. Model text is never Scheme code admission.
++(def (numeric-data? value (depth 0))
++  (and (<= depth 64) (or (exact-integer? value) (null? value)
++                        (and (list? value) (andmap (lambda (item) (numeric-data? item (+ depth 1))) value)))))
++(def (prediction-value datum)
++  (cond
++   ((numeric-data? datum) (vector #t datum))
++   ((and (list? datum) (= (length datum) 2) (eq? (car datum) 'quote) (numeric-data? (cadr datum)))
++    (vector #t (cadr datum)))
++   ((and (list? datum) (= (length datum) 3) (equal? (take datum 2) '(check-equal? result)))
++    (let (value (caddr datum))
++      (cond ((exact-integer? value) (vector #t value))
++            ((and (list? value) (= (length value) 2) (eq? (car value) 'quote) (numeric-data? (cadr value)))
++             (vector #t (cadr value))) (else (vector #f #f)))))
++   (else (vector #f #f))))
++(def (read-prediction-text text)
++  (with-catch (lambda (_error) (vector #f #f))
++    (lambda ()
++      (let ()
++        (unless (and (string? text) (<= (u8vector-length (string->utf8 text)) 8192)
++                     (<= (length (filter (lambda (char) (char=? char #\')) (string->list text))) 64)
++                     (andmap (lambda (char) (or (char-whitespace? char) (char-numeric? char) (char-alphabetic? char)
++                                               (memv char '(#\( #\) #\' #\+ #\- #\? #\_)))) (string->list text)))
++          (error "bounded inert model datum required"))
++        (let (depth 0)
++          (for-each (lambda (char)
++            (cond ((char=? char #\() (set! depth (+ depth 1))) ((char=? char #\)) (set! depth (- depth 1))))
++            (unless (<= 0 depth 64) (error "model datum nesting bound"))) (string->list text))
++          (unless (= depth 0) (error "unbalanced model datum")))
++        (call-with-input-string text (lambda (port)
++          (let (datum (read port))
++            (unless (eof-object? (read port)) (error "model datum trailing input"))
++            (prediction-value datum))))))))
++
++(def (read-bounded path limit)
++  (call-with-input-file path
++    (lambda (port)
++      (let loop ((chars []) (count 0))
++        (let (char (read-char port))
++          (cond ((eof-object? char) (list->string (reverse chars)))
++                ((>= count limit) (error "model response byte bound"))
++                (else (loop (cons char chars) (+ count 1)))))))))
++(def (read-prediction path)
++  (with-catch (lambda (_) (vector #f #f))
++    (lambda () (read-prediction-text (read-bounded path 8192)))))
++(def (trim text)
++  (let ((start 0) (end (string-length text)))
++    (let loop () (when (and (< start end) (char-whitespace? (string-ref text start)))
++                  (set! start (+ start 1)) (loop)))
++    (let loop () (when (and (< start end) (char-whitespace? (string-ref text (- end 1))))
++                  (set! end (- end 1)) (loop)))
++    (substring text start end)))
++(def (starts-at? text prefix position)
++  (let (end (+ position (string-length prefix)))
++    (and (<= end (string-length text)) (string=? prefix (substring text position end)))))
++(def (candidate-record text)
++  (let* ((text (trim text)) (prediction (read-prediction-text text)))
++    (and (vector-ref prediction 0)
++         (let (datum (call-with-input-string text read))
++           (list text (vector-ref prediction 1)
++                 (and (pair? datum) (memq (car datum) '(quote check-equal?)) #t))))))
++(def (assertion-candidates text)
++  (let (result [])
++    (let scan ((start 0))
++      (when (< start (string-length text))
++        (when (starts-at? text "(check-equal?" start)
++          (let close ((end start) (depth 0))
++            (when (< end (string-length text))
++              (let* ((char (string-ref text end))
++                     (next (+ depth (cond ((char=? char #\() 1) ((char=? char #\)) -1) (else 0)))))
++                (cond ((zero? next) (set! result (cons (substring text start (+ end 1)) result)))
++                      ((<= 1 next 64) (close (+ end 1) next)))))))
++        (scan (+ start 1))))
++    (reverse result)))
++(def (fence-candidates text)
++  (let ((result []) (body #f))
++    (for-each
++     (lambda (line)
++       (let (marker (trim line))
++         (cond
++          ((and body (string=? marker "```"))
++           (set! result (cons (apply string-append (reverse body)) result)) (set! body #f))
++          ((not body)
++           (when (member marker '("```" "```scheme" "```gerbil")) (set! body [])))
++          (else (set! body (cons (string-append line "\n") body))))))
++     (string-split text #\newline))
++    (reverse result)))
++(def (project-prediction text)
++  (with-catch (lambda (_) #f)
++    (lambda ()
++      (unless (and (string? text) (<= (u8vector-length (string->utf8 text)) 65536))
++        (error "model response byte bound"))
++      (let (direct (candidate-record text))
++        (if direct (car direct)
++          (let* ((records (filter-map candidate-record
++                            (append (assertion-candidates text) (fence-candidates text))))
++                 (explicit (filter caddr records)) (selected (if (pair? explicit) explicit records)))
++            (and (pair? selected)
++                 (andmap (lambda (record) (equal? (cadr record) (cadar selected))) selected)
++                 (caar selected))))))))
++(def (prediction-main path)
++  (displayln "MODULE-OK Scheme response projection") (force-output)
++  (let (candidate (with-catch (lambda (_) #f)
++                    (lambda () (project-prediction (read-bounded path 65536)))))
++    (displayln "NATIVE-PROJECTION " (json->string (hash ("prediction" candidate)))))
++  (displayln "HARNESS-OK Scheme response projection") (displayln "OK") (force-output))
+diff --git a/t/harness/run.ss b/t/harness/run.ss
+index b4de6a2..3b744ef 100644
+--- a/t/harness/run.ss
++++ b/t/harness/run.ss
+@@ -7,6 +7,7 @@
+ (import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
+         (only-in :std/make make)
+         :std/misc/process :std/os/flock :std/os/device
++        (only-in "artifact.ss" artifact-main)
+         (only-in "../../build.ss" gerbil-ascent-library-modules)
+         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
+                  initialize-native-build-core-capacity!))
+@@ -105,7 +106,8 @@
+   (let* ((library (path-expand "lib" test-cache))
+          (module-file (path-expand "modules.sexp" test-cache))
+          (modules (append gerbil-ascent-library-modules
+-                          '("t/scenarios/performance/ascent-table-expression/baseline"))))
++                          '("t/scenarios/performance/ascent-table-expression/baseline"
++                            "t/harness/artifact" "t/harness/prediction"))))
+     (call-with-output-file [path: module-file truncate: #t]
+       (lambda (out) (write modules out) (newline out)))
+     ;; Compile both sides of the paired performance fixture. Native make also
+@@ -149,10 +151,10 @@
+       (lambda ()
+         ;; Freeze and bind under the same compilation lock: concurrent builds
+         ;; cannot replace each other's source snapshot.
+-        (run-command ["python3" "tools/dsl-closure-artifact.py" "freeze"])
+-        (unless (zero? command-exit-status) (error "DSL source freeze failed"))
++        (artifact-main "freeze")
+         (prepare-test-library!
+          '("t/qualification/scheme-closure-contract-test.ss"
++           "t/qualification/scheme-artifact-test.ss"
+            "t/qualification/scheme-provenance-graph-test.ss"
+            "t/qualification/scheme-higher-order-test.ss"
+     "t/qualification/scheme-session-deletion-test.ss"
+@@ -207,7 +209,7 @@
+           ;; Drain every queued object and the compiler's link barrier before
+           ;; binding. Compiler exceptions propagate; no partial binary qualifies.
+           (execute-pending-compile-jobs!)
+-          (run-command ["python3" "tools/dsl-closure-artifact.py" "bind"])))))
++          (artifact-main "bind")))))
+     (["test-file" path]
+      (with-test-lane
+       (lambda () (prepare-test-library! [path])
+diff --git a/t/qualification/scheme-artifact-test.ss b/t/qualification/scheme-artifact-test.ss
+new file mode 100644
+index 0000000..b2cfc60
+--- /dev/null
++++ b/t/qualification/scheme-artifact-test.ss
+@@ -0,0 +1,60 @@
++;;; -*- Gerbil -*-
++;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++(import :std/test :std/misc/process :std/encoding/json "../harness/artifact")
++(export scheme-artifact-test)
++(def (put path text)
++  (call-with-output-file [path: path truncate: #t] (lambda (out) (display text out))))
++(def (with-artifact-fixture thunk)
++  (let* ((old (current-directory))
++         (root (path-expand (string-append ".cache/ascent/tmp/artifact-" (number->string (current-jiffy))) old))
++         (token (getenv "ASCENT_DSL_BUILD_TOKEN" #f))
++         (started (getenv "ASCENT_DSL_BUILD_STARTED" #f)))
++    (run-process/batch (list "mkdir" "-p" root))
++    (try
++     (current-directory root)
++     (run-process/batch '("git" "init" "-q"))
++     (run-process/batch '("mkdir" "-p" "t/harness" "python/src/ascent_test_support" ".cache/ascent/native-library"))
++     (for-each (lambda (name) (put name "fixture bytes\n"))
++               '("fixture.ss" "justfile" "python/src/ascent_test_support/supervision.py" "python/pyproject.toml"))
++     (put ".cache/ascent/native-library/dsl-closure" "fixture executable bytes")
++     (setenv "ASCENT_DSL_BUILD_TOKEN" "test-owner")
++     (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (- (time->seconds (current-time)) 181)))
++     (thunk)
++     (finally
++      (current-directory old)
++      (if token (setenv "ASCENT_DSL_BUILD_TOKEN" token) (setenv "ASCENT_DSL_BUILD_TOKEN"))
++      (if started (setenv "ASCENT_DSL_BUILD_STARTED" started) (setenv "ASCENT_DSL_BUILD_STARTED"))
++      (run-process/batch (list "rm" "-rf" root))))))
++(def (stage) (artifact-main "freeze") (artifact-main "bind"))
++(def (rejected? thunk)
++  (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
++(def scheme-artifact-test
++  (test-suite "Scheme native artifact publication"
++    (test-case "completed build beyond 180 seconds is accepted"
++      (with-artifact-fixture (lambda ()
++        (stage) (artifact-main "finalize") (artifact-main "check")
++        (let (receipt (artifact-read-json ".cache/ascent/native-library/dsl-closure.json"))
++          (check (>= (hash-ref receipt "buildElapsedSeconds") 181) => #t)))))
++    (test-case "staged failed compiler cannot be accepted"
++      (with-artifact-fixture (lambda () (stage) (check (rejected? (lambda () (artifact-main "check"))) => #t))))
++    (test-case "other run cannot publish"
++      (with-artifact-fixture (lambda ()
++        (stage) (setenv "ASCENT_DSL_BUILD_TOKEN" "other-owner")
++        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
++    (test-case "changed source cannot stage or publish"
++      (with-artifact-fixture (lambda ()
++        (stage) (put "fixture.ss" "changed source")
++        (check (rejected? (lambda () (artifact-main "bind"))) => #t)
++        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
++    (test-case "changed binary cannot publish or be used"
++      (with-artifact-fixture (lambda ()
++        (stage) (put ".cache/ascent/native-library/dsl-closure" "changed binary")
++        (check (rejected? (lambda () (artifact-main "finalize"))) => #t)
++        (stage) (artifact-main "finalize")
++        (put ".cache/ascent/native-library/dsl-closure" "changed again")
++        (check (rejected? (lambda () (artifact-main "check"))) => #t))))
++    (test-case "future build identity cannot freeze"
++      (with-artifact-fixture (lambda ()
++        (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (+ (time->seconds (current-time)) 1000)))
++        (check (rejected? (lambda () (artifact-main "freeze"))) => #t))))))
+diff --git a/t/qualification/scheme-model-closure-test.ss b/t/qualification/scheme-model-closure-test.ss
+index 797f719..be0c213 100644
+--- a/t/qualification/scheme-model-closure-test.ss
++++ b/t/qualification/scheme-model-closure-test.ss
+@@ -11,6 +11,7 @@
+         (only-in :clan/poo/object .ref)
+         (only-in :std/list/list find take)
+         (only-in :std/test/base TestCase test-case-add!))
++(import (only-in "../harness/prediction" read-prediction project-prediction))
+ (export scheme-model-closure-test model-closure-compute model-closure-score)
+ (defsyntax (study-case stx)
+   (syntax-case stx ()
+@@ -309,6 +310,17 @@
+ 
+ (def scheme-model-closure-test
+   (test-suite "Native preflight for source-only model closure tasks"
++    (test-case "native response literals and assertions remain inert"
++      (for-each (lambda (text) (check-equal? (project-prediction text) text))
++                '("2" "'2" "(check-equal? result 2)" "(check-equal? result '(1 2 2))"))
++      (check-equal? (project-prediction "(check-equal? result (+ 1 2))") #f)
++      (check-equal? (project-prediction "(check-equal? result '?)") #f))
++    (test-case "native response projection rejects conflicting explicit data"
++      (check-equal? (project-prediction "(check-equal? result '2)\n```scheme\n'3\n```") #f)
++      (check-equal? (project-prediction "(check-equal? result '2)\n```scheme\n'2\n```") "(check-equal? result '2)"))
++    (test-case "native response projection enforces byte and nesting limits"
++      (check-equal? (project-prediction (make-string 65537 #\x)) #f)
++      (check-equal? (project-prediction (string-append (make-string 65 #\() "2" (make-string 65 #\)))) #f))
+     (for-each (lambda (record)
+       (test-case-add! (TestCase (case-id record) (lambda ()
+         (let (actual (case-value record))
+@@ -330,43 +342,6 @@
+   (displayln "NATIVE-DATUM " (datum-text (case-value (find-case id))))
+   (displayln "HARNESS-OK Scheme model compute") (displayln "OK") (force-output))
+ 
+-;;; Bounded inert data reader. Model text is never Scheme code admission.
+-(def (numeric-data? value (depth 0))
+-  (and (<= depth 64) (or (exact-integer? value) (null? value)
+-                        (and (list? value) (andmap (lambda (item) (numeric-data? item (+ depth 1))) value)))))
+-(def (prediction-value datum)
+-  (cond
+-   ((numeric-data? datum) (vector #t datum))
+-   ((and (list? datum) (= (length datum) 2) (eq? (car datum) 'quote) (numeric-data? (cadr datum)))
+-    (vector #t (cadr datum)))
+-   ((and (list? datum) (= (length datum) 3) (equal? (take datum 2) '(check-equal? result)))
+-    (let (value (caddr datum))
+-      (cond ((exact-integer? value) (vector #t value))
+-            ((and (list? value) (= (length value) 2) (eq? (car value) 'quote) (numeric-data? (cadr value)))
+-             (vector #t (cadr value))) (else (vector #f #f)))))
+-   (else (vector #f #f))))
+-(def (read-prediction path)
+-  (with-catch (lambda (_error) (vector #f #f))
+-    (lambda ()
+-      (let (text (call-with-input-file path (lambda (port) (let loop ((chars []) (count 0))
+-                               (let (char (read-char port))
+-                                 (cond ((eof-object? char) (list->string (reverse chars)))
+-                                       ((>= count 8192) (error "model datum byte bound"))
+-                                       (else (loop (cons char chars) (+ count 1)))))))))
+-        (unless (and (string? text) (<= (u8vector-length (string->utf8 text)) 8192)
+-                     (<= (length (filter (lambda (char) (char=? char #\')) (string->list text))) 64)
+-                     (andmap (lambda (char) (or (char-whitespace? char) (char-numeric? char) (char-alphabetic? char)
+-                                               (memv char '(#\( #\) #\' #\+ #\- #\? #\_)))) (string->list text)))
+-          (error "bounded inert model datum required"))
+-        (let (depth 0)
+-          (for-each (lambda (char)
+-            (cond ((char=? char #\() (set! depth (+ depth 1))) ((char=? char #\)) (set! depth (- depth 1))))
+-            (unless (<= 0 depth 64) (error "model datum nesting bound"))) (string->list text))
+-          (unless (= depth 0) (error "unbalanced model datum")))
+-        (call-with-input-string text (lambda (port)
+-          (let (datum (read port))
+-            (unless (eof-object? (read port)) (error "model datum trailing input"))
+-            (prediction-value datum))))))))
+ (def (model-closure-score id path)
+   (displayln "MODULE-OK Scheme model score") (force-output)
+   (let* ((actual (case-value (find-case id))) (prediction (read-prediction path))
+diff --git a/tools/dsl-closure-artifact.py b/tools/dsl-closure-artifact.py
+deleted file mode 100644
+index 2b8e48d..0000000
+--- a/tools/dsl-closure-artifact.py
++++ /dev/null
+@@ -1,97 +0,0 @@
+-#!/usr/bin/env python3
+-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+-"""Bind a native test artifact to source bytes; no rule or verdict evaluation."""
+-import hashlib
+-import json
+-import math
+-import os
+-from pathlib import Path
+-import subprocess
+-import sys
+-import time
+-
+-ROOT = Path(__file__).resolve().parents[1]
+-CACHE = ROOT / '.cache/ascent/native-library'
+-BINARY = CACHE / 'dsl-closure'
+-FREEZE = CACHE / 'dsl-closure-sources.json'
+-MANIFEST = CACHE / 'dsl-closure.json'
+-PENDING = CACHE / 'dsl-closure-pending.json'
+-RUN = CACHE / 'dsl-closure-run.json'
+-
+-
+-def digest(path):
+-    return hashlib.sha256(path.read_bytes()).hexdigest()
+-
+-
+-def sources():
+-    paths = subprocess.check_output(
+-        ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '*.ss'],
+-        cwd=ROOT).decode().split('\0')
+-    paths = sorted(set(p for p in paths if p))
+-    paths.extend(['justfile', 'tools/dsl-closure-artifact.py', 't/harness/watch_output.py'])
+-    return {p: digest(ROOT / p) for p in paths}
+-
+-
+-def main(mode):
+-    CACHE.mkdir(parents=True, exist_ok=True)
+-    current = sources()
+-    if mode == 'freeze':
+-        token=os.environ.get('ASCENT_DSL_BUILD_TOKEN')
+-        started=float(os.environ['ASCENT_DSL_BUILD_STARTED'])
+-        if not token or not math.isfinite(started) or started > time.monotonic():
+-            raise ValueError('missing or invalid supervised build identity')
+-        for path in (MANIFEST,PENDING):
+-            path.unlink(missing_ok=True)
+-        RUN.write_text(json.dumps({'token':token,'started':started})+'\n')
+-        FREEZE.write_text(json.dumps(current, indent=2, sort_keys=True) + '\n')
+-        print('DSL-SOURCE-FROZEN', flush=True)
+-        return
+-    if mode == 'bind':
+-        run=json.loads(RUN.read_text())
+-        if run['token']!=os.environ.get('ASCENT_DSL_BUILD_TOKEN'):
+-            raise ValueError('compile staging owner mismatch')
+-        if current != json.loads(FREEZE.read_text()):
+-            raise ValueError('source changed during native DSL compilation')
+-        receipt = {'schema': 'ascent.dsl-closure-artifact', 'version': 1,
+-                   'artifactSha256': digest(BINARY), 'sources': current,
+-                   'buildRun':run['token'],'buildStarted':run['started']}
+-        PENDING.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+-        print('DSL-ARTIFACT-STAGED', receipt['artifactSha256'], flush=True)
+-        return
+-    if mode == 'finalize':
+-        receipt=json.loads(PENDING.read_text())
+-        if receipt['buildRun']!=os.environ.get('ASCENT_DSL_BUILD_TOKEN'):
+-            raise ValueError('compile finalization owner mismatch')
+-        if receipt['sources']!=current or receipt['artifactSha256']!=digest(BINARY):
+-            raise ValueError('staged native artifact changed before finalization')
+-        elapsed=time.monotonic()-receipt['buildStarted']
+-        if not math.isfinite(elapsed) or elapsed < 0:
+-            raise ValueError('invalid native build elapsed time')
+-        receipt['compilerExitStatus']=0
+-        receipt['buildElapsedSeconds']=elapsed
+-        PENDING.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+-        PENDING.replace(MANIFEST)
+-        print('DSL-ARTIFACT-BOUND',receipt['artifactSha256'],flush=True)
+-        return
+-    if mode != 'check':
+-        raise ValueError('expected freeze, bind or check')
+-    receipt = json.loads(MANIFEST.read_text())
+-    if (receipt.get('schema') != 'ascent.dsl-closure-artifact' or receipt.get('version') != 1
+-        or receipt.get('compilerExitStatus')!=0
+-        or not math.isfinite(receipt.get('buildElapsedSeconds',float('nan')))
+-        or receipt.get('buildElapsedSeconds',-1)<0):
+-        raise ValueError('invalid native DSL artifact binding')
+-    if receipt['sources'] != current or receipt['artifactSha256'] != digest(BINARY):
+-        raise ValueError('stale or changed native DSL artifact; run just build-dsl-closure')
+-    print('DSL-ARTIFACT-VERIFIED', receipt['artifactSha256'], flush=True)
+-
+-
+-if __name__ == '__main__':
+-    try:
+-        if len(sys.argv) != 2:
+-            raise ValueError('expected freeze, bind or check')
+-        main(sys.argv[1])
+-    except (OSError, ValueError, KeyError) as error:
+-        print('DSL-ARTIFACT-REJECTED', error, file=sys.stderr, flush=True)
+-        sys.exit(1)
+diff --git a/tools/model_prediction_transport.py b/tools/model_prediction_transport.py
+deleted file mode 100644
+index 62c99ed..0000000
+--- a/tools/model_prediction_transport.py
++++ /dev/null
+@@ -1,90 +0,0 @@
+-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+-"""Bounded inert prediction transport; no evaluation, oracle or answer repair.
+-
+-Explicit assertions and quoted literals identify predicted data in mixed prose.
+-Unquoted code fences are only a fallback when no explicit data is supplied.
+-All explicit predictions must agree after removing their transport wrappers.
+-"""
+-import re
+-DIRECT_DATA_ALPHABET = re.compile(r"[\s()A-Za-z0-9_?+\-']+")
+-
+-
+-def _datum(text):
+-    if len(text.encode()) > 8192 or not DIRECT_DATA_ALPHABET.fullmatch(text):
+-        return None
+-    tokens = re.findall(r"[A-Za-z0-9_?+\-]+|[()']", text)
+-    position = 0
+-    def read(depth=0):
+-        nonlocal position
+-        if depth > 64 or position == len(tokens):
+-            raise ValueError('bounded datum required')
+-        token = tokens[position]; position += 1
+-        if token == "'":
+-            return ('quote', read(depth+1))
+-        if token == '(':
+-            values = []
+-            while position < len(tokens) and tokens[position] != ')':
+-                values.append(read(depth+1))
+-            if position == len(tokens):
+-                raise ValueError('unclosed datum')
+-            position += 1
+-            return tuple(values)
+-        if token == ')':
+-            raise ValueError('unexpected closing parenthesis')
+-        return token
+-    try:
+-        value = read()
+-        if position != len(tokens):
+-            return None
+-        return value
+-    except ValueError:
+-        return None
+-
+-
+-def _prediction(text):
+-    value = _datum(text)
+-    if value is None:
+-        return None
+-    explicit = isinstance(value, tuple) and len(value) == 2 and value[0] == 'quote'
+-    if isinstance(value, tuple) and len(value) == 3 and value[:2] == ('check-equal?', 'result'):
+-        value = value[2]
+-        explicit = isinstance(value, tuple) and len(value) == 2 and value[0] == 'quote'
+-        if not explicit and isinstance(value, str) and re.fullmatch(r'[+\-]?[0-9]+', value):
+-            explicit = True
+-        if not explicit:
+-            return None
+-    if isinstance(value, tuple) and len(value) == 2 and value[0] == 'quote':
+-        value = value[1]
+-    def placeholder(node):
+-        return node == '?' or isinstance(node, tuple) and any(placeholder(x) for x in node)
+-    return None if placeholder(value) else (value, explicit)
+-
+-
+-def prediction_from_output(output):
+-    if len(output.encode()) > 65536:
+-        return None
+-    text = output.strip()
+-    direct = _prediction(text)
+-    if direct is not None:
+-        return text
+-    candidates = []
+-    for match in re.finditer(r'\(check-equal\?\s+result\s+', text):
+-        depth = 0
+-        for index in range(match.start(), len(text)):
+-            depth += (text[index] == '(') - (text[index] == ')')
+-            if depth > 64:
+-                break
+-            if depth == 0:
+-                candidates.append(text[match.start():index+1]); break
+-    candidates += [value.strip() for value in
+-                   re.findall(r'```(?:scheme|gerbil)?\s*\n(.*?)\n```', text, re.S)]
+-    parsed = [(candidate, _prediction(candidate)) for candidate in candidates]
+-    parsed = [(candidate, value) for candidate, value in parsed if value is not None]
+-    explicit = [(candidate, value) for candidate, value in parsed if value[1]]
+-    selected = explicit or parsed
+-    # Never choose by private truth. Different asserted literal data reject,
+-    # including conflicts between assertion and quote representations.
+-    if len({value[0] for _, value in selected}) != 1:
+-        return None
+-    return selected[0][0]
+diff --git a/tools/test_dsl_artifact.py b/tools/test_dsl_artifact.py
+deleted file mode 100644
+index 8ccf2e2..0000000
+--- a/tools/test_dsl_artifact.py
++++ /dev/null
+@@ -1,79 +0,0 @@
+-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+-"""Artifact publication failure controls; no Scheme semantic assertions."""
+-import os
+-from pathlib import Path
+-import shutil
+-import subprocess
+-import tempfile
+-import time
+-import unittest
+-
+-
+-class ArtifactPublication(unittest.TestCase):
+-    def setUp(self):
+-        self.temp = tempfile.TemporaryDirectory()
+-        self.addCleanup(self.temp.cleanup)
+-        self.root = Path(self.temp.name)
+-        (self.root / 'tools').mkdir()
+-        (self.root / 't/harness').mkdir(parents=True)
+-        shutil.copyfile(Path(__file__).with_name('dsl-closure-artifact.py'),
+-                        self.root / 'tools/dsl-closure-artifact.py')
+-        for name in ('justfile', 't/harness/watch_output.py', 'fixture.ss'):
+-            (self.root / name).write_text('fixture bytes\n')
+-        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+-        self.cache = self.root / '.cache/ascent/native-library'
+-        self.cache.mkdir(parents=True)
+-        (self.cache / 'dsl-closure').write_bytes(b'fixture executable bytes')
+-        self.env = {**os.environ, 'ASCENT_DSL_BUILD_TOKEN': 'test-owner',
+-                    'ASCENT_DSL_BUILD_STARTED': str(time.monotonic())}
+-
+-    def call(self, mode, success=True, env=None):
+-        result = subprocess.run(['python3', 'tools/dsl-closure-artifact.py', mode],
+-                                cwd=self.root, env=env or self.env,
+-                                capture_output=True, text=True, timeout=5)
+-        self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
+-
+-    def stage(self):
+-        self.call('freeze')
+-        self.call('bind')
+-
+-    def test_staged_failed_compilation_is_not_accepted(self):
+-        self.stage()
+-        self.call('check', False)
+-
+-    def test_completed_publication_is_accepted(self):
+-        self.stage()
+-        self.call('finalize')
+-        self.call('check')
+-
+-    def test_other_run_cannot_publish(self):
+-        self.stage()
+-        self.call('finalize', False, {**self.env, 'ASCENT_DSL_BUILD_TOKEN': 'other-owner'})
+-        self.call('check', False)
+-
+-    def test_completed_build_beyond_180_seconds_is_accepted(self):
+-        self.stage()
+-        import json
+-        path = self.cache / 'dsl-closure-run.json'
+-        run = json.loads(path.read_text())
+-        run['started'] = time.monotonic() - 181
+-        path.write_text(json.dumps(run))
+-        self.call('bind')
+-        self.call('finalize')
+-        self.call('check')
+-
+-    def test_changed_source_cannot_publish(self):
+-        self.stage()
+-        (self.root / 'fixture.ss').write_text('changed source\n')
+-        self.call('finalize', False)
+-
+-    def test_changed_binary_cannot_be_used(self):
+-        self.stage()
+-        self.call('finalize')
+-        (self.cache / 'dsl-closure').write_bytes(b'changed binary')
+-        self.call('check', False)
+-
+-
+-if __name__ == '__main__':
+-    unittest.main()

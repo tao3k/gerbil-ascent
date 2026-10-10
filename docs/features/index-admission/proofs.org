@@ -1,0 +1,301 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Index Admission: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Physical index recovery along the traversal mainline
+
+The current-snapshot premise of =IndexedPositiveTraversal= must also survive
+provider failures. =program/index.ss= used to leave a matching cache version
+when an in-place extension raised after mutation. It now clears validity before
+provider dispatch and publishes a new version only after success. Failed reads
+rebuild from committed rows; rows/version publication remains coordinator owned.
+Actor workers create private indexes over frozen row/version vector copies in
+=program/evaluate.ss=, so this change introduces no shared worker cache.
+
+The [[file:../../evidence/scheme-index-recovery-20261006/receipt.json][source-bound receipt]] separates Lean's unchanged algebra, finite TLA+
+cache recovery protocol and native mutation/raise/retry checks. Native recursive
+component cases exercise scalar/composite keys with 1, 2 and 4 workers. General
+native encoding/equality and asynchronous trace refinement remain open; no
+whole-framework closure or end-to-end performance gain follows from this fix.
+
+
+* rule planning native correspondence: complete custom index candidate tuples
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning Section 4, index selection and code generation]] derives lookup layouts from
+join columns and iterates the returned tuples in generated rule loops. In the
+Rust embedding the relation tuple type carries its width. For this Scheme
+implementation's extensible IndexProvider receiver, the corresponding premise
+needs an executable boundary. This is an implementation inference from the
+paper, not a theorem stated there. Selected key columns restrict candidates;
+they do not turn a candidate into a partial row.
+
+The custom lookup boundary previously admitted any proper outer list. The
+compiled matcher accepted a row with extra cells once its terms were exhausted;
+the general matcher likewise ignored the trailing cells. Missing or improper
+cells instead failed during matching, potentially after a preceding candidate
+had executed a callback. Thus a shape-invalid answer could either contribute
+a consequence or expose effects before a failure.
+
+=program/index.ss= now checks every custom candidate against the admitted
+atom's complete term list before handing the batch to any matching owner.
+The traversal is bounded by that arity, so cyclic and improper rows reject
+without traversing arbitrary provider data indefinitely or printing it in the
+exception. The check returns the original rows and preserves order and cell
+identity. Canonical hash and engine-owned shared indexes keep their trusted
+lookup paths. The receiver contract documents this tuple premise.
+
+The native BYODS suite exercises both a compiled positive rule and an ordinary
+pattern rule against a 32-row indexed relation. A valid candidate precedes
+each malformed candidate to discriminate complete-batch checking from a
+per-row late guard. Controls cover overlong, short, dotted and cyclic rows,
+zero term callbacks on rejection, empty answers, false-valued cells,
+shape-correct overselection with ordinary term filtering, and recovery of the
+same failed Session. Existing custom composite eqrel append/replacement cases
+remain in that suite. The stable index-entry suite additionally checks all/delta
+lanes, alias sharing, version revocation, ordered keys and independent solve
+results. Its first run exposed a synthetic fixture that described only key
+terms as the complete atom. The fixture now keeps the full declared row width
+and its selected key projection separate; existing cache assertions are retained.
+Qualification and source identity are recorded in
+[[file:../../evidence/scheme-provider-rows-20261006/receipt.json][the native receipt]].
+
+This closes tuple shape only. Candidate membership in the represented relation,
+key completeness, callback mutation of returned rows and universal Provider
+concretization remain separate obligations. No relation-membership scan,
+performance result or general Provider semantic refinement is claimed here.
+
+
+* Provider concretization native correspondence: custom index candidates belong to their lane
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] requires all logical indexes of a relation to
+agree on concretization. Its total/delta interface additionally distinguishes
+which represented facts each lane may enumerate. In this implementation the
+storage Provider owns represented facts; the IndexProvider receives the
+already-enumerated row snapshot and may only choose candidates from it. This
+split does not grant an index authority to synthesize additional facts.
+
+After the tuple-shape repair, a well-shaped foreign row could still pass term
+matching and reach a rule head. =program/index.ss= now retains a membership
+witness beside each custom physical index's lookup and version. The witness
+is built from that entry's actual all or delta snapshot, published only after
+successful build, and extended only after successful incremental extension.
+Lookup first admits the complete batch shape, then checks every candidate's
+equality membership before invoking any rule-term callback. Empty candidates,
+ordered overselection and equal copied tuples remain admissible. A candidate
+outside the selected lane or no longer in the current source version is rejected.
+
+A fresh version rebuilds lookup and witness together. Existing revoke-before-
+extend behavior still forces reconstruction after a mutating Provider raises.
+All and delta retain separate entries; atom aliases resolve the same physical
+entry. Canonical hash and engine-owned curried indexes retain their trusted
+representations and do not build these extra witnesses. Custom witnesses use
+one additional equality table per physical index. This is an explicit cost of
+the custom boundary, with no speedup claim.
+
+Native controls exercise shape-correct forged consequences in both compiled
+and pattern execution, rejection before callbacks, recovery, equal copied
+rows, disjoint all/delta candidates, append admission, stale rows after source
+replacement, aliases and existing extension-failure revocation. The
+[[file:../../evidence/scheme-provider-members-20261006/receipt.json][source-bound receipt]] distinguishes local execution from remote CI.
+
+This establishes a checked subset-of-snapshot condition under the existing
+stable-value premise. It does not prove lookup completeness, uniqueness,
+Provider callback purity, mutable nested-value stability or general storage
+concretization. Provider concretization's semi-naive equivalence theorem still needs its other
+premises; this check alone does not establish that theorem for native Scheme.
+
+* Provider concretization native correspondence: custom lookup coverage and unique enumeration
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] defines key lookup as enumeration of all tuples
+corresponding to a key. The previous native boundary admitted complete tuple
+shape and snapshot membership, but a proper subset of matching members still
+silently removed rule consequences. Repeated candidates also multiplied
+aggregate inputs even when ordinary Set output admission later deduplicated
+heads. These are separate lookup-enumeration gaps.
+
+=program/index.ss= now retains a compact private =provider-row-witness=: each
+unique represented row maps to its physical projected key, and each key maps
+to its unique member count. Build constructs the witness from the actual
+lane snapshot. Successful append extends both maps, ignoring already-known
+rows; replacement rebuilds them under the new version. Publication and
+revoke-before-extension retain their existing ownership rules.
+
+For every custom lookup, the complete batch first passes shape admission.
+Every candidate must be a represented member and must appear only once. The
+engine counts candidates whose stored key equals the already-evaluated
+lookup key. That count must equal the witness's expected count. Under stable
+values and admitted column projection, the matching candidate set is a subset
+of the represented key set; equal finite cardinality therefore establishes
+coverage. A different-key candidate cannot compensate for a missing match.
+This is our concrete implementation argument, not a new claim that the Provider concretization
+semi-naive theorem has been extracted from native code.
+
+All checks precede term callbacks, rule heads and aggregate invocation. The
+original candidate order and identities are returned unchanged. Lookup keys
+and their host expressions are evaluated only by the existing lookup owner;
+validation never reruns an expression. Legal unique overselection remains
+admissible, including a no-match key with an empty answer. An empty answer
+for a represented key, a partial bucket or a duplicate candidate now rejects
+instead of silently producing a partial result or inflated aggregation.
+
+Native controls cover both compiled and pattern rules, a count aggregate with
+independent expected count 16, empty/partial/mixed-key omission, duplicate
+rows, equal copied complete answers, false values, callback suppression and
+failed Session recovery. Existing index-entry controls additionally cover
+all/delta isolation, aliases, append, replacement, extension failures, repeated
+columns, reordered composite keys and once-per-lookup expression order. See
+the [[file:../../evidence/scheme-provider-coverage-20261006/receipt.json][source-bound native receipt]].
+
+The witness uses one row-to-key map and one per-key count map per custom
+physical index, plus a temporary candidate set per lookup. It does not store
+a second full row-bucket index. No performance improvement is claimed.
+Trusted canonical and engine-owned curried paths retain their representations.
+Stable nested values, callback purity, field equality laws, storage Provider
+concretization and universal native-to-proof extraction remain premises or
+separate obligations. No Lean/Quint source is changed by this implementation.
+
+* Provider concretization native correspondence: protect lookup keys and column headers
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4 and Figure 1, PDF pages 11-12]] expose key lookup through a
+shared Rust key reference. Our Scheme transfer cannot treat a mutable list
+passed to an open receiver as an immutable borrow. The tuple fields retain
+their existing stable-value premise, but the list header itself belongs to
+the engine's evaluated key. Logical column lists likewise belong to admitted
+atom metadata and physical cache selection.
+
+The coverage guard reused the evaluated key after calling the Provider. A
+receiver could change the key header to an absent value and return an empty
+answer. The guard then found zero expected rows for the modified key, although
+the original key represented facts. A negative clause interpreted that empty
+answer as absence and could publish a false consequence. Mutating build or
+extend columns could also alter admitted metadata and cache hash keys.
+
+=table/access.ss= now supplies fresh list headers for custom build columns,
+extend columns and lookup keys. These copies isolate the dispatch receiver
+from the engine's logical columns and verification key. Values, order and
+callback count are preserved. Canonical trusted dispatch retains its direct
+path. Rows and nested field values are not deep-copied; this change does not
+claim arbitrary callback purity or immutable nested values.
+
+The native discriminator constructs a stratified negative rule over an actual
+32-row represented key. A receiver mutates its key to 99 and returns empty.
+The original engine accepted the false absence; the repaired engine rejects
+the omission against the original key, and the same failed Session then
+recovers with a valid receiver answer. Additional index lifecycle controls
+exercise build/extend header mutation, retained callback arguments, aliases,
+all/delta lanes, source versions and exceptional extension recovery. The
+[[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] retains failing and final native source boundaries.
+
+This isolates engine-owned metadata spines across open dispatch. It adds
+header-copy work proportional to selected key width on custom receiver calls.
+No runtime improvement, general storage refinement or new theorem is claimed.
+
+
+* Provider concretization native correspondence: isolate custom index row spines
+
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Sections 3.1, 3.3 and 4]] distinguish represented facts, their injection
+and total/delta enumeration. In our Scheme split the storage/evaluation
+owner supplies those facts; a physical IndexProvider cannot overwrite them
+through a borrowed list. This is a concrete ownership requirement of the
+transfer, not an additional theorem claimed from the paper.
+
+A native counterexample exposed a transaction leak. A custom build changed
+one supplied row's first cell from 0 to 9, then raised. Session recovery
+rebuilt from its accepted source log, but the log and engine had shared that
+row spine. Retrying a literal-0 rule produced 31 rows instead of the independent
+32-row expectation. The first build exception was propagated correctly; the
+accepted source identity had nevertheless changed outside source admission.
+
+=table/funs.ss= now owns the pure admitted-row snapshot algorithm. Custom
+build and extend dispatch in =table/access.ss= copy the outer list and every
+row spine before handing them to the receiver. =program/index.ss= first
+performs bounded shape admission of a custom lookup answer, then detaches the
+complete candidate packet before membership/coverage checks and term
+callbacks. This order preserves rejection of improper and cyclic rows without
+copying them first. Returned packet order and field identities are preserved;
+row/list addresses are intentionally private to the receiving owner.
+
+The repaired native Session retries the same failed build and obtains all
+32 independently expected consequences. Index-entry controls retain build
+arguments, mutate row cells and outer list tails after lookup, and check both
+the source root and admitted packet against separately constructed rows.
+They also retain append arguments and mutate them after extension/witness
+publication: the accepted batch remains unchanged, invalid Provider state
+rejects as foreign, and a new version rebuilds from the intact root. All/delta
+isolation and prior header/coverage/aggregate controls remain qualified in
+the [[file:../../evidence/scheme-provider-row-spines-20261006/receipt.json][source-bound native receipt]].
+
+This closes mutable list/row-spine access through physical index dispatch.
+Nested field values are still shared and retain their stability/equality
+premises. General storage callbacks and arbitrary host closure side effects
+remain separate obligations. Trusted canonical and engine-owned shared paths
+retain their existing representations. Custom copying costs scale with batch
+size times row width; no speed or allocation improvement is claimed here.
+No Lean/Quint source is changed by this Scheme implementation.
+
+
+* General Provider and custom-index admission progress (2026-10-07)
+
+Provider concretization Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+and require newly visible facts in delta. ProviderAdmission now states these
+abstract laws and derives arbitrary finite positive-body completeness directly
+from them, alongside growth and soundness. The Domain record is a proof-level
+contract; POO procedure validation does not certify arbitrary semantic behavior.
+
+Section 4 requires relation indexes to agree on concretization. Native custom
+lookup preserves admitted occurrence counts, including duplicate source rows;
+a Set observation cannot establish aggregate multiplicity. Per-row quota caps
+plus equal matching-key mass now derive exact occurrence counts in Lean. The
+Quint packet protocol distinguishes six faults, and a native control rejects
+compensated omission despite equal cardinality and Set membership, accepts
+reordered complete packets and checks delta ownership/recovery. Ordered callback
+traces require the additional receiver-order premise retained in the canonical
+bucket calculus. Native witness extraction, full abstract-lattice iteration and
+paper application/benefit qualification remain open. See [[file:../../scheme-trrel-uf-design.org][the UF design]]
+for proof ownership, implementation seams and admission evidence.
+
+
+* Multi-column routing proof boundary (2026-10-07)
+
+ProviderRectangles.lookup_exact covers an abstract first-coordinate query.
+ProviderRouting now covers arbitrary selected coordinates and constraint lists:
+complete candidate coverage implies exact ordered scan output, with original
+occurrences preserved; key permutation and inconsistent repeated keys are handled
+explicitly. Selecting a different admitted bucket changes no result.
+
+Lean owns universal list/key algebra. Quint owns the build/read/finish/cancel
+interleavings of independent lazy row/parts cursors, with four faults that must
+produce CompleteExact violations and TLC exit 12. Neither layer assumes that
+actual Scheme bucket construction has been extracted into the abstract model.
+Native shape validation, hash/equality coherence, ordinal sorting and captured
+member identity retain their own source/test correspondence. Fault injection is
+a discrimination result, not evidence of a production defect. See
+[[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+
+The synchronized =9cd4897= CI passed Scheme, BYODS, scale and formal gates, but
+the other oracle shard failed eight tests without a retained panic cause. A
+current parallel reproduction passed 66/66; this does not erase that CI failure
+or identify its historical cause. The existing test adapter now keeps panic
+diagnostics in an ignored ordinary file, serializes concurrent diagnostic
+writes, and forwards the original panic hook. CI prints that receipt only on
+failure and preserves the original exit status. One controlled panic verifies
+that its cause is retained. Neither retries nor relaxed result assertions turn
+a failure into successful evidence. Raw diagnostic files are not committed.
+
+The ordinary-file diagnostic is best effort if the cache is not writable; the
+original hook and panic failure remain in effect. CI output is bounded to the
+first 8,192 bytes of each diagnostic file. This logging boundary changes neither
+Scheme row truth nor process/request/stream admission.
+
+Before publication, concurrent commit =8afd5af= repaired the non-Gambit exec
+boundary by restoring blocking standard descriptors. Its controlled actual
+Gerbil/Rust backpressure reproduces incomplete unadapted logging; the exact
+historical syscall remains unobserved. This fix is preserved alongside panic
+receipts. The integrated execution entry passed 67/67 other-shard cases and
+14/14 Python framework tests, including four backpressure controls. The repair
+is test-process transport, not a Scheme semantic rewrite. See
+[[file:../../evidence/scheme-application-admission-20261007/transport.json][the concurrent transport evidence]].
+

@@ -1,0 +1,28 @@
+{
+  "schema": "ascent.dsl-closure-integration",
+  "version": 1,
+  "sourceHead": "8c2d746d2986176183a48c68217edee6473655c6",
+  "baseHead": "53980e47681d095b30400cefc745d90b5509e8be",
+  "status": "build-timeout",
+  "attempts": [
+    {
+      "log": "integrated-dsl-build.log",
+      "sha256": "ccb71daff70315618cbdb2c5c8b3993a5af92c86075a893115f5be6339152071",
+      "exitCode": 124,
+      "deadlineSeconds": 180,
+      "lastPhase": "AOT static compilation/linking",
+      "semanticQualificationStarted": false
+    },
+    {
+      "log": "integrated-dsl-rebuild.log",
+      "sha256": "c3f2f916b14909323ac3ef484115ef82b49d008224d794a4b10f36104ada5585",
+      "exitCode": 124,
+      "deadlineSeconds": 180,
+      "lastPhase": "AOT static compilation/linking",
+      "semanticQualificationStarted": false
+    }
+  ],
+  "passedCases": null,
+  "qualification": "not run; prior 51-case receipt remains bound to its original sources",
+  "githubCi": "separate check required on submitted head"
+}

@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "sourceBase": "b8c695d92eb9ad1ff9710f3f55b982b0e956a853",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "c7de733a7697fef3a3af2d9dd623a13eaf3493784d18b4c241a55e3a3ff2ab96"
+  },
+  "native": {
+    "artifactSHA256": "ace61c75421062ff7509b0be2c28678d574588c1a71d0c58df4963ef4acf52aa",
+    "sourceCount": 353,
+    "sourceMapSHA256": "f33aad0d4daf4acdef6d36d135d03302ff5b421eeafd33f08a2ec052ed9ca9de",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 302.44914197921753,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "counts": {
+      "cases": 141,
+      "suites": 13,
+      "modules": 13,
+      "harnesses": 13,
+      "finalOK": 13
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    }
+  },
+  "measurement": {
+    "exit": 0,
+    "groups": 180,
+    "independentNativeVerdicts": 5400,
+    "arms": [
+      "solve",
+      "fresh-update",
+      "retained"
+    ],
+    "samples": "samples.json",
+    "samplesSHA256": "672f0b5315aaf78c13c3c64f73dfcb1772396d48dc9c0ec6868e8655b858a8a6",
+    "samplesPerConditionAndSize": 30,
+    "ordersPerConditionAndSize": 6,
+    "repetitionsPerOrder": 5,
+    "batches": {
+      "12": 16,
+      "48": 4
+    },
+    "semanticAuthority": "Scheme independent relation truth checks before sample publication",
+    "serialization": "Numeric stdout samples transcribed to JSON; no semantic scoring or selection in the transcription",
+    "aggregation": "Per-arm medians and medians of paired retained/fresh-update ratios; all 180 groups retained",
+    "allocationMetric": "Total native allocated bytes, not peak/live heap",
+    "limitations": [
+      "Finite chain workloads, not general runtime benefit",
+      "Shared host, no significance or isolation claim",
+      "Existing session setup excluded; replacement construction included in both update arms",
+      "No fresh model calls or compiler refinement claim"
+    ]
+  },
+  "rootCause": {
+    "component": "fresh-update comparison candidate construction",
+    "expression": "relations: relations",
+    "mechanism": "POO implicit self-field binding shadows the lexical replacement list",
+    "nativeReproductionExit": 70,
+    "nativeReproductionStatus": "heap overflow; benchmark previously stack overflow",
+    "fix": "Use replacement-relations lexical binding",
+    "regression": [
+      "replacement relation results independently enumerated",
+      "empty source withdrawal",
+      "inherited rules, source handles and budgets",
+      "original program remains unchanged"
+    ]
+  },
+  "excludedAttempt": {
+    "stage": "integrated build supervisor startup",
+    "exit": 1,
+    "cause": "sandbox denied ps; rerun with process-inspection permission passed"
+  },
+  "modelCalls": 0,
+  "proofChanges": false,
+  "remainingGates": [
+    "Descriptor/compiler refinement to intrinsically typed IR, including recursion and height",
+    "General workload/time/allocation benefit",
+    "Fresh authorized actual-source model experiment",
+    "MRR Rust binding after preceding gates"
+  ]
+}

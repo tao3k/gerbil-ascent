@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Actor Scheduling: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Component selection and temporal completion follow-up (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF design]] now derives exact delta selection
+from the directed insertion law, candidate encoding and homogeneous component
+rectangles, rather than assuming an =Exact= frontier. A Lean counterexample
+shows that rejecting a mixed-old rectangle loses fresh implied facts. This is
+an explicit missing-premise discriminator for the paper's delta obligations.
+
+Quint separately checks stale-reader release under completion fairness. The
+=ReaderLifetime= abstraction invalidates a read even when row sets return after
+replacement (ABA), and has no generation cutoff or state constraint. Both
+missing stale discard and missing fairness violate eventual completion. Native
+SCC decoding and future compressed-view actor integration remain separate
+obligations. The accepted gate covers 90 Lean jobs, 55,197 view safety states,
+315 lifetime states and seven deliberate fault controls; it makes no new
+whole-engine speedup or application replication claim.

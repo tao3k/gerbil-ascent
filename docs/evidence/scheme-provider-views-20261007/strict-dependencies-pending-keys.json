@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "978b294d4b61670114b9ad3af426fdf9b090adaa",
+  "previous_qualified_head": "0a48020fc0ccbe1532ddcc6afa089525522aef82",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Sections 3.2 and 5.6",
+    "interpretation": "Current-value map tuples can be replaced; the native strict projection boundary cannot be justified by automatically applying monotone-gamma iteration."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/StrictDependencies.lean": "0ebe9426f4314def44427e027c9408966ee9f3030ccd97a47ff54f973f4f1b4b",
+    "packages/proofs/lean/PendingKeys.lean": "74fc94773c27bbf671c21560891823f3dc6a6785268b67b73a3bc5f6a4161c85",
+    "packages/proofs/lean/Tests/StrictDependenciesTests.lean": "9586bf9779451a8af2e9896d0a1694382a892efc999c5c5ff3e20556299bbb4c",
+    "packages/proofs/lean/Tests/PendingKeysTests.lean": "558648b3dcd323937041427f80d5cee581929bf2b2515069e60f24495ee22cf2",
+    "packages/proofs/lean/lakefile.lean": "b6f4cf3ec1736876084285d23ae15c88c5487599a141fb04969e4de1e2fed77a",
+    "packages/proofs/tla/LatticeProjection.tla": "e8f6840ae81920cf7003829789b0e2cda34a13497865e5ab4578b143583c4aa2",
+    "packages/proofs/tla/LatticeProjection.cfg": "8ab6d4c35e30d4a1bc4e50f36f67ad27e2883e26e4b6e1f87b477c8a5b89436f",
+    "core/rule-semantics.ss": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+    "core/dependency-graph.ss": "797d32b47c195d1f26d0ea95d7ed4b5e73f66f4f7c096fa22c066cf35d489ce7",
+    "program/evaluate.ss": "503bf331950a9dbfbf857a65ad38c2246616a67f2fd66b8f81a88f61aee617dd",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "t/qualification/ascent-strata-test.ss": "b391c1c66f465efbef59e1bbac85bc6300d98f8d8b489ae55b785aeb50d6afa5",
+    "t/qualification/ascent-lattice-program-test.ss": "fcf84213f0e7a2fb6e4f3c665b666d32b5d4b256cd7bc8e9021fa7c396d29aef",
+    "justfile": "f1d01e140ea399cfa6cf3eebd0474583f38c91c71178b09de476dd31fc25e61b"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 103,
+    "modules": [
+      {
+        "module": "StrictDependencies",
+        "theorems": [
+          "extraction_exact",
+          "strict_exact",
+          "strict_preflight",
+          "skipped_edges_nonstrict",
+          "skipped_zero_valid",
+          "path_bound",
+          "strict_cycle_impossible",
+          "projection_later",
+          "relax_below_valid",
+          "propagated_below_valid",
+          "completed_propagation_minimal",
+          "mutual_paths_equal",
+          "component_max_below",
+          "normalization_below_valid"
+        ],
+        "test_owner": "packages/proofs/lean/Tests/StrictDependenciesTests.lean",
+        "examples": 9
+      },
+      {
+        "module": "PendingKeys",
+        "theorems": [
+          "empty_covered",
+          "write_covered",
+          "replay_covered",
+          "materialization_exact",
+          "materialization_unique",
+          "repeated_key_final",
+          "write_untouched"
+        ],
+        "test_owner": "packages/proofs/lean/Tests/PendingKeysTests.lean",
+        "examples": 6
+      }
+    ],
+    "axiom_boundary": [
+      "propext",
+      "Quot.sound"
+    ],
+    "added_axioms": false,
+    "sorry": false,
+    "premises": [
+      "Admitted lowered vectors, relation-kind extraction and indices refine the typed rule representation.",
+      "Completed propagation minimality requires a valid completed assignment; arbitrary Tarjan/condensation extraction is not assumed proved.",
+      "SCC normalization requires mutual reachability of component members.",
+      "Every effective write enters the pending table and key roster; hash lookup/equality refines the functional table.",
+      "Materialization proves row membership/value uniqueness; native visited-table list deduplication and ordering remain representation premises."
+    ]
+  },
+  "tla": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "positive_configurations": 26,
+    "typed_fault_controls": 74,
+    "final_marker": "ALL-FORMAL-CHECK-OK",
+    "projection": {
+      "generated": 1651,
+      "distinct": 858,
+      "fault_controls": 9,
+      "invariants": [
+        "MapExact",
+        "SnapshotExact",
+        "PrivateStable",
+        "HeldStable",
+        "KeyCoverage"
+      ],
+      "new_faults": [
+        {
+          "mutation": "lost-key",
+          "exit_code": 12,
+          "invariant": "KeyCoverage",
+          "generated": 67,
+          "distinct": 67,
+          "trace_states": 3,
+          "final_state": [
+            "/\\ dirty = {}",
+            "/\\ applied = {<<0, 0>>}",
+            "/\\ rows = {<<0, 2>>, <<1, 2>>}",
+            "/\\ held = {<<0, 2>>, <<1, 2>>}",
+            "/\\ current = (0 :> 0 @@ 1 :> 2)",
+            "/\\ phase = \"collecting\"",
+            "/\\ cut = {<<0, 0>>}"
+          ],
+          "scope": "Injected protocol fault; not a discovered defect in the current Scheme implementation."
+        },
+        {
+          "mutation": "repeat-key",
+          "exit_code": 12,
+          "invariant": "KeyCoverage",
+          "generated": 267,
+          "distinct": 267,
+          "trace_states": 4,
+          "final_state": [
+            "/\\ dirty = {}",
+            "/\\ applied = {<<0, 0>>, <<0, 1>>}",
+            "/\\ rows = {<<0, 2>>, <<1, 2>>}",
+            "/\\ held = {<<0, 2>>, <<1, 2>>}",
+            "/\\ current = (0 :> 0 @@ 1 :> 2)",
+            "/\\ phase = \"collecting\"",
+            "/\\ cut = {<<0, 0>>, <<0, 1>>}"
+          ],
+          "scope": "Injected protocol fault; not a discovered defect in the current Scheme implementation."
+        }
+      ],
+      "scope": "One finite min-map publication transaction; key support is set-valued, not a proof of event-list ordering or arbitrary lattice convergence."
+    }
+  },
+  "native": [
+    {
+      "command": "just test-file t/qualification/ascent-strata-test.ss",
+      "exit_code": 0,
+      "cases": 5,
+      "final_ok": true,
+      "independent_configurations": 8704,
+      "positive_graphs": 512,
+      "kind_assignments": 8,
+      "strict_single_edge_configurations": 4608,
+      "label_assignments_per_configuration": 27,
+      "truth": "Enumerate all valid three-node Nat labelings in 0..2, take coordinatewise minimum, reject if none. No SCC traversal or relaxation computes the expected answer.",
+      "population_justification": "A feasible graph has no strict edge within an SCC; its simple condensation path has at most two edges. This is a finite test population, not a runtime generation cap.",
+      "controls": [
+        "Strict incoming and outgoing edges around a positive SCC.",
+        "All positive graph/kind assignments and each present edge separately negated/aggregated.",
+        "Multi-head projection with non-reading clauses ignored.",
+        "Empty declarations and duplicate edges."
+      ],
+      "historical_comparison": "Frozen reference implementation remains a separate comparator, not the independent label truth."
+    },
+    {
+      "command": "just test-file t/qualification/ascent-lattice-program-test.ss",
+      "exit_code": 0,
+      "cases": 12,
+      "final_ok": true,
+      "scope": "Existing source-bound native min-map/ordinary projection, repeated key, ineffective append, source replacement, multi-field false/true keys and held-result controls rerun on the integrated latest PR."
+    }
+  ],
+  "delivery": {
+    "pr": "https://github.com/tao3k/gerbil-ascent/pull/1",
+    "documents_language": "English",
+    "runtime_changes": 0,
+    "new_model_calls": 0,
+    "new_rust_integration": false,
+    "raw_logs_committed": false
+  },
+  "remaining": [
+    "Universal native mutable hash/vector/SCC extraction and complete sweep refinement.",
+    "Arbitrary user join purity and algebraic admission.",
+    "Asynchronous custom-lattice execution and full paper application/cost/memory replication."
+  ]
+}

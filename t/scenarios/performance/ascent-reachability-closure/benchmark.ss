@@ -7,7 +7,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure a complete demanded transitive closure, including POO expression construction, over a 20-node chain.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-reachability-closure/benchmark.ss")

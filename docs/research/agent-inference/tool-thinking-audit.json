@@ -1,0 +1,1027 @@
+{
+  "schema": "ascent.compound-thinking-audit.v1",
+  "groups": {
+    "raw-fact-reasoning": {
+      "trajectories": 8,
+      "verified": 7,
+      "accuracy": 0.875,
+      "firstAnswerCorrect": 5,
+      "answerAttempts": 12,
+      "consumedReasoningTokens": 560342,
+      "modelCalls": 21,
+      "consumedInputTokens": 488363,
+      "consumedOutputTokens": 565577,
+      "failureAttempts": 6,
+      "failureAndRepairReasoningTokens": 323755,
+      "failureAndRepairModelCalls": 8,
+      "failureAndRepairPeakEstimateUsd": 0.400001148,
+      "peakEstimateUsd": 0.6999243719999999,
+      "evidenceAdoption": 0,
+      "aliasExtensionQueries": 0,
+      "schemeSeconds": 0.05093375101569109,
+      "providerSeconds": 1819.7406362509646,
+      "reasoningUsageComplete": true,
+      "modelUsageComplete": true
+    },
+    "scheme-evidence": {
+      "trajectories": 8,
+      "verified": 8,
+      "accuracy": 1.0,
+      "firstAnswerCorrect": 8,
+      "answerAttempts": 8,
+      "consumedReasoningTokens": 199765,
+      "modelCalls": 33,
+      "consumedInputTokens": 533167,
+      "consumedOutputTokens": 216924,
+      "failureAttempts": 4,
+      "failureAndRepairReasoningTokens": 96552,
+      "failureAndRepairModelCalls": 16,
+      "failureAndRepairPeakEstimateUsd": 0.147668184,
+      "peakEstimateUsd": 0.32392245,
+      "evidenceAdoption": 8,
+      "aliasExtensionQueries": 0,
+      "schemeSeconds": 2.6210789150500204,
+      "providerSeconds": 770.1897162909736,
+      "reasoningUsageComplete": true,
+      "modelUsageComplete": true
+    }
+  },
+  "episodes": [
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 0,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9163,
+        "outputIncludingReasoningTokens": 33521,
+        "observedReasoningTokens": 33367,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.002496166998753324,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 42684
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.04259778,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 0,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 45725,
+        "outputIncludingReasoningTokens": 19529,
+        "observedReasoningTokens": 18178,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.4577565419895109,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": false,
+        "totalModelTokens": 65254
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.027255083999999995,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 2,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 2,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "query",
+        "query",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 8875,
+        "outputIncludingReasoningTokens": 57429,
+        "observedReasoningTokens": 57275,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.00393337503192015,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 66304
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.07112571599999999,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 1,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 136501,
+        "outputIncludingReasoningTokens": 20786,
+        "observedReasoningTokens": 19875,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.15501712501281872,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 157287
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.058895418,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 1,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 1,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "query",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": false,
+      "answerAttempts": 5,
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 0,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 6,
+        "modelCalls": 6,
+        "inputTokens": 383045,
+        "outputIncludingReasoningTokens": 110136,
+        "observedReasoningTokens": 108968,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.017707750026602298,
+        "verified": true,
+        "firstVerifiedAttempt": 6,
+        "adaptive": false,
+        "totalModelTokens": 493181
+      },
+      "failureAttempts": 4,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 5,
+        "modelCalls": 5,
+        "inputTokens": 382263,
+        "outputIncludingReasoningTokens": 109817,
+        "observedReasoningTokens": 108721,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.01607408403651789,
+        "verified": true,
+        "firstVerifiedAttempt": 5,
+        "adaptive": false,
+        "totalModelTokens": 492080
+      },
+      "postFailureModelCalls": 4,
+      "peakEstimateUsd": 0.13707836399999998,
+      "failureAndRepairPeakEstimateUsd": 0.136460964,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer",
+        "answer",
+        "answer",
+        "answer",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "answer_not_verified",
+          "feedback": {
+            "verification": "not_verified"
+          },
+          "thinkingTokens": 54488
+        },
+        {
+          "turn": 3,
+          "outcome": "answer_not_verified",
+          "feedback": {
+            "verification": "not_verified"
+          },
+          "thinkingTokens": 39445
+        },
+        {
+          "turn": 4,
+          "outcome": "answer_not_verified",
+          "feedback": {
+            "verification": "not_verified"
+          },
+          "thinkingTokens": 411
+        },
+        {
+          "turn": 5,
+          "outcome": "answer_not_verified",
+          "feedback": {
+            "verification": "not_verified"
+          },
+          "thinkingTokens": 721
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 0,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 35372,
+        "outputIncludingReasoningTokens": 25793,
+        "observedReasoningTokens": 24181,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.17410158400889486,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": false,
+        "totalModelTokens": 61165
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 33977,
+        "outputIncludingReasoningTokens": 25332,
+        "observedReasoningTokens": 23792,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.1731323340209201,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 59309
+      },
+      "postFailureModelCalls": 2,
+      "peakEstimateUsd": 0.03422496,
+      "failureAndRepairPeakEstimateUsd": 0.03325326,
+      "queryActions": 1,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 1,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "invalid action shape",
+        "query",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "head must be nonempty atom array"
+          },
+          "thinkingTokens": 1402
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": false,
+      "answerAttempts": 2,
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 50492,
+        "outputIncludingReasoningTokens": 85035,
+        "observedReasoningTokens": 84303,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.004264832998160273,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 135527
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 49710,
+        "outputIncludingReasoningTokens": 84622,
+        "observedReasoningTokens": 83962,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0036459580005612224,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 134332
+      },
+      "postFailureModelCalls": 1,
+      "peakEstimateUsd": 0.10462051199999998,
+      "failureAndRepairPeakEstimateUsd": 0.10407847199999999,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "answer_not_verified",
+          "feedback": {
+            "verification": "not_verified"
+          },
+          "thinkingTokens": 32334
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 1,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 37117,
+        "outputIncludingReasoningTokens": 18752,
+        "observedReasoningTokens": 17254,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.03215066500706598,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": false,
+        "totalModelTokens": 55869
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 35722,
+        "outputIncludingReasoningTokens": 17991,
+        "observedReasoningTokens": 16565,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.031574457010719925,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 53713
+      },
+      "postFailureModelCalls": 2,
+      "peakEstimateUsd": 0.026148732,
+      "failureAndRepairPeakEstimateUsd": 0.025155720000000003,
+      "queryActions": 1,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 1,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "invalid action shape",
+        "query",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "head must be nonempty atom array"
+          },
+          "thinkingTokens": 849
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 0,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9035,
+        "outputIncludingReasoningTokens": 28024,
+        "observedReasoningTokens": 27030,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.004795375978574157,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 37059
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.035962980000000005,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 0,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 23870,
+        "outputIncludingReasoningTokens": 34698,
+        "observedReasoningTokens": 33125,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.32798641704721376,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 58568
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.044659080000000004,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 1,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 1,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "query",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9243,
+        "outputIncludingReasoningTokens": 57141,
+        "observedReasoningTokens": 56147,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.014723375003086403,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 66384
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.070852884,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 1,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 30083,
+        "outputIncludingReasoningTokens": 32126,
+        "observedReasoningTokens": 30394,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.12690254198969342,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": false,
+        "totalModelTokens": 62209
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.042458147999999994,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 1,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 1,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "query",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 0,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9325,
+        "outputIncludingReasoningTokens": 62857,
+        "observedReasoningTokens": 61890,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.002418333984678611,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 72182
+      },
+      "failureAttempts": 0,
+      "firstFailureTurn": null,
+      "failureAndRepairEffort": {
+        "attempts": 0,
+        "modelCalls": 0,
+        "inputTokens": 0,
+        "outputIncludingReasoningTokens": 0,
+        "observedReasoningTokens": 0,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 0
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.07773668399999999,
+      "failureAndRepairPeakEstimateUsd": 0,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "answer"
+      ],
+      "failureDetails": []
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 0,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 7,
+        "modelCalls": 7,
+        "inputTokens": 118761,
+        "outputIncludingReasoningTokens": 28731,
+        "observedReasoningTokens": 24657,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.7442454989941325,
+        "verified": true,
+        "firstVerifiedAttempt": 7,
+        "adaptive": false,
+        "totalModelTokens": 147492
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 6,
+        "modelCalls": 6,
+        "inputTokens": 117343,
+        "outputIncludingReasoningTokens": 28166,
+        "observedReasoningTokens": 24164,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.7429417910170741,
+        "verified": true,
+        "firstVerifiedAttempt": 6,
+        "adaptive": false,
+        "totalModelTokens": 145509
+      },
+      "postFailureModelCalls": 5,
+      "peakEstimateUsd": 0.042069659999999995,
+      "failureAndRepairPeakEstimateUsd": 0.041267316,
+      "queryActions": 4,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 4,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "invalid action shape",
+        "query",
+        "query",
+        "query",
+        "query",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "head must be nonempty atom array"
+          },
+          "thinkingTokens": 1084
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": false,
+      "answerAttempts": 0,
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9185,
+        "outputIncludingReasoningTokens": 131434,
+        "observedReasoningTokens": 131362,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0005945409939158708,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 140619
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 1,
+        "modelCalls": 1,
+        "inputTokens": 8380,
+        "outputIncludingReasoningTokens": 131072,
+        "observedReasoningTokens": 131072,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 139452
+      },
+      "postFailureModelCalls": 0,
+      "peakEstimateUsd": 0.159949452,
+      "failureAndRepairPeakEstimateUsd": 0.159461712,
+      "queryActions": 0,
+      "evidencePublished": false,
+      "laterCallsExposedToEvidence": 0,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "invalid action shape"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "output_budget_exhausted",
+          "feedback": [],
+          "thinkingTokens": 131072
+        }
+      ]
+    },
+    {
+      "firstAnswerCorrect": true,
+      "answerAttempts": 1,
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 1,
+      "arm": "scheme-evidence",
+      "effort": {
+        "attempts": 5,
+        "modelCalls": 5,
+        "inputTokens": 105738,
+        "outputIncludingReasoningTokens": 36509,
+        "observedReasoningTokens": 32101,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.6029185410006903,
+        "verified": true,
+        "firstVerifiedAttempt": 5,
+        "adaptive": false,
+        "totalModelTokens": 142247
+      },
+      "failureAttempts": 1,
+      "firstFailureTurn": 2,
+      "failureAndRepairEffort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 104320,
+        "outputIncludingReasoningTokens": 36367,
+        "observedReasoningTokens": 32031,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.5997591239865869,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": false,
+        "totalModelTokens": 140687
+      },
+      "postFailureModelCalls": 3,
+      "peakEstimateUsd": 0.048211368,
+      "failureAndRepairPeakEstimateUsd": 0.047991887999999996,
+      "queryActions": 2,
+      "evidencePublished": true,
+      "laterCallsExposedToEvidence": 2,
+      "aliasExtensionQueries": 0,
+      "completedPathHits": 0,
+      "actions": [
+        "scan",
+        "invalid action shape",
+        "query",
+        "query",
+        "answer"
+      ],
+      "failureDetails": [
+        {
+          "turn": 2,
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "head must be nonempty atom array"
+          },
+          "thinkingTokens": 15037
+        }
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 0,
+      "bothVerified": true,
+      "thinkingReduction": 0.7780908156523016,
+      "modelTurnReduction": 0.33333333333333337
+    },
+    {
+      "case": "four-hop-shared-witness-seed-20261010",
+      "repetition": 1,
+      "bothVerified": true,
+      "thinkingReduction": 0.7953334994009703,
+      "modelTurnReduction": -0.33333333333333326
+    },
+    {
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 0,
+      "bothVerified": true,
+      "thinkingReduction": -0.22549019607843146,
+      "modelTurnReduction": -0.5
+    },
+    {
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 1,
+      "bothVerified": true,
+      "thinkingReduction": 0.4586709886547812,
+      "modelTurnReduction": -0.5
+    },
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 0,
+      "bothVerified": true,
+      "thinkingReduction": 0.6015996122152205,
+      "modelTurnReduction": -2.5
+    },
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 1,
+      "bothVerified": false,
+      "thinkingReduction": null,
+      "modelTurnReduction": null
+    },
+    {
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 0,
+      "bothVerified": true,
+      "thinkingReduction": 0.4552102376599635,
+      "modelTurnReduction": -1.0
+    },
+    {
+      "case": "all-targets-positive-reach-seed-20261313",
+      "repetition": 1,
+      "bothVerified": true,
+      "thinkingReduction": 0.6529899607158446,
+      "modelTurnReduction": -0.5
+    }
+  ],
+  "jointlyVerifiedPairs": 7,
+  "measurableThinkingPairs": 7,
+  "totalPairs": 8,
+  "jointlyVerifiedThinkingTokens": {
+    "raw-fact-reasoning": 428980,
+    "scheme-evidence": 167664
+  },
+  "jointlyVerifiedThinkingReduction": 0.6091566040374843,
+  "scope": "Observed cumulative thinking effort; does not identify exact redundant internal token spans. Jointly verified subset must be read alongside all-arm accuracy and censored costs.",
+  "planSha256": "d89ad9716e76298cf03b0fd410aa5eb8dd7f92e1955068e185c61c47fc173ac4",
+  "rawResultSha256": "4acb569a186b86163241732baae2da07445e9ff78779b07247db817e48534b52"
+}

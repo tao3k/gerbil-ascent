@@ -1,0 +1,45 @@
+#+title: Scheme Coding Style
+
+* Purpose
+
+Study the installed Gerbil compiler and standard-library Scheme sources, and
+apply their organization, binding, representation and state-ownership patterns
+to ASCENT. Each topic records concrete source references, implemented changes,
+semantic gates and rejected candidates. This index is the entry point; new
+studies belong in the corresponding topic file.
+
+* Documentation language
+
+All repository documentation must be English only. This includes design and
+research notes, RFCs, proof explanations, acceptance reports, evidence prose,
+and README files. New sections and revisions follow the same requirement.
+
+* Topics
+
+| Topic | Contents |
+|-------+----------|
+| [[file:coding-style/architecture.org][Architecture and responsibility]] | Current module boundaries and algorithm ownership |
+| [[file:coding-style/compiler-patterns.org][Compiler and Scheme patterns]] | Compiler sources, checked calling conventions, lexical scope and finite types |
+| [[file:coding-style/representations-and-results.org][Data representations and lookup results]] | Named private state, dense vectors, stable wire data and explicit absence |
+| [[file:coding-style/planning-and-graphs.org][Planning and graph algorithms]] | Declaration lowering, names, dependency components and stratification |
+| [[file:coding-style/indexes-and-storage.org][Indexes and storage]] | Row projection, indexed keys, equivalence classes and lattice binding |
+| [[file:coding-style/session-state.org][Session state and admission]] | Immutable declarations, engine frames, retained updates and checked source admission |
+| [[file:coding-style/admission-and-evidence.org][Admission and evidence]] | Finite selection, execution receipts and semantic evidence boundaries |
+| [[file:coding-style/rejected-experiments.org][Rejected experiments]] | Candidates rejected by complete-update or matched semantic controls |
+| [[file:coding-style/build-and-test.org][Build and test boundaries]] | Production build declarations, native test ownership and startup constraints |
+| [[file:coding-style/qualification-history.org][Qualification history]] | Historical local receipts and measurement boundaries; each section describes its own revision |
+
+* Reading order
+
+1. Architecture and responsibility: current ownership and dependency direction.
+2. Compiler and Scheme patterns: upstream techniques and local applications.
+3. Planning, storage, Sessions and evidence: the affected production chain.
+4. Build/test boundaries, rejected experiments and qualification history:
+   evidence for each study, with its original budgets and revision boundary.
+
+* Evidence policy
+
+Historical receipts apply to their recorded revision. Local semantic tests,
+matched performance results, AOT application checks and remote CI are separate
+claims. Generated logs and experiments belong in ignored =.cache/=. This
+collection stores the reasoning and receipt boundaries, not execution logs.

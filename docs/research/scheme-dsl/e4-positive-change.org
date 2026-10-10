@@ -1,0 +1,111 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: E4: finite positive relation change, semantics and cost
+#+STATUS: local matched probe; no cross-language performance claim
+#+DATE: 2026-10-01
+#+FILETAGS: :research:scheme-dsl:delta:benchmark:
+
+* Research question
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-question
+:END:
+
+Can a first-class, inspectable Scheme relation transformer propagate an
+insertion through recursion while preserving the complete set meaning,
+and avoid work that a second complete interpretation performs? This is
+the local E4 discriminator in [[file:reflection.org::#scheme-dsl-ab-protocol][the preregistered comparison]].
+
+The [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun higher-order change paper]] defines a typed higher-order change translation and
+proves correctness for its calculus (§§5–8). Its evaluation (§9, PDF
+pp. 25–26) reports that the raw translation alone brings only a modest
+gain in its two chosen workloads; simplification of zero changes is
+needed for the reported asymptotic gain. Its discussion (§10, PDF p. 26)
+leaves changing nested fixed points as further work. Those results and
+proofs do not transfer to this Gerbil implementation.
+
+* Implemented local rule
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-rule
+:END:
+
+[[file:../../scheme-relational-language-design.org::#scheme-language-finite-operator-graph][The finite operator grammar]] contains source, union, keyed join,
+fixed equality selection, projection, finite mapping, explicit
+function application and least fixed points. For one input insertion,
+=relational-op-reference-change= computes two complete meanings and
+takes their set difference. =relational-op-delta-change= computes the
+old meaning once and propagates inserted rows structurally. A join
+uses the old/new, new/old and new/new terms. A recursive application
+starts from the old fixed point and advances a new-row frontier.
+
+The frontier evaluator skips an old join when neither operand changes.
+When only one side changes it evaluates the other old side, then joins
+only the needed cross term. A nested changing fixed point currently
+falls back to its complete local change interpretation; the eight-case
+qualification checks its result but does not prove a general nested
+change theorem. Removal uses the existing failure-atomic source
+replacement and recomputation path. The native retained session also
+accepts checked source-row appends, whose results are compared with the
+structural delta prediction.
+
+* Reproducible local probe
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-probe
+:END:
+
+Source: [[file:../../../t/performance/scheme-operator-change-probe.ss][probe script]]. Command:
+
+#+begin_src sh
+just build
+just operator-change-probe
+#+end_src
+
+Run on 2026-10-01, Darwin 25.6.0 arm64 T6020, Gerbil =2591dcd= on
+Gambit =dcd677c=, local branch based on =4e21c40= with this change
+under test. Each case warms both methods, alternates method order for
+five pairs, and checks old/grown/delta sets against an independent
+Floyd-Warshall closure *outside* the timed region. =us= is the median
+of the five in-process microsecond samples. Counts include candidate
+row-pair checks in the two set interpreters and fixed-point body
+evaluations; they do not model the native indexed rule evaluator. All
+individual observations, including outliers, are retained in
+[[file:e4-positive-change-2026-10-01.txt][the first raw receipt]] and an [[file:e4-positive-change-2026-10-01-repeat.txt][independent repeat]].
+
+#+NAME: scheme-e4-local-cost
+| Shape | Vertices before addition | Old/grown rows | Reference join probes | Delta join probes | Reference/delta body evaluations | Reference median us | Delta median us |
+|-------+--------------------------+----------------+-----------------------+-------------------+----------------------------------+---------------------+-----------------|
+| chain | 12 | 66/78 | 13366 | 6282 | 25/14 | 3948 | 6146 |
+| chain | 24 | 276/300 | 217052 | 104628 | 49/26 | 109120 | 41649 |
+| chain | 36 | 630/666 | 1105266 | 538686 | 73/38 | 792656 | 220649 |
+| star | 12 | 11/13 | 421 | 167 | 5/4 | 153 | 110 |
+| star | 24 | 23/25 | 1705 | 623 | 5/4 | 414 | 213 |
+| star | 36 | 35/37 | 3853 | 1367 | 5/4 | 857 | 656 |
+
+The join and body counts favor structural change for all six cases.
+The chain-12 median wall time favors complete recomputation despite
+fewer counted operations. Chain-24 and chain-36 timings have large
+outliers in the raw receipts. A second fresh process produced chain-12
+medians of 4017/5939 us, chain-24 medians of 153770/96460 us, and
+chain-36 medians of 820493/481952 us (reference/delta). The counted
+operations were identical in both processes. The timing table is
+exploratory and does
+not establish an asymptotic or general speedup. This compares two
+Gerbil set interpreters with the same fixed grammar, not Datafun,
+Flix, Ascent or the native indexed rule engine.
+
+* Remaining discriminators
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-next
+:END:
+
+- The finite =relational-op-delta-change= function still receives old
+  input rows and rebuilds the old fixed point on every call. The
+  [[file:e4-retained-session.org][native Session gate]] now retains the lowered rule state across calls;
+  these are separate algorithms with separate cost receipts.
+- Compare larger sparse and dense families with controlled allocation
+  and GC receipts before a performance claim. Counted row-pair probes
+  are only one component of cost.
+- Give deletions and changing nested fixed points separate equivalence
+  arguments. The insertion equation does not justify either one.
+
+[[file:higher-order-change.org][higher-order change reading]]; [[file:reflection.org][research reflection]].

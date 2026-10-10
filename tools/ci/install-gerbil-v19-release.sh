@@ -27,10 +27,13 @@ case "$(uname -s)-$(uname -m)" in
 esac
 
 archive="$tag.tar.gz"
-download="${RUNNER_TEMP:?}/$archive"
-mkdir -p "$release_root"
-curl --fail --location --retry 3 --output "$download" \
-  "https://github.com/tao3k/gerbil-bazel/releases/download/$tag/$archive"
+download="${GERBIL_RELEASE_ARCHIVE_CACHE:-${RUNNER_TEMP:?}}/$archive"
+mkdir -p "$release_root" "$(dirname "$download")"
+if [ ! -f "$download" ]; then
+  curl --fail --location --retry 3 --output "$download" \
+    "https://github.com/tao3k/gerbil-bazel/releases/download/$tag/$archive"
+fi
+# Every restored archive must satisfy the pinned digest before extraction.
 echo "$sha256  $download" | shasum -a 256 --check
 tar -xzf "$download" -C "$release_root" --strip-components=1
 

@@ -1,0 +1,124 @@
+{
+  "schema": "ascent.provider-view-qualification",
+  "version": 1,
+  "source": {
+    "originalBase": "384ab64ca41a2912a0ec9da802923f81f6b61ae1",
+    "integratedBase": "0a45d8e2560f51313d0d0395a4789d37bfb56d69",
+    "codeCommit": "20401286a7e477c9b1dd756978a8e0019d2a3003",
+    "proofTransport": "Rebase changes neither the new Lean/TLA artifacts nor the UF implementation, native view fixture, Justfile and CI registration. Concurrent index occurrence fixes are retained.",
+    "schemeManifestSha256": "84aeed13813d642eab48b992c5dad91294418fbc1e8014ef0870b3afb2b5b3e2",
+    "schemeFiles": 546
+  },
+  "lean": {
+    "exitStatus": 0,
+    "jobs": 90,
+    "newLaws": 12,
+    "testExamples": 11,
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "scope": "Frozen binary member-list enumeration, uniqueness under member/disjointness premises, exact frontier transport under the concretization premise, first-column filtering and logical count arithmetic. No native SCC extraction or arbitrary lattice theorem."
+  },
+  "tla": {
+    "exitStatus": 0,
+    "explorationBound": 4,
+    "distinctStates": 44172,
+    "generatedStates": 149518,
+    "faults": {
+      "alias": "FrozenRead",
+      "retire": "ReaderAlive",
+      "early": "AtomicPublication",
+      "stale": "CurrentReply",
+      "budget": "LogicalBudget"
+    },
+    "faultAdmission": "All five require TLC exit 12 and the named invariant violation; tool or parse errors cannot pass.",
+    "scope": "One outstanding reader, repeated source cuts, staging, atomic publication, cancel/drain, backing lifetime and revision admission. Generation is unbounded in Spec; TLC exploration does not prove unbounded safety, liveness or native trace refinement."
+  },
+  "nativeViewCorpus": {
+    "graphSubsets": 512,
+    "insertionOrders": 2,
+    "histories": 1024,
+    "prefixes": 4608,
+    "oracle": "Independent Boolean adjacency/Floyd closure",
+    "controls": [
+      "exact frontier and count",
+      "held old total after mutation",
+      "budget one below exact requirement",
+      "exact retry",
+      "zero-budget duplicate",
+      "three keyed binary reads per prefix",
+      "held frontier after SCC merge",
+      "owned exported row spines",
+      "false group key isolation",
+      "reordered grouped keys",
+      "64-node cycle",
+      "legacy list adapter order"
+    ]
+  },
+  "designFindings": [
+    "A small rectangle descriptor cannot replace logical fact cardinality.",
+    "Unique facts require unique member lists and disjoint rectangles, not only correct Set membership.",
+    "A view referencing mutable current roots would change after a later merge.",
+    "Lawful min joins can retract exact winner tuples, so abstract lattice growth does not imply monotone Set concretization.",
+    "Component traversal order differs from legacy engine publication order; retaining or replaying an ordering journal has its own cost."
+  ],
+  "remainingArchitectureGate": "The UF list entrypoint uses the compressed frontier plan, but current engine rows/membership/indexes/results still materialize facts. Full compressed-engine integration, reader trace refinement, ordered observation and measured whole-engine benefits remain required.",
+  "rejectedPreparation": [
+    {
+      "kind": "native fixture syntax",
+      "status": "rejected",
+      "rootCause": "Incomplete let binding/form; compilation failed before tests."
+    },
+    {
+      "kind": "native source freeze",
+      "status": "rejected",
+      "rootCause": "Justfile changed during native pool compilation; no tests started and the run is not admitted."
+    },
+    {
+      "kind": "TLC tool startup",
+      "status": "rejected",
+      "rootCause": "Missing pinned jar, then sandbox denial of Java's local management port; neither is an invariant counterexample."
+    }
+  ],
+  "modelCalls": 0,
+  "performanceClaim": "No allocator, whole-engine memory or timing benefit is claimed.",
+  "owners": {
+    "table/trrel-uf.ss": "00e621eaab7f38a4f71eafbe8f4a131f647ecde9ba95e5c3e3fd47a9cb7f1b12",
+    "t/qualification/ascent-provider-views-test.ss": "b623365c694b6b8c893449f14814f88bcf74836afcbed1e98ea7e163458bc63b",
+    "t/harness/run.ss": "f58f9ec40ef3b0ea485543d56b6cb4d035cf840365af00c656c78080f9cabf3e",
+    "packages/proofs/lean/ProviderRectangles.lean": "9cd470b32c2ed7c854fc172fcee85b71f4ff875671e4d1a4a565ff6f711f35fd",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "2b5885cfae3ad02b2fdc5c974b197d3301da7313ac76a108ae496a13731ad195",
+    "packages/proofs/lean/lakefile.lean": "93b740d91ff64c519be178b7d80ddad727155a241ca837c92869f43d8f0a8ea0",
+    "packages/proofs/lean/AscentProof.lean": "35f70b3af4f293e22ba4200001afb6ea3ec9525b6bb78f3719db22afc7e8b788",
+    "packages/proofs/tla/ProviderViews.tla": "973561f0a8066854bad4e7c60a7387f8b17475909536290c66e4e3daa489b349",
+    "packages/proofs/tla/ProviderViews.cfg": "868daab697df6288ffd88c4d5624aef881a789a252dab1384eaf642bb3fadf64",
+    "justfile": "9af2c60a5ee381bc860877ea8d2cbeecc315c9dc0f2ef7b34902ffc50827d5ad",
+    ".github/workflows/ci.yml": "de838553f790bae98c4d223965974e79a0ee390b3f5dfa6aa6421f927ead2214"
+  },
+  "native": {
+    "exitStatus": 0,
+    "modules": 84,
+    "cases": 781,
+    "nativeReadyMarkers": 84,
+    "explicitOKMarkers": 84,
+    "watchdogFailures": 0
+  },
+  "logHashes": {
+    "lean-accepted": "f13fa07dcf77249b958937aeeb4218582ed12c964c19c75dceda993fc4a521a6",
+    "tla-accepted": "b260bcfe9ac3efb3e3b0bd45e55f17307f6ba15bb182f851970b21e73abc1608",
+    "full-native-accepted": "bdd88e3100042aa1c8c3a5afa443e2a2fbac6cd22f92a905594bb264d4ea7a85",
+    "full-native": "3facd7230191d4264aa1a4bbd5c312c583ae85c65c237445be18041055fd581e",
+    "native-final": "6b63645b34d44b995e9eeb22a3cfce2b3046761ce430c8879bb71af2392510cf",
+    "native-retry": "49521909b4a19929391ecbf1bf31df829adf17e8d6f4dd464948196f090a98c7",
+    "native": "69770e83c4b4daba020bc4fd363c9ce4ab7da6957a425e0ef8de7c84c17e2c3e",
+    "policy-accepted": "9af4c916da925042250d4be91e10c4b7c69f4aa2303056921644493de7a56939"
+  },
+  "policy": {
+    "exitStatus": 0,
+    "errors": 0,
+    "findings": 18,
+    "command": "just check-policy"
+  }
+}

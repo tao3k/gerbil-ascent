@@ -1,0 +1,95 @@
+#+title: Matched checked row binding
+
+=GERBIL_BUILD_CORES=12 GERBIL_PATH=<qualified-prefix> just binding-benchmark=
+compiles both binders and evaluators with identical optimizing settings
+into one isolated library. It compares frozen =74f0046= row binding
+with current checked binding plans. Raw terms and the source term grammar
+remain unchanged; only first variable occurrences skip an environment search.
+
+Each case has 1000 alternating old/new pairs and 20 warmups. Binding
+kernels repeat 128 calls per span and report per-call nanoseconds. The
+16- and 32-column kernels require median nonregression and at least
+900 strictly faster pairs. The two-column kernel and individual solves
+require median nonregression. Result bindings, row order, and independent
+expected rows are checked outside timing spans. All raw samples and
+source hashes are retained in =receipts/=.
+
+Both final local runs passed, with process exit 0 and final =OK=.
+Their source manifests match the retained production and benchmark sources.
+
+| shape | old p50 run 1/2 (ns) | new p50 run 1/2 (ns) | wins run 1/2 |
+|-------+----------------------+----------------------+--------------|
+| bind 2 | 140 / 140 | 117 / 109 | 951 / 958 |
+| bind 16 | 492 / 468 | 195 / 187 | 968 / 982 |
+| bind 32 | 1132 / 1140 | 289 / 289 | 976 / 976 |
+| solve two-hop | 63000 / 63000 | 62000 / 62000 | 501 / 534 |
+| solve projection 16 | 159000 / 160000 | 156000 / 157000 | 825 / 767 |
+| solve projection 32 | 203000 / 205000 | 183000 / 184000 | 897 / 858 |
+
+- [[file:receipts/2026-10-02-matched-1.sexp][Run 1 raw samples]] and
+  [[file:receipts/2026-10-02-matched-1.sexp.sources][source manifest]]
+- [[file:receipts/2026-10-02-matched-2.sexp][Run 2 raw samples]] and
+  [[file:receipts/2026-10-02-matched-2.sexp.sources][source manifest]]
+
+The full-solve cases reuse warmed declaration metadata shared by both
+evaluators, including the current SCC planner. They include per-evaluation
+engine initialization, fixed-point execution, and result materialization.
+They exclude cold admission and process startup. Solver controls do not
+qualify a stable full-solve speedup or p95 improvement.
+
+** Semantic and build qualification
+
+All commands used =GERBIL_BUILD_CORES=12= and
+=GERBIL_PATH=/private/tmp/ascent-v0121-gerbil=. New reference-based
+tests additionally load the compiled benchmark library, whose production
+sources match the final source manifests. Existing integration tests use
+the rebuilt installed-prefix libraries. Source hashes for the new
+qualification fixtures are in =receipts/qualification.sources=.
+
+| check | outcome | seconds |
+|-------+---------+---------|
+| just build | exit 0 | 137 |
+| just check-policy | 37 modules, findings 0, errors 0, exit 0 | 92 |
+| ascent-binding-test | 99,999 comparisons plus goldens, exit 0 | 36 |
+| ascent-source-admission-test | 12 Cases, exit 0 | 36 |
+| ascent-binding-program-test | 15 relations, reference order and goldens, exit 0 | 31 |
+| ascent-index-program-test | exit 0 | 40 |
+| ascent-aggregate-program-test | exit 0 | 28 |
+| ascent-lattice-program-test | exit 0 | 29 |
+| scheme-operator-retained-test | two 64-graph matrices plus update recovery, exit 0 | 94 |
+| ascent-strata-test | 6,656 comparisons plus goldens, exit 0 | 16 |
+
+Successful module checks have =MODULE-OK=, =HARNESS-OK=, and final =OK=.
+Raw build, policy, and module output is retained in =receipts/*.log=.
+
+The unchanged rule-program module failed its first mixed-ternary Case
+at the 2000 ms Core duration boundary in the initial and standalone
+serial runs; both logs are in =experiments/rule-duration*.log=. Its other
+Cases completed without check failures. The independent 15-relation
+semantic comparison uses Core's default profile and passes, but does
+not qualify the existing 2000 ms timing gate. The complete qualification
+suite is therefore not reported as passing.
+
+** Rejected experiments
+
+The initial two-column, 16-repeat measurement tied at the timer resolution
+and failed its original 900-win gate. =experiments/fresh-only-initial.sexp=
+retains that result and its source manifest. Final kernels use 128 repeats
+for timer resolution; the narrow shape is a nonregression control.
+
+An exact built-in Set fast path bypassed identity wrapping and duplicate
+width checks while preserving the extensible Provider path. Individual
+projection solves failed the attempted 900-win gate: 854/1000 and 882/1000
+in =experiments/identity-fastpath.sexp=. That exploratory raw receipt has
+no retained matching benchmark-source manifest and is not qualification.
+The subsequent eight-solve batch reached only 705/1000 wins for width 16
+and timed out before completing width 32; the log and its then-current
+source manifest are retained in =experiments/identity-batch.log=. The
+Set fast path was reverted before the final measurements.
+
+The unchanged =ascent-indexed-joins= SS check retained 1000 samples and
+its 2 ms p95 limit. With the experimental Set fast path, correct rows
+were produced but p95 was 28.703 ms, failing that gate. The complete
+diagnostic is =experiments/indexed-ss.log=. No cause is attributed to
+host load, GC, or the watchdog from this evidence. Final binding receipts
+do not close that failure or claim complete SS qualification.

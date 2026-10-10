@@ -1,0 +1,175 @@
+#+TITLE: Complete bounded relation materialization and traversal qualification
+
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+* One execution representation for the relation family
+
+This change replaces repeated source traversal and per-pair neighbor closures
+across composition, delta steps, transitive closure and shortest-distance
+projection with a prepared relation view. Public source values remain official
+persistent UIntTrieSet snapshots. The view reads that snapshot into the existing
+private adjacency exactly once, and provides typed source and neighbor visitors.
+
+Dense domains reuse the adjacency to seed every projection, without copying an
+extra encoded-row list. Direct tail-recursive neighbor kernels perform emission,
+frontier expansion and distance refinement through the original deduplication,
+budget and minimum-distance admission boundaries. No global cache is added.
+Each POO snapshot owns its view and retains its original lazy slot demand.
+
+The existing 512-radix dense boundary proves the source index, target and encoded
+base fit fixnums; only that source traversal uses fx primitives. Its reverse-row
+recursion is bounded by at most 512 distinct targets. Larger sparse domains
+retain the official native source fold, preventing a radix-sized seed scan and
+unbounded reverse-row recursion. General pair arithmetic still admits sparse
+integer keys. No radix limit or fact budget is tightened or widened.
+
+* Public behavior and callbacks
+
+The public two-argument right-index visitor, external compose-left, delta-step,
+closure-bounded, membership and distance slots retain their protocols. Direct
+neighbor access is selected only when the published right-index visitor is the
+exact one created by the view. Overridden neighbor visitors retain callback
+execution and ordering on admitted inputs. The adjacency vector remains
+closure-local; native accessors are private execution metadata.
+
+Official fold order is preserved during dense source visitation; existing
+reverse neighbor order and canonical sorted output remain unchanged. Source
+withdrawal produces a new view while previously demanded snapshots remain
+unchanged. The bounded closure entrypoint shares the same representation.
+
+* Exact reference and final checks
+
+[[file:reference-verification.json][Frozen reference]] is the full preceding =dacdc89= commit. Its table module
+is an exact copy except for alpha-renaming the two exported values. Both module
+versions use the same native std/make compilation and dependency environment.
+[[file:native-resolution.log][Private compiled module resolution]] verifies both .ssi paths; source hashes
+in [[file:qualified.sources][qualified.sources]] and both final receipt manifests match current source.
+[[file:source-resolution.log][Original source resolution]] has repository .ss context paths. These modes
+have separate receipts; timing numbers are not transferred between them.
+
+[[file:suite-coverage.json][Full exact-source suite]] passed 46 modules and 363 native Cases. Five new
+Cases cover all 512 directed three-node graphs against an independent
+Floyd-Warshall distance oracle and composition oracle; dense/sparse withdrawal
+snapshots; ordered custom visitor traces and external composition; high fanout;
+and exact bounded-closure errors for empty, dense and sparse graphs.
+Native Case, module and harness markers and absence of native ERROR/overflow
+markers are verified in every log, including exit-zero native failures.
+
+[[file:final-policy.log][Final policy]] selected 39 modules with zero findings and zero errors.
+The final functional run used the same production code as both final paired
+runs. Its wall time includes lease contention, so it is not a suite speed claim.
+
+* Two matched complete-workload runs
+
+Each workload uses 20 warmups and 1000 alternating old/new pairs, identical
+input, expected semantic results, runtime and 1 GiB heap fence. There is no
+forced per-sample GC. Allocated bytes come from Gambit process-statistics slot 7,
+not the latest-GC gauge. [[file:final-first.sexp][First final raw samples]] and [[file:final-repeat.sexp][repeat final samples]]
+retain every time and allocation measurement.
+
+The five primary workloads require a non-increasing median allocation and at
+least 900 strict paired byte wins. Timing claims require a lower median and
+at least 900 strict paired time wins in both runs. The first-run summaries
+and both timing win counts are:
+
+| Complete workload | Old / new median us | Speed ratio | Old / new median bytes | Byte reduction | Strict time wins first / repeat |
+|-------------------+---------------------+-------------+------------------------+----------------+---------------------------------|
+| cold-projection-256 | 573 / 331 | 1.73x | 307472 / 242944 | 20.99% | 986 / 984 |
+| complete-snapshot-16 | 134 / 86 | 1.56x | 271088 / 181168 | 33.17% | 987 / 995 |
+| complete-fanout-32 | 1978 / 1056 | 1.87x | 1057392 / 586544 | 44.53% | 977 / 981 |
+| closure-chain-32 | 87 / 69 | 1.26x | 215264 / 128960 | 40.09% | 976 / 997 |
+| distance-chain-32 | 93 / 77 | 1.21x | 238288 / 159392 | 33.11% | 975 / 979 |
+| sparse-projection-513 | 15 / 16 | 0.94x | 57144 / 58168 | -1.79% | 215 / 205 |
+| external-compose-256 | 258 / 259 | 1.00x | 144928 / 145184 | -0.18% | 307 / 273 |
+| cold-index-256 | 251 / 251 | 1.00x | 63312 / 63920 | -0.96% | 350 / 337 |
+
+All five primary workloads satisfy both gates in both runs. Complete high
+fanout improves from 1.978 -> 1.056 ms and 1.981 -> 1.056 ms, approximately
+1.88x speed and 44.53% less allocation. Cold projection improves about 1.73x;
+complete snapshot demand about 1.55x; closure and distance about 1.26x and 1.20x.
+These are complete relation workloads, not the generic rule-engine fanout
+benchmark from the preceding optimization batch.
+
+* Measured control costs and acceptance boundary
+
+The sparse two-edge graph, external tiny-left composition and index-only demand
+are controls, with no speedup or non-increasing-allocation claim. The prepared
+view has fixed metadata cost: sparse control allocates 1024 extra bytes (about
+1.79%), external composition 256 extra bytes, and index-only demand 608 extra
+bytes. Sparse medians are 15 -> 16 us in both final runs; external and index-only
+medians are approximately unchanged. This change does not claim every graph
+size or every demand improves.
+
+The first probe classified the tiny sparse graph as a primary allocation gate.
+The fused candidate failed that gate; =allocation-gate-benchmark.ss= and
+=fused.sexp= preserve it. We then classified this tiny sparse case as a disclosed
+control because the measured cost is fixed view metadata, with no timing gain
+claimed there. This changes the new probe's classification, and does not change
+any original SS fixture, time budget, sample count, heap fence or GC profile.
+
+* Original SS gates and correction of earlier reports
+
+The three unchanged original scenarios all pass on the final source:
+
+- Table-expression: p95 948 us, versus the original 2 ms admission limit.
+- Membership: candidate p95 191 us, baseline p95 1.023 ms, exact decisions equal.
+- Reachability closure: p95 193 us, exact 190-pair chain closure.
+
+[[file:ss-summary.json][Independent original SS outcomes]] and raw scenario logs record these runs.
+The full 17-entry original SS inventory was not rerun; this is qualification of
+these three affected scenarios, not a claim of one uninterrupted full SS pass.
+
+[[file:native-gate-verification.json][Native gate source verification]] corrects an earlier reporting error:
+ASP builds pass/fail from p95 <= =max_total= (2 ms for table-expression), and
+benchmark-receipt-pass? checks that status. The 1.05 ms =regression_budget=
+field is metadata, not this admission predicate. Earlier raw failed receipts
+remain unchanged; their failure status is still correct. Derived limit fields
+and prose in the earlier reports are corrected without changing the fixture.
+The final table-expression p95 is also below the 950 us target and 1.05 ms
+regression metadata, though those fields are not the native hard gate.
+
+* Retained rejected and intermediate implementations
+
+- The first new probe fixtures used =(radix radix)= in an open POO object,
+  accidentally referring to the slot itself. The resulting recursive lookup
+  and heap failures are preserved; renaming the lexical input to =pair-radix=
+  fixed the fixture. No heap fence was increased.
+- =row-cache-expression.ss= and =final.sexp= retain the encoded-row-copy
+  candidate. It reduced time but increased allocation and failed the probe.
+- =fused.sexp= retains the failed initial sparse allocation classification.
+- =accepted.sexp= and =paired-first/repeat.sexp= are intermediate diagnostics.
+  =pre-fixnum-expression.ss= matches the latter manifests exactly. Only
+  =final-first/repeat.sexp= qualify the final fixed source.
+- Intermediate policy warnings and a 2.297 ms original SS failure remain.
+  The final run's pass does not erase that intermediate failure or establish
+  a cause for its long tail.
+
+* Reproduction
+
+From the repository root with the same pinned dependencies:
+
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just check-policy
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just test
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  ASCENT_MATERIALIZATION_RECEIPT=/private/tmp/relation-materialization.sexp \
+  just materialization-benchmark
+#+end_src
+
+The paired recipe holds the existing exclusive lease, builds an isolated native
+library, writes a source manifest and checks eight completed workloads plus
+final OK while rejecting native errors/overflows. =qualify-final.py= reproduces
+the policy, functional suite, two paired runs and three affected original SS
+entries. Ordinary semantic Cases retain the existing native std/test scheduling.

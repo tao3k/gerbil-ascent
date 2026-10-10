@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "98d4b3c048cc52a9379f8ef917028e0478a4090a",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 3.2 abstract tuple injection and monotone consequence operator; Section 3.3 frontier laws and Theorem 3.5",
+    "interpretation": "Abstract injections accumulate by supremum; monotone concretization plus sound and fresh-covering delta support merged-snapshot positive iteration. Fixed-point existence is distinct from finite executable convergence."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/ProviderIteration.lean": "cc6f43190c67ac426a151128e26516790b5bea2b8a23a01e74274508c527993d",
+    "packages/proofs/lean/Tests/ProviderIterationTests.lean": "4f3c9b9d4803cace0b17ea04e2b6692af095686b010aec0fc72c68b404027030",
+    "packages/proofs/lean/ProviderAdmission.lean": "a218885cbd2f48285393ba88ffb120f15b6863fa4cbf4939fc4afaf6a316bb88",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+    "packages/proofs/lean/lakefile.lean": "290048aee3e7bd5aa108b31a15377f239386a961425904471ecbb84676343beb",
+    "packages/proofs/tla/ProviderFrontier.tla": "d0600ac3a5f5a1dadeb123928facf0d9e434c5541a20b9a95ef4462b20fc619c",
+    "packages/proofs/tla/ProviderFrontier.cfg": "b103e84ee43a3db559dd62c96a4f995bf53fc8a295590a33e7550cd4ab0f5fbc",
+    "t/qualification/ascent-byods-invariants-test.ss": "ae51c9002434e094085917d27b7883c8550c584fd8f9a6e5e1a36541801f6f37",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "program/view-state.ss": "f4541aeefa1f111eae948e25a5408ffe3dec0d42c5c2168ac8d0e32c0a1daa92",
+    "justfile": "832e5098efdd616a830f322e7f85f195190af0dfc336bc7bd414da3caa6ca64f"
+  },
+  "lean": {
+    "module": "ProviderIteration",
+    "new_theorems": [
+      "join_left",
+      "join_right",
+      "join_le",
+      "join_mono",
+      "inject_upper",
+      "inject_le",
+      "inject_mono",
+      "inject_union",
+      "heads_partition",
+      "full_grows",
+      "heads_mono",
+      "full_mono",
+      "pivot_after_full",
+      "iterations_equal",
+      "history_below_closed",
+      "initial_below_history",
+      "stationary_least",
+      "least_below_closed",
+      "seed_below_least",
+      "least_closed",
+      "least_fixed",
+      "stationary_eq_least",
+      "ranked_termination",
+      "ranked_converges"
+    ],
+    "build_jobs": 97,
+    "test_examples": 6,
+    "test_owner": "packages/proofs/lean/Tests/ProviderIterationTests.lean",
+    "abstract_domain_control": "Two-element Bool lattice with both distinct head facts injected as true; gamma does not enumerate only the raw injected tuple family.",
+    "negative_controls": [
+      "Anti-monotone gamma cannot satisfy the admission law",
+      "Empty fresh head cannot overwrite a retained true abstract state"
+    ],
+    "axiom_boundary": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "proved": [
+      "Tuple-family injection monotonicity and union/join correspondence from complete supremum laws",
+      "Arbitrary finite projected positive-body decomposition with repeated relations and overlapping delta",
+      "Every natural-number naive/semi-naive abstract history agrees; initialization is full and old-head coverage is derived",
+      "Least closed state above the seed exists and is fixed",
+      "Any stationary history equals that least state",
+      "Parameterized bounded rank and strict progress imply finite convergence of both histories to the least state"
+    ],
+    "premises": [
+      "Reflexive, transitive, antisymmetric abstract order with arbitrary-family supremum upper/least laws",
+      "Monotone gamma for each body relation",
+      "Delta soundness and coverage of newly concretized observations between ordered snapshots",
+      "Immutable rules and fixed tuple injection for an execution",
+      "Bounded rank and strict progress only for finite convergence"
+    ],
+    "not_assumed": [
+      "Abstract state is a powerset",
+      "Gamma preserves joins",
+      "Delta is disjoint from old facts",
+      "Completed solving",
+      "Fixed generation cap"
+    ]
+  },
+  "tla": {
+    "model": "ProviderFrontier",
+    "new_mutation": "replace",
+    "observed_exit": 12,
+    "diagnostic": "Invariant ConsumerSnapshot is violated",
+    "witness_states": 5,
+    "trace": [
+      {
+        "pending": "{}",
+        "inputs": "{}",
+        "phase": "\"idle\"",
+        "total": "{}",
+        "delta": "{}",
+        "delivered": "{}",
+        "answers": "{}"
+      },
+      {
+        "pending": "{<<1, 1>>}",
+        "inputs": "{<<1, 1>>}",
+        "phase": "\"pending\"",
+        "total": "{}",
+        "delta": "{<<1, 1>>}",
+        "delivered": "{}",
+        "answers": "{}"
+      },
+      {
+        "pending": "{<<1, 1>>}",
+        "inputs": "{<<1, 1>>}",
+        "phase": "\"idle\"",
+        "total": "{<<1, 1>>}",
+        "delta": "{}",
+        "delivered": "{<<1, 1>>}",
+        "answers": "{<<1, 1>>}"
+      },
+      {
+        "pending": "{<<1, 1>>, <<2, 2>>}",
+        "inputs": "{<<1, 1>>, <<2, 2>>}",
+        "phase": "\"pending\"",
+        "total": "{<<1, 1>>}",
+        "delta": "{<<2, 2>>}",
+        "delivered": "{<<1, 1>>}",
+        "answers": "{<<1, 1>>}"
+      },
+      {
+        "pending": "{<<1, 1>>, <<2, 2>>}",
+        "inputs": "{<<1, 1>>, <<2, 2>>}",
+        "phase": "\"idle\"",
+        "total": "{<<1, 1>>, <<2, 2>>}",
+        "delta": "{}",
+        "delivered": "{<<1, 1>>, <<2, 2>>}",
+        "answers": "{<<2, 2>>}"
+      }
+    ],
+    "meaning": "Two isolated reflexive head components are produced in successive publications. Overwriting old heads with the current pivot output loses the first component.",
+    "ownership": "Bounded accumulated-head publication and retention protocol; no duplicate abstract order/injection theorem",
+    "transcript_sha256": "5987041c4872146fda9c484506627b289d2bbe5b12519a677fd7cb914c7f106e"
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-byods-invariants-test.ss",
+    "exit": 0,
+    "passing_cases": 14,
+    "final_marker": "OK",
+    "new_control": "retained head injection survives an empty implied frontier",
+    "providers": [
+      "eqrel",
+      "trrel",
+      "trrel-uf"
+    ],
+    "source_history": {
+      "initial": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "delayed": [
+        [
+          1,
+          2
+        ]
+      ],
+      "already_implied": [
+        [
+          0,
+          2
+        ]
+      ]
+    },
+    "body_occurrences": 3,
+    "independent_truth": "Graph adjacency reachability closure followed by explicit three-edge witness enumeration",
+    "checks": [
+      "Initial solve",
+      "Delayed producer insertion",
+      "Already-implied new source tuple with no new concrete facts",
+      "Repeated retained solve",
+      "Earlier published result unchanged"
+    ],
+    "initial_fixture_correction": "The session append API accepts one row; corrected a batch argument rejected by source-row validation. No native runtime defect asserted."
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "exit": 0,
+    "lean_jobs": 97,
+    "positive_configs": 25,
+    "negative_controls": 65,
+    "marker": "ALL-FORMAL-CHECK-OK"
+  },
+  "closure": "Conditional abstract complete-join injection, merged-snapshot round equivalence, least-state construction and ranked convergence components.",
+  "remaining": [
+    "Universal native gamma/head/key/equality extraction refinement",
+    "Asynchronous custom-domain history and publication refinement",
+    "General lattice projection semantics and native rank witnesses",
+    "Complete paper applications and matched cost/memory qualification"
+  ],
+  "scope": {
+    "new_model_calls": 0,
+    "rust_runtime_integration": false,
+    "raw_logs_committed": false
+  }
+}

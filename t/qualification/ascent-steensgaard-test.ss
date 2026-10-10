@@ -1,0 +1,97 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil/runtime/gambit
+        (only-in :std/test test-suite check-equal? check-exception test-case)
+        (only-in :clan/poo/object .ref)
+        :gerbil-ascent/applications/steensgaard
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
+                 gerbil-ascent-session-run gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!))
+(export ascent-steensgaard-test steensgaard-truth)
+
+;; Independent partition saturation. It does not use Scheme clauses, UF,
+;; the production equality Provider, or the explicit Datalog closure rules.
+(def (steensgaard-truth alloc assign load store)
+  (let ((classes []) (changed? #f))
+    (def (class-of value)
+      (let loop ((remaining classes))
+        (and (pair? remaining)
+             (if (member value (car remaining)) (car remaining) (loop (cdr remaining))))))
+    (def (join! a b)
+      (let ((left (class-of a)) (right (class-of b)))
+        (unless (and left (eq? left right))
+          (set! classes (cons (append (or left (list a))
+                                      (if (equal? a b) [] (or right (list b))))
+                              (filter (lambda (members) (and (not (eq? members left))
+                                                              (not (eq? members right)))) classes)))
+          (set! changed? #t))))
+    (for-each (lambda (pair) (join! (car pair) (cadr pair))) (append alloc assign))
+    (let loop ()
+      (set! changed? #f)
+      (for-each (lambda (write)
+        (for-each (lambda (read)
+          (let (members (class-of (car write)))
+            (when (and members (member (cadr read) members)
+                       (equal? (cadr write) (caddr read)))
+              (join! (caddr write) (car read))))) load)) store)
+      (when changed? (loop)))
+    (apply append (map (lambda (members)
+      (apply append (map (lambda (left) (map (lambda (right) (list left right)) members)) members))) classes))))
+(def (check-vpt result expected)
+  (let (actual ((.ref result 'rows-of) 'vpt))
+    (check-equal? (.ref result 'finished) #t)
+    (let (visited [])
+      ((.ref result 'visit-rows) 'vpt [] [] (lambda (row) (set! visited (cons row visited))))
+      (check-equal? (length visited) (length expected))
+      (for-each (lambda (row) (check-equal? (and (member row visited) #t) #t)) expected))
+    (for-each (lambda (row)
+      (let ((visited []) (node (car row)))
+        ((.ref result 'visit-rows) 'vpt '(0) (list node)
+          (lambda (found) (set! visited (cons found visited))))
+        (check-equal? (length visited) (length (filter (lambda (found) (equal? (car found) node)) expected)))
+        (for-each (lambda (found) (check-equal? (and (member found expected) #t) #t)) visited))) expected)
+    (check-exception ((.ref result 'visit-rows) 'vpt '(2) '(0) void) true)
+    (check-exception ((.ref result 'visit-rows) 'vpt '(0) [] void) true)
+    ((.ref result 'visit-rows) 'vpt [] [] (lambda (row) (set-car! row 'callback-mutation)))
+    (check-equal? ((.ref result 'rows-of) 'vpt) actual)
+    (check-equal? (length actual) (length expected))
+    (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected)))
+(def ascent-steensgaard-test
+  (test-suite "Steensgaard complete rule program and retained source lifecycle"
+    (test-case "load store field and active equivalence premises discriminate saturation"
+      (for-each (lambda (inputs)
+        (let (expected (apply steensgaard-truth inputs))
+          (for-each (lambda (explicit?)
+            (for-each (lambda (workers)
+              (check-vpt (gerbil-ascent-evaluate-program
+                          (apply gerbil-ascent-steensgaard-program (append inputs (list explicit?)))
+                          workers: workers) expected)) '(1 2))) '(#f #t))))
+        '((() () () ())
+          (((0 1)) ((1 2)) ((3 2 8)) ((0 8 4)))
+          (((0 1)) ((1 2)) ((3 2 9)) ((0 8 4)))
+          (() () ((3 0 8)) ((0 8 4)))
+          (((0 1) (0 1)) ((1 2)) ((3 2 8) (5 3 9)) ((0 8 4) (4 9 6)))
+          (((#f #t)) () ((left #t field)) ((#f field right)))))
+      (check-equal? (and (member '(4 3) (steensgaard-truth '((0 1)) '((1 2)) '((3 2 8)) '((0 8 4)))) #t) #t)
+      (check-equal? (member '(4 3) (steensgaard-truth '((0 1)) '((1 2)) '((3 2 9)) '((0 8 4)))) #f))
+    (test-case "source append and withdrawal reconstruct closure while holding the old result"
+      (let* ((alloc '((0 1))) (assign '((1 2))) (load '((3 2 8))) (store '((0 8 4)))
+             (session (gerbil-ascent-open-session
+                       (gerbil-ascent-steensgaard-program alloc assign load store)))
+             (held (gerbil-ascent-session-run session)) (old ((.ref held 'rows-of) 'vpt)))
+        (check-vpt held (steensgaard-truth alloc assign load store))
+        (gerbil-ascent-session-append-source! session 'assign '(4 5))
+        (check-vpt (gerbil-ascent-session-run session)
+                   (steensgaard-truth alloc (append assign '((4 5))) load store))
+        (gerbil-ascent-session-replace-source! session 'assign [])
+        (check-vpt (gerbil-ascent-session-run session) (steensgaard-truth alloc [] load store))
+        (check-equal? ((.ref held 'rows-of) 'vpt) old)))
+    (test-case "explicit actor cancellation drains before the same application retries"
+      (let* ((checks 0) (inputs '(((0 1)) ((1 2)) ((3 2 8)) ((0 8 4))))
+             (program (apply gerbil-ascent-steensgaard-program (append inputs '(#t)))))
+        (check-exception (gerbil-ascent-evaluate-program program workers: 2
+                           canceled?: (lambda () (set! checks (+ checks 1)) (> checks 2))) true)
+        (check-vpt (gerbil-ascent-evaluate-program program workers: 2)
+                   (apply steensgaard-truth inputs))))))

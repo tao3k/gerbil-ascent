@@ -1,0 +1,150 @@
+#+title: Scheme Coding Style: Rejected experiments
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Candidates rejected by complete-update or matched semantic controls. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Research: rejected positional selection during positive slot compilation
+
+=optimize-call.ss:43= resolves known procedure types before selecting a
+specialized call path; unknown or nullable types retain the generic transform.
+The transferable lesson is to specialize from an established representation
+and keep the general behavior outside that boundary. Gerbil's call optimizer
+does not implement ASCENT column selection or prove its cost model.
+
+After applicability checks in =program/positive.ss=, all atom terms have been
+lowered to ordered slot actions. The baseline compiler selects every indexed
+column with =list-ref=, repeatedly scanning prefixes. For an atom with =W=
+terms and =K= selected columns, selection can cost =O(W*K)=; a full ordered
+composite key costs =O(W^2)=. A temporary vector permits =O(W+K)= selection,
+but introduces allocation and branch costs on the complete compilation path.
+A candidate used a vector when =K>=8=, retaining list selection for short
+keys and later specializing empty/singleton keys with native =match=.
+
+The experiment measured complete slot compilation, including applicability,
+slot allocation, body actions, key selection and head actions. The reference
+compiler was frozen from =53980e4= and compiled inside the benchmark unit;
+the candidate used the production export. Each shape retained 1000 alternating
+pairs of eight compilations, with input construction and exact plan comparison
+outside the intervals. Wide targets required 900 strict wins and nonregressing
+medians; controls required nonregressing medians.
+
+With collection every 20 pairs, the first candidate's 128-column target had
+reference/candidate medians =176/122= jiffies and 940 strict wins. The
+512-column target had =1388/542= but only 884 wins, and the 64-of-512 target
+had =668/512= but only 800. The one-column control regressed =502/521=.
+After removing a local selector call, medians were =169/117=, =1360/516=
+and =669/499= with =924/917/864= wins; the one-column control remained
+=484/486=. Neither version qualified.
+
+Collecting before every batch exceeded the native 120-second deadline,
+including an isolated narrow shape, and is discarded. Collecting once per
+pair completed the isolated narrow shape with =13/16= median jiffies and
+503 wins, still failing its gate. Wide shapes were not rerun under this
+last protocol after the control failed. The candidate and its experimental
+performance module were removed from the tracked tree. Source snapshots,
+patches and raw logs remain under ignored =.cache/ascent/slot-selection/=.
+
+These results do not establish a stable production slowdown or a full-solve
+speedup: GC protocols differ, and the frozen local reference and production
+export have different module call boundaries. Future work should first
+calibrate the unchanged production export under an identical call boundary
+and retain a bounded benchmark protocol. Reduced asymptotic selection cost
+alone is insufficient evidence to replace the existing implementation.
+
+Three retained Cases strengthen the existing positive-plan qualification.
+They assert independently specified fresh/bound slot sequences, slot counts,
+forward/reverse/duplicated key order, action identity, repeated variables,
+literals, wildcards and callback rejection at 7/8/9/32/128-column widths.
+The real composite Join compares custom provider key traces and ordered
+output rows against the existing independent evaluator, including =#f=.
+There is no copied slot compiler in the retained tests. Production code,
+build entrypoints, scheduling, original deadlines and sample counts remain
+unchanged by this research slice.
+
+#+begin_src sh
+just test-file t/qualification/ascent-positive-plan-test.ss
+#+end_src
+
+The retained positive-plan module passes all 13 Cases in the pinned native
+cache SDK with =GERBIL_BUILD_CORES=12=, including =MODULE-OK=, =HARNESS-OK=,
+final =OK= and exit 0. The baseline =53980e4= has green Scheme, both Rust
+oracle groups and the combined native-and-oracle CI check. This slice changes
+only this test module and the research note; production bytes match that
+baseline. The full suite and SS scenarios were not rerun for the test-only
+slice, and no new performance improvement is claimed.
+
+* Study: source-log comparison candidate rejected after complete-update controls
+
+The installed compiler's =optimize-top.ss:703-712= (=extract-keyword-args=)
+uses an explicit remaining suffix and a tail loop, materializing its accumulated
+result at the end. The transferable lesson is to distinguish traversal state
+from a published result. ASCENT's retained source state consists of a forward
+base and a reverse-chronological append log. Dependency selection needs only an
+equality result, not a newly materialized source snapshot.
+
+Selection constructs =(append base (reverse additions))= before each
+source comparison, copying the full historical base even when there are no
+appends. A candidate compared the base directly when the append log was empty. With
+appends, its tail loop checked the base prefix and reversed only the remaining log
+for suffix comparison. Ordered duplicates, false scalar values and nullary rows
+remain significant. Snapshot publication kept its existing copying boundary;
+no retained source header was modified, and no new cache or metadata field was added.
+
+Two native Cases add independently specified source-mask goldens for changed
+order, duplicate count, empty bases, prefix mismatch, reverse append order and
+nullary facts. They check source header identity after comparison. A real retained
+Session then appends twice, replaces the source with its materialized sequence,
+checks that no rules activate, and performs a subsequent deletion against fresh
+closure. The focused module passes all 12 Cases including the existing 64 graph
+and 192 withdrawal corpus, with native module/harness/final markers and exit 0.
+
+The native probe freezes evaluator, reuse and selection from =93e26bc=. Candidate
+source-list spines are copied outside timing, so the unchanged relation cannot
+rely on identical list pointers. It measures complete updated-engine construction
+and completion, with initial completion, schema and Analysis outside timing.
+Each shape has 1000 alternating old/new pairs, with explicit GC every 20 pairs
+outside timing. Ordered source rows and finished status are checked after timing.
+The fixture has two unary source relations, no rules and one changed trigger.
+
+Median old/new jiffies are 71/71 for one unchanged row, 113/112 for 128 rows,
+and 683/673 for 2048 rows (707 strict wins). A 128-row base with two reversed
+appends has 113/112 (593 wins), but p95 rises from 487 to 539. The complete-update
+median improvement is about 1.5% at 2048 rows; these data do not support a major
+speedup or a consistent tail improvement. Original SS performance gaps remain open.
+
+The first probe used =rows= inside a POO =rows:= initializer. Generated native
+Scheme revealed a self-slot read and recursive evaluation, rather than the
+intended lexical capture. Preparing the copied source under a distinct lexical
+name outside the object expression fixes the probe. Those failed diagnostics
+and all experiment sources/logs remain in ignored =.cache/ascent/source-comparison/=.
+
+The uncollected Core allocation diagnostic returned zero differences; it is
+discarded rather than interpreted as zero allocation. A two-pair calibration
+collecting at both sampling boundaries produced positive counters, but is too
+small to qualify a resource claim. The full 100-pair, eight-updates-per-batch
+diagnostic reached 70 pairs before its unchanged 120-second deadline and exited
+124. No quantified memory reduction is admitted from it.
+
+The candidate's full native run also exits nonzero because the existing mixed
+ternary rule Case exceeds its original duration budget inside Core contract
+validation. Allocation diagnostics ran during this qualification, so contention
+cannot be excluded or asserted as the cause. No duration budget is relaxed.
+Together with the small whole-update median change and the adverse append-control
+tail, this evidence is insufficient to justify another production optimization.
+The candidate is removed. Production bytes remain identical to =93e26bc=;
+only the two semantic Cases and this study are retained. Further work should
+target complete source admission and contract validation with the same callback,
+snapshot ownership and failure-recovery constraints.
+
+On the restored production tree, the retained deletion module passes 12 Cases
+and exits 0 (44 seconds), and the isolated original rule module passes all 14
+Cases under its unchanged profiles and exits 0 (52 seconds). Both have native
+resolution, module, harness and final success markers. No competing probe from
+this turn runs during these checks. This does not erase the rejected candidate's
+failed full-suite receipt or claim a new complete-suite/performance pass. The
+production-source diff against =93e26bc= is empty; this commit retains tests and
+study only. Source policy has no new owner change; the existing typed-contract
+warning remains outside this test-only slice.
+

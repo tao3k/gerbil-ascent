@@ -1,0 +1,77 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: incremental view maintenance: DBSP and retained recursive view maintenance
+#+STATUS: paper reading; local transfer remains bounded
+#+DATE: 2026-10-01
+#+FILETAGS: :research:scheme-dsl:incremental:recursion:
+
+* Source identity
+:PROPERTIES:
+:CUSTOM_ID: dbsp-source
+:SOURCE_PDF: https://arxiv.org/pdf/2203.16684
+:DOI: 10.48550/arXiv.2203.16684
+:ACCESSED: 2026-10-01
+:END:
+
+Mihai Budiu, Frank McSherry, Leonid Ryzhyk and Val Tannen, /DBSP:
+Automatic Incremental View Maintenance for Rich Query Languages/,
+arXiv:2203.16684v1 (2022), [[https://arxiv.org/abs/2203.16684][record]] and [[https://arxiv.org/pdf/2203.16684][PDF]].
+
+* Evidence ledger
+:PROPERTIES:
+:CUSTOM_ID: dbsp-evidence
+:END:
+
+#+NAME: dbsp-source-ledger
+| Locator | Paper's claim or construction | Our bounded inference | What remains unproved here |
+|---------+-------------------------------+-----------------------+----------------------------|
+| §1, PDF pp. 1–2 | View snapshots and transaction changes form separate streams; a direct differentiation recipe may reconstruct the entire dataset | Distinguish one-shot before/after set difference from retained update execution | No DBSP stream semantics in Gerbil Ascent |
+| §1, PDF p. 2 | Bilinear joins need stored relation state for incremental work | Compare a retained native Session with fresh materialization on the same join/closure program | No storage or complexity equivalence to DBSP |
+| §5.1, PDF pp. 8–9 | Recursive Datalog is represented with an internal incremental fixed-point circuit | Keep fixed-point state in the native evaluator's semantic owner | Our engine is not compiled to a DBSP circuit |
+| §6, PDF pp. 9–10 | Incremental recursive programs preserve and adjust changes across input updates | Test multiple updates, duplicate additions and withdrawal against an independent closure | Our deletion path recomputes and lacks the paper's general transformation |
+
+The section and page locators refer to the PDF's printed numbering;
+the PDF viewer's zero-based page count may differ by one. The paper's
+broader language includes aggregation and nonmonotone recursion. The
+current positive operator graph implements neither its stream algebra
+nor that full breadth.
+
+* Design consequence
+:PROPERTIES:
+:CUSTOM_ID: dbsp-local-transfer
+:END:
+
+The existing =program/session.ss= already retains the admitted rule
+engine, source snapshots and indexes. The local
+[[file:e4-retained-session.org][retained operator experiment]] uses that owner for a first-class Scheme
+transformer, then records a separate fresh-materialization control.
+The finite =relational-op-delta-change= interpreter remains a semantic
+comparison; it does not acquire DBSP's proof or persistent state by
+renaming its old/new row sets.
+
+A meaningful improvement claim needs paired update sequences,
+including initial materialization and retained memory, plus complete
+result equality and an explicit supported grammar. The local probe now
+includes one chain sequence with initial materialization and eleven
+insertions, but does not measure memory and has noisy local timing.
+Source replacement recomputes rather than applying signed changes.
+
+* Falsifier
+:PROPERTIES:
+:CUSTOM_ID: dbsp-falsifier
+:END:
+
+If a retained update returns a different complete set from an
+independent finite closure, or if a failed update changes the last
+completed snapshot, the local Session integration fails its semantic
+gate regardless of timing. If matched lifecycle cost is not lower on a
+target workload, retain the semantic API without a performance claim.
+
+[[file:higher-order-change.org][Datafun higher-order change]]; [[file:e4-retained-session.org][local retained receipt]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Checked native Sessions now use dependency invalidation and affected-component rederivation; full prospective recomputation remains the opaque-provider fallback. This does not implement signed DBSP streams. The latest three-arm lifecycle measurement failed its progress gate; historical timings do not establish positive net benefit.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

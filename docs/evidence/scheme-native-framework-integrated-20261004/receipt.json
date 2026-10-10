@@ -1,0 +1,47 @@
+{
+  "build": {
+    "artifactSha256": "a9f8a1f06140a7813c4c8918ba035cf89413017e39861e198bf000412d5b435f",
+    "clock": "unix",
+    "configuredCores": 4,
+    "elapsedSeconds": 347.17911291122437,
+    "exitStatus": 0
+  },
+  "ciObservation": {
+    "formal": "success",
+    "oracleByods": "success",
+    "overall": "in progress at observation; no complete CI claim",
+    "run": "https://github.com/tao3k/gerbil-ascent/actions/runs/37200749678"
+  },
+  "filesSha256": {
+    "artifact.json": "e2387177f614ac341660a16842c4f78ef117e1d6e5312c85177f0d06c3419391",
+    "build.log": "bcd3f93ffdbc60e74739068eaa1f56773101bf2017ec2a87edf41ab0d8112503",
+    "python-io.log": "7a3302e3a761a7846c6432ce08e1b520c100aacb6f294d575f891d52e3dcbcbf",
+    "qualification.log": "3e7cee7f940bed3ad5155830dea1557e266386e2f12627c7210a097b703f9935"
+  },
+  "integrationUpstream": "834ff8c327f74827f9aeadebc774a769278122f3",
+  "modelCalls": 0,
+  "pythonIoTests": {
+    "cases": 5,
+    "exitStatus": 0
+  },
+  "pythonOwner": "provider byte IO, request receipts and process supervision",
+  "qualification": {
+    "cases": 138,
+    "exitStatus": 0,
+    "finalOkMarkers": 13,
+    "harnessMarkers": 13,
+    "modules": 13,
+    "suites": 13
+  },
+  "remainingGates": [
+    "three-arm retained runtime benefit",
+    "general compiler refinement",
+    "other provenance algebras",
+    "new authorized actual-model study",
+    "MRR integration after prior gates"
+  ],
+  "schema": "ascent.native-framework-migration",
+  "semanticOwner": "Scheme: artifact admission, inert prediction parsing, expected data and verdicts",
+  "sourceHead": "0e1141e94e9d578eb31e9cf4e0f1c3bac33a61d6",
+  "version": 1
+}

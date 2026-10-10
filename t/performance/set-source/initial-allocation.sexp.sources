@@ -1,0 +1,4 @@
+b2acb94fbcba1c4a8927aae50315049fe85a4a5d5e530a2e46e8041f9df667ed  program/evaluate.ss
+33050ef0d352cef5ea78fc28cd4eeceecc338a128e10e85006cef36c015ea136  t/qualification/ascent-set-source-reference-evaluate.ss
+081371b0b7e2103eb4f62e23ce383c4a9e0fff69bf377508d39a8bce1eff1b99  t/performance/set-source-allocation.ss
+031f6e6b687f106c8467faab6783a3363a4a17dbd6b658d591cb18e59baca2a9  tools/build-set-source-benchmark.ss

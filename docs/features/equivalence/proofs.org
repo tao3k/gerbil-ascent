@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Equivalence: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Provider concretization eqrel instance and per-insertion frontier (2026-10-06)
+
+Provider concretization sections 3.1 and 3.3 were checked against the primary paper: equivalence
+concretization is monotone, and semi-naive consumers must see newly implied
+facts through delta. =EquivalenceComponents= now constructs a reusable
+active-domain equivalence state, proves one-edge and arbitrary finite-history
+least closure, and proves exact emitted/total decomposition. This extends the
+canonical Set instance with a non-Set representation-semantic instance.
+
+The [[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][receipt]] records the complete Lean collection and native eqrel suite,
+including 512 graph inputs in both insertion orders, exact independent Floyd
+frontiers, budget rejection/retry, zero-budget replay and two non-singleton
+component merges. Lean test controls remain under =Tests=. Quint protocol
+ownership is unchanged. No production representation or runtime behavior was
+changed, and neither paper performance results nor finite observations prove
+universal native representation correspondence. MR remains deferred.
+
+

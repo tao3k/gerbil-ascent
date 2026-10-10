@@ -1,3 +1,10 @@
 .gerbil/
+.env
 target/
 manifest.ss
+
+# Execution logs and their sidecars must never be committed.
+*.log
+*.log.license
+.cache/
+.lake/

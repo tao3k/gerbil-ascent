@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Typed lexical lowering proof and native compiler correspondence
+#+DATE: 2026-10-04
+#+STATUS: lexical, recursive and finite-signature kernels proved; native refinement open
+
+The current [[file:scheme-actor-runtime-design.org][actor runtime decision]] adds scheduling, cancellation and
+publication obligations to the refinement plan. =AtomicBinding.lean= specifies
+ordinary association-list variable/literal/wildcard binding on equal-arity rows,
+proves declarative soundness/completeness and initial-binding preservation, then
+composes known-column key soundness with =StratifiedNegation.BucketRep= to prove
+indexed positive-atom equivalence. The native discriminator uses an independent
+total-assignment enumeration and canonical physical buckets. Actual decoding,
+fresh-variable association-list specialization, hash/cache ownership and round execution
+remain explicit obligations; this is not a complete compiler refinement.
+
+[[file:../packages/proofs/lean/PositiveSlots.lean][PositiveSlots]] adds the dense slot matcher refinement: first-occurrence
+lowering preserves ordinary binding success/failure, successful frames preserve
+head observations, and even failed candidates preserve the initialized prefix.
+This proves why partial fresh writes need no rollback. Compiled slot IDs fit
+the final dense extent. The native runner's 125-term corpus and a missing-fresh
+fault compare complete ordered emissions with ordinary binding on dirty frames.
+
+The finite-vector bridge now constructs =vectorFrame= directly from every
+caller vector. =vector_frame_rep= establishes its correspondence without an
+assumed frame invariant; =vector_write_rep= preserves every in-range cell after
+a write. =vector_run_refines= preserves both acceptance and the entire returned
+finite frame, including partial fresh writes on rejected candidates.
+=compiled_vector_refines= uses compiler-derived slot bounds for any vector whose
+capacity is at least the compiled extent, rather than only an exactly sized
+frame. Bounds failure is represented separately from candidate mismatch.
+The native public plan entry rejects undersized/non-vector frames before any
+provider read, callback or write. Oversized frames remain admitted, and unused
+tail cells retain their caller values. Executable Lean controls stay in
+=Tests/PositiveSlotsTests.lean=; the native discriminator checks early rejection,
+false-valued bindings, reuse and dirty tail preservation. This closes the finite
+slot-container model for the callback-free action grammar. Native compiled
+action decoding and its slot-bound extraction, Scheme scalar/list decoding, host
+expression and callback refinement, full compiler descriptor correspondence,
+and emitted least-model equality remain separate obligations. Quint continues
+to own publication and scheduling interleavings, not vector algebra.
+
+The unchanged seven-scenario complete-solve allocation gate exposed a source-only
+regression: constructing a full physical index owner despite an empty rule list.
+=program/index.ss= now returns a private immutable empty owner when the engine
+has no rules; cache advancement is inert, and accidental nonempty requirements
+or lookups fail explicitly. Source admission, versions, storage and budget
+checking retain their existing owners. Ordinary rule programs still receive
+independent mutable index roots. Allocation and time comparisons against the
+frozen association-list evaluator measure the accumulated slot-plan path; they
+do not isolate the new capacity check or establish an application speed gain.
+[[file:../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal]] composes that matcher into the complete raw-row traversal.
+=precompiled_refines= equates precompiled multi-atom plans with ordinary
+binding, preserving the entire ordered emission list. =walk_prefix= proves
+that recursive success returns and failed candidates preserve parent bindings;
+=walk_reuse= admits another traversal of the actual dirty returned frame.
+The native three-atom discriminator checks 81 ordered multihead emissions,
+provider visit counts and repeated dirty-frame runs against an independent
+ordinary binder.
+
+[[file:../packages/proofs/lean/IndexedPositiveTraversal.lean][IndexedPositiveTraversal]] now includes physical bucket selection and delta
+pivots in that same chain. =compiled_key_refines= proves that arbitrary ordered
+selected columns read the actual compiled bound/literal actions; fresh local
+slots cannot supply admitted keys. =precompiled_indexed_pivot_refines= proves
+whole ordered-output equality after the native 32-row threshold chooses a scan
+or canonical ordered bucket, with delta at exactly one body occurrence.
+=row_partition= and =row_pivots_iff= connect concrete row coverage to the
+frontier law. =DeltaCovers= allows old/delta overlap while requiring every new
+row in delta and excluding rows outside the current snapshot. =exact_covers=
+admits exact row differences as a stronger implementation choice. This is the
+concrete frozen-row specialization of BYODS section 3.2 properties (1)-(2),
+not a proof of arbitrary abstract lattices or concretization operators.
+=new_output_indexed_pivot= covers every new head through a compiled
+indexed pivot; =indexed_pivot_output_sound= excludes heads outside the full next
+snapshot. Projection collisions may rederive old heads and overlapping pivots
+require authoritative deduplication. Native qualification covers 30 layout /
+relation-alias / pivot combinations, canonical scalar and composite keys,
+custom-provider probes, four dirty starts, retained cache hits and fault controls.
+Symbol/hash-map decoding, native vector ownership and mutable cache publication
+remain representation obligations; custom provider membership alone does not
+promise canonical emission order.
+
+[[file:../packages/proofs/lean/IndexedIteration.lean][IndexedIteration]] carries those concrete indexed traversals into synchronous
+multi-rule Set history. =Schema= checks row arity against a declared domain and
+known columns at each lowering position; faithful finite enumeration supplies
+row admission and monotonicity. =batch_refines= preserves the entire ordered
+pivot stream while threading actual dirty returns. =returned_frame_valid= and
+=pivot_frame_independent= justify using those returns in later rounds.
+=full_step_exact= derives complete initialization; =pivot_after_full= derives
+all-old head coverage from history. =indexed_iterations_equal= equates every
+natural-number round with full ordinary-binding iteration, including multiple
+and duplicate heads. =stable_indexed= transports stability to all later rounds
+without asserting a termination cutoff. Native qualification retains one set
+of slot frames, all/delta versions and physical indexes for twelve rounds,
+compares each round to an independent full scan, and checks the final 102 paths
+against independent Floyd closure. Delta-only initialization is a required
+counterexample, and an extra stable round must admit nothing. Mutable native
+representation and actor publication remain outside this semantic history.
+
+
+The [[file:features/representation/compiler.org::*Equality-preserving scalar representation][scalar representation bridge]] now proves that faithful value encoding
+commutes with ordinary binding, first-occurrence compilation, dirty-frame slot
+execution, ordered observations and keys. The equality premise is explicit and
+has a noninjective counterexample. Native heap decoding and stable Scheme
+hash/equality correspondence remain separate from that representation algebra.
+
+* Feature modules
+
+
+Detailed design, proof and acceptance records are maintained by feature.
+Do not append cross-feature implementation history to this overview.
+
+- [[file:features/actor-scheduling/compiler.org][Actor Scheduling: compiler]]
+- [[file:features/assurance/compiler.org][Assurance: compiler]]
+- [[file:features/compiler-lowering/compiler.org][Compiler Lowering: compiler]]
+- [[file:features/equivalence/compiler.org][Equivalence: compiler]]
+- [[file:features/index-admission/compiler.org][Index Admission: compiler]]
+- [[file:features/lattices/compiler.org][Lattices: compiler]]
+- [[file:features/positive-evaluation/compiler.org][Positive Evaluation: compiler]]
+- [[file:features/qualification/compiler.org][Qualification: compiler]]
+- [[file:features/representation/compiler.org][Representation: compiler]]
+- [[file:features/shared-indexes/compiler.org][Shared Indexes: compiler]]
+- [[file:features/source-lifecycle/compiler.org][Source Lifecycle: compiler]]
+- [[file:features/transitive/compiler.org][Transitive: compiler]]

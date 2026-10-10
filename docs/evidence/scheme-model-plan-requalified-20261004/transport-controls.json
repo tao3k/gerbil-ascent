@@ -1,0 +1,62 @@
+[
+  {
+    "control": "literal",
+    "readable": true,
+    "nativeDatum": "2",
+    "correct": true
+  },
+  {
+    "control": "quote",
+    "readable": true,
+    "nativeDatum": "2",
+    "correct": true
+  },
+  {
+    "control": "assertion",
+    "readable": true,
+    "nativeDatum": "2",
+    "correct": true
+  },
+  {
+    "control": "quoted-assertion",
+    "readable": true,
+    "nativeDatum": "2",
+    "correct": true
+  },
+  {
+    "control": "wrong",
+    "correct": false,
+    "readable": true,
+    "nativeDatum": "2"
+  },
+  {
+    "control": "executable",
+    "readable": false,
+    "nativeDatum": "2",
+    "correct": false
+  },
+  {
+    "control": "ambiguous",
+    "readable": false,
+    "nativeDatum": "2",
+    "correct": false
+  },
+  {
+    "control": "reader-label",
+    "readable": false,
+    "nativeDatum": "2",
+    "correct": false
+  },
+  {
+    "control": "deep",
+    "readable": false,
+    "nativeDatum": "2",
+    "correct": false
+  },
+  {
+    "control": "oversize",
+    "readable": false,
+    "nativeDatum": "2",
+    "correct": false
+  }
+]

@@ -1,0 +1,95 @@
+{
+  "qualifiedBaseHead": "6458ec36d0d86ad3126850172572747654bae55a",
+  "scope": "Custom index build/extend arguments and validated lookup packets own outer and row spines; field values remain shared.",
+  "sources": {
+    "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+    "table/provider.ss": "5d3a29788f39d4bb2d55d44bde1a7ec893165203c4da5a7c4b413d39565a4283",
+    "program/index.ss": "2c9601457f6f4f4e9e576472ca1acc00f095e8e38ebd8d111358060005dd6531",
+    "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-byods-index-test.ss": "53c759c9eed1a37020e1abd2c80a6067e1e92f9a14cffb320163bd2406f3f6d1",
+    "t/qualification/ascent-index-entry-test.ss": "5c62a765687fbc650d40ba87755ae9222e5ead3b9003713ccd2367c55329c859",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "f730de0b958133bca04318460bcca1897cb7a19c60f2e7d53ccd1846f7162b64",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 7,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "88df34df2b1eec0b8156d09238d7e4dff0b6e6621042c3042bb4ccd494a8b80b"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 22,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "72c4bb6d134419d651d1aa94fd6b2c02fc490a8e6ba5defaf1fe227cbd4cf919"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "6458ec36d0d86ad3126850172572747654bae55a",
+    "productionSourceHashes": {
+      "table/access.ss": "7d39828036c38153e1d0be8458e7000da2277c2e1101df351738bd660e91fca8",
+      "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+      "program/index.ss": "d2b800005fda618b75319756730d0ef367e7b40cc562aa657f4251bbe9f428cd",
+      "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c"
+    },
+    "testSourceSha256": "53c759c9eed1a37020e1abd2c80a6067e1e92f9a14cffb320163bd2406f3f6d1",
+    "exitCode": 70,
+    "observedRetryRowCount": 31,
+    "expectedRetryRowCount": 32,
+    "logSha256": "dfff77c5e5dcdb91f9584131b7ced435be48ac79b1a5a801a6f65a4db13d02b9",
+    "qualification": "Rejected native result: mutation before build failure corrupted accepted source row spines."
+  },
+  "discriminators": [
+    "Failed mutating custom build cannot change committed source rows; same Session retries to all 32 independent consequences",
+    "Retained build row cells and outer tails cannot mutate source roots or admitted lookup packets",
+    "Retained extend row cells cannot mutate the accepted append batch",
+    "Invalid private index state rejects foreign rows; new version rebuilds from intact roots",
+    "All/delta ownership, malformed/cyclic row rejection, coverage, unique aggregation, header isolation and callback order pass"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Sections 3.1, 3.3 and 4: concretization, injection and index enumeration",
+    "transfer": "Physical index dispatch cannot modify authoritative facts outside storage/source admission; admitted candidate packet spines must survive retained receiver mutation.",
+    "boundary": "Concrete ownership repair under stable nested fields; not general Provider refinement or native proof extraction."
+  },
+  "cost": "Custom build/extend and admitted lookup packets copy outer and row spines in O(batch size times row width). Trusted canonical and engine-owned shared paths stay unchanged.",
+  "remaining": [
+    "Nested field value stability and equality laws",
+    "General storage callbacks and arbitrary host closure effects",
+    "Universal native-to-proof extraction"
+  ],
+  "developmentFailures": [],
+  "modelCalls": 0,
+  "rebaseIntegration": {
+    "baseHead": "128815e78b8c5a67d90e2ace88b2e858d91f911b",
+    "changedPaths": [
+      "docs/evidence/scheme-directed-frontier-20261006/receipt.json",
+      "docs/evidence/scheme-selected-activation-layout-20261006/receipt.json",
+      "docs/evidence/scheme-selected-activation-layout-20261006/receipt.json.license",
+      "docs/scheme-compiler-proof-bridge.org",
+      "docs/scheme-research-proof-audit.org",
+      "t/performance/selected-activation/fixture.ss",
+      "t/qualification/ascent-index-build-test.ss",
+      "t/qualification/ascent-selected-activation-test.ss"
+    ],
+    "scope": "Parallel documentation and unrelated selected-activation/index-build tests and fixture only. Every qualified runtime/test/harness source hash must remain unchanged after rebase. Aggregate digest describes the qualification base."
+  }
+}

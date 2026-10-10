@@ -1,0 +1,1002 @@
+{
+  "artifactSha256": "af54bf52ea09c0513e86da9ec614477e1b8bda57f25eb90f29fccb13c7f85503",
+  "compilerImportRoots": 8,
+  "completedCompilerImports": 3573,
+  "modelCalls": 0,
+  "nativeScorerControls": 10,
+  "nativeTasks": 24,
+  "offlineValidationExitStatus": 0,
+  "planSha256": "bd7aba6a2eaf22251bb7771a7c0edddada636d6a64cdc2359e149fd6470339f5",
+  "priceVerification": {
+    "date": "2026-10-04",
+    "peakInputUsdPerMillion": 0.3,
+    "peakOutputUsdPerMillion": 1.2,
+    "url": "https://api-docs.deepseek.com/quick_start/pricing/"
+  },
+  "privateTruthSentToModel": false,
+  "reconstruction": "ASCENT module bytes at sourceHead; lowered core/types and unchanged task bytes here; plan cases contain complete module closure and source/task/input hashes. No private expected datum in model context.",
+  "schema": "ascent.model-plan-native-preflight",
+  "sourceFiles": 38,
+  "sourceHead": "e732b2b76e558257fb70bfff75ea108e7e0f2a3a",
+  "status": "historical prepared snapshot; superseded for latest implementation by function-valued fixed-point changes; zero paid calls",
+  "supersedesPlanSha256": "594b9442da7af3fb190ab5b317725397f0081c558187d0ee31ec8b7c6bae8936",
+  "version": 1,
+  "certifiedRuntimePlan20261006": {
+    "sourceHead": "77fbabec443a4c7c22fbbc02febbb843f0fe0e85",
+    "model": "deepseek-flash",
+    "baseUrl": "https://api.deepseek.com",
+    "maxCalls": 60,
+    "retries": 0,
+    "maxInputBytes": 655360,
+    "maxOutputTokens": 8192,
+    "budgetCeilingUsd": 13,
+    "conservativeMaximumUsd": 12.404735999999998,
+    "priceSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "peakInputUsdPerMillion": 0.3,
+    "peakOutputUsdPerMillion": 1.2,
+    "framingTokenPadding": 1024,
+    "requestReadTimeoutSeconds": 45,
+    "requestWallDeadlineSeconds": null,
+    "providerProgressContract": "Actual response/reasoning/text events renew the idle deadline; keepalive lines do not; no absolute cutoff while computation progresses",
+    "inputContract": "actual compiler-derived module sources and exact compiled Scheme expression with missing expected datum; no system instructions, examples, semantic recipe, answer prefill, tools or repair",
+    "feedbackContract": "only actual initial output and post-response current native score/truth; no corrective instruction",
+    "outputContract": "raw retained; unique inert literal/quoted assertion normalization without oracle; ambiguity, EOF and executable leaves reject",
+    "primaryMetric": "completed provider response and correct native-scored normalized datum; all scheduled attempts remain in denominator",
+    "producerHashes": {
+      "python/src/ascent_test_support/model_study.py": "388c1a7cc31e1a70095c24dd2b3464e824c388a2ef44748e62773836a8017cf5",
+      "python/src/ascent_test_support/supervision.py": "c62b7a2fb66fd5cb81e961ea4cbacba8578e2fccad825ebd318737a34a167133",
+      "t/harness/prediction.ss": "9035ed21ec181d2855ac281068746ad2141e4b96436ddaa061b9ae6fdf8bc53d",
+      "tools/model-source-closure.ss": "26e63ae42ab7e986170dd695fcf38cec31d21e43825429bc0accf59d90df1c6f"
+    },
+    "modules": {
+      "core/types.scm": "82c49e203e035928d79e8bd65cb2ae459a722d649046f9a756f6a38989f81b91",
+      "core/types.ssi": "8adfe3ca37541ece111af19d3e854dd9d6a4165d89a53b0d666e1d49b4292f9d",
+      "core/types~0.scm": "548f7fc7c7cb36ba6f365a82bb37fb307dabc853713f810f0c04dca83725c46a",
+      "gerbil-ascent/candidate/certificate-limits": "f98287811fe559534af82deaf5eb4f1cec3b99919334180568447a4f2ed34a1c",
+      "gerbil-ascent/candidate/closure-index": "ef174e5258dc8addcded8a1c3597af6132cf4ea59c3f6b110ca182ec0803f30c",
+      "gerbil-ascent/candidate/datum": "4c48712f7588734e4061e4375a5cceb8fde91094f3134b4ec90ebcb2afc04067",
+      "gerbil-ascent/candidate/finite-evidence": "3c4bcf52f01dd8d3f136da9c67598e8f2659f49da39e4dcc58b7647a32745da5",
+      "gerbil-ascent/candidate/funs": "6c5b9d17ce2fcbdcae763db275cb5c51c997a79cf323f64d7a6eb86c8ba6bfef",
+      "gerbil-ascent/candidate/nonmembership": "d57c593890dabe8685ff1dd1c2f73248b64ade94167b87e7688911ebab5bce6c",
+      "gerbil-ascent/candidate/program": "e39bedf46e9a70551ad97f445d2e0d8b3a106dfbb10e44b0614a93fc4be8ca7a",
+      "gerbil-ascent/candidate/program-identity": "c23f4ce210c938e614acd61ef150293fcf5c90815bb9292045c27f485f3e700b",
+      "gerbil-ascent/candidate/provenance": "47b7d1a08507975eae0909948f20507c1860f1b9bffee9b6a5a255dda4228e07",
+      "gerbil-ascent/candidate/reasoning": "77c3c36464dbab13ce2a94bac99b7b91037cee17091318ab56bd2cf189189518",
+      "gerbil-ascent/candidate/stratified-producer": "99b4731310f0363f70f016c15e9780f8a364a837790a35203346a2dedd31dcc5",
+      "gerbil-ascent/candidate/stratified-proof": "765c9cc6a52e6ae32a6e857cd5eecf2c89851a5351359834f74e6126a0d6951a",
+      "gerbil-ascent/candidate/stratified-provenance": "c113fe0a13946af8d561f0748708c097342c992bc0a850200caa0f0a7c348f55",
+      "gerbil-ascent/candidate/types": "7e83ce8a87183116ca820fb4c51284e9b3a19b524629009cf972957bc8e44c87",
+      "gerbil-ascent/core/dependency-graph": "797d32b47c195d1f26d0ea95d7ed4b5e73f66f4f7c096fa22c066cf35d489ce7",
+      "gerbil-ascent/core/expression-plan": "8c0c99f5896c91fbb1a4d14842bf271c3447912e8d23c984bea0fcf34ccd9955",
+      "gerbil-ascent/core/positive-plan": "d0f1bbfaa9c3fbd985387b5cebe73e12fcfe5b7a3ede7783c2fb760ef2110d80",
+      "gerbil-ascent/core/rule-bindings": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+      "gerbil-ascent/core/rule-semantics": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+      "gerbil-ascent/program/activation": "d4189e85f55d3f2bb178e89134c19e5232ee0bd72f9a3f19a1b8116febbfccc4",
+      "gerbil-ascent/program/actor-round": "93a21cf4238c6375357facb80412037dc371b35d6ff9e6997a3deded46ca259e",
+      "gerbil-ascent/program/admission": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+      "gerbil-ascent/program/aggregators": "397717ef7aa985dbabfba3c39058209ecb19c6c915b29ca67d9a438d1f936e3d",
+      "gerbil-ascent/program/analysis": "d9e7b862273d6234bae7d495785dc5629656c0d17c9baca10276de9e7292b827",
+      "gerbil-ascent/program/component-plan": "b7cc4a3f5af4b054f37ac6cbecc74324736b5554911734098d36f82218063117",
+      "gerbil-ascent/program/component-worker": "bd47c1f33b65d11bd57bbbdef7796bd0ab34a4eae1fc44622b164adaafb8e608",
+      "gerbil-ascent/program/evaluate": "6dcdd57cb26df0b91db29a9a43511e12124e12922d5bdbb900bf5a4ec7b13729",
+      "gerbil-ascent/program/finite-arithmetic": "530225d833ba4d0db0acb0cd6e1ed4b929e9dd9754324bc29c2e6142fe51c508",
+      "gerbil-ascent/program/higher-order": "e55601ee7788b073c72509e5710bb9e99986ff49798c651c69487f9fe9019498",
+      "gerbil-ascent/program/index": "7201a25cc42b24629699d0c20551717f360834cac72bc81029dbb8f61558ca95",
+      "gerbil-ascent/program/objects": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+      "gerbil-ascent/program/operator": "5f59d9fae8b81d9bb3d6a2b787adcf0aaeb93519767a958f6bf1826a2195bbbe",
+      "gerbil-ascent/program/operator-analysis": "e802ee07e81c7f5e62b91804501a22a3accbf0f62974de335c5981ad0315e29e",
+      "gerbil-ascent/program/operator-descriptor": "5808eb59ea5d13939f35324d58948cb1b5555864b0d38199c6e09395a4fa0c62",
+      "gerbil-ascent/program/operator-measurement": "1278db1fbf65b905631bcbfc50eb6c947f6790b74be192b1f533f59a1c552ef1",
+      "gerbil-ascent/program/operator-reference": "ebc538b85e7fcc1273bd9cc84659d99cc4b54e6548538b90cbe2bef2cb05f709",
+      "gerbil-ascent/program/planning": "338a3e269dd796a3756855ff172b38814fd7ed95f487c840ad333abcb4242078",
+      "gerbil-ascent/program/positive-components": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+      "gerbil-ascent/program/result": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+      "gerbil-ascent/program/reuse": "39093b88322c9484c634e1bd5f3509b8ae9e1d23d0f3483c727b8a55bdb5cf40",
+      "gerbil-ascent/program/scheme-admission": "599404695b27f72505428d78d7a793af7dfcb9c2527b070b7244e54f3a708fce",
+      "gerbil-ascent/program/scheme-admit": "1ca8572d20f044150b26d508bcdfd873aa40dd013e4bb48cd2900b6e84f1e92a",
+      "gerbil-ascent/program/scheme-checked": "280bbd8a11cc37283fce6a785271effa35b506b4c1c8028af9f65e8f252b3688",
+      "gerbil-ascent/program/scheme-language": "db6c7cf5ce3944e04153b720514a51a0450a537cbdcff490ac1cae4908f5ffaa",
+      "gerbil-ascent/program/scheme-query": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+      "gerbil-ascent/program/scheme-session": "836131ffe572c21a74d43e813a347512b17a0a0572f58128f2d06be3471b3823",
+      "gerbil-ascent/program/scheme-snapshot": "876ed111dc52953ade5222210c8028e65e81218cfdfeb8d3f915acd04eefc071",
+      "gerbil-ascent/program/session": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+      "gerbil-ascent/program/source-log": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+      "gerbil-ascent/program/types": "be5a32c0fd98bf60c5af8685b68182ce5aa52bda7e9d1a80040ff24e057ace93",
+      "gerbil-ascent/program/update-selection": "92d9f669ec75a42eeea49c2291a49b9eccbdaf903cd7a32399ff8db0df0d01d0",
+      "gerbil-ascent/table/access": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+      "gerbil-ascent/table/eqrel": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+      "gerbil-ascent/table/funs": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+      "gerbil-ascent/table/index-sharing": "2fec3b87f5dd83e9afb1d288234f7f887b16ff5d288806fd1feb40ca2e91ad62",
+      "gerbil-ascent/table/provider": "2b5d250f0c3d2ff72dbb438833e2919d3e18029e0991e540a8507c40a14483aa",
+      "gerbil-ascent/table/storage": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02",
+      "gerbil-ascent/table/trrel": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+      "gerbil-ascent/table/trrel-uf": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e"
+    },
+    "cases": [
+      {
+        "id": "higher-input-initial",
+        "family": "higher-input",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469822,
+        "inputSha256": "17fe1fc5784788a100350e639a2c28ae105279348bfa8d8931db91c01284660f",
+        "taskSha256": "5c1467b500cc0069136d4efa0db58580509486b0d77a4acc70fc8b86d685ef10",
+        "expectedSha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "higher-return-initial",
+        "family": "higher-return",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469773,
+        "inputSha256": "2e6bc195966cca9d9384118a043343946e74132ae50f4a524afc7895fd1aa65f",
+        "taskSha256": "50ed9f721f7968fc672ce7ff36ee93d5d03266ebef7ca86af53374af159f34d1",
+        "expectedSha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "higher-instances-initial",
+        "family": "higher-instances",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469852,
+        "inputSha256": "ad45582fa6ba10613e7a2033bfa93ce268f42cece66405c71a79a5783e21451d",
+        "taskSha256": "e6250c0901f02b11fd2dbf3d667a568aa09ca262ea7373c631600a8f072ded40",
+        "expectedSha256": "205931acc78d7bb7098eb98dc96cc3a4462853b48da05e338048aa7cc078398f",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "finite-mapping-initial",
+        "family": "finite-mapping",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469576,
+        "inputSha256": "b623aa3bbe0bc1ad7c8b342d7c1849bbe89dfb1b8fd1793f56f005eb20370f01",
+        "taskSha256": "a430b09ee19f90a31a53461e9d6a71ec785e44a9234d01cb3afa851427d8fa7a",
+        "expectedSha256": "06e9d52c1720fca412803e3b07c4b228ff113e303f4c7ab94665319d832bbfb7",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "finite-fix-initial",
+        "family": "finite-fix",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469768,
+        "inputSha256": "406a49bffc97ebc5dec9375bb04485ad84ab8a976706bae623ae545d02f7253a",
+        "taskSha256": "9cf85400c02ca488e9306ef5de7f4d541fc90a6eee52877d49fa1c6fdb07ba60",
+        "expectedSha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "domain-runtime-initial",
+        "family": "domain-runtime",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469466,
+        "inputSha256": "737b7fa1e1ca50cb9579f238c6e09a0c65875ea558f00f7da14fa7df3507148a",
+        "taskSha256": "a08623350be38e63b7332c3407f178d9ecee59882c6ee4161cfc0ab87c51e27b",
+        "expectedSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "retained-delete-initial",
+        "family": "retained-delete",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401987,
+        "inputSha256": "8ba03685f9bf9fc7bfd9a3ad3089d89582b773f4e84de704264b66fdf829cc06",
+        "taskSha256": "bfe9fd3481a0c3c7fac0fd764604ee7488ab51f433cdd3f0b794c855d71ce8ab",
+        "expectedSha256": "2ff88b3897c6ef5dfe057099a40d85e313f2eccff4d2d57434131124fb8a9f02",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-negation-initial",
+        "family": "retained-negation",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401884,
+        "inputSha256": "3d4ddfb743580648c4f2740a6e208254a6247f08b79ac2ef4f721344afb9a9f1",
+        "taskSha256": "5006355f9d1810db1210905d21853b2dd8ccbacecb4f1a3fd3bdc3c4fa03f543",
+        "expectedSha256": "cf2dad5ca5c290f2aec97276219e13607cb024d687d4204a9bd518bbb24d3921",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-reduction-initial",
+        "family": "retained-reduction",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401919,
+        "inputSha256": "005789ec6be974d88cc9d8db334c4ec1f14654885093e91d7b75e56d09652634",
+        "taskSha256": "bebbe6a57d32d3314826b7a04452b3b84f3050c3756f0dfafdd7df5d442506d0",
+        "expectedSha256": "ca4dba38b329ec7b32b8f84c0043fcef4c990f2ca2dfc8601aa4b6d54322bfc3",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-lattice-initial",
+        "family": "retained-lattice",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401855,
+        "inputSha256": "cf8e57bd58987e3c04c7310b8b6437339f497a60441dce7f5ac72b748be7cf7f",
+        "taskSha256": "5a62e6756ab9c73df90eb919e825c5a5c41caa5e5ecbad8d29f8530f16ad9b8a",
+        "expectedSha256": "98a753ccb38f4918a6602f97638492ce1b9dd59f2f43fc92f72074afddd51b99",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "recursive-provenance-initial",
+        "family": "recursive-provenance",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/candidate/reasoning",
+          ":gerbil-ascent/candidate/program",
+          ":gerbil-ascent/candidate/finite-evidence",
+          ":gerbil-ascent/candidate/stratified-provenance"
+        ],
+        "inputBytes": 568155,
+        "inputSha256": "af9a7c830ae7ac280cb66e0d69192e2de80b71dc5755353af0de617ad30d1720",
+        "taskSha256": "7b482036901a23385a16ebc5415da7bfd42d52fc93b379e72a68a23c6deb07c2",
+        "expectedSha256": "64ea937cb12b5e4c16db6f64ac0ccd89c677ecf4b972c2276f48847d9b6deceb",
+        "projectDependencyCount": 52,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "745541285e58e67b35d57d1a330ef0e6f3622bc1e9fc69a5050783220c9a2051"
+      },
+      {
+        "id": "stratified-provenance-initial",
+        "family": "stratified-provenance",
+        "variant": "initial",
+        "imports": [
+          ":gerbil-ascent/candidate/reasoning",
+          ":gerbil-ascent/candidate/program",
+          ":gerbil-ascent/candidate/finite-evidence",
+          ":gerbil-ascent/candidate/stratified-provenance"
+        ],
+        "inputBytes": 568381,
+        "inputSha256": "34cc35c4cb9fea41cefa509eb04da4b1844bcdb09ceabd3bc1f9e563aaa49e4e",
+        "taskSha256": "cad58153f44eb898d1934fc7261e3048e557a7048dd28fefccf5c7467d555928",
+        "expectedSha256": "e20d7c3c9897b1f719f914885f6083f9f74f7dc2fc7b15365af46bb64727f990",
+        "projectDependencyCount": 52,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "745541285e58e67b35d57d1a330ef0e6f3622bc1e9fc69a5050783220c9a2051"
+      },
+      {
+        "id": "higher-input-transfer",
+        "family": "higher-input",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469822,
+        "inputSha256": "e26bf99f8221e44e34435cb9e59826341474d0f40bc5f5ba85edfcf003c8b1e6",
+        "taskSha256": "0bc4de45239621a99a0ede90deb5be7d088c6983ad0d80fa83eb473a8cbb71d9",
+        "expectedSha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "higher-return-transfer",
+        "family": "higher-return",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469773,
+        "inputSha256": "3948ca3baae4f1a1e48b0104238817709b17922e81e3e4eb31413711cf762f83",
+        "taskSha256": "eb9f585fa0d6d2dbeaa45558b71a2bba113243295da498ad020905c202b4c993",
+        "expectedSha256": "06e9d52c1720fca412803e3b07c4b228ff113e303f4c7ab94665319d832bbfb7",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "higher-instances-transfer",
+        "family": "higher-instances",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469852,
+        "inputSha256": "6ffa37ae409c0dafaa53864f5f91246b0b306986e0129d1558e847a1b4a6e96f",
+        "taskSha256": "b1ae6dc8f134ec4ae52e60402888f257997c4d1021a090fcaafd18a012b4149a",
+        "expectedSha256": "b31159fa944b3201eca4817df0824f5080fb75bf08a07c1fb09fffd29e2b7f63",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "finite-mapping-transfer",
+        "family": "finite-mapping",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469576,
+        "inputSha256": "cf60eb41af7021e1728190efc7750d8c6d25068b0af34597ba9b2c610a2f6f44",
+        "taskSha256": "2bd3ef890271bc0a7d41bf3fe4a704ad8e80db164febdc61fcd0a7c5bd44b906",
+        "expectedSha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "finite-fix-transfer",
+        "family": "finite-fix",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469758,
+        "inputSha256": "d7ee2420fc6ad2c964384e1ecb6dfdacbee8151089b8e88846845f4a815374ad",
+        "taskSha256": "a261600f3811117261f75fefa5596715fbe5e9b7de9d16b9391e63cc9b1c428b",
+        "expectedSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "domain-runtime-transfer",
+        "family": "domain-runtime",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/higher-order",
+          ":gerbil-ascent/program/scheme-language"
+        ],
+        "inputBytes": 469466,
+        "inputSha256": "ee164a8bfabb4bc110339b7054e2308ca72aa1bab33646c3b8cf7843cf1e8e61",
+        "taskSha256": "a4fe2f36960fde1c702e1a6de66f62aa774d8ffe28e75b4cbecb9a41269bb855",
+        "expectedSha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "projectDependencyCount": 45,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "a63c0ded5deb64b5735c6a254279f1d7e4cb232debd5fd25e979daba46925dbc"
+      },
+      {
+        "id": "retained-delete-transfer",
+        "family": "retained-delete",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401982,
+        "inputSha256": "6311121586d0bb0d768229efcfe0a38109f03db4f3ac867c3fb1039cf42c29a7",
+        "taskSha256": "0f63f800a52a0685f1f46d086d1b7a096790319ea11d5b01dd8afdfdceb284b7",
+        "expectedSha256": "cb7c29864746913aa1e0770690cd7690a9ac20c2928a95deaaf686ae9a0bd504",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-negation-transfer",
+        "family": "retained-negation",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401884,
+        "inputSha256": "54ca6195a5b2108eb99a1ec8a1c0e272e9fac32a3f87cb1e826c5ed6150a0d58",
+        "taskSha256": "44f1ec650bfcd98066c4267167ae1d09f7e9da2ac7cca2f85abd0733ee72dc94",
+        "expectedSha256": "be5f9b8a6fa067f22cdaabf119108c333b3bba9ea25968a021d6fe58d39a5b02",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-reduction-transfer",
+        "family": "retained-reduction",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401919,
+        "inputSha256": "6874e768716c1b5cc289f021c373cca3aa804809c55848d9e5d865468b0de2de",
+        "taskSha256": "5dbbc14eeecf767e7e151873bc862bf542cd26bcdf5542190589b8877a4770f3",
+        "expectedSha256": "86f7bd6e65d01f0fde620b0b5f28541f384d1c2108c3047f6a0eea1c7c3eed0c",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "retained-lattice-transfer",
+        "family": "retained-lattice",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/program/scheme-language",
+          ":gerbil-ascent/program/session",
+          ":clan/poo/object"
+        ],
+        "inputBytes": 401861,
+        "inputSha256": "81fb46a86baf3b279a1d45b8c99eabda9b593e339385c89fe4db04c4b83c824c",
+        "taskSha256": "45bb30aedb7cc2cbbc4e5360ea2096e9882c7622efe94cd15695693a00adf07f",
+        "expectedSha256": "72896439caa642ba1572e3be3bddae6abbcdf6a94c08d3839f17c04b4190b915",
+        "projectDependencyCount": 38,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "1ac392b384d2e788fa5a0910ee617f7207d30bdecde1a6ec7065ce29a09e1e47"
+      },
+      {
+        "id": "recursive-provenance-transfer",
+        "family": "recursive-provenance",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/candidate/reasoning",
+          ":gerbil-ascent/candidate/program",
+          ":gerbil-ascent/candidate/finite-evidence",
+          ":gerbil-ascent/candidate/stratified-provenance"
+        ],
+        "inputBytes": 568159,
+        "inputSha256": "b5807e0a81f6b10e808b580e7c1188aa3fbf574507b7b992a54f4ad4a199c974",
+        "taskSha256": "abad444d0b3103a562ec90244c5399950b6a7720ee27cd97e6d93fe08339af38",
+        "expectedSha256": "b7791026ce0c34d11d185bc278696c967a4c0a5ab65344707dfa4dd3cfab65a1",
+        "projectDependencyCount": 52,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "745541285e58e67b35d57d1a330ef0e6f3622bc1e9fc69a5050783220c9a2051"
+      },
+      {
+        "id": "stratified-provenance-transfer",
+        "family": "stratified-provenance",
+        "variant": "transfer",
+        "imports": [
+          ":gerbil-ascent/candidate/reasoning",
+          ":gerbil-ascent/candidate/program",
+          ":gerbil-ascent/candidate/finite-evidence",
+          ":gerbil-ascent/candidate/stratified-provenance"
+        ],
+        "inputBytes": 568376,
+        "inputSha256": "443944005c830d162d5faea206e0e5a53dcdc95ec8b35b7f65af97e8fd7b5109",
+        "taskSha256": "46bb933e923e950ceffe24267a6be32a2658b0d2837fefd3b98fcae4f6569517",
+        "expectedSha256": "b825b0330e929b81b250f739382162ea3575d4cdf9902dc2c2180e4c749b84bb",
+        "projectDependencyCount": 52,
+        "compilerLoweredDependencyFiles": [
+          "core/types.ssi",
+          "core/types.scm",
+          "core/types~0.scm"
+        ],
+        "dependencyInventorySha256": "745541285e58e67b35d57d1a330ef0e6f3622bc1e9fc69a5050783220c9a2051"
+      }
+    ],
+    "order": [
+      {
+        "arm": "initial-none",
+        "case": "higher-input-initial",
+        "family": "higher-input",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "higher-input-initial",
+        "family": "higher-input",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "higher-input-transfer",
+        "family": "higher-input",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "higher-input-transfer",
+        "family": "higher-input",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "higher-input-transfer",
+        "family": "higher-input",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "higher-return-initial",
+        "family": "higher-return",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "higher-return-initial",
+        "family": "higher-return",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "higher-return-transfer",
+        "family": "higher-return",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "higher-return-transfer",
+        "family": "higher-return",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "higher-return-transfer",
+        "family": "higher-return",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "higher-instances-initial",
+        "family": "higher-instances",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "higher-instances-initial",
+        "family": "higher-instances",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "higher-instances-transfer",
+        "family": "higher-instances",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "higher-instances-transfer",
+        "family": "higher-instances",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "higher-instances-transfer",
+        "family": "higher-instances",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "finite-mapping-initial",
+        "family": "finite-mapping",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "finite-mapping-initial",
+        "family": "finite-mapping",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "finite-mapping-transfer",
+        "family": "finite-mapping",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "finite-mapping-transfer",
+        "family": "finite-mapping",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "finite-mapping-transfer",
+        "family": "finite-mapping",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "finite-fix-initial",
+        "family": "finite-fix",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "finite-fix-initial",
+        "family": "finite-fix",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "finite-fix-transfer",
+        "family": "finite-fix",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "finite-fix-transfer",
+        "family": "finite-fix",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "finite-fix-transfer",
+        "family": "finite-fix",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "domain-runtime-initial",
+        "family": "domain-runtime",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "domain-runtime-initial",
+        "family": "domain-runtime",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "domain-runtime-transfer",
+        "family": "domain-runtime",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "domain-runtime-transfer",
+        "family": "domain-runtime",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "domain-runtime-transfer",
+        "family": "domain-runtime",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "retained-delete-initial",
+        "family": "retained-delete",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "retained-delete-initial",
+        "family": "retained-delete",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "retained-delete-transfer",
+        "family": "retained-delete",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "retained-delete-transfer",
+        "family": "retained-delete",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "retained-delete-transfer",
+        "family": "retained-delete",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "retained-negation-initial",
+        "family": "retained-negation",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "retained-negation-initial",
+        "family": "retained-negation",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "retained-negation-transfer",
+        "family": "retained-negation",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "retained-negation-transfer",
+        "family": "retained-negation",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "retained-negation-transfer",
+        "family": "retained-negation",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "retained-reduction-initial",
+        "family": "retained-reduction",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "retained-reduction-initial",
+        "family": "retained-reduction",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "retained-reduction-transfer",
+        "family": "retained-reduction",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "retained-reduction-transfer",
+        "family": "retained-reduction",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "retained-reduction-transfer",
+        "family": "retained-reduction",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "retained-lattice-initial",
+        "family": "retained-lattice",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "retained-lattice-initial",
+        "family": "retained-lattice",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "retained-lattice-transfer",
+        "family": "retained-lattice",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "retained-lattice-transfer",
+        "family": "retained-lattice",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "retained-lattice-transfer",
+        "family": "retained-lattice",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "recursive-provenance-initial",
+        "family": "recursive-provenance",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "initial-high",
+        "case": "recursive-provenance-initial",
+        "family": "recursive-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "recursive-provenance-transfer",
+        "family": "recursive-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "recursive-provenance-transfer",
+        "family": "recursive-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "recursive-provenance-transfer",
+        "family": "recursive-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-high",
+        "case": "stratified-provenance-initial",
+        "family": "stratified-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "initial-none",
+        "case": "stratified-provenance-initial",
+        "family": "stratified-provenance",
+        "reasoningEffort": "none"
+      },
+      {
+        "arm": "transfer-history",
+        "case": "stratified-provenance-transfer",
+        "family": "stratified-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-fresh",
+        "case": "stratified-provenance-transfer",
+        "family": "stratified-provenance",
+        "reasoningEffort": "high"
+      },
+      {
+        "arm": "transfer-feedback",
+        "case": "stratified-provenance-transfer",
+        "family": "stratified-provenance",
+        "reasoningEffort": "high"
+      }
+    ],
+    "families": [
+      "higher-input",
+      "higher-return",
+      "higher-instances",
+      "finite-mapping",
+      "finite-fix",
+      "domain-runtime",
+      "retained-delete",
+      "retained-negation",
+      "retained-reduction",
+      "retained-lattice",
+      "recursive-provenance",
+      "stratified-provenance"
+    ],
+    "nativeTransportControls": 10,
+    "planSha256": "d065179832f1319e9613fcfacbf31da428436d54da310f626dcdff9124bdc511",
+    "nativeArtifactBinding": "ad3ce95da0e08bfbc9ef236e490882a87b846b65300b23d5eab7e2573ab9e4f4",
+    "prepareExitCode": 0,
+    "validateExitCode": 0,
+    "independentTruthCases": 24,
+    "actualSchemeModules": 59,
+    "compilerLoweredCoreFiles": 3,
+    "modelCalls": 0,
+    "authorizationStatus": "Pending new explicit source externalization and fee authorization",
+    "scope": "Current finite DSL comprehension; no model gain, full higher-order change compiler, full application replication or MRR integration closure claim",
+    "publicationContract": "Compact receipt of the frozen plan: module/input/task/truth identities and call order; repeated compiler dependency inventories are bound by per-case hashes rather than duplicated here. Full frozen plan bytes remain the authority for approval."
+  }
+}

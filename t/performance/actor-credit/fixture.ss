@@ -1,0 +1,31 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round!)
+        (rename-in (only-in :gerbil-ascent/t/performance/actor-credit/reference gerbil-ascent-run-actor-round!)
+                   (gerbil-ascent-run-actor-round! old-round))
+        (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components!)
+        (rename-in (only-in :gerbil-ascent/t/performance/actor-credit/coordinator-reference gerbil-ascent-run-positive-components!)
+                   (gerbil-ascent-run-positive-components! old-coordinator))
+        :gerbil-ascent/t/performance/component-index/fixture)
+(export credit-stream credit-stream-truth credit-closure credit-request credit-truth)
+(def (credit-stream old? n)
+  (let ((rows []) (checks 0))
+    ((if old? old-round gerbil-ascent-run-actor-round!) (vector 'stream) '(a b) 2
+     (lambda (task emit! checkpoint!)
+       (for-each (lambda (k) (checkpoint!) (emit! task (list k))) (iota n)))
+     (lambda (task row) (set! rows (cons (cons task row) rows)))
+     (lambda () (set! checks (+ checks 1)) #f))
+    (vector rows checks)))
+(def (credit-stream-truth result n)
+  (and (= (length (vector-ref result 0)) (* 2 n))
+       (andmap (lambda (task)
+                 (equal? (list-sort < (map cadr (filter (lambda (row) (eq? (car row) task)) (vector-ref result 0)))) (iota n))) '(a b))))
+(def (credit-request) (component-index-request (component-index-program 64 #t #f)))
+(def (credit-truth) (component-index-truth 64 #t #f))
+(def (credit-closure old? request)
+  (let (rows [])
+    ((if old? old-coordinator gerbil-ascent-run-positive-components!)
+     (vector-ref request 3) (vector-ref request 1) (vector-ref request 2) 2
+     (lambda (atom row) (set! rows (cons row rows))) (lambda () #f))
+    rows))

@@ -1,0 +1,101 @@
+[
+  {
+    "name": "recursive-chain-16",
+    "old-p50-bytes": 46912,
+    "new-p50-bytes": 24224,
+    "paired-wins": 996,
+    "old-p50-ns": 18000,
+    "new-p50-ns": 16000,
+    "old-p95-ns": 54000,
+    "new-p95-ns": 48000,
+    "time-paired-wins": 907
+  },
+  {
+    "name": "recursive-chain-256",
+    "old-p50-bytes": 583968,
+    "new-p50-bytes": 208000,
+    "paired-wins": 991,
+    "old-p50-ns": 295000,
+    "new-p50-ns": 257000,
+    "old-p95-ns": 684000,
+    "new-p95-ns": 651000,
+    "time-paired-wins": 945
+  },
+  {
+    "name": "recursive-chain-1024",
+    "old-p50-bytes": 2267616,
+    "new-p50-bytes": 761152,
+    "paired-wins": 981,
+    "old-p50-ns": 1170000,
+    "new-p50-ns": 1016000,
+    "old-p95-ns": 3026000,
+    "new-p95-ns": 2448000,
+    "time-paired-wins": 915
+  },
+  {
+    "name": "indexed-fanout-50-1",
+    "old-p50-bytes": 89568,
+    "new-p50-bytes": 88960,
+    "paired-wins": 997,
+    "old-p50-ns": 87000,
+    "new-p50-ns": 87000,
+    "old-p95-ns": 209000,
+    "new-p95-ns": 209000,
+    "time-paired-wins": 361
+  },
+  {
+    "name": "indexed-fanout-100-100",
+    "old-p50-bytes": 9450848,
+    "new-p50-bytes": 9450240,
+    "paired-wins": 930,
+    "old-p50-ns": 10692000,
+    "new-p50-ns": 10909000,
+    "old-p95-ns": 34664000,
+    "new-p95-ns": 35947000,
+    "time-paired-wins": 414
+  },
+  {
+    "name": "indexed-wide-40-256",
+    "old-p50-bytes": 1708720,
+    "new-p50-bytes": 1708112,
+    "paired-wins": 986,
+    "old-p50-ns": 1972000,
+    "new-p50-ns": 1972000,
+    "old-p95-ns": 3116000,
+    "new-p95-ns": 3090000,
+    "time-paired-wins": 518
+  },
+  {
+    "name": "source-only",
+    "old-p50-bytes": 12624,
+    "new-p50-bytes": 12592,
+    "paired-wins": 996,
+    "old-p50-ns": 2000,
+    "new-p50-ns": 2000,
+    "old-p95-ns": 3000,
+    "new-p95-ns": 3000,
+    "time-paired-wins": 132
+  },
+  {
+    "name": "retained-append-16",
+    "old-p50-bytes": 328816,
+    "new-p50-bytes": 319008,
+    "paired-wins": 970,
+    "old-p50-ns": 106000,
+    "new-p50-ns": 105000,
+    "old-p95-ns": 300000,
+    "new-p95-ns": 303000,
+    "time-paired-wins": 433
+  },
+  {
+    "name": "retained-append-64",
+    "old-p50-bytes": 831760,
+    "new-p50-bytes": 792768,
+    "paired-wins": 951,
+    "old-p50-ns": 251000,
+    "new-p50-ns": 252000,
+    "old-p95-ns": 294000,
+    "new-p95-ns": 296000,
+    "time-paired-wins": 397
+  }
+]

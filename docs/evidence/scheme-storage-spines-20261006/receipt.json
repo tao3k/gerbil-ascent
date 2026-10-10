@@ -1,0 +1,127 @@
+{
+  "qualifiedBaseHead": "41e9a441c75435e75e05485717047349eea77655",
+  "scope": "Immutable schema selects owned custom StorageProvider argument/result row spines for initialization, rule emission and retained append; four native receivers keep direct dispatch.",
+  "sources": {
+    "table/storage.ss": "c8b77d4d30bd907c457b99192ee3414ddfbd085c8c38402e39ecb079f7f57b59",
+    "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "table/eqrel.ss": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "t/qualification/ascent-storage-batch-test.ss": "bc17c8825386e13aa4868555730afb1bd3735b3472af59debaa8ca3ef4038284",
+    "t/qualification/ascent-byods-index-test.ss": "f144c332c49deaf7cc223266733d7e22e5bfd3b3e26eba17d50c4eeea5b6fd8a",
+    "t/performance/storage-batch/fixture.ss": "4ee509500a98ac87798eb44460f21c5cfc866cff05919acb17c55b9e1ac6201a",
+    "t/performance/storage-batch/reference.ss": "4cf369a3830cc523cf48ccd1de99e3180a153fbe9d8ed0e135b0bfaaef2d31bc",
+    "t/performance/storage-batch/reference-evaluate.ss": "44e99690ee2d85b929c27a6f1f3fa8b3756f71ad878d6737ca7d83c1b025456e",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "f546216df402e562023c79111b8c37fb4968468e3ce112fa16523a87cfbe00c4",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "suiteCases": 12,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "35f3f2b81bbb57b311284e83203bcf14b1a9f6a35ed04a2a7898f8777d5e6d72"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 8,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "0ae4c0ed1a4ed0333350cfb748771c67e6ba82fd20bb08346f4cd64c083e14d8"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "41e9a441c75435e75e05485717047349eea77655",
+    "productionSourceHashes": {
+      "table/storage.ss": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02",
+      "program/analysis.ss": "d9e7b862273d6234bae7d495785dc5629656c0d17c9baca10276de9e7292b827",
+      "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+      "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78"
+    },
+    "testSourceSha256": "19b10a31a7e71b114f66927a8c186683184f33385e682989a99dfa029a76e9e1",
+    "exitCode": 70,
+    "publishedRowsObserved": [
+      [
+        99
+      ],
+      [
+        2
+      ]
+    ],
+    "publishedRowsExpected": [
+      [
+        1
+      ],
+      [
+        2
+      ]
+    ],
+    "sourceRowsObserved": [
+      [
+        99
+      ],
+      [
+        99
+      ]
+    ],
+    "sourceRowsExpected": [
+      [
+        1
+      ],
+      [
+        2
+      ]
+    ],
+    "logSha256": "4da329098b44daee152c90e2e5d507d61a82e22a75a06996c81653a2e37e0bb7",
+    "qualification": "Two ownership cases rejected native results. Those ownership case bodies are unchanged in the final suite; rule, shape and native-identity controls were added afterward."
+  },
+  "discriminators": [
+    "Retained custom output and argument row spines cannot rewrite prior results or source declarations",
+    "Initialization, retained append and ordinary rule-produced storage facts share one dispatch seam",
+    "Proper packet and bounded whole-batch row shape admission precede stored-field callbacks; improper/cyclic rows and cyclic outer packets reject",
+    "Native Set/eqrel/trrel/trrel_uf identities retain original extension procedure; derived receivers use owned dispatch",
+    "Nested field identity and identical all/pending root identity remain preserved",
+    "Existing duplicate order, budget refusal, Session recovery and native BYODS composition pass"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Sections 3.1 and 3.3: injection and total/delta concretization",
+    "transfer": "Concrete Scheme storage dispatch cannot lend writable source or published fact spines to arbitrary receivers.",
+    "boundary": "Ownership transfer condition only; not arbitrary Provider completeness or private-state rollback."
+  },
+  "cost": "Custom calls copy distinct all/pending snapshots, the input row and the shape-admitted returned batch; cost scales with rows times widths. Native receivers keep direct dispatch.",
+  "remaining": [
+    "Nested field value stability and equality laws",
+    "Provider private-state exception atomicity",
+    "Arbitrary host closure effects",
+    "General concretization completeness and native-to-proof extraction"
+  ],
+  "developmentFailures": [
+    {
+      "logSha256": "2d2c03200bec8a0b25284afb8337f4a114aed49e795c3bea8ad370787a1c4b25",
+      "exitCode": 70,
+      "cause": "Test fixture invoked gerbil-ascent-make-engine with zero arguments; fixed before semantic counterexample run."
+    },
+    {
+      "logSha256": "be80fc4a261416a5fc99c88a96f379f71687d9dc14978b25b470bcc4e500ce80",
+      "exitCode": 70,
+      "cause": "Malformed-packet fixture attempted append before first run; fixed without changing production source."
+    }
+  ],
+  "modelCalls": 0
+}

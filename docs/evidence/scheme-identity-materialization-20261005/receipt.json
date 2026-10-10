@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "qualifiedDate": "2026-10-05",
+  "sourceBase": "34ea7e884aa6c25ef4ee6d51815d62adc8803557",
+  "qualifiedCommit": "3fc19575d4e2224a9810bf2cef35207aae8e576b",
+  "native": {
+    "qualificationExit": 0,
+    "artifactSHA256": "157d3e32e87e528f2cb6904fbdb7cc4f592d9446be97e455cca903c244e37d67",
+    "sourcesUnchanged": true,
+    "sourceCount": 365,
+    "artifactCheckedBeforeAndAfter": true,
+    "rebuiltThisSlice": false,
+    "qualifiedModules": [
+      "scheme-higher-order"
+    ],
+    "counts": {
+      "cases": 33,
+      "suites": 1,
+      "modules": 1,
+      "harnesses": 1,
+      "finalOK": 1
+    },
+    "bounds": {
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "maxHeap": "1G"
+    },
+    "historicalFullQualification": "../scheme-row-lifecycle-20261005/receipt.json"
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "5abf300e6d2a9c03c040f91bc57cfbec121ebdef32de72a64eaba30ff8054035",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "b4981b34cc98bb99644baae79038b4b749982361975851edddf0776311f17d0f",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "tlaFilesSHA256": {
+      "packages/proofs/tla/PositiveNonmembershipSession.cfg": "0b6788a5a7514564eda6587b45016901bc8b8e9e5be937f3808807dc1be53408",
+      "packages/proofs/tla/PositiveNonmembershipSession.tla": "8a5327d8788dacbe9ad944f3c2972905a1c60d4c1a05578d34f51e47cd47a2a8",
+      "packages/proofs/tla/SessionTransaction.cfg": "e812dc6a3a5fb3320eb681e2e40d717d2376cdcca258cf473b97b7edb1052490",
+      "packages/proofs/tla/SessionTransaction.tla": "986027c07c3657f51556cb1965e9af54ff18a5b87a028118308b0c59d0a9f7fe"
+    },
+    "newTheorems": 8,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "early: AtomicSnapshot",
+      "stale: NoStaleCommit"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "scope": "Mathematical checked-column/tuple/set interpretation and source-only IR materialization composed with closed lexical lowering; independently rerun existing native module",
+  "remaining": [
+    "Native iota/list-ref and scalar equality/hash correspondence",
+    "Scheme descriptor and emitted-rule refinement",
+    "Exact per-term domains and synthetic mapping-table mutation contract",
+    "Measured model and runtime benefit"
+  ],
+  "excludedAttempts": [
+    {
+      "phase": "lemma-name diagnostic probe",
+      "exit": 1,
+      "reason": "Unavailable Lean library names; not qualification"
+    },
+    {
+      "phase": "first full formal run",
+      "exit": 1,
+      "reason": "Lean rewrite transparency failed in the final composition theorem; replaced by explicit equality transitivity and complete formal gate rerun"
+    }
+  ],
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "logsPublished": false
+}

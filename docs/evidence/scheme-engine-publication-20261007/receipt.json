@@ -1,0 +1,84 @@
+{
+  "qualifiedBaseHead": "b7abe1b1e9c901852da9e461a28f458e65545714",
+  "scope": "Engine index advance failure quarantines raw run/timed run and ordinary/single-Set append; Checked Session reconstructs the committed source cut. Primitive physical cache retry remains separate.",
+  "sources": {
+    "program/evaluate.ss": "586a901fc31a53365b5612cea12d5276390c5bd579bc8c3dd22c9936c2d21c38",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "table/provider.ss": "6727d87e9f705ca24a459b413c5babf37fab1749c24572043f6405dd98f5483e",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/harness/native-child.ss": "2abe4cc3e429fe3e45d7c491dde943db3d5868fafe6d50962e71f2d7f3f52809",
+    "t/qualification/ascent-storage-batch-test.ss": "ec12778a63c4248dc162b17ee39be520037e196fcd802045eff23e2d0d9f31b2",
+    "t/qualification/ascent-index-entry-test.ss": "80eb2f771d2a82e0971014a4650a054667be7b69081df1c568d32425d5942daf"
+  },
+  "trackedSchemeSourceCount": 545,
+  "trackedSchemeSourceDigest": "09407f9b0f9adcd808209b9f710ae174d4b43e1c31ec1538adce9bca239edef1",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "red": {
+    "productionBaseHead": "df0f7163272abbfc72a91435c6521bef0dd36729",
+    "exitCode": 70,
+    "observation": "Raw engine accepts a second run after Set source index extension mutated then raised.",
+    "expected": "ASCENT engine publication requires source replay",
+    "actual": "unexpected-success",
+    "logPath": "/private/tmp/ascent-engine-publication-red.log",
+    "logSha256": "f06e72bce115fe03a7d6076f64a905e54257fa7f6fb27d843fab02fdf5b6b230",
+    "fixtureBoundary": "Initial added source-flush case; final fixture additionally covers single-Set specialization and Session recovery."
+  },
+  "developmentFailure": {
+    "logPath": "/private/tmp/ascent-engine-publication-final-storage.log",
+    "logSha256": "81e565a4eeaaea1240c2c5da4be37e2bba1df01db63f2ac86ce4317b15fa7179",
+    "exitCode": 70,
+    "cause": "Incomplete form in expanded single/multi-relation fixture, corrected before integrated acceptance."
+  },
+  "policy": {
+    "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just check-policy",
+    "exitCode": 0,
+    "errors": 0,
+    "findings": 17,
+    "logPath": "/private/tmp/ascent-engine-publication-integrated-policy.log",
+    "logSha256": "851808c6ef53190139001443f6cbb1f3b067826c81beb130c1e0aeb130933c93"
+  },
+  "native": [
+    {
+      "module": "t/qualification/ascent-storage-batch-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "cases": 19,
+      "explicitOK": true,
+      "moduleOK": true,
+      "harnessOK": true,
+      "logPath": "/private/tmp/ascent-engine-publication-integrated-storage.log",
+      "logSha256": "1e2d4121f6bdb4b74de7759cee1dfe139c9129906be5104b9908f58fdddf3c3c"
+    },
+    {
+      "module": "t/qualification/ascent-index-entry-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "cases": 23,
+      "explicitOK": true,
+      "moduleOK": true,
+      "harnessOK": true,
+      "logPath": "/private/tmp/ascent-engine-publication-integrated-index.log",
+      "logSha256": "6328e14b6e60e484ad1ff6a863f076885269fd498aa412ba5ccdfc8279877999"
+    }
+  ],
+  "totalNativeCases": 42,
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 3.3 total/delta concretization and Section 4 indexes",
+    "inference": "Physical index version revocation alone does not restore engine membership and complete fact publication after a callback exception."
+  },
+  "limits": [
+    "Focused local native evidence, not full remote CI or full inventory.",
+    "No new Lean/TLA theorem or performance result.",
+    "Engine wrapper covers extension failure at index advance; arbitrary external effects and mutable nested values remain outside the guarantee.",
+    "Raw replacement clears the new failure flag only after fresh candidate evaluation; graph/custom storage readiness is independently checked."
+  ]
+}

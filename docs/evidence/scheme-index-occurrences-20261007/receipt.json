@@ -1,0 +1,161 @@
+{
+  "qualifiedBaseHead": "93e81c1c3645197578073fd5481bf7195f16fd0b",
+  "scope": "Custom physical index coverage preserves admitted row occurrences while rejecting excess repetitions and missing keyed occurrences, allowing duplicate-bearing pending Session replay.",
+  "sources": {
+    "program/evaluate.ss": "50a76e2bd3d5f18a8c463526730b4daeed015810ba6bbd85cf4504c00991740e",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+    "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/index.ss": "1143af51ad1213a022cc771448a2a05b653b651ee01747c35f3d3e6db532f96f",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/qualification/ascent-storage-batch-test.ss": "1bd6804154d95cc0e658be26fb86c470b1054565259de30a8c4bd3f1d6f65fe4",
+    "t/qualification/ascent-timeout-test.ss": "8f8f6fa3c9fa70f9d7e452735ed670572f9fa45892bb60ec652dd530ff3ed236",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2",
+    "t/qualification/ascent-index-entry-test.ss": "7949c7d0775da51727a37a2b5e4f58bfc98e6029cb831da3094a5f6674bf4233"
+  },
+  "trackedSchemeSourceCount": 545,
+  "trackedSchemeSourceDigest": "c23a67f3b0efaef7b063bb4b355255831fa5de42190e98e581e7e3668d9a043e",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "red": {
+    "trackedSchemeSourceDigest": "9765c59fb68f2aa8167bfc422626afab247715d8695a6aae0ad40f2871e1f982",
+    "filesChangedToGreen": [
+      "program/index.ss",
+      "table/provider.ss"
+    ],
+    "productionSourceHashes": {
+      "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+      "table/provider.ss": "6727d87e9f705ca24a459b413c5babf37fab1749c24572043f6405dd98f5483e"
+    },
+    "index": {
+      "path": "/private/tmp/ascent-index-occurrences-red-index.log",
+      "sha256": "f4c4b85cbe0bea0ead74481ad9b5518842942bc7d5b06774f49867cb25c040d0",
+      "exitCode": 70
+    },
+    "indexRootError": "ASCENT index provider returned duplicate row for a represented duplicate occurrence",
+    "storage": {
+      "path": "/private/tmp/ascent-index-occurrences-red-storage.log",
+      "sha256": "e71b18c8621cb7bc7d725fdd5f30680eaef3e4bd190b2d31584c6f7187862a38",
+      "exitCode": 70
+    },
+    "storageActualBothTargets": [
+      "buffered Set index failure",
+      [
+        32,
+        1,
+        false,
+        [],
+        [
+          [
+            7
+          ]
+        ],
+        32
+      ]
+    ]
+  },
+  "green": {
+    "index": {
+      "path": "/private/tmp/ascent-index-occurrences-green-index.log",
+      "sha256": "1b272de66087510b4e6bdbb601fccd3cda3d2b24b52c7bf016f98beb54f2898a",
+      "exitCode": 0,
+      "nativeCases": 24,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "storage": {
+      "path": "/private/tmp/ascent-index-occurrences-green-storage.log",
+      "sha256": "a21ea4b71b51d977343dd3b2a40d580bab2942aae8da2392e85aa29ab7ac131b",
+      "exitCode": 0,
+      "nativeCases": 23,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "timeout": {
+      "path": "/private/tmp/ascent-index-occurrences-green-timeout.log",
+      "sha256": "b0a9e42e8ddd5337a1124612245fb7b17b78f94ad2909d0f95ec3d46853b6231",
+      "exitCode": 0,
+      "nativeCases": 12,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "sourceDeletion": {
+      "path": "/private/tmp/ascent-index-occurrences-green-deletion.log",
+      "sha256": "a8f4380877409528daa6b90a7eef1d93163b971aea801d03d03a7f5721854664",
+      "exitCode": 0,
+      "nativeCases": 26,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "storageActualBothTargets": [
+      "buffered Set index failure",
+      [
+        34,
+        2,
+        true,
+        [],
+        [
+          [
+            7
+          ]
+        ],
+        32
+      ]
+    ],
+    "nativeCaseTotal": 85,
+    "controls": [
+      "Canonical/custom enumeration parity for represented duplicates",
+      "Excess duplicate and missing occurrence rejection with alias recovery",
+      "All incremental multiplicity with independent delta witness",
+      "Same-relation and cross-relation append failure pending replay"
+    ]
+  },
+  "policy": {
+    "path": "/private/tmp/ascent-index-occurrences-final-policy.log",
+    "sha256": "28a7ecc2e5863f2fbd6fa60a0f5c1405fa7ac195852a5e342639f057edf7afd0",
+    "exitCode": 0,
+    "findings": 17,
+    "errors": 0
+  },
+  "failedPolicyAttempt": {
+    "path": "/private/tmp/ascent-index-occurrences-policy.log",
+    "sha256": "234fcfbe70ae823098672eb47c6f430cffe5a334b2e8305957121a83aa5fc3cb",
+    "exitCode": 70
+  },
+  "failedPolicyReason": "Concurrent test-lane flock deadline exceeded; final policy rerun serially with unchanged source and timeout.",
+  "research": [
+    {
+      "source": "https://kmicinski.com/assets/byods.pdf",
+      "sections": [
+        "3",
+        "3.3"
+      ],
+      "use": "Logical concretized support is distinct from admitted host row enumeration."
+    },
+    {
+      "source": "https://www.cs.ucdavis.edu/~green/papers/pods07.pdf",
+      "sections": [
+        "2",
+        "3"
+      ],
+      "use": "Natural-number tuple multiplicity inspires the finite snapshot counting witness."
+    }
+  ],
+  "limits": [
+    "No recursive bag Datalog, provenance polynomial evaluation, theorem or performance claim.",
+    "Custom providers must enumerate every requested-key source occurrence; no silent deduplication.",
+    "Field stability and successful fresh replay remain required; arbitrary external callback effects are not rolled back."
+  ],
+  "integratedRemoteRevision": "384ab64ca41a2912a0ec9da802923f81f6b61ae1",
+  "integrationScope": "Latest remote revision changes only Provider-owned view design documents; qualified Scheme sources remain identical."
+}

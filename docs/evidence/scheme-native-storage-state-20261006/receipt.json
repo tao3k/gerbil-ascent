@@ -1,0 +1,118 @@
+{
+  "qualifiedBaseHead": "d5028218ecbc17550af97bb92c746e211885399d",
+  "scope": "Stateful native graph engine dispatch participates in readiness through full publication; raw native algorithms keep original state and borrowed rows.",
+  "sources": {
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/evaluate.ss": "81df482fbcfbd8ed139f22db94123237839c89dd55e53e3d5e02ceb8f8e115ee",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "table/eqrel.ss": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "t/qualification/ascent-storage-batch-test.ss": "0e03e956234d75583e1f4b10b5f9971f077e4d15e642a0993ab72d6a30f79cfb",
+    "t/qualification/ascent-byods-index-test.ss": "f144c332c49deaf7cc223266733d7e22e5bfd3b3e26eba17d50c4eeea5b6fd8a",
+    "t/performance/storage-batch/fixture.ss": "4ee509500a98ac87798eb44460f21c5cfc866cff05919acb17c55b9e1ac6201a",
+    "t/performance/storage-batch/reference.ss": "4cf369a3830cc523cf48ccd1de99e3180a153fbe9d8ed0e135b0bfaaef2d31bc",
+    "t/performance/storage-batch/reference-evaluate.ss": "44e99690ee2d85b929c27a6f1f3fa8b3756f71ad878d6737ca7d83c1b025456e",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "t/qualification/ascent-eqrel-program-test.ss": "f7a4c4cf1d9608aa323c16431379cba2bb1897505404ab62501eb1b9809312f4"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "e47d43c5454d2ab50c10cf71048432be4ccca4206ac85368a7d5caaf932dfc17",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "suiteCases": 18,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "18303794bc65e69a583b66492bbe57a6daaeca94cffba1b6c40f9ffb12abf171"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-eqrel-program-test.ss",
+      "exitCode": 0,
+      "suiteCases": 26,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "7ee766de4ed7d20c428d20da0923cadfc2b93abf746dbc5a19800420c75c471a"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 8,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "6565ddeb7dab73b7314426d9cf66fe45f232b04d4f8783119d7d6248cf9bed81"
+    }
+  ],
+  "counterexample": {
+    "productionHead": "d5028218ecbc17550af97bb92c746e211885399d",
+    "productionSourceHashes": {
+      "table/storage.ss": "f2300368fe7150caf0f55a508c167f5db8e40dec195d5c56cc4bcba1a8235ab9",
+      "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",
+      "program/evaluate.ss": "81df482fbcfbd8ed139f22db94123237839c89dd55e53e3d5e02ceb8f8e115ee",
+      "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c"
+    },
+    "testSourceSha256": "3bc529dfccb3bc22dbaccf387a2ff9398c9534ec7e02210100866ec0b4323430",
+    "exitCode": 70,
+    "provider": "eqrel",
+    "sourceEdge": [
+      1,
+      2
+    ],
+    "observedUnsafeRetryRows": [],
+    "independentConcreteRows": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "expectedRetryDiagnostic": "ASCENT storage state requires source replay",
+    "logSha256": "9342115388b4bbe973f319a7ca3f51ce8db8a91a7fa111d30ee0ea3249f7f085",
+    "qualification": "Field rejection occurred after successful private injection. Unsafe raw engine retry returned zero rows instead of refusing uncertain state. Final qualification retains this case and adds native Session and late-guard controls."
+  },
+  "discriminators": [
+    "Native eqrel/trrel/trrel_uf field rejection revokes raw engine reuse; fresh source reconstruction produces explicit independent two-node relations",
+    "All three native graph states remain tentative after injection followed by a later rule guard failure; fresh solves recover complete three-node relations",
+    "Session recovery preserves prior results and reconstructs native state after rejected stored fields",
+    "Raw native constructor and procedure identity remain unchanged; engine schema selects guarded graph dispatch while canonical Set stays direct",
+    "Raw graph frontier enumeration, budget refusal/retry, retained Session qualification and custom/BYODS controls pass"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 3.3: total/delta concretization must deliver represented facts",
+    "transfer": "Successful private graph injection cannot certify engine publication when later admission or rule callbacks may reject the update.",
+    "boundary": "Engine readiness/replay extends kernel preflight; not arbitrary rollback or a new DLDS theorem."
+  },
+  "cost": "One readiness record per stateful relation plus readiness checks; native graph dispatch adds a guarded call but does not copy all/pending/input/output row packets. No performance improvement is claimed.",
+  "remaining": [
+    "Stable nested fields and arbitrary external effects",
+    "Private representation rollback and general lattice laws",
+    "Universal native-to-proof extraction"
+  ],
+  "developmentFailures": [],
+  "modelCalls": 0
+}

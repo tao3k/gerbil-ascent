@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Steensgaard: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Steensgaard full-input correspondence and metric correction (2026-10-07)
+
+The paper application gate now includes the pinned 47,069-fact OpenJDK corpus
+and exact 51,022-member partition identity across native Scheme, the actual
+Rust Ascent eqrel program and independent partition saturation. The native
+published-result visitor retains keyed frozen routes and owns emitted row
+spines; small explicit/implicit and retained controls check selection and
+callback mutation isolation. The full dataset has no effective store/load
+unions, so the positive small applications remain necessary discriminators.
+
+Lean adds constructed component-square expansion and partition-equality laws,
+with two equal-count/different-partition controls under =Tests=. Quint retains
+publication/read/lifetime protocol ownership. Full-input execution is concrete
+native evidence; it does not discharge the universal native extraction premises
+of either proof family. The GitHub scale job repeats source verification and
+complete partition comparison for the submitted revision.
+
+The resource observer discovered non-monotone VM accounting differences on
+correct full results. CPU and direct process RSS/footprint are distinct from
+that counter. Neither its positive values nor historical small-fixture ratios
+admit physical allocation savings. A constructor-byte observer remains a
+separate resource gate. The current acceptance scope and negative measurements
+are recorded in
+[[file:acceptance.org::*Complete Steensgaard partition acceptance (2026-10-07)][the closure section]] and
+[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][the receipt]].
+

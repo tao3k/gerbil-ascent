@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "qualifiedDate": "2026-10-05",
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "45de17a952ce33d2f6b2c88ff532e7bd2f29e3a65872258465e1860e737405e9",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "tlaFilesSHA256": {
+      "packages/proofs/tla/PositiveNonmembershipSession.cfg": "0b6788a5a7514564eda6587b45016901bc8b8e9e5be937f3808807dc1be53408",
+      "packages/proofs/tla/PositiveNonmembershipSession.tla": "8a5327d8788dacbe9ad944f3c2972905a1c60d4c1a05578d34f51e47cd47a2a8",
+      "packages/proofs/tla/SessionTransaction.cfg": "e812dc6a3a5fb3320eb681e2e40d717d2376cdcca258cf473b97b7edb1052490",
+      "packages/proofs/tla/SessionTransaction.tla": "986027c07c3657f51556cb1965e9af54ff18a5b87a028118308b0c59d0a9f7fe"
+    },
+    "newTheorems": 6,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "early: AtomicSnapshot",
+      "stale: NoStaleCommit"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "native": {
+    "newModulesRun": 0,
+    "newArtifactBuilt": false,
+    "historicalEvidence": "../scheme-primitive-domains-20261005/receipt.json",
+    "historicalEvidenceSHA256": "5c8099f0239e3679886ba92ec11fbbb70d52200a6c512e222134c4c988e18b07",
+    "unchangedRelevantOwnersSHA256": {
+      "program/operator.ss": "014d8f4c952e39fe67fe3c4ca9884850e75e74eade371e72650c6453d94886de",
+      "program/higher-order.ss": "0944e5f3d52e0eb7e3cc278fe96502f1247bd8cb9e90fdad74e3d81e2cf2d821",
+      "t/qualification/scheme-operator-test.ss": "db28087da61c1701fd6b92dde670063c851bcbcf5a2ab1cd0567ed868e45b654"
+    },
+    "scope": "Historical 25-Case native operator qualification; owner byte equality is checked, not full current-source qualification"
+  },
+  "implementationMap": {
+    "owner": "program/operator.ss",
+    "seams": [
+      "fresh-variables",
+      "variable-atom",
+      "lower-operator-graph ordinary project branch"
+    ],
+    "model": "Ascent.Lowering.ProjectionRule",
+    "proofs": [
+      "complete_body_length",
+      "complete_body_lookup",
+      "bind_complete_row",
+      "emitted_projection_sound",
+      "emitted_projection_complete",
+      "emitted_projection_iff_descriptor"
+    ]
+  },
+  "premises": [
+    "Finite variable identities model distinct input-column variables",
+    "Checked column indices reference the complete input body pattern",
+    "Proper row arity is checked independently of rule membership"
+  ],
+  "remaining": [
+    "Gerbil symbol/variable decoding and gensym freshness",
+    "Actual native rule matching and incremental execution",
+    "Optimized two-body projected-join branch",
+    "Whole descriptor-to-grammar translation and recursive feedback"
+  ],
+  "excludedAttempts": [],
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "logsPublished": false,
+  "sourceBase": "edd4ee3672f62d3d12b47a9ceb2d32854be9cff8",
+  "qualifiedSnapshotCommit": "a7ba5cdceb498d14fefc771e38e28697f6809c5c",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "caf2b4969d50254fd771f9df9396a3039eeea8fcab0b4e0614370816dfbde540",
+    "applyOptions": [
+      "--unidiff-zero"
+    ],
+    "reconstructionVerified": true,
+    "scope": "One changed Lean file on sourceBase; docs and receipt do not alter formal code"
+  },
+  "upstreamIntegration": {
+    "commit": "541d5b5",
+    "scope": "Index lifecycle implementation update outside historical native qualification; formal owners unchanged"
+  }
+}

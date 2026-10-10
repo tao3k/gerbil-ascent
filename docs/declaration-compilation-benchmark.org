@@ -1,0 +1,84 @@
+#+TITLE: Declaration compilation: matched local receipt
+#+DATE: 2026-10-04
+#+FILETAGS: :scheme:performance:qualification:
+
+* Scope
+
+This receipt compares =ce866473962cb0dc9fa12d98547f154b8a043591= with
+=a97762d11d3fa0e036d2fbd14ef45d88cf01e60b=. The latter moves
+declaration planning out of the evaluator closure and groups active rule
+heads once per rule. Both source states were built with the pinned package
+dependencies and =Gerbil 2591dcd on Gambit dcd677c=.
+
+The probe [[file:../t/performance/declaration-compilation-probe.ss][declaration-compilation-probe.ss]] constructs 8, 32 and 64 strict
+strata using one source row and a chain of negations. For each size it
+preconstructs 44 programs, warms the one reused program, then samples 40
+times. =cold= builds a fresh engine from a distinct program, =warm= builds
+from the same program and its cached declaration plan, =state= supplies
+the already prepared analysis and schema, and =solve= builds and runs an
+engine with that prepared analysis. Every engine is run and its final rows
+are checked after its timed construction; =solve= checks rows inside its
+timed section. The timer excludes program construction, Gerbil startup and
+test printing. =cold= includes schema validation, source admission and
+engine state creation in addition to declaration planning; it is not a
+standalone compiler measurement.
+
+Two runs alternated process order: head then parent, followed by parent
+then head. Each run produced 40 samples at each size and a final =OK= on
+both commits. The table gives medians in microseconds; raw logs were
+captured outside the repository under =/private/tmp/declaration-*-final*.log=.
+A later validation run added an explicit assertion that the last relation
+is in the requested stratum; both commits again returned =OK=, with
+64-stratum cold medians of 1616 and 1113.5 microseconds respectively.
+
+#+NAME: declaration-compilation-p50
+| run | strata | parent cold | head cold | parent warm | head warm | parent state | head state | parent solve | head solve |
+|-----+--------+-------------+-----------+-------------+-----------+--------------+------------+--------------+------------|
+|   1 |      8 |       178.0 |     175.5 |          33 |        32 |           27 |         27 |          187 |        186 |
+|   1 |     32 |       670.0 |     562.5 |          86 |      88.5 |         79.5 |         81 |         1456 |       1458 |
+|   1 |     64 |      1564.5 |      1074 |         159 |       163 |        151.5 |      152.5 |       5099.5 |       5113 |
+|   2 |      8 |       178.5 |     175.5 |          32 |        32 |           27 |         27 |          183 |        187 |
+|   2 |     32 |       666.5 |       554 |          87 |        86 |           81 |         79 |         1458 |       1456 |
+|   2 |     64 |        1568 |    1072.5 |         162 |       161 |          153 |        152 |         5099 |       5082 |
+
+In this synthetic 64-stratum case, the head's cold engine construction
+median is about 31% lower in both runs. At 32 strata it is about 16-17%
+lower; at 8 strata the medians are close. The warm, state and whole-solve
+medians show no stable gain. The result supports a bounded local claim
+about cold construction for many strata, not a general solve-time speedup.
+The original scenario thresholds remain unchanged. For the compared
+=a97762d= head, the remote =scheme=, =oracle (byods)=,
+=oracle (other)= and =native-and-oracle= checks completed successfully
+on 2026-10-04. Later PR commits require their own qualification.
+
+* Reproduction
+
+Build each commit in an isolated checkout with its pinned dependencies.
+The probe file was added after the compared commits, so copy this exact
+file into the parent checkout. Run each checkout separately; reverse the
+process order for the second pass. The environment must resolve the
+checkout's own compiled modules.
+
+#+begin_src sh
+GERBIL_BUILD_CORES=12 just build
+GERBIL_LOADPATH="$PWD" timeout 45s gerbil -:max-heap=1G,debug=q env gxi \
+  t/performance/declaration-compilation-probe.ss
+#+end_src
+
+Each =SAMPLE= line records nanoseconds. Compute the median separately for
+each size and phase, then divide by 1000 for the table above. A failed
+row check or a missing final =OK= invalidates the run.
+
+* Next candidate: arbitrary-order index keys
+
+The local [[file:../t/performance/index-key-vector-probe.ss][index-key-vector-probe.ss]] compares the current =list-ref= walk
+with =list->vector= plus ordered =vector-ref= lookups. It checks exact key
+contents including reordered and duplicate columns, and alternates 200
+samples per case. For 4 columns with 2 selected, median nanoseconds were
+154 versus 190; for 8 with 4 selected, 206 versus 234; for 32 with 8
+selected, both were 353; for 64 with 16 selected, 825 versus 590; and
+for 64 with 8 selected including duplicates, 440 versus 445. These are
+direct helper costs, not a full index or BYODS workload. A blanket
+replacement would regress common narrow keys, so the running index
+algorithm remains unchanged. A future wide-row change needs a matched
+end-to-end case and must retain arbitrary column order and duplicates.

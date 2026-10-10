@@ -1,0 +1,64 @@
+{
+  "algorithmRelocation": {
+    "normalizedLoopSha256": "2f254198ea4625885fc60f1009b919c9b70f71d0faa7ff4af8b9debe0b428869",
+    "scope": "Exact initial admission loop moved with indentation normalized; engine-owned buffers passed by a private named record; counters returned as two Scheme values. No change to source validation, provider dispatch, budget checks or lattice materialization order.",
+    "unchanged": true
+  },
+  "controls": [
+    "Initial row shape, field callbacks and input/output budget errors",
+    "Lattice duplicate source joins and final materialization ordering",
+    "Independent binary/Provider closure and repeated three-body witnesses",
+    "Session deletion, retained source logs and rollback",
+    "Actor Session generations and storage state publication guards",
+    "Custom physical index row-spine and borrowed field identities"
+  ],
+  "failedCI": {
+    "head": "9eda9fcff147d6c1152c5b341fb51b89e5e17427",
+    "rootCause": "ASP GERBIL-SCHEME-MOD-R002 rejected program/evaluate.ss at 1006 effective lines and four definitions. Scheme package build failed before native tests.",
+    "schemeLogSha256": "31675253ab9c4204cc51dac11fd0957a79728ec3f08e92174284a2e948f1f352",
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37490725090"
+  },
+  "formalBoundary": "This source ownership refactor adds no algebraic theorem or lifecycle transition. Existing Lean/TLA obligations are unchanged; exact-head GitHub full CI remains the final gate.",
+  "modelCalls": 0,
+  "native": {
+    "cases": 106,
+    "exitStatus": 0,
+    "explicitOKMarkers": 10,
+    "logSha256": "84e805f7690f24932f19826adc823ec03e0b5f9bd76a26e9835baebbf47ddd42",
+    "modules": 10,
+    "nativeReadyMarkers": 10,
+    "watchdogFailures": 0
+  },
+  "owners": {
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "program/evaluate.ss": "e67a86ffb6c5ddbea570e2af6f383027a92f73fef30b2ac4905a896f6dcb3336",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956"
+  },
+  "policy": {
+    "command": "just check-policy",
+    "declaredModules": 77,
+    "errors": 0,
+    "exitStatus": 0,
+    "logSha256": "12395f4e7f888201f7074662535f6486554b451c3ae40af35692fb7e7fc4ca16"
+  },
+  "postRebaseReuseIntegration": {
+    "base": "df0f716",
+    "cases": 82,
+    "exitStatus": 0,
+    "explicitOKMarkers": 6,
+    "logSha256": "7923a8caed78121670edab0ebb93fe00c00d68fc05e4428ecc1b573e9a478660",
+    "modules": 6,
+    "nativeReadyMarkers": 6,
+    "owners": {
+      "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+      "program/evaluate.ss": "0d2c0a1907de21b61ea2e341bd0611a3e9596b4bba6f906a46a2cc6a70a0da98",
+      "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+      "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a"
+    },
+    "policyErrors": 0,
+    "policyLogSha256": "931f183c33970e943c253caacba2e3584c677709317b2dd72c13062d7178cd70",
+    "watchdogFailures": 0
+  },
+  "schema": "ascent.source-initialization-qualification",
+  "version": 1
+}

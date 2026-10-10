@@ -1,0 +1,119 @@
+{
+  "qualifiedBaseHead": "08c9c7e54fc66316eddd6e8efde47ab4ef5691f4",
+  "sources": {
+    "packages/proofs/lean/ComponentClosure.lean": "12b5f9fbb3860ab2baf459b526a9d63800da3afe711bb2d1fb40d623b8d6ae8c",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "65346d935aea4fa84430d1a1da49f425efb104d1bfa9951be69f2723346b7542",
+    "packages/proofs/lean/AscentProof.lean": "5a4c22baa820a585f5be73fd3921786382e746abb058ba22f494f185fb77df7d",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "804beef4c75613079eeaa0267127d8f191f1a6f400ec1934de3f41037c027e23",
+    "packages/proofs/lean/lakefile.lean": "269eaa1e16878871d9ed6e3885d1c4a22e8841cddf132f6e2b572230ed5176b8",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "t/qualification/ascent-positive-components-test.ss": "c751ea81bfa7676cbfb71d74a8f35d32d265215365fafe32666db7efa51aaac2",
+    "t/qualification/ascent-positive-plan-test.ss": "19cbb4b356245ddc770b8f833630787e36a6d34b663e2535c4b19476c1ea9e0d",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "justfile": "4f47241a44a880be471880d7d8b43e912ad260dcc64ea3e236919602461a2e78",
+    "core/positive-plan.ss": "d51d7676d8ef49097219e812f3596ba589f0f6779e2a09e282222e84afa2f101"
+  },
+  "scope": "Pure semantic component decomposition of finite ground positive Horn rules, not a mailbox/worker protocol replica or native grounding extraction.",
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 77,
+    "theorems": [
+      "iterate_frame",
+      "stable_closed",
+      "preserve_closed",
+      "solve_closed",
+      "least_closure",
+      "least_model",
+      "orders_equal"
+    ],
+    "premises": [
+      "Fact ownership and read dependencies correspond to the ground rule bodies and heads",
+      "Every rule head component is covered by the plan",
+      "No later component reads into an earlier component",
+      "Each chosen local full iteration has actually stabilized; no fixed runtime round bound"
+    ],
+    "conclusions": [
+      "Local stable iteration implies closure",
+      "Later owned writes preserve prior closures when there is no backward read",
+      "The final facts equal inductive positive derivability",
+      "Final facts belong to every closed model covering the seed",
+      "Alternative admitted component orders yield the same facts"
+    ],
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "controls": [
+      "Recursive diamond closes under two independent component orders",
+      "Premature successor evaluation misses a derivable output and violates Ordered",
+      "One local round fails stability of the recursive component"
+    ],
+    "axioms": {
+      "iterate_frame": [],
+      "solve_closed": [
+        "propext"
+      ],
+      "least_closure": [
+        "propext"
+      ],
+      "least_model": [
+        "propext"
+      ],
+      "orders_equal": [
+        "propext",
+        "Quot.sound"
+      ]
+    }
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-ready-components-formal check-actor-credit-formal",
+    "exitCode": 0,
+    "modelsChanged": false,
+    "normalDistinctStates": [
+      134,
+      857,
+      857,
+      73,
+      121,
+      137
+    ],
+    "expectedNegativeControls": [
+      "ready-components-prerequisite Prerequisites",
+      "ready-components-early CompleteReturn",
+      "ready-components-snapshot DependencySnapshot",
+      "ready-components-tail CompletedDelivery",
+      "ready-components-credit CompletedDelivery",
+      "actor-credit-early CompleteReturn"
+    ],
+    "scope": "Finite ready admission, snapshot capture, terminal delivery, bounded assignment and drain. Independent of the new Lean algebra."
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-positive-plan-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 38,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "correspondingFixture": "Seed 0 derives cyclic left {0,1} and independent right {0}; their join derives out {0}. Both left/right declaration orders at workers 1,2,4 yield exact expected rows.",
+    "schedulingImplementationChanged": false
+  },
+  "qualificationCorrections": [
+    "Native fixture initially supplied raw integers as atom terms and rejected with TypeError; replaced them with actual gerbil-ascent-literal terms, then reran the entire native gate successfully",
+    "Moved the test aggregator import before its module doc comment",
+    "Cleared the produced premise before induction in least_model to avoid an unintended conditional induction hypothesis"
+  ],
+  "remaining": [
+    "Faithful binder-to-ground-rule consequence certificate",
+    "Native Tarjan/projected head and dependency correspondence",
+    "Existence of component-local stabilization / termination",
+    "Asynchronous linearization and native representation refinement"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null,
+  "requalification": "All three gates reran after rebasing over 08c9c7e immutable slot projection specialization. Current native qualifier includes the actual new binder implementation; source hashes refreshed."
+}

@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Transitive: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Provider concretization directed Provider instances (2026-10-06)
+
+Following the eqrel instance, =DirectedFrontier= proves the active-domain
+=trrel_uf= view and the explicit-self-filtered =trrel= view, including exact
+new frontier, least UF insertion and least latent preorder over every finite
+input history. Active membership and explicit self inputs are characterized
+exactly. This completes the algebraic frontier instances for these declared
+providers alongside canonical Set and eqrel; it does not instantiate arbitrary
+custom lattices or prove universal native hash/SCC extraction.
+
+The [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][qualification receipt]] links every law to the complete Lean build and
+finite native per-insertion checks. Quint retains temporal responsibilities.
+Provider concretization sections 5.3-5.4 supply the representation motivation; their performance
+results are not attributed to the Scheme implementation. Native actor
+completion/trace and general representation correspondence remain open.
+
+
+* Operational SCC refinement (2026-10-07)
+
+The UF design now connects BYODS SCC compression to maximum-size representative
+selection, retained parent chains, member migration, additive sizes and optimized
+absorbed-key deletion. Lean derives the complete-closure conditions for safe key
+cleanup; Quint explores the operational updates and four additional seeded defects;
+native Scheme audits actual storage after graph-prefix acceptance/refusal and a
+balanced ten-node merge sequence. This strengthens representation evidence, not
+a universal mutable-memory proof or a new performance claim. See
+[[file:../../scheme-trrel-uf-design.org][the UF design]] and its operational receipt for scope and remaining obligations.
+

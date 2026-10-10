@@ -1,0 +1,165 @@
+{
+  "boundary": "General mathematical laws and finite native checks are separate evidence. No production runtime change, performance gain or end-to-end framework closure is claimed.",
+  "changedModules": {
+    "packages/proofs/lean/AscentProof.lean": "554c98e6f05378370cb4a7475f86cea9c8febee383b86a4642cb79d9236bd547",
+    "packages/proofs/lean/EquivalenceComponents.lean": "55a9e6a815d9768d93a1cc7aa822b08344e82ba8ea0ce11fb1f2006a13053186",
+    "packages/proofs/lean/Tests/EquivalenceComponentsTests.lean": "2a62296af500b213522fd5515bd05d6cf0060fc5163ef3a1a95d6077ddb87ab7",
+    "packages/proofs/lean/lakefile.lean": "ebc2601ca13bbb5993033635f3238aae1725e3842737d3839eb9061794225207",
+    "t/qualification/ascent-eqrel-program-test.ss": "f7a4c4cf1d9608aa323c16431379cba2bb1897505404ab62501eb1b9809312f4"
+  },
+  "integration": "Rebased both upstream complete candidate tuple checks and versioned snapshot membership admission. Both append-only audit and B23 research sections retained. Complete Lean and eqrel native suite rerun on final combined source; earlier output hashes retained.",
+  "intermediateVerification": {
+    "qualifiedBaseHead": "6f358993cf9088aff8531c92095fe5ce209c07e2",
+    "verification": {
+      "lean": {
+        "command": "just check-lean-proofs",
+        "exitStatus": 0,
+        "jobs": 86,
+        "logSha256": "7865f49d4445674aa3a5fd702108f2491fea578fa027e61c7b2e4a4d21c2d882"
+      },
+      "native": {
+        "budget": "Reject below independent delta size, retry same state at exact size, replay at zero.",
+        "cases": 26,
+        "command": "just test-file t/qualification/ascent-eqrel-program-test.ss",
+        "compilerHeap": "1G",
+        "executionSeconds": 1,
+        "exitStatus": 0,
+        "explicitOK": true,
+        "graphs": 512,
+        "histories": 1024,
+        "idleSeconds": 5,
+        "logSha256": "73ce7dd520ae9bb4a10ade04f685d305a3c9e8f0001bdf3d2aed122a5de57e8f",
+        "modules": 1,
+        "nonSingletonMergeHistories": 2,
+        "startupSeconds": 5,
+        "threeNodeInsertionComparisons": 4608
+      }
+    }
+  },
+  "modelCalls": 0,
+  "mr": "Deferred future library consumer.",
+  "nativeRuntimeSource": {
+    "program/index.ss": "f081d97d9e34b78bb5e603ce45224ff9178378893b0ed0a7a3c3c573b429a0d1",
+    "table/eqrel.ss": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+    "table/provider.ss": "9725cd9b7268ef5a9778d50e4453e976c7722ca6761cfccb76138150153cbefa",
+    "table/storage.ss": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02"
+  },
+  "papers": [
+    {
+      "id": "B23",
+      "sections": "3.1, 3.3, 5.1",
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "use": "Equivalence concretization and newly implied fact visibility; paper performance is not transferred to Scheme."
+    }
+  ],
+  "previousVerification": {
+    "qualifiedBaseHead": "c3c62589b2274d7ef1086ddae477c4e1a5242e5d",
+    "verification": {
+      "lean": {
+        "command": "just check-lean-proofs",
+        "exitStatus": 0,
+        "jobs": 86,
+        "logSha256": "7865f49d4445674aa3a5fd702108f2491fea578fa027e61c7b2e4a4d21c2d882"
+      },
+      "native": {
+        "budget": "Reject below independent delta size, retry same state at exact size, replay at zero.",
+        "cases": 26,
+        "command": "just test-file t/qualification/ascent-eqrel-program-test.ss",
+        "compilerHeap": "1G",
+        "executionSeconds": 1,
+        "exitStatus": 0,
+        "explicitOK": true,
+        "graphs": 512,
+        "histories": 1024,
+        "idleSeconds": 5,
+        "logSha256": "73ce7dd520ae9bb4a10ade04f685d305a3c9e8f0001bdf3d2aed122a5de57e8f",
+        "modules": 1,
+        "nonSingletonMergeHistories": 2,
+        "startupSeconds": 5,
+        "threeNodeInsertionComparisons": 4608
+      }
+    }
+  },
+  "proofOwnership": "Lean owns equivalence/least closure/frontier algebra; existing TLA+ owns publication, private state, credits and failure lifecycle. No TLA+ model changed.",
+  "qualifiedBaseHead": "3f82d3a343c769b88e2af27d8e6f3ce2e3b7d701",
+  "rejectedChecks": [
+    "Lean diagonal/history control substitution removed a needed binder; explicit equalities repaired elaboration.",
+    "Tests needed the qualified insertion name to avoid List.insert ambiguity.",
+    "A native invocation omitted package-local dependency exports; import failed before execution, then repaired using the established toolchain environment."
+  ],
+  "remaining": [
+    "Universal Gambit hash/equality, component pointer and member enumeration extraction",
+    "Native budget arithmetic and row ordering refinement",
+    "General custom lattice concretization/join/injection contracts and other representation instances",
+    "Universal native actor completion and TLA+ trace refinement"
+  ],
+  "schema": "ascent.eqrel-frontier-qualification",
+  "scope": "Reusable active-domain equivalence insertion, least closure over all finite histories, exact emitted frontier and isolated group updates.",
+  "theorems": {
+    "base_fresh": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "base_supported": [],
+    "base_symm": [],
+    "base_trans": [],
+    "emitted_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "injectMany_inputs": [
+      "propext",
+      "Quot.sound"
+    ],
+    "injectMany_least": [
+      "propext"
+    ],
+    "injectMany_monotone": [],
+    "insert_least": [],
+    "insert_refl": [],
+    "insert_supported": [],
+    "insert_symm": [],
+    "insert_trans": [],
+    "inserted_edge": [],
+    "other_group": [
+      "propext"
+    ],
+    "total_delta": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "verification": {
+    "lean": {
+      "command": "just check-lean-proofs",
+      "exitStatus": 0,
+      "jobs": 86,
+      "logSha256": "ec3859178b4a05502f296f4d3ed0bee52a5a3d6fb90bf1975eaf85a4e9bc852e",
+      "sourceCount": 45,
+      "sourceInventorySha256": "f230cef9a42d19b16aa64dc163596c79f7ad18607c68f6767bf2cba5f4546c5a"
+    },
+    "native": {
+      "budget": "Reject below independent delta size, retry same state at exact size, replay at zero.",
+      "cases": 26,
+      "command": "just test-file t/qualification/ascent-eqrel-program-test.ss",
+      "compilerHeap": "1G",
+      "executionSeconds": 1,
+      "exitStatus": 0,
+      "explicitOK": true,
+      "graphs": 512,
+      "histories": 1024,
+      "idleSeconds": 5,
+      "logSha256": "2131e3b3052fd41bc5ae59aee9dc6999b982e3e561849c30a782094c197d3143",
+      "modules": 1,
+      "nonSingletonMergeHistories": 2,
+      "sourceCount": 543,
+      "sourceInventorySha256": "d192ad83ed3c984e1c020c2900585159c6c65ed3fb90ff3505074bcbaa2096f0",
+      "startupSeconds": 5,
+      "threeNodeInsertionComparisons": 4608
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,55 @@
+#+title: Structural term protocol qualification
+
+* Source and responsibility
+
+Baseline: =4aced8e62ce0bfa821bb85e63bf392fc0939c161=.
+Original =core/rule-bindings.ss= blob:
+=274c634f4a5b1301e834d26fd26f5705acb7f1b6=.
+Frozen =reference.ss= blob: =e03d860c08ed454c9085a2b7ac7cf08bfca486e1=.
+Only the relative ordered-call import is normalized to its package path.
+
+The candidate uses structural matches across row binding, bounded callback
+output extension and ordered head construction. A local hygienic syntax rule
+owns state advancement. Gerbil source =1cfb032= =core/match.ss:640-688=
+is the reference for once-evaluated matching and =match <>= procedure syntax.
+
+* Matched native A/B
+
+The ASP Scheme benchmark API runs 50 alternating old/new pairs. Each call
+binds candidate rows, constructs heads and consumes all results; the checksum
+must equal both the baseline and an independent input sum. Process CPU and
+allocated bytes are measured with GC outside each measured call. No native
+build or qualification overlaps the timing lanes.
+
+All scenarios were declared regression controls before measurement:
+CPU <= 110% baseline + 20 microseconds; allocation <= 110% + 4096 bytes.
+There is no predeclared speedup target for this expression refactor.
+
+| Scenario | Iterations | Old CPU us | New CPU us | Old bytes | New bytes |
+|----------+------------+------------+------------+-----------+-----------|
+| fresh 8 | 1000 | 192 | 193 | 1200224 | 1200224 |
+| pattern 32 | 1000 | 1312 | 1358 | 4656432 | 4656432 |
+| small 1 | 1 | 1 | 1 | 416 | 416 |
+
+All three gates passed. The pattern control is about 3.5% slower in this run;
+allocation is unchanged. These results support retaining the abstraction within
+the declared regression budget, not a speedup or whole-solve performance claim.
+Receipts, logs and binaries remain under ignored =.cache/ascent/term-matching=.
+
+* Semantic boundary
+
+The native qualifier combines existing callback, expression and rule-binding
+suites with structural-term cases. Coverage includes all admitted term roles,
+ordered heads, false values, prior environment tail identity, first head errors,
+rejection short circuit and callback mutation of row tails and output names.
+Existing suites cover malformed/cyclic callback tuples and full evaluator traces.
+No equivalence claim is made for malformed non-admitted term representations.
+
+Root =build.ss= is unchanged; benchmark and qualification entry points stay in =t/=.
+
+Local validation: four suites, 29 case completions, final =OK= and exit zero.
+A source-loaded false-binding/head pipeline also passed. The native policy scan
+completed with 31 warnings and zero errors. Its repeated-match advisory includes
+the finite term dispatcher; each branch owns a distinct admitted term operation,
+and the repeated state advance is already unified by syntax. This receipt is
+not a claim of a warning-free repository or completed remote CI.

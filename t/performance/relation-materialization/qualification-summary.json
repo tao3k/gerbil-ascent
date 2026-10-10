@@ -1,0 +1,37 @@
+[
+  {
+    "name": "policy-complete",
+    "exit": 0,
+    "seconds": 11.6947657500059
+  },
+  {
+    "name": "full-suite",
+    "exit": 0,
+    "seconds": 118.25652020899724
+  },
+  {
+    "name": "paired-first",
+    "exit": 0,
+    "seconds": 17.623521000001347
+  },
+  {
+    "name": "paired-repeat",
+    "exit": 0,
+    "seconds": 13.516875708999578
+  },
+  {
+    "name": "original-table-expression",
+    "exit": 1,
+    "seconds": 36.91424862500571
+  },
+  {
+    "name": "original-membership",
+    "exit": 0,
+    "seconds": 63.85484225000255
+  },
+  {
+    "name": "original-closure",
+    "exit": 0,
+    "seconds": 15.2606512919956
+  }
+]

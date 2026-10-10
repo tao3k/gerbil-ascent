@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "base_commit": "4f0505ec0130f4b5eeca39753ce345be45a3da0f",
+  "scope": "Constructed UF root frontier completeness and independent publication verification",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "section": "3.3, properties (1)/(2) and Theorem 3.5",
+    "relationship": "Our exact positive UF delta is stronger than required new-fact coverage; native host protocols remain separate."
+  },
+  "finding": {
+    "classification": "Verification coverage defect; no new native runtime defect observed",
+    "before": "TLA Plan.delta was assigned independent Expected closure difference; all nodes appeared activated. Emission faults could not be checked.",
+    "after": "Plan derives missing root rectangles and fresh endpoint diagonals; independent input closure occurs only in invariants. Active endpoints and published delta are checked explicitly."
+  },
+  "sources": {
+    "packages/proofs/lean/DirectedFrontier.lean": "4ef91c9808fc823d33259d6191d28afe6c8d5588348b4390854a8f5cc92561c9",
+    "packages/proofs/lean/ProviderRectangles.lean": "809a0f0a181bb90a8b1151e6293547bc5c3bbf7ca0392b169a8467c95e63e3c6",
+    "packages/proofs/lean/Tests/DirectedFrontierTests.lean": "2c91ed91be8674dd6554af4547fba9e80321f0b0f7c332511672a3577cd5b949",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "2872d2b018d35844e2092af191b396b678efede13eb9dc3f9fb88d452569c568",
+    "packages/proofs/tla/TransitiveComponents.tla": "73c4d82d8ab801a4d8fe8a8d50f4eff364a87089407ec47be78aac7f723128d0",
+    "packages/proofs/tla/TransitiveComponents.cfg": "a473adbc209c5786392aea278cfcad528d7635558da4aa062b1b0088f062f885",
+    "justfile": "388d68fab104712337fb9e2be598cb681e20909b667caa6ea18268ff68c47d85",
+    "table/trrel-uf.ss": "b0acc56983f21a436ab8567e0e4119b97ad3a7d9947d703f7104ed3d5d953ae0",
+    "t/qualification/ascent-provider-views-test.ss": "b623365c694b6b8c893449f14814f88bcf74836afcbed1e98ea7e163458bc63b"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 90,
+    "new_laws": [
+      "DirectedFrontier.uf_emitted_decomposition",
+      "ProviderRectangles.component_plan_member_iff",
+      "ProviderRectangles.inactive_component_singleton",
+      "ProviderRectangles.root_frontier_exact",
+      "ProviderRectangles.root_plan_exact",
+      "ProviderRectangles.root_plan_nodup"
+    ],
+    "rectangle_laws": 32,
+    "rectangle_examples": 21,
+    "premises": [
+      "Supported reflexive transitive reach",
+      "SCC equivalence for captured owners",
+      "Complete captured member lists",
+      "Complete captured root enumeration",
+      "Unique roots and member lists for unique enumeration"
+    ],
+    "candidate_encoding_assumed_in_root_plan_exact": false,
+    "axioms": "Only standard propext, Classical.choice and Quot.sound; inactive_component_singleton has none. Reports are under Tests.",
+    "transcript_sha256": "f6b33bd895b1bd9c3e8ac9ba3816c796a47d52912e40f31b19c8e1998f0db111"
+  },
+  "tla": {
+    "command": "just check-transitive-components-formal",
+    "exit_code": 0,
+    "generated_states": 164980,
+    "distinct_states": 38374,
+    "nodes": [
+      1,
+      2,
+      3
+    ],
+    "invariants": [
+      "ReachExact",
+      "SCCExact",
+      "ParentRoots",
+      "PrivateArcs",
+      "RefusalAtomic",
+      "ActiveExact",
+      "DeltaExact"
+    ],
+    "seeded_defects": 6,
+    "new_fault_traces": {
+      "raw": {
+        "expected_exit_code": 12,
+        "invariant": "DeltaExact",
+        "states": [
+          {
+            "state": 1,
+            "step": "<Initial predicate>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{}",
+              "inputs": "{}",
+              "before": "{}",
+              "arcs": "{}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          },
+          {
+            "state": 2,
+            "step": "<Accept line 39, col 19 to line 51, col 56 of module TransitiveComponents>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{<<1, 2>>}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{1, 2}",
+              "inputs": "{<<1, 2>>}",
+              "before": "{}",
+              "arcs": "{<<1, 2>>}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          }
+        ],
+        "transcript_sha256": "28aee97de2fb4f40884d96beacf24c634761c8b3f4466be2e940639e07842741"
+      },
+      "diagonal": {
+        "expected_exit_code": 12,
+        "invariant": "DeltaExact",
+        "states": [
+          {
+            "state": 1,
+            "step": "<Initial predicate>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{}",
+              "inputs": "{}",
+              "before": "{}",
+              "arcs": "{}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          },
+          {
+            "state": 2,
+            "step": "<Accept line 39, col 19 to line 51, col 56 of module TransitiveComponents>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{1}",
+              "inputs": "{<<1, 1>>}",
+              "before": "{}",
+              "arcs": "{}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          }
+        ],
+        "transcript_sha256": "f4f34f3fed36e15606aa783dcab2091638d4a406cb092e8007554db08c9c1fab"
+      },
+      "old": {
+        "expected_exit_code": 12,
+        "invariant": "DeltaExact",
+        "states": [
+          {
+            "state": 1,
+            "step": "<Initial predicate>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{}",
+              "inputs": "{}",
+              "before": "{}",
+              "arcs": "{}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          },
+          {
+            "state": 2,
+            "step": "<Accept line 39, col 19 to line 51, col 56 of module TransitiveComponents>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{<<1, 1>>, <<1, 2>>, <<2, 2>>}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{1, 2}",
+              "inputs": "{<<1, 2>>}",
+              "before": "{}",
+              "arcs": "{<<1, 2>>}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          },
+          {
+            "state": 3,
+            "step": "<Accept line 39, col 19 to line 51, col 56 of module TransitiveComponents>",
+            "fields": {
+              "refused": "FALSE",
+              "frontier": "{<<1, 1>>, <<1, 2>>}",
+              "parent": "<<1, 2, 3>>",
+              "active": "{1, 2}",
+              "inputs": "{<<1, 1>>, <<1, 2>>}",
+              "before": "{<<1, 1>>, <<1, 2>>, <<2, 2>>}",
+              "arcs": "{<<1, 2>>}",
+              "saved": "<<{}, <<1, 2, 3>>, {}, {}>>"
+            }
+          }
+        ],
+        "transcript_sha256": "6ce5242845bfcdce9f8285eb13c59039b66db131f9e494d5e2f8aa46f3130883"
+      }
+    },
+    "generation_ceiling": false,
+    "transcript_sha256": "129d6dd5141d3424dd1abb1592e29841fa2b19261f3838a7235720648b99eb55"
+  },
+  "integrated_formal": {
+    "command": "ASCENT_TLC_GENERATION_CUTOFF=4 just check-formal",
+    "exit_code": 0,
+    "detected_negative_controls": 48,
+    "transcript_sha256": "484473a0bce9f8d24b170f9e3177f4ebd78f965ed89417049fc31c6a9314ed63"
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-provider-views-test.ss",
+    "exit_code": 0,
+    "modules": 1,
+    "cases": 5,
+    "final_OK": true,
+    "graphs": 512,
+    "insertion_orders": [
+      "forward",
+      "reverse"
+    ],
+    "coverage": [
+      "Every selected insertion prefix against independent closure",
+      "Exact emitted count and frontier",
+      "Budget refusal preserves observation",
+      "Zero-frontier repeated insertion",
+      "Held cuts across SCC merges and caller row mutation",
+      "Group keys, keyed reads and public row order"
+    ],
+    "transcript_sha256": "18f8c8ba68221f47e2e3eb046c66b76ccb8dd31b052fd0ed57f97db6c9d406a0"
+  },
+  "remaining_correspondence": [
+    "Native member/size and parent-chain extraction",
+    "Largest-component representative and in-place adjacency optimization versus model canonical normalization",
+    "Grouped prefix decoding",
+    "General ordered injection journal replay"
+  ],
+  "new_model_calls": 0,
+  "new_runtime_code": false,
+  "new_performance_claim": false
+}

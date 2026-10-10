@@ -1,0 +1,81 @@
+#+title: Scheme Coding Style: Build and test boundaries
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Production build declarations, native test ownership and startup constraints. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Feature: production build declarations separated from native test execution
+
+=std/build-script.ss:35= supplies =defbuild-script= directly over a build
+specification. ASCENT previously wrapped that native =main= with test-file
+selection, test inventories, compilation, lane locking and performance dispatch.
+That mixed build and test ownership and encouraged fixture-specific branches.
+
+=build.ss= contains production module declarations,
+the ASP package specification, and native =defbuild-script=. Its exported
+production module list is shared data, with no test imports or dispatch.
+=std/source this-source-file= is imported explicitly because the native build
+macro requires it; it previously arrived through the removed process imports.
+
+| Source | Responsibility |
+|--------+----------------|
+| =build.ss= | Production modules and native build specification |
+| =t/native/qualification.ss= | Native test compilation, inventories, capacity and lane |
+| =t/qualification/*-test.ss= | Semantic Unit Test Suites and Cases |
+| =t/performance/*-test.ss= | Timing qualification Suites and Cases |
+
+Public build and policy recipes invoke =gerbil build= directly. Ordinary
+=just test= and =just test-file= use =gerbil test=; no alternate test dispatcher
+or executable preparation runs on that path. Explicit =test-native= and
+=test-native-suite= retain the compiled artifact gate and its lane lock.
+Parallel/exclusive classification applies to that native gate only.
+=GERBIL_BUILD_CORES= controls compilation capacity; =ASP_GERBIL_SCHEME_POLICY=1=
+enables policy checking. Test artifacts remain ignored cache files.
+
+Final local validation uses the pinned cache SDK with =GERBIL_BUILD_CORES=12=.
+Build passes; policy checks 42 production modules with zero findings/errors;
+all 50 semantic modules and 404 Cases pass; and all 17 original SS scenarios
+pass their unchanged 1000-sample contracts. All commands exit 0 and retain
+native completion markers. The pool remains 47 parallel plus 3 exclusive
+modules. Logs are ignored cache artifacts. This is local qualification,
+separate from CI for the resulting commit.
+
+* Test startup and the POO Flow Core Case dependency
+
+The installed Gerbil v0.19 =tools/gxtest.ss= calls =import-module=
+with evaluation for each test source before it prints =HARNESS=. Its
+=std/test= files declare =test-suite= and =test-case= directly. The
+installed =gerbil/main.ss= maps =gerbil test= directly to =gxtest=,
+while =gerbil env= invokes =gxpkg env= first. In =std/make.ss=,
+=GERBIL_BUILD_CORES= defaults to zero workers unless set explicitly;
+the Ascent =just build= recipe already sets the detected core count.
+
+Timestamped local runs separate the phases. A minimal native Case
+reached =HARNESS= at 9.1 s and exited at 11.3 s. Importing POO Flow
+Core's =testing-case= without using its Case macro reached =HARNESS=
+at 22.4 s and exited at 32.4 s. The indexed-program module reached
+=HARNESS= at 33.5 s, completed its eight Cases at 35.5 s, and exited
+at 45.9 s. An installed Gerbil =std/string/misc-test.ss= module using
+the same =gerbil test= command reached =HARNESS= at 20.2 s and exited
+immediately after its 31 Cases. These observations locate substantial
+time before Case execution and after =OK=; they do not attribute the
+time to a particular library. Later host load exceeded 100, so the
+isolated Core-module split is not yet a measured startup improvement.
+
+The Core checkout has its own capitalized =Justfile=. Its test recipe
+used =gerbil env gxtest=; the local Core change now uses the standard
+=gerbil test= entrypoint with the same bounded timeout and receipts.
+It also prints start and elapsed-time markers so a long module import
+is visible. The extracted =observability/debug-memory.ss= keeps the
+memory and duration Case boundary apart from tracing and slot debug;
+the compatibility export in =debug.ss= preserves existing imports.
+The isolated Core build with explicit =GERBIL_BUILD_CORES=12= and the
+=t/core-test.ss= and =t/observability-feedback-test.ss= modules passed.
+Using that isolated Core build as =GERBIL_PATH=, the Ascent
+=just test-file t/qualification/ascent-index-program-test.ss= also
+passed all eight Cases, =MODULE-OK=, =HARNESS-OK=, final =OK=, and
+process exit 0.
+Startup latency remains an open performance question until matched
+measurements under a stable host load are available.
+

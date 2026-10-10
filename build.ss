@@ -93,6 +93,7 @@
     "candidate/funs"
     "candidate/provenance"
     "candidate/provenance-graph"
+    "candidate/support-height"
     "candidate/provenance-maintenance"
     "candidate/annotations"
    "candidate/stratified-provenance"

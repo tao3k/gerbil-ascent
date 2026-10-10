@@ -550,3 +550,42 @@ The workflow now invokes the existing Scheme file's =main= directly with gxi,
 using the established production library and source load paths. This native
 entry locally generated six Cases' 36 wire contracts with =MOVIE-WIRE-OK=.
 The C ABI consumer itself still requires the next exact-head CI result.
+
+* Grounded support height flow
+
+The retained support owner had another complete-flow hotspot:
+=candidate-provenance-heights= relaxed every edge on every pass. Reverse-ordered
+chains repeat unrelated source/rule reads until all predecessor labels arrive.
+The new =candidate/support-height.ss= separates dependency admission, founded
+seed publication and dependent rule wakeups from maintenance's completeness
+and ordered root publication. Its private final rule records and invocation
+identity tables follow Gerbil's explicit state ownership; native =until= and
+short-circuit =andmap= own queue and conjunction control.
+
+Every invocation rebuilds its dependency/height state after a subcut. Source and
+candidate facts seed zero, empty rules seed one, a conjunction adds one to its
+maximum premise height, and alternatives lower the retained minimum. Unfounded
+cycles remain absent. Repeated premises and a late shorter alternative propagate
+correctly. The counter charges actual edge/premise admission and wakeups; its
+numeric value changes with the algorithm. Exhaustion returns no partial table.
+The DRed withdrawal and its existing budget/result contracts remain intact.
+
+[[file:../../t/performance/support-height/README.org][Complete height/compaction consumers]] freeze the immediately preceding
+=4528237= maintenance owner. All three fixed gates pass: reverse-chain CPU
+455 -> 79 us (82.6% lower), after duplicate withdrawal 463 -> 84 us (81.9%
+lower), and one-edge control 10 -> 9 us. The large arms win all 20 pairs.
+Allocation rises 66704 -> 115728 / 69792 -> 118816 bytes for invocation-owned
+indexes, within the preset 3x+4096 bound. No allocation reduction, full solver
+or certificate verification speedup is claimed. The initial 96-edge fixture
+failed complete proof production under the unchanged proof budget; it was
+reduced to an admitted 32-edge fixture before timing, with failure retained.
+
+Five native modules pass 53 Cases with final =OK=, including the existing all-64
+graph truth, source/cycle/shortest-height/conjunction controls and withdrawal
+budget rollback. New Cases additionally cover repeated premises, empty bodies,
+late shorter support, frozen complete lifecycle equality and insufficient height
+budgets. The two production owners and native witnesses pass ASP Policy with
+zero findings. Receipts stay under =.cache/ascent/support-height/=.
+
+The preceding source-transaction commit =4528237= is now independently qualified
+by all six completed exact-head GitHub CI jobs in run =38032841056=.

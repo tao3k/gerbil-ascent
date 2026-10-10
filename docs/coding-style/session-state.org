@@ -921,3 +921,20 @@ traversal removes intermediate index/log lists without caching callback results.
 Cases, frozen controls and unchanged full consumer gates. The measurement
 qualifies the accumulated flow against its fixed baseline; this architectural
 unit alone has no claimed incremental CPU percentage.
+
+* Study: dependencies own height wakeups
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:24-29= binds identity tables to an
+optimizer invocation; =core/more-sugar.ss:118-129= expresses condition-driven
+iteration through native =until=. The retained support height flow now gives
+one call its own premise-to-rule index, final rule records, height labels and
+pending spine. Native =andmap= preserves short-circuit premise charging.
+The maintenance owner retains completeness and ordered result publication.
+Every subcut starts fresh labels, so a withdrawn shortest proof cannot remain
+cached. Cycles require a founded seed; conjunctions use maximum, alternatives
+use minimum. This is an algorithm/lifetime boundary, not cosmetic nesting removal.
+
+[[file:../../t/performance/support-height/README.org][Matched complete height/compaction consumers]] record the frozen preceding
+implementation, native boundary checks and fixed gates. Large consumer CPU falls
+82.6%/81.9%; invocation-owned indexes increase transient allocation. Claims exclude
+public proof production/verification and full solver throughput.

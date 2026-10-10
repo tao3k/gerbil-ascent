@@ -5,21 +5,14 @@
 ;;; Private retained state over an already verified grounded support graph.
 ;;; Enumeration and verification belong to provenance-graph. Membership indexes
 ;;; never order evidence; every bounded phase still traverses the retained edges.
-(import (only-in "support-height.ss" grounded-support-heights)
-        (only-in "datum.ss" reasoning-bounded-data? candidate-copy-pairs)
-        (only-in "provenance.ss" positive-proof-nodes positive-proof-roots
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/provenance positive-proof-nodes positive-proof-roots
                  proof-node-id proof-node-row))
 (export candidate-make-provenance-maintenance provenance-maintenance?
         provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
         provenance-maintenance-size candidate-provenance-heights)
 (defstruct provenance-maintenance (rows-table roots edges sources alive removed))
-
-;;; Every phase reads the membership it owns, including tentative withdrawal
-;;; and fresh height labels. A shared selector never borrows published state.
-;; : (forall (n) (-> NodeMembership n Boolean))
-;; : (-> NodeMembership NodeId Boolean)
-(def (live-node? membership id) (hash-get membership id))
 
 ;;; Counts describe retained graph owners, not allocator or resident memory.
 ;; : (-> ProvenanceMaintenance (Values Nat Nat Nat))
@@ -50,13 +43,13 @@
                        (and (hash-get alive (car edge))
                             (not (and (eq? (cadr edge) 'source)
                                       (hash-get removed (caddr edge))))
-                            (andmap (lambda (id) (probe!) (live-node? alive id)) (cadddr edge))))
+                            (andmap (lambda (id) (probe!) (hash-get alive id)) (cadddr edge))))
                      (provenance-maintenance-edges state)))
-           (roots (filter (lambda (id) (probe!) (live-node? alive id))
+           (roots (filter (lambda (id) (probe!) (hash-get alive id))
                           (provenance-maintenance-roots state))))
       (hash-for-each (lambda (id row)
                        (probe!)
-                       (when (live-node? alive id) (hash-put! rows id row)))
+                       (when (hash-get alive id) (hash-put! rows id row)))
                     (provenance-maintenance-rows-table state))
       (values (make-provenance-maintenance rows roots edges
                  (provenance-maintenance-sources state) alive removed) steps))))
@@ -82,7 +75,7 @@
     (for-each
      (lambda (node)
        (let (id (proof-node-id node))
-         (unless (live-node? alive id)
+         (unless (hash-get alive id)
            (hash-put! rows id (candidate-copy-pairs (proof-node-row node)))
            (hash-put! alive id #t)))) (positive-proof-nodes proof))
     (for-each (lambda (edge)
@@ -106,7 +99,7 @@
 ;;   %
 (def (maintenance-rows state alive)
   (map (lambda (id) (candidate-copy-pairs (hash-ref (provenance-maintenance-rows-table state) id)))
-       (filter (lambda (id) (live-node? alive id)) (provenance-maintenance-roots state))))
+       (filter (lambda (id) (hash-get alive id)) (provenance-maintenance-roots state))))
 
 ;; provenance-maintenance-rows
 ;;   : (forall (row) (-> (ProvenanceMaintenance row) (List row)))
@@ -204,12 +197,12 @@
            (when (and (hash-get affected (car edge))
                       (not (hash-get alive (car edge)))
                       (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge))))
-                      (andmap (lambda (id) (probe!) (live-node? alive id)) (cadddr edge)))
+                      (andmap (lambda (id) (probe!) (hash-get alive id)) (cadddr edge)))
              (hash-put! alive (car edge) #t) (set! changed? #t))) edges)
         (when changed? (rederive))))
     (let (rows (map (lambda (id) (candidate-copy-pairs
                       (hash-ref (provenance-maintenance-rows-table state) id)))
-                   (filter (lambda (id) (probe!) (live-node? alive id))
+                   (filter (lambda (id) (probe!) (hash-get alive id))
                            (provenance-maintenance-roots state))))
       (provenance-maintenance-alive-set! state alive)
       (provenance-maintenance-removed-set! state removed)
@@ -218,21 +211,39 @@
 ;;; Z19 min/max height relaxation over the current founded support graph.
 ;;; Absence is not height zero. Source/candidate facts seed zero; a rule adds
 ;;; one to the maximum premise height, including one for an empty rule body.
-;;; Dependency wakeups improve already present annotations. No partial table escapes
+;;; Repeated scans improve already present annotations. No partial table escapes
 ;;; on budget exhaustion. This read computes fresh heights after every subcut;
 ;;; it never retains an obsolete short proof across source deletion.
 ;; : (-> ProvenanceMaintenance Nat (Values RowHeights Nat))
 (def (candidate-provenance-heights state (max-steps 100000))
   (unless (and (provenance-maintenance? state) (exact-integer? max-steps) (> max-steps 0))
     (error "invalid provenance height budget or state"))
-  (let ((heights #f) (steps 0)
+  (let ((heights (make-hash-table-eqv)) (steps 0)
         (alive (provenance-maintenance-alive state))
         (removed (provenance-maintenance-removed state)))
     (def (probe!)
       (set! steps (+ steps 1))
       (when (> steps max-steps) (error "provenance height budget exceeded")))
-    (set! heights (grounded-support-heights (provenance-maintenance-edges state)
-                                           alive removed probe!))
+    (def (body-height inputs)
+      (let scan ((rest inputs) (maximum 0))
+        (if (null? rest) maximum
+          (begin (probe!)
+            (let (height (hash-get heights (car rest)))
+              (and height (scan (cdr rest) (max maximum height))))))))
+    (let relax ()
+      (let (changed? #f)
+        (for-each
+          (lambda (edge)
+            (probe!)
+            (when (and (hash-get alive (car edge))
+                       (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge)))))
+              (let* ((body (and (eq? (cadr edge) 'rule) (body-height (cadddr edge))))
+                     (next (if (eq? (cadr edge) 'rule) (and body (+ body 1)) 0))
+                     (old (hash-get heights (car edge))))
+                (when (and next (or (not old) (< next old)))
+                  (hash-put! heights (car edge) next) (set! changed? #t)))))
+          (provenance-maintenance-edges state))
+        (when changed? (relax))))
     ;; Completeness covers all live support, even when the query is empty.
     (hash-for-each (lambda (id _)
                      (probe!)
@@ -240,7 +251,7 @@
     (let (entries
            (filter-map (lambda (id)
                          (probe!)
-                         (and (live-node? alive id)
+                         (and (hash-get alive id)
                               (list (candidate-copy-pairs
                                       (hash-ref (provenance-maintenance-rows-table state) id))
                                     (hash-ref heights id))))

@@ -9,6 +9,12 @@
 Dedicated [[file:withholding.org][BRINK method reading]] connects whole-batch evidence protection to
 [[file:../../features/withholding/acceptance.org][native snapshot withholding and finite qualification]].
 
+The [[file:repository-evidence-study.md][Fresh Repository Evidence Study]] applies
+SWE-rebench and LiveCodeBench collection methods to recent public changes,
+records executable source qualification, and specifies the matched evidence
+retention comparison. The [[file:real-repository-experiment-report.md][real repository experiment report]]
+records actual model calls, cumulative thinking, hidden acceptance and repair cost.
+
 * Question and scope
 :PROPERTIES:
 :CUSTOM_ID: agent-inference-research

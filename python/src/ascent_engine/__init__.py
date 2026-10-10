@@ -5,6 +5,10 @@ import json
 from pathlib import Path
 import threading
 import atexit
+import signal
+import contextlib
+import fcntl
+import os
 from cffi import FFI
 
 CDEF = '''
@@ -17,8 +21,31 @@ void ascent_result_release(ascent_result *);
 '''
 _loaded = None
 
+@contextlib.contextmanager
+def _preserve_host_io():
+    """Embedded Scheme must not change flags of Python-owned descriptors."""
+    descriptors = {}
+    for name in os.listdir('/dev/fd'):
+        fd = int(name)
+        try:
+            stat = os.fstat(fd)
+            descriptors[fd] = ((stat.st_dev, stat.st_ino, stat.st_mode), fcntl.fcntl(fd, fcntl.F_GETFL))
+        except OSError:
+            pass
+    try:
+        yield
+    finally:
+        for fd, (identity, flags) in descriptors.items():
+            try:
+                stat = os.fstat(fd)
+                if identity == (stat.st_dev, stat.st_ino, stat.st_mode):
+                    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
+            except OSError:
+                pass
+
 def _shutdown():
-    if _loaded is not None: _loaded[2].ascent_runtime_shutdown()
+    if _loaded is not None:
+        with _preserve_host_io(): _loaded[2].ascent_runtime_shutdown()
 atexit.register(_shutdown)
 
 class EngineError(RuntimeError):
@@ -44,7 +71,14 @@ class Engine:
             raise EngineError(-2, 'one engine library per Python process')
         _, self.ffi, self.lib = _loaded
         if self.lib.ascent_abi_version() != 1: raise EngineError(-2, 'ABI mismatch')
-        status = self.lib.ascent_runtime_init()
+        child_handler = signal.getsignal(signal.SIGCHLD)
+        with _preserve_host_io():
+            status = self.lib.ascent_runtime_init()
+        # The embedding Python host owns subprocess reaping. Gambit's installed
+        # SIGCHLD handler otherwise consumes statuses before Popen can collect
+        # them, turning failed test commands into apparent zero exits.
+        if child_handler is not None:
+            signal.signal(signal.SIGCHLD, child_handler)
         if status: raise EngineError(status, 'runtime initialization')
         self.owner = threading.get_ident(); self.closed = False
 
@@ -54,20 +88,22 @@ class Engine:
         data = json.dumps(request, ensure_ascii=False, allow_nan=False).encode()
         if not 0 < len(data) <= 1048576: raise EngineError(-4, 'input byte bound')
         result = self.ffi.new('ascent_result *')
-        try:
-            status = self.lib.ascent_request(data, len(data), result)
-            payload = bytes(self.ffi.buffer(result.payload, result.length)) if result.payload else b''
-            if status: raise EngineError(status, payload.decode(errors='replace'))
-            return json.loads(payload)
-        finally:
-            self.lib.ascent_result_release(result)
+        with _preserve_host_io():
+            try:
+                status = self.lib.ascent_request(data, len(data), result)
+                payload = bytes(self.ffi.buffer(result.payload, result.length)) if result.payload else b''
+                if status: raise EngineError(status, payload.decode(errors='replace'))
+                return json.loads(payload)
+            finally:
+                self.lib.ascent_result_release(result)
 
     def open(self, program):
         return Session(self, self.request({'operation': 'open', 'program': program})['handle'])
 
     def shutdown(self):
         if self.closed: return
-        status = self.lib.ascent_runtime_shutdown()
+        with _preserve_host_io():
+            status = self.lib.ascent_runtime_shutdown()
         if status: raise EngineError(status, 'runtime shutdown')
         self.closed = True
     def __enter__(self): return self

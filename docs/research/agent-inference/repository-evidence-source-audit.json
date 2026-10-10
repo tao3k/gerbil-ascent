@@ -1,0 +1,356 @@
+{
+  "schema": "ascent.repository-corpus-audit.v1",
+  "provenanceCutoff": "2026-10-10T12:21:12Z",
+  "earliestDisclosure": "2026-09-20T00:00:00Z",
+  "trainingExposure": "unknown",
+  "providerCalls": 0,
+  "candidates": [
+    {
+      "repository": "networkx/networkx",
+      "pullRequest": 8906,
+      "url": "https://github.com/networkx/networkx/pull/8906",
+      "title": "BUG: Fix row-max normalization in vectorized effective_size",
+      "eligible": false,
+      "reasons": [
+        "problem first disclosed before the temporal holdout window"
+      ],
+      "dates": {
+        "pullRequestCreated": "2026-09-13T17:36:17Z",
+        "merged": "2026-09-25T20:27:50Z",
+        "commitAuthored": "2026-09-25T20:27:49Z",
+        "commitCommitted": "2026-09-25T20:27:49Z"
+      },
+      "firstPublicAt": "2026-09-13T17:36:17+00:00",
+      "fixedCommit": "9f6079c0120416599ea5d4018bbaba229ea2e456",
+      "parentCommit": "4a72b69adcf22da900710cd39cf6212b9420db12",
+      "sourceFiles": [
+        "networkx/algorithms/structuralholes.py"
+      ],
+      "testFiles": [
+        "networkx/algorithms/tests/test_structuralholes.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "networkx/networkx",
+      "pullRequest": 8931,
+      "url": "https://github.com/networkx/networkx/pull/8931",
+      "title": "BUG: group betweenness centrality changes output with reorder of input group nodes",
+      "eligible": true,
+      "reasons": [],
+      "dates": {
+        "pullRequestCreated": "2026-09-27T20:08:08Z",
+        "merged": "2026-09-28T03:09:03Z",
+        "commitAuthored": "2026-09-28T03:09:03Z",
+        "commitCommitted": "2026-09-28T03:09:03Z"
+      },
+      "firstPublicAt": "2026-09-27T20:08:08+00:00",
+      "fixedCommit": "c1ebe046ec672eca7cba4dc88d6e0145406d693a",
+      "parentCommit": "9f6079c0120416599ea5d4018bbaba229ea2e456",
+      "sourceFiles": [
+        "networkx/algorithms/centrality/group.py"
+      ],
+      "testFiles": [
+        "networkx/algorithms/centrality/tests/test_group.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "pydantic/pydantic",
+      "pullRequest": 13954,
+      "url": "https://github.com/pydantic/pydantic/pull/13954",
+      "title": "Fix `arguments-v3` schema with variadic keywords",
+      "eligible": true,
+      "reasons": [],
+      "dates": {
+        "pullRequestCreated": "2026-10-08T15:31:44Z",
+        "merged": "2026-10-08T18:16:12Z",
+        "commitAuthored": "2026-10-08T18:16:12Z",
+        "commitCommitted": "2026-10-08T18:16:12Z"
+      },
+      "firstPublicAt": "2026-10-08T15:31:44+00:00",
+      "fixedCommit": "9541387a9537e8ad3ef2694fe36ad450a7793078",
+      "parentCommit": "e40a1762024e3ac6ec036a890ce955062f475c80",
+      "sourceFiles": [
+        "pydantic-core/src/validators/arguments_v3.rs"
+      ],
+      "testFiles": [
+        "tests/test_experimental_arguments_schema.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "pytest-dev/pytest",
+      "pullRequest": 15058,
+      "url": "https://github.com/pytest-dev/pytest/pull/15058",
+      "title": "Fix fixture discovery for bound methods in custom collectors",
+      "eligible": false,
+      "reasons": [
+        "problem first disclosed before the temporal holdout window"
+      ],
+      "dates": {
+        "pullRequestCreated": "2026-09-17T22:53:26Z",
+        "merged": "2026-10-06T19:32:32Z",
+        "commitAuthored": "2026-10-06T19:32:31Z",
+        "commitCommitted": "2026-10-06T19:32:31Z",
+        "issueCreated": "2020-02-17T02:04:35Z"
+      },
+      "firstPublicAt": "2020-02-17T02:04:35+00:00",
+      "fixedCommit": "59200df778adf8079df6125d60662908ac0a0646",
+      "parentCommit": "2950bc2392f521fc0fd5e889a6a9857bc9d3ffe8",
+      "sourceFiles": [
+        "src/_pytest/compat.py"
+      ],
+      "testFiles": [
+        "testing/python/fixtures.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "pytest-dev/pytest",
+      "pullRequest": 15149,
+      "url": "https://github.com/pytest-dev/pytest/pull/15149",
+      "title": "Derive ExceptionInfo strip text lazily from the exception",
+      "eligible": false,
+      "reasons": [
+        "problem first disclosed before the temporal holdout window"
+      ],
+      "dates": {
+        "pullRequestCreated": "2026-10-07T16:37:02Z",
+        "merged": "2026-10-08T16:26:45Z",
+        "commitAuthored": "2026-10-08T16:26:44Z",
+        "commitCommitted": "2026-10-08T16:26:44Z",
+        "issueCreated": "2024-04-01T10:19:02Z"
+      },
+      "firstPublicAt": "2024-04-01T10:19:02+00:00",
+      "fixedCommit": "3e34325a991b0f3b77f2ca27a227addcc0570bc2",
+      "parentCommit": "e90885e6b3b6223a4b391632a15bfc2a0a20a591",
+      "sourceFiles": [
+        "src/_pytest/_code/code.py"
+      ],
+      "testFiles": [
+        "testing/code/test_excinfo.py",
+        "testing/test_subtests.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "sympy/sympy",
+      "pullRequest": 30699,
+      "url": "https://github.com/sympy/sympy/pull/30699",
+      "title": "polys: fix precision calculation in rs_nth_root",
+      "eligible": true,
+      "reasons": [],
+      "dates": {
+        "pullRequestCreated": "2026-10-08T09:11:35Z",
+        "merged": "2026-10-08T16:26:43Z",
+        "commitAuthored": "2026-10-08T16:26:42Z",
+        "commitCommitted": "2026-10-08T16:26:42Z",
+        "issueCreated": "2026-10-08T05:24:57Z"
+      },
+      "firstPublicAt": "2026-10-08T05:24:57+00:00",
+      "fixedCommit": "8c02bd2b177bce1775cd3688cef07d225f69345d",
+      "parentCommit": "a0be64b90beabfaa8f76fcb31f2983b2476adfb4",
+      "sourceFiles": [
+        "sympy/polys/puiseux.py",
+        "sympy/polys/ring_series.py"
+      ],
+      "testFiles": [
+        "sympy/polys/tests/test_ring_series.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    },
+    {
+      "repository": "sympy/sympy",
+      "pullRequest": 30702,
+      "url": "https://github.com/sympy/sympy/pull/30702",
+      "title": "ode: drop redundant const sol's after applying ic",
+      "eligible": true,
+      "reasons": [],
+      "dates": {
+        "pullRequestCreated": "2026-10-08T15:45:06Z",
+        "merged": "2026-10-09T08:24:37Z",
+        "commitAuthored": "2026-10-09T08:24:36Z",
+        "commitCommitted": "2026-10-09T08:24:36Z"
+      },
+      "firstPublicAt": "2026-10-08T15:45:06+00:00",
+      "fixedCommit": "8816d63c98ab9277eacbab066ceee939e025095a",
+      "parentCommit": "8c02bd2b177bce1775cd3688cef07d225f69345d",
+      "sourceFiles": [
+        "sympy/solvers/ode/ode.py"
+      ],
+      "testFiles": [
+        "sympy/solvers/ode/tests/test_ode.py"
+      ],
+      "trainingExposure": "unknown; recency is not proof of exclusion from training"
+    }
+  ],
+  "qualification": [
+    {
+      "task": "group-centrality-order",
+      "qualified": true,
+      "reasons": [],
+      "failToPass": [
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_all_group_orders_agree"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_order_dependent"
+        ]
+      ],
+      "passToPass": [
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_directed_ground_truth"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_directed_weighted"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_disconnected_directed_graph"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_disconnected_graph"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_endpoints_normalized[DiGraph]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_endpoints_normalized[Graph]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_guard_against_keyerror"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_many_groups"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_many_groups_directed_graph"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_no_paths_through_group"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_node_not_in_graph"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_normalized"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_normalized_connected[DiGraph-7-0.5833333333333334]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_normalized_connected[Graph-6-1]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_normalized_disconnected[DiGraph-6-0.2]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_normalized_disconnected[Graph-6-0.4]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_order_dependent_smaller"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_single_node"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_value_zero"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_with_endpoints[DiGraph]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_group_betweenness_with_endpoints[Graph]"
+        ],
+        [
+          "networkx.algorithms.centrality.tests.test_group.TestGroupBetweennessCentrality",
+          "test_two_group_betweenness_value_zero"
+        ]
+      ],
+      "artifacts": {
+        "before.xml": "b8cddf05282dde8f2f141f51def694daa5191d914af5afa7939c7021d7674db9",
+        "after.xml": "326465e80add0915e4accac77036118a1e2cd1e9e2a49a87dc0bdb66bbce527b",
+        "before.exit.json": "098859c77735d29b330de2d3bc2a116283f724328d1520c6daf8cb4101bbf6d5",
+        "9f6079c0120416599ea5d4018bbaba229ea2e456.tar.gz": "6269dec6dbfc59735761df7701957a6e7d2e796140b1143a0ae7072c8556c58f",
+        "before.log": "ed34c04d6a7ca76310b946f6584ad1c6536983248c8b394e8cc3a439f6604ecc",
+        "c1ebe046ec672eca7cba4dc88d6e0145406d693a.tar.gz": "e09eb69dc5b770aecedfde6c66548470a10b112c16ec8882ae3b1a9719718a34",
+        "after.log": "11f538e438c02047e247fd66b0418b9070b039c1cedc28898377aece22dc8034",
+        "after.exit.json": "76862f55862e4f593b81bff8dd5d4f6790f970bd01ca4e304a70e1933686e4b1"
+      }
+    },
+    {
+      "task": "series-root-precision",
+      "qualified": true,
+      "reasons": [],
+      "failToPass": [
+        [
+          "sympy.polys.tests.test_ring_series",
+          "test_issue_30698"
+        ],
+        [
+          "sympy.polys.tests.test_ring_series",
+          "test_nth_root"
+        ]
+      ],
+      "passToPass": [
+        [
+          "sympy.polys.tests.test_ring_series",
+          "test_inversion"
+        ]
+      ],
+      "artifacts": {
+        "before.xml": "d545d64a62c7eeaec128c2bf59be16ed61eebd3b277c109230e179c190aa1e85",
+        "a0be64b90beabfaa8f76fcb31f2983b2476adfb4.tar.gz": "00b37a5299188019bc28b3f4173b837e1f93b9935da1fc37a3747aea2eb01b2a",
+        "after.xml": "a7961bbaa3968a762a758746d7a6efdad14b76b012b304168f84e5d978d0c470",
+        "before.exit.json": "5aec0c812d01bf8a70d5f04d2ca31cdce6fb102b30cae84a3542a2cba1ca9841",
+        "before.log": "c23bf39f57c0d201d77b57733606f4fd2ee3da1a7c35677d96e57fa893f7182d",
+        "8c02bd2b177bce1775cd3688cef07d225f69345d.tar.gz": "b6e4d2ff0fb513f1db544e744fcbed78efbbf708d29d84980aac7b933121f48a",
+        "after.log": "6ba4cd7c0c55d8ab9798b9332709dc41758619a77d0873d90855a5aba90e4f35",
+        "after.exit.json": "01f8435d548f889833d780a2b1729789ae21a40f8c59cfb7f9639192f9399b07"
+      }
+    }
+  ],
+  "dependencies": [
+    "Pygments==2.21.0",
+    "attrs==26.1.0",
+    "hypothesis==6.140.2",
+    "iniconfig==2.3.1",
+    "mpmath==1.3.0",
+    "numpy==2.3.3",
+    "packaging==26.3",
+    "pandas==2.3.3",
+    "pluggy==1.6.0",
+    "pytest==8.4.2",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2026.5",
+    "scipy==1.16.2",
+    "six==1.17.0",
+    "sortedcontainers==2.4.0",
+    "tzdata==2026.5"
+  ],
+  "interpreter": "CPython 3.13.12",
+  "scope": "Source qualification only, no model evaluation or Scheme speedup claim."
+}

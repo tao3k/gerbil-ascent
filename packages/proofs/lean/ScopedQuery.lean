@@ -41,6 +41,51 @@ theorem bounded_has_shortest (h : Bounded edge k s t) : ∃ n, n ≤ k ∧ Short
         intro neq
         exact lower ⟨n,by omega,path⟩
       exact ⟨n,hn,path,fun m hm hp => lower ⟨m,by omega,hp⟩⟩
+-- Total-length exclusion: every segment and its sum belong to one request.
+def Via (edge : Vertex → Vertex → Prop) (k : Nat) (s z t : Vertex) :=
+  ∃ p q, p + q ≤ k ∧ Exact edge p s z ∧ Exact edge q z t
+theorem via_iff_shortest : Via edge k s z t ↔
+    ∃ p q, p + q ≤ k ∧ Shortest edge p s z ∧ Shortest edge q z t := by
+  constructor
+  · rintro ⟨p,q,hk,hp,hq⟩
+    rcases bounded_has_shortest (show Bounded edge p s z from ⟨p,by omega,hp⟩) with ⟨a,ha,pa⟩
+    rcases bounded_has_shortest (show Bounded edge q z t from ⟨q,by omega,hq⟩) with ⟨b,hb,pb⟩
+    exact ⟨a,b,by omega,pa,pb⟩
+  · rintro ⟨p,q,hk,hp,hq⟩
+    exact ⟨p,q,hk,hp.1,hq.1⟩
+theorem exact_append (hp : Exact edge p s z) (hq : Exact edge q z t) :
+    Exact edge (p+q) s t := by
+  induction q generalizing t with
+  | zero => cases hq; simpa using hp
+  | succ q ih =>
+    rcases hq with ⟨x,path,link⟩
+    exact ⟨x,ih path,link⟩
+theorem via_is_bounded (h : Via edge k s z t) : Bounded edge k s t := by
+  rcases h with ⟨p,q,hk,hp,hq⟩
+  exact ⟨p+q,hk,exact_append hp hq⟩
+theorem via_implies_independent_sides (h : Via edge k s z t) :
+    Bounded edge k s z ∧ Bounded edge k z t := by
+  rcases h with ⟨p,q,hk,hp,hq⟩
+  exact ⟨⟨p,by omega,hp⟩,⟨q,by omega,hq⟩⟩
+def Admitted (edge : Vertex → Vertex → Prop) (blocked : Scope → Vertex → Prop)
+    (k : Nat) (scope : Scope) (s t : Vertex) :=
+  Bounded edge k s t ∧ ¬ ∃ z, blocked scope z ∧ Via edge k s z t
+theorem mask_antitone (grow : ∀ z, blocked scope z → stronger scope z)
+    (h : Admitted edge stronger k scope s t) : Admitted edge blocked k scope s t := by
+  exact ⟨h.1,fun ⟨z,hb,hv⟩ => h.2 ⟨z,grow z hb,hv⟩⟩
+theorem mask_local (same : ∀ z, blocked scope z ↔ other scope z) :
+    Admitted edge blocked k scope s t ↔ Admitted edge other k scope s t := by
+  constructor
+  · exact mask_antitone (fun z hb => (same z).mpr hb)
+  · exact mask_antitone (fun z hb => (same z).mp hb)
+theorem zero_via : Via edge 0 s z t ↔ s = z ∧ z = t := by
+  constructor
+  · rintro ⟨p,q,hk,hp,hq⟩
+    have hp0 : p = 0 := by omega
+    have hq0 : q = 0 := by omega
+    subst p; subst q; exact ⟨hp,hq⟩
+  · rintro ⟨hp,hq⟩; exact ⟨0,0,by omega,hp,hq⟩
+
 theorem exact_is_walk (h : Exact edge n s t) : UnsanitizedPaths.Walk edge s t := by
   induction n generalizing t with
   | zero => cases h; exact .refl s
@@ -64,7 +109,7 @@ theorem trace_covers_required (h : ScopedComposition.Answer candidate required m
   exact ⟨scope,n,h,⟨h.1,hg,hm,hb⟩,hn⟩
 def SelectedBranch (start target blocked : Scope → Vertex → Prop)
     (edge : Vertex → Vertex → Prop) (k : Nat) (scope : Scope) (s t : Vertex) :=
-  start scope s ∧ target scope t ∧ ScopedReachabilityMask.Admitted (Bounded edge k) blocked scope s t
+  start scope s ∧ target scope t ∧ Admitted edge blocked k scope s t
 theorem query_trace_complete
     (h : ScopedComposition.NativeAnswer candidate required member (SelectedBranch start target blocked edge k) s t)
     (hg : required g) : ∃ scope n, n ≤ k ∧
@@ -82,7 +127,9 @@ def minimum (id s t n : Nat) := exact id s t n && (List.range n).all (fun m => !
 def first (id s t n : Nat) := n ≤ limit id && minimum id s t n
 def reachAt (id cap s t : Nat) := (List.range (cap + 1)).any (fun n => exact id s t n)
 def reach (id s t : Nat) := reachAt id (limit id) s t
-def witness (id scope z t : Nat) := ScopedReachabilityMask.banned (id % 512) scope z && reach id 0 z && reach id z t
+def viaBool (id k s z t : Nat) := (List.range (k+1)).any
+  (fun p => (List.range (k+1)).any (fun q => p+q ≤ k && exact id s z p && exact id z t q))
+def witness (id scope z t : Nat) := ScopedReachabilityMask.banned (id % 512) scope z && viaBool id (limit id) 0 z t
 def branch (id scope t : Nat) := reach id 0 t && !(List.range 3).any (fun z => witness id scope z t)
 def answer (id t : Nat) := branch id 0 t && branch id 1 t
 def predecessor (id s x t : Nat) := (List.range (limit id)).any
@@ -118,6 +165,17 @@ instance (id k : Nat) (s t : Fin 3) : Decidable (Bounded (FinEdge id) k s t) :=
       constructor
       · rintro ⟨n,path⟩; exact ⟨n.val,by omega,path⟩
       · rintro ⟨n,hn,path⟩; exact ⟨⟨n,by omega⟩,path⟩)
+instance (id k : Nat) (s z t : Fin 3) : Decidable (Via (FinEdge id) k s z t) :=
+  decidable_of_iff (∃ p q : Fin (k+1), p.val + q.val ≤ k ∧
+      Exact (FinEdge id) p.val s z ∧ Exact (FinEdge id) q.val z t)
+    (by
+      constructor
+      · rintro ⟨p,q,hk,hp,hq⟩; exact ⟨p.val,q.val,hk,hp,hq⟩
+      · rintro ⟨p,q,hk,hp,hq⟩; exact ⟨⟨p,by omega⟩,⟨q,by omega⟩,hk,hp,hq⟩)
+set_option maxRecDepth 4096 in
+theorem finite_via : ∀ id : Fin 8, ∀ k : Fin 3, ∀ s z t : Fin 3,
+    viaBool id.val k.val s.val z.val t.val = true ↔ Via (FinEdge id.val) k.val s z t := by decide
+
 set_option maxRecDepth 4096 in
 theorem finite_exact : ∀ id : Fin 8, ∀ n : Fin 3, ∀ s t : Fin 3,
     exact id.val s.val t.val n.val = true ↔ Exact (FinEdge id.val) n.val s t := by decide

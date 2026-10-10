@@ -180,8 +180,10 @@ addition is separate from the historical migration inventory.
 
 The [[file:../scoped-witness/query.org][unified bounded scoped query]] additionally checks the complete request
 chain in =ScopedQuery=: 3,072 pending/completed states, eight exact output
-invariants and empty pending publication. Four controls must fail on ignored K,
-global masks, lost predecessors and lost final traces. Its 1,536 complete
+invariants and empty pending publication. Five controls must fail on ignored K, independently bounded mask sides,
+global masks, lost predecessors and lost final traces. The total-hop mask
+transition uses shortest distances; its independent expectation enumerates
+exact prefix/suffix lengths whose sum fits K. Its 1,536 complete
 request observations are independently graded by Lean and replayed through the
 public Scheme compiler and retained Sessions. =check-scoped-query-conformance=
 is part of formal CI; ordinary Gerbil tests reconstruct paths from its evidence.

@@ -78,11 +78,15 @@
         (check-equal? (gerbil-ascent-scoped-query-path one 0 2) #f)
         (same (rows blocked 'group_answer) [])
         (same (rows blocked 'answer_trace) [])))
-    (test-case "prefix and suffix are each bounded by K including a 2K returning witness"
+    (test-case "total hop limit excludes a returning witness only when its sum fits K"
       (let (r (gerbil-ascent-evaluate-program (request '((0 1) (1 0)) '((alpha 1)) 1)))
+        (same (rows r 'mask_witness) '((alpha 0 1 1)))
+        (same (rows r 'group_answer) '((0 0)))
+        (same (rows r 'branch_answer) '((alpha 0 0) (beta 0 0) (beta 0 1)))
+        (same (rows r 'answer_trace) '((red alpha 0 0 0) (blue beta 0 0 0))))
+      (let (r (gerbil-ascent-evaluate-program (request '((0 1) (1 0)) '((alpha 1)) 2)))
         (same (rows r 'mask_witness) '((alpha 0 1 0) (alpha 0 1 1)))
-        (same (rows r 'group_answer) [])
-        (same (rows r 'branch_answer) '((beta 0 0) (beta 0 1)))))
+        (same (rows r 'group_answer) [])))
     (test-case "diamond has both shortest predecessors and an unaffected scope trace"
       (let* ((edges '((0 1) (0 2) (1 3) (2 3)))
              (r (gerbil-ascent-evaluate-program

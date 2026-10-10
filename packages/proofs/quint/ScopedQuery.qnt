@@ -15,7 +15,8 @@ module ScopedQuery {
   pure def expectedHops(id:int):Set[int] = 0.to(26).filter(slot => slot%3 <= limit(id) and exact(id,slot/9,(slot%9)/3,slot%3))
   pure def first(id:int,s:int,t:int,k:int):bool = k <= limit(id) and exact(id,s,t,k) and range(0,k).foldl(true,(ok,n) => ok and not(exact(id,s,t,n)))
   pure def reachable(id:int,s:int,t:int):bool = 0.to(limit(id)).exists(k => exact(id,s,t,k))
-  pure def witness(id:int,scope:int,z:int,t:int):bool = banned(id,scope,z) and reachable(id,0,z) and reachable(id,z,t)
+  pure def witness(id:int,scope:int,z:int,t:int):bool = banned(id,scope,z) and 0.to(limit(id)).exists(p => 0.to(limit(id)).exists(q =>
+    p+q <= limit(id) and exact(id,0,z,p) and exact(id,z,t,q)))
   pure def branch(id:int,scope:int,t:int):bool = reachable(id,0,t) and 0.to(2).forall(z => not(witness(id,scope,z,t)))
   pure def answer(id:int,t:int):bool = branch(id,0,t) and branch(id,1,t)
   pure def evaluate(id:int,mutation:str):State = {
@@ -30,7 +31,8 @@ module ScopedQuery {
     val witnesses = 0.to(17).filter(w => {
       val z = (w%9)/3
       val blocked = if (mutation == "global") banned(id,0,z) or banned(id,1,z) else banned(id,w/9,z)
-      blocked and reach.contains(z) and reach.contains(z*3+w%3)
+      blocked and (if (mutation == "independentSides") reach.contains(z) and reach.contains(z*3+w%3) else
+        0.to(cap).exists(p => 0.to(cap).exists(q => p+q <= cap and shortest.contains(z*3+p) and shortest.contains(z*9+(w%3)*3+q))))
     })
     val branches = 0.to(5).filter(b => reach.contains(b%3) and not(witnesses.exists(w => w/9 == b/3 and w%3 == b%3)))
     val groups = 0.to(2).filter(t => branches.contains(t) and branches.contains(3+t))

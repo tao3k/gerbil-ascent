@@ -17,7 +17,7 @@ Session owns execution and publishes one immutable evidence cut.
 | Produce | =mask_reach(s,t)= | Union of exact layers, including the identity layer |
 | Provenance | =mask_shortest(s,t,k)= | First reachable layer, unique distance per pair |
 | Provenance | =mask_predecessor(s,x,t,k)= | All last edges of shortest k-edge witnesses |
-| Negate | =mask_witness(scope,s,z,t)= | Selected endpoints, banned z, bounded prefix and suffix |
+| Negate | =mask_witness(scope,s,z,t)= | Selected endpoints, banned z, shortest prefix + suffix ≤ K |
 | Negate | =branch_answer(scope,s,t)= | Selected reachable pair with no exclusion witness |
 | Compose | =group_witness(g,scope,s,t)= | Required-group support before conjunction |
 | Compose | =group_answer(s,t)= | Finite candidate supported in every required group |
@@ -30,9 +30,21 @@ explicit contracts; this unified request selects bounded structural masking.
 
 * Semantic and publication boundaries
 
-The explicit paper formula =pre(z)⊗suf(z)= bounds *each side* by K, not their
-combined length. For 0→1→0, K=1 and banned 1, (0,0) is excluded by two one-hop
-sides. Clean alternative paths do not rescue a structurally excluded pair.
+The bounded request uses *total-length structural exclusion*: a pair is removed
+if a walk of total length ≤K visits a banned vertex in that scope. The paper's
+explicit =pre(z)⊗suf(z)= formula bounds each side independently by K. These are
+different contracts, rather than a reproduction of one another. For 0→1→0 and
+banned 1, our K=1 request retains (0,0); K=2 excludes it. The independent-side
+formula excludes it already at K=1. This is an intentional semantic revision
+of the bounded constructor, not a fix to the least-closure API.
+
+The compiler joins *shortest* prefix/suffix distances and checks their sum ≤K.
+Lean proves existence of an exact bounded walk through z iff such shortest
+segments exist with sum ≤K. Joining every pair of exact hop layers is therefore
+unnecessary; the compiler remains O(K) declarations, without O(K²) split rules.
+Only integer addition/comparison is a native guard; graph propagation,
+stratification, source updates and evidence publication belong to the engine.
+Clean alternative paths do not rescue a structurally excluded pair.
 Increasing K can add both reachable pairs and banned witnesses; scoped answers
 are not claimed monotone in K. Masks remain local to the selected scope.
 
@@ -57,23 +69,26 @@ requests and 3,072 pending/completed states. Ten corpus fields retain reach,
 layers, shortest distances, predecessors, exclusion witnesses, branches,
 group answers and final traces. Pending states expose no result relations.
 
-[[file:../../../packages/proofs/lean/ScopedQuery.lean][Lean]] independently grades all fields. Generic kernel theorems connect exact
-hops to inductive walks, establish a shortest witness for bounded reachability,
+[[file:../../../packages/proofs/lean/ScopedQuery.lean][Lean]] independently grades all fields. Generic kernel theorems prove =via_iff_shortest=, segment concatenation,
+total-bound implication, zero-hop exclusion and scope-local mask antitonicity.
+They connect exact hops to inductive walks, establish a shortest witness for bounded reachability,
 and prove shortest predecessors decrease distance. =query_trace_complete=
 connects native missing-group semantics to a bounded shortest trace for every
-required group. The finite exact/minimum tables are linked to those path
-predicates for every graph and k≤2. Existing scope/composition laws are reused.
+required group. The finite exact/minimum/total-witness tables are linked to those path
+predicates for every graph and k≤2. The revised mask has its own locality/antitonicity proofs; generic composition
+laws are reused.
 No project axiom, =sorry= or =native_decide= is introduced.
 
 [[file:../../../t/qualification/ascent-scoped-query-test.ss][Scheme qualification]] executes the complete public request on 24 retained
 Session owners, compares all shared tables, and reconstructs every shortest
 path through the production accessor, checking its edges against the source.
-Controls cover zero hops, the 2K mask boundary, diamond alternatives, group
+Controls cover zero hops, total-hop returning-path boundaries, diamond alternatives, group
 boundaries, source withdrawal, held evidence, publication rejection and budgets.
 
 | Deliberate model fault | Required failure |
 |------------------------+------------------|
 | Ignore K | ExactHops |
+| Bound prefix and suffix independently (paper formula) | ExactWitnesses |
 | Globalize scope mask | ExactWitnesses |
 | Drop predecessors | ExactPredecessors |
 | Drop final traces | ExactTraces |
@@ -81,7 +96,7 @@ boundaries, source withdrawal, held evidence, publication rejection and budgets.
 =just check-scoped-query-conformance= compares regenerated and frozen corpora;
 =just _check-quint ScopedQuery= checks states and fault controls. Both are wired
 into formal CI; ordinary Gerbil discovery owns Scheme qualification.
-These faults are injected contract violations, not four production bug claims.
+These faults are injected contract violations, not production bug claims.
 
 This closes normalized pair requests on a caller-owned finite graph. General
 typed evidence joins, per-atom relation/direction plans, projection across
@@ -89,18 +104,20 @@ different anchors, NL/model specification and real-KG benchmarks remain open.
 Finite cross-language agreement and generic laws are not universal Scheme
 compiler refinement.
 
-* Local verification receipts
+* Total-hop design validation
 
-- Eight native Cases passed with final =HARNESS-OK=, =OK= and exit 0 in
-  27 seconds, including all 1,536 requests and the K=64 compiler boundary.
-- Existing composition (nine Cases) and least-closure mask (eight Cases)
-  regressions passed with final =OK= and exit 0.
-- Policy-enabled native package build passed. Lean build and independent
-  current/frozen ten-field corpus comparison passed.
-- Quint explored 3,072 states; all four deliberate faults failed their
-  designated invariant with exit 12; the complete harness exited 0.
-- Independently clearing a nonempty hop, mask-witness, predecessor or trace
-  field in the foreign corpus was rejected by Lean comparison.
+- Eight native Cases passed, including all 1,536 complete requests, source
+  withdrawal, shortest-path replay and K=64 admission, with final =HARNESS-OK=,
+  =OK= and exit 0 (19 seconds in the focused local run).
+- Existing least-closure mask (eight Cases), group composition (nine Cases)
+  and the policy-enabled native package build passed.
+- 156 corpus observations differ from the previous independent-side formula.
+  The reference formula remains a deliberate =independentSides= model control;
+  disagreement is expected for this declared contract.
+- Lean kernel checks the generic shortest-segment equivalence and all finite
+  exact/minimum/bounded/total-witness tables without additional axioms.
 
-These are local correctness receipts, not an end-to-end speedup claim or a
-claim that remote CI has completed.
+Focused local timing is a correctness receipt, not a matched performance
+comparison or a KGQA accuracy claim. Lean accepted the regenerated and frozen ten-field corpus. Quint explored
+3,072 states and detected all five designated faults (exit 12); the complete
+harness exited 0. Exact-revision CI is required for delivery.

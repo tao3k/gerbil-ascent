@@ -125,4 +125,33 @@ the same contract distinction: structural pair exclusion and existential
 clean-path survival differ. The
 finite least-closure producer retains its own contract. The unified bounded
 request entry additionally implements K-hop production and shortest predecessor
-publication, preserving the explicit formula's independently bounded mask sides.
+publication. Its revised contract bounds the *sum* of exclusion prefix and suffix
+lengths by the request K. The paper's independently bounded sides remain an
+explicit comparison control, rather than the default bounded query semantics.
+
+* Proof-guided total-hop experiment
+
+The transferable design points are scope ownership, evidence before projection,
+and a unified production/mask/composition/trace schedule. We do not infer that
+our executor has higher KGQA accuracy or throughput from its architecture.
+
+For a fixed directed graph, =Via(K,s,z,t)= means there exist exact prefix/suffix
+walks of lengths p and q with p+q≤K. =via_iff_shortest= proves this iff the
+shortest segment lengths satisfy the same sum bound. =exact_append= proves the
+segments concatenate into an actual bounded producer walk; =zero_via= rules
+out removing an identity pair through an unrelated returning cycle at K=0.
+These laws justify using existing shortest relations in the Scheme mask rule.
+
+Quint independently enumerates exact segment lengths in its expected predicate,
+while actual transitions and Scheme use shortest distances. All 1,536 request
+observations remain linked to Lean grading, scope/group tables and final traces.
+The =independentSides= mutation reinstates the paper formula and must produce a
+counterexample to the total-hop invariant. On the same census, 156 observations
+change. This establishes a reproducible semantic difference, not a superiority
+claim or replication of the paper's natural-language benchmark.
+
+Structural exclusion still rejects a pair when any *in-bound* banned walk
+exists, even if a clean alternative exists. The least-closure producer retains
+its separate unbounded structural contract. This experiment does not truncate
+the general ASCENT fixed-point engine or replace the remaining typed evidence
+join/interface/projection architecture work.

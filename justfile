@@ -869,7 +869,7 @@ _check-quint group='all': prepare-quint
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
             ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences; fault referenceStale Qualified; fault referencePartial Qualified; fault query Qualified ;;
             ScopedReachabilityMask) fault global ExactWitnesses; fault late ExactWitnesses; fault cleanAlternative ExactBranches; fault forgetWitness ExactWitnesses ;;
-            ScopedQuery) fault unbounded ExactHops; fault global ExactWitnesses; fault forgetPredecessor ExactPredecessors; fault forgetTrace ExactTraces ;;
+            ScopedQuery) fault unbounded ExactHops; fault independentSides ExactWitnesses; fault global ExactWitnesses; fault forgetPredecessor ExactPredecessors; fault forgetTrace ExactTraces ;;
             ScopedComposition) fault union ExactAnswer; fault allBranches ExactCoverage; fault emptyGroup ExactMissing; fault forgetWitness ExactWitnesses ;;
             BranchScopedWitness) fault crossMask ExactWitnesses; fault switchMask ExactWitnesses; fault forgetScope ExactWitnesses; fault collapseBranch ExactBranches ;;
             ScopedWitness) fault late ExactWitnesses; fault global ExactAnswer; fault anyBlocked ExactWitnesses; fault forget ExactWitnesses ;;

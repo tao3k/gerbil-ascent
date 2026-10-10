@@ -42,7 +42,8 @@
 
 ;;; Compile exact hop layers, shortest distances and all shortest predecessors
 ;;; into ordinary relations. No callback computes reachability or provenance.
-;;; Both sides of the structural mask use the same <=K closure independently.
+;;; A banned witness must fit the total hop limit. Shortest prefix/suffix
+;;; distances decide existence without joining every pair of exact hop layers.
 ;; : (forall (v scope) (-> [(Tuple v)] [(Pair v v)] [(Pair scope v)] [(Pair scope v)] [(Pair scope v)] Integer Integer Integer Integer Program))
 ;; : (-> VertexRows EdgeRows ScopedStarts ScopedTargets ScopedBlocked HopLimit InputBudget FactBudget OutputBudget Program)
 (def (gerbil-ascent-bounded-scoped-reachability-mask-program vertices edges starts targets blocked hops
@@ -52,7 +53,9 @@
   (let* ((base (gerbil-ascent-scoped-reachability-mask-program
                 vertices edges starts targets blocked input-budget fact-budget output-budget))
          (s (gerbil-ascent-variable 's)) (x (gerbil-ascent-variable 'x))
-         (t (gerbil-ascent-variable 't)) (k (gerbil-ascent-variable 'k)))
+         (t (gerbil-ascent-variable 't)) (k (gerbil-ascent-variable 'k))
+         (scope (gerbil-ascent-variable 'scope)) (z (gerbil-ascent-variable 'z))
+         (prefix (gerbil-ascent-variable 'prefix)) (suffix (gerbil-ascent-variable 'suffix)))
     (def (a name . terms)
       (gerbil-ascent-atom name (map (lambda (term)
         (if (exact-integer? term) (gerbil-ascent-literal term) term)) terms)))
@@ -76,6 +79,10 @@
             (if (= n 1) []
               (list (rule (a 'mask_shorter s t n) (a 'mask_shorter s t (- n 1)))))))
           (iota hops 1)))
-        ;; Reuse the producer's scope rules; replace only its unbounded closure.
-        (cddr (.ref base 'rules)))
+        ;; Scope admission remains native; only integer addition is a guard.
+        (list (rule (a 'mask_witness scope s z t)
+          (a 'mask_start scope s) (a 'mask_target scope t) (a 'mask_blocked scope z)
+          (a 'mask_shortest s z prefix) (a 'mask_shortest z t suffix)
+          (gerbil-ascent-guard '(prefix suffix) (lambda (p q) (<= (+ p q) hops)))))
+        (cdddr (.ref base 'rules)))
       input-budget fact-budget output-budget (.ref base 'source-handles))))

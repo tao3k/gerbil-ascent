@@ -737,3 +737,40 @@ tables, native typed bindings and ordered expression composition is applied to
 this entire evidence boundary. Solver planning, bridge/session execution and
 general workload performance remain separate audit work. Preceding =71ac687=
 now has six successful exact-head CI jobs in run =38036942726=.
+
+* Native binary relation admission, analysis and persistent publication
+
+This audit extends to =core/binary-relation.ss= and =table/expression.ss=.
+Sparse closure/distance membership already used hashes, but source adjacency still
+allocated every radix slot. Simultaneous closure/distance demands repeated whole
+path traversal. Final Set publication then rebuilt persistent Trie paths by
+inserting each already ordered result. The costs span admission through public
+observation, not just one graph helper.
+
+Sparse views now own occupied adjacency. Canonical analysis maps exact external
+IDs to local offsets, traverses private vector frontiers and reuses invocation
+visitation stamps. A typed final record carries complete private rows/distance
+queries into independent POO projections. Native provenance and neighbor identity
+guard sharing; custom visitor packets and bounded calls keep separate execution.
+Public row spines stay detached. The new =core/ordered-pair-set.ss= composes the
+official UIntTrieSet Table constructors to publish sorted outputs in bulk; default
+Set admission remains for unsorted, duplicate or invalid input.
+
+[[file:../../t/performance/sparse-view/README.org][Frozen complete binary consumers]] include fresh POO construction, composition, closure,
+distances, delta/bounded steps, persistent publication and complete reads. Against
+=c90f272=, sparse CPU falls 2615 ->1137 us (56.5%, 20/20 wins) and allocation
+2863168 ->406368 bytes (85.8%). Dense CPU falls 1200 ->388 us (67.7%), boundary
+1362 ->497 us (63.5%). Empty and callback controls pass. Small adds 1904 bytes;
+closure-only adds 17112 bytes with essentially unchanged CPU. All seven preset
+scenario gates pass; isolated helper gains are not promoted to solver throughput.
+
+The admission-only variant failed stability; private POO analysis failed the
+closure-only allocation control; the record revision still failed full-consumer
+CPU. Those receipts remain alongside excluded overlapping and intermediate
+measurements. The ordered persistent publication revision closes the measured
+flow under unchanged gates. Thirty-five Cases in three native modules pass final
+=OK=, including exhaustive independent path truth, Set validation/operations,
+callback traces/counts, exact budgets, publication isolation and 2^80 keys.
+ASP Policy passes all changed production owners and the new Suite with zero
+findings. The preceding =c90f272= unit has six successful exact-head CI jobs in
+run =38038056373=. Broader engine/bridge execution remains separate audit work.

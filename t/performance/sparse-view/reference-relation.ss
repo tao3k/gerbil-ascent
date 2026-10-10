@@ -8,22 +8,17 @@
 ;;; the caller that demands a view or invokes a bounded closure.
 
 (import (only-in :clan/poo/object .o .ref .call)
-        (only-in "ordered-pair-set.ss" gerbil-ascent-ordered-pair-set)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :std/iter for in-range)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-relation-closure-bounded
         relation-view
-        native-relation-view?
         relation-source-visitor
         relation-compose
         relation-delta-step
         relation-closure
         relation-projection
         relation-shortest-distance-projection
-        (struct-out native-path-distances)
-        native-sparse-distance-analysis
         build-native-path-layout
         compute-native-path-analysis
         path-projection
@@ -31,27 +26,6 @@
 
 ;; A provenance marker for the private prepared view, not a global result cache.
 (def native-path-view-tag (list 'native-path-view))
-
-;; : (-> EncodedRows DistanceQuery NativePathDistances)
-(defstruct native-path-distances (pairs distance) final: #t)
-
-;; native-relation-view?
-;; : (forall (a) (-> a Boolean))
-;; : (-> UntrustedRelationView Boolean)
-;; | doc m%
-;;     Recognize the provenance marker of this module's private prepared views.
-;;     Custom source/neighbor visitor packets cannot authorize shared analysis.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (native-relation-view? (relation-view source 513))
-;;     ;; => #t
-;;     ```
-;;   %
-(def (native-relation-view? view)
-  (and (vector? view) (= (vector-length view) 4)
-       (eq? (vector-ref view 3) native-path-view-tag)))
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -120,60 +94,31 @@
 (def (relation-view pairs radix)
   (unless (and (exact-integer? radix) (> radix 1))
     (error "Ascent table radix must be an integer greater than one" radix))
-  (if (> radix 512)
-    (sparse-relation-view pairs radix)
-    (let (index (make-vector radix []))
-      (.call UIntTrieSet .foldl
-        (lambda (pair _)
-          (let ((source (quotient pair radix)) (target (modulo pair radix)))
-            (when (>= source radix)
-              (error "Ascent table pair exceeds the declared radix" pair))
-            (vector-set! index source (cons target (vector-ref index source)))))
-        (void) pairs)
-      ;; Ordered trie admission reverses each target list. Source traversal
-      ;; restores encoded key order; direct neighbor visitation keeps its order.
-      ;; Radix <= 512 proves source, target and encoded base fit fixnums.
-      (vector
-        (lambda (consume)
-          (let visit ((source 0))
-            (when (fx< source radix)
-              (visit-source-row (vector-ref index source) (fx* source radix) consume)
-              (visit (fx+ source 1)))))
-        (lambda (source) (vector-ref index source))
-        (lambda (source consume) (for-each consume (vector-ref index source)))
-        native-path-view-tag))))
-
-;; sparse-relation-view
-;; : (forall (a) (-> a Radix IndexedSource))
-;; : (-> UIntTrieSet Radix IndexedSource)
-;; | doc m%
-;;     Own adjacency only for admitted source identities. Exact radix and pair
-;;     arithmetic stay external; source traversal uses the ordered native trie.
-;;     Targets retain the same reverse admission order as the dense view.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (sparse-relation-view (.call UIntTrieSet .<-list [515 1029]) 513)
-;;     ;; => a private view of edges 1->2 and 2->3
-;;     ```
-;;   %
-(def (sparse-relation-view pairs radix)
-  (let (index (make-hash-table))
+  (let (index (make-vector radix []))
     (.call UIntTrieSet .foldl
-      (lambda (pair _)
-        (let ((source (quotient pair radix)) (target (modulo pair radix)))
-          (when (>= source radix)
-            (error "Ascent table pair exceeds the declared radix" pair))
-          (hash-put! index source (cons target (or (hash-get index source) [])))))
-      (void) pairs)
-    (def (targets source)
-      (unless (and (exact-integer? source) (<= 0 source) (< source radix))
-        (error "Ascent table source exceeds the declared radix" source))
-      (or (hash-get index source) []))
-    (vector (relation-source-visitor pairs) targets
-      (lambda (source consume) (for-each consume (targets source)))
-      native-path-view-tag)))
+           (lambda (pair _)
+             (let ((source (quotient pair radix)) (target (modulo pair radix)))
+               (when (>= source radix)
+                 (error "Ascent table pair exceeds the declared radix" pair))
+               (vector-set! index source (cons target (vector-ref index source)))))
+           (void) pairs)
+    ;; The official fold is ordered by encoded key. Reverse each private
+    ;; neighbor list by traversal, without copying or publishing the vector.
+    (vector
+     (if (<= radix 512)
+       ;; Radix <= 512 proves source, target and encoded base fit fixnums.
+       ;; Keep generic arithmetic and the native fold for unbounded sparse keys.
+       (lambda (consume)
+         (let visit ((source 0))
+           (when (fx< source radix)
+             (visit-source-row (vector-ref index source) (fx* source radix) consume)
+             (visit (fx+ source 1)))))
+       ;; Sparse domains retain the native fold: no scan proportional to an
+       ;; arbitrarily large radix, and no unbounded reverse-row recursion.
+       (relation-source-visitor pairs))
+     (lambda (source) (vector-ref index source))
+     (lambda (source consume) (for-each consume (vector-ref index source)))
+     native-path-view-tag)))
 
 ;; : (-> UIntTrieSet SourceVisitor)
 (def (relation-source-visitor pairs)
@@ -252,8 +197,8 @@
 ;; : (-> SourceVisitor UIntTrieSet NeighborVisitor Radix (Maybe NeighborRows) DeltaProjection)
 (def (relation-delta-step visit-frontier accumulated neighbors-of radix native-neighbors)
   (let* ((candidates
-          (gerbil-ascent-ordered-pair-set
-           (relation-compose visit-frontier neighbors-of radix #f native-neighbors)))
+          (.call UIntTrieSet .<-list
+                 (relation-compose visit-frontier neighbors-of radix #f native-neighbors)))
          ;; V19 Set .diff omits operands in its Table .merge forwarding.
          (delta
           (.call (.ref UIntTrieSet 'Table) .merge
@@ -412,71 +357,6 @@
          (lambda (pair)
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
                 (lookup-distance pair)))))))
-
-;; native-sparse-distance-analysis
-;; : (forall (p) (-> (IndexedSource p) Radix (NativePathDistances p)))
-;; : (-> NativeRelationView Radix NativePathDistances)
-;; | doc m%
-;;     Prepare occupied node offsets and traverse one private vector frontier per
-;;     source. External pair identities stay exact; nonempty cycles keep their
-;;     shortest positive distance. Only a canonical view authorizes this path.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (native-sparse-distance-analysis (relation-view source 513) 513)
-;;     ;; => a private record of complete pairs and an exact distance query
-;;     ```
-;;   %
-(def (native-sparse-distance-analysis view radix)
-  (unless (and (native-relation-view? view) (exact-integer? radix) (> radix 512))
-    (error "Ascent sparse path analysis requires a canonical sparse view"))
-  (with (#(visit-source targets _ _) view)
-    (let (offsets (make-hash-table))
-      (visit-source (lambda (pair)
-        (hash-put! offsets (quotient pair radix) #t)
-        (hash-put! offsets (modulo pair radix) #t)))
-      (let* ((nodes (list->vector (list-sort < (hash-keys offsets))))
-             (count (vector-length nodes))
-             (adjacency (make-vector count []))
-             (visited (make-vector count 0))
-             (distances (make-hash-table))
-             (ordered []))
-        ;; Admission ended. Reuse the membership owner for local physical offsets.
-        (for (slot (in-range count))
-          (hash-put! offsets (vector-ref nodes slot) slot))
-        (for (slot (in-range count))
-          (vector-set! adjacency slot
-            (map (lambda (node) (hash-get offsets node)) (targets (vector-ref nodes slot)))))
-        (for (origin (in-range count))
-          (let (seed (vector-ref adjacency origin))
-            (when (pair? seed)
-              (let ((stamp (+ origin 1))
-                    (base (* (vector-ref nodes origin) radix))
-                    (depth 1) (next []))
-                ;; This invocation alone owns visitation. Source stamps reuse
-                ;; one physical vector; discovery/expansion closures are bound
-                ;; once per origin rather than allocated at every path probe.
-                (def (discover! target)
-                  (unless (= (vector-ref visited target) stamp)
-                    (vector-set! visited target stamp)
-                    (let (pair (+ base (vector-ref nodes target)))
-                      (hash-put! distances pair depth)
-                      (set! ordered (cons pair ordered)))
-                    (set! next (cons target next))))
-                (def (expand! middle)
-                  (for-each discover! (vector-ref adjacency middle)))
-                (for-each discover! seed)
-                (let visit ((frontier next))
-                  (unless (null? frontier)
-                    (set! depth (+ depth 1))
-                    (set! next [])
-                    (for-each expand! frontier)
-                    (visit next)))))))
-        (make-native-path-distances (list-sort < ordered)
-          (lambda (pair)
-            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                 (hash-get distances pair))))))))
 
 ;;; Whole-row path propagation is confined to canonical, dense snapshots.
 ;;; The general pair frontier remains authoritative for callbacks and sparse

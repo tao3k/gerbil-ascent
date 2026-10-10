@@ -9,7 +9,8 @@
                  asp-gerbil-scheme-library-package-prototype))
 
 (def gerbil-ascent-library-modules
-  '("core/binary-relation"
+  '("core/ordered-pair-set"
+    "core/binary-relation"
     "core/relation-view"
     "core/finite-flow"
     "table/expression"

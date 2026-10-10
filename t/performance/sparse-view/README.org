@@ -1,0 +1,141 @@
+#+TITLE: Native binary relation admission, analysis and publication
+
+* One production flow
+
+The unit spans =core/binary-relation.ss=, =core/ordered-pair-set.ss= and
+=table/expression.ss=. It closes the sparse adjacency gap and follows the
+result through composition, closure, shortest distances, delta steps and
+persistent set publication. Public extensible expressions remain POO values.
+Private complete path results use a typed final =native-path-distances= record.
+
+For the existing sparse domain branch (>512), adjacency retains only occupied
+source identities. The ordered native trie visitor and reverse neighbor order
+are preserved. Exact radix/pair arithmetic supports identities above 2^80;
+invalid sparse neighbor coordinates now receive explicit radix admission.
+Dense bitmap/path selection keeps its existing numerical boundary.
+
+Canonical sparse analysis prepares occupied node offsets once and runs BFS over
+private adjacency/visitation vectors. One invocation owns the source stamps and
+frontier. Discovery/expansion operations bind once per source. External IDs stay
+exact, and nonempty cycles retain their shortest positive distance. This removes
+repeated pair decoding and encoded-key membership probes during path expansion.
+
+POO demands share this private complete analysis only when the view carries the
+native provenance marker and the neighbor procedure is unchanged. Custom neighbor
+or whole-source visitor packets retain separate complete operations. Bounded
+closure calls still perform independent budget admission and traversal. Closure
+and distance publication each detach their row spine, so editing either public
+list cannot alter another demand or the private distance query.
+
+Publication previously inserted every ordered output into a persistent Trie,
+rebuilding shared paths. The new ordered-pair adapter prepares the official
+UIntTrieSet Table =.make-leaf= / =.branch= / =.make-skip= constructor contract.
+Each Patricia branch is built once using a monotone bit-partition search. Generic
+exact bit arithmetic preserves large keys. Unsorted, duplicate or invalid inputs
+retain the original Set constructor. Delta publication and demanded closure sets
+use the same adapter; membership, removal, merge/union and native validation retain
+the original persistent Set contract.
+
+* Source learning
+
+Installed Gerbil =1cfb032= =compiler/compile.ss:1115-1125= owns a local resolved
+identifier table while preserving traversal order. =optimize-base.ss:24-29= names
+private optimizer metadata with native records. Here numeric node identity uses
+value equality, not the compiler's identifier identity table. After admission,
+the local membership table becomes an offset map; public ordering never comes
+from hash enumeration.
+
+The local POO =trie.ss:335-398= supplies normalized native constructor methods,
+while =table.ss:218-236= expresses the Set/Table contract and its original
+element-wise =.<-list= flow. The adapter composes those constructors without
+inventing another public Set model or accessing raw node representation.
+
+* Frozen complete consumers and fixed gates
+
+Baseline =c90f2726d3a62ee2fc0695b1e4129de61d964b0e= freezes:
+
+| Owner | Original blob | Adaptation |
+|-------+---------------+------------|
+| core/binary-relation.ss | 14d73ed2ccba9f47411118cab00d33d643acf8db | Byte-identical reference-relation.ss |
+| table/expression.ss | dc700e04cd77aed71dedf855d236ca9288432cc0 | Only its core import redirects to the frozen relation owner |
+
+Both arms share the same UIntTrieSet dependency and independent mathematical
+chain expectations. Inputs and expected rows are prepared outside timing. Each
+timed call constructs a fresh POO expression, admits its source, forces complete
+two-hop/at-most-two-hop/closure/distance projections, performs one delta step,
+independently executes an exactly bounded closure, publishes a persistent closure
+set and reads all distance/membership results. Every ordered projection, result
+field and callback trace must match. No native solver throughput is measured.
+
+Sparse uses a 17-node chain with gapped IDs in radix 262144. Empty uses the same
+domain without edges; boundary/callback/closure-only use radix 513, dense 64 and
+small 8. Callback replaces the neighbor procedure and retains its full trace.
+Closure-only reads complete closure, bounded closure and membership without
+demanding distance publication or persistent set publication.
+
+All gates are set before their scenario's first measurement. The original gates
+remain unchanged: 20 alternating CPU pairs, 20 ASP Scheme API admissions and
+five dedicated cumulative allocation pairs. Sparse/empty require <=90% CPU and
+>=16 wins. Controls permit <=110% CPU +20 us. Allocation permits <=110% baseline
++8192 bytes. Closure-only was added as a control before its first timing. CPU
+includes natural GC. Negative allocator differences are rejected. Final scenarios
+run sequentially after compilation, native tests and Policy have finished.
+
+| Complete consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|-------------------+------------+------------+-----------+-----------+-----------|
+| Sparse | 2615 | 1137 | 20 | 2863168 | 406368 |
+| Empty | 293 | 49 | 20 | 2248880 | 154256 |
+| Sparse boundary | 1362 | 497 | 20 | 758680 | 396096 |
+| Dense control | 1200 | 388 | 20 | 691952 | 354752 |
+| Callback control | 1516 | 702 | 20 | 1200024 | 852688 |
+| Small control | 64 | 55 | 18 | 148176 | 150080 |
+| Closure-only control | 157 | 152 | 12 | 143608 | 160720 |
+
+All fixed gates pass. Sparse CPU/allocation falls 56.5%/85.8%; dense CPU falls
+67.7% and boundary CPU 63.5%. Empty CPU falls 83.3%. Small adds 1904 bytes;
+closure-only adds 17112 bytes and supports nonregression, rather than a strong
+speedup claim. These results cover the complete consumers on this VM.
+
+* Retained negative results
+
+- Adjacency alone failed sparse stability (2666 ->2366 us, 15/20 wins).
+- The provenance-guard measurement also failed stability and overlapped a Policy
+  invocation; it is excluded from exclusive qualification. Its raw failed receipt
+  remains alongside the other failures.
+- Offset BFS with a private POO analysis failed closure-only allocation
+  (143608 ->175136 bytes). Reusing visitation/frontier operations did not resolve
+  the extra private-object publication cost (174912 bytes). The final record
+  revision passed that control but failed the complete sparse CPU gate
+  (3021 ->2741 us, 13/20 wins). Native bulk Trie publication addressed the remaining
+  full-consumer insertion cost before final requalification.
+- Earlier successful intermediate receipts remain explicitly named =before-*=;
+  they do not replace the final-version receipts. No failed unchanged variant was
+  rerun to select a better sample. Budgets, sample counts and gates were not eased.
+- Initial test fixture failures included a POO slot/local-name collision, a
+  duplicate-prototype precedence conflict, reader parentheses and a missing/error
+  accessor import. Repairs preceded admitted timing; failed logs remain cached.
+
+* Native qualification and reproduction
+
+Three official GxTest modules pass 35 Cases with no errors/failures and final
+=OK=. New checks cover all 512 three-node graphs at radix 512 and 513, independent
+shortest positive paths and exact pair budgets, both public demand orders,
+publication mutation isolation, source snapshots, custom visitor counts, exact
+2^80 identities and original invalid radix diagnostics. Ordered Set construction
+checks all 512 tiny subsets plus unsorted/duplicate/word-boundary/large-key inputs
+through native validation, membership and removal. Existing table-expression and
+binary-program Cases remain unchanged, including callback and publication controls.
+ASP Policy passes the three production owners and the new Suite with zero findings.
+
+Root =build.ss= adds only the production module registration. No SDK/source rebuild
+or new environment setting is involved. Logs and raw receipts remain ignored in
+=.cache/ascent/sparse-view/=.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/sparse-view/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/qualification/ascent-sparse-view-test.ss t/qualification/ascent-table-expression-test.ss t/qualification/ascent-binary-program-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/sparse-view/runner.ss sparse .cache/ascent/sparse-view/sparse-final.ss
+#+end_src
+
+Run the remaining scenarios separately with their corresponding receipt paths.
+The runner calls the ASP Scheme benchmark API directly.

@@ -698,3 +698,29 @@ allocation. Build and witness construction are outside timing; these figures
 make no cold-build or whole-evaluator performance claim. Narrow, small and empty
 controls retain the predeclared regression gates. Root =build.ss= stays a
 production roster; native qualification and benchmarks live under =t/=.
+
+* Study: prepare native identity layout and publish through the constructor contract
+
+Gerbil =1cfb032= =compiler/compile.ss:1115-1125= binds resolved identities to
+one traversal; =optimize-base.ss:24-29= names private metadata with native records.
+For binary paths, external unsigned node identity needs generic value equality.
+After admission the local membership owner becomes an offset map. Private vectors
+carry adjacency and visitation; result order follows sorted external pair keys.
+Visitation stamps and frontier operations belong to one analysis invocation.
+
+Private complete path data uses a final record, while public extensible POO
+expressions own their projection demands. Native provenance and unchanged neighbor
+identity authorize sharing. Callback packets and independently bounded traversals
+retain their operation boundaries. Each published row list has its own spine.
+Sharing an internal analysis never authorizes sharing caller-editable publication.
+
+The POO Trie source supplies =.make-leaf=, =.branch= and =.make-skip= through its
+Table constructor contract. Ordered Set publication composes those methods once
+per Patricia branch, replacing repeated persistent path insertion. The bit
+partition driver narrows an owned index interval; generic key arithmetic retains
+large unsigned identities. Unadmitted ordering/shapes use the original Set flow.
+
+[[file:../../t/performance/sparse-view/README.org][Complete native binary qualification]] records failed adjacency-only, private-POO and
+allocation experiments before the combined admission/analysis/publication revision.
+All seven gates pass; small and closure-only allocation costs remain explicit.
+Native validation and independent path truths qualify the representation changes.

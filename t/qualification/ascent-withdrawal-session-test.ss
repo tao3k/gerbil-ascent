@@ -16,7 +16,7 @@
                  gerbil-ascent-session-run gerbil-ascent-session-run-timeout
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-replace-sources!))
-(export ascent-withdrawal-session-test)
+(export ascent-withdrawal-session-test ascent-withdrawal-height-test ascent-height-conjunction-test)
 (def proposal '(candidate (relation path 2)
                  (rule (path ?x ?y) (edge ?x ?y))
                  (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
@@ -56,6 +56,74 @@
                         (cons (car todo) seen))))))
   (apply append (map (lambda (a)
                       (filter-map (lambda (b) (and (reaches? a b) (list a b))) '(0 1 2))) '(0 1 2))))
+(def ascent-withdrawal-height-test
+  (test-suite "Minimum withdrawal proof heights"
+    (test-case "minimum proof height increases when the shortest support is withdrawn"
+      (let* ((edges '((0 2) (0 1) (1 2)))
+             (owner (candidate-open-withdrawal-session (source edges) proposal))
+             (held (candidate-withdrawal-heights owner)))
+        (check-equal? (cadr (assoc '(0 2) (.ref held 'heights))) 1)
+        (check-exception (candidate-withdrawal-heights owner 1) (lambda (_) #t))
+        (check-equal? (reasoning-snapshot-generation (.ref (observed owner) 'source)) 0)
+        (candidate-withdrawal-session! owner 0 '((edge 1)))
+        (let (next (candidate-withdrawal-heights owner))
+          (check-equal? (cadr (assoc '(0 2) (.ref next 'heights))) 2)
+          (check-equal? (reasoning-snapshot-generation (.ref (.ref next 'observation) 'source)) 1)
+          (candidate-withdrawal-compact! owner 1)
+          (check-equal? (.ref (candidate-withdrawal-heights owner) 'heights) (.ref next 'heights)))
+        ;; Evaluate the held lazy POO fields after subsequent publication.
+        (check-equal? (reasoning-snapshot-generation (.ref (.ref held 'observation) 'source)) 0)
+        (check-equal? (cadr (assoc '(0 2) (.ref held 'heights))) 1)
+        (set-car! (car (car (.ref held 'heights))) 99)
+        (check-equal? (assoc '(99 2) (.ref (candidate-withdrawal-heights owner) 'heights)) #f)))
+    (test-case "all sixty-four graph heights match independent shortest nonempty walks"
+      (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+        (def (distance edges from to)
+          (let walk ((front (list from)) (depth 0) (seen []))
+            (let (next (apply append (map (lambda (at)
+                          (map cadr (filter (lambda (edge) (= (car edge) at)) edges))) front)))
+              (cond ((memv to next) (+ depth 1))
+                    ((null? next) #f)
+                    (else (let (fresh (filter (lambda (at) (not (memv at seen))) next))
+                            (and (pair? fresh) (walk fresh (+ depth 1) (append fresh seen)))))))))
+        (for-each (lambda (mask)
+          (let* ((edges (filter-map (lambda (edge n)
+                           (and (odd? (quotient mask (expt 2 n))) edge)) possible (iota 6)))
+                 (owner (candidate-open-withdrawal-session (source edges) proposal)))
+            (def (check-heights remaining)
+              (let* ((receipt (candidate-withdrawal-heights owner)) (entries (.ref receipt 'heights)))
+                (check-set (map car entries) (reference remaining))
+                (for-each (lambda (entry)
+                  (check-equal? (cadr entry) (distance remaining (caar entry) (cadar entry)))) entries)))
+            (check-heights edges)
+            (unless (null? edges)
+              (candidate-withdrawal-session! owner 0 '((edge 1)))
+              (check-heights (cdr edges)))
+            (when (zero? (modulo (+ mask 1) 8))
+              (displayln "HEIGHT-GRAPHS-CHECKED " (+ mask 1) "/64") (force-output)))) (iota 64))))
+
+  ))
+
+(def ascent-height-conjunction-test
+  (test-suite "Conjunctive and source fact proof heights"
+    (test-case "conjunction height uses maximum while candidate facts seed zero"
+      (let* ((cut (reasoning-source-snapshot 'conjunction 0 '((s 1 ((1))))))
+             (plan '(candidate (relation a 1) (relation b 1) (relation p 1)
+                      (rule (a ?x) (s ?x))
+                      (rule (b ?x) (a ?x))
+                      (rule (p ?x) (a ?x) (b ?x))
+                      (rule (p ?x) (p ?x))
+                      (query p ?x) (limits 16 64 128)))
+             (owner (candidate-open-withdrawal-session cut plan)))
+        (check-equal? (.ref (candidate-withdrawal-heights owner) 'heights) '(((1) 3)))
+        (candidate-withdrawal-session! owner 0 '((s 1)))
+        (check-equal? (.ref (candidate-withdrawal-heights owner) 'heights) []))
+      (let (owner (candidate-open-withdrawal-session
+                    (reasoning-source-snapshot 'facts 0 '((s 1 ())))
+                    '(candidate (relation unused 1) (fact s 7)
+                      (query s ?x) (limits 8 16 32))))
+        (check-equal? (.ref (candidate-withdrawal-heights owner) 'heights) '(((7) 0)))))))
+
 (def ascent-withdrawal-session-test
   (test-suite "Grounded withdrawal and native publication"
     (test-case "grouped protocol admission requires every named procedure"
@@ -65,7 +133,7 @@
                     (check-exception
                       (validate GerbilAscentWithdrawalSessionContract
                         (.cc owner '.operations (.cc operations slot 'invalid))) (lambda (_) #t)))
-                  '(.observe .withdraw .compact .support-size))
+                  '(.observe .withdraw .compact .support-size .heights))
         (check-exception (validate GerbilAscentWithdrawalSessionContract
                           (.cc owner '.operations (.o))) (lambda (_) #t))))
     (test-case "concurrent current-generation withdrawals have exactly one successful publisher"

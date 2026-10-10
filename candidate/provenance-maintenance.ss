@@ -11,7 +11,7 @@
 (export candidate-make-provenance-maintenance provenance-maintenance?
         provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
-        provenance-maintenance-size)
+        provenance-maintenance-size candidate-provenance-heights)
 (defstruct provenance-maintenance (rows-table roots edges sources alive removed))
 
 ;;; Counts describe retained graph owners, not allocator or resident memory.
@@ -207,3 +207,53 @@
       (provenance-maintenance-alive-set! state alive)
       (provenance-maintenance-removed-set! state removed)
       (values rows steps))))
+
+;;; Z19 min/max height relaxation over the current founded support graph.
+;;; Absence is not height zero. Source/candidate facts seed zero; a rule adds
+;;; one to the maximum premise height, including one for an empty rule body.
+;;; Repeated scans improve already present annotations. No partial table escapes
+;;; on budget exhaustion. This read computes fresh heights after every subcut;
+;;; it never retains an obsolete short proof across source deletion.
+;; : (-> ProvenanceMaintenance Nat (Values RowHeights Nat))
+(def (candidate-provenance-heights state (max-steps 100000))
+  (unless (and (provenance-maintenance? state) (exact-integer? max-steps) (> max-steps 0))
+    (error "invalid provenance height budget or state"))
+  (let ((heights (make-hash-table-eqv)) (steps 0)
+        (alive (provenance-maintenance-alive state))
+        (removed (provenance-maintenance-removed state)))
+    (def (probe!)
+      (set! steps (+ steps 1))
+      (when (> steps max-steps) (error "provenance height budget exceeded")))
+    (def (body-height inputs)
+      (let scan ((rest inputs) (maximum 0))
+        (if (null? rest) maximum
+          (begin (probe!)
+            (let (height (hash-get heights (car rest)))
+              (and height (scan (cdr rest) (max maximum height))))))))
+    (let relax ()
+      (let (changed? #f)
+        (for-each
+          (lambda (edge)
+            (probe!)
+            (when (and (hash-get alive (car edge))
+                       (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge)))))
+              (let* ((body (and (eq? (cadr edge) 'rule) (body-height (cadddr edge))))
+                     (next (if (eq? (cadr edge) 'rule) (and body (+ body 1)) 0))
+                     (old (hash-get heights (car edge))))
+                (when (and next (or (not old) (< next old)))
+                  (hash-put! heights (car edge) next) (set! changed? #t)))))
+          (provenance-maintenance-edges state))
+        (when changed? (relax))))
+    ;; Completeness covers all live support, even when the query is empty.
+    (hash-for-each (lambda (id _)
+                     (probe!)
+                     (unless (hash-get heights id) (error "unfounded live provenance height" id))) alive)
+    (let (entries
+           (filter-map (lambda (id)
+                         (probe!)
+                         (and (hash-get alive id)
+                              (list (candidate-copy-pairs
+                                      (hash-ref (provenance-maintenance-rows-table state) id))
+                                    (hash-ref heights id))))
+             (provenance-maintenance-roots state)))
+      (values entries steps))))

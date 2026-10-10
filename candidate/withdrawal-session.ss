@@ -17,21 +17,21 @@
         (only-in "provenance-graph.ss" candidate-positive-provenance
                  candidate-open-provenance-maintenance
                  candidate-provenance-preview-withdraw candidate-provenance-compact
-                 provenance-maintenance-size)
+                 provenance-maintenance-size candidate-provenance-heights)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run))
 (export candidate-open-withdrawal-session candidate-withdrawal-observe
         candidate-withdrawal-session! candidate-withdrawal-compact!
-        candidate-withdrawal-support-size GerbilAscentWithdrawalSessionContract)
+        candidate-withdrawal-support-size candidate-withdrawal-heights GerbilAscentWithdrawalSessionContract)
 
-;;; Admit the named procedure protocol as one responsibility. Four identical
+;;; Admit the named procedure protocol as one responsibility. Separate identical
 ;;; per-slot evidence trees add construction cost without richer method types.
 ;;; Every method is still required and checked before this owner escapes.
 ;; : (-> Any Boolean)
 (def (withdrawal-operations? candidate)
   (and (object? candidate)
        (andmap (lambda (slot) (and (.slot? candidate slot) (procedure? (.ref candidate slot))))
-               '(.observe .withdraw .compact .support-size))))
+               '(.observe .withdraw .compact .support-size .heights))))
 
 (define-type (GerbilAscentWithdrawalSessionContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/grounded-withdrawal-session
@@ -155,6 +155,10 @@
       (def (support-size)
         (let-values (((node-count edge-count root-count) (provenance-maintenance-size (vector-ref current 1))))
           (.o nodes: node-count edges: edge-count roots: root-count)))
+      (def (height-observation budget)
+        (let-values (((entries work) (candidate-provenance-heights (vector-ref current 1) budget)))
+          (let (captured (observe))
+            (.o observation: captured heights: entries visits: work))))
       (def (compact! generation budget)
         (unless (and (exact-integer? generation)
                      (= generation (reasoning-snapshot-generation (vector-ref current 0)))
@@ -174,7 +178,8 @@
                                (serialized (lambda () (withdraw! generation selectors budget)))))
                   (.compact (lambda (generation budget)
                               (serialized (lambda () (compact! generation budget)))))
-                  (.support-size (lambda () (serialized support-size))))))))))
+                  (.support-size (lambda () (serialized support-size)))
+                  (.heights (lambda (budget) (serialized (lambda () (height-observation budget))))))))))))
 
 (def (withdrawal-observe session) ((.ref (.ref session '.operations) '.observe)))
 (.defgeneric (withdrawal-update session generation selectors budget) slot: .withdraw)
@@ -194,3 +199,9 @@
 ;;; Immutable count snapshot; this does not measure resident memory.
 ;; : (-> WithdrawalSession SupportSize)
 (def (candidate-withdrawal-support-size session) ((.ref (.ref session '.operations) '.support-size)))
+
+;;; Detached query-row/minimum-height pairs and the exact captured source cut.
+;;; Budget failure exposes no partial annotation and changes no owner state.
+;; : (-> WithdrawalSession Nat HeightObservation)
+(def (candidate-withdrawal-heights session (budget 100000))
+  ((.ref (.ref session '.operations) '.heights) budget))

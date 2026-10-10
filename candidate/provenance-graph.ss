@@ -20,14 +20,14 @@
                  candidate-make-provenance-maintenance provenance-maintenance?
                  provenance-maintenance-rows candidate-provenance-withdraw!
                  candidate-provenance-preview-withdraw candidate-provenance-compact
-                 provenance-maintenance-size))
+                 provenance-maintenance-size candidate-provenance-heights))
 
 (export candidate-positive-provenance candidate-verify-positive-provenance
         positive-provenance? positive-provenance-status positive-provenance-witness
         positive-provenance-alternatives candidate-open-provenance-maintenance
         provenance-maintenance? provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
-        provenance-maintenance-size)
+        provenance-maintenance-size candidate-provenance-heights)
 
 ;; instantiate-head
 ;;   : (forall (a) (-> (Pair Symbol [(Or Symbol a)]) [(Pair Symbol a)] [(Or Symbol a)]))

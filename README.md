@@ -115,7 +115,7 @@ mined with confidence thresholds rather than established as universal laws.
 - [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf) (2007) — [dedicated reading and bounded natural annotations](docs/research/agent-inference/provenance-p07.org).
 - [Revisiting Semiring Provenance for Datalog](https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf) (2022) — all-tree versus minimum-depth semantics and recursive convergence boundaries.
 - [PUG: A Framework and Practical Implementation for Why & Why-Not Provenance](https://arxiv.org/abs/1808.05752) (2018)
-- [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019)
+- [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019) — [minimum-height reading and bounded support queries](docs/research/agent-inference/provenance-z19.org).
 - [Dedalus: Datalog in Time and Space](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html) (2009)
 - [Causes and Explanations: A Structural-Model Approach. Part I: Causes](https://doi.org/10.1093/bjps/axi147) (2005)
 

@@ -9,7 +9,7 @@
                  positive-provenance-status positive-provenance-alternatives
                  candidate-open-provenance-maintenance provenance-maintenance-rows
                  candidate-provenance-withdraw! candidate-provenance-preview-withdraw
-                 candidate-provenance-compact provenance-maintenance-size))
+                 candidate-provenance-compact provenance-maintenance-size candidate-provenance-heights))
 (import (rename-in (only-in :gerbil-ascent/t/performance/provenance-index/reference
                            candidate-positive-provenance positive-provenance-status
                            positive-provenance-alternatives positive-provenance-witness)
@@ -27,6 +27,8 @@
                    (candidate-open-provenance-maintenance prior-open)
                    (candidate-provenance-withdraw! prior-withdraw!)
                    (provenance-maintenance-rows prior-rows)))
+
+(import (only-in :gerbil-ascent/candidate/provenance-maintenance candidate-make-provenance-maintenance))
 
 (def corpus-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 (def (edges-for-mask mask)
@@ -67,7 +69,7 @@
   (check-equal? (length actual) (length expected))
   (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
 
-(export scheme-provenance-graph-test)
+(export scheme-provenance-graph-test scheme-minimum-height-test)
 
 (def (recursive-provenance-spec)
   (make-reasoning-candidate
@@ -75,6 +77,36 @@
    (list (vector '(p ?x) '((s ?x)) 10)
          (vector '(p ?x) '((p ?x)) 11))
    (vector '(p ?x) 12) '(8 16 32)))
+
+(def scheme-minimum-height-test
+  (test-suite "Minimum grounded proof heights"
+    (test-case "height relaxation improves a previously discovered longer proof"
+      (let* ((snapshot (reasoning-source-snapshot 'height-relax 0 '((s 1 ((1))))))
+             (spec (make-reasoning-candidate '((a . 1) (b . 1) (p . 1)) []
+                     (list (vector '(a ?x) '((s ?x)) 10)
+                           (vector '(b ?x) '((a ?x)) 11)
+                           (vector '(p ?x) '((b ?x)) 12)
+                           (vector '(p ?x) '((s ?x)) 13)
+                           (vector '(p ?x) '((p ?x)) 14))
+                     (vector '(p ?x) 15) '(8 32 64)))
+             (graph (candidate-positive-provenance snapshot spec 'program 'complete '((1)) 1024))
+             ;; Sort already verified ground alternatives to discover height 3
+             ;; before the height 1 alternative in the same relaxation pass.
+             (edges (list-sort (lambda (a b)
+                                (< (if (eq? (cadr a) 'source) -1 (car (caddr a)))
+                                   (if (eq? (cadr b) 'source) -1 (car (caddr b)))))
+                              (positive-provenance-alternatives graph)))
+             (state (candidate-make-provenance-maintenance (positive-provenance-witness graph) edges)))
+        (let-values (((heights work) (candidate-provenance-heights state)))
+          (check-equal? heights '(((1) 1)))
+          (check-exception (candidate-provenance-heights state (- work 1)) true)
+          (check-equal? (provenance-maintenance-rows state) '((1)))
+          (let-values (((exact measured) (candidate-provenance-heights state work)))
+            (check-equal? exact heights) (check-equal? measured work)))
+        (candidate-provenance-withdraw! state '((s 1)))
+        (let-values (((heights _) (candidate-provenance-heights state)))
+          (check-equal? heights []))))
+  ))
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"

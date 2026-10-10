@@ -14,7 +14,7 @@ public methods; no native engine or support state escapes. Maintained rows follo
 meaning is set-valued. Negative rules and reducers do not enter this positive owner.
 
 The POO owner admits one =.operations= responsibility whose named map requires
-all four procedure methods. Public helpers dispatch through that map. This
+all five procedure methods, including the optional height read. Public helpers dispatch through that map. This
 shares protocol admission evidence; it does not omit validation of any method.
 The qualification Suite rejects a missing map and each nonprocedure method.
 
@@ -53,7 +53,7 @@ on subsequent cuts. The initial certificate remains bound to its initial cut;
 it is not republished as a fresh certificate for later generations.
 
 Failure preserves the previous cut, including token translation. The owner
-serializes all four public methods through a private native Gerbil mutex.
+serializes all five public methods through a private native Gerbil mutex.
 Generation validation, support maintenance, publication and returned observation
 construction occur within one critical section. Waiting callers validate the
 generation after they acquire the gate; concurrent same-generation withdrawals
@@ -253,3 +253,12 @@ read 557 to 24 us. Tiny is a retained negative result: 3 to 6 us and 4032 to
 10256 bytes, within its existing 5% + 30 us and 8 KiB allowances. The nine
 native performance Suites also pass under the unchanged 120s total deadline.
 These are local receipts; remote CI must be checked at the delivered revision.
+
+* Minimum-height evidence read
+
+The owner additionally admits =.heights= through the same grouped protocol and
+native gate. [[file:../provenance-heights/acceptance.org][Minimum proof heights]] binds source generation, current rows and
+detached =(row height)= annotations. Source withdrawal can increase a minimum;
+the read therefore computes a fresh bounded private table rather than applying
+insertion-only minimum updates to stale annotations. Ordinary withdrawal does
+not invoke this optional computation.

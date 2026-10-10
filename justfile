@@ -629,7 +629,7 @@ _check-quint group='all': prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
     group="{{ group }}"
-    models=(WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -676,6 +676,7 @@ _check-quint group='all': prepare-quint
         ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
         ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
         WithdrawalSession) constants='Mutation = "none"'; invariants='AtomicSnapshot FrozenGraph CurrentTokens CurrentOrdinal CumulativeSupport HistoricalObservation SupportCoverage StorageAtomic BudgetAdmission'; constraint=ExplorationBound ;;
+        MinimumHeight) constants='Mutation = "none"'; invariants='CompleteMinimum Private' ;;
         WithdrawalConcurrency) constants='Mutation = "none"\nSecondExpected = 0'; invariants='AtomicSnapshot ExclusiveOwnership TerminalReleased OnePublicationPerGeneration ReceiptBound' ;;
         ChangePlan) constants='Mutation = "none"'; invariants='Frozen CompletePublication FailureAtomic' ;;
         DerivationCounts) constants='Mutation = "none"'; invariants='Private Fixed Exact' ;;
@@ -817,6 +818,7 @@ _check-quint group='all': prepare-quint
             TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
             OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
             WithdrawalSession) fault early AtomicSnapshot; fault graphEdit FrozenGraph; fault unchecked AtomicSnapshot; fault ordinal CurrentOrdinal; fault forgetRemoved CumulativeSupport; fault rebase CurrentTokens; fault borrowObservation HistoricalObservation; fault compactLoss SupportCoverage; fault compactEarly StorageAtomic; fault compactRebase CurrentTokens; fault uncharged BudgetAdmission ;;
+            MinimumHeight) fault first CompleteMinimum; fault stale CompleteMinimum; fault early Private; fault cycle CompleteMinimum; fault minimumBody CompleteMinimum ;;
             WithdrawalConcurrency) fault outside OnePublicationPerGeneration; fault abandon TerminalReleased; fault earlyUnlock ExclusiveOwnership; sed 's/SecondExpected = 0/SecondExpected = 1/' "$base" > "$temp/$model-successor.cfg"; execute successor "$temp/$model-successor.cfg" 0; sed 's/Mutation = "none"/Mutation = "lateReceipt"/' "$temp/$model-successor.cfg" > "$temp/$model-late.cfg"; execute late-receipt "$temp/$model-late.cfg" 12 ReceiptBound ;;
             ChangePlan) fault alias Frozen; fault borrow Frozen; fault early CompletePublication; fault failure FailureAtomic ;;
             DerivationCounts) fault refusal Private; fault early Fixed; fault accumulate Fixed ;;

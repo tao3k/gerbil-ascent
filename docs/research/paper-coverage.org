@@ -38,7 +38,7 @@ for all these states.
 | Provenance semirings | [[file:agent-inference/provenance-p07.org][note]] | Dedicated method reading; bounded all-tree natural counts implemented; symbolic polynomial/power-series annotations pending |
 | Revisiting semiring provenance | [[file:agent-inference/provenance-p07.org][note]] | Dedicated semantics comparison; all-tree choice and recursive refusal tested; alternative semantics unimplemented |
 | PUG | [[file:agent-inference/pug-p18.org][note]] | Dedicated reading; bounded Why/Why-Not transfer; full PUG replication pending |
-| Large-scale Datalog provenance | [[file:agent-inference/provenance-z19.org][note]] | Dedicated minimum-height/fragment method reading; native height annotations and paper workload replication remain open |
+| Large-scale Datalog provenance | [[file:agent-inference/provenance-z19.org][note]] | Dedicated minimum-height/fragment method reading; bounded maintained-support min/max heights, Lean certificate characterization and Quint fault controls implemented; native seminaive annotations, fragments and paper workloads remain open |
 | Dedalus | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; dedicated temporal/distributed semantics study pending |
 | Structural-model causes | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; counterfactual cause model unimplemented |
 

@@ -97,7 +97,9 @@ to compare current Quint output and the frozen native fixture with Lean.
 
 * Remaining scope
 
-Two-hop atomic branch semantics remain unchanged. Arbitrary multi-hop EEC,
+Two-hop atomic branch semantics remain unchanged. The new
+[[file:reachability-mask.org][structural reachability-mask producer]] also feeds the same composition rules,
+with explicit alternative-path semantics. Bounded-hop EEC,
 typed evidence-slot joins, conjunction over differently shaped assignments,
 matrix planning, model proposal capture and real-KG benchmark replication
 remain separate work. This implementation composes complete pair relations;

@@ -175,3 +175,13 @@ that same corpus. Named native Cases cover all four mutation identifiers.
 Early publication, local-only protection, stale binding and missing body
 membership each produce the designated counterexample (exit 12). This
 addition is separate from the historical migration inventory.
+
+* Scoped structural reachability-mask qualification
+
+[[file:../scoped-witness/reachability-mask.org][Scoped structural reachability masks]] checks 1,024 states and four deliberate
+faults (global masking, endpoint-only exclusion, clean-alternative substitution,
+and lost exclusion witnesses). Its 512-input corpus connects actual recursive
+closure and scoped-mask evaluation to independent Lean grading and native
+Session replay, then the existing group composer. The structural formula and
+clean-path semantics remain explicitly distinct. CI runs
+=check-scoped-reachability-mask-conformance= after the shared formal gate.

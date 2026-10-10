@@ -78,6 +78,7 @@
     "applications/taint-paths"
     "applications/scoped-witness"
     "applications/scoped-composition"
+    "applications/scoped-reachability-mask"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

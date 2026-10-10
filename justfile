@@ -544,6 +544,11 @@ check-feedback-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ExecutionFeedback.qnt::ExecutionFeedback conformance .exit > .cache/ascent/feedback-conformance/quint.json
     cd packages/proofs/lean && lake build FeedbackConformance && lake env lean --run FeedbackConformance.lean ../../../.cache/ascent/feedback-conformance/quint.json ../../../t/qualification/fixtures/feedback/conformance.json
 
+check-scoped-reachability-mask-conformance: prepare-quint
+    mkdir -p .cache/ascent/scoped-reachability-mask-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ScopedReachabilityMask.qnt::ScopedReachabilityMask conformance .exit > .cache/ascent/scoped-reachability-mask-conformance/quint.json
+    cd packages/proofs/lean && lake build ScopedReachabilityMask && lake env lean --run ScopedReachabilityMaskConformance.lean ../../../.cache/ascent/scoped-reachability-mask-conformance/quint.json ../../../t/qualification/fixtures/scoped-reachability-mask/conformance.json
+
 check-scoped-composition-conformance: prepare-quint
     mkdir -p .cache/ascent/scoped-composition-conformance
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ScopedComposition.qnt::ScopedComposition conformance .exit > .cache/ascent/scoped-composition-conformance/quint.json
@@ -652,7 +657,7 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-    models+=(ScopedWitness BranchScopedWitness ScopedComposition)
+    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -706,6 +711,7 @@ _check-quint group='all': prepare-quint
         CanonicalIndex) constants='Mutation = "none"'; invariants='Private Canonical' ;;
         Withholding) constants='Mutation = "none"'; invariants='Private Bound Protected ExactCut' ;;
         ExecutionFeedback) constants='Mutation = "none"'; invariants='Qualified ExactDifferences ExactMatch InconclusivePrivate' ;;
+        ScopedReachabilityMask) constants='Mutation = "none"'; invariants='ExactReach ExactWitnesses ExactBranches ExactGroups Private' ;;
         ScopedComposition) constants='Mutation = "none"'; invariants='ExactWitnesses ExactCoverage ExactMissing ExactAnswer Private' ;;
         BranchScopedWitness) constants='Mutation = "none"'; invariants='ExactWitnesses ExactBranches ExactUnion Private' ;;
         ScopedWitness) constants='Mutation = "none"'; invariants='ExactWitnesses ExactAnswer Private' ;;
@@ -851,6 +857,7 @@ _check-quint group='all': prepare-quint
             CanonicalIndex) fault early Private; fault omit Canonical; fault duplicate Canonical; fault order Canonical ;;
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
             ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences; fault referenceStale Qualified; fault referencePartial Qualified; fault query Qualified ;;
+            ScopedReachabilityMask) fault global ExactWitnesses; fault late ExactWitnesses; fault cleanAlternative ExactBranches; fault forgetWitness ExactWitnesses ;;
             ScopedComposition) fault union ExactAnswer; fault allBranches ExactCoverage; fault emptyGroup ExactMissing; fault forgetWitness ExactWitnesses ;;
             BranchScopedWitness) fault crossMask ExactWitnesses; fault switchMask ExactWitnesses; fault forgetScope ExactWitnesses; fault collapseBranch ExactBranches ;;
             ScopedWitness) fault late ExactWitnesses; fault global ExactAnswer; fault anyBlocked ExactWitnesses; fault forget ExactWitnesses ;;

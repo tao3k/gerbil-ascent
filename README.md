@@ -80,7 +80,7 @@ starts the executor check for branch-scoped exclusion over a finite real-KG extr
 
 ### Model reasoning and executable inference: current evidence
 
-- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (ICML 2026) — [dedicated reading](docs/research/agent-inference/scoped-witness.org), [scoped witnesses](docs/features/scoped-witness/acceptance.org), [group OR/AND composition](docs/features/scoped-witness/composition.org) and [same-source gold/proposal comparison](docs/features/candidate-feedback/acceptance.org); model KGQA pending.
+- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (ICML 2026) — [dedicated reading](docs/research/agent-inference/scoped-witness.org), [scoped witnesses](docs/features/scoped-witness/acceptance.org), [group OR/AND composition](docs/features/scoped-witness/composition.org), [structural reachability masks](docs/features/scoped-witness/reachability-mask.org) and [same-source gold/proposal comparison](docs/features/candidate-feedback/acceptance.org); model KGQA pending.
 - [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026 preprint) — generated recursive rules checked by execution, with preprint and dialect limits.
 - [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (ICLR 2025) — real-code candidate specifications and CodeQL results; adjacent language and high false-alert cost.
 

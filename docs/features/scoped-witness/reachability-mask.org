@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scoped structural reachability masks
+#+DATE: 2026-10-10
+
+* Research contract and the alternative-path distinction
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation]],
+section 3.1, page 6, defines =C(z)=pre(z)⊗suf(z)= and a scope-local mask
+=complement(union C(z))=. Its structural formula excludes an entire endpoint
+pair when a banned vertex lies on any witness between those endpoints.
+The prose also describes disallowing witnesses traversing banned entities;
+these readings need not agree when both clean and banned alternative paths
+exist. We implement the explicit structural formula and retain the distinction.
+
+For the diamond =0→1→3= and =0→2→3=, banning 1 structurally rejects =(0,3)=,
+although a CleanPath through 2 exists. Lean proves both facts on the same graph;
+the native control compares the mask Program with the existing taint-path
+Program, and Quint's =cleanAlternative= mutation must violate =ExactBranches=.
+This difference is a contract distinction, not a newly found Scheme bug.
+The existing two-hop witness producer remains existential over surviving
+middle witnesses; it is not the structural-pair formula.
+
+* Scheme architecture
+
+[[file:../../../applications/scoped-reachability-mask.ss][gerbil-ascent-scoped-reachability-mask-program]] declares a reflexive least
+closure over caller-supplied =mask_vertex= and =mask_edge= rows. Edges entering
+undeclared vertices cannot propagate. Scope-tagged starts, targets and banned
+vertices are ordinary admitted source rows. All recursion and stratified
+negation execute in the existing Scheme Program/Session engine.
+
+| Relation | Contract |
+|----------+----------|
+| =mask_reach(s,t)= | Zero or more edges inside the declared vertex universe |
+| =mask_witness(scope,s,z,t)= | Selected endpoints, banned z, reach(s,z), reach(z,t) |
+| =mask_rejected(scope,s,t)= | Existential projection of those exclusion witnesses |
+| =branch_answer(scope,s,t)= | Selected reachable pair with no exclusion witness |
+
+Exclusion includes endpoints and zero-hop pairs. In a directed cycle, a banned
+node can exclude a zero-hop pair through a nonempty returning walk. Additional
+banned nodes can only remove admitted pairs for a fixed graph. Changing one
+scope's mask cannot change another scope's answers.
+
+[[file:../../../applications/scoped-composition.ss][gerbil-ascent-compose-scoped-program]] now consumes any ordinary Program
+exposing =branch_answer(scope,s,t)=, preserving its budgets and source handles.
+The old convenience constructor delegates to it. The new producer composes
+through the same group OR / required-group AND rules, with no second evaluator.
+Admission owns arities, reserved relation collisions and stratification.
+
+* Shared executable evidence
+
+[[file:../../../packages/proofs/quint/ScopedReachabilityMask.qnt][Quint]] uses its actual closure evaluator for both state transition and corpus
+export. The graph has vertices 0,1,2, three independently present edges
+=0→1→2→0=, and six independent scope/vertex mask bits. All 512 inputs check
+closure, all 18 possible exclusion witnesses, six branch answers and three
+composed answers. The expected functions independently use the three-vertex
+closed form. Model checking explores 1,024 pending/completed states.
+
+[[file:../../../packages/proofs/lean/ScopedReachabilityMask.lean][Lean]] independently grades the current and frozen corpus. Kernel proofs connect
+finite branch bits to the structural =Admitted= predicate and its banned-node
+witness relation; the finite group theorem connects both scope bits to their
+conjunction. For all eight edge graphs, reflexivity, step closure and generation
+prove the closed-form reach table equivalent to inductive walks of arbitrary
+length. Generic theorems establish mask antitonicity, scope locality and locality
+through the existing =ScopedComposition.Answer= predicate. No =sorry=,
+=native_decide= or project-specific axiom is introduced.
+
+[[file:../../../t/qualification/ascent-scoped-reachability-mask-test.ss][Native qualification]] uses eight retained Session owners, one per edge graph.
+It replays every foreign input through real source replacements and checks
+exact closure, exclusion witness, rejected pair, branch, group witness and
+composed answer rows. Additional controls cover the diamond distinction,
+intermediate exclusions, cycles, a three-hop chain, endpoint masks, declared
+vertex boundaries, immutable held evidence and restoration after mask withdrawal.
+
+| Deliberate model fault | Expected failure | Native control |
+|------------------------+------------------+----------------|
+| =global= | ExactWitnesses | Alpha mask cannot reject beta |
+| =late= | ExactWitnesses | Intermediate banned node rejects a selected pair |
+| =cleanAlternative= | ExactBranches | Structural diamond rejection despite a clean path |
+| =forgetWitness= | ExactWitnesses | Witness rows are checked independently of correct answer bits |
+
+The comparison recipe is =just check-scoped-reachability-mask-conformance=;
+formal CI also checks the model and its four faults. Native qualification is
+part of ordinary Gerbil test discovery. Finite cross-language agreement is not
+universal Scheme source refinement.
+
+* Remaining boundaries
+
+The paper uses bounded K-hop closure; this feature deliberately uses finite
+least closure, with caller budgets governing admission and execution. It does
+not reproduce K, matrix multiplication, typed evidence-slot joins, or the full
+request compiler. =mask_witness= certifies an exclusion with its banned node;
+it does not return a complete admissible path or certify external graph facts.
+Positive path reconstruction, bounded-hop provenance and real-KG evaluation
+remain separate implementation requirements.
+
+* Local validation receipts
+
+- Eight native Cases, including all 512 shared inputs, passed in 10 seconds;
+  the existing nine-Case scoped composition regression passed in 9 seconds.
+- Quint explored 1,024 states; each of four deliberate mutations failed its
+  required invariant with exit 12; the complete harness exited 0.
+- Final Lean build and current/frozen corpus comparison passed. The finite
+  closure is linked to arbitrary-length inductive walks on all eight graphs.
+- Clearing the last row's exclusion-witness mask while leaving closure,
+  branch and group outputs unchanged was rejected by Lean comparison (exit 1).
+- Generic antitonicity and locality have no axiom dependencies. Finite proofs
+  use standard =propext= / =Quot.sound=; diamond facts use =propext=.
+  No additional project axiom is introduced.
+- Policy build passed with 43 findings and zero errors in the shared checkout;
+  neither changed scoped source owner emitted a policy warning. Concurrent
+  source-snapshot work is retained outside this feature's commit ownership.
+- During development, Lean rejected an overgeneral scope-local proof and an
+  unresolved intermediate vertex in the diamond construction. Explicit local
+  witness conversion and typed path steps repaired those proofs. The native
+  test import was corrected to =:std/list/list= for =delete-duplicates/hash=.
+  Failed builds are retained in local logs, not counted as passing evidence.

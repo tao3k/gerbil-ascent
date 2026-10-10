@@ -110,3 +110,11 @@ that ASCENT runs the paper's benchmark. Full KG truth, NL intent, and incomplete
 answers remain distinct from finite Datalog closure.
 
 [[file:index.org][Agent inference index]]; [[file:2026-logic-ai-screen.org][code-anchored screen]].
+
+* Structural mask semantics and executable distinction
+
+[[file:../../features/scoped-witness/reachability-mask.org][Scoped structural reachability masks]] transfers section 3.1's explicit
+=pre(z)⊗suf(z)= formula into recursive Scheme relations and the same group
+composer. The diamond counterexample is checked in Lean, Quint and Scheme:
+structural pair exclusion and existential clean-path survival differ. The
+finite least-closure implementation is not the paper's bounded K-hop executor.

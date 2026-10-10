@@ -4,7 +4,7 @@
 (import (only-in :clan/poo/object .ref)
         :gerbil-ascent/program/objects
         :gerbil-ascent/applications/scoped-witness)
-(export gerbil-ascent-scoped-composition-program)
+(export gerbil-ascent-scoped-composition-program gerbil-ascent-compose-scoped-program)
 
 ;;; Scope exclusion belongs to the existing branch Program. Group composition
 ;;; keeps explicit candidate pairs and required groups, including empty groups.
@@ -15,9 +15,18 @@
 (def (gerbil-ascent-scoped-composition-program edges starts targets blocked direct
         required members candidates
         (input-budget 10000) (fact-budget 10000) (output-budget 20000))
-  (let ((base (gerbil-ascent-branch-scoped-witness-program
-               edges starts targets blocked direct input-budget fact-budget output-budget))
-        (g (gerbil-ascent-variable 'group)) (scope (gerbil-ascent-variable 'scope))
+  (gerbil-ascent-compose-scoped-program
+    (gerbil-ascent-branch-scoped-witness-program
+      edges starts targets blocked direct input-budget fact-budget output-budget)
+    required members candidates))
+
+;;; Compose an admitted declaration tree exposing branch_answer(scope,s,t).
+;;; Preserve producer budgets and source handles; the ordinary Program contract
+;;; and admission own relation collisions, arities and stratification.
+;; : (forall (v scope group) (-> Program [(Tuple group)] [(Pair group scope)] [(Pair v v)] Program))
+;; : (-> Program RequiredGroups GroupMembers CandidatePairs Program)
+(def (gerbil-ascent-compose-scoped-program base required members candidates)
+  (let ((g (gerbil-ascent-variable 'group)) (scope (gerbil-ascent-variable 'scope))
         (s (gerbil-ascent-variable 's)) (t (gerbil-ascent-variable 't)))
     (def (a name . terms) (gerbil-ascent-atom name terms))
     (gerbil-ascent-program
@@ -45,4 +54,5 @@
           (gerbil-ascent-rule (list (a 'group_answer s t))
             (list (a 'group_candidate s t)
                   (gerbil-ascent-negation 'group_failure (list s t))))))
-      input-budget fact-budget output-budget)))
+      (.ref base 'max-input-facts) (.ref base 'max-derived-facts)
+      (.ref base 'max-output-facts) (.ref base 'source-handles))))

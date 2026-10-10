@@ -1,0 +1,373 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+"""Movie-study byte preparation and offline dispatch; Scheme owns all semantics.
+
+Small mechanism pilot only; complex capability evaluation is a separate study.
+Scheme owns gold construction and grading; Python records provider byte IO.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import shlex
+import re
+import shutil
+
+ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
+SCHEME_ENTRY = 't/qualification/ascent-movie-cast-test.ss'
+PRODUCERS = [SCHEME_ENTRY, 'applications/movie-cast-query.ss',
+             't/qualification/fixtures/movie-cast/source.json',
+             'python/src/ascent_test_support/movie_study.py',
+             'python/src/ascent_test_support/model_study.py']
+MAX_INPUT_BYTES = 32768
+MAX_OUTPUT_TOKENS = 4096
+
+
+def provider_fatal(response):
+    terminal = response.get('terminal') or {}
+    return (response.get('error') is not None or terminal.get('error') is not None
+            or terminal.get('status') not in ('completed', 'incomplete'))
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def provider_key():
+    if os.environ.get('DEEPSEEK_API_KEY'):
+        return os.environ['DEEPSEEK_API_KEY']
+    path = ROOT/'.env'
+    if path.is_file():
+        for line in path.read_text().splitlines():
+            text = line.strip()
+            if text.startswith('export '): text = text[7:].lstrip()
+            if text.split('=', 1)[0].strip() != 'DEEPSEEK_API_KEY': continue
+            parts = shlex.split(text.split('=', 1)[1].strip(), comments=True)
+            if len(parts) != 1 or not parts[0]:
+                raise ValueError('invalid DEEPSEEK_API_KEY assignment in .env')
+            return parts[0]
+    raise ValueError('DEEPSEEK_API_KEY is not configured')
+
+
+def identities():
+    paths = {path: ROOT/path for path in PRODUCERS}
+    for directory in ('core', 'table', 'program', 'applications'):
+        for source in (ROOT/directory).glob('*.ss'):
+            paths[str(source.relative_to(ROOT))] = source
+        for artifact in (ROOT/'.gerbil/lib/gerbil-ascent'/directory).glob('*'):
+            if artifact.is_file() and (re.fullmatch(r'\.o\d*', artifact.suffix)
+                                      or artifact.suffix in ('.ssi', '.scm')
+                                      or artifact.name.endswith('.ssxi.ss')):
+                paths[str(artifact.relative_to(ROOT))] = artifact
+    return {path: digest(file.read_bytes()) for path, file in paths.items()}
+
+
+def scheme(*arguments):
+    env = os.environ.copy()
+    env['GERBIL_LOADPATH'] = str(ROOT/'.gerbil/lib') + (':' + env['GERBIL_LOADPATH'] if env.get('GERBIL_LOADPATH') else '')
+    env['GERBIL_PATH'] = str(ROOT/'.gerbil')
+    env.pop('DEEPSEEK_API_KEY', None)
+    invocation = '(begin (import :gerbil-ascent/t/qualification/ascent-movie-cast-test) (main '+ ' '.join(json.dumps(str(arg), ensure_ascii=False) for arg in arguments)+') (exit 0))'
+    # Report actual completed compiler imports while the scheme root expands.
+    code = '''(import :gerbil/expander)
+(let ((loader (current-expander-module-import)) (count 0))
+ (parameterize ((current-expander-module-import
+  (lambda (path reload?)
+   (let (context (loader path reload?))
+    (when context (set! count (+ count 1))
+     (when (zero? (modulo count 8)) (displayln "MOVIE-IMPORTS " count " " (expander-context-id context)) (force-output))) context))))
+  (eval '\n'''+invocation+')))'
+    command = [sys.executable, '-m', 'ascent_test_support.supervision', '--',
+               'timeout', '120s', 'gxi', '-:max-heap=2G,debug=q', '-e',
+               code]
+    subprocess.run(command, cwd=ROOT, env=env, check=True)
+
+
+def request_for(source, case, arm):
+    # Explicit declared family reuse. No automatic NL intent equivalence claim.
+    public = {k: case[k] for k in ('template', 'left', 'right', 'blocked')}
+    task = json.dumps({'finiteSource': source, 'question': public}, ensure_ascii=False, sort_keys=True)
+    if arm == 'baseline':
+        instruction = 'Using only the supplied finite P161 cast facts, answer the question. Return only a JSON array of actor QIDs; no prose. Missing claims mean absent only in this finite extract.'
+    elif arm == 'scheme-contract':
+        instruction = ('Compile the declared question template, not its answer. Return only a JSON object with exactly two fields: '
+                       '"combine": "any" (OR) or "all" (AND), and "exclude_scope": "none", "left", or "both". '
+                       'The scheme engine will substitute movie/actor bindings and preserve typed evidence before projection. No prose.')
+    else:
+        raise ValueError('unknown movie study arm')
+    request = {'model': 'deepseek-flash', 'input': [{'role': 'user', 'content': instruction+'\n'+task}],
+               'reasoning': {'effort': 'high'}, 'max_output_tokens': MAX_OUTPUT_TOKENS, 'stream': True, 'store': False}
+    if len(json.dumps(request, ensure_ascii=False).encode()) > MAX_INPUT_BYTES:
+        raise ValueError('movie request exceeds frozen input bound')
+    return request
+
+
+def prepare(output):
+    output.mkdir(parents=True, exist_ok=False)
+    scheme('prepare', output/'scheme-scenario.json')
+    scenario = json.loads((output/'scheme-scenario.json').read_text())
+    private = output/'private'; private.mkdir()
+    public_cases = []
+    for case in scenario['cases']:
+        # Gold contract and answers stay outside every provider request.
+        public_cases.append({k: v for k, v in case.items() if k not in ('combine', 'exclude_scope', 'expected')})
+        (private/(case['id']+'.answer.json')).write_text(json.dumps(case['expected'])+'\n')
+        (private/(case['family']+'.contract.json')).write_text(json.dumps({k: case[k] for k in ('combine', 'exclude_scope')})+'\n')
+    order = []
+    for index, case in enumerate(public_cases):
+        scheduled = [('baseline', case['id'])]
+        if case['id'].endswith('-seed'):
+            scheduled.append(('scheme-contract', case['family']))
+        if index % 2:
+            scheduled.reverse()
+        for arm, identity in scheduled:
+            request = request_for(scenario['source'], case, arm)
+            data = (json.dumps(request, ensure_ascii=False, sort_keys=True)+'\n').encode()
+            name = identity+'.'+arm+'.request.json'; (output/name).write_bytes(data)
+            order.append({'arm': arm, 'id': identity, 'request': name, 'sha256': digest(data), 'inputBytes': len(data)})
+    plan = {'schema': 'ascent.movie-cast-plan.v1', 'sourceHead': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+            'producerHashes': identities(), 'model': 'deepseek-flash', 'cases': public_cases, 'order': order,
+            'scheduledBaselineCalls': 6, 'scheduledContractCalls': 3, 'retries': 0, 'maxInputBytes': MAX_INPUT_BYTES,
+            'maxOutputTokens': MAX_OUTPUT_TOKENS, 'providerCallsExecuted': 0, 'liveAuthorized': False,
+            'candidateBudgetCeilingUsd': 1, 'priceSource': 'https://api-docs.deepseek.com/quick_start/pricing/',
+            'conservativeScheduledUpperUsd': sum((item['inputBytes']+1024)*.3+MAX_OUTPUT_TOKENS*1.2 for item in order)/1_000_000,
+            'purpose': 'mechanism-regression', 'capabilityEvaluationEligible': False,
+            'primaryMetric': 'Scheme contract admission, scoped evidence and binding substitution only; six questions cannot establish model reasoning ability or economic benefit',
+            'reuseBoundary': 'Caller-declared identical template only; hashes bind source, implementation, schema and prompt bytes; answers recomputed from current bindings, not reused',
+            'target': 'No capability or savings target for this regression; the 6:3 call schedule is constructed, not an experimental cost result'}
+    (output/'plan.json').write_text(json.dumps(plan, indent=2)+'\n')
+    print('MOVIE-STUDY-PREPARED cases=6 scheduledCalls=9 executedCalls=0', flush=True)
+
+
+def validate(preview):
+    plan = json.loads((preview/'plan.json').read_text())
+    if plan['producerHashes'] != identities():
+        raise ValueError('movie source/implementation changed: prepare a new plan')
+    for item in plan['order']:
+        if digest((preview/item['request']).read_bytes()) != item['sha256']:
+            raise ValueError('movie prompt changed')
+    return plan
+
+
+def offline(preview, output):
+    plan = validate(preview)
+    output.mkdir(parents=True, exist_ok=False)
+    observations = []; commands = []
+    for item in plan['order']:
+        mode = 'baseline' if item['arm'] == 'baseline' else 'family'
+        kind = 'answer' if mode == 'baseline' else 'contract'
+        destination = output/(item['id']+'.'+item['arm']+'.json')
+        commands.append([mode, item['id'], str(preview/'private'/(item['id']+'.'+kind+'.json')), str(destination)])
+    batch = output/'commands.json'; batch.write_text(json.dumps(commands)+'\n')
+    scheme('batch', batch)
+    for item in plan['order']:
+        destination = output/(item['id']+'.'+item['arm']+'.json')
+        value = json.loads(destination.read_text())
+        observations.append({'arm': item['arm'], 'id': item['id'], 'scheme': value})
+    result = {'schema': 'ascent.movie-cast-offline.v1', 'sourceHead': plan['sourceHead'],
+              'providerCalls': 0, 'controlOrigin': 'Scheme gold fixture; not model predictions', 'observations': observations,
+              'observedTokenSavings': None, 'observedCostSavings': None, 'observedModelAccuracy': None,
+              'engineControlsCorrect': all(row['correct'] for item in observations for row in (item['scheme'] if isinstance(item['scheme'], list) else [item['scheme']]))}
+    (output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
+    if not result['engineControlsCorrect']:
+        raise RuntimeError('scheme offline control failed; result retained')
+    print('MOVIE-STUDY-OFFLINE-OK controls=9 providerCalls=0', flush=True)
+
+
+def live(preview, output):
+    from .model_study import provider
+    plan = validate(preview)
+    if plan.get('purpose') != 'mechanism-regression' or plan.get('capabilityEvaluationEligible') is not False:
+        raise ValueError('expected frozen mechanism regression plan')
+    bound = sum((len((preview/item['request']).read_bytes())+1024)*.3+MAX_OUTPUT_TOKENS*1.2
+                for item in plan['order'])/1_000_000
+    if len(plan['order']) != 9 or bound > 1:
+        raise ValueError('pilot exceeds nine-call / one-dollar bound')
+    key = provider_key()
+    output.mkdir(parents=True, exist_ok=False)
+    with (preview/'paid-batch-claim.json').open('x') as claim:
+        claim.write(json.dumps({'planSha256': digest((preview/'plan.json').read_bytes()),
+                                'output': str(output), 'maxCalls': 9, 'budgetCeilingUsd': 1})+'\n')
+        claim.flush(); os.fsync(claim.fileno())
+    records = []; commands = []; started = time.monotonic()
+    try:
+        for index, item in enumerate(plan['order']):
+            validate(preview)
+            request = json.loads((preview/item['request']).read_text())
+            if request.get('model') != 'deepseek-flash' or request.get('max_output_tokens') != MAX_OUTPUT_TOKENS:
+                raise ValueError('provider request limits changed')
+            directory = output/f'{index:02d}'; directory.mkdir()
+            (directory/'request.json').write_text(json.dumps(request)+'\n')
+            print(f'MOVIE-CALL {index+1}/9 {item["arm"]} {item["id"]}', flush=True)
+            raw, response = provider(request, key, directory/'response.json')
+            raw_path = directory/'raw-output.txt'; raw_path.write_text(raw)
+            terminal = response['terminal'] or {}
+            record = {**item, 'providerCompleted': terminal.get('status') == 'completed' and not provider_fatal(response),
+                      'resolvedModel': terminal.get('model'), 'responseId': terminal.get('id'),
+                      'usage': terminal.get('usage'), 'providerError': response['error'],
+                      'providerSeconds': response['providerSeconds'], 'gradePath': str(directory/'grade.json')}
+            records.append(record)
+            with (output/'calls.jsonl').open('a') as ledger:
+                ledger.write(json.dumps(record)+'\n'); ledger.flush(); os.fsync(ledger.fileno())
+            mode = 'baseline' if item['arm'] == 'baseline' else 'family'
+            commands.append([mode, item['id'], str(raw_path), record['gradePath']])
+            print(f'\nMOVIE-RESPONSE complete={record["providerCompleted"]}', flush=True)
+            if provider_fatal(response): break  # Capped answers remain scheduled failures.
+        batch = output/'commands.json'; batch.write_text(json.dumps(commands)+'\n')
+        scheme('batch', batch)
+        for record in records:
+            record['engineObservation'] = json.loads(Path(record['gradePath']).read_text())
+    finally:
+        result = {'purpose': 'mechanism-regression', 'capabilityEvaluationEligible': False,
+                  'scheduledCalls': 9, 'executedCalls': len(records), 'budgetCeilingUsd': 1,
+                  'seconds': time.monotonic()-started, 'records': records,
+                  'capabilityConclusion': None, 'costSavingsConclusion': None}
+        (output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
+    print('MOVIE-LIVE-PILOT-RECORDED', flush=True)
+
+
+def continuation_plan(preview, output, frozen_root):
+    """Bind preserved producers and the exact paid prefix before resuming."""
+    plan = json.loads((preview/'plan.json').read_text())
+    for path, expected in plan['producerHashes'].items():
+        if digest((frozen_root/path).read_bytes()) != expected:
+            raise ValueError('frozen producer mismatch: '+path)
+    for item in plan['order']:
+        data = (preview/item['request']).read_bytes()
+        request = json.loads(data)
+        if digest(data) != item['sha256'] or len(data) > MAX_INPUT_BYTES:
+            raise ValueError('frozen request mismatch')
+        if request['model'] != 'deepseek-flash' or request['max_output_tokens'] != MAX_OUTPUT_TOKENS:
+            raise ValueError('frozen request budget mismatch')
+    if (plan['purpose'] != 'mechanism-regression' or plan['capabilityEvaluationEligible']
+            or len(plan['order']) != 9 or plan['retries'] != 0
+            or plan['conservativeScheduledUpperUsd'] > 1):
+        raise ValueError('unexpected pilot budget or scope')
+    records = [json.loads(line) for line in (output/'calls.jsonl').read_text().splitlines()]
+    if not 0 < len(records) < 9: raise ValueError('expected an unfinished paid prefix')
+    for index, record in enumerate(records):
+        if any(record[key] != plan['order'][index][key] for key in ('id', 'arm', 'sha256')):
+            raise ValueError('paid prefix does not match frozen order')
+    return plan, records
+
+
+def ffi_grade(engine, wire, preview, plan, item, raw):
+    """Protocol adaptation only; scheme Scheme executes and compares answers."""
+    cases = [c for c in plan['cases'] if (c['id'] == item['id'] if item['arm'] == 'baseline'
+                                        else c['family'] == item['id'])]
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result: raise ValueError('duplicate prediction key')
+            result[key] = value
+        return result
+    try:
+        value = json.loads(raw, object_pairs_hook=pairs)
+        if item['arm'] == 'baseline':
+            if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
+                raise ValueError('expected actor array')
+            expected = json.loads((preview/'private'/(item['id']+'.answer.json')).read_text())
+            return [{'id':item['id'], 'correct':engine.request({'operation':'compare',
+                     'actual':[[x] for x in value], 'expected':[[x] for x in expected]})['equal']}]
+        if (not isinstance(value, dict) or set(value) != {'combine','exclude_scope'}
+                or value['combine'] not in ('any','all') or value['exclude_scope'] not in ('none','left','both')):
+            raise ValueError('expected finite query contract')
+        key = cases[0]['id']+':'+value['combine']+':'+value['exclude_scope']
+        observations = []
+        with engine.open(wire[key]) as session:
+            for index, case in enumerate(cases):
+                if index:
+                    session.replace([{'relation':relation,'rows':[[case[field]]]}
+                                     for relation,field in (('left_film','left'),('right_film','right'),('blocked_actor','blocked'))])
+                result = session.run()
+                expected = json.loads((preview/'private'/(case['id']+'.answer.json')).read_text())
+                equal = engine.request({'operation':'compare','actual':result['relations']['actor_answer'],
+                                        'expected':[[x] for x in expected]})['equal']
+                observations.append({'id':case['id'],'correct':bool(result['complete'] and equal),
+                                     'scheme':result})
+            return observations
+    except (ValueError, TypeError, KeyError) as error:
+        return [{'id':case['id'], 'correct':False, 'protocolError':str(error)} for case in cases]
+
+
+def continue_ffi(preview, output, frozen_root, library, wire_path):
+    from ascent_engine import Engine
+    from .model_study import provider
+    plan, records = continuation_plan(preview, output, frozen_root)
+    key = provider_key()
+    # Exclusive claim: interrupted paid continuations require explicit audit,
+    # never automatic retries or replay of already charged requests.
+    cut = output/'ffi-cut'; cut.mkdir(exist_ok=False)
+    copied = cut/library.name; shutil.copyfile(library, copied)
+    shutil.copyfile(library.with_suffix(library.suffix+'.json'), cut/'build.json')
+    shutil.copyfile(wire_path, cut/'wire.json')
+    (cut/'transition.json').write_text(json.dumps({
+        'schema':'ascent.movie-backend-transition.v1','paidPrefix':len(records),
+        'planSha256':digest((preview/'plan.json').read_bytes()),
+        'previousBackend':'frozen temporary Scheme AOT scorer',
+        'currentBackend':'general Scheme C ABI via Python CFFI',
+        'librarySha256':digest(copied.read_bytes()),'wireSha256':digest((cut/'wire.json').read_bytes()),
+        'driverSha256':digest(Path(__file__).read_bytes()),
+        'bindingSha256':digest((ROOT/'python/src/ascent_engine/__init__.py').read_bytes()),
+        'maxTotalCalls':9,'retries':0,'budgetCeilingUsd':1},indent=2)+'\n')
+    wire = json.loads((cut/'wire.json').read_text())
+    started = time.monotonic()
+    try:
+        with Engine(copied) as engine:
+            for index, record in enumerate(records):
+                old = json.loads(Path(record['gradePath']).read_text())
+                old = old if isinstance(old,list) else [old]
+                grade = ffi_grade(engine,wire,preview,plan,record,(output/f'{index:02d}'/'raw-output.txt').read_text())
+                if [r['correct'] for r in old] != [r['correct'] for r in grade]:
+                    raise ValueError('previous AOT/CFFI grading disagreement')
+                record['ffiObservation'] = grade
+            for index in range(len(records),len(plan['order'])):
+                item = plan['order'][index]; directory = output/f'{index:02d}';directory.mkdir()
+                data = (preview/item['request']).read_bytes()
+                if digest(data) != item['sha256']: raise ValueError('request changed during continuation')
+                (directory/'request.json').write_bytes(data)
+                print(f'MOVIE-CFFI-CALL {index+1}/9 {item["arm"]} {item["id"]}',flush=True)
+                raw,response = provider(json.loads(data),key,directory/'response.json')
+                (directory/'raw-output.txt').write_text(raw)
+                terminal = response['terminal'] or {}
+                record = {**item,'providerCompleted':terminal.get('status') == 'completed' and not provider_fatal(response),
+                          'providerStatus':terminal.get('status'),'incompleteDetails':terminal.get('incomplete_details'),
+                          'resolvedModel':terminal.get('model'),'responseId':terminal.get('id'),
+                          'usage':terminal.get('usage'),'providerError':response['error'],
+                          'providerSeconds':response['providerSeconds'],'gradePath':str(directory/'grade.json')}
+                records.append(record)
+                with (output/'calls.jsonl').open('a') as ledger:
+                    ledger.write(json.dumps(record)+'\n');ledger.flush();os.fsync(ledger.fileno())
+                grade = ffi_grade(engine,wire,preview,plan,item,raw)
+                (directory/'grade.json').write_text(json.dumps(grade,indent=2)+'\n')
+                record['ffiObservation'] = grade
+                print(f'\nMOVIE-CFFI-GRADE completed={record["providerCompleted"]} correct={[x["correct"] for x in grade]}',flush=True)
+                if provider_fatal(response): break
+    finally:
+        (output/'ffi-result.json').write_text(json.dumps({'purpose':'mechanism-regression',
+            'capabilityEvaluationEligible':False,'scheduledCalls':9,'executedCalls':len(records),
+            'continuationSeconds':time.monotonic()-started,'records':records,
+            'capabilityConclusion':None,'costSavingsConclusion':None},indent=2)+'\n')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    modes = parser.add_subparsers(dest='mode', required=True)
+    p = modes.add_parser('prepare'); p.add_argument('output', type=Path)
+    p = modes.add_parser('offline'); p.add_argument('preview', type=Path); p.add_argument('output', type=Path)
+    p = modes.add_parser('live'); p.add_argument('preview', type=Path); p.add_argument('output', type=Path)
+    p = modes.add_parser('continue-ffi')
+    for field in ('preview','output','frozen_root','library','wire'): p.add_argument(field,type=Path)
+    args = parser.parse_args()
+    if args.mode == 'prepare': prepare(args.output.resolve())
+    elif args.mode == 'offline': offline(args.preview.resolve(), args.output.resolve())
+    elif args.mode == 'live': live(args.preview.resolve(), args.output.resolve())
+    else: continue_ffi(*(getattr(args,field).resolve() for field in ('preview','output','frozen_root','library','wire')))
+
+
+if __name__ == '__main__':
+    main()

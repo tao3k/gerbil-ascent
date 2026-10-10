@@ -1,0 +1,190 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Complex movie reasoning: execution assistance and reusable subgoals
+#+DATE: 2026-10-10
+#+STATUS: experimental design; Scheme movie contract regression qualified; model evaluation pending
+
+* Research question and present boundary
+
+Does ASCENT reduce the total model reasoning cost of complex knowledge-graph
+questions while preserving answer quality and scope-correct evidence? Does
+reusing admitted subgoals add a benefit beyond deterministic execution alone?
+
+The current six movie questions are mechanism regressions. They exercise
+contract admission, typed film/actor joins, scoped exclusions and changed
+bindings on 90 pinned P161 claims from three films. Their deliberately chosen
+six baseline versus three contract calls do not measure model ability,
+reasoning-token savings or monetary savings. The 1,536-state correspondence
+check qualifies a finite executor abstraction, not natural-language understanding.
+The completed real pilot executed nine provider calls without retries. Direct
+answers were correct on 5/6 questions; scoped-union transfer was incomplete
+after consuming its 4,096-token output limit entirely on reasoning. Three
+contract calls produced correct Scheme answers on all six question bindings.
+Direct calls consumed 12,241 output tokens (11,432 reasoning); contract calls
+consumed 335 (293 reasoning). These are observed pilot totals under a deliberately
+constructed reuse schedule, not an estimate of general savings or model ability.
+Offline gold remains a control, never a model prediction. Raw responses, usage
+and Scheme grades are retained under =.cache/ascent/movie-study/real-20261010=.
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] section 4.1 describes filtering simple subgraphs for its
+main experiment, matching query-pattern sampling and sharing retrieved subgraphs
+between methods. Its minimal movie example is useful for a scope regression;
+it is not an adequate main benchmark for a modern strong model.
+
+* Complex task construction
+
+Complexity must come from dependencies, not prompt length or extra distractors.
+Cover path depth, joins sharing an actor variable across distinct film anchors,
+union inside conjunction, scope-local negation before projection, relation
+direction, and changes to facts supporting a previously reusable result.
+Keep simple questions as a separate calibration stratum.
+
+An illustrative target is: actors shared by films whose directors satisfy an
+award constraint and films whose production companies satisfy a country
+constraint, with a release-date constraint and a cameo exclusion confined to
+the first branch. Returning an actor requires both branch witnesses, the
+correct date/role interpretation and the appropriate exclusion scope.
+This is a task specification, not a claim that the current P161 fixture or
+two-field contract can express it. Director, award, company, country, date and
+role-qualified cast evidence must first be acquired, licensed, pinned and
+represented. Missing role qualifiers cannot be interpreted as non-cameo facts.
+Date comparisons and additional operators require Scheme implementation and
+qualification before admitting those task strata.
+
+Use both independently annotated natural-language questions and structured
+paper-pattern queries. Freeze gold typed query structure, scoped witnesses
+and answer sets separately from provider inputs; audit annotations before
+execution. Split by query structure and entity anchors, rather than only
+rewriting names. Include paraphrases that change scope and plausible hard
+negatives, empty answers, competing witnesses and multiple correct answers.
+Reserve held-out structures to test generalization rather than template recall.
+
+* Three matched experimental arms
+
+| Arm | Model and Scheme work | Comparison |
+|-----+-----------------------+------------|
+| Direct model reasoning | Strong model solves each question using the frozen evidence and an equal retrieval entitlement; capture all tool/model work. | Reference quality and cost. |
+| Contract execution without reuse | Same model specifies each question independently; Scheme admits and executes each contract. | Execution assistance versus direct model reasoning. |
+| Contract execution with subgoal reuse | Same admission and execution, with qualifying subgoals reused across questions. | Incremental reuse benefit versus execution without reuse. |
+
+Do not weaken the reference prompt or withhold evidence/tools to create a win.
+Give all arms the same source boundary, question, model version, reasoning
+effort and allowed recovery policy. Count verification, rejected proposals,
+repairs, retries and retrieval calls in the arm that incurred them. A gold
+contract execution is a diagnostic upper bound, excluded from model accuracy.
+
+* Workload and reuse admission
+
+Report cold queries, warm queries sharing actual subgoals, and queries following
+source updates separately. Freeze workload order and reuse prevalence before
+running; do not choose a fixed repetition ratio to manufacture a saving.
+Show the cost curve as reuse prevalence varies, including zero reuse.
+
+Updates include insertion of a new answer witness, withdrawal of a supporting
+fact, changed scope/role constraints, and changes unrelated to a cached subgoal.
+Measure invalidation, revalidation and recomputation, including their Scheme
+cost. Compare every reuse result with fresh execution on the current snapshot.
+Never return an old answer solely because a template or prompt string matches.
+
+Reuse admission needs typed query structure, bindings, exclusion scope,
+source identity and evidence completeness. Equivalence of natural-language
+intent cannot be assumed from superficial wording. A reuse decision and its
+current witnesses must be inspectable. The current movie fixture establishes
+only caller-declared template reuse with answer recomputation, not this general
+subgoal mechanism.
+
+* Measurements and decision rule
+
+Primary quality measures are exact answer-set agreement and scope-correct
+witness validity. Diagnose interpretation/admission/execution errors separately.
+Keep empty, failed, rejected and timed-out questions in the denominator.
+
+Primary economic measures are total billed tokens and priced provider cost,
+including planning, verification and recovery. Record requested and resolved
+model, cached/uncached input, output and reasoning tokens when exposed, provider
+usage, wall time and Scheme execution cost. Reasoning-token savings cannot be
+claimed if reasoning usage is unavailable; missing usage does not become zero.
+Calls are a secondary measure. Provider prefix caching and ASCENT semantic reuse
+must be accounted for separately.
+
+Use matched question pairs, counterbalanced arm order and repeated trials.
+Group uncertainty estimates by query family/source episode so repeated variants
+are not treated as independent samples. Freeze the quality tolerance, workload,
+analysis and trial budget before live execution; determine sample size using
+pilot variance. Do not promise statistical power from an arbitrary case count.
+The 40–50% reduction is a hypothesis for the complex workload. A claim requires
+measured total cost reduction together with the preregistered quality gate;
+quality degradation or expensive repairs are retained as negative results.
+
+* Scheme, Lean and Quint responsibilities
+
+Scheme owns actual admission, query execution, invalidation and witness receipts.
+Lean establishes the semantic conditions for scope preservation, shared-variable
+joins and valid reuse. Quint explores update sequences and stale-result faults.
+Counterexamples must become matching Scheme regressions. Foreign-model passes
+alone cannot qualify a production implementation or a model answer.
+
+The existing finite movie correspondence is a foundation for those obligations.
+It does not prove arbitrary complex query compilation, general reuse, or any
+empirical model-cost result. Expand each admitted operator across all three
+artifacts before using it in the main workload.
+
+* Scheme transport and cold startup
+
+The pilot used one temporary AOT Scheme batch scorer to diagnose repeated
+module-import cost. This is an experimental receipt, not a supported public
+interface or a scene-specific build command. Python keeps provider byte IO;
+Scheme constructs truth, admits contracts and grades actual answers. The frozen plan binds the
+executable and every versioned =.oN= object and compiler metadata, not only the
+potentially stale =.o1= file. Producer source hashes and runtime artifact hashes
+are identities, not a general proof of source-to-binary refinement.
+
+The implemented integration is a general ASCENT C ABI, implemented on the Scheme
+side through its Scheme FFI, and a Python CFFI binding. Python owns model
+transport and connects directly to Scheme engine operations; the engine owns
+query admission, reusable sessions, updates, execution and witness receipts.
+The interface must specify runtime/session initialization, handle and buffer
+ownership, thread affinity, error/status propagation and cancellation. A model
+scenario consumes this interface; it does not introduce a separate Scheme build.
+Avoid arbitrary model-generated Python/Scheme evaluation.
+
+The public interface is =bindings/c/ascent.h=, =interface/engine-api.ss= and
+=python/src/ascent_engine=. The normal Gerbil package build compiles the Scheme
+modules; the Python package links their compiler-derived closure into one
+engine shared library. There is no movie-specific Scheme build command.
+The supported wire subset is finite typed relations, literals, variables,
+positive atoms and stratified negation, with explicit update-source authority.
+Arbitrary host predicates, aggregates and procedure callbacks are unsupported.
+Actual CFFI qualification replayed all 1,536 frozen Lean/Quint observations,
+and checked UTF-8, duplicate keys, transactional rejection, thread affinity,
+stale handles and terminal runtime shutdown. This does not prove C memory safety
+or refinement for arbitrary programs. Measure runtime initialization, module loading, FFI marshaling,
+request time and Scheme execution separately. Reusing the initialized runtime
+and sessions removes repeated local setup; remote inference latency remains a
+separate measurement.
+
+* Execution gates
+
+1. Qualify the current small fixture as a mechanism regression only.
+2. Acquire and independently annotate complex frozen evidence and query strata.
+3. Implement missing typed contracts/operators and subgoal reuse, with Scheme
+   regressions, Lean obligations and Quint update/fault controls.
+4. Freeze matched requests and offline oracle/witness checks without model calls.
+5. Run an authorized pilot, choose the main sample size, preregister the quality
+   tolerance and cost analysis, then run the held-out evaluation.
+
+The user authorized real model testing on 2026-10-10 and supplied the project
+=.env= location. The key was read as data without shell execution or printing.
+The pilot was bounded to nine calls and one dollar without automatic retries.
+The first three charged requests used the frozen temporary AOT scorer. The
+remaining six used a frozen copy of the public CFFI library; all prior responses
+were regraded through CFFI with matching results and no repeated model calls.
+The explicit backend transition is recorded in =ffi-cut/transition.json=;
+=ffi-result.json= retains all nine outcomes, including the incomplete response.
+The compact tracked receipt is [[file:movie-pilot-result.json][movie-pilot-result.json]];
+it records individual usage, failures, Scheme grades and response hashes.
+The continuation took 22.757 seconds on this host, including remote calls and
+Scheme grading. Complex workload construction
+and qualification remain the preceding gates above. The six-question fixture
+remains a mechanism regression even with real model responses. The separate
+source-closure study's 60-call budget is not the movie study's budget.

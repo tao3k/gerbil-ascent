@@ -1,0 +1,45 @@
+#+TITLE: ASCENT Scheme engine interface
+
+The normal Gerbil package build owns =interface/engine-api.ss= and =interface/c-api.ss=.
+=python -m ascent_engine.build= links the compiler-derived dependency closure
+into one general shared library. Applications use =ascent_engine.Engine= and
+=Session=; they do not introduce separate scene executables or build tools.
+
+* Ownership and lifecycle
+
+=bindings/c/ascent.h= declares ABI version 1. One OS thread initializes the
+Gambit runtime, submits requests and shuts it down. Python initialization uses
+the main thread. Shutdown is terminal; the runtime cannot be restarted in the
+same process. The Python binding retains the loaded library until process exit.
+Closing a session releases its engine handle. Stale handles reject.
+
+C callers zero-initialize =ascent_result= and call =ascent_result_release= after
+every request, including errors. Payloads are copied UTF-8 bytes owned by the
+result. Python copies them and releases the C allocation in a finally block.
+Input is limited to 1 MiB and rejects NUL, invalid UTF-8, duplicate JSON keys,
+trailing input and unknown contract fields. Errors return a typed status.
+
+* Declarative operations
+
+=describe= returns the ABI and operators. =open= admits a program containing
+finite relations, typed scalar columns with optional finite domains, source
+facts, rules and query relation names. Rules support variables, literals,
+positive relational atoms and stratified negation. No executable expressions,
+host callbacks, aggregates or arbitrary predicate serialization are supported.
+
+=run= returns completion and query rows with an execution deadline of at most
+one second. A fresh zero-budget run is incomplete; an already completed clean
+session can return its retained result. =replace= atomically replaces declared
+source relations after the initial run completes. All replacement rows are
+validated before publication. Derived relations cannot be updated as sources.
+=close= releases a handle. =compare= checks extensional row agreement; caller
+expectations do not certify natural-language intent or source completeness.
+
+* Qualification
+
+=t/qualification/ascent-engine-interface-test.ss= exercises recursion,
+negation, retained updates and invalid transactions directly in Scheme.
+=python/engine_tests/test_engine.py= exercises actual shared-library ownership,
+thread errors, parsing boundaries, retained sessions and all 1,536 frozen
+movie observations corresponding to Lean and Quint. This finite correspondence
+does not prove generic C ABI memory safety or arbitrary-program refinement.

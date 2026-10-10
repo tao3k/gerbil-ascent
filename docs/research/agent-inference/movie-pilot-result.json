@@ -1,0 +1,301 @@
+{
+  "schema": "ascent.movie-pilot-receipt.v1",
+  "date": "2026-10-10",
+  "purpose": "mechanism-regression",
+  "capabilityEvaluationEligible": false,
+  "modelRequests": 9,
+  "retries": 0,
+  "sourceFixtureSha256": "fd90eebe82d88946e1f1f4b5dcdd18d9d9dc5701987c89748d5016f36a742dea",
+  "transition": {
+    "schema": "ascent.movie-backend-transition.v1",
+    "paidPrefix": 3,
+    "planSha256": "02fcbbe08e19cb92eae8ad541c06c745384e527da92bb83e736a00b4041d65e3",
+    "previousBackend": "frozen temporary Scheme AOT scorer",
+    "currentBackend": "general Scheme C ABI via Python CFFI",
+    "librarySha256": "dc40e549dee3872d20539a39bab84e2efc262bae468da19193dfa1d3df295541",
+    "wireSha256": "b715090ebeeab064d1d16bf568196f4b85077bee396a72cb80a8deba28515193",
+    "driverSha256": "a2b0e1cd0efc421b09b09b7c11277bdac2c37aa8bf43a7092748799ec9636ab9",
+    "bindingSha256": "2f7543bf6e0a1757b79aa886d706bfcbd986c80e4308a40657a76065b4c94185",
+    "maxTotalCalls": 9,
+    "retries": 0,
+    "budgetCeilingUsd": 1
+  },
+  "records": [
+    {
+      "id": "scoped-union-seed",
+      "arm": "baseline",
+      "sha256": "ad4797a97e718d1243cc0fe41ecab0fd59da88c9f3a1b99fa7206b7223c581ce",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5417,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 3217,
+        "output_tokens_details": {
+          "reasoning_tokens": 2898
+        },
+        "total_tokens": 8634
+      },
+      "providerSeconds": 10.869016332988394,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "scoped-union-seed",
+          "correct": true
+        }
+      ],
+      "rawSha256": "a980deda11d44d0bd317dce84c8d37ab5c9d4a753f6447e2d748ba1b8f9b3a2e"
+    },
+    {
+      "id": "scoped-union",
+      "arm": "scheme-contract",
+      "sha256": "7a55f97ecceb87eaa3deb411864f59b937a40444e8bed1192f3ccba778345ce8",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5455,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 113,
+        "output_tokens_details": {
+          "reasoning_tokens": 99
+        },
+        "total_tokens": 5568
+      },
+      "providerSeconds": 1.4193634160037618,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "scoped-union-seed",
+          "correct": true
+        },
+        {
+          "id": "scoped-union-transfer",
+          "correct": true
+        }
+      ],
+      "rawSha256": "7d387c06275fcc883d255ffab89b23776717bbd965f7d0413c348431ebca911b"
+    },
+    {
+      "id": "scoped-union-transfer",
+      "arm": "baseline",
+      "sha256": "9f983682caeed407fc5d9a2f2749caee9a547e857f68ddec5a388c7475db1a0a",
+      "providerCompleted": false,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5418,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 4096,
+        "output_tokens_details": {
+          "reasoning_tokens": 4096
+        },
+        "total_tokens": 9514
+      },
+      "providerSeconds": 15.990176291001262,
+      "status": "incomplete",
+      "incompleteDetails": {
+        "reason": "max_output_tokens"
+      },
+      "engineGrades": [
+        {
+          "id": "scoped-union-transfer",
+          "correct": false
+        }
+      ],
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "global-union-seed",
+      "arm": "baseline",
+      "sha256": "b221906b40750a961bdfce58f8f9d7471dcc687aa301a223301c38f53469cce2",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5409,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 2616,
+        "output_tokens_details": {
+          "reasoning_tokens": 2301
+        },
+        "total_tokens": 8025
+      },
+      "providerSeconds": 9.654029208992142,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "global-union-seed",
+          "correct": true
+        }
+      ],
+      "rawSha256": "ea90c686d75c921250d32aecc54a5db0edf0859f8897daee6399b3c5117ea9e4"
+    },
+    {
+      "id": "global-union",
+      "arm": "scheme-contract",
+      "sha256": "a0f59c87206d6949cf2a652846c4ed72dd473c4be5bbf1eb0bf913942ecc9dbe",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5447,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 78,
+        "output_tokens_details": {
+          "reasoning_tokens": 64
+        },
+        "total_tokens": 5525
+      },
+      "providerSeconds": 0.9710810830001719,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "global-union-seed",
+          "correct": true
+        },
+        {
+          "id": "global-union-transfer",
+          "correct": true
+        }
+      ],
+      "rawSha256": "9cad386536878b1572b34ebad9a0b0f210ed23dd5576e6ca0f11fc337af76e75"
+    },
+    {
+      "id": "global-union-transfer",
+      "arm": "baseline",
+      "sha256": "b8cb64e6f1e288c096e9e87f629d95117901ae418f644c8aebdf0faeae0b3983",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5410,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 1161,
+        "output_tokens_details": {
+          "reasoning_tokens": 998
+        },
+        "total_tokens": 6571
+      },
+      "providerSeconds": 4.626061209011823,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "global-union-transfer",
+          "correct": true
+        }
+      ],
+      "rawSha256": "c979f6162796ed789ea2ba1aad8dd0072ee116f8ed94a7421acd0d9bab1aeabe"
+    },
+    {
+      "id": "shared-actor-seed",
+      "arm": "baseline",
+      "sha256": "a031793a4cfdbdc0867b37a2425a69ddac44fbc1157f6d88342d9a157cca2277",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5413,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 720,
+        "output_tokens_details": {
+          "reasoning_tokens": 718
+        },
+        "total_tokens": 6133
+      },
+      "providerSeconds": 3.456576833006693,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "shared-actor-seed",
+          "correct": true
+        }
+      ],
+      "rawSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "id": "shared-actor",
+      "arm": "scheme-contract",
+      "sha256": "e592ae8de71724d19c888e1a246bdc62460ac5b3fde370f3526cf37dd437f73a",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5451,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 144,
+        "output_tokens_details": {
+          "reasoning_tokens": 130
+        },
+        "total_tokens": 5595
+      },
+      "providerSeconds": 1.1955374169920105,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "shared-actor-seed",
+          "correct": true
+        },
+        {
+          "id": "shared-actor-transfer",
+          "correct": true
+        }
+      ],
+      "rawSha256": "95df0f604814afc10835b0d226c1f21f7238d29a8764be77ba2029fd3a8e17e8"
+    },
+    {
+      "id": "shared-actor-transfer",
+      "arm": "baseline",
+      "sha256": "5a04fdfe5524631f7ec14bd65c6dd0f3e98f7d753c65b8a7b3b2fb106e0c409c",
+      "providerCompleted": true,
+      "resolvedModel": "deepseek-flash",
+      "usage": {
+        "input_tokens": 5414,
+        "input_tokens_details": {
+          "cached_tokens": 5248
+        },
+        "output_tokens": 431,
+        "output_tokens_details": {
+          "reasoning_tokens": 421
+        },
+        "total_tokens": 5845
+      },
+      "providerSeconds": 2.255371874984121,
+      "status": "completed",
+      "incompleteDetails": null,
+      "engineGrades": [
+        {
+          "id": "shared-actor-transfer",
+          "correct": true
+        }
+      ],
+      "rawSha256": "1d83dbb930ea862cdfa79dcf40ab9f95250c6f50503a859ef3f110b7688952f4"
+    }
+  ],
+  "capabilityConclusion": null,
+  "costSavingsConclusion": null,
+  "deliveryRegrade": {
+    "callsReplayed": 0,
+    "responsesRegraded": 9,
+    "allPreviousGradesMatch": true,
+    "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+    "bindingSha256": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d",
+    "wireSha256": "e66e3ffe4d279a627d05f1fcdc987bcf4ab16048482dcd6cc42c1ee6f9e27391"
+  }
+}

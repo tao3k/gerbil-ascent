@@ -1,14 +1,34 @@
 #+TITLE: ASCENT test support
 
-This Python package owns provider HTTP/SSE byte IO, frozen request receipts,
-and process supervision for those IO studies. It does not parse Scheme model predictions, determine
-DSL correctness, publish native artifacts, or implement a semantic oracle.
+This Python package provides the =ascent_engine= CFFI client and shared-library
+linker, provider HTTP/SSE byte IO, frozen request receipts, and process supervision.
+Scheme owns query semantics, typed admission, source updates and execution.
+Python adapts inert JSON and compares results through the Scheme engine; it does
+not implement a separate semantic oracle.
 
 Scheme owns artifact admission in =t/native/artifact-admission.ss= and inert prediction
 projection in =t/model/response-projection.ss=. Native Cases cover staged compilation
 failure, owner/source/binary changes, prediction ambiguity, size and nesting
-bounds, and rejection of executable expressions. Those Cases run in native Scheme qualification.
-The Justfile and Scheme test/build/oracle paths do not invoke this package. Python tests cover only process activity and request byte context.
+bounds, and rejection of executable expressions. Those Cases run in Scheme qualification.
+Python tests additionally exercise the actual public C ABI and replay the frozen
+Lean/Quint movie observations through CFFI. =engine_tests/test_engine.py= requires a
+built shared library and =ASCENT_ENGINE_WIRE= exported by the Scheme movie test's
+=wire= operation. These tests intentionally fail when qualification inputs are absent.
+
+Build Gerbil modules with the normal package build first, then link the engine:
+
+#+begin_src sh
+PYTHONPATH=python/src python3 -m ascent_engine.build --output .gerbil/lib/libascent.dylib
+#+end_src
+
+Use =libascent.so= on Linux. The linker honors =GERBIL_BUILD_CORES= for missing C
+objects and uses the same SDK's compiler, headers and runtime. See =bindings/c/README.org=
+for ownership, lifecycle and supported operators.
+
+Run provider/supervision tests from =python/tests=; run the shared-library
+qualification from =python/engine_tests= after building and exporting its wire
+input. The Scheme CI job runs the latter on Ubuntu; the formal CI job runs
+provider tests without requiring a Scheme runtime.
 
 From the repository root, use the captured environment:
 

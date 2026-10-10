@@ -9,7 +9,7 @@ name = "ascent-test-support"
 version = "1"
 description = "Provider byte IO and process supervision for native Scheme tests"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["cffi>=1.16,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

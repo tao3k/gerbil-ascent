@@ -81,6 +81,7 @@
     "applications/scoped-witness"
     "applications/scoped-reachability-mask"
     "applications/scoped-composition"
+    "applications/movie-cast-query"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"
@@ -107,12 +108,16 @@
     "temporal/value"
     "temporal/projection"
     "temporal/lens"
-    "interface/request"))
+    "interface/request"
+    "interface/engine-api"))
 
 (asp-gerbil-scheme-package-spec!
  (gerbil-ascent-library-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (spec gerbil-ascent-build-spec)
- (modules gerbil-ascent-library-modules))
+ (modules gerbil-ascent-library-modules)
+ (extra-spec (cond-expand
+   (darwin '((gxc: "interface/c-api" "-ld-options" "-Wl,-undefined,dynamic_lookup")))
+   (else '((gxc: "interface/c-api"))))))
 (export gerbil-ascent-library-modules)
 (defbuild-script (gerbil-ascent-build-spec))

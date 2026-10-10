@@ -549,6 +549,11 @@ check-feedback-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ExecutionFeedback.qnt::ExecutionFeedback conformance .exit > .cache/ascent/feedback-conformance/quint.json
     cd packages/proofs/lean && lake build FeedbackConformance && lake env lean --run FeedbackConformance.lean ../../../.cache/ascent/feedback-conformance/quint.json ../../../t/qualification/fixtures/feedback/conformance.json
 
+check-movie-cast-conformance: prepare-quint
+    mkdir -p .cache/ascent/movie-cast-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/MovieCastQuery.qnt::MovieCastQuery conformance .exit > .cache/ascent/movie-cast-conformance/quint.json
+    cd packages/proofs/lean && lake build MovieCastQuery && lake env lean --run MovieCastQueryConformance.lean ../../../.cache/ascent/movie-cast-conformance/quint.json ../../../t/qualification/fixtures/movie-cast/conformance.json
+
 check-scoped-query-conformance: prepare-quint
     mkdir -p .cache/ascent/scoped-query-conformance
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ScopedQuery.qnt::ScopedQuery conformance .exit > .cache/ascent/scoped-query-conformance/quint.json
@@ -667,7 +672,7 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery)
+    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -722,6 +727,7 @@ _check-quint group='all': prepare-quint
         Withholding) constants='Mutation = "none"'; invariants='Private Bound Protected ExactCut' ;;
         ExecutionFeedback) constants='Mutation = "none"'; invariants='Qualified ExactDifferences ExactMatch InconclusivePrivate' ;;
         ScopedReachabilityMask) constants='Mutation = "none"'; invariants='ExactReach ExactWitnesses ExactBranches ExactGroups Private' ;;
+        MovieCastQuery) constants='Mutation = "none"'; invariants='ExactEvidence ExactAnswer ExactTrace Private' ;;
         ScopedQuery) constants='Mutation = "none"'; invariants='ExactHops ExactReach ExactShortest ExactPredecessors ExactWitnesses ExactBranches ExactGroups ExactTraces Private' ;;
         ScopedComposition) constants='Mutation = "none"'; invariants='ExactWitnesses ExactCoverage ExactMissing ExactAnswer Private' ;;
         BranchScopedWitness) constants='Mutation = "none"'; invariants='ExactWitnesses ExactBranches ExactUnion Private' ;;
@@ -869,6 +875,7 @@ _check-quint group='all': prepare-quint
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
             ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences; fault referenceStale Qualified; fault referencePartial Qualified; fault query Qualified ;;
             ScopedReachabilityMask) fault global ExactWitnesses; fault late ExactWitnesses; fault cleanAlternative ExactBranches; fault forgetWitness ExactWitnesses ;;
+            MovieCastQuery) fault global ExactEvidence; fault early ExactEvidence; fault union ExactAnswer; fault forget ExactTrace ;;
             ScopedQuery) fault unbounded ExactHops; fault independentSides ExactWitnesses; fault global ExactWitnesses; fault forgetPredecessor ExactPredecessors; fault forgetTrace ExactTraces ;;
             ScopedComposition) fault union ExactAnswer; fault allBranches ExactCoverage; fault emptyGroup ExactMissing; fault forgetWitness ExactWitnesses ;;
             BranchScopedWitness) fault crossMask ExactWitnesses; fault switchMask ExactWitnesses; fault forgetScope ExactWitnesses; fault collapseBranch ExactBranches ;;

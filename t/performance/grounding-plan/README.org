@@ -1,0 +1,96 @@
+#+TITLE: Invocation-owned positive grounding expressions
+
+* Coherent production boundary
+
+=candidate/grounding-plan.ss= prepares private final rule/clause records and
+expression closures once per synchronous invocation. An atom matcher classifies
+wildcards, variables and literals before row probing; a head renderer resolves
+only its prepared getters. Rule and query plans own no rows or mutable bindings.
+Native =foldr= composes ordered matcher continuations, =with= destructures the
+inspected rule vector, and typed =using= exposes private clause fields.
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:89-125= guards substitution using
+arity/mutation facts and preserves ordered operand bindings. Its
+=core/contract.ss:401-445= supplies typed expression binding through =using=.
+The application is preparation of admitted expressions followed by execution,
+not a new evaluator for arbitrary user code. Fixed scalar clauses retain the
+existing evaluator. Plans are rebuilt for each call; no validation or producer
+result is cached across mutable source/proposal boundaries.
+
+The plan is used by positive proof saturation, final query matching and complete
+grounded alternative enumeration. Independent positive proof verification keeps
+its original direct binding/head evaluation. Graph verification still reconstructs
+the entire expected graph, and public opening still verifies before copying state.
+Unsuccessful row probes, scalar evaluations, completed-round visibility, IDs,
+labels, duplicate choices, material caps and exact work boundaries are unchanged.
+There is no semi-naive probe skipping or reduction of verification boundaries.
+
+* Frozen complete consumers
+
+Baseline =c7da281307de86c91fba053a8efc5b43e071fbc0= freezes three owners:
+
+| Frozen source | Original blob |
+|---------------+---------------|
+| provenance.ss | fa5434fdd4570247fe0691813f661873a2262111 |
+| provenance-graph.ss | a17f5e62f6f88c2db76921a0d42fcfc9814bcb7a |
+| provenance-maintenance.ss | 803da4e58482aa263670d552040de0b7007f3548 |
+
+Only imports are redirected: frozen graph uses frozen proof and maintenance;
+frozen maintenance uses frozen proof record accessors and current datum/cut/height
+kernels. Other dependencies remain shared. Freezing all three preserves native
+record identity. The initial mixed-record baseline opening failed semantic
+qualification before timing; its log is retained.
+
+The proof consumer generates the complete DAG, independently verifies it and
+projects every ordered node field and root. The graph consumer produces every
+alternative, opens through full reconstruction verification, copies retained
+state, reads complete heights and detached rows, and projects the full witness
+and alternatives. Snapshot/spec/expected rows are prepared outside timing;
+every plan construction and evidence operation is inside timing. Independently
+specified chain rows and heights must agree with both complete consumers.
+
+Fixed gates preceded timing: 20 alternating CPU pairs, 20 ASP Scheme API
+admissions and five dedicated allocation pairs. Large arms require <=90% CPU
+and >=16 wins. Small permits <=110% CPU +20 us. Allocation permits <=110%
+baseline +8192 bytes. CPU includes natural GC; cumulative allocator samples use
+native =##get-bytes-allocated!= and reject negative differences. All arms run
+sequentially without tests or compilation alongside them.
+
+An initial proof measurement failed (874 -> 880 us, six wins) and was rejected:
+the benchmark builder had omitted the changed proof owner, loading a stale
+compiled artifact. Its receipt/log remain =proof-rejected-stale-artifact.*=.
+The builder now explicitly lists all changed production modules. Corrected
+compiled output contains the prepared-rule and prepared-query calls; all six
+native modules were rerun before measurement. No gate/sample count was changed.
+
+| Complete consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|-------------------+------------+------------+-----------+-----------+-----------|
+| Proof plus independent verification | 864 | 759 | 19 | 695216 | 706512 |
+| Graph plus verified opening and heights | 2031 | 1826 | 20 | 1839296 | 1864224 |
+| One-edge proof control | 26 | 26 | 8 | 52672 | 54048 |
+
+All fixed gates pass. Large CPU improvements are 12.2% and 10.1%; allocation
+increases 1.6% and 1.4%. Small-input CPU has no measured improvement and allocates
+1376 additional bytes. Claims cover these full evidence consumers on this VM,
+not native solver throughput, asymptotic probe reduction or other platforms.
+
+* Native qualification and reproduction
+
+Six official GxTest modules pass 50 Cases with =HARNESS-OK= and final =OK=.
+New Cases enumerate 4096 two-field combinations with prior binding preservation,
+empty atoms, repeated variables, false values, fixed scalar filters/computations,
+all 80 small work budgets and eight graph edge caps. Existing all-64 tiny graphs,
+100 consecutive recursive work boundaries, source/proposal mutation rejection,
+nonmembership and graph/stratified controls remain unchanged. ASP Policy passes
+the three production owners and new native Suite with zero findings.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/grounding-plan/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/grounding-plan/runner.ss proof .cache/ascent/grounding-plan/proof-final.ss
+#+end_src
+
+Other fixed arms are =graph= and =small=. Tests use
+=gxi :gerbil/tools/gxtest -v 5=. The runner calls ASP's Scheme benchmark API
+directly; root =build.ss= adds only a production module registration. The existing
+installed SDK and runtime options are unchanged. All raw receipts, failed attempts
+and logs stay under ignored =.cache/ascent/grounding-plan/=.

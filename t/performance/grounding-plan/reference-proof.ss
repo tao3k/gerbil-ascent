@@ -8,7 +8,6 @@
 ;;; Its result is checked against the completed native query before use.
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        :gerbil-ascent/candidate/grounding-plan
         (only-in :gerbil-ascent/candidate/certificate-limits
                  make-certificate-material-budget certificate-material-reserve!
                  certificate-for-each-while bounded-list-length)
@@ -124,8 +123,6 @@
             (not (positive-rules? spec)))
       (result 'unsupported [] [])
       (let ((index (make-hash-table))
-            (plans (map prepare-grounding-rule (reasoning-candidate-rules spec)))
-            (query-match (prepare-grounding-atom query))
             (nodes [])
             (next-id 0)
             (derived-count 0)
@@ -180,13 +177,15 @@
         (let saturate ()
           (let ((pending []) (pending-count 0) (pending-index #f))
             (certificate-for-each-while active?
-             (lambda ((rule :- grounding-rule))
-               (let ((name rule.name) (render rule.head)
-                     (body rule.body) (label rule.label))
+             (lambda (rule)
+               (let ((head (vector-ref rule 0))
+                     (body (vector-ref rule 1))
+                     (label (vector-ref rule 2)))
                  (def (walk remaining bindings inputs)
                    (unless bounded?
                      (if (null? remaining)
-                       (let (row (render bindings))
+                       (let* ((name (car head))
+                              (row (instantiate-head head bindings)))
                          (unless (or (known? name row)
                                      (let (members (and pending-index (hash-get pending-index name)))
                                        (and members (hash-get members row))))
@@ -206,13 +205,14 @@
                                (hash-put! members (proof-node-row node) node)
                                (set! pending (cons node pending))
                                (set! pending-count (+ pending-count 1))))))
-                       (using (clause (car remaining) :- grounding-clause)
-                         (if (not clause.relation)
+                       (let (clause (car remaining))
+                         (if (positive-fixed-clause? clause)
                            (begin
                              (set! steps (+ steps 1))
                              (if (> steps max-steps)
                                (set! bounded? #t)
-                               (let (next (clause.apply bindings))
+                               (let (next (candidate-fixed-clause
+                                           clause bindings))
                                  (when next
                                    (walk (cdr remaining) next inputs)))))
                            (certificate-for-each-while active?
@@ -222,21 +222,23 @@
                                 (if (> steps max-steps)
                                   (set! bounded? #t)
                                   (let (next
-                                        (clause.apply (proof-node-row node) bindings))
+                                        (candidate-bind-atom
+                                         clause (proof-node-row node)
+                                         bindings))
                                     (when next
                                       (walk (cdr remaining) next
                                             (cons (proof-node-id node)
                                                   inputs)))))))
-                            (facts clause.relation)))))))
+                            (facts (car clause))))))))
                  (walk body [] [])))
-             plans)
+             (reasoning-candidate-rules spec))
             (if bounded?
               (result 'bounded [] [])
               (if (null? pending)
                 (let* ((matching
                         (filter
                          (lambda (node)
-                           (query-match (proof-node-row node) []))
+                           (candidate-bind-atom query (proof-node-row node) []))
                          (facts (car query))))
                        (rows (map proof-node-row matching))
                        (roots (map proof-node-id matching)))

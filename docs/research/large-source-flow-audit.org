@@ -625,3 +625,42 @@ options are unchanged. Raw receipts remain under =.cache/ascent/support-cut/=.
 Initial support admission, public certificate construction/verification and
 broader solver execution remain separate audit work; this unit closes retained
 withdrawal propagation and its complete lifecycle controls.
+
+* Positive evidence expression preparation
+
+The next complete evidence flow still classified terms inside every row match
+and rendered heads from their syntax at every conclusion. This affected positive
+proof saturation, final query matching and complete grounded alternative
+enumeration. =candidate/grounding-plan.ss= now owns one invocation's final
+rule/clause records and prepared expression closures. Native =foldr= composes
+ordered matching continuations; vector =with= and typed =using= express admitted
+layout. Plans retain no rows or mutable bindings and do not survive the call.
+
+Gerbil's guarded substitution in =compiler/optimize-call.ss:89-125= motivates
+separating admitted expression preparation from repeated execution. Independent
+positive proof verification retains direct syntax interpretation. Graph opening
+still reconstructs the entire graph before copying state. Actual probe order,
+unsuccessful matches, scalar work, round visibility, node IDs, labels, duplicate
+selection, material caps and exact budget outcomes remain unchanged.
+
+[[file:../../t/performance/grounding-plan/README.org][Complete frozen evidence consumers]] compare preceding =c7da281= proof, graph
+and maintenance owners with independent chain rows/heights. All fixed gates pass:
+proof generation plus independent verification CPU 864 -> 759 us (12.2%, 19/20
+wins), graph generation plus verified opening and heights 2031 -> 1826 us
+(10.1%, 20/20 wins). Allocation increases 1.6%/1.4%. Small proof CPU is 26 ->
+26 us with 1376 additional bytes. Plan preparation is included in each interval.
+No solver throughput or asymptotic probe reduction is claimed.
+
+The initial mixed-record frozen consumer failed before timing. A subsequent
+proof measurement loaded a stale production artifact because the native builder
+omitted the changed proof module; it failed and was rejected. Both failures are
+retained. The builder now explicitly compiles all changed production owners.
+All six modules were rerun against the corrected artifact before timing; the
+same gates and sample counts remained fixed.
+
+Six native modules pass 50 Cases with final =OK=, including unchanged exhaustive
+recursive/budget controls and 4096 direct matching combinations. ASP Policy
+passes three production owners and the new Suite with zero findings. Logs and
+receipts stay under =.cache/ascent/grounding-plan/=. SDK/source builds remain
+unchanged. The preceding =c7da281= withdrawal unit now has six successful
+exact-head CI jobs in run =38034820309=.

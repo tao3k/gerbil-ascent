@@ -3,19 +3,20 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
-        :gerbil-ascent/candidate/grounding-plan
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations reasoning-candidate-facts
                  reasoning-candidate-rules)
-        (only-in :gerbil-ascent/candidate/provenance
-                 candidate-positive-closed-absence
+        (only-in :gerbil-ascent/candidate/program candidate-variable?)
+        (only-in :gerbil-ascent/candidate/funs candidate-fixed-clause candidate-bind-atom)
+        (only-in :gerbil-ascent/t/performance/grounding-plan/reference-proof
+                 candidate-positive-closed-absence positive-fixed-clause?
                  positive-proof? positive-proof-status positive-proof-nodes positive-proof-roots
                  positive-proof-snapshot-identity positive-proof-snapshot-generation
                  positive-proof-snapshot-digest positive-proof-candidate-digest positive-proof-query
                  proof-node? proof-node-id proof-node-relation proof-node-row
                  proof-node-kind proof-node-label proof-node-inputs))
 
-(import (only-in "provenance-maintenance.ss"
+(import (only-in :gerbil-ascent/t/performance/grounding-plan/reference-maintenance
                  candidate-make-provenance-maintenance provenance-maintenance?
                  provenance-maintenance-rows candidate-provenance-withdraw!
                  candidate-provenance-preview-withdraw candidate-provenance-compact
@@ -27,6 +28,24 @@
         provenance-maintenance? provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
         provenance-maintenance-size candidate-provenance-heights)
+
+;; instantiate-head
+;;   : (forall (a) (-> (Pair Symbol [(Or Symbol a)]) [(Pair Symbol a)] [(Or Symbol a)]))
+;;   : (-> Head GroundBindings GroundRow)
+;;   | doc m%
+;;       Resolve a grounded head in term order, preserving literal values. Callers supply a binding for every head variable after finite positive grounding.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (instantiate-head '(out ?x 7) '((?x . #f)))
+;;       ;; => '(#f 7)
+;;       ```
+;;     %
+(def (instantiate-head head bindings)
+  (map (lambda (term)
+         (if (candidate-variable? term) (cdr (assq term bindings)) term))
+       (cdr head)))
 
 ;;; Complete finite grounded derivation graph. A fact node may have several
 ;;; alternatives and rule alternatives may refer back to that same node.
@@ -49,7 +68,6 @@
     (if (not (memq status '(complete closed-absent)))
       (make-positive-provenance status witness [])
       (let ((nodes (positive-proof-nodes witness))
-            (plans (map prepare-grounding-rule (reasoning-candidate-rules spec)))
             (by-row (make-hash-table))
             (by-relation (make-hash-table-eq))
             (seen-edges (make-hash-table))
@@ -96,24 +114,26 @@
                    'candidate (vector-ref fact 2) [])))
          (reasoning-candidate-facts spec))
         (for-each
-         (lambda ((rule :- grounding-rule) position)
+         (lambda (rule position)
            (def (walk remaining bindings inputs)
              (unless bounded?
                (if (null? remaining)
-                 (let (output (node-for rule.name (rule.head bindings)))
+                 (let (output (node-for (car (vector-ref rule 0))
+                                        (instantiate-head (vector-ref rule 0)
+                                                          bindings)))
                    (unless output
                      (error "completed provenance closure is not closed"))
                    ;; Rule position distinguishes different rule occurrences
                    ;; even when their user-facing labels are identical.
-                   (add! output 'rule (list position rule.label)
+                   (add! output 'rule (list position (vector-ref rule 2))
                          (reverse inputs)))
-                 (using (clause (car remaining) :- grounding-clause)
-                   (if (not clause.relation)
+                 (let (clause (car remaining))
+                   (if (positive-fixed-clause? clause)
                      (begin
                        (set! steps (+ steps 1))
                        (if (> steps max-steps)
                          (set! bounded? #t)
-                         (let (next (clause.apply bindings))
+                         (let (next (candidate-fixed-clause clause bindings))
                            (when next (walk (cdr remaining) next inputs)))))
                      (for-each
                       (lambda (node)
@@ -121,14 +141,15 @@
                           (set! steps (+ steps 1))
                           (if (> steps max-steps)
                             (set! bounded? #t)
-                            (let (next (clause.apply (proof-node-row node) bindings))
+                            (let (next (candidate-bind-atom
+                                        clause (proof-node-row node) bindings))
                               (when next
                                 (walk (cdr remaining) next
                                       (cons (proof-node-id node) inputs)))))))
-                      (or (hash-get by-relation clause.relation) [])))))))
-           (walk rule.body [] []))
-         plans
-         (iota (length plans)))
+                      (or (hash-get by-relation (car clause)) [])))))))
+           (walk (vector-ref rule 1) [] []))
+         (reasoning-candidate-rules spec)
+         (iota (length (reasoning-candidate-rules spec))))
         (make-positive-provenance (if bounded? 'bounded 'complete)
                                   witness
                                   (if bounded? [] (reverse alternatives)))))))

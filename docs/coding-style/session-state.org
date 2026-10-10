@@ -959,3 +959,25 @@ algorithm boundary replaces both repeated DRed scans.
 fixed gates and height controls. Large retained consumers improve CPU and
 allocation; the small consumer has measured overhead. No solver or certificate
 verification claim is derived from these intervals.
+
+* Study: prepare admitted expressions before repeated evidence execution
+
+Gerbil =compiler/optimize-call.ss:89-125= checks arity and mutation before
+substitution and preserves ordered operand binding. =core/contract.ss:401-445=
+provides typed expression binding through native =using=. The evidence flow
+applies this preparation/execution split with private final rule/clause records:
+=foldr= composes matcher continuations once, vector =with= admits the rule layout,
+and typed clause access selects row matching versus the existing scalar evaluator.
+Variables, wildcards and literals are classified before repeated row probes.
+
+Each proof/graph invocation prepares its own plans. Rows and binding pairs stay
+with execution; repeated-variable equality and first bindings remain exact.
+Independent positive proof verification continues direct interpretation, and
+graph opening still reconstructs the complete expected graph. Preparation never
+skips unsuccessful work probes, round visibility, or public trust boundaries.
+
+[[file:../../t/performance/grounding-plan/README.org][Complete evidence qualification]] includes plan preparation, proof generation and
+independent verification, or graph generation and verified retained opening.
+Large CPU falls 12.2%/10.1% with 1.6%/1.4% additional transient allocation.
+Small-input CPU is unchanged. Exact budget controls and failed artifact
+admission are recorded alongside the successful fixed gates.

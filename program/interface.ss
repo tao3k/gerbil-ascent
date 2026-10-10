@@ -7,7 +7,7 @@
         "session.ss" "actor-session.ss" "scheme-language.ss" "operator.ss"
         "operator-change.ss" "operator-session.ss")
 (export (import: "types.ss")
-        (import: "objects.ss")
+        (except-out (import: "objects.ss") gerbil-ascent-construct-inert-program)
         (import: "aggregators.ss")
         (import: "summary.ss")
         gerbil-ascent-evaluate-program

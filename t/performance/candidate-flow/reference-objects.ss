@@ -10,7 +10,7 @@
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider)
-        (only-in "types.ss"
+        (only-in :gerbil-ascent/program/types
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
                  GerbilAscentTermContract
@@ -41,19 +41,7 @@
         gerbil-ascent-bound-membership
         gerbil-ascent-rule
         gerbil-ascent-fragment
-        gerbil-ascent-program gerbil-ascent-construct-inert-program)
-
-;;; A private inert construction flow has no supplied procedures or escaping
-;;; children. Its root contract recursively checks the complete POO object tree.
-;;; Ordinary public constructors keep immediate validation. No validation result
-;;; is cached across calls, and dynamic extent restores checks after failure.
-(def current-declaration-check (make-parameter validate))
-(def (declaration-check contract value)
-  ((current-declaration-check) contract value))
-(def (gerbil-ascent-construct-inert-program construct)
-  (validate GerbilAscentProgramContract
-            (parameterize ((current-declaration-check (lambda (_contract value) value)))
-              (construct))))
+        gerbil-ascent-program)
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Lattice. (.ref GerbilAscentLatticeContract 'proto))
@@ -287,7 +275,7 @@
                    relation-name row)))
         field-predicates-value row)))
    source-rows)
-  (declaration-check GerbilAscentRelationContract
+  (validate GerbilAscentRelationContract
             (.o (:: @ Relation.)
                 name: relation-name arity: column-count rows: source-rows
                 field-predicates: field-predicates-value
@@ -321,7 +309,7 @@
                    relation-name row)))
         field-predicates-value row)))
    source-rows)
-  (declaration-check GerbilAscentLatticeContract
+  (validate GerbilAscentLatticeContract
             (.o (:: @ Lattice.)
                 name: relation-name arity: column-count rows: source-rows
                 field-predicates: field-predicates-value
@@ -332,15 +320,15 @@
 
 (def (gerbil-ascent-variable name)
   (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))
-  (declaration-check GerbilAscentTermContract
+  (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'variable value: name)))
 
 (def (gerbil-ascent-wildcard)
-  (declaration-check GerbilAscentTermContract
+  (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'wildcard value: #f)))
 
 (def (gerbil-ascent-literal literal-value)
-  (declaration-check GerbilAscentTermContract
+  (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'literal value: literal-value)))
 
 (def (gerbil-ascent-expression input-variables compute)
@@ -348,7 +336,7 @@
                (andmap symbol? input-variables)
                (procedure? compute))
     (error "invalid ASCENT head expression" input-variables compute))
-  (declaration-check GerbilAscentTermContract
+  (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'expression
                 value: (vector input-variables compute))))
 
@@ -357,12 +345,12 @@
                (andmap symbol? output-variables)
                (procedure? matcher))
     (error "invalid ASCENT pattern" output-variables matcher))
-  (declaration-check GerbilAscentTermContract
+  (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'pattern
                 value: (vector output-variables matcher))))
 
 (def (gerbil-ascent-atom relation-name atom-terms)
-  (declaration-check GerbilAscentAtomContract
+  (validate GerbilAscentAtomContract
             (.o (:: self Atom.) ascent-clause-kind: 'atom
                 relation: relation-name terms: atom-terms
                 (.plan (lambda (atom-plan bound)
@@ -370,7 +358,7 @@
 
 (def (gerbil-ascent-guard input-variables guard-procedure
                           (operator-descriptor #f))
-  (declaration-check GerbilAscentGuardContract
+  (validate GerbilAscentGuardContract
             (.o (:: self Guard.) ascent-clause-kind: 'guard
                 variables: input-variables
                 predicate: guard-procedure
@@ -384,7 +372,7 @@
 
 (def (gerbil-ascent-generator output-variable input-variables
                               generator-procedure)
-  (declaration-check GerbilAscentGeneratorContract
+  (validate GerbilAscentGeneratorContract
             (.o (:: self Generator.) ascent-clause-kind: 'generator
                 variable: output-variable
                 variables: input-variables generate: generator-procedure
@@ -394,7 +382,7 @@
 
 (def (gerbil-ascent-binding output-variable input-variables
                             binding-procedure (operator-descriptor #f))
-  (declaration-check GerbilAscentBindingContract
+  (validate GerbilAscentBindingContract
             (.o (:: self Binding.) ascent-clause-kind: 'binding
                 variable: output-variable variables: input-variables
                 compute: binding-procedure
@@ -404,7 +392,7 @@
                                                'compute bound))))))
 
 (def (gerbil-ascent-negation relation-name atom-terms)
-  (declaration-check GerbilAscentNegationContract
+  (validate GerbilAscentNegationContract
             (.o (:: self Negation.) ascent-clause-kind: 'negation
                 relation: relation-name terms: atom-terms
                 (.plan (lambda (atom-plan bound)
@@ -418,7 +406,7 @@
                    (andmap symbol? output-variable)
                    (procedure? matcher)))
     (error "invalid ASCENT aggregate output" output-variable matcher))
-  (declaration-check GerbilAscentAggregateContract
+  (validate GerbilAscentAggregateContract
             (.o (:: self Aggregate.) ascent-clause-kind: 'aggregate
                 variable: output-variable relation: relation-name
                 terms: atom-terms variables: value-variables
@@ -428,7 +416,7 @@
                          (aggregate-clause-plan self atom-plan bound))))))
 
 (def (gerbil-ascent-rule head-atoms body-atoms)
-  (declaration-check GerbilAscentRuleContract
+  (validate GerbilAscentRuleContract
             (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
 
 ;;; Copy the signature before closure capture so a caller cannot rewrite an
@@ -471,7 +459,7 @@
 
 (def (gerbil-ascent-fragment relation-values rule-values
                              (export-values []) (source-handle-values []))
-  (declaration-check GerbilAscentFragmentContract
+  (validate GerbilAscentFragmentContract
             (.o (:: @ Fragment.)
                 relations: relation-values rules: rule-values
                 exports: (fragment-export-resolver export-values)
@@ -483,7 +471,7 @@
                                      input-fact-limit derived-fact-limit
                                      output-fact-limit
                                      (source-handle-values []))
-  (declaration-check GerbilAscentProgramContract
+  (validate GerbilAscentProgramContract
             (.o (:: @ Program.)
                 relations: declared-relations rules: declared-rules
                 source-handles:

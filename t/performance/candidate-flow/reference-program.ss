@@ -16,11 +16,10 @@
                  reasoning-candidate-query reasoning-candidate-limits
                  +max-relations+ +max-rules+ +max-input-facts+
                  +max-derived-facts+ +max-output-facts+)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/t/performance/candidate-flow/reference-objects
                  gerbil-ascent-relation gerbil-ascent-atom
                  gerbil-ascent-negation gerbil-ascent-rule
-                 gerbil-ascent-program gerbil-ascent-construct-inert-program
-                 gerbil-ascent-variable
+                 gerbil-ascent-program gerbil-ascent-variable
                  gerbil-ascent-wildcard gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-where relational-compute relational-reducer))
@@ -127,37 +126,13 @@
           (else
            (reject 'unsupported-construct path (car clause))))))))
 
-;;; One inspection owns name resolution and source/derived write authority.
-;;; Public candidate records stay inert; these indexes never escape inspection.
-(defstruct candidate-declaration (arity source?))
-(def (candidate-schema source derived)
-  (let (schema (make-hash-table-eq))
-    (for-each
-     (lambda (entry)
-       (unless (hash-get schema (car entry))
-         (hash-put! schema (car entry)
-                    (make-candidate-declaration (cadr entry) #t))))
-     source)
-    (for-each
-     (lambda (entry)
-       (when (hash-get schema (car entry))
-         (reject 'duplicate-relation '(relations) (car entry)))
-       (hash-put! schema (car entry)
-                  (make-candidate-declaration (cdr entry) #f)))
-     derived)
-    schema))
-
-(def (candidate-bind! bound term)
-  (when (logic-variable? term) (hash-put! bound term #t))
-  bound)
-
 (def (atom-check atom schema path)
   (unless (and (list? atom) (pair? atom) (symbol? (car atom)))
     (reject 'invalid-atom path atom))
-  (let (declaration (hash-get schema (car atom)))
+  (let (declaration (assq (car atom) schema))
     (unless declaration
       (reject 'unknown-relation path (car atom)))
-    (unless (= (length (cdr atom)) (candidate-declaration-arity declaration))
+    (unless (= (length (cdr atom)) (cdr declaration))
       (reject 'arity-mismatch path (car atom)))
     (for-each
      (lambda (term position)
@@ -171,7 +146,7 @@
 (def (require-bound-inputs inputs bound path)
   (for-each
    (lambda (input position)
-     (unless (and (logic-variable? input) (hash-get bound input))
+     (unless (and (logic-variable? input) (memq input bound))
        (reject 'unbound-operator-input
                (append path (list 'input position)) input)))
    inputs (iota (length inputs) 1)))
@@ -226,7 +201,7 @@
        (atom-check atom schema path)
        (for-each
         (lambda (term position)
-          (when (and (logic-variable? term) (not (hash-get bound term)))
+          (when (and (logic-variable? term) (not (memq term bound)))
             (reject 'unsafe-negation
                     (append path (list 'term position)) term)))
         (cdr atom) (iota (length (cdr atom)) 1)))
@@ -240,17 +215,17 @@
      (unless (and (= (length clause) 3)
                   (logic-variable? (cadr clause)))
        (reject 'invalid-computation path clause))
-     (when (hash-get bound (cadr clause))
+     (when (memq (cadr clause) bound)
        (reject 'duplicate-binding path (cadr clause)))
      (checked-operation (caddr clause) 'compute bound path)
-     (candidate-bind! bound (cadr clause)))
+     (cons (cadr clause) bound))
     ((reduce)
      (unless (and (= (length clause) 4)
                   (logic-variable? (cadr clause))
                   (list? (caddr clause))
                   (pair? (caddr clause)))
        (reject 'invalid-reduction path clause))
-     (when (hash-get bound (cadr clause))
+     (when (memq (cadr clause) bound)
        (reject 'duplicate-binding path (cadr clause)))
      (let* ((mode (caaddr clause))
             (inputs (cdaddr clause))
@@ -266,11 +241,13 @@
           (unless (memq input (cdr atom))
             (reject 'reduction-input-absent path input)))
         inputs))
-     (candidate-bind! bound (cadr clause)))
+     (cons (cadr clause) bound))
     (else
      (atom-check clause schema path)
-     (for-each (cut candidate-bind! bound <>) (cdr clause))
-     bound)))
+     (foldl
+      (lambda (term prior)
+        (if (logic-variable? term) (cons term prior) prior))
+      bound (cdr clause)))))
 
 ;;; Inspection must resolve every symbol against the copied source schema
 ;;; before a planner sees the proposal. Only source names accept candidate
@@ -279,17 +256,26 @@
 (def (candidate-inspect snapshot candidate)
   (let* ((spec (candidate-parse candidate))
          (source (reasoning-snapshot-relations snapshot))
+         (source-schema
+          (map (lambda (entry) (cons (car entry) (cadr entry))) source))
          (derived (reasoning-candidate-relations spec))
-         (schema (candidate-schema source derived)))
+         (schema (append source-schema derived))
+         (seen (map car source-schema)))
+    (for-each
+     (lambda (entry)
+       (when (memq (car entry) seen)
+         (reject 'duplicate-relation '(relations) (car entry)))
+       (set! seen (cons (car entry) seen)))
+     derived)
     (for-each
      (lambda (fact)
        (let ((name (vector-ref fact 0))
              (row (vector-ref fact 1))
              (path (list 'clause (vector-ref fact 2))))
-         (let (declaration (hash-get schema name))
-           (unless (and declaration (candidate-declaration-source? declaration))
+         (let (declaration (assq name source-schema))
+           (unless declaration
              (reject 'fact-needs-source path name))
-           (unless (= (length row) (candidate-declaration-arity declaration))
+           (unless (= (length row) (cdr declaration))
              (reject 'arity-mismatch path name)))))
      (reasoning-candidate-facts spec))
     (for-each
@@ -297,9 +283,9 @@
        (let* ((head (vector-ref rule 0))
               (body (vector-ref rule 1))
               (path (list 'clause (vector-ref rule 2)))
-              (bound (make-hash-table-eq)))
+              (bound []))
          (atom-check head schema (append path '(head)))
-         (when (candidate-declaration-source? (hash-ref schema (car head)))
+         (unless (assq (car head) derived)
            (reject 'rule-writes-source (append path '(head)) (car head)))
          (for-each
           (lambda (clause position)
@@ -314,7 +300,7 @@
               (reject 'wildcard-head
                       (append path (list 'head 'term position)) term))
              ((and (candidate-variable? term)
-                   (not (hash-get bound term)))
+                   (not (memq term bound)))
               (reject 'unbound-head-variable
                       (append path (list 'head 'term position)) term))))
           (cdr head) (iota (length (cdr head)) 1))))
@@ -360,29 +346,13 @@
         (car atom) (map candidate-term->object (cdr atom)))))
     (else (candidate-atom->object clause))))
 
-;;; Group once, then restore each source's candidate order at publication.
-;;; Rows and duplicate occurrences are retained; no source authority is added.
-(def (candidate-fact-partition facts)
-  (and (pair? facts)
-       (let (groups (make-hash-table-eq))
-         (for-each
-          (lambda (fact)
-            (with ((vector name row _) fact)
-              (hash-put! groups name (cons row (hash-ref groups name [])))))
-          facts)
-         groups)))
-
 ;;; Lower the checked data into POO declarations with no caller procedures.
 ;;; The source-handle list marks only copied inputs as replaceable; derived
 ;;; relations remain private to this one attempt.
 ;; : (-> ReasoningSnapshot ReasoningCandidate RelationalProgram)
 (def (candidate-program snapshot spec)
-  (gerbil-ascent-construct-inert-program
-   (cut candidate-lower-program snapshot spec)))
-
-(def (candidate-lower-program snapshot spec)
   (let* ((source (reasoning-snapshot-relations snapshot))
-         (facts (candidate-fact-partition (reasoning-candidate-facts spec)))
+         (facts (reasoning-candidate-facts spec))
          (derived (reasoning-candidate-relations spec))
          (source-relations
           (map (lambda (entry)
@@ -390,7 +360,10 @@
                    (gerbil-ascent-relation
                     name (cadr entry)
                     (append (caddr entry)
-                            (if facts (reverse (hash-ref facts name [])) [])))))
+                            (map (lambda (fact) (vector-ref fact 1))
+                                 (filter (lambda (fact)
+                                           (eq? (vector-ref fact 0) name))
+                                         facts))))))
                source))
          (derived-relations
           (map (lambda (entry)

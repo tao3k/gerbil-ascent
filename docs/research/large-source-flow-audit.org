@@ -1,0 +1,198 @@
+#+title: Large Scheme source flow audit
+#+date: 2026-10-10
+
+* Scope and evidence
+
+Audited revision =189a6919cd74e43e2274dc2e483ecc97d9aad25d=.
+The six focal modules contain 3477 lines: =program/evaluate.ss= (989),
+=candidate/reasoning.ss= (567), =program/syntax.ss= (555),
+=program/higher-order.ss= (486), =program/objects.ss= (482), and
+=candidate/program.ss= (398). Audit scope is their construction, inspection,
+lowering, update and observation flows, with supporting admission, initialization,
+snapshot and proof boundaries traced. This is a flow audit, not an assertion
+that every line or every remaining production module has been reviewed.
+
+Findings below separate observed growth, architectural coupling and hypotheses
+that need measurement. No production refactor or CPU gain is delivered by this
+audit. Existing temporal constructor gains do not establish gains in these flows.
+
+* Priority and coordinated work units
+
+| Work unit | Source owners | Finding | Evidence | Priority |
+|-----------+---------------+---------+----------+----------|
+| Candidate admission to receipt | candidate/program, candidate/reasoning | Repeated schema/variable scans, repeated fact selection, whole-edge graph scans | Direct loop structure; graph scan counts below | First |
+| Retained engine transaction lifecycle | program/evaluate, program/admission, program/initialization, program/session | One closure owns execution, storage, publication and mutation recovery | Named lifecycle paths and eager fallback below | Second |
+| Typed descriptor admission and lowering | program/higher-order | Validation and rebuilding repeat before descriptor reuse | Scoped traversal and budget contract; benefit unmeasured | Separate qualified study |
+| Public declaration construction | program/objects, program/types | Some construction lookups repeatedly scan declaration lists | Source-handle and fragment export loops | Include when profiling admission |
+| Macro expansion | program/syntax | Large module with explicit grammar owners | Native syntax dispatch already expresses major forms | No demonstrated runtime hotspot |
+
+* Candidate admission and lowering
+
+** Repeated schema resolution: candidate/program.ss:129,256
+
+=candidate-inspect= builds source and combined alist schemas. =atom-check= uses
+=assq= for every head/body/query atom. Facts independently search the source
+schema, and heads independently search derived declarations. Worst-case schema
+lookup work is proportional to atom/fact references times relation declarations.
+A source/derived/all schema frame could resolve names once per inspection while
+keeping distinct write authority and arity checks. Arity zero is a valid value;
+absence must have an explicit representation.
+
+The admitted schema cannot be retained blindly across mutable snapshots.
+Duplicate-relation diagnostics precede fact and rule diagnostics; head admission
+precedes body binding diagnostics. Keep those order contracts.
+
+** Variable scope grows with occurrences: candidate/program.ss:146,193-253
+
+Positive body atoms cons every logical-variable occurrence into =bound=, including
+already-bound variables. =memq= then scans that occurrence list for negation,
+operators, freshness and head admission. The relevant size is variable occurrences,
+not distinct bindings. For Q membership reads and B accumulated occurrences,
+worst-case scope work is O(Q*B). Repeated uses can enlarge B without extending
+the logical scope.
+
+A private rule-local symbol set should own membership and binding extension.
+Positive atoms bind; negation/operators only read; computation/reduction bind
+fresh output names. Wildcard, duplicate-binding and first located diagnostic
+behavior must remain exact. No arbitrary function or candidate callback runs
+at this inert inspection stage.
+
+** Facts are repartitioned for every source: candidate/program.ss:353-367
+
+For each source declaration, =candidate-program= filters the complete candidate
+fact list, maps matching rows, then appends them to original source rows. With
+R sources and F candidate facts, relation-name selection performs R*F checks,
+plus temporary filtered lists. At R=64/F=128 that is 8192 name comparisons
+(the count is derived from loop structure, not a timed measurement).
+
+Partition admitted facts once in original order. Preserve source rows before
+candidate rows, duplicate occurrences and candidate labels in all evidence.
+Lowered inputs containing candidate facts do not confer source authority. The
+public POO relation/rule/program construction contracts remain the consumer.
+
+* Candidate evidence construction
+
+** Whole-edge BFS scans: candidate/reasoning.ss:233-264
+
+=candidate-graph-walk= visits each reachable vertex once, but its inner loop scans
+all records each time. Work is O(V_reachable*E), even when each vertex has one
+outgoing edge. Support paths share tails; path copying is not the principal
+issue in this chain case. The search must continue after finding the target
+because it also returns the complete reachable cut.
+
+A Scheme audit probe extracts this current private algorithm and adds one counter
+at each record visit. It verifies shortest support length and independent chain
+reachability before accepting the count. It runs without Python or a new harness.
+The receipt is ignored =.cache/ascent/large-flow-audit/graph-scan.log=:
+
+| Vertices | Edges | Observed record probes |
+|----------+-------+------------------------|
+| 32 | 31 | 992 |
+| 64 | 63 | 4032 |
+| 128 | 127 | 16256 |
+| 256 | 255 | 65280 |
+
+An invocation-owned ordered adjacency index can reduce record selection to one
+construction pass plus reached out-edges. Its allocation cost and small/empty
+controls still require A/B qualification. Preserve shortest nonempty support,
+source-first ties, hypothetical edge labels, repeated source occurrences and
+reachable-cut order. In particular origin=target does not automatically prove
+a nonempty path. Temporal horizon-frontier semantics differ from this support/
+cut protocol; their walkers must not be merged merely because both use BFS.
+
+** Receipt stages and repeated trust boundaries: candidate/reasoning.ss:343-567
+
+=reasoning-attempt= interleaves inspection, native admission, solve, query,
+evidence and optional positive/absence/stratified proof production in one deep
+control tree. Failure classification depends on its stage. These stages warrant
+named result records and explicit publication policy, coordinated with candidate
+schema/scope/fact preparation rather than separate cosmetic rewrites.
+
+Receipt verifiers recheck mutable snapshot content binding and reinspect candidate
+data. Proof producers/verifiers have their own current-snapshot checks. These are
+real public trust boundaries, not automatically removable duplicate work.
+An internal owned admission context might amortize preparation within one call;
+measure its construction/copy cost and preserve budget charging. Do not cache
+validation across calls or let one producer's proof stand in for independent
+verification. Current source/proposal/certificate mutation controls stay mandatory.
+
+* Retained engine execution and update ownership
+
+=program/evaluate.ss:91-981= binds schema, all/delta rows, versions, index owners,
+storage owners, lattice state and counters inside one construction closure.
+Nested owners cover =commit-view!=, staged Set flush, row emission, body execution,
+retained fixed point, result publication and source append/replacement/recovery.
+=program/initialization.ss= already names initialization buffers; use that existing
+ownership pattern rather than introduce a second generic engine framework.
+
+=append-source!= at lines 799-904 also chooses update policy. For negation,
+aggregation, lattice interaction or a previously replayed engine, it copies source
+rows, rebuilds source declarations, constructs an engine and runs it before
+publishing the append. Repeated updates can therefore pay repeated whole solves.
+Positive Set appends already use a buffered persistent log and batch admission.
+
+The eager path preserves immediate errors and atomic publication. Simply delaying
+it to =run!= would change failure timing and accepted state. Work should separate
+update preparation, candidate execution and publication, with explicit state and
+recovery ownership. Bulk behavior requires a defined transaction contract and a
+matched workload; a module move alone cannot claim CPU improvement. Native row
+loops should borrow their state once, rather than pay record access/dispatch per
+field just to shorten the coordinator.
+
+* Typed compilation and public declarations
+
+=program/higher-order.ss:296-486= combines type freezing, scoped term validation,
+finite-domain collection and beta/fixed-point lowering. Term copies are reused
+only after children, lexical scope and rebuilt signatures are checked. This can
+repeat rebuilding for shared descriptors, but early memoization keyed only by node
+identity would skip scope checks. Every visit is also budgeted. The type snapshotter
+already checks/charges before reuse; retain that contract. A measured next design
+would separate scoped validation from owned representation reuse while preserving
+all budget boundaries and escaped-parameter rejection.
+
+=program/objects.ss:426-468= scans prior exports for duplicate detection and scans
+all declarations per source handle. These are real construction costs, but their
+frequency and contribution to a full admitted program are unmeasured. Its clause
+planning already uses POO generic dispatch and bounded/lazy symbol indexes.
+Keep that public extension axis. A large scope should not be represented by a
+new fixed arbitrary cutoff without evidence about scope lifetime and read reuse.
+
+=program/syntax.ss= uses =defsyntax=/=defrules= for major grammar forms. File size
+alone does not justify rewriting macro dispatch or claiming runtime gains.
+Expansion cost needs an expansion workload, not a runtime-only solve benchmark.
+
+* Source patterns and next batch acceptance
+
+Installed Gerbil =1cfb032= =compiler/optimize.ss:28-35= allocates invocation-owned
+mutation/type facts; =optimize-xform.ss:108-113= records resolved identifier facts
+before descending further. =core/match.ss:672-689= supplies structural bindings.
+The application here is a checked construction flow with owned indexes and
+explicit stages, not a generic method for every list field.
+
+First implementation batch: the complete Candidate inspection/lowering/receipt
+path. Carry source/derived schema authority, rule-local membership, ordered fact
+partitioning and graph-evidence preparation through named private owners. Preserve
+public POO construction and independent evidence verification. Separate inert
+language admission, private preparation and receipt publication responsibilities.
+
+Freeze the current complete consumers before changes. Qualify exact located
+errors, source/candidate ordering, duplicate occurrences, callback boundaries,
+mutable snapshot/candidate/certificate rejection, witness and cut order, and
+proof budget outcomes. ASP Scheme A/B must include complete Candidate admission
+and lowering and complete =reasoning-attempt= controls, not only a fast adjacency
+helper. Report execution-only and proof-producing cases separately. Set CPU and
+allocation gates before timing, retain failures, and keep all logs under =.cache=.
+
+Second batch: retained engine update/publication flow, with positive buffered and
+nonmonotone replay controls. Typed scoped lowering remains a separate budgeted
+study. This audit supplies a bounded work queue; it does not establish improvement
+percentages for any unimplemented change.
+
+* First implementation follow-through
+
+The Candidate work unit is implemented in the subsequent construction and receipt
+flow study: [[file:../../t/performance/candidate-flow/README.org][Candidate construction and execution flow]]. The audit's evidence and revision
+above remain historical. The implementation also addresses repeated recursive
+POO construction validation, a larger measured cost than the initial lookup work.
+Retained engine transactions and scoped typed compilation remain separate work
+units; this Candidate batch does not claim gains in those paths.

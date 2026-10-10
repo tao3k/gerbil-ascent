@@ -20,7 +20,7 @@
                  reasoning-candidate-rules reasoning-candidate-query
                  candidate-rejection? candidate-rejection-diagnostic
                  +max-relations+ +max-input-facts+)
-        (only-in :gerbil-ascent/candidate/program
+        (only-in :gerbil-ascent/t/performance/candidate-flow/reference-program
                  scalar? candidate-variable? candidate-inspect candidate-program
                  candidate-planner-path)
         (only-in :gerbil-ascent/candidate/provenance
@@ -230,20 +230,8 @@
 
 ;;; Breadth-first search yields one shortest support and the reachable cut.
 ;;; Candidate edges remain labelled as hypothetical in the returned support.
-;;; Index record selection once. Reverse only reached buckets, once per node,
-;;; so publication retains source-first and candidate-clause tie order.
-(def (candidate-edge-index records)
-  (let (index (make-hash-table))
-    (for-each
-     (lambda (record)
-       (let (origin (caaddr record))
-         (hash-put! index origin (cons record (hash-ref index origin [])))))
-     records)
-    index))
-
 (def (candidate-graph-walk records origin target)
-  (let ((index (candidate-edge-index records))
-        (visited (make-hash-table))
+  (let ((visited (make-hash-table))
         (reachable (list origin))
         (support #f))
     (hash-put! visited origin #t)
@@ -260,15 +248,17 @@
                (next back))
           (for-each
            (lambda (record)
-             (with ([_ _ [_ neighbor]] record)
-               (let (extended (cons record path))
-                 (when (and (not support) (equal? neighbor target))
-                   (set! support (reverse extended)))
-                 (unless (hash-get visited neighbor)
-                   (hash-put! visited neighbor #t)
-                   (set! reachable (cons neighbor reachable))
-                   (set! next (cons (cons neighbor extended) next))))))
-           (reverse (hash-ref index node [])))
+             (let (edge (caddr record))
+               (when (equal? (car edge) node)
+                 (let ((neighbor (cadr edge))
+                       (extended (cons record path)))
+                   (when (and (not support) (equal? neighbor target))
+                     (set! support (reverse extended)))
+                   (unless (hash-get visited neighbor)
+                     (hash-put! visited neighbor #t)
+                     (set! reachable (cons neighbor reachable))
+                     (set! next (cons (cons neighbor extended) next)))))))
+           records)
           (loop (cdr front) next)))))))
 
 ;;; Evidence is deliberately narrower than query execution: only the exact
@@ -316,11 +306,10 @@
          (candidate-copy-pairs (reasoning-evidence-reachable evidence))))
    proof nonmembership stratified))
 
-(defstruct captured-stage (ok? value))
 (def (capture thunk)
   (with-catch
-   (lambda (failure) (make-captured-stage #f failure))
-   (lambda () (make-captured-stage #t (thunk)))))
+   (lambda (failure) (vector #f failure))
+   (lambda () (vector #t (thunk)))))
 
 (def (failure-detail failure)
   (let (message (exception->string failure))
@@ -370,7 +359,7 @@
               (reasoning-stratified-evidence-finite
                (reasoning-receipt-stratified receipt))
               work-budget))))
-      (if (captured-stage-ok? checked) (captured-stage-value checked) 'invalid))
+      (if (vector-ref checked 0) (vector-ref checked 1) 'invalid))
     'invalid))
 
 ;; reasoning-verify-stratified-receipt
@@ -403,7 +392,7 @@
                    work-budget
                    (reasoning-stratified-evidence-proof evidence)
                    work-budget))))
-           (if (captured-stage-ok? checked) (captured-stage-value checked) 'invalid)))
+           (if (vector-ref checked 0) (vector-ref checked 1) 'invalid)))
         ((bounded) 'bounded)
         ((unsupported) 'unsupported)
         (else 'invalid)))
@@ -437,107 +426,142 @@
 ;;     %
 ;;; Boundary: Structural diagnostics use candidate clause indexes, not
 ;;; Scheme syntax locations; planner failures retain their own messages.
-(defstruct attempt-observation (rows evidence))
-
-;;; Each stage owns its failure classification. Proof failures are diagnostics
-;;; on a complete native answer; inspection/planning/solve failures are not.
-(def (attempt-failure snapshot digest status query code path failure)
-  (reasoning-receipt-for
-   snapshot digest status query []
-   (list (make-reasoning-diagnostic code path (failure-detail failure))) #f))
-
-(def (attempt-proof-diagnostics result code)
-  (if (or (not result) (captured-stage-ok? result)) []
-    (list (make-reasoning-diagnostic
-           code '(explain) (failure-detail (captured-stage-value result))))))
-
-(def (attempt-proof-value result)
-  (and result (captured-stage-ok? result) (captured-stage-value result)))
-
-(def (attempt-publish snapshot spec digest query observation proof-steps stratified-steps)
-  (with ((attempt-observation rows evidence) observation)
-    (let* ((proof (capture (lambda ()
-                   (and proof-steps
-                        (candidate-positive-proof snapshot spec digest 'complete rows proof-steps)))))
-           (absence (capture (lambda ()
-                     (and proof-steps
-                          (candidate-positive-nonmembership snapshot spec digest 'complete rows proof-steps)))))
-           (stratified (and stratified-steps
-                         (capture (lambda ()
-                           (produce-receipt-stratified snapshot spec digest rows stratified-steps))))))
-      (reasoning-receipt-for
-       snapshot digest 'complete query rows
-       (append (attempt-proof-diagnostics proof 'proof-failed)
-               (attempt-proof-diagnostics absence 'nonmembership-failed)
-               (attempt-proof-diagnostics stratified 'stratified-evidence-failed))
-       evidence (attempt-proof-value proof) (attempt-proof-value absence)
-       (attempt-proof-value stratified)))))
-
-(def (attempt-observe snapshot spec digest query solved proof-steps stratified-steps)
-  (let (observed
-        (capture (lambda ()
-          (let* ((all (relational-query-name solved (car query)))
-                 (rows (filter (cut query-row-matches? (cdr query) <>) all)))
-            (make-attempt-observation rows (candidate-evidence snapshot spec query rows))))))
-    (cond
-     ((not (captured-stage-ok? observed))
-      (attempt-failure snapshot digest 'unknown query 'query-failed '(query)
-                       (captured-stage-value observed)))
-     ((attempt-observation-evidence (captured-stage-value observed))
-      (attempt-publish snapshot spec digest query (captured-stage-value observed)
-                       proof-steps stratified-steps))
-     (else
-      (reasoning-receipt-for
-       snapshot digest 'unknown query []
-       (list (make-reasoning-diagnostic 'evidence-mismatch '(explain) query)) #f)))))
-
-(def (attempt-solve snapshot spec digest query report proof-steps stratified-steps)
-  (let (diagnostic (relational-admission-report-diagnostic report))
-    (if diagnostic
-      (reasoning-receipt-for
-       snapshot digest 'rejected query []
-       (list (make-reasoning-diagnostic
-              (relational-diagnostic-code diagnostic)
-              (candidate-planner-path spec (relational-diagnostic-path diagnostic))
-              (relational-diagnostic-detail diagnostic))) #f)
-      (let (solved (capture (lambda ()
-                    (relational-solve (relational-admission-report-admission report)))))
-        (if (captured-stage-ok? solved)
-          (attempt-observe snapshot spec digest query (captured-stage-value solved)
-                           proof-steps stratified-steps)
-          (attempt-failure snapshot digest 'unknown query 'solve-failed '(solve)
-                           (captured-stage-value solved)))))))
-
-(def (attempt-prepare snapshot spec digest proof-steps stratified-steps)
-  (let* ((query (vector-ref (reasoning-candidate-query spec) 0))
-         (prepared (capture (lambda ()
-                     (relational-admit/report (candidate-program snapshot spec))))))
-    (if (captured-stage-ok? prepared)
-      (attempt-solve snapshot spec digest query (captured-stage-value prepared)
-                     proof-steps stratified-steps)
-      (attempt-failure snapshot digest 'rejected query 'planner-rejected '(program)
-                       (captured-stage-value prepared)))))
-
 (def (reasoning-attempt snapshot candidate (proof-steps 100000)
                         (stratified-steps #f))
   (unless (reasoning-snapshot-valid? snapshot)
-    (error "reasoning attempt requires a current valid source snapshot" snapshot))
+    (error "reasoning attempt requires a current valid source snapshot"
+           snapshot))
   (unless (or (not proof-steps)
               (and (exact-integer? proof-steps) (> proof-steps 0)))
-    (error "reasoning attempt requires positive proof work budget or #f" proof-steps))
+    (error "reasoning attempt requires positive proof work budget or #f"
+           proof-steps))
   (unless (or (not stratified-steps)
               (and (exact-integer? stratified-steps) (> stratified-steps 0)))
-    (error "reasoning attempt requires positive stratified work budget" stratified-steps))
+    (error "reasoning attempt requires positive stratified work budget"
+           stratified-steps))
   (let* ((digest (candidate-content-digest candidate))
-         (inspection (capture (cut candidate-inspect snapshot candidate))))
-    (cond
-     ((captured-stage-ok? inspection)
-      (attempt-prepare snapshot (captured-stage-value inspection) digest
-                       proof-steps stratified-steps))
-     ((candidate-rejection? (captured-stage-value inspection))
-      (reasoning-receipt-for
-       snapshot digest 'rejected #f []
-       (list (candidate-rejection-diagnostic (captured-stage-value inspection))) #f))
-     (else
-      (attempt-failure snapshot digest 'unknown #f 'inspector-failed '(candidate)
-                       (captured-stage-value inspection))))))
+         (inspection
+          (capture (lambda () (candidate-inspect snapshot candidate)))))
+    (if (not (vector-ref inspection 0))
+      (let (failure (vector-ref inspection 1))
+        (if (candidate-rejection? failure)
+          (reasoning-receipt-for
+           snapshot digest 'rejected #f []
+           (list (candidate-rejection-diagnostic failure)) #f)
+          (reasoning-receipt-for
+           snapshot digest 'unknown #f []
+           (list (make-reasoning-diagnostic
+                  'inspector-failed '(candidate)
+                  (failure-detail failure))) #f)))
+      (let* ((spec (vector-ref inspection 1))
+             (query (vector-ref (reasoning-candidate-query spec) 0))
+             (prepared
+              (capture
+               (lambda ()
+                 (relational-admit/report
+                  (candidate-program snapshot spec))))))
+        (if (not (vector-ref prepared 0))
+          (reasoning-receipt-for
+           snapshot digest 'rejected query []
+           (list (make-reasoning-diagnostic
+                  'planner-rejected '(program)
+                  (failure-detail (vector-ref prepared 1)))) #f)
+          (let ((report (vector-ref prepared 1)))
+            (if (relational-admission-report-diagnostic report)
+              (let (diagnostic
+                    (relational-admission-report-diagnostic report))
+                (reasoning-receipt-for
+                 snapshot digest 'rejected query []
+                 (list
+                  (make-reasoning-diagnostic
+                   (relational-diagnostic-code diagnostic)
+                   (candidate-planner-path
+                    spec (relational-diagnostic-path diagnostic))
+                   (relational-diagnostic-detail diagnostic))) #f))
+              (let (solved
+                (capture
+                 (lambda ()
+                   (relational-solve
+                    (relational-admission-report-admission report)))))
+            (if (not (vector-ref solved 0))
+              (reasoning-receipt-for
+               snapshot digest 'unknown query []
+               (list (make-reasoning-diagnostic
+                      'solve-failed '(solve)
+                      (failure-detail (vector-ref solved 1)))) #f)
+              (let (observed
+                    (capture
+                     (lambda ()
+                       (let* ((all
+                               (relational-query-name
+                                (vector-ref solved 1) (car query)))
+                              (rows
+                               (filter (lambda (row)
+                                         (query-row-matches? (cdr query) row))
+                                       all)))
+                         (vector rows
+                                 (candidate-evidence
+                                  snapshot spec query rows))))))
+                (cond
+                 ((not (vector-ref observed 0))
+                  (reasoning-receipt-for
+                   snapshot digest 'unknown query []
+                   (list (make-reasoning-diagnostic
+                          'query-failed '(query)
+                          (failure-detail (vector-ref observed 1)))) #f))
+                 ((vector-ref (vector-ref observed 1) 1)
+                  (let* ((rows (vector-ref (vector-ref observed 1) 0))
+                         (proof-result
+                          (capture
+                           (lambda ()
+                             (and proof-steps
+                                  (candidate-positive-proof
+                                   snapshot spec digest 'complete rows
+                                   proof-steps)))))
+                         (absence-result
+                          (capture
+                           (lambda ()
+                             (and proof-steps
+                                  (candidate-positive-nonmembership
+                                   snapshot spec digest 'complete rows
+                                   proof-steps)))))
+                         (stratified-result
+                          (and stratified-steps
+                               (capture
+                                (lambda ()
+                                  (produce-receipt-stratified
+                                   snapshot spec digest rows
+                                   stratified-steps)))))
+                         (proof-ok? (vector-ref proof-result 0))
+                         (absence-ok? (vector-ref absence-result 0))
+                         (stratified-ok?
+                          (or (not stratified-result)
+                              (vector-ref stratified-result 0))))
+                    (reasoning-receipt-for
+                     snapshot digest 'complete query rows
+                     (append
+                      (if proof-ok? []
+                        (list (make-reasoning-diagnostic
+                               'proof-failed '(explain)
+                               (failure-detail
+                                (vector-ref proof-result 1)))))
+                      (if absence-ok? []
+                        (list (make-reasoning-diagnostic
+                               'nonmembership-failed '(explain)
+                               (failure-detail
+                                (vector-ref absence-result 1)))))
+                      (if stratified-ok? []
+                        (list (make-reasoning-diagnostic
+                               'stratified-evidence-failed '(explain)
+                               (failure-detail
+                                (vector-ref stratified-result 1))))))
+                     (vector-ref (vector-ref observed 1) 1)
+                     (and proof-ok? (vector-ref proof-result 1))
+                     (and absence-ok? (vector-ref absence-result 1))
+                     (and stratified-result stratified-ok?
+                          (vector-ref stratified-result 1)))))
+                 (else
+                  (reasoning-receipt-for
+                   snapshot digest 'unknown query []
+                   (list (make-reasoning-diagnostic
+                          'evidence-mismatch '(explain) query)) #f)))))))))))))

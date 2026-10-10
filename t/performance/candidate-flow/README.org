@@ -1,0 +1,165 @@
+#+title: Candidate construction and execution flow
+
+* Responsibility and source study
+
+Baseline =189a6919cd74e43e2274dc2e483ecc97d9aad25d= freezes complete
+=candidate/program.ss=, =candidate/reasoning.ss= and =program/objects.ss=.
+Their original blobs are respectively =afe8ac61264f72d32232203516af00251508e285=,
+=1e839f3e013be99205ea2b9ef75dc02e5db16d96= and
+=5652d56b2ea0177a44632c033a3d8f14fc01b9ef=.
+Reference edits only redirect imports to the frozen owners or make the relative
+type import absolute. Core contracts, providers, solving and proof producers
+remain shared, unchanged dependencies.
+
+Gerbil =1cfb032= =compiler/optimize.ss:28-35= scopes fact tables to a compile
+invocation; =core/match.ss= expresses vector and record binding directly.
+Core =types.ss:315-346= constructs responsibility evidence recursively, and
+its =229-239= implements both boolean membership and validation through full
+admission evidence. The important construction cost is that validating a term,
+then its atom, then its rule, then its program revisits the same owned tree.
+
+The Candidate inspector owns one relation-name index with explicit source/write
+authority and one fresh binding set per rule. Fact lowering partitions rows once,
+retaining source-first rows and every candidate occurrence. Graph evidence owns
+one outgoing-edge index; each reached bucket is restored to original record order.
+Search continues after the first shortest nonempty support to return the complete
+reachable cut. Empty reflexive queries remain unsupported, not zero-edge proofs.
+
+=program/objects.ss= supplies an internal inert construction flow. Public
+constructors retain immediate contract checking. Only synchronous Candidate
+lowering opts into preparing its private tree followed by one complete root
+contract validation before returning a program. That recursive validation checks
+all relations, rules, clauses and terms. Manual constructor shape/row checks
+still execute during preparation. The dynamic scope restores immediate checking
+after either preparation or root-validation failure. No candidate procedure,
+mutable child escape or cross-call validation cache belongs in this scope.
+The internal entry is excluded from =program/interface.ss= exports. This is not
+a replacement for native admission, current-snapshot binding or independent proof
+verification; those boundaries still perform their own checks.
+
+Receipt execution has named prepare, solve, observe and evidence/publication
+owners. Captured stages and observations are native private records. Existing
+located diagnostics, stage-specific failure status, proof budget behavior and
+optional evidence-failure diagnostics remain unchanged.
+
+* Matched consumers and fixed gates
+
+The runner executes 50 alternating CPU pairs in isolation, followed by 50
+optimized consumer invocations through the ASP Scheme API for latency admission.
+Each result must match both implementations and the frozen consumer projection.
+CPU is process user plus system time, including natural collection. A separate
+allocation phase reads the VM-wide counter at statistics slot 16 between forced
+GCs, with the same result checks. Forced collection and allocation instrumentation
+are outside ASP admission timing. Negative allocation differences fail.
+Allocation measures cumulative bytes, not peak/live memory or RSS.
+
+Allocation uses five alternating pairs. The prior 50-pair runs varied by at most
+0.0072% across wide/medium baseline and candidate counters. Five probes retain
+the same 110% +4096-byte gate while removing 90% of forced-collection probes.
+This sample count is explicit in the fixture; CPU samples and thresholds remain
+unchanged. Receipt arrays retain every observation.
+
+Wide/medium scenarios inspect and lower complete programs with 60/24 source and
+derived declarations, 128 candidate facts and one rule per derived relation.
+Scope uses 12 independent 64-field positive atoms, 768 variables and a 64-field
+head. Each admission scenario performs two complete constructions, including the
+recursive root contract and ordered output projection. These are construction
+measurements, not solving measurements.
+
+Graph/proof scenarios execute a complete =reasoning-attempt= with a 64-edge chain
+and 512 disconnected edges. Graph disables proof production; proof requests
+100000 positive proof steps. Both include snapshot validation, candidate digest,
+inspection, construction, native admission, solving, query, graph evidence and
+receipt publication. Proof also includes unchanged positive and absence producers.
+Small/empty controls execute two complete attempts each. Stratified evidence has
+semantic qualification, not a separate performance scenario here.
+
+Admission targets require <=90% median CPU and at least 40 faster pairs. Complete
+receipt and small/empty controls allow 110% +20 us. All allocation gates allow
+110% +4096 bytes. ASP's per-attempt bound remains 999 ms. These gates are fixed;
+failed receipts are retained rather than weakening a budget.
+
+* Reproduction and qualification
+
+Use the existing Gerbil package/library and Darwin OpenSSL environment from the
+repository =justfile=. Build =build.ss <absolute .gerbil/lib> <absolute binary>=
+for the paired runner, or append =qualify= for native =std/test= qualification.
+Production =build.ss= gains no test or benchmark dispatch. Run scenarios
+=wide medium scope graph proof small empty= sequentially, giving each its own
+receipt path. Generated binaries, raw pairs, failures and logs belong under
+ignored =.cache/ascent/candidate-flow/=.
+
+Qualification dispatches independent suites to isolated native processes using
+the same compiled executable and =std/misc/process=. Each child owns its
+=std/test= harness and mutable test tree. Capacity is the smaller of detected
+CPU count and suite count, with a minimum of one. There is no fixed worker count
+or new environment setting. Native Gerbil threads wait for and join the children;
+nonzero status fails qualification. Cases within a suite retain their order.
+The installed VM reports one processor on this twelve-CPU machine, so local
+threads alone would not provide CPU parallelism. Process CPU and allocation
+benchmarks remain isolated.
+
+The final native harness covers five suites and 54 Cases: all 512 directed
+three-node graphs for query 0->2, explicit reflexive/cycle cases, source-first and
+hypothetical ties, duplicate labels, exact large integers, declaration authority,
+zero arity, diagnostic precedence, isolated binding scopes, proof budgets,
+independent replay, and current-content rejection. It also checks recursive
+root rejection and restoration of ordinary constructor checks after failure.
+Existing reasoning, description, positive nonmembership and stratified proof
+suites retain their independent semantic controls.
+
+The isolated-process qualification passed all 54 Cases and five harnesses in
+53.39 seconds on the twelve-CPU machine. Compilation ran concurrently, so this
+wall time is a run receipt, not a controlled serial/parallel speedup ratio.
+The earlier thread-only run also passed; it is not claimed as multicore evidence.
+An invalid suite selector independently failed with exit 70.
+
+The first implementation indexed schema/scope/facts/edges and separated receipt
+stages but still repeatedly validated each POO layer. Its wide receipt failed:
+337430->328692 us, 507506720->507870240 allocated bytes, 25/50 faster pairs.
+It does not establish a qualified gain. That receipt remains =wide-receipt.ss=.
+
+A consumer precheck also rejected selecting an optional-argument attempt through
+a local function binding: generated Scheme called the new attempt for both
+branches. The fixture now branches explicitly; generated Scheme contains both
+frozen and current =reasoning-attempt__%= calls. Keep this failure separate from
+an old/new result. The initial link failed without Darwin's existing OpenSSL
+library path, and one qualification build rejected a changed whole-source
+inventory during concurrent work. Local executable builds now bind a conservative
+superset of their source closure, excluding independent application/proof work.
+The canonical production library retains its whole-workspace admission gate.
+
+The first root-construction measurement passed relative CPU/allocation and
+50-win gates (331747->127367 us, 507507968->202502736 bytes), but failed ASP's
+999 ms admission clock: each sample included six forced GCs and both instrumentation
+invocations. Its p95 was 4.363369 s. The runner now measures complete CPU consumers
+through ASP and performs the equal allocation experiment in a separate phase.
+Natural GC remains included in CPU and ASP time. All numeric gates and workload
+shapes remain unchanged. The rejected receipt remains =wide-final-receipt.ss=.
+
+An intermediate paired-consumer ASP clock also rejected scope (p95 1.84234 s).
+That clock included baseline plus candidate. Final ASP admission measures the
+complete optimized consumer, with paired CPU and allocation reported separately.
+The failed receipt remains =scope-qualified-receipt.ss=.
+
+* Accepted batch receipts
+
+| Scenario | Baseline CPU us | Candidate CPU us | Baseline bytes | Candidate bytes | Faster CPU pairs | Gate |
+|----------+-----------------+------------------+----------------+-----------------+------------------+------|
+| wide | 377445 | 145828 | 507508256 | 202503968 | 50/50 | pass |
+| medium | 143555 | 56908 | 203502416 | 81503680 | 50/50 | pass |
+| scope | 585750 | 150016 | 943974672 | 257619056 | 50/50 | pass |
+| graph | 21002 | 16127 | 28942592 | 21734112 | 47/50 | pass |
+| proof | 32833 | 28326 | 30404784 | 23195952 | 38/50 | pass |
+| small | 17430 | 12728 | 22140800 | 17062160 | 43/50 | pass |
+| empty | 17227 | 11741 | 22128624 | 17051968 | 42/50 | pass |
+
+All values are matched medians with full consumer equality and ASP latency
+admission. Wide/medium reuse their completed 50-allocation-pair receipts named
+=*-accepted-receipt.ss=. Scope and controls use the five-pair protocol in
+=*-five-receipt.ss=. The remaining five scenarios took 126.07, 22.64, 18.95,
+8.98 and 6.90 seconds respectively, totaling 183.54 seconds. This is a dedicated
+50-pair A/B study, separate from the 53.39-second semantic qualification.
+Construction CPU reductions are about 61.4%, 60.4% and 74.4%; their allocation
+reductions are about 60.1%, 60.0% and 72.7%. Complete graph/proof rows establish
+their own bounded controls; construction results do not establish solver gains.

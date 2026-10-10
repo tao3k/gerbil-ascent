@@ -8,10 +8,12 @@
 ;;; semantic FactId, rule-pack, generation, and admission authority.
 
 (import (only-in :gerbil/runtime/gambit fx+)
-        (only-in :clan/poo/object .o))
+        (only-in :clan/poo/object .o)
+        (only-in :std/list/list-builder with-list-builder))
 
 (export gerbil-ascent-closure-candidates)
 
+;; : (-> SourceLabels SourceLabels Boolean)
 (def (support<? left right)
   (let loop ((left left) (right right))
     (cond ((null? left) (pair? right))
@@ -20,6 +22,7 @@
           ((> (car left) (car right)) #f)
           (else (loop (cdr left) (cdr right))))))
 
+;; : (-> RankedSupport (Maybe RankedSupport) Boolean)
 (def (better-support? candidate current)
   (or (not current)
       (< (car candidate) (car current))
@@ -27,32 +30,68 @@
            (support<? (reverse (cdr candidate))
                       (reverse (cdr current))))))
 
+;;; One admission owns the occupied nodes and ordered adjacency. Dense arrays
+;;; use dense invocation-local offsets after source validation. Absent domain
+;;; slots consume neither graph storage nor result-selection work.
+;; source-index
+;; : (forall (label) (-> [(Pair Nat label)] Nat (Values (Adjacency label) (Vector Nat))))
+;; : (-> SourceFacts Nat (Values Adjacency OrderedNodes))
+;; | doc m%
+;;     Validate facts and labels before choosing the occupied-domain layout.
+;;     Adjacency retains reversed source order for canonical support comparison.
+;;     The numeric domain bounds IDs; its absent slots need no storage.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (source-index '((1 . 7)) 8)
+;;     ;; => adjacency and ordered occupied nodes #(0 1)
+;;     ```
+;;   %
 (def (source-index facts radix)
-  (let ((index (make-vector radix []))
-        (nodes (make-u8vector radix 0))
-        (node-count 0)
+  (let ((index (make-hash-table-eqv)) (nodes (make-hash-table-eqv))
         (ids (make-hash-table)))
-    (def (mark-node! node)
-      (when (= (u8vector-ref nodes node) 0)
-        (u8vector-set! nodes node 1)
-        (set! node-count (fx+ node-count 1))))
     (for-each
      (lambda (fact)
-       (let ((pair (car fact)) (id (cdr fact)))
+       (with ([pair . id] fact)
          (unless (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
                       (exact-integer? id) (<= 0 id))
            (error "invalid ASCENT source fact" fact))
-         (when (hash-get ids id)
-           (error "duplicate ASCENT source fact label" id))
+         (when (hash-get ids id) (error "duplicate ASCENT source fact label" id))
          (hash-put! ids id #t)
          (let ((from (quotient pair radix)) (to (modulo pair radix)))
-           (mark-node! from)
-           (mark-node! to)
-           (vector-set! index from
-                        (cons (cons to id) (vector-ref index from))))))
-     facts)
-    (values index node-count)))
+           (hash-put! nodes from #t) (hash-put! nodes to #t)
+           (hash-put! index from (cons (cons to id) (or (hash-get index from) [])))))) facts)
+    (let* ((ordered (list->vector (list-sort < (hash-keys nodes))))
+           (count (vector-length ordered))
+           (adjacency (make-vector count [])))
+      ;; Admission is complete: reuse membership as the private ID-to-offset
+      ;; map. No caller observes this table or depends on its former booleans.
+      (for-each (lambda (position)
+                  (hash-put! nodes (vector-ref ordered position) position)) (iota count))
+      (for-each
+       (lambda (position)
+         (vector-set! adjacency position
+           (map (lambda (edge) (cons (hash-ref nodes (car edge)) (cdr edge)))
+                (or (hash-get index (vector-ref ordered position)) [])))) (iota count))
+      (values adjacency ordered))))
 
+
+;; shortest-supports
+;; : (forall (label) (-> (Adjacency label) Nat Nat (SupportTable label)))
+;; : (-> Adjacency Origin Nat SupportTable)
+;; | doc m%
+;;     Traverse source-labelled frontiers and retain shortest canonical paths.
+;;     Dense offsets represent only occupied IDs, including sparse input domains.
+;;     Superseded paths cannot expand, and cycles establish nonempty support.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (shortest-supports adjacency 0 radix)
+;;     ;; => founded support paths, without a zero-edge origin claim
+;;     ```
+;;   %
 (def (shortest-supports index origin radix)
   (let ((best (make-vector radix #f)))
     ;; A path is (depth . reversed-labels): extending it shares the existing
@@ -70,7 +109,7 @@
                 (lambda (edge)
                   (let* ((target (car edge))
                          (parent (cdr state))
-                         (support (cons (+ 1 (car parent))
+                         (support (cons (fx+ 1 (car parent))
                                         (cons (cdr edge) (cdr parent))))
                          (current (vector-ref best target)))
                     (when (better-support? support current)
@@ -84,6 +123,22 @@
           (loop (reverse next)))))
     best))
 
+
+;; closure-candidates
+;; : (forall (label) (-> [(Pair Nat label)] Nat Nat Nat Nat (ClosureReceipt label)))
+;; : (-> SourceFacts Nat InputCap PairCap ResultCap ClosureReceipt)
+;; | doc m%
+;;     Admit the full source graph, compute canonical shortest supports and
+;;     publish numeric pair order before result truncation. Pair admission uses
+;;     the square of occupied node count, independent of domain padding.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (closure-candidates '((1 . 7)) 8 1 4 4)
+;;     ;; => a complete receipt containing pair 1 with support '(7)
+;;     ```
+;;   %
 (def (closure-candidates facts radix max-input-facts max-derived-pairs max-results)
   (unless (and (exact-integer? radix) (> radix 1)
                (exact-integer? max-input-facts) (> max-input-facts 0)
@@ -92,40 +147,48 @@
     (error "invalid ASCENT closure bounds"))
   (when (> (length facts) max-input-facts)
     (error "ASCENT input fact budget exceeded" (length facts) max-input-facts))
-  (let-values (((index node-count) (source-index facts radix)))
-    (when (> (* node-count node-count) max-derived-pairs)
+  (let-values (((index occupied) (source-index facts radix)))
+    (when (> (* (vector-length occupied) (vector-length occupied)) max-derived-pairs)
       (error "ASCENT derived pair budget exceeded"
-             (* node-count node-count) max-derived-pairs))
-    ;; A source-labelled breadth-first traversal already computes both the
-    ;; minimum distance and canonical support. Visiting origins and targets
-    ;; in numeric order publishes the same canonical pair order without a
-    ;; second closure materialization or a result sort.
+             (* (vector-length occupied) (vector-length occupied)) max-derived-pairs))
+    ;; Native list construction owns ordered publication. Numeric sorting of
+    ;; occupied/reached keys supplies order; hash iteration never publishes.
     (let* ((all
-            (let origin-loop ((origin 0) (result []))
-              (if (= origin radix)
-                (reverse result)
-                (let ((paths (and (pair? (vector-ref index origin))
-                                  (shortest-supports index origin radix))))
-                  (let target-loop ((target 0) (result result))
-                    (if (= target radix)
-                      (origin-loop (fx+ origin 1) result)
-                      (let (path (and paths (vector-ref paths target)))
-                        (if path
-                          (let (depth (car path))
-                            (target-loop
-                             (fx+ target 1)
-                             (cons (.o (pair (+ (* origin radix) target))
-                                       (distance depth)
-                                       (support (reverse (cdr path)))
-                                       (rule (if (= depth 1)
-                                               'base 'transitive)))
-                                   result)))
-                          (target-loop (fx+ target 1) result)))))))))
+            (with-list-builder (collect)
+              (for-each
+               (lambda (origin)
+                 (when (pair? (vector-ref index origin))
+                   (let* ((paths (shortest-supports index origin (vector-length occupied)))
+                          (targets (iota (vector-length occupied))))
+                     (for-each
+                      (lambda (target)
+                        (let (path (vector-ref paths target))
+                          (when path
+                            (let (depth (car path))
+                              (collect (.o (pair (+ (* (vector-ref occupied origin) radix) (vector-ref occupied target)))
+                                           (distance depth)
+                                           (support (reverse (cdr path)))
+                                           (rule (if (= depth 1) 'base 'transitive)))))))) targets))))
+               (iota (vector-length occupied)))))
            (truncated? (> (length all) max-results)))
       (.o (status (if truncated? 'output-truncated 'complete))
           (input-count (length facts))
           (candidates (if truncated? (take all max-results) all))))))
 
+;; gerbil-ascent-closure-candidates
+;; : (forall (label) (-> [(Pair Nat label)] Nat Nat Nat Nat (ClosureReceipt label)))
+;; : (-> SourceFacts Nat InputCap PairCap ResultCap ClosureReceipt)
+;; | doc m%
+;;     Compute the bounded public shortest-source-support receipt. Source IDs
+;;     and labels retain exact integer semantics across sparse domains.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-closure-candidates '((1 . 7)) 8 1 4 4)
+;;     ;; => complete source-labelled closure receipt
+;;     ```
+;;   %
 (def (gerbil-ascent-closure-candidates
       source-facts radix max-input-facts max-derived-pairs max-results)
   (closure-candidates source-facts radix

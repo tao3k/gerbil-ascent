@@ -664,3 +664,42 @@ passes three production owners and the new Suite with zero findings. Logs and
 receipts stay under =.cache/ascent/grounding-plan/=. SDK/source builds remain
 unchanged. The preceding =c7da281= withdrawal unit now has six successful
 exact-head CI jobs in run =38034820309=.
+
+* Occupied-domain closure support flow
+
+The adjacent binary closure consumer =candidate/closure.ss= retained a domain
+size cost across source indexing, shortest-support state and ordered publication.
+Publication scanned every target for every origin, including empty origins.
+Thus an empty domain still paid O(radix^2) selection work. This complete-flow
+audit extends the original graph focus to the public source-labelled closure API.
+
+One admission now validates source labels/IDs, sorts occupied IDs, reuses its
+membership table as a local ID-to-offset map and prepares compact adjacency.
+Shortest paths use dense local offsets and native vectors. Native list-builder
+publication maps back to exact original IDs in numeric order. No density cutoff
+or environment setting is introduced. Canonical shortest/tied supports, nonempty
+cycles, occupied-count squared pair budgets and complete closure before truncation
+remain intact. Selection/storage follows occupied nodes rather than radix holes;
+tie comparisons, POO publication and complete output size remain real costs.
+
+[[file:../../t/performance/sparse-closure/README.org][Frozen complete closure qualification]] uses byte-identical preceding =ac46b62=
+source and independently specified chain candidates. Fixed gates pass: sparse
+CPU 3865 -> 1982 us (48.7%, 17/20 wins), truncated publication 1110 -> 92 us
+(91.7%, 20/20 wins), empty domain 1041 -> 12 us. Sparse/truncated allocation
+falls 2.2%/17.4%. The dense control passes with only 13/20 faster pairs; small
+CPU rises 9 -> 11 us and allocation rises 8880 bytes within preset tolerances.
+No general solver, bridge or downstream throughput claim follows.
+
+Initial radix 65536 semantic baseline stalled and was stopped. The admitted
+fixture uses 1024, chosen before timing without changing budgets or gates.
+The initial per-origin hash implementation failed the fixed 16-win gate; the
+compact-offset revision resolved the concrete lookup/allocation overhead, then
+was requalified. Failures remain alongside successful receipts in ignored cache.
+
+Nine Cases in two native GxTest modules pass final =OK=, including all 512 tiny
+graphs at two domain widths, nonempty reflexive/tie controls, truncation, budget
+rejection and a new 2^64-domain exact-ID Case. ASP Policy passes the production
+owner and new Suite with zero findings. Gerbil invocation-owned tables and native
+ordered builders motivate this whole admission/traversal/publication boundary.
+The preceding =ac46b62= evidence unit now has six successful exact-head CI jobs
+in run =38035720855=.

@@ -981,3 +981,24 @@ independent verification, or graph generation and verified retained opening.
 Large CPU falls 12.2%/10.1% with 1.6%/1.4% additional transient allocation.
 Small-input CPU is unchanged. Exact budget controls and failed artifact
 admission are recorded alongside the successful fixed gates.
+
+* Study: distinguish external numeric identity from internal graph layout
+
+Gerbil's optimizer binds identity facts to one invocation; its native
+=std/list/list-builder.ss:8-21= owns ordered publication without a reverse-copy
+spine. Source-labelled closure applies these patterns across the full flow:
+validate original IDs, sort occupied IDs, convert edges to local dense offsets,
+traverse vector-backed frontiers, then publish original numeric IDs in order.
+The source membership owner becomes the offset map only after admission ends.
+No caller retains this private table or observes the representation change.
+
+External radix and pair encoding remain exact integers. Internal frontier depth
+counts physically admitted nodes and retains native fixnum arithmetic. Empty
+domain slots consume no graph storage or target selection work. Canonical label
+ties, shared support tails, nonempty cyclic support and complete-before-truncation
+remain explicit algorithm contracts.
+
+[[file:../../t/performance/sparse-closure/README.org][Complete closure qualification]] records the rejected hash experiment and fixed
+gates for the compact-offset revision. Sparse and truncated consumers improve
+CPU/allocation, while small inputs have measured overhead. Exact large-ID tests
+ensure representation specialization never narrows the public numeric domain.

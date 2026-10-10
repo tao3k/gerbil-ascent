@@ -1,0 +1,132 @@
+{
+  "schema": "ascent.compound-thinking-qualification.v1",
+  "phase": "offline; no new model results",
+  "planSha256": "31064b09bcaa269c7852b0577e55fdb9dc0065b3289811cac4767e4691d7a2c5",
+  "focusedTests": 10,
+  "schemeOracleObservations": 8,
+  "faultControls": [
+    "three rather than four hops",
+    "actor-wide exclusion incorrectly extended to right branch",
+    "universal target coverage incorrectly replaced with existence"
+  ],
+  "cases": [
+    {
+      "name": "four-hop-shared-witness-seed-20261010",
+      "complexity": {
+        "actors": 96,
+        "films": 32,
+        "directors": 8,
+        "countries": 4,
+        "sourceFacts": 391,
+        "opaqueEntityIds": true,
+        "operators": [
+          "shared-witness joins",
+          "four-edge walks",
+          "positive recursive closure",
+          "scoped negation",
+          "actor-wide anti-existence",
+          "union",
+          "universal target coverage"
+        ]
+      },
+      "originalAnswerCount": 25,
+      "withdrawnAnswerCount": 23,
+      "withdrawal": {
+        "relation": "mentor",
+        "row": [
+          "actor_d5c96ab5b1a1",
+          "actor_b644fcda3d7c"
+        ]
+      }
+    },
+    {
+      "name": "recursive-clean-bridge-seed-20261111",
+      "complexity": {
+        "actors": 96,
+        "films": 32,
+        "directors": 8,
+        "countries": 4,
+        "sourceFacts": 391,
+        "opaqueEntityIds": true,
+        "operators": [
+          "shared-witness joins",
+          "four-edge walks",
+          "positive recursive closure",
+          "scoped negation",
+          "actor-wide anti-existence",
+          "union",
+          "universal target coverage"
+        ]
+      },
+      "originalAnswerCount": 80,
+      "withdrawnAnswerCount": 79,
+      "withdrawal": {
+        "relation": "mentor",
+        "row": [
+          "actor_1c290ecadfb4",
+          "actor_88ed934f51c7"
+        ]
+      }
+    },
+    {
+      "name": "scoped-union-recursive-branch-seed-20261212",
+      "complexity": {
+        "actors": 96,
+        "films": 32,
+        "directors": 8,
+        "countries": 4,
+        "sourceFacts": 391,
+        "opaqueEntityIds": true,
+        "operators": [
+          "shared-witness joins",
+          "four-edge walks",
+          "positive recursive closure",
+          "scoped negation",
+          "actor-wide anti-existence",
+          "union",
+          "universal target coverage"
+        ]
+      },
+      "originalAnswerCount": 78,
+      "withdrawnAnswerCount": 63,
+      "withdrawal": {
+        "relation": "mentor",
+        "row": [
+          "actor_4d020b08814b",
+          "actor_c9b55ec53254"
+        ]
+      }
+    },
+    {
+      "name": "all-targets-positive-reach-seed-20261313",
+      "complexity": {
+        "actors": 96,
+        "films": 32,
+        "directors": 8,
+        "countries": 4,
+        "sourceFacts": 391,
+        "opaqueEntityIds": true,
+        "operators": [
+          "shared-witness joins",
+          "four-edge walks",
+          "positive recursive closure",
+          "scoped negation",
+          "actor-wide anti-existence",
+          "union",
+          "universal target coverage"
+        ]
+      },
+      "originalAnswerCount": 4,
+      "withdrawnAnswerCount": 0,
+      "withdrawal": {
+        "relation": "mentor",
+        "row": [
+          "actor_7136c5399937",
+          "actor_7e12e5860fe0"
+        ]
+      }
+    }
+  ],
+  "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+  "scope": "Actual frozen Scheme CFFI versus independent finite Python oracle. Not new formal proof or measured model thinking reduction."
+}

@@ -1,647 +1,515 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-#+TITLE: Complex movie reasoning: execution assistance and reusable subgoals
+#+TITLE: Scheme evidence to enhance complex model reasoning
 #+DATE: 2026-10-10
-#+STATUS: real multi-hop pilot and adaptive diagnostics; held-out main evaluation pending
+#+STATUS: Historical pilots retained; compound reasoning protocol under qualification
 
-* Research question and present boundary
+* Research objective and corrected mechanism
 
-Does ASCENT reduce the total model reasoning cost of complex knowledge-graph
-questions while preserving answer quality and scope-correct evidence? Does
-reusing admitted subgoals add a benefit beyond deterministic execution alone?
+The model receives the complete complex question and reasons about it. Scheme
+checks externally expressed facts, constraints and derivations, retains their
+source-bound evidence, and returns that evidence to subsequent reasoning rounds.
+The hypothesis is that this enhances subsequent thinking by avoiding repeated
+inference and incorrect branches. A model-first subproblem decomposition is
+not a prerequisite. Hidden model thinking is not read or certified by Scheme.
+A derived relation certifies consequences of admitted rules and finite facts;
+it does not certify that a model-generated rule captures natural-language intent.
 
-The current six movie questions are mechanism regressions. They exercise
-contract admission, typed film/actor joins, scoped exclusions and changed
-bindings on 90 pinned P161 claims from three films. Their deliberately chosen
-six baseline versus three contract calls do not measure model ability,
-reasoning-token savings or monetary savings. The 1,536-state correspondence
-check qualifies a finite executor abstraction, not natural-language understanding.
-The completed real pilot executed nine provider calls without retries. Direct
-answers were correct on 5/6 questions; scoped-union transfer was incomplete
-after consuming its 4,096-token output limit entirely on reasoning. Three
-contract calls produced correct Scheme answers on all six question bindings.
-Direct calls consumed 12,241 output tokens (11,432 reasoning); contract calls
-consumed 335 (293 reasoning). These are observed pilot totals under a deliberately
-constructed reuse schedule, not an estimate of general savings or model ability.
-Offline gold remains a control, never a model prediction. Raw responses, usage
-and Scheme grades are retained under =.cache/ascent/movie-study/real-20261010=.
+There are two distinct validations:
 
-[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] section 4.1 describes filtering simple subgraphs for its
-main experiment, matching query-pattern sampling and sharing retrieved subgraphs
-between methods. Its minimal movie example is useful for a scope regression;
-it is not an adequate main benchmark for a modern strong model.
+1. Enhancement during reasoning: cumulative work from the complete question
+   until the first independently verified correct answer, including failed
+   attempts, scans, query synthesis, reflection, repairs and evidence construction.
+2. Reuse after validation: an admitted identical task on the same source can
+   follow the established path with zero model calls. Source changes invalidate
+   old completed evidence and require fresh execution. New intent needs admission.
 
-* Complex task construction
+The second validation cannot establish the first. Shorter visible output does
+not establish reduced reasoning effort. The primary comparison is cumulative
+thinking tokens and turns to the first correct answer, with total input/output
+usage and Scheme work reported alongside it. Output tokens already include
+reasoning tokens; do not double count. Missing usage is unknown, not zero.
+Unverified trajectories are censored, not inexpensive successes.
 
-Complexity must come from dependencies, not prompt length or extra distractors.
-Cover path depth, joins sharing an actor variable across distinct film anchors,
-union inside conjunction, scope-local negation before projection, relation
-direction, and changes to facts supporting a previously reusable result.
-Keep simple questions as a separate calibration stratum.
+The desired 40–50% reduction remains a hypothesis. None of the completed pilots
+below establishes a sustained benefit of that size on an independent complex
+workload. Negative results and all historical failures remain in the report.
 
-An illustrative target is: actors shared by films whose directors satisfy an
-award constraint and films whose production companies satisfy a country
-constraint, with a release-date constraint and a cameo exclusion confined to
-the first branch. Returning an actor requires both branch witnesses, the
-correct date/role interpretation and the appropriate exclusion scope.
-This is a task specification, not a claim that the current P161 fixture or
-two-field contract can express it. Director, award, company, country, date and
-role-qualified cast evidence must first be acquired, licensed, pinned and
-represented. Missing role qualifiers cannot be interpreted as non-cameo facts.
-Date comparisons and additional operators require Scheme implementation and
-qualification before admitting those task strata.
+* Experimental design and quality gates
 
-Use both independently annotated natural-language questions and structured
-paper-pattern queries. Freeze gold typed query structure, scoped witnesses
-and answer sets separately from provider inputs; audit annotations before
-execution. Split by query structure and entity anchors, rather than only
-rewriting names. Include paraphrases that change scope and plausible hard
-negatives, empty answers, competing witnesses and multiple correct answers.
-Reserve held-out structures to test generalization rather than template recall.
+Use the same question, finite source boundary, model, reasoning effort, raw-fact
+access, verification feedback, turn limit and recovery policy in both conditions.
+Control reasons over raw facts. The assisted condition additionally has Scheme
+checking and retained evidence available inside its reasoning loop. Both can
+scan facts first. Do not require a first-round witness query or reject an otherwise
+correct assisted answer merely because it did not use Scheme. Report evidence
+adoption separately; keep every assigned trajectory in the quality denominator.
 
-* Three matched experimental arms
+A separate ablation is needed to isolate retained cross-round evidence from
+execution assistance alone. The present two-arm protocol does not establish
+that incremental causal contribution. Likewise, exact-repeat answer caching
+is a fair zero-call control; it cannot safely handle changed source facts.
 
-| Arm | Model and Scheme work | Comparison |
-|-----+-----------------------+------------|
-| Direct model reasoning | Strong model solves each question using the frozen evidence and an equal retrieval entitlement; capture all tool/model work. | Reference quality and cost. |
-| Contract execution without reuse | Same model specifies each question independently; Scheme admits and executes each contract. | Execution assistance versus direct model reasoning. |
-| Contract execution with subgoal reuse | Same admission and execution, with qualifying subgoals reused across questions. | Incremental reuse benefit versus execution without reuse. |
+Freeze questions, sources, oracle, producer identities, trial order and analysis
+before paid execution. Keep private oracle values and programs out of prompts.
+Counterbalance condition order and repeat trials. Two repetitions can expose
+variation but cannot establish statistical power. Split by compound structure
+and entity anchors, not merely paraphrases. Independently annotated real-world
+questions and a larger sample remain necessary for generalization claims.
 
-Do not weaken the reference prompt or withhold evidence/tools to create a win.
-Give all arms the same source boundary, question, model version, reasoning
-effort and allowed recovery policy. Count verification, rejected proposals,
-repairs, retries and retrieval calls in the arm that incurred them. A gold
-contract execution is a diagnostic upper bound, excluded from model accuracy.
+Report exact answer-set agreement, scope-correct witnesses, success rate, first
+verified turn, cumulative reasoning/input/output tokens, provider usage, query
+and scan counts, local execution time, and all repair costs. Report requested
+and resolved model separately where available. Prefix caching is distinct from
+Scheme semantic reuse. Price estimates are sensitivity calculations, not invoices
+or end-to-end machine costs. Retain empty, rejected, failed and timed-out cases.
 
-* Workload and reuse admission
+* Compound questions replacing the small capability probes
 
-Report cold queries, warm queries sharing actual subgoals, and queries following
-source updates separately. Freeze workload order and reuse prevalence before
-running; do not choose a fixed repetition ratio to manufacture a saving.
-Show the cost curve as reuse prevalence varies, including zero reuse.
+The former 12-actor tasks are mechanism regressions. The new executable workload
+has four compound questions, each with 96 opaque Actor identifiers, 32 Films,
+8 Directors and 4 Countries. It includes shared dependencies, directed cycles,
+multiple nationalities, competing witnesses, two selected countries and four
+target actors. Source order is shuffled independently of semantic IDs.
+Increasing entity count alone is insufficient: the new structures combine
+four-edge walks, recursive closure, same-film joins, scoped negation, global
+anti-existence, branch union and universal target coverage.
 
-Updates include insertion of a new answer witness, withdrawal of a supporting
-fact, changed scope/role constraints, and changes unrelated to a cached subgoal.
-Measure invalidation, revalidation and recomputation, including their Scheme
-cost. Compare every reuse result with fresh execution on the current snapshot.
-Never return an old answer solely because a template or prompt string matches.
+** Four-hop shared witness
 
-Reuse admission needs typed query structure, bindings, exclusion scope,
-source identity and evidence completeness. Equivalence of natural-language
-intent cannot be assumed from superficial wording. A reuse decision and its
-current witnesses must be inspectable. The current movie fixture establishes
-only caller-declared template reuse with answer recomputation, not this general
-subgoal mechanism.
+#+begin_quote
+Return actor x iff there is a directed mentor walk of EXACTLY FOUR edges
+x->p->q->r->z, and z and an actor t in target appear in the SAME film f whose
+director has at least one selected_country. That supporting film f must not be
+banned_film. In addition, x must have NO appearance in ANY banned film.
+Intermediate actors may repeat; x need not act in f. Nationality belongs to
+the director, not the actors. All joins in this witness must use the same f,
+director and t. Use only the supplied finite relations. Return unique actor identifiers.
+#+end_quote
 
-* Measurements and decision rule
+** Recursive clean bridge
 
-Primary quality measures are exact answer-set agreement and scope-correct
-witness validity. Diagnose interpretation/admission/execution errors separately.
-Keep empty, failed, rejected and timed-out questions in the denominator.
+#+begin_quote
+Return actor x iff x reaches an actor z through ONE OR MORE directed mentor
+edges, and z and a target actor t appear in the SAME film f whose director has
+a selected_country; f must not be banned. Neither x nor z may appear in ANY
+banned film. Paths may traverse banned-film actors in intermediate positions:
+the actor-wide exclusion applies ONLY to x and z. Cycles are allowed; a
+zero-edge identity path is not sufficient. Use only the supplied finite relations.
+Return unique actor identifiers.
+#+end_quote
 
-Primary economic measures are total billed tokens and priced provider cost,
-including planning, verification and recovery. Record requested and resolved
-model, cached/uncached input, output and reasoning tokens when exposed, provider
-usage, wall time and Scheme execution cost. Reasoning-token savings cannot be
-claimed if reasoning usage is unavailable; missing usage does not become zero.
-Calls are a secondary measure. Provider prefix caching and ASCENT semantic reuse
-must be accounted for separately.
+** Scoped union with a recursive branch
 
-Use matched question pairs, counterbalanced arm order and repeated trials.
-Group uncertainty estimates by query family/source episode so repeated variants
-are not treated as independent samples. Freeze the quality tolerance, workload,
-analysis and trial budget before live execution; determine sample size using
-pilot variance. Do not promise statistical power from an arbitrary case count.
-The 40–50% reduction is a hypothesis for the complex workload. A claim requires
-measured total cost reduction together with the preregistered quality gate;
-quality degradation or expensive repairs are retained as negative results.
+#+begin_quote
+Return the UNION of two branches. LEFT: x has an EXACTLY FOUR-edge directed
+mentor walk to z, where z and a target actor share a film f with a selected-country
+director; f is not banned, and x has NO appearance in ANY banned film.
+RIGHT: x has a ONE-OR-MORE-edge directed mentor path to a target actor, and x
+acts in some film g with a selected-country director, where this supporting g
+is not banned. The right branch has NO actor-wide banned-film exclusion: a
+different banned appearance must not remove x from RIGHT. The two branches may
+have different witnesses. Preserve local and branch exclusion scope before
+taking the union. Use only the supplied finite relations. Return unique actor identifiers.
+#+end_quote
+
+** Universal positive reachability
+
+#+begin_quote
+Return actors x in actor_domain that can reach EVERY actor t in target through
+ONE OR MORE directed mentor edges, and that share at least one unbanned film f
+with a target actor, where the director of that same f has a selected_country.
+This is universal coverage over the entire target relation, NOT existence of
+one reachable target. x must have NO appearance in ANY banned film. A target
+actor requires a positive-length path to itself; identity alone does not count.
+Cycles count as positive paths. For an empty target set the reachability
+condition is vacuous, but the coappearance condition still requires a target
+witness. Use only the supplied finite relations. Return unique actor identifiers.
+#+end_quote
+
+** Plan and verification boundary
+
+The generator and independent Python set oracle are in
+=python/src/ascent_test_support/complex_inference_workload.py=.
+The existing driver freezes four tasks, two independent trials per condition,
+eight turns per trajectory: 16 trajectories and at most 128 provider calls.
+The per-call output ceiling remains 65,536; the conservative peak-price ceiling
+is approximately USD 12, not a claim about account balance. No automatic paid retry.
+The oracle and a separately expressed Scheme contract must agree on original
+and withdrawn sources before live execution. A passed offline gate is not a
+model result. The new tasks are synthetic compound evaluations, not an
+independently annotated external benchmark. Real enhancement results are pending.
+
+** Completed offline qualification
+
+Ten focused tests passed: five protocol checks, four first-correct accounting
+checks and one actual Scheme integration test. The integration test compared all
+four original and withdrawn sources against the independent oracle (eight
+observations) and detected three deliberately injected semantic faults.
+Each case contains 391 source facts. The answer changes are:
+
+| Compound question | Original count | After supporting-edge withdrawal |
+|-------------------+----------------+----------------------------------|
+| Four-hop shared witness | 25 | 23 |
+| Recursive clean bridge | 80 | 79 |
+| Scoped union with recursion | 78 | 63 |
+| Universal positive reachability | 4 | 0 |
+
+The faults were three instead of four hops, globalizing the right-branch
+exclusion, and replacing universal target coverage with existential coverage.
+These tests establish that the workload distinguishes those errors; they do
+not establish model accuracy or thinking savings. The qualified frozen plan is
+[[file:compound-thinking-plan.json][compound-thinking-plan.json]], and the
+counts, withdrawal identities and qualification scope are retained in
+[[file:compound-thinking-qualification.json][compound-thinking-qualification.json]].
 
 * Scheme, Lean and Quint responsibilities
 
-Scheme owns actual admission, query execution, invalidation and witness receipts.
-Lean establishes the semantic conditions for scope preservation, shared-variable
-joins and valid reuse. Quint explores update sequences and stale-result faults.
-Counterexamples must become matching Scheme regressions. Foreign-model passes
-alone cannot qualify a production implementation or a model answer.
-
-The existing finite movie correspondence is a foundation for those obligations.
-It does not prove arbitrary complex query compilation, general reuse, or any
-empirical model-cost result. Expand each admitted operator across all three
-artifacts before using it in the main workload.
-
-* Scheme transport and cold startup
-
-The pilot used one temporary AOT Scheme batch scorer to diagnose repeated
-module-import cost. This is an experimental receipt, not a supported public
-interface or a scene-specific build command. Python keeps provider byte IO;
-Scheme constructs truth, admits contracts and grades actual answers. The frozen plan binds the
-executable and every versioned =.oN= object and compiler metadata, not only the
-potentially stale =.o1= file. Producer source hashes and runtime artifact hashes
-are identities, not a general proof of source-to-binary refinement.
-
-The implemented integration is a general ASCENT C ABI, implemented on the Scheme
-side through its Scheme FFI, and a Python CFFI binding. Python owns model
-transport and connects directly to Scheme engine operations; the engine owns
-query admission, reusable sessions, updates, execution and witness receipts.
-The interface must specify runtime/session initialization, handle and buffer
-ownership, thread affinity, error/status propagation and cancellation. A model
-scenario consumes this interface; it does not introduce a separate Scheme build.
-Avoid arbitrary model-generated Python/Scheme evaluation.
-
-The public interface is =bindings/c/ascent.h=, =interface/engine-api.ss= and
-=python/src/ascent_engine=. The normal Gerbil package build compiles the Scheme
-modules; the Python package links their compiler-derived closure into one
-engine shared library. There is no movie-specific Scheme build command.
-The supported wire subset is finite typed relations, literals, variables,
-positive atoms and stratified negation, with explicit update-source authority.
-Arbitrary host predicates, aggregates and procedure callbacks are unsupported.
-Actual CFFI qualification replayed all 1,536 frozen Lean/Quint observations,
-and checked UTF-8, duplicate keys, transactional rejection, thread affinity,
-stale handles and terminal runtime shutdown. This does not prove C memory safety
-or refinement for arbitrary programs. Measure runtime initialization, module loading, FFI marshaling,
-request time and Scheme execution separately. Reusing the initialized runtime
-and sessions removes repeated local setup; remote inference latency remains a
-separate measurement.
-
-* Execution gates
-
-1. Qualify the current small fixture as a mechanism regression only.
-2. Acquire and independently annotate complex frozen evidence and query strata.
-3. Implement missing typed contracts/operators and subgoal reuse, with Scheme
-   regressions, Lean obligations and Quint update/fault controls.
-4. Freeze matched requests and offline oracle/witness checks without model calls.
-5. Run an authorized pilot, choose the main sample size, preregister the quality
-   tolerance and cost analysis, then run the held-out evaluation.
-
-The user authorized real model testing on 2026-10-10 and supplied the project
-=.env= location. The key was read as data without shell execution or printing.
-The pilot was bounded to nine calls and one dollar without automatic retries.
-The first three charged requests used the frozen temporary AOT scorer. The
-remaining six used a frozen copy of the public CFFI library; all prior responses
-were regraded through CFFI with matching results and no repeated model calls.
-The explicit backend transition is recorded in =ffi-cut/transition.json=;
-=ffi-result.json= retains all nine outcomes, including the incomplete response.
-The compact tracked receipt is [[file:movie-pilot-result.json][movie-pilot-result.json]];
-it records individual usage, failures, Scheme grades and response hashes.
-The continuation took 22.757 seconds on this host, including remote calls and
-Scheme grading. Complex workload construction
-and qualification remain the preceding gates above. The six-question fixture
-remains a mechanism regression even with real model responses. The separate
-source-closure study's 60-call budget is not the movie study's budget.
-
-* 真实失败反思、输出上限对照与结果验证
-
-** 完整题目与事实边界
-
-本次失败诊断对应的完整题目是：
-
-#+begin_quote
-仅使用给定的有限 P161 演员事实：找出演过《盗梦空间》且不是莱昂纳多·迪卡普里奥的演员，或演过《荒野猎人》的演员。排除条件只作用于《盗梦空间》分支；最终结果按演员去重，返回演员 QID。不得引入资料之外的事实。
-#+end_quote
-
-原始英文模板：
-=Actors in $left except $blocked, OR actors in $right; the exclusion applies only to the left branch.=
-绑定为 left=Q25188（Inception）、right=Q18002795（The Revenant）、
-blocked=Q38111（Leonardo DiCaprio）。语义是
-=(Cast(Inception) \ {Leonardo}) ∪ Cast(The Revenant)=。
-莱昂纳多必须通过右分支保留；将排除条件提升到整个并集会给出错误答案。
-
-冻结事实包含 90 条 P161 记录：盗梦空间 21、荒野猎人 18、泰坦尼克号 51。
-泰坦尼克号在本题中是无关事实。事实完整性仅针对冻结有限提取，
-不声称覆盖现实世界全部演员。此题涉及两个分支、局部否定、并集、去重和证据；
-它属于机制回归，不能充当复杂多跳能力主实验。
-
-** 实验计划与目标
-
-原始九次调用在请求、来源和评分器冻结后执行：六次直接回答，三次契约编译；
-每个契约由 Scheme 对种子与迁移绑定分别执行。随后针对唯一未完成响应，
-追加两次诊断（模型反思及约束更明确的直接回答），再追加一次仅提高输出上限的对照。
-共十二次真实调用，无自动重试。后续诊断具有适应性，不能作为独立留出集。
-
-目标是区分传输失败、生成未完成和答案错误，验证模型提出的作用域契约能否在
-实际 Scheme 引擎正确执行，并检查提高输出上限后的原题结果。
-评分使用预先冻结的私有答案与实际引擎，提示不携带私有答案。
-仅提高上限的对照保持原题、事实、模型别名、high reasoning 和其余请求字段不变。
-
-** 真实结果
-
-| 条件 | 输出上限 | 输出 token | 其中 reasoning | 服务耗时秒 | 验证 |
-|------+----------+------------+----------------+------------+------|
-| 原始直接回答 | 4096 | 4096 | 4096 | 15.990 | incomplete；无可见答案 |
-| 模型反思 | 4096 | 905 | 521 | 5.778 | 契约实际执行两组绑定，2/2 正确 |
-| 明确分支执行顺序的直接回答 | 4096 | 1734 | 1567 | 6.959 | 原题正确 |
-| 原始请求仅提高上限 | 65536 | 1948 | 1781 | 7.988 | 原题正确 |
-
-原始响应 error=null、incomplete_details.reason=max_output_tokens。
-这支持“单次生成在输出上限处被截断”；没有账户余额不足的错误证据。
-官方 Responses API 的输出上限包含 reasoning 和可见输出：
-[[https://api-docs.deepseek.com/api/create-response/][DeepSeek Responses API]]。
-反思建议中“单独预留最终输出 token”是模型建议，当前并无相应独立参数实现。
-
-模型反思输出的契约是：
-#+begin_src json
-{"combine":"any","exclude_scope":"left"}
-#+end_src
-实际 Scheme 返回左分支证据 20 条、右分支证据 18 条、分支轨迹 38 条；
-去重答案为 36 名演员，包含 Q38111。两组绑定均与冻结答案吻合。
-完整 36 个 QID、证据、调用 usage 和请求/响应身份保存在
-[[file:movie-reflection-result.json][movie-reflection-result.json]]。
-原始九次成绩仍为直接回答 5/6、契约执行 6/6；未完成样本没有被改写为成功，
-也没有被描述为已观察到的错误答案。
-
-提高上限的成功请求实际只使用 1948 个输出 token，小于旧上限。
-因此一次对照不能证明提高上限是成功的唯一原因；生成路径的随机差异仍然存在。
-这些诊断也不能证明节省 40%–50% 费用或总体推理能力提高。
-
-** 自有机制落地与三位一体验证
-
-新电影实验默认 max_output_tokens=65536，可用 ASCENT_MODEL_MAX_OUTPUT_TOKENS 配置；
-已冻结的历史请求继续使用其计划中声明的上限。
-响应分类区分 output_budget_exhausted、answer_mismatch 和 provider_failure。
-契约编译上下文改为题意、Film/Actor 类型、允许的操作和来源身份，
-完整事实留在 Scheme 执行器。这项最小上下文改造已有离线回归测试，尚无新版本的真实模型收益结论。
-来源哈希用于身份绑定，不替代语义证明。
-
-实际 CFFI 已重放 1536 个 Lean/Quint 有限观察；此前 Quint TLC 探索 3072 状态并检出
-四类作用域/合并/遗忘故障。该证据限于已实现的有限算子与更新边界，
-不证明任意自然语言编译、任意程序或 C 内存安全。
-本轮 Python 回归检查协议、来源/请求身份、输出分类和进程监督；
-复杂主实验仍需冻结多跳证据、共享子目标、更新失效场景和独立留出集，
-并为新增算子同步补 Scheme 回归、Lean 条件及 Quint 故障控制。
-
-* 复杂多跳电影试验：公平三组对照与来源撤回
-
-** 研究来源与具体问题
-
-[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] 区分自然语言规格错误与执行错误，并强调在投影丢失证据之前实施作用域排除。
-本试验将这些设计点落实到已有 Scheme 类型关系、分层否定和物化视图接口；
-额外分离执行辅助与子目标复用的贡献。它不复现论文全部基准或其结果。
-
-完整首题：
-#+begin_quote
-仅使用冻结事实。L：演员出演某部电影，该电影导演具有英国国籍，且电影不是《盗梦空间》。
-R：演员出演某部电影，该电影的演员列表也包含莱昂纳多；演员可以就是莱昂纳多本人。
-找出同时满足 L 和 R 的演员，只在 L 排除莱昂纳多。L 与 R 可以由不同电影支持，
-必须连接同一演员。按演员 QID 去重。事实缺失只表示在本有限提取中不存在。
-#+end_quote
-
-L 需要 cast → directed → citizen 三关系连接；R 需要通过同一电影连接两条 cast 事实。
-两组最后通过同一 Actor 连接。国籍属于导演，不能误施加到演员；两组不能强迫使用同一电影。
-影片集合为《盗梦空间》《星际穿越》《黑暗骑士》《荒野猎人》《敦刻尔克》《泰坦尼克号》。
-来源包含 165 条 cast、6 条 directed、6 条 citizen，附实体 revision、原始 JSON 哈希、
-statement ID、rank 与 qualifier。只提取有值且非 deprecated 的 P161/P57/P27；
-资格元数据保留但不解释为客串或日期语义。事实是在本试验中冻结的有限提取，非完整世界知识。
-
-** 对照、预算与评分
-
-八题分别覆盖 AND/OR × 左分支排除/两分支排除/无排除，以及两次事实撤回。
-每题三组：模型直接回答、模型生成一般关系规则后 Scheme 执行、提供 Scheme 实际物化子目标后执行。
-组顺序轮换，每组八次调用，共 24 次，无自动重试。模型别名 deepseek-flash、high reasoning、
-max_output_tokens=65536。三组具有相同原始事实、题目、实体域和数据边界；复用组额外获得
-330 条 eligible 与 90 条 coactor 物化记录。复用记录是处理条件，不是题目金标准。
-其额外输入成本必须计入；当前通过枚举传递视图，可能造成负收益。
-冻结计划最坏输出费用估算约 2.0101 美元，不是账户余额或项目总预算。
-
-金标准在真实调用前由冻结 Scheme 查询构造，单独保存于计划，不进入提示。
-主要评分是答案集合完全一致；本试验不是独立自然语言标注的大规模留出评估。
-一般规则接口允许模型组合关系和变量，不再局限于旧电影契约的两个枚举字段。
-模型不能修改来源声明或向来源关系/已有物化关系写入规则头。
-
-** 真实答案与可检查证据
-
-首题的冻结答案为 Michael Caine(Q123351)、Tom Hardy(Q208026)、Cillian Murphy(Q202589)。
-以下为每位演员的一组支持路径；完整声明指针由 Scheme 证据查询输出：
-
-| 演员 | L 的电影/导演/国籍 | R 的共同出演电影 |
-|------+--------------------+------------------|
-| Michael Caine | 星际穿越 / Christopher Nolan / 英国 | 盗梦空间 / Leonardo DiCaprio |
-| Tom Hardy | 敦刻尔克 / Christopher Nolan / 英国 | 盗梦空间 / Leonardo DiCaprio |
-| Cillian Murphy | 黑暗骑士 / Christopher Nolan / 英国 | 盗梦空间 / Leonardo DiCaprio |
-
-首题合计有 6 条 L 支持路径和 4 条 R 支持路径，答案投影为三人。
-撤回 cast(荒野猎人,Tom Hardy)，他仍由盗梦空间支持 R，因此答案仍三人。
-撤回 cast(盗梦空间,Michael Caine)，他在本提取中失去 R 支持，答案应为 Tom Hardy、Cillian Murphy。
-复用按完整来源身份接纳；任意来源变化保守地使旧视图不可复用，重新物化。
-目前不是细粒度最小依赖失效，也不声称支持任意自然语言等价复用。
-
-** 三位一体对应与故障控制
-
-Lean MaterializedMovieQuery 证明：当前两组物化关系分别与其关系语义逐点等价时，
-替换后的答案语义相同。这一条件不能用旧来源的身份或旧视图代替。
-Quint 独立计算 512 个有限来源快照与六种作用域/连接条件，共 3072 个观察。
-Lean 对应输出与当前 Quint 输出、冻结语料一致；实际 Scheme CFFI 对全部观察进行重放。
-资格检查使用两个保留会话实施来源与视图替换，避免为每个观察反复创建和编译查询。
-本地主机上此检查约 1.45 秒；单次用时不代表稳定性能提升。
-
-另外故意注入三类故障：将局部排除提升为全局排除、将 AND 错换为 OR、来源撤回后继续使用旧视图。
-三类均由实际 Scheme 对照检出。它们是故障控制，不是声称当前生产实现存在这三个 BUG。
-对应证明、语料和 Scheme 检查已接入现有 formal 与 CFFI 资格测试入口。
-
-** 结论边界与结果记录
-
-本轮是较复杂的多跳可行性试验，仍只有八个高度相关的问题、一次重复和六部电影。
-不能用它给出总体准确率增益、置信区间、40%–50% 节省或独立结构泛化结论。
-保留失败和负收益；原始评分不被后续结构修复或诊断重写。
-单元素规则头结构修复只将 head 对象包为单元素数组，不改变规则正文、变量、常量和算子。
-修复后另行检查原快照及两种撤回；这些是零额外模型调用的事后诊断。
-下一阶段应改进契约结构约束和物化视图传递，再冻结独立结构、实体和来源的留出集。
-
-计划见 [[file:complex-movie-plan.json][complex-movie-plan.json]]，有限对应见
-[[file:materialized-movie-correspondence.json][materialized-movie-correspondence.json]]。
-真实模型逐次结果、成本与失败诊断将在本节补齐，不能将运行中的结果提前计为成功。
-
-** 已完成的真实结果与反例
-
-首轮 24 次已完成，无输出上限截断或自动重试：
-
-| 问题条件 | 直接回答 | 普通契约执行 | 枚举视图复用 |
-|----------+----------+--------------+--------------|
-| all-left | 通过 | 通过 | 结构拒绝 |
-| any-left | 通过 | 通过 | 通过 |
-| all-none | 通过 | 通过 | 通过 |
-| any-both | 通过 | 通过 | 答案错误 |
-| all-both | 通过 | 通过 | 通过 |
-| any-none | 通过 | 结构拒绝 | 通过 |
-| withdraw-hardy | 通过 | 通过 | 通过 |
-| withdraw-inception-caine | 通过 | 通过 | 通过 |
-
-| 方法 | 原始正确数 | 输出 token | reasoning token | API 高峰价估算美元 |
-|------+------------+------------+-----------------+---------------------|
-| 直接回答 | 8/8 | 83223 | 81079 | 0.102559 |
-| 普通契约执行 | 7/8 | 105287 | 101988 | 0.129015 |
-| 枚举视图复用 | 6/8 | 105106 | 103192 | 0.136241 |
-
-首轮未验证收益：普通契约 API 估算费用约高 25.8%，枚举视图约高 32.8%。
-这些是本次样本的描述，不是稳定总体回退比例。后续修复与调用成本另列，原始失败不被覆盖。
-两个结构失败都是 head 被写成对象而非数组；另一次模型将 OR 写为 AND，实际返回 3 人而非 154 人。
-Scheme 忠实执行了这个错误契约；形式化验证执行器不等于证明模型理解自然语言正确。
-
-针对首个结构失败，模型自我审查确认单元素规则头的结构不一致；仅追加官方 JSON Schema
-输出约束的原题对照通过，输出 4034 token。新编译请求已默认使用该结构约束。
-针对语义失败，模型在未获得金标准答案的情况下检查原题和自己的程序，
-指出同一规则体是 AND、分支规则才是 OR；修正契约由 Scheme 执行得到 154 人。
-三个诊断调用合计估算 0.027281 美元，不能从效果或成本统计中隐藏。
-JSON Schema 只约束结构，不能保证自然语言语义；新回归包含实际 OR/AND 反例。
-
-首轮还有选样缺口：三个 OR 变体几乎输出整个 155 人实体域。
-因此新增国籍约束与局部排除场景，避免用实体域枚举替代真正求解。
-
-** 更有区分度的国籍约束题：完整题目
-
-#+begin_quote
-仅使用冻结事实。L：演员出演某部电影，电影导演具有英国国籍(Q145)，电影不是《盗梦空间》(Q25188)。
-R：演员与莱昂纳多(Q38111)出演同一部电影，且这部共同出演电影的导演具有墨西哥国籍(Q96)。
-L 和 R 可以使用不同电影，但必须连接同一演员；R 的共同出演与导演国籍必须由同一部电影支持。
-找出满足 L 或 R 的演员，只在 L 排除 Tom Hardy(Q208026)，R 不排除他。
-演员可以就是莱昂纳多本人。按演员 QID 去重，事实缺失只表示在本有限提取中不存在。
-#+end_quote
-
-另外两题分别为：同样的 L/R 条件取 AND、不排除演员；以及首题撤回
-cast(荒野猎人 Q18002795,Tom Hardy Q208026) 后重算，其余事实不变。
-此组是看到首轮选样缺口后增加的适应性试验，不是独立留出集。
-三组原始数据、模型与推理设置相同；两种契约组均使用结构化输出。
-
-| 题目 | 金标准答案数量 | 三组实际验证 | 关键判定 |
-|------+----------------+--------------+----------|
-| 英国左分支 OR 墨西哥右分支，左侧排除 Hardy | 89 | 三组通过 | Hardy 通过墨西哥导演的右分支保留 |
-| 两组同时成立，不排除演员 | 1 | 三组通过 | 唯一答案 Tom Hardy；国籍属于导演 |
-| 撤回 Hardy 在荒野猎人的出演事实 | 88 | 三组通过 | Hardy 在 Inception 的出演不能冒充墨西哥电影支持 |
-
-国籍约束部分由 Lean qualified_view_rewrite 证明同一 Film 上资格与共同出演视图的等价改写。
-实际 CFFI 新回归还检出强迫 L/R 使用同一电影会丢失 Hardy。
-演员本人国籍不能替代导演国籍；“同一演员连接”不等于“两组共用同一电影”。
-
-** 上下文优化：实际代码与真实调用
-
-此前编译题意时仍向模型枚举全部事实及 420 条物化视图，是需要检验的接口设计缺口。
-本轮落实 compact_request 和 --compiler-context intent：只发送题目、绑定、类型、来源身份和
-eligible/coactor 的精确逻辑定义。完整事实及视图值用于实际 Scheme 执行，不进入模型上下文。
-没有向模型提供答案、答案数量或金标准程序。接口允许通用关系规则，不靠已知演员答案拼装。
-
-三个国籍题的紧凑接口均正确；其生成契约在三种来源快照上共九个补充检查全部通过。
-其中 AND 题在支持撤回后变为空集，说明契约没有将已观察到的 Hardy 答案硬编码为常量。
-此次变化同时移除了数据枚举并补充视图语义，不是单因素实验，不能分离两项变化的贡献。
-
-| 国籍题三次调用合计 | 输入 token | 输出 token | API 高峰价估算美元 | 正确数 |
-|--------------------+------------+------------+---------------------+--------|
-| 模型直接回答 | 9604 | 24631 | 0.031121 | 3/3 |
-| 普通契约，完整事实上下文 | 11599 | 40322 | 0.050135 | 3/3 |
-| 契约，枚举事实和视图 | 35471 | 24649 | 0.036043 | 3/3 |
-| 契约，仅题意和类型定义 | 3404 | 21846 | 0.026672 | 3/3 |
-
-紧凑接口本次 API 估算费用比直接回答低约 14.3%，比枚举视图低约 26.0%。
-全部输入不缓存的统一价格敏感性估算分别是 0.032438 和 0.027236 美元，
-对应直接回答与紧凑接口，仍只代表这三道适应性选题的单次观察。
-Provider 前缀缓存与 Scheme 语义复用分别计数。模型源事实使用边界相同，但上下文布局不同。
-这些是 API token 费用估算，不是账户账单或包含机器成本的端到端收益。
-不能据此宣称总体能力提高、达到 40%–50% 节省，或已验证所有普通契约的紧凑上下文模式。
-
-** 预算、交付验证和仍需完成的主实验
-
-本轮共 39 次真实调用：首轮 24、国籍约束 9、紧凑接口 3、失败诊断 3。
-总输入 226910（缓存命中 119424）、输出 421754（reasoning 409456）。
-按当前官方高峰价格及返回 usage 估算约 0.539067 美元；全部输入按不缓存计约 0.574178 美元。
-[[https://api-docs.deepseek.com/quick_start/pricing/][价格来源]]。没有查询账户余额或实际扣款账单。
-自我审查调用不属于答案评分，不能把混合的 39 次调用汇总成一个“整体准确率”。
-
-实际共检查 3072 个有限观察、三类故障控制，并补充真实国籍/排除/撤回/规则头/OR-AND 回归。
-形式证明是对应算子条件与物化关系等价，不是整个模型、自然语言编译或任意 C 程序的证明。
-真实试验使用冻结的 CFFI 库及请求/驱动身份；当前源码新增结构输出约束和接口模式，
-历史源代码及旧请求仍留在原实验缓存，历史评分不重写。最新 revision CI 需要单独报告。
-
-下一阶段的统一主线：冻结独立结构与实体的留出题，覆盖选择性、多层逻辑和来源更新；
-在生成契约质量门槛与模型/恢复政策相同时，分别测量执行辅助和合格子目标复用。
-按重复试验方差确定样本量，计入接纳失败、检查、修复、检索、失效与重算成本。
-以正确答案和有效证据为质量门槛，再判断总费用是否下降。预算不是当前瓶颈；
-本轮发现的上下文枚举、结构接纳和语义误编译已经有代码改造或明确的回归证据。
-独立留出评估与自然语言意图验证仍然开放。
-
-完整39次用量、原始失败、模型自我审查、请求/响应身份、来源迁移检查和 statement 证据指针，
-集中保存在 [[file:complex-movie-result.json][complex-movie-result.json]]；新增冻结题见
-[[file:country-qualified-movie-plan.json][country-qualified-movie-plan.json]]。
-
-* Retained inference: structural holdouts and repeated controls
-
-** 实验目标与冻结边界
-
-本轮分开测量首次生成查询、完全相同任务再次执行、事实撤回后复用查询逻辑。
-前一轮 reuse 仅缓存物化视图，每道题仍调用模型，14.3% 不代表第二次路径复用。
-本轮直接使用 CFFI Session：首次 open/run、重复 run(0)、来源变化 replace/run。
-Python 负责实验编排和 provider IO，关系推理及来源更新由 Scheme 执行。
-首次指首次生成契约，不是 OS 进程或模型服务冷启动；API 估算不包含机器费用。
-
-四种此前电影试验未测的结构，各用独立命名的合成实体。
-每个来源包含 12 个 Actor、6 个 Film、3 个 Director、2 个 Country，不是新真实 Wikidata 数据。
-每种结构两轮独立模型生成，首次调用先后顺序轮换，每轮三个执行阶段。
-直接回答每阶段调用模型；紧凑接口仅首次调用，之后保留相同程序会话。
-原题与事实不变时通用答案缓存也能零调用，另外报告这一公平基线。
-来源变化后旧答案不能使用，已有程序在新来源上执行并生成新答案。
-
-冻结计划后调用模型。错误和输出预算耗尽保留，主实验不自动修复或重试。
-首次契约失败使其后两个复用阶段也失败，不能把不可执行路径计为免费正确答案。
-两轮重复用于发现波动，不足以证明统计稳定性；合成独立实体不覆盖真实世界分布。
-编译器只有自然语言、关系类型和含义，没有事实、实体域或金标准。
-直接回答获得完整同源事实，Scheme 对源数据的拥有是本实验处理条件。
-
-** 完整题目与预先核对的事实变化
-
-*** mentor-chain
-
-Return actors x with a directed mentor edge x->y and y->z, where z acts in a film whose director has the selected_country. The two mentor edges must share y; cast, directed and citizen must share the same film and director. Actors may repeat along the path; do not require x itself to act. Use only the supplied finite relations. Return unique actor identifiers.
-
-撤回：{'relation': 'mentor', 'row': ['holdout0_actor11', 'holdout0_actor0']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 10 个答案，撤回后 8 个答案。
-
-*** witness-local-exclusion
-
-Return actors with at least one film directed by a director with selected_country, with that supporting film not in banned_film. Exclude individual supporting films before projecting actor: acting in a banned film must not exclude an actor who also has another qualifying, unbanned film. Use only the supplied finite relations. Return unique actor identifiers.
-
-撤回：{'relation': 'cast', 'row': ['holdout1_film2', 'holdout1_actor2']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 6 个答案，撤回后 5 个答案。
-
-*** anti-existential
-
-Return actors in actor_domain with at least one film whose director has selected_country AND with no appearance in any banned_film. The second condition excludes the entire actor if ANY banned-film appearance exists, even if a different film qualifies. Use only the supplied finite relations. Return unique actor identifiers.
-
-撤回：{'relation': 'cast', 'row': ['holdout2_film0', 'holdout2_actor2']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 5 个答案，撤回后 6 个答案。
-
-*** recursive-mentor
-
-Return actors that can reach an actor in target through ONE OR MORE directed mentor edges. Include any path length, including cycles; zero-length paths alone do not qualify. An actor in target qualifies only if it also has a positive-length path to target. Use only the supplied finite relations. Return unique actor identifiers.
-
-撤回：{'relation': 'mentor', 'row': ['holdout3_actor0', 'holdout3_actor1']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 12 个答案，撤回后 11 个答案。
-
-** Reflection、论文与机制改造
-
-准备本轮前已读取已有 reflection，冻结其文件身份并记录设计决定：规则头必须是数组；
-AND/OR 明确编码；支持路径排除与实体级反存在分开；不枚举事实上下文；
-保留程序会话；撤回来源后禁止沿用旧完成答案。新 reflection 单独记录，不改写主成绩。
-
-[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] 强调作用域排除和规格/执行错误分离，
-据此设计 witness-local-exclusion 和 anti-existential。
-[[https://arxiv.org/abs/2609.37233][DatalogBench]] 使用留出输入执行评分和经变异验证的 oracle，
-据此加入递归、独立有限 oracle 和错误控制；本轮未移植其完整基准。
-[[https://arxiv.org/abs/1808.05752][PUG]] 将 why/why-not 查询转成求取相关解释的 Datalog 程序。
-据此为漏答构造 Scheme support 查询，获取连接证据元组；本实现未复现其完整 provenance 模型。
-
-搜索、大模型与引擎的分工：检索关系含义与来源身份，模型指定题意，
-Scheme 查找连接/排除/递归证据，后续同意图任务复用程序并更新来源。
-本次只有冻结有限关系及支持元组的检索，没有外部搜索服务或其费用。
-自然语言相似度不能证明意图等价；新题意和新 schema 需要重新接纳。
-
-** Lean、Quint 与实际执行
-
-RetainedInference 的 Lean 条件证明区分答案接纳与查询路径复用：
-答案接纳要求来源与查询身份一致，来源或查询改变则拒绝旧答案。
-Quint 与 Lean 枚举全部 16 个两节点有向图及撤回阶段，共 32 个观察。
-实际 Scheme CFFI 重放同一语料，检查 retained/fresh 一致、run(0) 返回完成结果，
-并识别 8 个事实撤回后仍返回旧答案的故障控制。这里是有限值枚举，不是 TLC 状态探索。
-四种 12-actor 结构另通过 Scheme 与独立集合 oracle 检查。
-这些证明不覆盖任意自然语言编译器、整个 C ABI 或模型推理正确性。
-
-** 单次契约生成与复用的资源记录（不是逐轮增强主指标）
-
-主实验四个结构、两轮重复、三阶段，共 24 个任务配置，每配置两组，共 48 个执行观察。
-真实模型调用 32 次：直接回答 24、紧凑契约首次生成 8，Scheme 重复及更新共 16 次零模型调用。
-另有漏答反思和预算恢复各一次，本批总计 34 次真实模型调用。
-原始单次评分：直接回答 21/24，紧凑接口 21/24，均为 87.5%。
-分阶段：直接首次 8/8、重复 7/8、更新 6/8；紧凑接口三个阶段均 7/8。
-首次失败不能拥有可复用程序，后续两个阶段同步计失败。
-
-API 高峰价敏感性估算：直接三阶段 0.092302 美元，紧凑生成 0.106118 美元，
-紧凑组反而高 15.0%。直接原题答案缓存也能略去重复调用；与该基线相比紧凑组高 104.8%。
-这只是费用账，并不能判断模型到正确答案所需推理是否减少。
-重复阶段模型调用下降到零有明确证据，但不能掩盖首次的失败及高额推理。
-一次契约耗尽 65536 输出 token，没有可见契约；约 0.079 美元的耗费必须累计保留。
-原驱动将空响应误报为 admission NoneType；已修复未来驱动在接纳前拒绝 incomplete，
-保留 output_budget_exhausted。原始文件与评分不改，根因另记录 completionAudit。
-
-漏答反思不提供金标准，模型第二次回答正确；它提出“误用 banned_film”作为诊断。
-这是模型的解释，未能验证原始内部思维的实际因果机制。
-Scheme support 查询证实 actor8→actor9→actor1 与 film0/director0/country0 的完整证据仍存在。
-此反思的证据是在模型纠正后检索，因此不能据此声称 Scheme 在纠正过程中帮助了模型。
-预算恢复将该适应性题分解为单个作用域明确的存在查询，不发送事实或答案。
-恢复消耗 2102 输出 token（1981 reasoning），其首次、重复、更新均正确；原始 65536 不扣除。
-两项诊断费用分别 0.008829 与 0.002803 美元，连同主实验约 0.210051 美元。
-恢复属于适应性探针，不作为新的独立留出成绩。
-
-[[file:inference-reuse-result.json][原始结果、冻结计划、诊断与审计]]；
-[[file:retained-inference-correspondence.json][实际 CFFI 32 观察凭据]]。
-
-* Iterative Scheme evidence: 模型每轮推理中的证据增强
-
-** 修正后的研究对象与两个验证
-
-核心闭环是：模型提出要查证的子问题，Scheme 建立并接纳证据，
-证据与来源身份进入下一轮，模型继续推理、补证或纠错，直到答案通过验证。
-模型的 thinking 不等于外部可重复验证的证据链；Scheme 不读取或声称验证隐藏思维。
-验证一：每题直到首次正确答案的累计模型轮次、reasoning token、全部模型 token 和检索/执行工作。
-验证二：已验证同题意、同来源任务再次出现，直接执行已有路径，零模型调用。
-验证二不能替代验证一；第一轮建立路径与所有失败/反思/修复开销必须纳入总账。
-
-前面的单次 API 费用对照不是该增强机制的主指标；output_tokens 包含 reasoning，
-但单次总量不能回答“几轮才找到正确答案”。新的 inference_effort 只累计到第一次通过验证，
-失败和 query/scan 都计入，未成功的轨迹标为未完成。实际模型调用缺 usage 时为未知，不能算零。
-可见答案的字节数不定义推理节省。原始事实相同但提供了执行工具，这是实验处理条件。
-
-** 已落地的接口与来源失效
-
-EvidenceStore 为真实 Scheme CFFI 会话提供原始关系扫描、规则执行、证据发布与复用。
-完整求值后的 derived relation 发布为带 path/source 身份的只读证据别名。
-第二轮规则可以直接引用第一轮别名，继续连接子目标，不必重新声明其规则。
-模型不能改写原始事实、证据别名或向派生关系注入事实。
-相同路径调用 run(0)，来源替换后旧派生别名与依赖消费者失效，基础查询路径更新后重新求值。
-此功能已在真实 Scheme 上验证两段子目标组合、重复命中、撤回拒绝及重新建链。
-
-EvidenceStore 的接纳保证是给定规则的有限来源推导，不是自然语言意图等价证明。
-自然语言题意改变不能依靠相似度自动复用，当前实验也未实现广泛自然语言搜索匹配。
-Lean 增加子目标关系等价条件下的扩展正确性；Quint 的有限语料与 Scheme 重放
-另外检查 32 个已发布子目标扩展观察，不声称完整模型/引擎 refinement。
-
-** 第一版多轮开发探针与处理条件审计
-
-三种既有结构（导师链、实体级反存在、递归导师可达），六条轨迹，共 13 次模型调用。
-导师链原始事实组：scan→错误答案→正确答案，3 轮，6235 reasoning token。
-Scheme 组：query 建立 12 条六列 witness→根据证据正确回答，2 轮，4584 reasoning token。
-该题轮数减少 33.3%，reasoning token 减少 26.5%，已包含首次生成 witness 的推理开销。
-但其余两题的“辅助组”只扫描事实，没有调用 Scheme 建链，因此不构成引擎增强证据。
-所有原始记录保留，不能拿这一次 3→2 宣称稳定收益。
-[[file:iterative-evidence-prototype-result.json][第一版结果和处理条件审计]]。
-
-** 收紧处理条件的完整多轮对照
-
-首轮控制组只能 scan，辅助组只能 query 并保留多列 witness；辅助答案必须已有完成证据。
-每题最多四轮，两组可读取同一原始来源；verifier 仅反馈 verified/not_verified，不给金标准。
-使用既有结构作为机制开发集，不冒充独立留出集。本轮 14 次模型调用、六条轨迹。
-
-| 题目 | 控制组到首次正确轮数 | Scheme 组到首次正确轮数 | 控制 reasoning | Scheme reasoning |
-|------+---------------------+------------------------+----------------+------------------|
+Scheme owns admission, actual relation execution, source replacement, evidence
+publication and invalidation. EvidenceStore publishes completed derived relations
+as read-only aliases carrying source/path identity. Later reasoning rounds can
+reference those aliases without synthesizing the established rules again.
+Same-path repeats use run(0). Source replacement clears published aliases and
+invalidates their consumers; retained base-source paths are recomputed. The model
+cannot alter original facts, define source heads or inject derived rows.
+
+Lean proves conditional equivalence and reuse obligations. Quint independently
+computes finite update/fault observations. Matching actual Scheme replay is
+required: a foreign-model pass alone does not qualify the implementation.
+Existing formal scope includes joins, exclusion, materialized equivalence and
+conditional subgoal extension. It does not prove hidden thinking, natural-language
+intent equivalence, arbitrary compound compilation, C memory safety or model savings.
+The new compound oracle checks do not silently extend those proof claims.
+
+* Integration and transport
+
+The public C ABI is =bindings/c/ascent.h= and =interface/engine-api.ss=;
+=python/src/ascent_engine= connects through CFFI. Python owns provider byte IO;
+Scheme owns relation truth, admission, sessions, execution and updates.
+Normal package compilation produces the Scheme modules; the Python package
+links the compiler-derived closure into an engine library. There is no
+movie-specific Scheme build command. Reusing the initialized runtime removes
+repeated local startup, not remote inference latency.
+
+The qualified subset is finite typed relations, constants, variables, positive
+atoms, recursion and stratified negation. Arbitrary host predicates, aggregates
+and callbacks are unsupported. Runtime/session lifetime, buffer ownership,
+thread affinity, error propagation and cancellation require explicit handling.
+Qualification includes UTF-8, duplicate keys, transactional rejection, stale
+handles, thread affinity and terminal shutdown. Producer/runtime hashes bind
+identities; they are not source-to-binary refinement proofs.
+
+* Historical movie pilot and output-limit diagnostics
+
+Historical results are preserved; English renderings below translate the
+original question wording without rewriting frozen requests or their hashes.
+The initial fixture contains 90 pinned P161 cast claims: Inception 21, The
+Revenant 18 and Titanic 51. It is a finite extraction, not complete world truth.
+Six questions and three reusable contracts deliberately created six direct
+calls versus three compilation calls. This schedule is not a capability benchmark.
+The 1,536-observation correspondence qualifies only a finite executor abstraction.
+
+The original nine paid calls, without retries, produced direct accuracy 5/6 and
+correct Scheme contract answers on all six bindings. Direct output totaled
+12,241 tokens, including 11,432 reasoning; contracts totaled 335, including 293
+reasoning. The failed direct request exhausted 4,096 tokens in reasoning with
+no visible answer. Three initial requests used a frozen temporary AOT scorer;
+six used public CFFI. Regrading all responses through CFFI agreed without new
+calls. Continuation time was 22.757 seconds, a single host observation.
+The key was read from the project .env as data and never printed.
+[[file:movie-pilot-result.json][Original pilot receipt]].
+
+The full failed question was: using only supplied cast facts, return actors in
+Inception other than Leonardo DiCaprio, OR actors in The Revenant. Exclude
+Leonardo only in the Inception branch; deduplicate Actor QIDs. The meaning is
+(Cast(Inception) minus Leonardo) union Cast(The Revenant), so Leonardo survives
+through the right branch. Titanic is irrelevant evidence in this question.
+
+| Diagnostic | Output ceiling | Output tokens | Reasoning | Provider seconds | Verification |
+|------------+----------------+---------------+-----------+------------------+--------------|
+| Original direct request | 4096 | 4096 | 4096 | 15.990 | Incomplete; no visible answer |
+| Model reflection | 4096 | 905 | 521 | 5.778 | Contract correct on 2/2 bindings |
+| Explicit branch order | 4096 | 1734 | 1567 | 6.959 | Original question correct |
+| Only ceiling increased | 65536 | 1948 | 1781 | 7.988 | Original question correct |
+
+The provider returned max_output_tokens incompleteness, not an account-credit
+error. Its ceiling includes reasoning and visible output
+([[https://api-docs.deepseek.com/api/create-response/][Responses API]]).
+Reflection proposed {"combine":"any","exclude_scope":"left"}. Scheme returned
+20 left witnesses, 18 right witnesses and 38 branch traces, deduplicated to 36
+actors including Q38111. Full identifiers and usage are retained in
+[[file:movie-reflection-result.json][Reflection receipt]]. The original failure
+remains incomplete, not a rewritten success or observed wrong answer.
+
+The raised-ceiling success used only 1,948 tokens, below the old ceiling;
+random generation variation prevents attributing that success solely to the
+ceiling. The three adaptive diagnostics bring this batch to 12 calls. They do
+not prove 40–50% savings. Future requests use 65,536 by default, configurable
+through ASCENT_MODEL_MAX_OUTPUT_TOKENS; frozen historical limits stay unchanged.
+Classification distinguishes output_budget_exhausted, answer_mismatch and
+provider_failure. The original finite Quint check explored 3,072 states and
+identified four injected scope/merge/forgetting faults; actual CFFI replayed
+1,536 observations. These are bounded mechanism checks.
+
+* Historical multi-hop movie experiments
+
+** Source and complete question
+
+The six-film source covers Inception Q25188, Interstellar Q13417189, The Dark
+Knight Q163872, The Revenant Q18002795, Dunkirk Q21935651 and Titanic Q44578.
+It contains 165 cast facts, 6 directed facts and 6 citizen facts, with entity
+revisions, raw JSON hashes, statement IDs, rank and qualifiers. Only valued,
+non-deprecated P161/P57/P27 claims are extracted. Retaining qualifiers does not
+interpret them as cameo/date semantics; absent facts mean absent in this extract.
+
+The first question: LEFT, an actor appears in a film directed by a UK citizen,
+and that film is not Inception. RIGHT, the actor appears in a film whose cast
+also includes Leonardo; the actor may be Leonardo. Return actors satisfying
+BOTH branches, excluding Leonardo only on LEFT. The branches may use different
+films but must join the same actor. Return unique Actor QIDs.
+Nationality applies to the director, not the actor. Each branch retains its own film.
+
+Answers are Michael Caine Q123351, Tom Hardy Q208026 and Cillian Murphy Q202589.
+Example LEFT witnesses respectively use Interstellar, Dunkirk and The Dark
+Knight with Christopher Nolan/UK; RIGHT uses Inception/Leonardo for each.
+There are six LEFT and four RIGHT support paths. Withdrawing Hardy from The
+Revenant preserves this answer through Inception. Withdrawing Caine from
+Inception removes Caine's RIGHT support, leaving Hardy and Murphy.
+
+** Three conditions and original results
+
+Eight questions cover AND/OR, LEFT/both/no exclusions and two withdrawals.
+Direct answers, independently generated executable contracts, and contracts
+with enumerated Scheme views each received eight calls in rotated order: 24
+calls, no retries, deepseek-flash/high reasoning/65,536 ceiling. Raw evidence
+was shared. The reuse condition additionally received 330 eligible and 90
+coactor tuples; their input cost was charged. The frozen worst-output estimate
+was USD 2.0101, not a total project budget.
+
+| Question | Direct | Executable contract | Enumerated views |
+|----------+--------+---------------------+------------------|
+| all-left | Pass | Pass | Structural rejection |
+| any-left | Pass | Pass | Pass |
+| all-none | Pass | Pass | Pass |
+| any-both | Pass | Pass | Wrong answer |
+| all-both | Pass | Pass | Pass |
+| any-none | Pass | Structural rejection | Pass |
+| withdraw-hardy | Pass | Pass | Pass |
+| withdraw-inception-caine | Pass | Pass | Pass |
+
+| Condition | Correct | Output tokens | Reasoning tokens | Peak-price estimate USD |
+|-----------+---------+---------------+------------------+-------------------------|
+| Direct | 8/8 | 83223 | 81079 | 0.102559 |
+| Executable contract | 7/8 | 105287 | 101988 | 0.129015 |
+| Enumerated views | 6/8 | 105106 | 103192 | 0.136241 |
+
+No benefit was established: contract estimates increased 25.8%; enumerated
+views increased 32.8%. Two heads were objects instead of arrays; a third program
+compiled OR as AND, returning 3 instead of 154 actors. Scheme correctly executing
+that wrong program does not establish correct language understanding.
+A head-only array normalization preserves body, variables, constants and
+operators; its post-hoc checks are diagnostics, not repaired primary scores.
+
+Three extra diagnostic calls cost USD 0.027281. A JSON Schema-only structural
+control passed with 4,034 output tokens. Semantic reflection, without gold,
+identified body conjunction versus multiple-rule union and produced 154 actors.
+Future requests use structural output constraints; those do not guarantee intent.
+All failures remain. Three OR variants nearly enumerated the entire 155-actor
+domain, revealing insufficient selectivity in the original task design.
+
+** Adaptive country-qualified questions and compact context
+
+Full added question: LEFT, an actor appears in a non-Inception film with a UK
+(Q145) director. RIGHT, the actor shares a film with Leonardo Q38111 and that
+SAME film has a Mexican (Q96) director. The branches may use different films
+but join the same actor. Return LEFT OR RIGHT, excluding Tom Hardy Q208026
+only from LEFT. Leonardo may be his own coappearance witness. Use the frozen
+finite facts and return unique Actor QIDs.
+Two variants take AND with no actor exclusion, and withdraw
+cast(The Revenant Q18002795, Hardy Q208026) from the OR question.
+
+| Adaptive question | Gold count | All three conditions | Key distinction |
+|-------------------+------------+----------------------+-----------------|
+| UK LEFT OR Mexican RIGHT; Hardy excluded only LEFT | 89 | Pass | Hardy survives RIGHT |
+| AND; no actor exclusion | 1 | Pass | Hardy is the only answer |
+| OR after Hardy/Revenant withdrawal | 88 | Pass | Inception cannot supply a Mexican-film witness |
+
+Compact context sends question, bindings, types, source identity and exact
+eligible/coactor definitions, not all facts and 420 view tuples. It provides
+no answer values, answer count or gold program. Three extra compact calls were
+correct; their programs passed nine supplementary source checks. After support
+withdrawal the AND answer becomes empty, rejecting a hardcoded Hardy answer.
+Removing enumeration and adding view definitions occurred together, so their
+individual contributions cannot be separated.
+
+| Three country questions | Input tokens | Output tokens | Peak estimate USD | Correct |
+|-------------------------+--------------+---------------+-------------------+---------|
+| Direct | 9604 | 24631 | 0.031121 | 3/3 |
+| Contract with facts | 11599 | 40322 | 0.050135 | 3/3 |
+| Contract with facts/views | 35471 | 24649 | 0.036043 | 3/3 |
+| Compact intent/types | 3404 | 21846 | 0.026672 | 3/3 |
+
+The compact estimate was 14.3% below direct and 26.0% below enumerated views
+on these three adaptive tasks only. All-input-uncached sensitivity was USD
+0.032438 direct versus 0.027236 compact. These are single-call API estimates,
+not the corrected multi-round reasoning metric or general capability gains.
+The complete batch had 39 calls: 24 initial, 9 country, 3 compact and 3 diagnostics.
+Total input 226,910 (119,424 cached), output 421,754 (409,456 reasoning).
+Peak-price estimate USD 0.539067; all input uncached USD 0.574178
+([[https://api-docs.deepseek.com/quick_start/pricing/][Price source]]).
+Do not aggregate diagnostic and answer calls into one accuracy rate.
+
+** Formal correspondence and boundaries
+
+MaterializedMovieQuery proves replacement under pointwise equivalence of the
+materialized relations to current source semantics. qualified_view_rewrite
+preserves same-film nationality/coappearance qualification. Lean, Quint and
+Scheme agree on 512 finite sources times six scope/join conditions: 3,072
+observations. Two retained sessions avoid repeated query compilation in replay;
+a local 1.45-second observation is not a stable speedup claim.
+Actual Scheme detects injected globalized exclusion, AND-to-OR substitution and
+stale views after withdrawal. These are fault controls, not three claimed
+production bugs. Additional country regressions detect forcing both branches
+onto one film. Source changes conservatively invalidate complete views;
+fine-grained minimal invalidation and arbitrary language-equivalence reuse are
+not established. Eight related questions, one repetition and six films do not
+justify independent structural generalization or confidence intervals.
+
+[[file:complex-movie-plan.json][Initial plan]],
+[[file:country-qualified-movie-plan.json][Adaptive country plan]],
+[[file:complex-movie-result.json][All 39 calls and diagnostics]],
+[[file:materialized-movie-correspondence.json][Finite correspondence]].
+
+* Historical retained-query experiment
+
+This tested first query generation, identical repeat and source withdrawal,
+not enhancement of thinking across rounds. Four structures used 12 Actors,
+6 Films, 3 Directors and 2 Countries each, two independent generations and
+three phases. These small tasks are now regression fixtures, not sufficient
+main capability evidence. Compilation saw intent/types but no facts or gold;
+direct reasoning saw all same-source facts. Failed initial programs failed
+both subsequent phases rather than becoming free successes.
+
+Complete question structures:
+
+- mentor-chain: x->y->z through exactly two directed mentor edges, with z in
+  a film whose director has selected_country. Share y, film and director;
+  repeats are allowed and x need not act. Withdrawal of actor11->actor0 changes
+  the independently checked answer count from 10 to 8.
+- witness-local-exclusion: actors with a selected-country director film whose
+  supporting film is unbanned. Another banned appearance does not exclude the
+  actor. Withdrawal of film2/actor2 changes 6 answers to 5.
+- anti-existential: a qualifying film AND no appearance in ANY banned film,
+  even when another film qualifies. Withdrawal of banned film0/actor2 changes
+  5 answers to 6.
+- recursive-mentor: positive-length directed paths to target, including cycles;
+  target membership alone is insufficient. Withdrawal of actor0->actor1 changes
+  12 answers to 11. All identifiers are prefixed with their frozen holdout index.
+
+There were 24 task configurations and 48 two-condition execution observations.
+Paid calls: direct 24, compact initial 8; repeat/update had 16 zero-model Scheme
+executions. Both had 21/24 correct (87.5%). Direct cold/repeat/update was
+8/8, 7/8, 6/8; compact was 7/8 in each phase.
+Direct three-phase peak estimate USD 0.092302 versus compact USD 0.106118:
+compact cost 15.0% more. Against a direct exact-answer-cache control it cost
+104.8% more. Initial compilation exhausted 65,536 tokens in one case and
+produced no contract, costing about USD 0.079. It remains charged. The future
+driver now rejects incomplete output before admission; completionAudit preserves
+the original misleading NoneType diagnostic without rewriting it.
+
+An adaptive reflection corrected a missed actor without gold and hypothesized
+an erroneous banned-film filter; the original internal cause was not verified.
+Scheme confirmed actor8->actor9->actor1 and film0/director0/country0 support,
+but this evidence was retrieved AFTER correction: no causal enhancement claim.
+Adaptive budget recovery used a single scoped existence query, 2,102 output
+(1,981 reasoning), correct in all three phases; the original 65,536 is not removed.
+Diagnostics cost USD 0.008829 and 0.002803; batch total about USD 0.210051,
+34 calls. Primary failures stay unchanged.
+
+RetainedInference separates source/query-bound answer admission from reuse of
+rules on new facts. Lean and Quint enumerate 16 two-node directed graphs and
+withdrawal phases: 32 observations, not a TLC exploration. Actual CFFI checks
+retained/fresh parity, completed run(0), and 8 stale-answer fault controls.
+Subgoal extension adds 32 matching observations under conditional relation
+equivalence. This does not prove arbitrary language compilation or the full ABI.
+[[file:inference-reuse-result.json][Full reuse experiment]],
+[[file:retained-inference-correspondence.json][Actual replay receipt]].
+
+* Historical iterative experiments and protocol correction
+
+** Voluntary evidence prototype
+
+Three development tasks produced six trajectories and 13 calls. Mentor-chain
+control: scan, wrong answer, correct answer, 3 calls and 6,235 reasoning tokens.
+Assisted: witness query, correct answer, 2 calls and 4,584 reasoning tokens,
+including first construction. That single task reduced calls 33.3% and thinking
+26.5%. The other two assigned assisted trajectories only scanned facts: they
+provide no evidence of actual Scheme enhancement. All stay in assigned-arm
+results; adoption was 1/3. One 3-to-2 observation is not sustained benefit.
+[[file:iterative-evidence-prototype-result.json][Prototype and adoption audit]].
+
+** Forced witness development protocol: historical negative result
+
+The next development protocol forced first scan for control and first witness
+query for assistance, and rejected assisted answers without admitted evidence.
+This imposed decomposition is the design limitation corrected by the new
+full-question protocol; historical records and scores remain unchanged.
+Four-turn ceiling, three existing structures, 14 calls and six trajectories:
+
+| Question | Control calls to verified answer | Assisted calls | Control reasoning | Assisted reasoning |
+|----------+----------------------------------+----------------+-------------------+--------------------|
 | mentor-chain | 2 | 2 | 2798 | 3137 |
 | anti-existential | 2 | 2 | 1912 | 4159 |
-| recursive-mentor | 2 | 四轮未通过 | 1346 | 已消耗 10549 |
+| recursive-mentor | 2 | Unverified after 4 | 1346 | 10549 consumed |
 
-主实验成功率：控制组 3/3，Scheme 组 2/3。前两题 reasoning 分别增加 12.1% 和 117.5%。
-不能给未完成的递归轨迹计算“到正确答案的节省比例”。本轮没有证明 40%–50% 目标。
-更长证据与首次查询合成的开销可能抵消后续推理收益，不能预设 Scheme 每题必然省 token。
+Control succeeded 3/3; assistance 2/3. Thinking increased 12.1% and 117.5% on
+completed pairs. No reduction is defined for the unverified pair. This did not
+establish the 40–50% target. Witness generation and context overhead can exceed
+later savings, so enhancement is an empirical hypothesis, not an assumption.
 
-递归题规则可以成立，但把查询选择器写成 witness(X,Y,T)，实际 ABI 需要裸关系名 witness。
-原错误反馈笼统，模型重复该格式；最终答案因无已接纳 Scheme 证据而被拒绝，处理条件未放松。
-未来接口已增加关系名 pattern、明确协议文字、具体错误反馈与回归测试。
-另做两轮适应性延续：先修正 query，Scheme 返回递归 witness，再由模型回答并通过验证。
-累计原四轮与两轮恢复，共六轮，15260 reasoning token；原主实验仍是未完成，不改为四轮成功。
-这次恢复闭合了接口缺口，但不是新留出成绩，也不是缩短推理的证据。
-[[file:iterative-inference-result.json][完整轨迹、逐轮动作、Scheme 证据和恢复记录]]。
+The recursive rule was potentially valid but selected witness(X,Y,T) instead
+of bare witness; generic feedback caused repeated protocol misuse. Future
+schema and feedback now require bare names and provide specific repair guidance.
+Two adaptive continuation calls repaired the selector and answered correctly:
+all six calls consumed 15,260 reasoning and 28,560 total model tokens. The
+primary four-turn failure is unchanged. Recovery is not a new held-out success.
+[[file:iterative-inference-result.json][Full trajectories and recovery]].
 
-** 统一后续主线
+** Current implementation changes and remaining evidence
 
-从机制开发转向独立实体、独立结构组合与更大选择性差异的留出任务，冻结后不调参。
-比较相同正确性门槛、相同轮次/恢复政策的完整轨迹；重复对照要计入首轮建链，
-并分开报告成功率、首次正确轮数、累计 reasoning、检索/执行工作、稳态路径复用。
-将已验证子目标的别名复用与较小的算子接口作为减少重复规则合成的实现方向；
-跨轮子目标引用的实际 Scheme 回归已通过，其真实模型收益尚未单独验证。
-每批准备前读取 reflection，把规格、传输、执行、检索缺口转成明确回归，
-同时保留原始失败。预算不是当前瓶颈，任务难度、意图接纳与样本覆盖仍限制结论。
+The current protocol permits both first-round fact scans and checked claims in
+the assisted condition. It permits unary checked claims, not only artificially
+required multi-column subproblem witnesses. Correct final answers are judged
+by the independent oracle, without an evidence-use prerequisite. Evidence
+adoption is recorded separately. Each query result still retains source/path
+identity and published aliases for subsequent thinking. Full-question reasoning,
+not mandatory subproblem-first planning, is the experimental object.
 
-** 本轮交付验证
+Actual Scheme tests verify retained aliases, multi-stage extension, repeat hits,
+withdrawal rejection and rebuilding. The prior qualification passed 15 focused
+checks plus finite Lean/Quint/Scheme correspondence. Those checks establish
+mechanism behavior, not a real-model benefit of cross-round alias composition.
+The new compound plan first checks original/withdrawn oracle parity; paid model
+results must be reported separately when completed. Local frozen-library
+qualification is distinct from fresh-source Ubuntu CI. macOS CI is not a gate
+for continuing the main research line.
 
-15 个定向测试通过：8 个轨迹/协议单元测试、6 个真实 Scheme 留出/撤回检查、1 个跨轮证据组合集成测试。
-Lean/Quint 与实际 Scheme 的 32 观察对应、32 个子目标扩展及 8 个陈旧答案故障控制通过。
-记录的是冻结 CFFI 库的本地验证，最新源码的 Ubuntu CI 另行验证；没有等待 macOS 作为主线门槛。
+* Research grounding and next closure criteria
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] motivates scope exclusion before witness projection and
+separation of specification versus execution failures; its simple subgraph
+movie examples are regressions, not sufficient main evidence here.
+[[https://arxiv.org/abs/2609.37233][DatalogBench]] motivates execution against held-out inputs and mutation-checked
+oracles; the complete benchmark is not reproduced here.
+[[https://arxiv.org/abs/1808.05752][PUG]] motivates relevant why/why-not support queries; this implementation does
+not reproduce the full provenance model. These are design inputs rather than
+claims that every paper mechanism has been implemented.
+
+Before each batch, read retained reflection and turn observed admission,
+transport, scope, execution and evidence-use gaps into executable regressions.
+Keep original failures. The closed-loop claim requires observed evidence use
+BEFORE later reasoning, matched first-correct trajectories, preserved quality,
+all failed work charged, and repeated compound evaluations. Exact-repeat reuse
+and source-update safety are reported separately. Budget is not the present
+bottleneck; task complexity, intent verification and coverage determine the
+strength of the conclusions.

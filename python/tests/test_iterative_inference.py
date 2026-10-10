@@ -6,17 +6,20 @@ from ascent_test_support import inference_reuse_study as study
 
 
 class IterativeEvidenceProtocol(unittest.TestCase):
-    def test_first_round_treatment_cannot_silently_become_raw_fact_reasoning(self):
-        for assisted,expected in [(False,'scan'),(True,'query')]:
+    def test_full_question_reasoning_does_not_force_evidence_first(self):
+        for assisted,expected in [(False,['scan']),(True,['scan','query'])]:
             choices=loop.action_format(assisted,initial=True)['schema']['anyOf']
-            self.assertEqual(len(choices),1)
-            self.assertEqual(choices[0]['properties']['action']['enum'],[expected])
+            self.assertEqual([c['properties']['action']['enum'][0] for c in choices],expected)
 
-    def test_raw_scans_and_answer_only_projection_are_not_witness_queries(self):
+    def test_raw_sources_cannot_be_relabelled_as_verified_claims(self):
         source=study.workload(0)['source']
-        for query in ['cast','answer']:
-            action={'contract':{'relations':[],'rules':[]},'queries':[query]}
-            with self.assertRaises(ValueError):loop.evidence_program(source,action)
+        with self.assertRaises(ValueError):
+            loop.evidence_program(source,{'contract':{'relations':[],'rules':[]},'queries':['cast']})
+
+    def test_unary_checked_claims_do_not_require_artificial_subproblems(self):
+        case=study.workload(0)
+        result=loop.evidence_program(case['source'],{'contract':study.oracle_contract(case),'queries':['answer']})
+        self.assertEqual(result['queries'],['answer'])
 
     def test_argument_notation_is_a_typed_protocol_error_with_repair_guidance(self):
         case=study.workload(3);contract=study.oracle_contract(case)

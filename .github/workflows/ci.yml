@@ -257,7 +257,7 @@ jobs:
       - name: Install Lean and protocol verification tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless
+          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi
           elan toolchain install leanprover/lean4:v4.34.0
       - name: Check Lean contracts, Quint protocols and counterexamples
         env:
@@ -269,6 +269,8 @@ jobs:
       - name: Compare Quint and Lean outputs with the Scheme conformance corpus
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
       - name: Qualify Python byte IO and process supervision
+        env:
+          PYTHONPATH: python/src
         run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:
     if: ${{ always() }}

@@ -1,0 +1,147 @@
+#+title: Accepted source cut materialization and update evidence
+
+* Complete production flow
+
+=program/source-snapshot.ss= owns exact persistent base/addition roots and their
+ordered materialized rows. New source-state headers cannot mutate these records.
+Unchanged roots share the materialization and declaration; changed roots produce
+provisional records. Session replacement, recovery and timeout replay use that
+owner. The native engine source replacement/replay path uses the same protocol.
+The existing caller publishes a prepared cut only after candidate execution and
+acceptance succeed. There is no global cache or retained chain of old cuts.
+
+The optional internal source cut propagates from Session through updated engine,
+reuse admission and update selection. It certifies only exact source equality:
+the candidate Program, original base/addition roots and candidate row root must
+all match the owned materialization. Foreign/stale evidence falls back to the
+original complete ordered comparison. Eligibility, every fresh engine row check,
+budget charging, dependency closure and completed-result admission remain intact.
+The public Session methods and root build interface are unchanged.
+
+The local Gerbil compiler at =1cfb032= allocates invocation-owned facts in
+=compiler/optimize.ss:28-35= and records facts before recursive work in
+=compiler/optimize-xform.ss:108-113=. Native =std/struct/lru.ss= illustrates compact
+final records and typed field access. This unit applies explicit lifetime and
+identity contracts to source preparation; it does not adopt an eviction policy
+or cache callback results.
+
+* Entry points
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/source-materialization/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/qualification/ascent-source-materialization-test.ss t/qualification/ascent-source-snapshot-test.ss t/qualification/ascent-source-log-test.ss t/qualification/ascent-withdrawal-session-test.ss t/qualification/ascent-timeout-test.ss t/qualification/ascent-storage-batch-test.ss t/qualification/ascent-affected-outputs-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/source-materialization/runner.ss retained .cache/ascent/source-materialization/retained-qualified.ss
+#+end_src
+
+Replace =retained= with =rejected=, =replay= or =small=. Native =:std/make= builds
+project libraries only and checks the actual source closure before/after build.
+Tests use the official Gerbil tool, and ASP's Scheme API measures the complete
+consumer directly in gxi. No subprocess launcher, custom scheduler, new runtime
+environment option or SDK rebuild is introduced. All logs/receipts stay in
+=.cache/ascent/source-materialization/=.
+
+* Frozen baseline and controls
+
+The frozen evaluator, Session, source-snapshot, reuse, selection and Result owners are
+from =75b1d2dc7a3fc712eb92dbdaeb4ec6f7d236e131=. Only their module import paths
+change; frozen owners refer to each other and share the remaining production
+helpers. Preparation and initial source appends/run are outside timing. Each
+consumer executes four full transactions or eager replacements and forces all
+ordered public source/output rows. Eight sources each have 1024 base rows and
+one persistent append. The small control has no extra sources. Rejected
+transactions assert the original diagnostic and read the last completed result.
+Independent truth validates each complete source sequence and rule output.
+
+Fixed gates precede measurement: 20 alternating process-CPU pairs, 20 ASP
+admissions and five allocation pairs. Retained/replay targets require >=10% CPU
+improvement and >=16 wins; rejected/small controls allow 110% plus 20 us.
+Allocation allows 110% plus 4096 bytes. Allocation uses the cumulative dedicated
+counter around each complete consumer, rejecting negative samples. These direct
+gxi receipts do not requalify prior static-executable allocation studies.
+
+The materialization-only implementation failed the retained CPU gate:
+14840 -> 13932 us, 11/20 wins; allocation 22034992 -> 19871280 bytes.
+It remains a negative result, motivating the same flow's exact-root equality
+handoff. Gates and workload are unchanged.
+
+Frozen original blobs:
+- source-snapshot: =0565df312522db29c74d838e433ff54d32929134=
+- Session: =de48a736a729ff65eae0a0c57e20c855331c1af7=
+- evaluator: =2290029b1bda7295530c8fead62c4ab7c8046795=
+
+Reuse admission expresses its optional result with =alet=, typed private capsule
+projection with =using=, and Analysis-to-activation composition with native
+=:std/func @compose1=. Upstream =src/std/func.ss:113-123= expands composition into
+a direct unary call chain; it avoids a runtime chain of dispatch wrappers.
+- reuse: =7b1c1a5c402654c4bf845d0f1cccc16e33b8f487=
+- update-selection: =b2c4872437890ecf17e472399301e23b16721172=
+
+Intermediate scalar-only qualification passes 74 Cases across seven modules in 44.05
+seconds, with explicit =CASE-OK=, =MODULE-OK=, =HARNESS-OK= and final =OK=.
+Five production owners pass ASP Policy with zero findings; the existing affected
+output Suite supplies executable evidence for the unchanged selection macro.
+Initial fixture mistakes (a constructor argument and analysis helper arity)
+were caught by the official framework and retained as failed logs; only the
+final suite qualifies the complete source flow.
+
+The equality-handoff experiment also failed the unchanged paired-win gates:
+retained CPU 19011 -> 15975 us (11/20 wins), allocation 22034992 -> 19869744;
+replay CPU 8139 -> 7284 us (12/20 wins), allocation 13441904 -> 11307696.
+Rejected and small controls passed. These medians alone do not qualify a CPU
+improvement. The next complete flow carries pure scalar classification with
+the owned materialization: an atomic promise captures only its read-only rows,
+requires exact candidate/row identity, and never certifies an opaque field
+predicate. Eligibility still inspects all field/provider/rule declarations;
+fresh admission still checks and charges every source occurrence.
+
+The scalar-classification variant alone also failed both CPU targets:
+retained 13734 -> 14270 us, 13/20 wins; replay 7221 -> 7030 us, 10/20 wins.
+Rejected/small controls passed. This rejects a scalar-cache-only CPU claim.
+
+The complete handoff additionally covers =program/result.ss=. Its native factory
+returns Result plus a private publication capsule through =values=. Engine owns
+the latest capsule; Session forwards it to reuse admission. Exact completed
+Result identity admits a read-only internal row reader. Foreign/stale capsules
+fall back to the public protocol. Public =rows-of= and visitors still detach
+row spines; retained native seeding owns new membership tables and row-list
+headers, and rechecks all seeded rows/budgets. The capsule captures only one
+published snapshot vector and its existing name resolver, never mutable engine
+buffers or a prior capsule. Existing clearing of completed reuse releases the
+previous publication. No global registry/cache or public Session method is added.
+The native engine's internal getter follows its existing analysis/schema/log
+handoff pattern. One-shot results do not allocate a publication capsule.
+
+Native seeding additionally reuses fresh initial admission for an unaffected
+canonical Set relation only when the immutable rule plan has no head writing
+that relation and its source occurrence count equals the matching native
+publication count. Fresh row/field/budget admission has already completed.
+Every written relation keeps full completed-row seeding, even if its counts
+coincide with source counts. Buffered duplicate appends with a count mismatch
+also keep full seeding. The derived/duplicate equal-count counterexample is
+an executable Case. This avoids building membership and row spines twice for
+source-only relations without accepting an unvalidated source or closure.
+
+* Final complete consumer receipt
+
+| Scenario | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes | Fixed gate |
+|----------+------------+------------+-----------+-----------+-----------+------------|
+| retained | 14774 | 5933 | 20 | 22034992 | 11375152 | pass |
+| rejected | 13868 | 6141 | 20 | 20429104 | 11982448 | pass |
+| replay | 6066 | 5547 | 15 | 13441904 | 11334768 | fail |
+| small | 410 | 420 | 2 | 1171504 | 1185840 | pass |
+
+Accepted cuts improve CPU 59.8% and allocation 48.4%; rejected prospective cuts
+improve CPU 55.7% and allocation 41.3%. Replay's 8.6% median decrease and 15 wins
+miss the unchanged 10%/16-win gate; no replay CPU speedup is qualified. Replay
+allocation decreases 15.7%. Small CPU increases 10 us and allocation increases
+14336 bytes, within fixed control limits. Frozen result producer blob:
+=d823040c0333d159ede63ad9820454fe888e61ba=. The baseline now freezes six owners,
+including Result, so private publication producers are isolated too.
+
+Final official native testing passes 76 Cases/seven modules in 23.96 seconds;
+six production owners pass Policy with zero findings. The retired eager engine
+clears its capsule instead of retaining stale private result headers. Recovery
+without a live engine falls back to ordinary completed-result reads. The current
+qualified unit is retained source transaction/publication handoff. Eager replay
+CPU remains open; full solving/construction and cross-platform claims remain
+outside these receipts.

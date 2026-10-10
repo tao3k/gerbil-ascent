@@ -347,3 +347,73 @@ and semantic results remain separate evidence. They were not rerun in this unit.
 See [[file:../../t/performance/lattice-frontier/README.org][lattice frontier qualification]] for entry points, frozen source blobs,
 fixed gates and measurement boundaries. This closes this lattice flow unit;
 other engine and compiler audit flows remain open.
+
+* Follow-through: accepted source cut through native publication seeding
+
+This unit now spans six production owners: =source-snapshot=, =session=,
+=evaluate=, =update-selection=, =reuse= and =result=. Source snapshots retain
+exact persistent log roots, ordered materializations and pure scalar facts.
+Preparation stays provisional; the existing Session transaction publishes only
+after candidate execution and acceptance. Field/provider/rule eligibility and
+every fresh input row/budget check remain authoritative. Exact candidate/log/row
+identity avoids re-comparing an unchanged source; foreign/stale evidence uses
+complete ordered comparison. Pure scalar classification never admits an opaque
+field predicate. No global cache or new runtime option is introduced.
+
+The larger consumer cost was native reuse reading public =rows-of=, detaching
+all row spines and then admitting source-only rows twice. Result production now
+returns the public POO Result and an internal publication capsule with =values=.
+The engine retains its latest capsule; Session passes it to reuse admission.
+Only exact completed Result identity admits the internal read-only row reader.
+Public methods still return detached rows, and stale/foreign capsules use the
+public protocol. A retired eager-replay engine revokes its old capsule; held
+results/explicit prior readers retain their own immutable published cut.
+
+Native seeding keeps fresh admission for an unaffected canonical Set relation
+only if no rule head writes it and its occurrence count equals the matching
+native publication count. Source admission already checked every occurrence
+and built this engine's membership. Any written relation, lattice, absent
+capsule or duplicate-count disagreement keeps complete seeding. Equal counts
+alone are insufficient: the executable duplicate-source/derived-fact example
+would lose a derived fact under that shortcut. The immutable writer fact is
+prepared from the complete Analysis, including inactive/self-writing rules.
+
+Gerbil =1cfb032= compiler invocation-owned facts and native final-record/typed
+field idioms guide these boundaries. =:std/func @compose1= expands Analysis-to-
+activation composition as direct calls; =alet= expresses optional admission.
+Each pure fact remains attached to its actual owner and consumer, instead of
+being a generic shortcut in the construction or build entry.
+
+The complete final consumers compare six frozen owners at
+=75b1d2dc7a3fc712eb92dbdaeb4ec6f7d236e131=. Each performs four full cuts and
+reads every ordered source/output row. Eight source logs each contain 1024 base
+rows plus one append. Preparation is outside clocks; transactions, candidate
+execution and public reads are inside. Twenty alternating CPU pairs, twenty ASP
+admissions and five cumulative allocation pairs use the original fixed gates:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes | Fixed gate |
+|----------+------------+------------+-----------+-----------+-----------+------------|
+| Accepted retained cuts | 14774 | 5933 | 20 | 22034992 | 11375152 | pass |
+| Rejected prospective cuts | 13868 | 6141 | 20 | 20429104 | 11982448 | pass |
+| Native eager replay | 6066 | 5547 | 15 | 13441904 | 11334768 | fail |
+| Small retained control | 410 | 420 | 2 | 1171504 | 1185840 | pass |
+
+Accepted transactions improve CPU 59.8% and allocation 48.4%; rejected
+transactions improve CPU 55.7% and allocation 41.3%. Eager replay remains
+unqualified for CPU: its 8.6% median decrease and 15 wins miss the unchanged
+10%/16-win target. Its allocation falls 15.7%. Small CPU increases 10 us and
+allocation increases 14336 bytes within the unchanged control limits. These
+receipts do not establish a general solver or compiler speedup. The retained
+transaction handoff is qualified; eager replay performance remains open.
+
+The materialization-only, equality-only and scalar-only implementations failed
+CPU targets. Their full measurements remain in =.cache= and in
+[[file:../../t/performance/source-materialization/README.org][accepted-cut qualification]]. No failed gate was widened or converted to a
+pass. The complete producer/consumer handoff accounts for the measured gain.
+
+Final official =gxi :gerbil/tools/gxtest= passes 76 Cases across seven modules
+in 23.96 seconds, with final =HARNESS-OK= and =OK=. Tests cover source/row identity,
+foreign/stale evidence, caller mutation isolation, derived/count counterexamples,
+rejected acceptance, provider recovery, graph withdrawal, timeouts and budgets.
+Six production owners pass ASP Policy with zero findings. Root =build.ss= has no
+change from this unit; all logs and scalar receipts remain ignored in =.cache=.

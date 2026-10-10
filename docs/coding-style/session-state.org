@@ -869,3 +869,37 @@ Unique arrivals already have the required order. Sorting after a key revisit
 avoids allocation for every update; a linked-node attempt reduced allocation
 but failed the repeated-key CPU gate. Choose the representation with matched
 complete consumers and negative controls, not a shorter isolated helper.
+
+* Carry accepted source ownership through update selection
+
+A persistent source log and its ordered materialization have different lifetimes.
+=program/source-snapshot.ss= now captures base/addition roots in private final
+records, independently of caller source-state headers. The prepared cut carries
+materialized rows and declaration views through execution and acceptance.
+Session replacement, recovery, timeout replay and native engine source cuts use
+this owner. Reuse neither admits rows nor skips per-occurrence budgets.
+
+The accepted cut also supplies bounded equality evidence to update selection.
+Evidence requires the exact candidate Program, exact original log roots and
+exact materialized row root; foreign candidates and stale roots fall back to
+ordered value comparison. Eligibility and transitive dependency closure remain
+separate checks. This follows the Gerbil compiler's invocation-owned fact pattern
+rather than adding mutable global facts or a parallel hierarchy of generic methods.
+
+A materialization-only complete-consumer experiment failed its CPU gate. Avoid
+promoting header allocation savings to a solver speed claim: carry the ownership
+contract through the consumer that repeats comparison, then measure the entire
+transaction including ordered public result reads. Keep rejected candidates and
+small controls in the same fixed qualification contract.
+
+The completed cut also owns a private native publication capsule, separate from
+the public POO Result. =values= transfers both from the producer; exact Result
+identity protects internal read-only consumption, while public reads detach
+spines. Source-only seeding requires a complete rule-head absence fact and a
+matching occurrence count after fresh admission. Equal source/result counts
+alone cannot prove absence of derived facts. Revoking a retired engine's capsule
+keeps ownership aligned with its adopted result without invalidating held cuts.
+
+The complete accepted/rejected transaction consumers qualify substantial gains;
+eager replay misses its unchanged CPU target and remains an explicit open item.
+See [[file:../../t/performance/source-materialization/README.org][complete source handoff]] for final measurements and negative experiments.

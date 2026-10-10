@@ -3,15 +3,16 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Retained source snapshots, failure recovery, and timeout admission.
-(import (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
-                 gerbil-ascent-prepare-source-log-snapshot source-snapshot-program
+(import (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
+        (only-in :gerbil-ascent/t/performance/source-materialization/reference-snapshot gerbil-ascent-source-snapshot
+                 gerbil-ascent-prepare-source-snapshot source-snapshot-program
                  source-snapshot-rows)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
-        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-check-replacement-rows!)
+        (only-in :gerbil-ascent/t/performance/source-materialization/reference-selection gerbil-ascent-update-eligible?)
+        (only-in :gerbil-ascent/t/performance/source-materialization/reference-evaluate gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
@@ -136,7 +137,9 @@
     ;; Replacement checks shape/types before publication, and the fresh native
     ;; engine rechecks every materialized row and all original fact budgets.
     (def (prepare-source-cut rows)
-      (gerbil-ascent-prepare-source-log-snapshot source-snapshot rows))
+      (gerbil-ascent-prepare-source-snapshot source-snapshot
+        (vector-map (lambda (source-state)
+                      (gerbil-ascent-source-log-rows (car source-state) (cdr source-state))) rows)))
     (def (restore! rows)
       (set! engine #f)
       (let* ((cut (prepare-source-cut rows))
@@ -286,8 +289,7 @@
                (candidate (source-snapshot-program cut))
                (fresh (gerbil-ascent-make-updated-engine
                        committed candidate committed-result
-                       engine-analysis engine-schema measure-rule-times? cut
-                       (and engine ((.ref engine '.native-publication)))))
+                       engine-analysis engine-schema measure-rule-times?))
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))

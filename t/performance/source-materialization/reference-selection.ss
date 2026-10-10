@@ -5,12 +5,10 @@
 ;;; Native dependency invalidation selects components; the evaluator owns
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
 (import (only-in :std/list/list-builder with-list-builder)
-        (only-in "source-log.ss" gerbil-ascent-source-log-equal?)
-        (only-in "source-snapshot.ss" gerbil-ascent-source-log-snapshot-equal?
-                 gerbil-ascent-source-snapshot-scalar?)
-        (only-in "activation.ss" gerbil-ascent-activate-rule)
+        (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-equal?)
+        (only-in :gerbil-ascent/program/activation gerbil-ascent-activate-rule)
         (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?
+        (only-in :gerbil-ascent/program/scheme-checked relational-stable-procedure?
                  relational-scalar?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan gerbil-ascent-positive-plan-with-outputs)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
@@ -20,8 +18,8 @@
         gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans)
 
 ;; gerbil-ascent-update-eligible?
-;; : (forall (p s) (-> p (Maybe s) Boolean))
-;; : (-> Program (Maybe SourceSnapshot) Boolean)
+;; : (forall (p) (-> p Boolean))
+;; : (-> Program Boolean)
 ;; | doc m%
 ;;     Check declaration eligibility without constructing a source snapshot,
 ;;     reading rows or computing dependency closure. Rule callbacks and lattice
@@ -31,8 +29,6 @@
 ;;     reuse. Trusted built-in field predicates certify source values at
 ;;     admission; otherwise inspect the candidate rows. Other field callbacks
 ;;     or an opaque lookup may observe or change state outside the read graph.
-;;     Owned materializations share only a pure scalar classification. Exact
-;;     candidate/row identity is required; opaque field predicates still reject.
 ;;
 ;;     # Examples
 ;;
@@ -41,7 +37,7 @@
 ;;     ;; => #t for declarations supporting completed-closure reuse
 ;;     ```
 ;;   %
-(def (gerbil-ascent-update-eligible? candidate (source-cut #f))
+(def (gerbil-ascent-update-eligible? candidate)
   (def (pure-terms? terms)
     (andmap (lambda (term)
               (let (kind (.ref term 'kind))
@@ -51,7 +47,7 @@
   (def (trusted-field? predicate)
     (or (eq? predicate relational-scalar?)
         (eq? predicate exact-integer?)))
-  (def (scalar-source? relation index)
+  (def (scalar-source? relation)
     (let (predicates (.ref relation 'field-predicates))
       (and (andmap trusted-field? predicates)
            ;; Core declarations may omit field checks. Their row spines are
@@ -59,9 +55,6 @@
            ;; only this unchecked case; checked scalar declarations already
            ;; established the invariant during source admission.
            (or (pair? predicates)
-               (and source-cut
-                    (gerbil-ascent-source-snapshot-scalar?
-                     source-cut candidate index (.ref relation 'rows)))
                (andmap (lambda (row) (andmap relational-scalar? row))
                        (.ref relation 'rows))))))
   (def (stable-clause? clause)
@@ -73,17 +66,15 @@
       ((guard) (relational-stable-procedure? (.ref clause 'predicate)))
       ((binding) (relational-stable-procedure? (.ref clause 'compute)))
       (else #f)))
-  ;; Both lists have the exact declaration count; multi-list andmap's truncating
-  ;; behavior cannot omit a declaration. Each occurrence retains admission.
-  (and (andmap (lambda (relation index)
-                 (and (scalar-source? relation index)
+  (and (andmap (lambda (relation)
+                 (and (scalar-source? relation)
                       (gerbil-ascent-canonical-hash-index-provider?
                        (.ref relation 'index-provider))
                       (if (eq? (.ref relation 'storage-kind) 'lattice)
                         (relational-stable-procedure? (.ref relation 'join))
                         (gerbil-ascent-canonical-set-storage-provider?
                          (.ref relation 'storage-provider)))))
-               (.ref candidate 'relations) (iota (length (.ref candidate 'relations))))
+               (.ref candidate 'relations))
        (andmap (lambda (rule)
                  (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))
                               (.ref rule 'heads))
@@ -91,15 +82,13 @@
                (.ref candidate 'rules))))
 
 ;; gerbil-ascent-update-selection
-;; : (forall (p r a s) (-> (Vector (SourceLog r)) p a (Maybe s) (Maybe Vector)))
-;;   : (-> SourceLogVector Program Analysis (Maybe SourceSnapshot) (Maybe AffectedRelations))
+;; : (forall (a) (-> a a Vector (Maybe Vector)))
+;;   : (-> SourceSnapshot Program Analysis (Maybe AffectedRelations))
 ;;   | doc m%
 ;;       Compare source logs and close the affected set through native plans.
 ;;       Only built-in storage/index providers and registered closed procedures
 ;;       qualify. An opaque callback/provider returns false and keeps full
 ;;       recomputation.
-;;       A prepared cut certifies only exact candidate/log/row root identity.
-;;       Without matching evidence, compare the complete ordered source values.
 ;;
 ;;       # Examples
 ;;
@@ -108,25 +97,21 @@
 ;;       ;; => a fresh affected-relation bitmap, or #f for an opaque provider
 ;;       ```
 ;;     %
-(def (gerbil-ascent-update-selection previous candidate analysis (source-cut #f))
+(def (gerbil-ascent-update-selection previous candidate analysis)
   (let* ((relations (.ref candidate 'relations))
          (old-relations (vector->list previous))
          (count (length relations))
          (affected (make-vector count #f)))
     (let (eligible?
           (and (= count (length old-relations))
-               (gerbil-ascent-update-eligible? candidate source-cut)))
+               (gerbil-ascent-update-eligible? candidate)))
       (if (not eligible?)
           #f
           (begin
             (for-each
              (lambda (old new index)
-               (let (rows (.ref new 'rows))
-                 (unless (or (and source-cut
-                                  (gerbil-ascent-source-log-snapshot-equal?
-                                   source-cut candidate index old rows))
-                             (gerbil-ascent-source-log-equal? (car old) (cdr old) rows))
-                   (vector-set! affected index #t))))
+               (unless (gerbil-ascent-source-log-equal? (car old) (cdr old) (.ref new 'rows))
+                 (vector-set! affected index #t)))
              old-relations relations (iota count))
             (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
             affected)))))

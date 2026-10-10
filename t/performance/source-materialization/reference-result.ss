@@ -12,36 +12,6 @@
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
         gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
         gerbil-ascent-visit-snapshot! gerbil-ascent-make-published-result)
-;; Internal handoff only: public Result methods continue to detach row spines.
-(export gerbil-ascent-make-owned-result gerbil-ascent-publication-reader gerbil-ascent-publication-size)
-(defstruct owned-publication (result snapshots sizes position-of) final: #t)
-
-;; : (forall (r p) (-> (Maybe p) r Symbol (Maybe Natural)))
-;; : (-> (Maybe OwnedPublication) EvaluationResult Symbol (Maybe Natural))
-(def (gerbil-ascent-publication-size publication completed name)
-  (and (owned-publication? publication)
-       (using (publication :- owned-publication)
-         (and (eq? completed publication.result)
-              (vector-ref publication.sizes (publication.position-of name))))))
-
-;; : (forall (r p) (-> (Maybe p) r (Maybe (-> Symbol [Row]))))
-;; : (-> (Maybe OwnedPublication) EvaluationResult (Maybe RowReader))
-(def (gerbil-ascent-publication-reader publication completed)
-  (and (owned-publication? publication)
-       (using (publication :- owned-publication)
-         (and (eq? completed publication.result)
-              (lambda (name)
-                (gerbil-ascent-snapshot-rows
-                 (vector-ref publication.snapshots (publication.position-of name))))))))
-
-;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Values e (Maybe (OwnedPublication e r)))))
-;; : (-> Names Arities SnapshotVector Sizes Representations Observation
-;;        NameResolver Boolean Boolean (Values EvaluationResult (Maybe OwnedPublication)))
-(def (gerbil-ascent-make-owned-result names arity snapshots sizes representations observation
-                                    position-of complete? session?)
-  (let (result (gerbil-ascent-make-published-result names arity snapshots sizes
-                 representations observation position-of complete? session?))
-    (values result (and session? (make-owned-publication result snapshots sizes position-of)))))
 
 ;; gerbil-ascent-publication-cache
 ;;   : (-> Nat PublicationCache)

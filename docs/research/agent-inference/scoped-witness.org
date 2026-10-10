@@ -115,6 +115,9 @@ answers remain distinct from finite Datalog closure.
 
 [[file:../../features/scoped-witness/reachability-mask.org][Scoped structural reachability masks]] transfers section 3.1's explicit
 =pre(z)⊗suf(z)= formula into recursive Scheme relations and the same group
-composer. The diamond counterexample is checked in Lean, Quint and Scheme:
-structural pair exclusion and existential clean-path survival differ. The
+composer. Lean and Scheme check the diamond counterexample; Quint detects
+clean-path substitution on the shared three-node cycle corpus, which is also
+graded by Lean and replayed by Scheme. These are two concrete presentations of
+the same contract distinction: structural pair exclusion and existential
+clean-path survival differ. The
 finite least-closure implementation is not the paper's bounded K-hop executor.

@@ -67,8 +67,14 @@ shared 1,024-input BranchScopedWitness corpus tests both independent masks,
 two alternative paths and each branch's direct support through Scheme, Lean
 and Quint. Lean establishes locality over arbitrary scope/vertex types; the
 native tests use caller-supplied symbolic identities and retained source updates.
-This transfer implements two-hop disjunctive composition. It does not implement
-the paper's conjunction groups, typed evidence slots or multi-hop matrix plan.
+This transfer implements two-hop disjunctive composition. The subsequent
+[[file:../../features/scoped-witness/composition.org][scoped composition]] layer implements group-local OR and required-group AND
+over the same endpoint pairs, following Algorithm 1 lines 19–30. Its shared
+512-input corpus qualifies group membership, empty groups, candidate boundaries
+and published evidence; Lean relates stratified missing-group negation to the
+declarative universal/existential condition. Typed evidence slots and the
+multi-hop matrix plan remain open. Pair relation composition does not replicate
+the paper's general typed evidence-space joins.
 
 | Paper stage | Relevant code | What the code currently establishes |
 |-------------+---------------+-------------------------------------|

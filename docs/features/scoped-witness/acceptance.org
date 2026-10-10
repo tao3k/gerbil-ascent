@@ -12,6 +12,9 @@ An answer-only post-filter cannot recover the missing witness attribute.
 
 * Branch scoped witness implementation
 
+[[file:composition.org][Scoped composition]] now builds group-local disjunction and required-group
+conjunction on these completed branch answers, retaining group/scope evidence.
+
 =gerbil-ascent-branch-scoped-witness-program= extends the executable contract to
 multiple named scopes over one shared edge relation. It constructs an ordinary
 POO Program and uses the existing stratified evaluator and retained Session.
@@ -39,8 +42,9 @@ witness in one scope must leave the other's witnesses and answer intact. A
 direct branch also keeps its own identity even when no two-hop path exists.
 Start, target and direct rows with different scope identities cannot join.
 All row material and exhaustion behavior remain under native Program budgets.
-This is a two-hop disjunctive union; arbitrary path lengths, conjunction groups,
-typed EEC slots, matrix masks and full knowledge-graph completeness remain open.
+This branch builder is a two-hop disjunctive union; the separate composed Program
+adds finite endpoint group conjunction. Arbitrary path lengths, typed EEC slots,
+matrix masks and full knowledge-graph completeness remain open.
 
 ** One shared finite correspondence corpus
 

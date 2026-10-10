@@ -142,6 +142,12 @@ the historical migration inventory above.
 
 * Branch scoped witness qualification (2026-10-10)
 
+[[file:../scoped-witness/composition.org][Scoped composition]] additionally checks 1,024 pending/complete states and
+four group OR/AND faults. The 512-input corpus is produced by the transition
+evaluator and compared with the Lean witness/coverage/missing/answer grader.
+Native replay checks real branch-answer input premises before group results.
+=check-scoped-composition-conformance= is part of the shared formal CI gate.
+
 [[file:../scoped-witness/acceptance.org][Branch scoped witnesses]] adds a 2,048-state model to the all gate. Its
 four injected faults cross scope masks, swap attachments, erase witness scope
 and collapse branch answers. All must fail their named exact-output invariant;

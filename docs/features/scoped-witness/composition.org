@@ -1,0 +1,132 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scoped composition: group disjunction and required-group conjunction
+#+DATE: 2026-10-10
+
+* Research requirement and implementation
+
+[[https://raw.githubusercontent.com/mlresearch/v306/main/assets/miao26e/miao26e.pdf][LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation]],
+Algorithm 1 lines 19–30, unions atomic evidence within a group and intersects
+the groups before answer projection. This motivates the composition operator;
+the native implementation below uses relational division over finite endpoint
+pairs rather than transferring the paper's matrix representation or typed slots.
+
+[[file:../../../applications/scoped-composition.ss][gerbil-ascent-scoped-composition-program]] constructs one ordinary POO Program
+from the existing [[file:acceptance.org][branch-scoped witness Program]] and additional declarations.
+The existing branch rules apply each scope's intermediate exclusion before
+the group layer consumes =branch_answer(scope,s,t)=. Native admission,
+stratification, budgets, execution and source replacement retain their existing
+owners. No separate execution loop or supervisor is introduced.
+
+| Source | Meaning |
+|--------+---------|
+| =group_required(g)= | Groups that must each have a supporting member |
+| =group_member(g,scope)= | Alternative branches within the named group |
+| =group_candidate(s,t)= | Explicit finite candidate universe |
+
+| Derived relation | Meaning |
+|------------------+---------|
+| =group_witness(g,scope,s,t)= | Selected candidate, required group, member and completed branch answer all agree |
+| =group_support(g,s,t)= | At least one member supports this endpoint pair |
+| =group_missing(g,s,t)= | Selected pair has no support in this required group |
+| =group_failure(s,t)= | At least one required group is missing |
+| =group_answer(s,t)= | Selected pair with no missing required group |
+
+=group_witness= retains group and scope identity. It references branch support,
+not a complete path certificate: the branch's two-hop witness or direct source
+must be inspected separately. Missing groups are finite closure observations,
+not real-world absence or source-completeness attestations.
+
+An empty *required group* rejects every selected pair. With *zero required
+groups*, the conjunction is vacuously true exactly for =group_candidate=;
+it does not invent an unbounded graph universe. This is an explicit local
+extension for empty group lists, not a paper benchmark result. Optional groups
+produce no group support or missing rows. Multiple groups may reuse a scope.
+Every join retains the same =(s,t)=, preventing different branch endpoint pairs
+from supplying unrelated halves of an alleged conjunction.
+
+* Scheme, Lean and Quint correspondence
+
+[[file:../../../packages/proofs/lean/ScopedComposition.lean][Lean semantics]] distinguishes the declarative condition
+
+#+begin_example
+candidate(s,t) AND
+  FOR EVERY required group g:
+    EXISTS member scope: branch_answer(scope,s,t)
+#+end_example
+
+from the native stratified condition =candidate AND NOT EXISTS missing group=.
+=no_missing_iff_answer= proves their equivalence over arbitrary group, scope and
+vertex types. Additional laws cover empty required groups, zero required groups
+and monotonic growth of branch support. Four kernel-checked finite theorems tie
+the witness/coverage/missing/answer bit grader to those relation predicates;
+the final declarative answer reuses the equivalence theorem. A thin CLI imports
+the compiled proof module during comparison, avoiding repeated proof elaboration.
+=scope_masks_local= imports the preceding branch-scoped theorem to prove that
+changing masks outside required member scopes leaves the composed answer
+unchanged. A native two-hop source-replacement control checks that boundary.
+
+[[file:../../../packages/proofs/quint/ScopedComposition.qnt][Quint]] uses one transition evaluator for both execution and corpus export.
+The 512 inputs enumerate two branch-answer bits, four group/member bits, two
+required-group bits and candidate inclusion. Vectors are
+=[id,witnessMask,coverageMask,missingMask,answerBit]=. Witness slots are
+=(red,alpha), (red,beta), (blue,alpha), (blue,beta)=; group slots are =red,blue=.
+The endpoint pair is =(0,3)=. Correct published outputs and empty pending
+outputs are checked independently of the injected implementation mutations.
+
+[[file:../../../t/qualification/ascent-scoped-composition-test.ss][Native qualification]] obtains each abstract branch-answer input from real direct
+support under the composed native Program, and checks actual =branch_answer=
+before comparing the group outputs. It uses four retained owners, one for each
+branch mask, and follows the run-before-replace Session protocol. Separate
+controls exercise real two-hop exclusion, immutable held publication, symbolic
+groups/scopes, candidate boundaries and differing endpoint pairs. The preceding
+branch-scoped corpus qualifies the two-hop producer; this corpus exhausts the
+composition input abstraction. Neither is universal Scheme source refinement.
+
+| Injected model fault | Required failed invariant | Native control |
+|----------------------+---------------------------+----------------|
+| =union= | =ExactAnswer= | One supported group does not satisfy two required groups |
+| =allBranches= | =ExactCoverage= | One supported member suffices within a group |
+| =emptyGroup= | =ExactMissing= | A required empty group remains missing |
+| =forgetWitness= | =ExactWitnesses= | Group/scope evidence remains present even for a correct final answer |
+
+These are deliberate model faults. Passing native regressions establishes the
+tested Scheme contract; it does not mean four production bugs were discovered.
+CI regenerates the shared corpus and runs =check-scoped-composition-conformance=
+to compare current Quint output and the frozen native fixture with Lean.
+
+* Remaining scope
+
+Two-hop atomic branch semantics remain unchanged. Arbitrary multi-hop EEC,
+typed evidence-slot joins, conjunction over differently shaped assignments,
+matrix planning, model proposal capture and real-KG benchmark replication
+remain separate work. This implementation composes complete pair relations;
+it does not introduce probabilistic, weighted or open-world negation semantics.
+
+* Local validation receipts
+
+- The native Suite passed nine Cases and all 512 shared states in 10 seconds.
+  The earlier eight-Case run passed in 22 seconds; these are separate local
+  receipts under shared host load, not a matched performance comparison.
+- Quint checked 1,024 pending/complete states; the correct model passed and
+  all four injected faults yielded the required invariant violation (exit 12).
+  The complete harness exited 0.
+- The final compiled Lean module and current/frozen corpus comparison passed.
+  The thin comparison CLI reuses the checked =olean=.
+- Removing all witness bits from vector 511 while leaving coverage, missing
+  groups and the final answer unchanged caused Lean comparison to reject with
+  exit 1. Final-answer agreement cannot conceal missing group/scope evidence.
+- Axiom inspection reports no dependencies for empty-group rejection,
+  zero-group semantics, branch monotonicity and scope locality. The arbitrary
+  group no-missing equivalence and derived finite answer use Lean's standard
+  =propext=, =Classical.choice= and =Quot.sound= foundations. No project-specific
+  axiom or =sorry= is introduced.
+- The initial Lean proof used the unavailable =by_contra= tactic. Replacing it
+  with the supported =Classical.byContradiction= term fixed elaboration without
+  changing the theorem or native behavior.
+- Native policy qualification passed with 42 findings and zero errors. The
+  new source owner includes adjacent generic/domain algebraic contracts.
+- Exact revision CI remains separate from these local receipts.
+
+[[file:acceptance.org][Scoped witness acceptance]];
+[[file:../../research/agent-inference/scoped-witness.org][research and paper correspondence]].

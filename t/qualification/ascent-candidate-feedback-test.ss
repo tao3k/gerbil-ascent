@@ -7,7 +7,7 @@
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-proof reasoning-receipt-nonmembership
                  reasoning-receipt-diagnostics reasoning-diagnostic-code))
-(export ascent-candidate-feedback-test)
+(export ascent-candidate-feedback-test ascent-scoped-attempt-feedback-test)
 (def (append-map f rows) (apply append (map f rows)))
 (def edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 (def (graph mask)
@@ -95,3 +95,85 @@
         (let (cycle (list '(0 1)))
           (set-cdr! cycle cycle)
           (check-equal? (reasoning-feedback-reason (reasoning-compare-rows source p r cycle)) 'invalid-reference))))))
+
+;;; Frozen specification controls, not model-generated proposals. The excluded
+;;; city 0 survives through direct; city 2 has only the excluded route witness.
+(def (scoped-proposal variant (query '(query answer ?city)))
+  (append '(candidate (relation answer 1) (relation joined 1)
+             (rule (joined ?city) (route ?city))
+             (rule (joined ?city) (direct ?city)))
+          (case variant
+            ((gold) '((rule (answer ?city) (route ?city) (not (capital ?city)))
+                      (rule (answer ?city) (direct ?city))))
+            ((global) '((rule (answer ?city) (joined ?city) (not (capital ?city)))))
+            (else '((rule (answer ?city) (joined ?city)))))
+          (list query '(limits 16 64 128))))
+(def (scoped-source generation)
+  (reasoning-source-snapshot 'ml26-scope-control generation
+    '((route 1 ((0) (1) (2))) (direct 1 ((0))) (capital 1 ((0) (2))))))
+(def ascent-scoped-attempt-feedback-test
+  (test-suite "ML26 same-source proposal comparison"
+    (test-case "complete scope errors have exact missing and extra rows"
+      (let* ((source (scoped-source 0)) (gold (scoped-proposal 'gold))
+             (reference (reasoning-attempt source gold #f))
+             (global (scoped-proposal 'global)) (positive (scoped-proposal 'positive))
+             (global-receipt (reasoning-attempt source global #f))
+             (positive-receipt (reasoning-attempt source positive #f))
+             (missing (reasoning-compare-attempts source global global-receipt gold reference))
+             (extra (reasoning-compare-attempts source positive positive-receipt gold reference)))
+        (for-each (lambda (r) (check-equal? (reasoning-receipt-status r) 'complete))
+                  (list reference global-receipt positive-receipt))
+        (check-equal? (reasoning-feedback-status missing) 'mismatch)
+        (check-equal? (reasoning-feedback-missing missing) '((0)))
+        (check-equal? (reasoning-feedback-extra missing) [])
+        (check-equal? (reasoning-feedback-status extra) 'mismatch)
+        (check-equal? (reasoning-feedback-missing extra) [])
+        (check-equal? (reasoning-feedback-extra extra) '((2)))
+        (check-equal? (reasoning-feedback-status
+                       (reasoning-compare-attempts source gold reference gold reference)) 'match)
+        ;; Caller-selected gold can itself have the wrong scope. A match is
+        ;; an executor comparison, not a theorem about natural-language intent.
+        (check-equal? (reasoning-feedback-status
+                       (reasoning-compare-attempts source global global-receipt global global-receipt)) 'match)))
+    (test-case "both receipt bindings and reference completion gate comparison"
+      (let* ((source (scoped-source 0)) (new-source (scoped-source 1))
+             (gold (scoped-proposal 'gold)) (p (scoped-proposal 'global))
+             (reference (reasoning-attempt source gold #f))
+             (current (reasoning-attempt new-source p #f))
+             (rejected-p '(candidate (relation answer 1)
+                            (rule (answer ?city) (unknown ?city))
+                            (query answer ?city) (limits 16 64 128)))
+             (rejected (reasoning-attempt new-source rejected-p #f)))
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-attempts new-source p current gold reference)) 'reference-unbound)
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-attempts source p current gold reference)) 'unbound)
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-attempts source gold reference p reference)) 'reference-unbound)
+        (let (f (reasoning-compare-attempts new-source p current rejected-p rejected))
+          (check-equal? (reasoning-feedback-reason f) 'reference-incomplete)
+          (check-equal? (reasoning-feedback-missing f) [])
+          (check-equal? (reasoning-feedback-extra f) []))
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-attempts new-source rejected-p rejected p current)) 'rejected)
+        (let* ((limited (append (reverse (cdr (reverse gold))) '((limits 16 1 1))))
+               (unfinished (reasoning-attempt new-source limited #f)))
+          (check-equal? (eq? (reasoning-receipt-status unfinished) 'complete) #f)
+          (check-equal? (reasoning-feedback-reason
+                         (reasoning-compare-attempts new-source p current limited unfinished)) 'reference-incomplete))))
+    (test-case "equal arity with a changed query constant is not comparable"
+      (let* ((source (scoped-source 0)) (gold (scoped-proposal 'gold))
+             (p (scoped-proposal 'gold '(query answer 0)))
+             (reference (reasoning-attempt source gold #f))
+             (r (reasoning-attempt source p #f)))
+        (check-equal? (reasoning-receipt-status r) 'complete)
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-attempts source p r gold reference)) 'query-mismatch)))
+    (test-case "published differences do not retain reference row pairs"
+      (let* ((source (scoped-source 0)) (gold (scoped-proposal 'gold))
+             (p (scoped-proposal 'global)) (reference (reasoning-attempt source gold #f))
+             (r (reasoning-attempt source p #f))
+             (f (reasoning-compare-attempts source p r gold reference)))
+        (set-car! (car (reasoning-feedback-missing f)) 9)
+        (check-equal? (reasoning-feedback-missing
+                       (reasoning-compare-attempts source p r gold reference)) '((0)))))))

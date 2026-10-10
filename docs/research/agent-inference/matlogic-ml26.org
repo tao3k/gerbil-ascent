@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: ML26 reading: executable scoped negation on knowledge graphs
-#+STATUS: core ASCENT application reading; proposed transfer, no local KGQA result
-#+DATE: 2026-10-04
+#+STATUS: finite scope executor and same-source proposal comparison implemented; model KGQA pending
+#+DATE: 2026-10-10
 #+FILETAGS: :research:knowledge-graph:negation:llm:datalog:
 
 * Source and why it is core
@@ -28,6 +28,19 @@ snapshot, query and evidence boundary in this repository.
 | §4.1, Appendix H | Structured CQA uses FB15k-237 and NELL995 over 14 query patterns, with generated natural-language renderings. End-to-end KGQA samples 1,000 test questions from each of CWQ and WebQSP over Freebase; all compared methods use the same retrieved subgraphs. | Both structured and natural-language paths matter. The CQA templates are synthetic even though the graphs are real; subgraph retrieval bounds the answer universe. |
 | §4.2, Table 3 | On CWQ the system reports 63.5 Hits@1 with 3.0 average LLM calls, versus MFC's 62.8 with 9.7 calls. On WebQSP it reports 76.7 with 3.0 calls versus MFC's 78.9 with 7.5 calls. | The end-to-end comparison is mixed; do not claim universal accuracy superiority or a local ASCENT benefit. |
 | §4.3, Table 5 | Keeping the executor fixed, supplying known exclusion constraints instead of model-generated ones raises average MRR from 0.199 to 0.369 over five negation patterns. | Semantic specification is a measurable bottleneck. Separate specifier, admission, execution and final-answer errors. |
+
+* Executable transfer
+
+The [[file:wikidata-scope-wd26.org][WD26 fixture]] already checks branch-scoped exclusion on pinned finite
+Wikidata claims. The [[file:../../features/candidate-feedback/acceptance.org][candidate feedback contract]] now adds
+=reasoning-compare-attempts=: compare submitted and gold program receipts only
+after independent same-source/content binding, completion and exact full query
+agreement. Frozen scope controls produce exact missing/extra rows under the
+same native executor, with Lean qualification premises and Quint fault controls.
+This makes gold-versus-proposal grading available without rerunning execution.
+It does not supply a model proposal, certify gold intent, implement MatLogic's
+matrix schedule or reproduce its benchmark. Raw response capture, model/request
+identity, retrieval provenance and the actual model study remain open.
 
 * Code correspondence and missing boundary
 

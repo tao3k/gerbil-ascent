@@ -45,4 +45,29 @@ theorem match_requires_binding (bound complete : Prop) (actual expected : Row �
 
 theorem match_requires_completion (bound complete : Prop) (actual expected : Row → Prop)
     (h : AdmittedMatch bound complete actual expected) : complete := h.2.1
+
+-- Gold-executor comparison has two independently bound, completed attempts
+-- and an identical full query. Gold authority is deliberately not a premise.
+def AdmittedComparison (bound complete referenceBound referenceComplete sameQuery : Prop)
+    (actual expected : Row → Prop) :=
+  bound ∧ complete ∧ referenceBound ∧ referenceComplete ∧ sameQuery ∧ Exact actual expected
+
+theorem comparison_requires_reference
+    (h : AdmittedComparison bound complete referenceBound referenceComplete sameQuery actual expected) :
+    referenceBound ∧ referenceComplete ∧ sameQuery :=
+  ⟨h.2.2.1, h.2.2.2.1, h.2.2.2.2.1⟩
+
+theorem comparison_no_differences
+    (h : AdmittedComparison bound complete referenceBound referenceComplete sameQuery actual expected) :
+    (∀ row, ¬ Missing actual expected row) ∧ (∀ row, ¬ Extra actual expected row) :=
+  (no_differences_iff_exact actual expected).mpr h.2.2.2.2.2
+
+theorem qualified_comparison_iff_no_differences
+    (hb : bound) (hc : complete) (hrb : referenceBound) (hrc : referenceComplete) (hq : sameQuery) :
+    AdmittedComparison bound complete referenceBound referenceComplete sameQuery actual expected ↔
+      ((∀ row, ¬ Missing actual expected row) ∧ (∀ row, ¬ Extra actual expected row)) := by
+  constructor
+  · exact comparison_no_differences
+  · intro h
+    exact ⟨hb, hc, hrb, hrc, hq, (no_differences_iff_exact actual expected).mp h⟩
 end Ascent.ExecutionFeedback

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: README paper coverage and engineering acceptance audit
-#+DATE: 2026-10-09
+#+DATE: 2026-10-10
 
 * Reading and implementation are separate statuses
 
@@ -14,7 +14,7 @@ for all these states.
 
 | README paper | Repository reading | Current transfer and remaining work |
 |--------------+--------------------+-------------------------------------|
-| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | Dedicated reading; WD26 finite executor fixture; model/KGQA benchmark pending |
+| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | WD26 finite executor and same-source gold/proposal grading implemented with Lean/Quint gates; raw model/KGQA benchmark pending |
 | DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
 | BRINK | [[file:agent-inference/brink-b26.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |
@@ -65,6 +65,11 @@ feedback; BRINK adds whole-batch incomplete-source construction and preserved
 original answers. Scheme snapshot/receipt owners connect these transfers. Lean
 states semantic laws; Quint states completion, binding and publication premises.
 The dedicated feature pages record their executable native controls.
+
+ML26 now has an executable gold/proposal comparison gate in the same feedback
+owner: both receipts independently bind and complete against one source, and
+full query identity precedes exact set differences. Frozen scope controls,
+Lean premises and Quint fault exploration qualify this finite transfer.
 
 Remaining head-paper experiments include ML26 raw model proposal/specification
 comparison and BRINK released mined-rule groundings with versioned real-KG

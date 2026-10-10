@@ -8,12 +8,21 @@
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-receipt-bound? reasoning-receipt-status
                  reasoning-receipt-query reasoning-receipt-rows))
-(export reasoning-compare-rows reasoning-feedback?
+(export reasoning-compare-rows reasoning-compare-attempts reasoning-feedback?
         reasoning-feedback-status reasoning-feedback-reason
         reasoning-feedback-missing reasoning-feedback-extra)
 
 ;;; Detached finite observations, never a proof of intended meaning.
 (defstruct reasoning-feedback (status reason missing extra) final: #t)
+
+(def (refuse-feedback reason)
+  (make-reasoning-feedback 'inconclusive reason [] []))
+
+(def (receipt-feedback-reason snapshot candidate receipt)
+  (cond ((not (reasoning-receipt-bound? receipt snapshot candidate)) 'unbound)
+        ((not (eq? (reasoning-receipt-status receipt) 'complete))
+         (reasoning-receipt-status receipt))
+        (else #f)))
 
 ;;; Compare all queried rows as sets against a caller-owned finite reference.
 ;;; Binding and native completion precede comparison. Rejection, exhaustion,
@@ -21,20 +30,39 @@
 ;;; The reference must use the receipt's full query tuple, including constants.
 ;;; Its authority and interpretation remain the caller's responsibility.
 (def (reasoning-compare-rows snapshot candidate receipt expected)
-  (def (refuse reason)
-    (make-reasoning-feedback 'inconclusive reason [] []))
+  (let (reason (receipt-feedback-reason snapshot candidate receipt))
+    (if reason (refuse-feedback reason)
+        (compare-qualified-rows receipt expected))))
+
+;;; Compare two already executed proposals, without rerunning either one.
+;;; Both must complete against this exact source and submitted content. The
+;;; full query datum (predicate, variables, constants and order) must agree.
+;;; A gold program is caller supplied: agreement does not establish its intent
+;;; fidelity, source completeness or proof validity.
+(def (reasoning-compare-attempts snapshot candidate receipt
+                                 reference-candidate reference-receipt)
+  (let (reason (receipt-feedback-reason snapshot candidate receipt))
+    (cond
+     (reason (refuse-feedback reason))
+     ((not (reasoning-receipt-bound? reference-receipt snapshot reference-candidate))
+      (refuse-feedback 'reference-unbound))
+     ((not (eq? (reasoning-receipt-status reference-receipt) 'complete))
+      (refuse-feedback 'reference-incomplete))
+     ((not (equal? (reasoning-receipt-query receipt)
+                   (reasoning-receipt-query reference-receipt)))
+      (refuse-feedback 'query-mismatch))
+     (else (compare-qualified-rows receipt
+                                   (reasoning-receipt-rows reference-receipt))))))
+
+(def (compare-qualified-rows receipt expected)
   (cond
-   ((not (reasoning-receipt-bound? receipt snapshot candidate))
-    (refuse 'unbound))
-   ((not (eq? (reasoning-receipt-status receipt) 'complete))
-    (refuse (reasoning-receipt-status receipt)))
    ((not (and (reasoning-bounded-data? expected 16384 128)
               (list? expected)
               (let (arity (length (cdr (reasoning-receipt-query receipt))))
                 (andmap (lambda (row)
                           (and (list? row) (= (length row) arity)
                                (andmap scalar? row))) expected))))
-    (refuse 'invalid-reference))
+    (refuse-feedback 'invalid-reference))
    (else
     (let ((actual-set (make-hash-table)) (expected-set (make-hash-table))
           (actual []) (wanted []))

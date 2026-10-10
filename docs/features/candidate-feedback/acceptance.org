@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Candidate execution feedback: finite reference qualification
-#+DATE: 2026-10-09
+#+DATE: 2026-10-10
 
 * Design and ownership
 
@@ -21,15 +21,53 @@ receipt establishes the reference's authority or natural-language fidelity.
 A match applies only to this reference, query and snapshot; it is not program
 equivalence or a proof/certificate verification result.
 
+* Same-source gold executor comparison (ML26)
+
+The [[file:../../research/agent-inference/matlogic-ml26.org][MatLogic reading]] motivates distinguishing a scope specification error
+from successful execution of that wrong specification. =reasoning-compare-attempts=
+accepts already executed candidate and gold proposals, retaining the exact
+existing executor and source boundary:
+
+#+begin_src scheme
+(reasoning-compare-attempts snapshot proposal receipt gold-proposal gold-receipt)
+#+end_src
+
+Candidate binding/completion is checked first, preserving =unbound= and the
+existing typed execution status. Gold must independently bind to the same
+snapshot identity, generation and content and its submitted proposal; failures
+return =reference-unbound=. A non-complete gold returns =reference-incomplete=.
+The entire query datum must agree, including predicate, variable spelling,
+constants and order, or the result is =query-mismatch=. This conservative
+contract does not normalize alpha-equivalent queries. All refusals return
+=inconclusive= and empty differences, including two empty but unfinished results.
+
+The API never executes either proposal again. Both public comparison functions
+share the bounded reference validation and one set-indexing pass; gold rows
+above the existing material bound are still =invalid-reference=. The caller
+must keep receipt/source material stable during this read, as for
+=reasoning-compare-rows=; it is not a concurrent publication owner.
+
+Four additional frozen-control Cases exercise branch-local exclusion, a
+global exclusion missing city 0, an omitted exclusion adding city 2, stale
+candidate/gold generations, changed gold content, rejected/exhausted attempts,
+changed query constants and detached differences. A wrong gold compared with
+itself can match: this explicitly preserves the distinction between executor
+agreement and natural-language intent. These are specification controls, not
+raw model responses or a KGQA population score.
+
 * Assurance correspondence
 
-[[file:../../../packages/proofs/lean/ExecutionFeedback.lean][Five Lean laws]] establish absence of both differences iff extensional equality,
+[[file:../../../packages/proofs/lean/ExecutionFeedback.lean][Lean laws]] establish absence of both differences iff extensional equality,
 a mismatch witness, disjoint missing/extra sets and binding/completion premises
 for admitted matches. Actual hash equality, finite tuple encoding and digest
 correspondence remain implementation premises; no new custom axioms or sorry.
-[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint]] explores 128 distinct states for two-row finite sets, binding and
-completion. Four mutants admit stale/partial observations or drop missing/extra
-rows; each produces the expected invariant counterexample. This model checks
+The gold comparison adds independent reference binding/completion and identical
+query premises. Qualified comparison is equivalent to absence of both differences;
+tests refute stale gold, incomplete gold, changed query and a scoped missing row.
+[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint]] now explores 2,048 distinct states for two-row finite sets, binding,
+completion and the optional gold gate. Seven mutants admit stale/partial
+candidate or gold observations, change query, or drop missing/extra rows;
+each produces the expected invariant counterexample. This model checks
 the feedback gate, not all execution/session interleavings.
 
 [[file:../../../t/qualification/ascent-candidate-feedback-test.ss][Native qualification]] freezes five proposals before enumerating all 64 directed
@@ -44,7 +82,8 @@ it. Additional controls cover withdrawal/current generation, proposal mismatch,
 undeclared helper diagnostics, refused execution, duplicate rows, malformed and
 cyclic references, material bound and detached differences.
 
-Local native four Cases, full Lean 134 jobs and the Quint gate pass. Remote
+The original four Cases and four added comparison Cases pass locally. Focused
+Lean kernel checking and the expanded Quint gate also pass. Remote
 whole-revision CI is a separate delivery gate. No model-generated proposal,
 Souffle corpus execution, published DB26 score or general equivalence is claimed.
 

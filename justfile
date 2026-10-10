@@ -824,7 +824,7 @@ _check-quint group='all': prepare-quint
             DerivationCounts) fault refusal Private; fault early Fixed; fault accumulate Fixed ;;
             CanonicalIndex) fault early Private; fault omit Canonical; fault duplicate Canonical; fault order Canonical ;;
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
-            ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences ;;
+            ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences; fault referenceStale Qualified; fault referencePartial Qualified; fault query Qualified ;;
             ProofPrefix) fault early ExactPrefix; fault forward GroundedPrefix; fault source GroundedPrefix; fault partial RefusalPrivate ;;
             ProofShapeAdmission) fault early AllocationAfterAdmission; fault roots AdmittedShape; fault improper AdmittedShape; fault partial RefusalUnpublished ;;
             TerminalTraversal) fault tail FailureFrozen; fault resume FailureFrozen; fault skip FailureFrozen; fault early CompletedScan ;;

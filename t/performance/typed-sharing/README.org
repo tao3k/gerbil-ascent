@@ -1,0 +1,96 @@
+#+title: Scoped typed ownership and checked publication
+
+* Coherent production flow
+
+The frozen =reference.ss= is =program/higher-order.ss= at
+=042ae44= (the full revision is in =benchmark.ss=), blob
+=802c6c38203ae3524c5c9492ae6f42cb8980a929=. Production imports are unchanged.
+Both consumers use the same current ordinary POO constructors and runtime.
+The baseline never enters the new typed private construction extent.
+
+Gerbil =1cfb032= =compiler/optimize.ss:28-35= owns analysis tables per invocation;
+=optimize-xform.ss:108-113= records mutation facts before recursive descent.
+Here, traversal checks every scoped occurrence and charges every type/lowering
+visit before representation reuse. =checked-copy= requires the same frozen
+type, kind, checked child identities and structurally equal owned data.
+Parameters always enter the lexical binding check. Generated result types that
+lack matching identity conservatively rebuild. Source domain registration still
+runs per occurrence, including same-name visit order. No validation survives
+between compiler calls; changed raw rows/columns/mapping payloads fall back to
+the original constructors and their diagnostics.
+
+After typed admission and lowering, the finite positive graph has no supplied
+constructor procedures. Use the existing private inert construction owner to
+build declarations, then recursively validate the complete Program before
+publishing it. Native =call-with-values= / =case-lambda= receives one Program
+for Candidate or Program/output for typed compilation after the dynamic extent
+has restored ordinary checks. This replaces neither public constructor contracts
+nor source/solver admission. Intermediate operator relations, source occurrences,
+mapping tables and derived rule multiplicity remain unchanged.
+
+* Workloads and fixed gates
+
+Descriptors are prepared outside timing. Every timed call performs full typed
+compilation, complete Program validation and ordered projection of all declared
+arities, rows, finite domains and rule count. Both sides compile native; public
+admit/solve/query independently checks identity-set truth before sampling.
+
+- source: domain 512, 512 rows, five shared union layers.
+- mapping: identity mapping over that source, four shared union layers.
+- single: domain 512, eight rows, no shared layer.
+- small: domain two, two rows, one shared layer.
+
+All compiler budgets are input=32768, derived=32768, output=32768 and
+expansion=10000. These limits retain mapping source occurrence multiplicity.
+Native ASP =benchmark-run/result= admits 20 optimized complete consumers;
+20 alternating CPU pairs include natural GC. Five separate allocation pairs
+use monotone cumulative VM statistic 16 with forced collections. Every result
+matches the frozen ordered publication projection. CPU target gates require
+<=90% baseline and >=16/20 wins. Controls allow <=110% plus 20 microseconds;
+allocation allows <=110% plus 4096 bytes. Gates were fixed before sampling.
+
+* Accepted local receipts
+
+| Consumer | Old CPU us | New CPU us | Wins | Old bytes | New bytes | Real s |
+| source  | 82632 | 31428 | 20/20 | 147132576 | 55891056 | 6.95 |
+| mapping | 123509 | 65388 | 20/20 | 193041296 | 76351616 | 11.08 |
+| single  | 3307 | 1750 | 20/20 | 4970640 | 2561536 | 0.20 |
+| small   | 2731 | 1498 | 19/20 | 4767072 | 2356816 | 0.29 |
+
+All four gates pass, taking 18.52 seconds including allocation probes and native
+truth oracles. Target CPU decreases 62.0%/47.1%, allocation 62.0%/60.4%.
+This establishes compilation/publication improvements for these consumers,
+not whole-solver speed or remote-CI performance. Production policy checks both
+changed owners with zero findings.
+
+* Negative experiments and reproduction
+
+The initial reuse-only source study reduced CPU merely 2.0% (91692 to 89861 us,
+11/20 wins) and allocation about 1.1%; it failed the unchanged 10% CPU gate.
+Its receipt remains =source-reuse-only.ss=. This led to the larger repeated
+recursive declaration-validation cost, addressed using the existing inert root
+contract. A first five-layer mapping truth oracle exceeded the original output
+budget before timing on the baseline. The fixture now uses four layers; budgets
+and performance gates remain unchanged. Its failed log is retained. The temporary
+mutable output carrier was replaced by the native multiple-value owner before
+the accepted series; its earlier source measurement remains separate.
+
+Use existing repository Gerbil package/load paths and Darwin OpenSSL library path.
+=gxi t/performance/typed-sharing/build.ss <absolute .gerbil/lib> <binary>= builds
+the runner; append =qualify= for native Suite qualification. Run the benchmark
+binary =<scenario> <receipt-path>= sequentially. Qualification uses separate
+processes with capacity =min(cpu-count,suite-count)=, preserving ordered Cases
+inside each Suite and draining all children before reporting failure.
+Logs, executables and raw receipts stay under ignored =.cache/ascent/typed-sharing/=.
+No testing behavior is added to the production build entry or public facade.
+
+Four native independent Suite processes pass all 54 Cases in 47.92 seconds,
+with final =OK= and zero exit status. The new Suite compares 64 expansion-budget
+verdicts to the frozen compiler (44 rejects / 45 accepts for its shared graph),
+checks an admitted shared body subsequently escaping its binder, verifies fresh
+source mutation admission and held Program ownership, and runs the wide source,
+mapping and both controls against native set truth. It independently validates
+the complete Program and checks ordinary constructor rejection after both typed
+success and failed construction. Candidate's existing single-value path also
+passes its full Suite, including all 512 three-node graphs. These are local native
+receipts; remote CI is a separate gate.

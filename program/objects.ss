@@ -50,10 +50,20 @@
 (def current-declaration-check (make-parameter validate))
 (def (declaration-check contract value)
   ((current-declaration-check) contract value))
+;; The producer may return a Program alone or a Program and its output handle.
+;; Receive both outside the construction extent, validating before publication.
+;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))
+;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))
 (def (gerbil-ascent-construct-inert-program construct)
-  (validate GerbilAscentProgramContract
-            (parameterize ((current-declaration-check (lambda (_contract value) value)))
-              (construct))))
+  (call-with-values
+   (lambda ()
+     (parameterize ((current-declaration-check (lambda (_contract value) value)))
+       (construct)))
+   (case-lambda
+     ((program) (validate GerbilAscentProgramContract program))
+     ((program output)
+      (let (checked (validate GerbilAscentProgramContract program))
+        (values checked output))))))
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Lattice. (.ref GerbilAscentLatticeContract 'proto))

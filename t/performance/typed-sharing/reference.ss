@@ -5,7 +5,6 @@
 ;;; Typed higher-order descriptors normalize to the existing positive IR.
 ;;; Builders run once during construction; admitted solves hold no callbacks.
 (import (only-in :clan/poo/object .o)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
         (only-in :gerbil-ascent/program/finite-arithmetic
                  relational-capped-product relational-capped-power)
         (only-in :gerbil-ascent/program/operator
@@ -327,19 +326,6 @@
       (let (owned (snapshot-type type []))
         (collect-type-atoms! owned)
         owned))
-    ;; A copy is reusable only after this occurrence's children and type have
-    ;; passed admission. Identity binds frozen types/children; structural data
-    ;; equality binds caller row/column spines to their admitted owned copy.
-    ;; Parameters always enter the constructor's lexical binding check.
-    (def (checked-copy node type kind inputs data)
-      (let (owned (hash-get term-copies node))
-        (and owned (not (eq? kind 'parameter))
-             (with ((relational-typed-term prior-type prior-kind prior-inputs prior-data) owned)
-               (and (eq? type prior-type) (eq? kind prior-kind)
-                    (= (length inputs) (length prior-inputs))
-                    (andmap eq? inputs prior-inputs)
-                    (equal? data prior-data)
-                    owned)))))
     ;; Reconstruction owns constructor contracts; traversal owns lexical
     ;; admission, path checks and per-occurrence accounting before any reuse.
     (def (rebuild-term node scope type kind inputs data)
@@ -352,7 +338,9 @@
         ((source)
          (unless (and (null? inputs) (vector? data) (= (vector-length data) 2))
            (error "invalid typed source data"))
-         (relational-typed-source (vector-ref data 0) type (vector-ref data 1)))
+         (let (checked (relational-typed-source (vector-ref data 0) type (vector-ref data 1)))
+           (hash-put! source-domains (vector-ref data 0) (relational-type-right type))
+           checked))
         ((apply)
          (unless (= (length inputs) 2) (error "invalid typed application children"))
          (relational-typed-apply (car inputs) (cadr inputs)))
@@ -409,12 +397,7 @@
             (when (memq kind '(parameter apply fix union))
               (unless (eq? data #f) (error "invalid typed inert node data")))
             (let* ((inputs (map (lambda (input) (check-term! input scope (cons node path))) inputs))
-                   (rebuilt (or (checked-copy node type kind inputs data)
-                                (rebuild-term node scope type kind inputs data))))
-              ;; Same-named source observations still publish in visit order,
-              ;; even when this occurrence reuses its owned representation.
-              (when (eq? kind 'source)
-                (hash-put! source-domains (vector-ref data 0) (relational-type-right type)))
+                   (rebuilt (rebuild-term node scope type kind inputs data)))
               (unless (relational-type=? (relational-typed-term-type rebuilt) type)
                 (error "typed node result signature mismatch"))
               (or (hash-get term-copies node)
@@ -503,15 +486,10 @@
     ;; Emit the final finite-domain representation directly. Constructing an
     ;; ordinary program and rebuilding all relations repeated contract checks
     ;; and ownership copies without changing the lowered rules or handles.
-    ;; Typed admission and lowering have frozen the entire inert graph. Use
-    ;; the existing private construction extent, then recursively validate the
-    ;; complete Program outside that extent before either value escapes.
-    (gerbil-ascent-construct-inert-program
-     (lambda ()
-       (relational-op-compile result-root input-limit derived-limit output-limit
-        (.o (:: @ relational-op-compiler)
-            (.make-relation
-             (lambda (name arity rows)
-               (let (domain (or (hash-get source-domains name) atoms))
-                 (relational-finite-source name arity rows
-                                          (make-list arity domain))))))))))))
+    (relational-op-compile result-root input-limit derived-limit output-limit
+      (.o (:: @ relational-op-compiler)
+          (.make-relation
+           (lambda (name arity rows)
+             (let (domain (or (hash-get source-domains name) atoms))
+               (relational-finite-source name arity rows
+                                        (make-list arity domain))))))))))

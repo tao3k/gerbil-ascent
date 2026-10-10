@@ -237,3 +237,28 @@ The two independent native Suites pass 40 Cases in 10.05 seconds, and the
 production file passes ASP Policy with zero findings. This completes the
 finite-domain admission unit; it leaves shared-descriptor reuse and the other
 unmeasured audit flows open.
+
+* Follow-through: scoped owned copies and checked typed publication
+
+The shared-descriptor unit now admits every scoped occurrence before reusing
+an owned representation. Reuse requires frozen type/child identity and equal
+owned payloads; parameters retain their lexical checks and all visits retain
+expansion charges. Typed lowering then uses the existing private inert
+construction owner and validates the complete Program before publication.
+Native multiple-value dispatch preserves Candidate's single-Program producer
+and typed compilation's Program/output producer without a mutable output carrier.
+
+The complete shared source/mapping compilation consumers reduce CPU 62.0%/47.1%
+and allocation 62.0%/60.4%. Single and small controls pass the fixed regression
+gates. The initial representation-reuse-only source experiment failed its 10%
+CPU gate (about 2% improvement); it remains a negative result, demonstrating the
+larger contribution of repeated declaration construction validation. A mapping
+fixture exceeded the unchanged output budget before measurement; reducing its
+shared depth admitted the intended workload without changing budgets or gates.
+See [[file:../../t/performance/typed-sharing/README.org][scoped ownership and checked publication]] for the matched source and boundaries.
+
+Public declaration contracts, source/derived rule multiplicity and fresh engine
+admission remain intact. No early node-only memoization or environment-blind
+lowered-operator sharing is introduced. Generated types without matching owned
+identity conservatively rebuild. Public fragment export/source-handle indexing
+and other unmeasured engine flows remain separate audit work.

@@ -1368,3 +1368,23 @@ contract. Inputs are not mutated, memoized or attached to published results.
 See [[file:../../t/performance/aggregate-input/README.org][aggregate input qualification]] for complete builtin-call A/B, finite numeric
 comparisons, public aggregate consumers and rejected counter observations.
 Arithmetic speedups here do not establish whole-evaluator throughput gains.
+
+* Multiple-value publication outside a private construction extent
+
+The useful compiler pattern is to check the conditions for reuse before selecting
+an expression representation. Typed traversal admits children under the current
+lexical scope and charges every occurrence; only then can frozen type/child
+identity and owned payload equality establish a reusable copy. Parameters keep
+binding checks, and generated types without matching identity rebuild.
+
+The larger construction cost occurs after lowering. An inert, fully frozen
+operator graph can use the existing private declaration construction owner and
+one complete recursive Program validation before publication. Native
+=call-with-values= separates the dynamically scoped producer from that checked
+consumer. =case-lambda= expresses the two private return contracts directly:
+Candidate publishes one Program; typed compilation publishes Program/output.
+This avoids mutable output capture and keeps ordinary constructor checks restored
+for both success and failure. It is not a public validation cache or an extension
+of the caller-supplied operator compiler protocol. See
+[[file:../../t/performance/typed-sharing/README.org][typed ownership qualification]] for whole compilation measurements and the
+rejected reuse-only experiment.

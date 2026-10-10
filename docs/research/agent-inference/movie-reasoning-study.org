@@ -2,9 +2,30 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scheme evidence to enhance complex model reasoning
 #+DATE: 2026-10-10
-#+STATUS: Historical pilots retained; compound reasoning protocol under qualification
+#+STATUS: Four complex real-model families completed; primary and adaptive costs audited
 
 * Research objective and corrected mechanism
+
+The complete English report is
+[[file:scheme-thinking-experiment-report.md][Scheme Evidence and Complex Model Thinking]].
+It prints all four complex questions, the matched protocol, every trajectory,
+first-answer accuracy, cumulative thinking, failures, repair costs and artifact
+identities. The original protocol and all adaptive follow-ups are separate.
+
+The corrected tool-history primary evaluation completed 16 trajectories:
+control 7/8 verified and Scheme 8/8 verified. On the seven jointly verified
+pairs, cumulative thinking decreased 60.92%. All assigned trajectories consumed
+560,342 control and 199,765 Scheme thinking tokens, including censoring.
+Calls increased from 21 to 33; this is a thinking reduction, not fewer rounds.
+Four-hop, recursive, scoped-union and universal-family matched reductions were
+78.56%, 23.63%, 60.16% (one verified pair), and 58.02% respectively. One recursive
+pair increased thinking 22.55%; the aggregate does not erase that negative result.
+
+All eight assisted trials published checked evidence, but no later query
+explicitly extended a published alias. These results do not isolate incremental
+evidence reuse from execution assistance. Complete provider reasoning and paired
+tool results are retained in both arms. Original action-ledger trials did not
+retain actual provider thinking history and are not pooled with these trials.
 
 The model receives the complete complex question and reasons about it. Scheme
 checks externally expressed facts, constraints and derivations, retains their

@@ -264,7 +264,8 @@ def provider(request, api_key, destination):
                            headers={'Content-Type':'application/json','Authorization':'Bearer '+api_key})
         response=connection.getresponse()
         if response.status!=200:
-            raise RuntimeError(f'provider HTTP status {response.status}')
+            detail=response.read(8192).decode('utf-8',errors='replace').replace(api_key,'[redacted]')
+            raise RuntimeError(f'provider HTTP status {response.status}: {detail}')
         last_progress=time.monotonic()
         with destination.with_suffix('.events.jsonl').open('x') as events:
             while True:
@@ -278,7 +279,7 @@ def provider(request, api_key, destination):
                 if not line.startswith(b'data: '): continue
                 event=json.loads(line[6:]); events.write(json.dumps(event,ensure_ascii=False)+'\n');events.flush()
                 kind=event.get('type','')
-                if (kind.startswith(('response.output_text.', 'response.reasoning')) or
+                if (kind.startswith(('response.output_text.', 'response.reasoning', 'response.function_call_arguments.')) or
                     kind in {'response.created','response.in_progress','response.output_item.added',
                              'response.output_item.done','response.content_part.added','response.content_part.done',
                              'response.completed','response.incomplete','response.failed'}):

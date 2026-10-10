@@ -1,0 +1,2003 @@
+{
+  "schema": "ascent.compound-inference-recovery.v1",
+  "protocol": {
+    "schema": "ascent.compound-inference-recovery-plan.v1",
+    "adaptive": true,
+    "primaryScoresChanged": false,
+    "primarySha256": "0ad3facb74456c240ec693ae868ff1532f9f224ca82c5b915a5ff87e2f96d30b",
+    "originalPlanSha256": "31064b09bcaa269c7852b0577e55fdb9dc0065b3289811cac4767e4691d7a2c5",
+    "maxAdditionalTurnsPerEpisode": 2,
+    "maxOutputTokens": 131072,
+    "maxProviderCalls": 8,
+    "episodes": [
+      {
+        "case": "recursive-clean-bridge-seed-20261111",
+        "repetition": 1,
+        "arm": "raw-fact-reasoning"
+      },
+      {
+        "case": "scoped-union-recursive-branch-seed-20261212",
+        "repetition": 0,
+        "arm": "raw-fact-reasoning"
+      },
+      {
+        "case": "scoped-union-recursive-branch-seed-20261212",
+        "repetition": 0,
+        "arm": "scheme-evidence"
+      },
+      {
+        "case": "scoped-union-recursive-branch-seed-20261212",
+        "repetition": 1,
+        "arm": "raw-fact-reasoning"
+      }
+    ],
+    "producerSha256": "3d84ad4fa55785b17793baed5b061947733995410d39bbaeaa7a8d1e6354c4bd",
+    "policy": "Continue every censored episode with the same facts, schema, action set and binary verifier, increasing the output ceiling. No gold feedback, no replacing original outcomes, and every original failed token stays charged."
+  },
+  "providerCalls": 5,
+  "additionalPeakEstimateUsd": 0.31311204,
+  "episodes": [
+    {
+      "case": "recursive-clean-bridge-seed-20261111",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "primaryEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 8982,
+        "outputIncludingReasoningTokens": 66026,
+        "observedReasoningTokens": 65990,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.002086458000121638,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 75008
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "adaptive": true,
+          "correct": true,
+          "usage": {
+            "input_tokens": 8381,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 52253,
+            "output_tokens_details": {
+              "reasoning_tokens": 51357
+            },
+            "total_tokens": 60634
+          },
+          "providerSeconds": 168.77540049998788,
+          "providerOutcome": "completed_ungraded",
+          "requestSha256": "105f04f1322007bc552a2cc726a91ec369fad9bbddcb05af8ef864711cd27eef",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "actor_ce82a8965700",
+              "actor_8c881e12f000",
+              "actor_cc4b7b7269bd",
+              "actor_7a68efebc7bb",
+              "actor_b3608ddd7fa8",
+              "actor_1485e012b943",
+              "actor_8550390034b8",
+              "actor_8141fb54d2b8",
+              "actor_46eac8cd0026",
+              "actor_2158756fd9a0",
+              "actor_5c9bde44dd83",
+              "actor_92f8ddcdffa6",
+              "actor_13a8de46c845",
+              "actor_ce5b84d9a293",
+              "actor_a7bd3e22b936",
+              "actor_c82330ad3bb0",
+              "actor_1ff8d0a7e5f1",
+              "actor_88ed934f51c7",
+              "actor_ac09c1a866db",
+              "actor_5e8862e1511f",
+              "actor_b7685efb05cf",
+              "actor_cdd67bb0b933",
+              "actor_86a4640a927d",
+              "actor_c893670da916",
+              "actor_147efc16af02",
+              "actor_1f0902ea4e8a",
+              "actor_a86f092ea739",
+              "actor_6bf65ea45adc",
+              "actor_376105f46a92",
+              "actor_3e3eeb8b0eb0",
+              "actor_1c290ecadfb4",
+              "actor_cf9c723b3888",
+              "actor_59f6363a3396",
+              "actor_0bc19f1d450b",
+              "actor_28f244b5b874",
+              "actor_0a82a95729d2",
+              "actor_4d6ddbe2be11",
+              "actor_59a581959dc1",
+              "actor_22ee00ba330f",
+              "actor_8063f8c80794",
+              "actor_e2ed75f85c22",
+              "actor_134efdc5c244",
+              "actor_96199903a5d4",
+              "actor_2d261619da5a",
+              "actor_f383d114e51f",
+              "actor_21c7f1fc68c3",
+              "actor_95711f8cfbec",
+              "actor_3b298171e851",
+              "actor_c2b8ce8e6d8d",
+              "actor_9907518833f1",
+              "actor_87b425601fa4",
+              "actor_767a320dd389",
+              "actor_013a72d0853c",
+              "actor_8d7d98ed84e3",
+              "actor_1a6728ad96f0",
+              "actor_20a84e6c75da",
+              "actor_5a22c4bc29cc",
+              "actor_e6ec575847c2",
+              "actor_5564703a3c7f",
+              "actor_ab64f2d87df0",
+              "actor_0c3e13588acf",
+              "actor_91210195715a",
+              "actor_a2bbe4d09c63",
+              "actor_fb8c53876af4",
+              "actor_d016b39ce4a1",
+              "actor_f893cd5b8f25",
+              "actor_a513d3605259",
+              "actor_87b79d2c87b5",
+              "actor_bb0ea2bbf47c",
+              "actor_cf54d2355ba2",
+              "actor_1a879bae9524",
+              "actor_6a8377f64e99",
+              "actor_9daa723f905f",
+              "actor_0a1e75b4ddd9",
+              "actor_a95fa609ce14",
+              "actor_6ce2ccb750ca",
+              "actor_80f27f8a28cf",
+              "actor_d39bd51629a1",
+              "actor_b4c03f417653",
+              "actor_25b5d4528671"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 0.0021910410141572356
+        }
+      ],
+      "setupSeconds": 0.024870374996680766,
+      "cumulativeEffort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 17363,
+        "outputIncludingReasoningTokens": 118279,
+        "observedReasoningTokens": 117347,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.004277499014278874,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": true,
+        "totalModelTokens": 135642
+      },
+      "additionalEffort": {
+        "attempts": 1,
+        "modelCalls": 1,
+        "inputTokens": 8381,
+        "outputIncludingReasoningTokens": 52253,
+        "observedReasoningTokens": 51357,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0021910410141572356,
+        "verified": true,
+        "firstVerifiedAttempt": 1,
+        "adaptive": true,
+        "totalModelTokens": 60634
+      }
+    },
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 0,
+      "arm": "raw-fact-reasoning",
+      "primaryEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 8999,
+        "outputIncludingReasoningTokens": 65786,
+        "observedReasoningTokens": 65741,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.003202916996087879,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 74785
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "adaptive": true,
+          "correct": true,
+          "usage": {
+            "input_tokens": 8357,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 120215,
+            "output_tokens_details": {
+              "reasoning_tokens": 119346
+            },
+            "total_tokens": 128572
+          },
+          "providerSeconds": 346.0942447090056,
+          "providerOutcome": "completed_ungraded",
+          "requestSha256": "bb53c8b3d8f17ff5bb82518152ddca06fc73ebd6c991d441ed8756aab21b2be0",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "actor_1c07836fb036",
+              "actor_4c308aca7a13",
+              "actor_c6d8551727e8",
+              "actor_7f7ed7225af5",
+              "actor_14ee4ca1737b",
+              "actor_df5ee6a32276",
+              "actor_9d763ce815ee",
+              "actor_e1c5b642916a",
+              "actor_62ad65895e0d",
+              "actor_57ff2ec5b6cd",
+              "actor_deed5e8fbe1c",
+              "actor_378577fc7254",
+              "actor_f13b13ffd770",
+              "actor_0ff5f4bff6f7",
+              "actor_ff4de5ca9c82",
+              "actor_83da5b7d9355",
+              "actor_8eea3f704498",
+              "actor_3cf97f9797cf",
+              "actor_e9dee961c2ad",
+              "actor_3f876373f6a0",
+              "actor_4d020b08814b",
+              "actor_61f970eae753",
+              "actor_c9b55ec53254",
+              "actor_1b84e7694556",
+              "actor_8c37a15b3675",
+              "actor_0d26301c3b3f",
+              "actor_1f966b87ed27",
+              "actor_4f92015e0a25",
+              "actor_b999f192c77c",
+              "actor_12d9e9b44c6c",
+              "actor_0a7cad841a56",
+              "actor_574b1a763d1e",
+              "actor_d48cdae4d43f",
+              "actor_e056f9d1930e",
+              "actor_6cadc0c22211",
+              "actor_5c105ad6f6c0",
+              "actor_14cd5568ecbf",
+              "actor_cd729bf2e582",
+              "actor_4f0f90835398",
+              "actor_b0768fcb6d49",
+              "actor_3291ce4a73e7",
+              "actor_94aba2af85d5",
+              "actor_d9e2bf9e5b82",
+              "actor_e570282a2231",
+              "actor_1d382de96af5",
+              "actor_7b44ca517421",
+              "actor_176ff92471a1",
+              "actor_f1a6eb68550f",
+              "actor_07c8e9c9e34b",
+              "actor_83067fda2b94",
+              "actor_abdab9be9633",
+              "actor_e73c07134e67",
+              "actor_e8c84e97444e",
+              "actor_c4c2eb57d541",
+              "actor_6338d1480059",
+              "actor_cb3da29515c0",
+              "actor_9a07cd81cb43",
+              "actor_ff15c08cc4f7",
+              "actor_f54a188a751b",
+              "actor_46762530a94c",
+              "actor_c879a0e4a8e1",
+              "actor_ca6281f18789",
+              "actor_51b3e21a5776",
+              "actor_d4704bd1fd5c",
+              "actor_3cae037d69bb",
+              "actor_bb9f6cd3405f",
+              "actor_edb357500603",
+              "actor_be8b5a89ee65",
+              "actor_e64afcfde7a9",
+              "actor_ccff2367eeae",
+              "actor_165412e061c1",
+              "actor_e999f868b72e",
+              "actor_176a9df46cfa",
+              "actor_be0ed1943b3a",
+              "actor_cdedd7495eda",
+              "actor_590240fa4ad2",
+              "actor_d93709133f0d",
+              "actor_e1fe2d330eb2"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 0.005710249999538064
+        }
+      ],
+      "setupSeconds": 0.017908082983922213,
+      "cumulativeEffort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 17356,
+        "outputIncludingReasoningTokens": 186001,
+        "observedReasoningTokens": 185087,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.008913166995625943,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": true,
+        "totalModelTokens": 203357
+      },
+      "additionalEffort": {
+        "attempts": 1,
+        "modelCalls": 1,
+        "inputTokens": 8357,
+        "outputIncludingReasoningTokens": 120215,
+        "observedReasoningTokens": 119346,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.005710249999538064,
+        "verified": true,
+        "firstVerifiedAttempt": 1,
+        "adaptive": true,
+        "totalModelTokens": 128572
+      }
+    },
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 0,
+      "arm": "scheme-evidence",
+      "primaryEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 10125,
+        "outputIncludingReasoningTokens": 65929,
+        "observedReasoningTokens": 65893,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0034434999979566783,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 76054
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "adaptive": true,
+          "correct": false,
+          "usage": {
+            "input_tokens": 8920,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 7130,
+            "output_tokens_details": {
+              "reasoning_tokens": 6378
+            },
+            "total_tokens": 16050
+          },
+          "providerSeconds": 30.549628000007942,
+          "providerOutcome": "completed_ungraded",
+          "requestSha256": "93e8184a22bf1b2842018bd62936ec0766f877393ef8b3797ed456a469f629bc",
+          "action": {
+            "action": "query",
+            "contract": {
+              "relations": [
+                {
+                  "name": "banned_actor",
+                  "types": [
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "sel_dir_film",
+                  "types": [
+                    "Film"
+                  ]
+                },
+                {
+                  "name": "e4",
+                  "types": [
+                    "Actor",
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "left",
+                  "types": [
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "mp",
+                  "types": [
+                    "Actor",
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "right",
+                  "types": [
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "ans",
+                  "types": [
+                    "Actor"
+                  ]
+                }
+              ],
+              "rules": [
+                {
+                  "head": [
+                    {
+                      "relation": "banned_actor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "banned_film",
+                      "terms": [
+                        {
+                          "var": "B"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "B"
+                        },
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "sel_dir_film",
+                      "terms": [
+                        {
+                          "var": "F"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "directed",
+                      "terms": [
+                        {
+                          "var": "F"
+                        },
+                        {
+                          "var": "D"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "citizen",
+                      "terms": [
+                        {
+                          "var": "D"
+                        },
+                        {
+                          "var": "C"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "selected_country",
+                      "terms": [
+                        {
+                          "var": "C"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "banned_film",
+                      "terms": [
+                        {
+                          "var": "F"
+                        }
+                      ],
+                      "not": true
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "e4",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "A"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "A"
+                        },
+                        {
+                          "var": "B"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "B"
+                        },
+                        {
+                          "var": "C"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "C"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "left",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "e4",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "F"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "F"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "sel_dir_film",
+                      "terms": [
+                        {
+                          "var": "F"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "banned_actor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ],
+                      "not": true
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "mp",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "mp",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mp",
+                      "terms": [
+                        {
+                          "var": "Z"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "right",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mp",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "G"
+                        },
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "sel_dir_film",
+                      "terms": [
+                        {
+                          "var": "G"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "ans",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "left",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "ans",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "right",
+                      "terms": [
+                        {
+                          "var": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "queries": [
+              "left",
+              "right",
+              "ans"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "4e3d97e3538bc78803a71a53400e667abe8aabc360195be9d1b92c195f690d86",
+            "pathIdentity": "59fbdb649167a32c6e9db817965297c0ff1434c994cb977f332bf70f1bba4da3",
+            "retainedPath": false,
+            "retainedCompleted": false,
+            "result": {
+              "relations": {
+                "left": [
+                  [
+                    "actor_57ff2ec5b6cd"
+                  ],
+                  [
+                    "actor_1c07836fb036"
+                  ],
+                  [
+                    "actor_12d9e9b44c6c"
+                  ],
+                  [
+                    "actor_4d020b08814b"
+                  ],
+                  [
+                    "actor_be0ed1943b3a"
+                  ],
+                  [
+                    "actor_176a9df46cfa"
+                  ],
+                  [
+                    "actor_cdedd7495eda"
+                  ],
+                  [
+                    "actor_0a7cad841a56"
+                  ],
+                  [
+                    "actor_14ee4ca1737b"
+                  ],
+                  [
+                    "actor_deed5e8fbe1c"
+                  ],
+                  [
+                    "actor_8c37a15b3675"
+                  ],
+                  [
+                    "actor_df5ee6a32276"
+                  ],
+                  [
+                    "actor_c9b55ec53254"
+                  ],
+                  [
+                    "actor_8eea3f704498"
+                  ],
+                  [
+                    "actor_590240fa4ad2"
+                  ],
+                  [
+                    "actor_d93709133f0d"
+                  ],
+                  [
+                    "actor_61f970eae753"
+                  ],
+                  [
+                    "actor_574b1a763d1e"
+                  ],
+                  [
+                    "actor_e1fe2d330eb2"
+                  ],
+                  [
+                    "actor_1b84e7694556"
+                  ],
+                  [
+                    "actor_ff4de5ca9c82"
+                  ],
+                  [
+                    "actor_4c308aca7a13"
+                  ],
+                  [
+                    "actor_7f7ed7225af5"
+                  ],
+                  [
+                    "actor_b999f192c77c"
+                  ],
+                  [
+                    "actor_f13b13ffd770"
+                  ]
+                ],
+                "right": [
+                  [
+                    "actor_4d020b08814b"
+                  ],
+                  [
+                    "actor_c9b55ec53254"
+                  ],
+                  [
+                    "actor_61f970eae753"
+                  ],
+                  [
+                    "actor_1b84e7694556"
+                  ],
+                  [
+                    "actor_57ff2ec5b6cd"
+                  ],
+                  [
+                    "actor_378577fc7254"
+                  ],
+                  [
+                    "actor_deed5e8fbe1c"
+                  ],
+                  [
+                    "actor_83067fda2b94"
+                  ],
+                  [
+                    "actor_62ad65895e0d"
+                  ],
+                  [
+                    "actor_07c8e9c9e34b"
+                  ],
+                  [
+                    "actor_51b3e21a5776"
+                  ],
+                  [
+                    "actor_c879a0e4a8e1"
+                  ],
+                  [
+                    "actor_d4704bd1fd5c"
+                  ],
+                  [
+                    "actor_ca6281f18789"
+                  ],
+                  [
+                    "actor_4f0f90835398"
+                  ],
+                  [
+                    "actor_cd729bf2e582"
+                  ],
+                  [
+                    "actor_b0768fcb6d49"
+                  ],
+                  [
+                    "actor_14cd5568ecbf"
+                  ],
+                  [
+                    "actor_3f876373f6a0"
+                  ],
+                  [
+                    "actor_e9dee961c2ad"
+                  ],
+                  [
+                    "actor_3cf97f9797cf"
+                  ],
+                  [
+                    "actor_8eea3f704498"
+                  ],
+                  [
+                    "actor_f13b13ffd770"
+                  ],
+                  [
+                    "actor_0ff5f4bff6f7"
+                  ],
+                  [
+                    "actor_ff4de5ca9c82"
+                  ],
+                  [
+                    "actor_cb3da29515c0"
+                  ],
+                  [
+                    "actor_83da5b7d9355"
+                  ],
+                  [
+                    "actor_6338d1480059"
+                  ],
+                  [
+                    "actor_edb357500603"
+                  ],
+                  [
+                    "actor_be8b5a89ee65"
+                  ],
+                  [
+                    "actor_3cae037d69bb"
+                  ],
+                  [
+                    "actor_bb9f6cd3405f"
+                  ],
+                  [
+                    "actor_6cadc0c22211"
+                  ],
+                  [
+                    "actor_d48cdae4d43f"
+                  ],
+                  [
+                    "actor_5c105ad6f6c0"
+                  ],
+                  [
+                    "actor_e056f9d1930e"
+                  ],
+                  [
+                    "actor_4f92015e0a25"
+                  ],
+                  [
+                    "actor_1f966b87ed27"
+                  ],
+                  [
+                    "actor_0d26301c3b3f"
+                  ],
+                  [
+                    "actor_8c37a15b3675"
+                  ],
+                  [
+                    "actor_7f7ed7225af5"
+                  ],
+                  [
+                    "actor_4c308aca7a13"
+                  ],
+                  [
+                    "actor_1c07836fb036"
+                  ],
+                  [
+                    "actor_abdab9be9633"
+                  ],
+                  [
+                    "actor_c6d8551727e8"
+                  ],
+                  [
+                    "actor_e73c07134e67"
+                  ],
+                  [
+                    "actor_ccff2367eeae"
+                  ],
+                  [
+                    "actor_e999f868b72e"
+                  ],
+                  [
+                    "actor_e64afcfde7a9"
+                  ],
+                  [
+                    "actor_165412e061c1"
+                  ],
+                  [
+                    "actor_1d382de96af5"
+                  ],
+                  [
+                    "actor_f1a6eb68550f"
+                  ],
+                  [
+                    "actor_176ff92471a1"
+                  ],
+                  [
+                    "actor_7b44ca517421"
+                  ],
+                  [
+                    "actor_b999f192c77c"
+                  ],
+                  [
+                    "actor_0a7cad841a56"
+                  ],
+                  [
+                    "actor_574b1a763d1e"
+                  ],
+                  [
+                    "actor_12d9e9b44c6c"
+                  ],
+                  [
+                    "actor_df5ee6a32276"
+                  ],
+                  [
+                    "actor_9d763ce815ee"
+                  ],
+                  [
+                    "actor_14ee4ca1737b"
+                  ],
+                  [
+                    "actor_e8c84e97444e"
+                  ],
+                  [
+                    "actor_e1c5b642916a"
+                  ],
+                  [
+                    "actor_c4c2eb57d541"
+                  ],
+                  [
+                    "actor_9a07cd81cb43"
+                  ],
+                  [
+                    "actor_ff15c08cc4f7"
+                  ],
+                  [
+                    "actor_f54a188a751b"
+                  ],
+                  [
+                    "actor_46762530a94c"
+                  ],
+                  [
+                    "actor_94aba2af85d5"
+                  ],
+                  [
+                    "actor_3291ce4a73e7"
+                  ],
+                  [
+                    "actor_e570282a2231"
+                  ],
+                  [
+                    "actor_d9e2bf9e5b82"
+                  ]
+                ],
+                "ans": [
+                  [
+                    "actor_d9e2bf9e5b82"
+                  ],
+                  [
+                    "actor_e570282a2231"
+                  ],
+                  [
+                    "actor_3291ce4a73e7"
+                  ],
+                  [
+                    "actor_94aba2af85d5"
+                  ],
+                  [
+                    "actor_46762530a94c"
+                  ],
+                  [
+                    "actor_f54a188a751b"
+                  ],
+                  [
+                    "actor_ff15c08cc4f7"
+                  ],
+                  [
+                    "actor_9a07cd81cb43"
+                  ],
+                  [
+                    "actor_c4c2eb57d541"
+                  ],
+                  [
+                    "actor_e1c5b642916a"
+                  ],
+                  [
+                    "actor_e8c84e97444e"
+                  ],
+                  [
+                    "actor_9d763ce815ee"
+                  ],
+                  [
+                    "actor_7b44ca517421"
+                  ],
+                  [
+                    "actor_176ff92471a1"
+                  ],
+                  [
+                    "actor_f1a6eb68550f"
+                  ],
+                  [
+                    "actor_1d382de96af5"
+                  ],
+                  [
+                    "actor_165412e061c1"
+                  ],
+                  [
+                    "actor_e64afcfde7a9"
+                  ],
+                  [
+                    "actor_e999f868b72e"
+                  ],
+                  [
+                    "actor_ccff2367eeae"
+                  ],
+                  [
+                    "actor_e73c07134e67"
+                  ],
+                  [
+                    "actor_c6d8551727e8"
+                  ],
+                  [
+                    "actor_abdab9be9633"
+                  ],
+                  [
+                    "actor_0d26301c3b3f"
+                  ],
+                  [
+                    "actor_1f966b87ed27"
+                  ],
+                  [
+                    "actor_4f92015e0a25"
+                  ],
+                  [
+                    "actor_e056f9d1930e"
+                  ],
+                  [
+                    "actor_5c105ad6f6c0"
+                  ],
+                  [
+                    "actor_d48cdae4d43f"
+                  ],
+                  [
+                    "actor_6cadc0c22211"
+                  ],
+                  [
+                    "actor_bb9f6cd3405f"
+                  ],
+                  [
+                    "actor_3cae037d69bb"
+                  ],
+                  [
+                    "actor_be8b5a89ee65"
+                  ],
+                  [
+                    "actor_edb357500603"
+                  ],
+                  [
+                    "actor_6338d1480059"
+                  ],
+                  [
+                    "actor_83da5b7d9355"
+                  ],
+                  [
+                    "actor_cb3da29515c0"
+                  ],
+                  [
+                    "actor_0ff5f4bff6f7"
+                  ],
+                  [
+                    "actor_3cf97f9797cf"
+                  ],
+                  [
+                    "actor_e9dee961c2ad"
+                  ],
+                  [
+                    "actor_3f876373f6a0"
+                  ],
+                  [
+                    "actor_14cd5568ecbf"
+                  ],
+                  [
+                    "actor_b0768fcb6d49"
+                  ],
+                  [
+                    "actor_cd729bf2e582"
+                  ],
+                  [
+                    "actor_4f0f90835398"
+                  ],
+                  [
+                    "actor_ca6281f18789"
+                  ],
+                  [
+                    "actor_d4704bd1fd5c"
+                  ],
+                  [
+                    "actor_c879a0e4a8e1"
+                  ],
+                  [
+                    "actor_51b3e21a5776"
+                  ],
+                  [
+                    "actor_07c8e9c9e34b"
+                  ],
+                  [
+                    "actor_62ad65895e0d"
+                  ],
+                  [
+                    "actor_83067fda2b94"
+                  ],
+                  [
+                    "actor_378577fc7254"
+                  ],
+                  [
+                    "actor_f13b13ffd770"
+                  ],
+                  [
+                    "actor_b999f192c77c"
+                  ],
+                  [
+                    "actor_7f7ed7225af5"
+                  ],
+                  [
+                    "actor_4c308aca7a13"
+                  ],
+                  [
+                    "actor_ff4de5ca9c82"
+                  ],
+                  [
+                    "actor_1b84e7694556"
+                  ],
+                  [
+                    "actor_e1fe2d330eb2"
+                  ],
+                  [
+                    "actor_574b1a763d1e"
+                  ],
+                  [
+                    "actor_61f970eae753"
+                  ],
+                  [
+                    "actor_d93709133f0d"
+                  ],
+                  [
+                    "actor_590240fa4ad2"
+                  ],
+                  [
+                    "actor_8eea3f704498"
+                  ],
+                  [
+                    "actor_c9b55ec53254"
+                  ],
+                  [
+                    "actor_df5ee6a32276"
+                  ],
+                  [
+                    "actor_8c37a15b3675"
+                  ],
+                  [
+                    "actor_deed5e8fbe1c"
+                  ],
+                  [
+                    "actor_14ee4ca1737b"
+                  ],
+                  [
+                    "actor_0a7cad841a56"
+                  ],
+                  [
+                    "actor_cdedd7495eda"
+                  ],
+                  [
+                    "actor_176a9df46cfa"
+                  ],
+                  [
+                    "actor_be0ed1943b3a"
+                  ],
+                  [
+                    "actor_4d020b08814b"
+                  ],
+                  [
+                    "actor_12d9e9b44c6c"
+                  ],
+                  [
+                    "actor_1c07836fb036"
+                  ],
+                  [
+                    "actor_57ff2ec5b6cd"
+                  ]
+                ]
+              },
+              "complete": true
+            },
+            "publishedEvidence": [
+              {
+                "relation": "evidence_59fbdb649167a32c_left",
+                "originRelation": "left",
+                "columns": [
+                  {
+                    "kind": "symbol",
+                    "domain": [
+                      "actor_d9e2bf9e5b82",
+                      "actor_569c6a458225",
+                      "actor_e570282a2231",
+                      "actor_2a93bdbb8073",
+                      "actor_3291ce4a73e7",
+                      "actor_94aba2af85d5",
+                      "actor_6ea73502fc8a",
+                      "actor_46762530a94c",
+                      "actor_90689d84fe22",
+                      "actor_f54a188a751b",
+                      "actor_ff15c08cc4f7",
+                      "actor_9a07cd81cb43",
+                      "actor_c4c2eb57d541",
+                      "actor_e1c5b642916a",
+                      "actor_e8c84e97444e",
+                      "actor_14ee4ca1737b",
+                      "actor_9d763ce815ee",
+                      "actor_df5ee6a32276",
+                      "actor_e1fe2d330eb2",
+                      "actor_12d9e9b44c6c",
+                      "actor_590240fa4ad2",
+                      "actor_574b1a763d1e",
+                      "actor_0a7cad841a56",
+                      "actor_b999f192c77c",
+                      "actor_7b44ca517421",
+                      "actor_4e6047431694",
+                      "actor_176ff92471a1",
+                      "actor_27d349019415",
+                      "actor_f1a6eb68550f",
+                      "actor_1d382de96af5",
+                      "actor_f160a2d1d254",
+                      "actor_165412e061c1",
+                      "actor_aaf64e773520",
+                      "actor_e64afcfde7a9",
+                      "actor_e999f868b72e",
+                      "actor_ccff2367eeae",
+                      "actor_e73c07134e67",
+                      "actor_c6d8551727e8",
+                      "actor_abdab9be9633",
+                      "actor_1c07836fb036",
+                      "actor_4c308aca7a13",
+                      "actor_7f7ed7225af5",
+                      "actor_cdedd7495eda",
+                      "actor_8c37a15b3675",
+                      "actor_5d62a4cc5254",
+                      "actor_0d26301c3b3f",
+                      "actor_1f966b87ed27",
+                      "actor_4f92015e0a25",
+                      "actor_e056f9d1930e",
+                      "actor_eb87cd913f56",
+                      "actor_5c105ad6f6c0",
+                      "actor_2f50ed9ef371",
+                      "actor_d48cdae4d43f",
+                      "actor_6cadc0c22211",
+                      "actor_696d5c19a093",
+                      "actor_bb9f6cd3405f",
+                      "actor_933c8689ec34",
+                      "actor_3cae037d69bb",
+                      "actor_be8b5a89ee65",
+                      "actor_edb357500603",
+                      "actor_6338d1480059",
+                      "actor_83da5b7d9355",
+                      "actor_cb3da29515c0",
+                      "actor_ff4de5ca9c82",
+                      "actor_0ff5f4bff6f7",
+                      "actor_f13b13ffd770",
+                      "actor_be0ed1943b3a",
+                      "actor_8eea3f704498",
+                      "actor_0492e84eafb2",
+                      "actor_3cf97f9797cf",
+                      "actor_e9dee961c2ad",
+                      "actor_3f876373f6a0",
+                      "actor_14cd5568ecbf",
+                      "actor_9470b122d5b3",
+                      "actor_b0768fcb6d49",
+                      "actor_ab03aab01f40",
+                      "actor_cd729bf2e582",
+                      "actor_4f0f90835398",
+                      "actor_ce42acc62124",
+                      "actor_ca6281f18789",
+                      "actor_78d32562665c",
+                      "actor_d4704bd1fd5c",
+                      "actor_c879a0e4a8e1",
+                      "actor_51b3e21a5776",
+                      "actor_07c8e9c9e34b",
+                      "actor_62ad65895e0d",
+                      "actor_83067fda2b94",
+                      "actor_deed5e8fbe1c",
+                      "actor_378577fc7254",
+                      "actor_57ff2ec5b6cd",
+                      "actor_d93709133f0d",
+                      "actor_1b84e7694556",
+                      "actor_176a9df46cfa",
+                      "actor_61f970eae753",
+                      "actor_4d020b08814b",
+                      "actor_c9b55ec53254"
+                    ]
+                  }
+                ]
+              },
+              {
+                "relation": "evidence_59fbdb649167a32c_right",
+                "originRelation": "right",
+                "columns": [
+                  {
+                    "kind": "symbol",
+                    "domain": [
+                      "actor_d9e2bf9e5b82",
+                      "actor_569c6a458225",
+                      "actor_e570282a2231",
+                      "actor_2a93bdbb8073",
+                      "actor_3291ce4a73e7",
+                      "actor_94aba2af85d5",
+                      "actor_6ea73502fc8a",
+                      "actor_46762530a94c",
+                      "actor_90689d84fe22",
+                      "actor_f54a188a751b",
+                      "actor_ff15c08cc4f7",
+                      "actor_9a07cd81cb43",
+                      "actor_c4c2eb57d541",
+                      "actor_e1c5b642916a",
+                      "actor_e8c84e97444e",
+                      "actor_14ee4ca1737b",
+                      "actor_9d763ce815ee",
+                      "actor_df5ee6a32276",
+                      "actor_e1fe2d330eb2",
+                      "actor_12d9e9b44c6c",
+                      "actor_590240fa4ad2",
+                      "actor_574b1a763d1e",
+                      "actor_0a7cad841a56",
+                      "actor_b999f192c77c",
+                      "actor_7b44ca517421",
+                      "actor_4e6047431694",
+                      "actor_176ff92471a1",
+                      "actor_27d349019415",
+                      "actor_f1a6eb68550f",
+                      "actor_1d382de96af5",
+                      "actor_f160a2d1d254",
+                      "actor_165412e061c1",
+                      "actor_aaf64e773520",
+                      "actor_e64afcfde7a9",
+                      "actor_e999f868b72e",
+                      "actor_ccff2367eeae",
+                      "actor_e73c07134e67",
+                      "actor_c6d8551727e8",
+                      "actor_abdab9be9633",
+                      "actor_1c07836fb036",
+                      "actor_4c308aca7a13",
+                      "actor_7f7ed7225af5",
+                      "actor_cdedd7495eda",
+                      "actor_8c37a15b3675",
+                      "actor_5d62a4cc5254",
+                      "actor_0d26301c3b3f",
+                      "actor_1f966b87ed27",
+                      "actor_4f92015e0a25",
+                      "actor_e056f9d1930e",
+                      "actor_eb87cd913f56",
+                      "actor_5c105ad6f6c0",
+                      "actor_2f50ed9ef371",
+                      "actor_d48cdae4d43f",
+                      "actor_6cadc0c22211",
+                      "actor_696d5c19a093",
+                      "actor_bb9f6cd3405f",
+                      "actor_933c8689ec34",
+                      "actor_3cae037d69bb",
+                      "actor_be8b5a89ee65",
+                      "actor_edb357500603",
+                      "actor_6338d1480059",
+                      "actor_83da5b7d9355",
+                      "actor_cb3da29515c0",
+                      "actor_ff4de5ca9c82",
+                      "actor_0ff5f4bff6f7",
+                      "actor_f13b13ffd770",
+                      "actor_be0ed1943b3a",
+                      "actor_8eea3f704498",
+                      "actor_0492e84eafb2",
+                      "actor_3cf97f9797cf",
+                      "actor_e9dee961c2ad",
+                      "actor_3f876373f6a0",
+                      "actor_14cd5568ecbf",
+                      "actor_9470b122d5b3",
+                      "actor_b0768fcb6d49",
+                      "actor_ab03aab01f40",
+                      "actor_cd729bf2e582",
+                      "actor_4f0f90835398",
+                      "actor_ce42acc62124",
+                      "actor_ca6281f18789",
+                      "actor_78d32562665c",
+                      "actor_d4704bd1fd5c",
+                      "actor_c879a0e4a8e1",
+                      "actor_51b3e21a5776",
+                      "actor_07c8e9c9e34b",
+                      "actor_62ad65895e0d",
+                      "actor_83067fda2b94",
+                      "actor_deed5e8fbe1c",
+                      "actor_378577fc7254",
+                      "actor_57ff2ec5b6cd",
+                      "actor_d93709133f0d",
+                      "actor_1b84e7694556",
+                      "actor_176a9df46cfa",
+                      "actor_61f970eae753",
+                      "actor_4d020b08814b",
+                      "actor_c9b55ec53254"
+                    ]
+                  }
+                ]
+              },
+              {
+                "relation": "evidence_59fbdb649167a32c_ans",
+                "originRelation": "ans",
+                "columns": [
+                  {
+                    "kind": "symbol",
+                    "domain": [
+                      "actor_d9e2bf9e5b82",
+                      "actor_569c6a458225",
+                      "actor_e570282a2231",
+                      "actor_2a93bdbb8073",
+                      "actor_3291ce4a73e7",
+                      "actor_94aba2af85d5",
+                      "actor_6ea73502fc8a",
+                      "actor_46762530a94c",
+                      "actor_90689d84fe22",
+                      "actor_f54a188a751b",
+                      "actor_ff15c08cc4f7",
+                      "actor_9a07cd81cb43",
+                      "actor_c4c2eb57d541",
+                      "actor_e1c5b642916a",
+                      "actor_e8c84e97444e",
+                      "actor_14ee4ca1737b",
+                      "actor_9d763ce815ee",
+                      "actor_df5ee6a32276",
+                      "actor_e1fe2d330eb2",
+                      "actor_12d9e9b44c6c",
+                      "actor_590240fa4ad2",
+                      "actor_574b1a763d1e",
+                      "actor_0a7cad841a56",
+                      "actor_b999f192c77c",
+                      "actor_7b44ca517421",
+                      "actor_4e6047431694",
+                      "actor_176ff92471a1",
+                      "actor_27d349019415",
+                      "actor_f1a6eb68550f",
+                      "actor_1d382de96af5",
+                      "actor_f160a2d1d254",
+                      "actor_165412e061c1",
+                      "actor_aaf64e773520",
+                      "actor_e64afcfde7a9",
+                      "actor_e999f868b72e",
+                      "actor_ccff2367eeae",
+                      "actor_e73c07134e67",
+                      "actor_c6d8551727e8",
+                      "actor_abdab9be9633",
+                      "actor_1c07836fb036",
+                      "actor_4c308aca7a13",
+                      "actor_7f7ed7225af5",
+                      "actor_cdedd7495eda",
+                      "actor_8c37a15b3675",
+                      "actor_5d62a4cc5254",
+                      "actor_0d26301c3b3f",
+                      "actor_1f966b87ed27",
+                      "actor_4f92015e0a25",
+                      "actor_e056f9d1930e",
+                      "actor_eb87cd913f56",
+                      "actor_5c105ad6f6c0",
+                      "actor_2f50ed9ef371",
+                      "actor_d48cdae4d43f",
+                      "actor_6cadc0c22211",
+                      "actor_696d5c19a093",
+                      "actor_bb9f6cd3405f",
+                      "actor_933c8689ec34",
+                      "actor_3cae037d69bb",
+                      "actor_be8b5a89ee65",
+                      "actor_edb357500603",
+                      "actor_6338d1480059",
+                      "actor_83da5b7d9355",
+                      "actor_cb3da29515c0",
+                      "actor_ff4de5ca9c82",
+                      "actor_0ff5f4bff6f7",
+                      "actor_f13b13ffd770",
+                      "actor_be0ed1943b3a",
+                      "actor_8eea3f704498",
+                      "actor_0492e84eafb2",
+                      "actor_3cf97f9797cf",
+                      "actor_e9dee961c2ad",
+                      "actor_3f876373f6a0",
+                      "actor_14cd5568ecbf",
+                      "actor_9470b122d5b3",
+                      "actor_b0768fcb6d49",
+                      "actor_ab03aab01f40",
+                      "actor_cd729bf2e582",
+                      "actor_4f0f90835398",
+                      "actor_ce42acc62124",
+                      "actor_ca6281f18789",
+                      "actor_78d32562665c",
+                      "actor_d4704bd1fd5c",
+                      "actor_c879a0e4a8e1",
+                      "actor_51b3e21a5776",
+                      "actor_07c8e9c9e34b",
+                      "actor_62ad65895e0d",
+                      "actor_83067fda2b94",
+                      "actor_deed5e8fbe1c",
+                      "actor_378577fc7254",
+                      "actor_57ff2ec5b6cd",
+                      "actor_d93709133f0d",
+                      "actor_1b84e7694556",
+                      "actor_176a9df46cfa",
+                      "actor_61f970eae753",
+                      "actor_4d020b08814b",
+                      "actor_c9b55ec53254"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "schemeSeconds": 0.24588699999731034
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "adaptive": true,
+          "correct": true,
+          "usage": {
+            "input_tokens": 15227,
+            "input_tokens_details": {
+              "cached_tokens": 8448
+            },
+            "output_tokens": 4269,
+            "output_tokens_details": {
+              "reasoning_tokens": 3400
+            },
+            "total_tokens": 19496
+          },
+          "providerSeconds": 14.358616833982524,
+          "providerOutcome": "completed_ungraded",
+          "requestSha256": "e171169214ca5ad42289278ea3594912d7ca75fdfe00952a38af2c663531c7f6",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "actor_d9e2bf9e5b82",
+              "actor_e570282a2231",
+              "actor_3291ce4a73e7",
+              "actor_94aba2af85d5",
+              "actor_46762530a94c",
+              "actor_f54a188a751b",
+              "actor_ff15c08cc4f7",
+              "actor_9a07cd81cb43",
+              "actor_c4c2eb57d541",
+              "actor_e1c5b642916a",
+              "actor_e8c84e97444e",
+              "actor_9d763ce815ee",
+              "actor_7b44ca517421",
+              "actor_176ff92471a1",
+              "actor_f1a6eb68550f",
+              "actor_1d382de96af5",
+              "actor_165412e061c1",
+              "actor_e64afcfde7a9",
+              "actor_e999f868b72e",
+              "actor_ccff2367eeae",
+              "actor_e73c07134e67",
+              "actor_c6d8551727e8",
+              "actor_abdab9be9633",
+              "actor_0d26301c3b3f",
+              "actor_1f966b87ed27",
+              "actor_4f92015e0a25",
+              "actor_e056f9d1930e",
+              "actor_5c105ad6f6c0",
+              "actor_d48cdae4d43f",
+              "actor_6cadc0c22211",
+              "actor_bb9f6cd3405f",
+              "actor_3cae037d69bb",
+              "actor_be8b5a89ee65",
+              "actor_edb357500603",
+              "actor_6338d1480059",
+              "actor_83da5b7d9355",
+              "actor_cb3da29515c0",
+              "actor_0ff5f4bff6f7",
+              "actor_3cf97f9797cf",
+              "actor_e9dee961c2ad",
+              "actor_3f876373f6a0",
+              "actor_14cd5568ecbf",
+              "actor_b0768fcb6d49",
+              "actor_cd729bf2e582",
+              "actor_4f0f90835398",
+              "actor_ca6281f18789",
+              "actor_d4704bd1fd5c",
+              "actor_c879a0e4a8e1",
+              "actor_51b3e21a5776",
+              "actor_07c8e9c9e34b",
+              "actor_62ad65895e0d",
+              "actor_83067fda2b94",
+              "actor_378577fc7254",
+              "actor_f13b13ffd770",
+              "actor_b999f192c77c",
+              "actor_7f7ed7225af5",
+              "actor_4c308aca7a13",
+              "actor_ff4de5ca9c82",
+              "actor_1b84e7694556",
+              "actor_e1fe2d330eb2",
+              "actor_574b1a763d1e",
+              "actor_61f970eae753",
+              "actor_d93709133f0d",
+              "actor_590240fa4ad2",
+              "actor_8eea3f704498",
+              "actor_c9b55ec53254",
+              "actor_df5ee6a32276",
+              "actor_8c37a15b3675",
+              "actor_deed5e8fbe1c",
+              "actor_14ee4ca1737b",
+              "actor_0a7cad841a56",
+              "actor_cdedd7495eda",
+              "actor_176a9df46cfa",
+              "actor_be0ed1943b3a",
+              "actor_4d020b08814b",
+              "actor_12d9e9b44c6c",
+              "actor_1c07836fb036",
+              "actor_57ff2ec5b6cd"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 0.0018387500022072345
+        }
+      ],
+      "setupSeconds": 0.015594166005030274,
+      "cumulativeEffort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 34272,
+        "outputIncludingReasoningTokens": 77328,
+        "observedReasoningTokens": 75671,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.25116924999747425,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": true,
+        "totalModelTokens": 111600
+      },
+      "additionalEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 24147,
+        "outputIncludingReasoningTokens": 11399,
+        "observedReasoningTokens": 9778,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.24772574999951757,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": true,
+        "totalModelTokens": 35546
+      }
+    },
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "primaryEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 8999,
+        "outputIncludingReasoningTokens": 66019,
+        "observedReasoningTokens": 65983,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0010983329848386347,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 75018
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "adaptive": true,
+          "correct": true,
+          "usage": {
+            "input_tokens": 8357,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 67258,
+            "output_tokens_details": {
+              "reasoning_tokens": 66468
+            },
+            "total_tokens": 75615
+          },
+          "providerSeconds": 221.5162296250055,
+          "providerOutcome": "completed_ungraded",
+          "requestSha256": "0ce4ff76a3e020ff8c4c68af53492cd1e8c079c721dac272e9d7aafa7d6ee2e0",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "actor_378577fc7254",
+              "actor_07c8e9c9e34b",
+              "actor_83067fda2b94",
+              "actor_57ff2ec5b6cd",
+              "actor_1c07836fb036",
+              "actor_4c308aca7a13",
+              "actor_c6d8551727e8",
+              "actor_7f7ed7225af5",
+              "actor_8eea3f704498",
+              "actor_3cf97f9797cf",
+              "actor_e9dee961c2ad",
+              "actor_3f876373f6a0",
+              "actor_d48cdae4d43f",
+              "actor_e056f9d1930e",
+              "actor_6cadc0c22211",
+              "actor_5c105ad6f6c0",
+              "actor_9a07cd81cb43",
+              "actor_ff15c08cc4f7",
+              "actor_f54a188a751b",
+              "actor_46762530a94c",
+              "actor_abdab9be9633",
+              "actor_e73c07134e67",
+              "actor_4d020b08814b",
+              "actor_61f970eae753",
+              "actor_c9b55ec53254",
+              "actor_1b84e7694556",
+              "actor_df5ee6a32276",
+              "actor_e8c84e97444e",
+              "actor_9d763ce815ee",
+              "actor_c4c2eb57d541",
+              "actor_14ee4ca1737b",
+              "actor_e1c5b642916a",
+              "actor_6338d1480059",
+              "actor_f13b13ffd770",
+              "actor_cb3da29515c0",
+              "actor_0ff5f4bff6f7",
+              "actor_14cd5568ecbf",
+              "actor_cd729bf2e582",
+              "actor_4f0f90835398",
+              "actor_b0768fcb6d49",
+              "actor_c879a0e4a8e1",
+              "actor_ca6281f18789",
+              "actor_51b3e21a5776",
+              "actor_d4704bd1fd5c",
+              "actor_3cae037d69bb",
+              "actor_bb9f6cd3405f",
+              "actor_edb357500603",
+              "actor_be8b5a89ee65",
+              "actor_3291ce4a73e7",
+              "actor_94aba2af85d5",
+              "actor_d9e2bf9e5b82",
+              "actor_e570282a2231",
+              "actor_1d382de96af5",
+              "actor_7b44ca517421",
+              "actor_176ff92471a1",
+              "actor_f1a6eb68550f",
+              "actor_8c37a15b3675",
+              "actor_0d26301c3b3f",
+              "actor_4f92015e0a25",
+              "actor_1f966b87ed27",
+              "actor_62ad65895e0d",
+              "actor_deed5e8fbe1c",
+              "actor_e64afcfde7a9",
+              "actor_ccff2367eeae",
+              "actor_165412e061c1",
+              "actor_e999f868b72e",
+              "actor_ff4de5ca9c82",
+              "actor_83da5b7d9355",
+              "actor_b999f192c77c",
+              "actor_12d9e9b44c6c",
+              "actor_0a7cad841a56",
+              "actor_574b1a763d1e",
+              "actor_be0ed1943b3a",
+              "actor_cdedd7495eda",
+              "actor_176a9df46cfa",
+              "actor_d93709133f0d",
+              "actor_590240fa4ad2",
+              "actor_e1fe2d330eb2"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 0.013985833997139707
+        }
+      ],
+      "setupSeconds": 0.00865254201926291,
+      "cumulativeEffort": {
+        "attempts": 3,
+        "modelCalls": 3,
+        "inputTokens": 17356,
+        "outputIncludingReasoningTokens": 133277,
+        "observedReasoningTokens": 132451,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.015084166981978342,
+        "verified": true,
+        "firstVerifiedAttempt": 3,
+        "adaptive": true,
+        "totalModelTokens": 150633
+      },
+      "additionalEffort": {
+        "attempts": 1,
+        "modelCalls": 1,
+        "inputTokens": 8357,
+        "outputIncludingReasoningTokens": 67258,
+        "observedReasoningTokens": 66468,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.013985833997139707,
+        "verified": true,
+        "firstVerifiedAttempt": 1,
+        "adaptive": true,
+        "totalModelTokens": 75615
+      }
+    }
+  ],
+  "completed": true
+}

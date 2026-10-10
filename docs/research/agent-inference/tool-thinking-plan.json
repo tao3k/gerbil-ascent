@@ -1,9 +1,9 @@
 {
-  "schema": "ascent.iterative-inference-plan.v2",
+  "schema": "ascent.tool-thinking-plan.v1",
   "maxTurns": 8,
   "maxProviderCalls": 128,
-  "maxOutputTokens": 65536,
-  "conservativePeakCeilingUsd": 12,
+  "maxOutputTokens": 131072,
+  "conservativePeakCeilingUsd": 24,
   "library": "libascent.dylib",
   "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
   "cases": [
@@ -6641,20 +6641,27 @@
     "raw-fact-reasoning",
     "scheme-evidence"
   ],
-  "scope": "Frozen synthetic compound tasks with opaque entities; two trials per task. Newly designed evaluation, not an independently annotated real-world benchmark.",
+  "scope": "Corrected tool-history development evaluation on the same frozen compound questions; follows diagnosis of the original protocol. Not a new independent holdout.",
   "primaryMetric": "First independently verified answer: model turns and cumulative input/output/reasoning tokens, including scans, queries, failed answers and correction. Unsatisfied episodes are censored.",
-  "sourceBoundary": "Both arms can scan identical raw facts. Assisted reasoning may submit executable claims for Scheme checking and retention at any round; no mandatory subproblem decomposition or forced evidence-first action. Untreated assisted episodes remain in the assigned-arm denominator.",
+  "sourceBoundary": "Identical raw-fact scan and binary verifier. Additional Scheme evidence checking is available in the assisted arm. No forced subproblem or forced first query. No gold values in prompts.",
   "mechanism": "The model reasons about the complete complex question. Scheme checks and retains externally expressed claims against admitted facts and rules. Source-bound evidence supports subsequent thinking; hidden model thoughts are neither read nor certified.",
   "verificationFeedback": "Only verified or not_verified; no gold answers or missing-actor list.",
   "producerHashes": {
+    "python/src/ascent_test_support/iterative_tool_inference_study.py": "0072faa5ef2b7eff1cf755f767044cc9db82ac4f7197f1bdd7cc8cc59a378a6b",
     "python/src/ascent_test_support/iterative_inference_study.py": "2fadb2985992e9b9c6dfc175e52f97abd743d2026fceebf3c2829c13b4c908f3",
     "python/src/ascent_test_support/inference_reuse_study.py": "0a77a71780666dac35711a971fea080bae09ca087c27dff509d9403327c8c159",
-    "python/src/ascent_test_support/inference_effort.py": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
     "python/src/ascent_test_support/complex_inference_workload.py": "f3b03617187a261e79ec2b39eb21c8a290c3e38ae68100938435e9ae8527e18f",
-    "python/src/ascent_test_support/model_study.py": "3c4bb43f62bf3094b826550edd39c3578d464857428d2b079ddd2e7d92326948",
+    "python/src/ascent_test_support/inference_effort.py": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
+    "python/src/ascent_test_support/model_study.py": "69e19658d5da399d81a0e7f989123fe9466aff800ff724f09be6861f606cf7aa",
     "python/src/ascent_test_support/movie_study.py": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
     "python/src/ascent_test_support/query_contract.py": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+    "python/src/ascent_test_support/complex_movie_study.py": "ad70937810023689a731d30476f884fa98e55a85d4e0d7923eaf3377054f52a3",
+    "python/src/ascent_engine/conversation.py": "975a4c0518ce207a513ff23c6479ed900521bb2c8da8720ffcc11e1320672045",
     "python/src/ascent_engine/evidence.py": "5bbc08a2006a7b25f2b97d0958ff01443a9dad14890d78aa1989225a3e5ac9e9",
     "python/src/ascent_engine/__init__.py": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d"
-  }
+  },
+  "workers": 2,
+  "originalPlanSha256": "31064b09bcaa269c7852b0577e55fdb9dc0065b3289811cac4767e4691d7a2c5",
+  "historyPolicy": "Both arms retain complete provider reasoning/message/function_call items and matched function_call_output items. Never use unsupported server conversation ids.",
+  "scheduling": "At most two spawned worker processes; one active provider call per process, one retained runtime per process, fresh evidence store per trajectory. Pair order counterbalanced."
 }

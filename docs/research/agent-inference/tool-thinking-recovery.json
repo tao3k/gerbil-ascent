@@ -1,0 +1,118 @@
+{
+  "schema": "ascent.tool-history-recovery.v1",
+  "protocol": {
+    "schema": "ascent.tool-history-recovery-plan.v1",
+    "adaptive": true,
+    "primaryScoresChanged": false,
+    "primarySha256": "4acb569a186b86163241732baae2da07445e9ff78779b07247db817e48534b52",
+    "maxAdditionalTurnsPerEpisode": 2,
+    "maxOutputTokens": 131072,
+    "producerSha256": "691b930d1c7a49e45ec4915d7ea298616cff00b970b03bd48432262c2b9e2373",
+    "policy": "Same per-call ceiling; retain full incomplete reasoning and all previous tool history. Charge original exhaustion plus all continuation calls. No gold feedback."
+  },
+  "providerCalls": 2,
+  "additionalPeakEstimateUsd": 0.047384172,
+  "episodes": [
+    {
+      "case": "scoped-union-recursive-branch-seed-20261212",
+      "repetition": 1,
+      "arm": "raw-fact-reasoning",
+      "primaryEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 9185,
+        "outputIncludingReasoningTokens": 131434,
+        "observedReasoningTokens": 131362,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0005945409939158708,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 140619
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "correct": false,
+          "adaptive": true,
+          "usage": {
+            "input_tokens": 139500,
+            "input_tokens_details": {
+              "cached_tokens": 139264
+            },
+            "output_tokens": 16265,
+            "output_tokens_details": {
+              "reasoning_tokens": 15390
+            },
+            "total_tokens": 155765
+          },
+          "providerSeconds": 51.931275209004525,
+          "providerOutcome": "completed_ungraded",
+          "priorReasoningItems": 2,
+          "feedback": [
+            {
+              "verification": "not_verified"
+            }
+          ],
+          "outcome": "unverified_continuation"
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "correct": true,
+          "adaptive": true,
+          "usage": {
+            "input_tokens": 155785,
+            "input_tokens_details": {
+              "cached_tokens": 155648
+            },
+            "output_tokens": 21654,
+            "output_tokens_details": {
+              "reasoning_tokens": 20759
+            },
+            "total_tokens": 177439
+          },
+          "providerSeconds": 67.01580716698663,
+          "providerOutcome": "completed_ungraded",
+          "priorReasoningItems": 3,
+          "feedback": [
+            {
+              "verification": "verified"
+            }
+          ],
+          "outcome": "verified_answer"
+        }
+      ],
+      "additionalEffort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 295285,
+        "outputIncludingReasoningTokens": 37919,
+        "observedReasoningTokens": 36149,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": true,
+        "totalModelTokens": 333204
+      },
+      "cumulativeEffort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 304470,
+        "outputIncludingReasoningTokens": 169353,
+        "observedReasoningTokens": 167511,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0005945409939158708,
+        "verified": true,
+        "firstVerifiedAttempt": 4,
+        "adaptive": true,
+        "totalModelTokens": 473823
+      }
+    }
+  ]
+}

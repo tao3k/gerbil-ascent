@@ -31,6 +31,13 @@ class CompoundReportAudit(unittest.TestCase):
         self.assertEqual(result['laterCallsExposedToEvidence'],2)
         self.assertEqual(result['aliasExtensionQueries'],1)
 
+    def test_malformed_provider_action_is_reported_without_normalizing_the_trial(self):
+        bad=attempt('action_failure',7)
+        bad['action']={'action':{'action':'query','contract':{'rules':[]}}}
+        result=summarize_episode({'case':'c','repetition':0,'arm':'scheme-evidence','attempts':[bad]})
+        self.assertEqual(result['actions'],['invalid action shape'])
+        self.assertEqual(result['failureAndRepairEffort']['observedReasoningTokens'],7)
+
     def test_censored_failure_is_not_in_the_success_savings_subset(self):
         plan={'cases':[{'name':'c'}],'arms':['raw-fact-reasoning','scheme-evidence'],'repetitions':1}
         result=summarize(plan,{'pairs':[],'episodes':[

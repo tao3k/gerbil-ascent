@@ -3,16 +3,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Retained source snapshots, failure recovery, and timeout admission.
-(import (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
-                 gerbil-ascent-prepare-source-snapshot source-snapshot-program
-                 source-snapshot-rows)
+(import (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
-        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-check-replacement-rows!)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-eligible?)
+        (only-in :gerbil-ascent/t/performance/source-snapshot/reference-evaluate gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
@@ -51,7 +48,6 @@
                      rows: (copy-source-rows (.ref relation 'rows))))
                relations))
          (initial-program (.o (:: @ program) relations: initial-relations))
-         (source-snapshot (gerbil-ascent-source-snapshot initial-program))
          (single-relation-name
           (and (pair? relations) (null? (cdr relations))
                (.ref (car relations) 'name)))
@@ -136,19 +132,21 @@
     ;; Source-only snapshots retain the admitted immutable declarations.
     ;; Replacement checks shape/types before publication, and the fresh native
     ;; engine rechecks every materialized row and all original fact budgets.
-    (def (prepare-source-cut rows)
-      (gerbil-ascent-prepare-source-snapshot source-snapshot
-        (vector-map (lambda (source-state)
-                      (gerbil-ascent-source-log-rows (car source-state) (cdr source-state))) rows)))
+    (def (snapshot-program rows)
+      (let (next-relations
+            (map (lambda (relation source-state)
+                   (let (source-rows (gerbil-ascent-source-log-rows (car source-state) (cdr source-state)))
+                     (.o (:: @ relation) rows: source-rows)))
+                 relations (vector->list rows)))
+        (.o (:: @ program) relations: next-relations)))
     (def (restore! rows)
       (set! engine #f)
-      (let* ((cut (prepare-source-cut rows))
-             (candidate (source-snapshot-program cut))
+      (let* ((candidate (snapshot-program rows))
              (fresh (gerbil-ascent-make-engine candidate #t
                                               engine-analysis engine-schema
                                               measure-rule-times?))
              (restored-result (and initialized? ((.ref fresh '.run)))))
-        (adopt-engine! fresh cut)
+        (adopt-engine! fresh candidate)
         (set! pending (snapshot-copy rows))
         (set! partial? #f)
         (set! clean? (and initialized?
@@ -157,14 +155,16 @@
         (set! replay-on-timeout? (and initialized? (not clean?)))
         (when clean?
           (set! last-result (or committed-result restored-result)))))
-    (def (adopt-engine! fresh cut)
-      (set! source-snapshot cut)
+    (def (adopt-engine! fresh candidate)
       (set! engine fresh)
       (set! replay-on-timeout? #f)
       (set! engine-append (.ref fresh '.append-source!))
       (set! engine-additions (.ref fresh '.source-additions))
       (set! engine-overrides (.ref fresh '.source-overrides))
-      (set! engine-base-rows (source-snapshot-rows cut)))
+      (set! engine-base-rows
+        (list->vector
+         (map (lambda (relation) (.ref relation 'rows))
+              (.ref candidate 'relations)))))
     (def (attempt thunk)
       (with-catch
        (lambda (failure) (vector #f failure))
@@ -285,8 +285,7 @@
              (vector-set! prospective index
                           (cons (copy-source-rows (cdr replacement)) []))))
          replacements)
-        (let* ((cut (prepare-source-cut prospective))
-               (candidate (source-snapshot-program cut))
+        (let* ((candidate (snapshot-program prospective))
                (fresh (gerbil-ascent-make-updated-engine
                        committed candidate committed-result
                        engine-analysis engine-schema measure-rule-times?))
@@ -298,7 +297,7 @@
           ;; Session operations are rejected for the whole transaction.
           (when (and accept-result (not (eq? #t (accept-result result))))
             (error "ASCENT replacement result was not accepted"))
-          (adopt-engine! fresh cut)
+          (adopt-engine! fresh candidate)
           (set! pending (snapshot-copy prospective))
           (set! committed (snapshot-copy prospective))
           (set! last-result result)
@@ -344,13 +343,12 @@
                    ;; already-complete validation snapshot.
                    (when (or replay-on-timeout?
                              ((.ref engine '.recomputed?)))
-                     (let* ((cut (prepare-source-cut next-pending))
-                            (candidate (source-snapshot-program cut))
+                     (let* ((candidate (snapshot-program next-pending))
                             (fresh
                              (gerbil-ascent-make-engine
                               candidate #t engine-analysis engine-schema
                               measure-rule-times?)))
-                       (adopt-engine! fresh cut)))
+                       (adopt-engine! fresh candidate)))
                    ((.ref engine '.run-timeout) duration-nanoseconds)))))
           (unless (vector-ref outcome 0)
             (recover! committed (vector-ref outcome 1)))

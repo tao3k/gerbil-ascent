@@ -1,0 +1,121 @@
+#+title: Retained source preparation, evaluation and atomic adoption
+#+date: 2026-10-10
+
+* Frozen consumer and production scope
+
+The baseline is =bd77446d4ba0f5c91e20f24ca88a02c4e771bc56=.
+=reference-evaluate.ss= and =reference-session.ss= retain the original bodies;
+only local imports are redirected to the canonical production owners and the
+frozen evaluator. Original source blobs are =c5bd32c29c35cb0e0370bb27933a6fb6e881a560=
+and =421d094b7047b48559c3dfe3fcaaa3b637c7f8e9= respectively.
+
+The private =program/source-snapshot.ss= owner carries a fixed declaration
+template and a prospective program, declaration list and row vector. Preparing
+a source cut shares unchanged row-bound declaration views. Changed views inherit
+the fixed template, bounding prototype depth across repeated updates. Preparation
+does not mutate the earlier cut; Session/engine adopt it after evaluation succeeds,
+and public batch replacement also waits for the acceptance callback.
+
+Session replacement, failure recovery and timeout replay and the engine's eager
+nonpositive append/replacement share this owner. Existing input shape/type checks,
+provider admission, budget charging, immediate errors and result ownership stay
+at their original boundaries. Identity selects a declaration view; it does not
+admit a row. Every fresh engine still checks all sources. Row lengths, callback
+results and completed solver results are not cached. The public POO Session
+contract remains the extension boundary; the private source carrier is not
+reexported by =program/interface.ss=.
+
+* Source study
+
+Gerbil =1cfb032= =compiler/optimize.ss:28-35= gives mutation/type facts a compilation
+owner; =optimize-xform.ss:108-113= records resolved facts before further traversal.
+The transferred principle is explicit ownership and lifetime, not a global cache.
+Native =with= binds the private record; =map= and =vector-map= prepare ordered
+source views. Session adoption remains the transaction boundary. Unlike compiler
+facts, source cuts persist across transactions and preparation must preserve the
+previous accepted cut on failure. Public POO declarations and methods stay intact.
+
+* Workloads and fixed admission gates
+
+All wide consumers contain input, blocker, output and 64 independent source
+declarations. Each invocation executes four complete ordered operations and reads
+every relation's ordered rows, finished status, execution path, reused names and
+active rule count. Both implementations must match a frozen steady consumer.
+
+| Scenario | Timed consumer |
+|----------+----------------|
+| transaction | Nonpositive public batch replacements with immediate solve and result publication |
+| dense | Same transactions with four rows in each of the 64 unchanged sources |
+| replay | Eager engine append, blocked result, replacement, restored result; four cycles |
+| positive | Public positive dependency invalidation and subsequent result reads |
+| small | Nonpositive transactions with only input, blocker and output |
+
+Setup and initial solve are outside these steady update measurements. These are
+complete update/publication consumers, not end-to-end Session construction or a
+universal solver benchmark. Buffered positive append remains an independent
+semantic control in the existing source-log and deletion suites.
+
+Before timing, transaction/dense/replay require <=90% median baseline CPU and
+at least 16 faster pairs out of 20. Positive/small allow 110% +20 us. Every
+allocation gate allows 110% +4096 bytes. The ASP optimized-consumer latency
+bound is 999 ms. No gate is weakened after measurement.
+
+CPU samples alternate order and include natural GC. ASP's native API measures
+20 additional complete optimized consumers. Allocation uses five alternating
+pairs with forced GC outside CPU and ASP clocks, reading VM-wide statistics slot
+16. Every phase checks full semantic equality. Allocation means cumulative bytes,
+not RSS or peak/live heap. CPU measurements run in isolation; semantic suites
+use separate native processes with capacity =min(cpu-count, suite-count)=.
+
+* Reproduction and failures
+
+Use the existing Gerbil package path, load path and Darwin OpenSSL library path
+from the repository =justfile=. Build =build.ss <absolute .gerbil/lib> <binary>=
+for the runner; append =qualify= for the five-suite qualification executable.
+Run =runner <scenario> <receipt-path>= for each scenario sequentially. Binaries,
+raw samples, logs and failures belong under ignored =.cache/ascent/source-snapshot/=.
+The production build entry gains only the new production module.
+
+Local executable admission binds program/core/table/candidate sources, the five
+suite files and their source-log/reference dependencies. An earlier build rejected
+changes in unrelated qualification files during concurrent work. The source set
+was narrowed to a conservative dependency closure; canonical whole-workspace
+production admission is unchanged.
+
+The first semantic run rejected two new assertions because they used Gambit's
+=error-exception?= for Gerbil =Error= objects. The actual rejection messages were
+correct. Tests now match the native Gerbil type and the acceptance/row messages;
+the failed receipt remains =qualify.log=. The initial source policy reported one
+missing adjacent algebraic-contract warning. Adding explicit polymorphic/domain
+signatures resolved it; =policy-final.log= reports three files and zero findings.
+
+* Accepted receipts
+
+Five independent native suites pass 61 Cases with no CHECK/CASE errors and all
+five successful child statuses. The parent completes with =OK= and exit zero in
+37.38 seconds (=qualify-accepted.log=). This run is a receipt, not a controlled
+serial/parallel speedup ratio. Tests cover complete paired consumers, unchanged
+declaration identity, abandoned preparation, acceptance rejection, invalid row
+shape, fresh validation after source mutation, source-log multiplicity, provider
+recovery, timed replay, grounded withdrawal, positive invalidation, callbacks and
+published result ownership. The earlier failed predicate assertions stay recorded.
+
+| Scenario | Baseline CPU us | Candidate CPU us | Baseline bytes | Candidate bytes | Faster CPU pairs | Gate |
+|----------+-----------------+------------------+----------------+-----------------+------------------+------|
+| transaction | 4893 | 1857 | 7564368 | 2817296 | 19/20 | pass |
+| dense | 4461 | 2256 | 8006096 | 3259664 | 19/20 | pass |
+| replay | 8377 | 2728 | 13549616 | 4268336 | 20/20 | pass |
+| positive | 4691 | 1818 | 7615664 | 2867920 | 20/20 | pass |
+| small | 954 | 911 | 1321424 | 1182992 | 16/20 | pass |
+
+Values are matched medians; each phase compares complete consumers. Every row
+also passes the ASP optimized-consumer latency gate. The five runs take 1.78,
+1.21, 1.29, 0.80 and 0.11 seconds, totaling 5.19 seconds. Construction/setup is
+outside steady update sampling. Transaction/dense/replay CPU decreases are about
+62.0%, 49.4% and 67.4%; corresponding allocation decreases are about 62.8%, 59.3%
+and 68.5%. Raw samples and ASP receipts are =*-accepted.ss= in the ignored cache.
+
+The first transaction precheck also passed (3548->1584 us, same allocation
+medians); it remains =transaction-first.ss=. Its smaller absolute times do not
+replace the final matched run. No universal solver, cold-start or wall-clock
+improvement follows from these steady source-update results.

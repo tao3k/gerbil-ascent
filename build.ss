@@ -57,6 +57,7 @@
     "program/view-replay"
     "program/view-state"
     "program/initialization"
+    "program/source-snapshot"
     "program/result"
     "program/source-log"
     "program/activation"

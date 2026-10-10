@@ -5,33 +5,31 @@
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
 (import :gerbil-ascent/core/relation-view
-        (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
+        (only-in :gerbil-ascent/program/view-state gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
                  gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
                  make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
-        (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
-        (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
-        (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
-                 gerbil-ascent-prepare-source-snapshot source-snapshot-program)
+        (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
+        (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+        (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
-        (only-in "admission.ss" gerbil-ascent-admit-source-row!
+        (only-in :gerbil-ascent/program/initialization make-initial-source-state gerbil-ascent-initialize-sources!)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation gerbil-ascent-make-published-result)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
@@ -255,7 +253,6 @@
                     (map (lambda (relation) (.ref relation 'rows))
                          relations))))
              (source-additions (and session? (make-vector count [])))
-             (source-snapshot (and session? (gerbil-ascent-source-snapshot program)))
              (staged-set-counts (and session? (make-vector count 0)))
              (staged-total 0)
              (source-overrides (and session? (make-vector count #f)))
@@ -771,12 +768,16 @@
               (or (vector-ref source-overrides index)
                   (gerbil-ascent-source-log-rows (vector-ref source-originals index)
                                                 (vector-ref source-additions index))))
-            (def (prepare-source-cut index replacement)
-              (gerbil-ascent-prepare-source-snapshot source-snapshot
-                (list->vector
-                 (map (lambda (position)
-                        (if (= position index) replacement (source-rows-at position)))
-                      (iota count)))))
+            (def (source-program-with index replacement)
+              (let (next-relations
+                    (map (lambda (relation position)
+                           (let (source-rows
+                                 (if (= position index)
+                                   replacement
+                                   (source-rows-at position)))
+                             (.o (:: @ relation) rows: source-rows)))
+                         relations (iota count)))
+                (.o (:: @ program) relations: next-relations)))
             (def (append-set-source! index row)
               ;; A Set source is buffered in its persistent recovery log; the
               ;; fixed-point boundary admits the whole batch exactly once.
@@ -825,15 +826,13 @@
                   ;; snapshot before publishing a changed fixed point.
                   (let* ((replacement
                           (append (source-rows-at index) (list row)))
-                         (cut (prepare-source-cut index replacement))
-                         (candidate (source-snapshot-program cut))
+                         (candidate (source-program-with index replacement))
                          ;; Retained publication owns public list/row reads even
                          ;; when the enclosing engine adopts only this result.
                          (result ((.ref (gerbil-ascent-make-engine
                                          candidate #t analysis schema
                                          measure-rule-times?) '.run))))
                     (set! source-count (+ source-count 1))
-                    (set! source-snapshot cut)
                     (vector-set! source-overrides index replacement)
                     (vector-set! source-additions index [])
                     (set! recompute-from-source? #t)
@@ -932,8 +931,7 @@
                 ;; Failed incremental admission may have advanced its counter
                 ;; before recording a source. Count the complete prospective
                 ;; source cut, including duplicates, before fresh evaluation.
-                (let* ((cut (prepare-source-cut index rows))
-                       (candidate (source-snapshot-program cut))
+                (let* ((candidate (source-program-with index rows))
                        (next-count
                         (apply + (map (lambda (relation)
                                         (length (.ref relation 'rows)))
@@ -944,7 +942,6 @@
                                        candidate #t analysis schema
                                        measure-rule-times?) '.run)))
                     (set! source-count next-count)
-                    (set! source-snapshot cut)
                     (vector-set! source-overrides index rows)
                     (vector-set! source-additions index [])
                     (set! recompute-from-source? #t)

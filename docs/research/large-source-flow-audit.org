@@ -196,3 +196,22 @@ above remain historical. The implementation also addresses repeated recursive
 POO construction validation, a larger measured cost than the initial lookup work.
 Retained engine transactions and scoped typed compilation remain separate work
 units; this Candidate batch does not claim gains in those paths.
+
+* Retained source preparation follow-through
+
+The second batch introduces one private persistent source-snapshot owner used
+by Session transaction/recovery/timeout preparation and engine eager replay.
+It shares unchanged row-bound POO declaration views and adopts a prospective
+cut only after the existing evaluation/acceptance boundary succeeds. It preserves
+fresh source admission, provider checks, immediate errors and solver budgets.
+[[file:../../t/performance/source-snapshot/README.org][Matched complete update/publication consumers]] report five passing A/B scenarios,
+61 native Cases and three production files with zero policy findings. Wide
+transaction, populated unchanged-source and eager replay CPU medians decrease
+by about 62.0%, 49.4% and 67.4% respectively.
+
+This addresses repeated declaration construction across retained source cuts.
+Fresh nonmonotone evaluation still solves immediately; retained row admission,
+storage, per-rule execution and their publication responsibilities remain in the
+engine. It introduces no deferred transaction semantics or new public bulk API.
+Scoped typed compilation remains a separate budget-preserving study; no gains
+are claimed for those unimplemented units.

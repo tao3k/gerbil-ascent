@@ -95,6 +95,50 @@ class EngineLibrary(unittest.TestCase):
             self.assertEqual(updated['relations'],{'path':[['c','d']],'safe':[['c','d']],'from_a':[]})
             self.assertEqual(result,held)
 
+    def test_movie_contract_shape_repair_and_current_source_witnesses(self):
+        from ascent_test_support import complex_movie_study as study
+        from ascent_test_support.complex_movie_validation import singleton_heads
+        source=json.loads(study.FIXTURE.read_text());case=study.cases()[0]
+        views=study.materialize(self.engine,source)
+        valid=study.gold(case,True);malformed=copy.deepcopy(valid)
+        malformed['rules'][0]['head']=malformed['rules'][0]['head'][0]
+        with self.assertRaises((TypeError,ValueError)):
+            study.program(source,malformed,views)
+        repaired,count=singleton_heads(malformed)
+        self.assertEqual(count,1);self.assertEqual(repaired,valid)
+        actual=study.case_program(self.engine,source,case,repaired,views)
+        self.assertTrue(self.engine.request({'operation':'compare','actual':actual,
+                        'expected':[['Q123351'],['Q208026'],['Q202589']]})['equal'])
+        changed={**case,'withdrawal':['Q25188','Q123351']};current=study.source_for(source,changed)
+        fresh_views=study.materialize(self.engine,current)
+        correct=study.case_program(self.engine,current,changed,repaired,fresh_views)
+        stale=study.case_program(self.engine,current,changed,repaired,views)
+        self.assertTrue(self.engine.request({'operation':'compare','actual':correct,
+                        'expected':[['Q208026'],['Q202589']]})['equal'])
+        self.assertFalse(self.engine.request({'operation':'compare','actual':stale,'expected':correct})['equal'])
+        union={**case,'combine':'any','scope':'both'}
+        mistaken={**union,'combine':'all'}
+        union_answer=study.case_program(self.engine,source,union,study.gold(union,True),views)
+        join_answer=study.case_program(self.engine,source,union,study.gold(mistaken,True),views)
+        self.assertEqual(len(union_answer),154);self.assertEqual(len(join_answer),3)
+        self.assertFalse(self.engine.request({'operation':'compare','actual':union_answer,'expected':join_answer})['equal'])
+        scoped,qualified,withdrawal=study.cases('country-qualified')
+        single=study.case_program(self.engine,source,qualified,study.gold(qualified,True),views)
+        self.assertEqual(single,[['Q208026']])
+        selective=study.case_program(self.engine,source,scoped,study.gold(scoped,True),views)
+        self.assertEqual(len(selective),89);self.assertIn(['Q208026'],selective)
+        current=study.source_for(source,withdrawal);updated_views=study.materialize(self.engine,current)
+        changed=study.case_program(self.engine,current,withdrawal,study.gold(withdrawal,True),updated_views)
+        self.assertEqual(len(changed),88);self.assertNotIn(['Q208026'],changed)
+        # Fusing the two branch film variables in the direct answer rule loses Hardy.
+        a,f,d,e=map(study.var,('a','f','d','e'))
+        fused={'relations':[],'rules':[study.rule(study.atom('answer',a),
+            study.atom('eligible',study.const('Q145'),f,d,a),
+            study.atom('omitted_film',f,negative=True),
+            study.atom('eligible',study.const('Q96'),f,e,a),
+            study.atom('coactor',study.const('Q38111'),f,a))]}
+        self.assertEqual(study.case_program(self.engine,source,qualified,fused,views),[])
+
     def test_all_1536_quint_lean_observations_through_cffi(self):
         corpus=json.loads((ROOT/'t/qualification/fixtures/movie-cast/conformance.json').read_text())
         actors=['a0','a1','a2'];casts=[[film,a] for film in ('movie-left','movie-right') for a in actors]

@@ -9,8 +9,18 @@ import unittest
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).parents[1]/'src'))
 from ascent_test_support import movie_study as study
+from ascent_test_support.model_study import response_outcome
 
 class MovieRequestBytes(unittest.TestCase):
+    def test_incomplete_output_is_not_an_incorrect_answer_or_account_error(self):
+        response={'terminal':{'status':'incomplete','error':None,
+                             'incomplete_details':{'reason':'max_output_tokens'}},'error':None}
+        self.assertEqual(response_outcome(response,False),'output_budget_exhausted')
+        response['terminal']={'status':'completed','error':None}
+        self.assertEqual(response_outcome(response,False),'answer_mismatch')
+        self.assertEqual(response_outcome(response,True),'correct')
+        self.assertEqual(response_outcome(response),'completed_ungraded')
+
     def test_capped_sample_continues_but_provider_failure_stops(self):
         self.assertFalse(study.provider_fatal({'terminal':{'status':'incomplete','incomplete_details':{'reason':'max_output_tokens'}},'error':None}))
         self.assertTrue(study.provider_fatal({'terminal':{'status':'failed'},'error':None}))
@@ -66,7 +76,21 @@ class MovieRequestBytes(unittest.TestCase):
             self.assertNotIn('PRIVATE-',text)
             self.assertEqual(request['reasoning'],{'effort':'high'})
             self.assertFalse(request['store'])
-            self.assertEqual(request['max_output_tokens'],4096)
+            self.assertEqual(request['max_output_tokens'],study.MAX_OUTPUT_TOKENS)
+
+    def test_contract_compilation_retains_identity_without_sending_fact_rows(self):
+        case={'template':'Actors in $left OR $right','left':'Q1','right':'Q2','blocked':'Q3'}
+        source={'cast':[['PRIVATE-FILM-ROW','PRIVATE-ACTOR-ROW']]*90}
+        compiler=study.request_for(source,case,'scheme-contract')
+        direct=study.request_for(source,case,'baseline')
+        text=compiler['input'][0]['content']
+        self.assertNotIn('PRIVATE-ACTOR-ROW',text)
+        self.assertIn('PRIVATE-ACTOR-ROW',direct['input'][0]['content'])
+        context=json.loads(text.split('\n',1)[1])
+        self.assertEqual(context['executor']['bindings']['blocked'],'Actor')
+        self.assertEqual(context['sourceIdentity'],study.digest(json.dumps(source,ensure_ascii=False,sort_keys=True).encode()))
+        other=study.request_for({'cast':[]},case,'scheme-contract')
+        self.assertNotEqual(compiler,other)
 
     def test_unknown_arms_and_oversized_requests_reject_before_transport(self):
         case={'template':'x','left':'Q1','right':'Q2','blocked':'Q3'}
@@ -94,7 +118,7 @@ class MovieRequestBytes(unittest.TestCase):
             order=[{'id':str(i),'arm':'baseline','request':'request.json','sha256':study.digest(data)} for i in range(9)]
             plan={'producerHashes':{'producer':study.digest(b'original')},'order':order,
                   'purpose':'mechanism-regression','capabilityEvaluationEligible':False,
-                  'retries':0,'conservativeScheduledUpperUsd':0.1}
+                  'retries':0,'conservativeScheduledUpperUsd':0.1,'maxOutputTokens':4096}
             (preview/'plan.json').write_text(json.dumps(plan))
             (output/'calls.jsonl').write_text(json.dumps(order[0])+'\n')
             self.assertEqual(len(study.continuation_plan(preview,output,root)[1]),1)

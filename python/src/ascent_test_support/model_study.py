@@ -27,6 +27,20 @@ FRAME_TOKEN_PADDING = 1024
 PROVIDER_IDLE_SECONDS = 45
 
 
+def response_outcome(response, correct=None):
+    """Classify observable completion separately from answer correctness."""
+    if response.get('error') is not None: return 'transport_error'
+    terminal = response.get('terminal') or {}
+    if terminal.get('error') is not None or terminal.get('status') == 'failed':
+        return 'provider_failure'
+    if terminal.get('status') == 'incomplete':
+        details = terminal.get('incomplete_details') or {}
+        return 'output_budget_exhausted' if details.get('reason') == 'max_output_tokens' else 'incomplete'
+    if terminal.get('status') != 'completed': return 'missing_terminal'
+    if correct is None: return 'completed_ungraded'
+    return 'correct' if correct else 'answer_mismatch'
+
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 

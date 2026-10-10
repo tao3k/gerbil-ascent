@@ -188,3 +188,83 @@ Scheme grading. Complex workload construction
 and qualification remain the preceding gates above. The six-question fixture
 remains a mechanism regression even with real model responses. The separate
 source-closure study's 60-call budget is not the movie study's budget.
+
+* 真实失败反思、输出上限对照与结果验证
+
+** 完整题目与事实边界
+
+本次失败诊断对应的完整题目是：
+
+#+begin_quote
+仅使用给定的有限 P161 演员事实：找出演过《盗梦空间》且不是莱昂纳多·迪卡普里奥的演员，或演过《荒野猎人》的演员。排除条件只作用于《盗梦空间》分支；最终结果按演员去重，返回演员 QID。不得引入资料之外的事实。
+#+end_quote
+
+原始英文模板：
+=Actors in $left except $blocked, OR actors in $right; the exclusion applies only to the left branch.=
+绑定为 left=Q25188（Inception）、right=Q18002795（The Revenant）、
+blocked=Q38111（Leonardo DiCaprio）。语义是
+=(Cast(Inception) \ {Leonardo}) ∪ Cast(The Revenant)=。
+莱昂纳多必须通过右分支保留；将排除条件提升到整个并集会给出错误答案。
+
+冻结事实包含 90 条 P161 记录：盗梦空间 21、荒野猎人 18、泰坦尼克号 51。
+泰坦尼克号在本题中是无关事实。事实完整性仅针对冻结有限提取，
+不声称覆盖现实世界全部演员。此题涉及两个分支、局部否定、并集、去重和证据；
+它属于机制回归，不能充当复杂多跳能力主实验。
+
+** 实验计划与目标
+
+原始九次调用在请求、来源和评分器冻结后执行：六次直接回答，三次契约编译；
+每个契约由 Scheme 对种子与迁移绑定分别执行。随后针对唯一未完成响应，
+追加两次诊断（模型反思及约束更明确的直接回答），再追加一次仅提高输出上限的对照。
+共十二次真实调用，无自动重试。后续诊断具有适应性，不能作为独立留出集。
+
+目标是区分传输失败、生成未完成和答案错误，验证模型提出的作用域契约能否在
+实际 Scheme 引擎正确执行，并检查提高输出上限后的原题结果。
+评分使用预先冻结的私有答案与实际引擎，提示不携带私有答案。
+仅提高上限的对照保持原题、事实、模型别名、high reasoning 和其余请求字段不变。
+
+** 真实结果
+
+| 条件 | 输出上限 | 输出 token | 其中 reasoning | 服务耗时秒 | 验证 |
+|------+----------+------------+----------------+------------+------|
+| 原始直接回答 | 4096 | 4096 | 4096 | 15.990 | incomplete；无可见答案 |
+| 模型反思 | 4096 | 905 | 521 | 5.778 | 契约实际执行两组绑定，2/2 正确 |
+| 明确分支执行顺序的直接回答 | 4096 | 1734 | 1567 | 6.959 | 原题正确 |
+| 原始请求仅提高上限 | 65536 | 1948 | 1781 | 7.988 | 原题正确 |
+
+原始响应 error=null、incomplete_details.reason=max_output_tokens。
+这支持“单次生成在输出上限处被截断”；没有账户余额不足的错误证据。
+官方 Responses API 的输出上限包含 reasoning 和可见输出：
+[[https://api-docs.deepseek.com/api/create-response/][DeepSeek Responses API]]。
+反思建议中“单独预留最终输出 token”是模型建议，当前并无相应独立参数实现。
+
+模型反思输出的契约是：
+#+begin_src json
+{"combine":"any","exclude_scope":"left"}
+#+end_src
+实际 Scheme 返回左分支证据 20 条、右分支证据 18 条、分支轨迹 38 条；
+去重答案为 36 名演员，包含 Q38111。两组绑定均与冻结答案吻合。
+完整 36 个 QID、证据、调用 usage 和请求/响应身份保存在
+[[file:movie-reflection-result.json][movie-reflection-result.json]]。
+原始九次成绩仍为直接回答 5/6、契约执行 6/6；未完成样本没有被改写为成功，
+也没有被描述为已观察到的错误答案。
+
+提高上限的成功请求实际只使用 1948 个输出 token，小于旧上限。
+因此一次对照不能证明提高上限是成功的唯一原因；生成路径的随机差异仍然存在。
+这些诊断也不能证明节省 40%–50% 费用或总体推理能力提高。
+
+** 自有机制落地与三位一体验证
+
+新电影实验默认 max_output_tokens=65536，可用 ASCENT_MODEL_MAX_OUTPUT_TOKENS 配置；
+已冻结的历史请求继续使用其计划中声明的上限。
+响应分类区分 output_budget_exhausted、answer_mismatch 和 provider_failure。
+契约编译上下文改为题意、Film/Actor 类型、允许的操作和来源身份，
+完整事实留在 Scheme 执行器。这项最小上下文改造已有离线回归测试，尚无新版本的真实模型收益结论。
+来源哈希用于身份绑定，不替代语义证明。
+
+实际 CFFI 已重放 1536 个 Lean/Quint 有限观察；此前 Quint TLC 探索 3072 状态并检出
+四类作用域/合并/遗忘故障。该证据限于已实现的有限算子与更新边界，
+不证明任意自然语言编译、任意程序或 C 内存安全。
+本轮 Python 回归检查协议、来源/请求身份、输出分类和进程监督；
+复杂主实验仍需冻结多跳证据、共享子目标、更新失效场景和独立留出集，
+并为新增算子同步补 Scheme 回归、Lean 条件及 Quint 故障控制。

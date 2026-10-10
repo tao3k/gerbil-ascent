@@ -59,6 +59,7 @@
     "program/lattice-frontier"
     "program/initialization"
     "program/source-snapshot"
+    "program/source-state"
     "program/result"
     "program/source-log"
     "program/activation"

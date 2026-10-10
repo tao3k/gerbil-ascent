@@ -11,9 +11,11 @@
                  make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
         (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
-        (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
-                 gerbil-ascent-prepare-source-log-snapshot source-snapshot-program)
+        (only-in "source-snapshot.ss" source-snapshot-program)
+        (only-in "source-state.ss" gerbil-ascent-source-state
+                 source-state-originals source-state-additions source-state-overrides
+                 gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
+                 gerbil-ascent-commit-source-replacement!)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
@@ -253,16 +255,12 @@
                    (not (vector-ref lattice-joins 0))
                    (gerbil-ascent-canonical-set-storage-provider?
                     (vector-ref storage-providers 0))))
-             (source-originals
-              (and session?
-                   (list->vector
-                    (map (lambda (relation) (.ref relation 'rows))
-                         relations))))
-             (source-additions (and session? (make-vector count [])))
-             (source-snapshot (and session? (gerbil-ascent-source-snapshot program)))
+             (source-state (and session? (gerbil-ascent-source-state program relations)))
+             (source-originals (and session? (source-state-originals source-state)))
+             (source-additions (and session? (source-state-additions source-state)))
              (staged-set-counts (and session? (make-vector count 0)))
              (staged-total 0)
-             (source-overrides (and session? (make-vector count #f)))
+             (source-overrides (and session? (source-state-overrides source-state)))
              (recompute-from-source? #f)
              (resume-stratum #f)
              (resume-round 0)
@@ -766,21 +764,33 @@
             (run-retained!)))
         (if session?
           (let (published (gerbil-ascent-publication-cache count))
-            (def (source-rows-at index)
-              (or (vector-ref source-overrides index)
-                  (gerbil-ascent-source-log-rows (vector-ref source-originals index)
-                                                (vector-ref source-additions index))))
-            (def (prepare-source-cut index replacement)
-              (gerbil-ascent-prepare-source-log-snapshot source-snapshot
-                (list->vector
-                 (map (lambda (position)
-                        (cond
-                         ((= position index) (cons replacement []))
-                         ((vector-ref source-overrides position)
-                          => (lambda (rows) (cons rows [])))
-                         (else (cons (vector-ref source-originals position)
-                                     (vector-ref source-additions position)))))
-                      (iota count)))))
+            (def (replay-source! mode index rows)
+              ;; Both eager update forms prepare and solve before adoption.
+              ;; Replacement recounts the complete prospective sources: failed
+              ;; incremental admission may have advanced source-count without
+              ;; recording a source. Raw borrowed roots cannot certify counts.
+              (let* ((cut (gerbil-ascent-prepare-source-replacement source-state index rows))
+                     (candidate (source-snapshot-program cut))
+                     (next-count
+                      (case mode
+                        ((append) #f)
+                        ((replace)
+                         (apply + (map (lambda (relation) (length (.ref relation 'rows)))
+                                       (.ref candidate 'relations)))))))
+                (when (and (eq? mode 'replace) (> next-count input-limit))
+                  (error "ASCENT session input fact budget exceeded"))
+                (let (result ((.ref (gerbil-ascent-make-engine
+                                     candidate #t analysis schema
+                                     measure-rule-times?) '.run)))
+                  ;; Append charges after fresh callbacks, as in the original
+                  ;; engine; replacement adopts its preflight occurrence total.
+                  (set! source-count (or next-count (+ source-count 1)))
+                  (gerbil-ascent-commit-source-replacement! source-state index rows cut)
+                  (set! recompute-from-source? #t)
+                  (when (eq? mode 'replace) (set! publication-failed? #f))
+                  (set! dirty? #f)
+                  (set! owned-publication #f)
+                  (set! last-result result))))
             (def (append-set-source! index row)
               ;; A Set source is buffered in its persistent recovery log; the
               ;; fixed-point boundary admits the whole batch exactly once.
@@ -827,23 +837,8 @@
                   ;; Negation, aggregation, and lattice-to-relation projections
                   ;; can invalidate prior rows. Re-evaluate the accepted source
                   ;; snapshot before publishing a changed fixed point.
-                  (let* ((replacement
-                          (append (source-rows-at index) (list row)))
-                         (cut (prepare-source-cut index replacement))
-                         (candidate (source-snapshot-program cut))
-                         ;; Retained publication owns public list/row reads even
-                         ;; when the enclosing engine adopts only this result.
-                         (result ((.ref (gerbil-ascent-make-engine
-                                         candidate #t analysis schema
-                                         measure-rule-times?) '.run))))
-                    (set! source-count (+ source-count 1))
-                    (set! source-snapshot cut)
-                    (vector-set! source-overrides index replacement)
-                    (vector-set! source-additions index [])
-                    (set! recompute-from-source? #t)
-                    (set! dirty? #f)
-                    (set! owned-publication #f)
-                    (set! last-result result)))
+                  (replay-source! 'append index
+                    (append (gerbil-ascent-source-state-rows source-state index) (list row))))
                  (else
                   (cond
                    ((view-relation? index)
@@ -934,29 +929,7 @@
                      (width (vector-ref arity index)))
                 (gerbil-ascent-check-replacement-rows!
                  name rows width (vector-ref field-checkers index))
-                ;; Failed incremental admission may have advanced its counter
-                ;; before recording a source. Count the complete prospective
-                ;; source cut, including duplicates, before fresh evaluation.
-                (let* ((cut (prepare-source-cut index rows))
-                       (candidate (source-snapshot-program cut))
-                       (next-count
-                        (apply + (map (lambda (relation)
-                                        (length (.ref relation 'rows)))
-                                      (.ref candidate 'relations)))))
-                  (when (> next-count input-limit)
-                    (error "ASCENT session input fact budget exceeded"))
-                  (let (result ((.ref (gerbil-ascent-make-engine
-                                       candidate #t analysis schema
-                                       measure-rule-times?) '.run)))
-                    (set! source-count next-count)
-                    (set! source-snapshot cut)
-                    (vector-set! source-overrides index rows)
-                    (vector-set! source-additions index [])
-                    (set! recompute-from-source? #t)
-                    (set! publication-failed? #f)
-                    (set! dirty? #f)
-                    (set! owned-publication #f)
-                    (set! last-result result)))))
+                (replay-source! 'replace index rows)))
             (def (run-session!)
               (if recompute-from-source? last-result
                 (begin (vector-set! published 0 #f) (run-retained! published))))

@@ -185,3 +185,24 @@ findings. Final logs/receipts are =*-traversal-final.log/.ss=,
 =gerbil-test-traversal-final.log= and =policy-traversal-final.log= in the existing
 ignored cache directory. Run the existing official test command with the five
 additional files; no custom runner or SDK build is required.
+
+* Source transaction ownership qualification
+
+=program/source-state.ss= now owns the engine's recovery log headers and accepted
+source snapshot. One evaluator boundary prepares, fully evaluates and commits
+both eager update forms. It keeps replacement recounting and append's original
+post-callback counter charge; failed candidates cannot adopt their cut. Native
+vector preparation removes temporary index and mapped log lists.
+
+All four unchanged complete consumer gates pass in =*-transaction-final.ss=:
+retained CPU 15133 -> 4407 us (20 wins), rejected 12669 -> 4604 (20), replay
+5656 -> 4030 (19), and small 426 -> 428 (6). Replay allocation is
+13442160 -> 11338800 bytes; small allocation remains 1171504 -> 1187952.
+These compare the accumulated production flow with fixed =75b1d2d=;
+they do not isolate this ownership refactor's incremental CPU gain.
+
+Official gxtest passes 131 Cases across 13 modules with final =OK=.
+The expanded six-Case =ascent-source-transaction-test.ss= also passes separately,
+superseding the initial five-Case boundary Suite. It checks frozen/current
+complete engine behavior against independent rows, errors and accepted roots.
+Logs and receipts remain under =.cache/ascent/source-materialization/=.

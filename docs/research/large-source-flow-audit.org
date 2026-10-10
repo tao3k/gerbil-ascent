@@ -21,7 +21,7 @@ audit. Existing temporal constructor gains do not establish gains in these flows
 | Work unit | Source owners | Finding | Evidence | Priority |
 |-----------+---------------+---------+----------+----------|
 | Candidate admission to receipt | candidate/program, candidate/reasoning | Repeated schema/variable scans, repeated fact selection, whole-edge graph scans | Direct loop structure; graph scan counts below | First |
-| Retained engine transaction lifecycle | program/evaluate, program/admission, program/initialization, program/session | One closure owns execution, storage, publication and mutation recovery | Named lifecycle paths and eager fallback below | Second |
+| Retained engine transaction lifecycle | program/evaluate, program/source-state, program/admission, program/initialization, program/session | Source provenance now has one owner and eager updates one commit boundary; execution/publication recovery remains in the engine | Source transaction study below; named lifecycle paths | Second |
 | Typed descriptor admission and lowering | program/higher-order | Validation and rebuilding repeat before descriptor reuse | Scoped traversal and budget contract; benefit unmeasured | Separate qualified study |
 | Public declaration construction | program/objects, program/types | Some construction lookups repeatedly scan declaration lists | Source-handle and fragment export loops | Include when profiling admission |
 | Macro expansion | program/syntax | Large module with explicit grammar owners | Native syntax dispatch already expresses major forms | No demonstrated runtime hotspot |
@@ -494,3 +494,59 @@ Case receipts and earlier CPU failures remain in ignored =.cache=; they are not
 substituted for this final source qualification. Complete final receipts are
 =.cache/ascent/source-materialization/*-traversal-final.log= and =.ss=, plus
 =gerbil-test-traversal-final.log= and =policy-traversal-final.log=.
+
+* Retained source transaction ownership
+
+The next coordinated unit separates source provenance from evaluation buffers.
+=program/source-state.ss= owns original row roots, reversed additions, accepted
+replacement roots and the current prepared snapshot in one private final record.
+Native typed slot access follows Gerbil =1cfb032= =std/struct/lru.ss:15-61=:
+private state has a concrete lifetime and its mutations stay with its owner.
+Public extensible Session declarations keep their existing POO contract.
+
+Both eager append and replacement now enter one =replay-source!= boundary in
+=program/evaluate.ss=: prepare a provisional source cut, admit its budget, run
+the complete fresh engine, then commit source provenance and retire incremental
+publication state. Failed preparation or fresh evaluation cannot adopt the cut.
+Replacement recounts every prospective declaration, including buffered duplicates
+and borrowed source headers; exact root identity does not certify a count.
+Append retains its original counter charge after fresh callbacks. Replacement
+alone clears the publication failure marker. The engine still owns storage,
+indexes, source admission counters and publication recovery; those lifetimes
+have not been hidden inside the source record.
+
+Source preparation fills its log vector directly through native =for/in-range=.
+It removes the eager update's temporary index list and mapped log list. The
+necessary log pairs, prospective snapshot and complete source validation remain.
+This is a linear preparation flow and an explicit ownership improvement;
+no incremental CPU speedup is attributed to this unit alone.
+
+Six native transaction Cases run frozen and current complete engines against
+independent expected rows, error messages and accepted log roots. They cover
+held results, duplicate budgets, buffered sources, failed fresh admission,
+failed eager append, borrowed-header recounting and failure after replay.
+The 13-module regression passes 131 Cases with final =OK=; the completed six-Case
+transaction Suite supersedes its initial five-Case receipt. ASP Policy passes
+with zero findings for the production owners and their native witnesses.
+
+The unchanged complete consumer gates all pass against fixed =75b1d2d=:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Accepted retained cuts | 15133 | 4407 | 20 | 22034992 | 11382896 |
+| Rejected prospective cuts | 12669 | 4604 | 20 | 20429104 | 11990192 |
+| Native eager replay | 5656 | 4030 | 19 | 13442160 | 11338800 |
+| Small retained control | 426 | 428 | 6 | 1171504 | 1187952 |
+
+These qualify the accumulated production flow against the original frozen
+baseline. Small-consumer timing supports nonregression only. Receipts remain
+in =.cache/ascent/source-materialization/*-transaction-final.log= and =.ss=;
+additional boundaries use =gerbil-test-transaction-boundaries.log=.
+
+CI for =1cd47ac= passed formal, all three oracle jobs and its native Scheme
+qualification, then failed the C ABI consumer's movie wire import: the test
+module had been run as source and was absent from the compiled module library.
+The workflow now invokes the existing Scheme file's =main= directly with gxi,
+using the established production library and source load paths. This native
+entry locally generated six Cases' 36 wire contracts with =MOVIE-WIRE-OK=.
+The C ABI consumer itself still requires the next exact-head CI result.

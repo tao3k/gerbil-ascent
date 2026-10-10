@@ -21,7 +21,7 @@
            (hash->list (artifact-sources)))))
 (def (main library)
   (let (sources (owned-sources))
-    (make '("program/initialization" "program/source-snapshot" "program/update-selection" "program/result" "program/reuse"
+    (make '("program/initialization" "program/source-snapshot" "program/source-state" "program/update-selection" "program/result" "program/reuse"
             "program/evaluate" "program/session"
           "t/performance/source-materialization/reference-initialization"
           "t/performance/source-materialization/reference-snapshot"

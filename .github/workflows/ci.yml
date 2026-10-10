@@ -86,7 +86,7 @@ jobs:
           export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
           export ASCENT_ENGINE_LIBRARY="$PWD/.gerbil/lib/libascent.so"
           gerbil env /usr/bin/python3 -m ascent_test_support.supervision --cpu-progress -- timeout 120s /usr/bin/python3 -m ascent_engine.build --output "$ASCENT_ENGINE_LIBRARY"
-          gerbil env /usr/bin/python3 -c 'import os; from ascent_test_support.movie_study import scheme; scheme("wire", os.environ["ASCENT_ENGINE_WIRE"])'
+          GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
           /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s /usr/bin/python3 -u -m unittest discover -s python/engine_tests -v
       - name: Qualify runtime source view loading
         run: just check-source-views

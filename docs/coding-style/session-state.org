@@ -903,3 +903,21 @@ keeps ownership aligned with its adopted result without invalidating held cuts.
 The complete accepted/rejected transaction consumers qualify substantial gains;
 eager replay misses its unchanged CPU target and remains an explicit open item.
 See [[file:../../t/performance/source-materialization/README.org][complete source handoff]] for final measurements and negative experiments.
+
+* Study: one source owner and one eager commit boundary
+
+Gerbil =1cfb032= =std/struct/lru.ss:15-61= uses private final records and typed
+slot access to keep related state mutations with their owner. The retained
+engine's =program/source-state.ss= applies that practice to original roots,
+addition logs, accepted replacements and the current source snapshot. Both
+eager update forms share a prepare/solve/commit boundary in the evaluator.
+Storage admission counters and publication recovery remain evaluation state.
+Provisional cuts never become accepted recovery state before fresh execution
+succeeds. Borrowed raw source roots require fresh occurrence counting; identity
+and readonly captured Session ownership are different contracts. Native vector
+traversal removes intermediate index/log lists without caching callback results.
+
+[[file:../research/large-source-flow-audit.org][Source transaction qualification]] records the six complete-engine boundary
+Cases, frozen controls and unchanged full consumer gates. The measurement
+qualifies the accumulated flow against its fixed baseline; this architectural
+unit alone has no claimed incremental CPU percentage.

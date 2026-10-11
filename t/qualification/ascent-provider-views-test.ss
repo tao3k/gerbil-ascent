@@ -133,7 +133,10 @@
              (limit (list (vector 'source (map (lambda (_) '(0 1)) (iota 256)))))
              (large (list (vector 'source (map (lambda (_) '(0 1)) (iota 257))))))
         (check-equal? (packed-journal limit 3 0 #f) '((0 0) (1 1) (0 1)))
-        (check-equal? (packed-journal large 3 0 #f) #f)
+        ;; The matrix is bounded by distinct vertices, not occurrences.
+        ;; Keep the historical 257-occurrence input and check independent truth.
+        (check-equal? (packed-journal large 3 0 #f) (journal-reference large 3 0 #f))
+        (check-equal? (packed-journal large 3 0 #f) '((0 0) (1 1) (0 1)))
         (check-exception (packed-journal events 2 0 #f) true)
         (check-exception (packed-journal events 3 1 #t) true)))
     (test-case "maximum packed vertex population preserves word boundaries and group isolation"
@@ -143,7 +146,7 @@
         (check-equal? (length expected) 768)
         (check-equal? (packed-journal events 768 0 #f) expected)
         ;; 512 distinct vertices exercise the highest packed diagonal bit.
-        ;; A 257th injection chooses bounded adjacency replay instead.
+        ;; The 513th distinct vertex chooses bounded adjacency replay instead.
         (check-equal? (packed-journal (cons (vector 'derived '((511 512))) events) 771 0 #f) #f)
         (displayln "JOURNAL-MAX-VERTICES-CHECKED 512") (force-output)
         (let* ((grouped (list (vector 'source

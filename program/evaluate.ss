@@ -58,7 +58,6 @@
 (export gerbil-ascent-evaluate-program gerbil-ascent-make-engine
         gerbil-ascent-make-updated-engine)
 
-(def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
@@ -969,7 +968,7 @@
                                  1000000000)))
                   (run-retained! published))))
           (validate GerbilAscentSessionContract
-                    (.o (:: @ Session.)
+                    (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
                         (.append-source!
                          (if single-set-source?
                            append-single-set-source! append-source!))

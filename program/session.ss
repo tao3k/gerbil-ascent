@@ -24,7 +24,6 @@
         gerbil-ascent-session-run
         gerbil-ascent-session-run-timeout)
 
-(def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; A retained session owns accepted source snapshots outside the mutable
 ;;; engine, allowing failed provider updates to rebuild from committed input.
@@ -366,7 +365,7 @@
               (set! partial? #t))
             result))))
     (validate GerbilAscentSessionContract
-              (.o (:: @ Session.)
+              (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
                   (.append-source!
                    (if direct-appends? direct-append-source!
                        append-source!))

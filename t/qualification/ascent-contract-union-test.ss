@@ -2,12 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite test-case)
+(import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :clan/poo/object .o .cc .ref)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/mop element? validate)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract
-                 GerbilAscentRuleContract GerbilAscentProgramContract)
+                 GerbilAscentRuleContract GerbilAscentProgramContract GerbilAscentSessionContract)
         (only-in :gerbil-ascent/program/objects
                  gerbil-ascent-atom gerbil-ascent-variable
                  gerbil-ascent-guard gerbil-ascent-generator
@@ -16,6 +16,8 @@
                  gerbil-ascent-rule gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture
                  ascent-reference-rule-contract ascent-reference-program-contract))
+(import (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-open-session))
 (export ascent-contract-union-test)
 
 (def (same-admission old-contract new-contract value expected)
@@ -24,6 +26,17 @@
 
 (def ascent-contract-union-test
   (test-suite "ASCENT native union classification"
+    (test-case "engine and retained Session share native prototype and reject invalid responsibilities"
+      (let* ((program (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1)))) [] 16 16 16))
+             (engine (gerbil-ascent-make-engine program #t))
+             (session (gerbil-ascent-open-session program))
+             (alien (.o .append-source!: void .replace-source!: void .run: void)))
+        (for-each (lambda (value)
+          (check-equal? (eq? (validate GerbilAscentSessionContract value) value) #t)
+          (for-each (lambda (slot)
+            (check-exception (validate GerbilAscentSessionContract (.cc value slot #f)) true))
+            '(.append-source! .replace-source! .run))) (list engine session))
+        (check-exception (validate GerbilAscentSessionContract alien) true)))
     (test-case "six clause prototypes retain full responsibility checks"
       (let* ((x (gerbil-ascent-variable 'x))
              (atom (gerbil-ascent-atom 'input (list x)))

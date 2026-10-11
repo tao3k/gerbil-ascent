@@ -1022,3 +1022,54 @@ reproduction are in [[file:../../t/performance/round-workspace/README.org][the r
 Remaining complete-flow work includes view/custom-storage workspace allocation,
 view/lattice global publication traversal and actor pending-list selection.
 This batch does not qualify those performance paths or multicore scaling.
+
+* Native view and lattice round workspace and commit traversal
+
+The next complete batch extends =program/round-workspace.ss= and the evaluator's
+single reset/stage/commit flow to exact native EqRel/UF/hash views and
+provider-less native lattice/hash key tables. The factory collects staging
+capabilities in one native provider fold. Mutable rows, key joins, field
+admission, budgets, index versions and immutable view publication stay with the
+evaluator; private final records and typed =using= projections own scheduling
+metadata. Gerbil =std/struct/lru.ss:19-32,45-67= and
+=std/list/list-builder.ss:5-24= supply the source patterns for affected-owner
+mutation and ordered selection construction.
+
+A view extension enters the touched set even when it emits no rows: its owner
+is pending until every relation/index/view cut in the round publishes. Effective
+lattice keys enter once without changing join/revisit order. Source view append
+registers newly published delta membership. Commit includes the old frontier,
+so exhausted deltas are cleared and view cuts retain matching generation and
+revision. Empty unchanged native lanes keep valid version-owned indexes;
+custom providers and single-relation engines preserve complete traversal.
+
+An invocation uses dense slot marks plus a touched-slot list. Deduplication is
+constant-time; declaration-order commit sorts only frontier/touched members;
+completion clears only touched marks. Reset uses =with-list-builder= to combine
+old frontier members with unique nonempty seeds without a temporary hash-copy.
+One mark vector is allocated per invocation, with no global sweep between
+rounds. Initial attempts retained another hash receiver and failed the small
+allocation control; their receipts remain rejected and are not combined with
+the final measurements.
+
+The complete evaluator and workspace freeze =d8d872c9ab4438783ba145abe38b011eaf89948d=
+with evaluator import relocation only. All eight fixed native ASP scenarios pass
+under one 90-second bound after root native build. View/lattice/mixed complete
+engine CPU improves 11947 ->7190us (39.8%), 2043 ->545us (73.3%) and
+8876 ->6679us (24.8%), with 18/20, 20/20 and 20/20 wins. View/mixed allocation
+falls 43.1% /25.8%; lattice allocation adds 4.4%. Cold, small, single-Set, dense
+multihead view and custom-index lattice controls pass the original gates; the
+small control still adds 3us and 9168 bytes. These are retained overheads.
+
+Nine native Suites pass 132 Cases, including exhaustive positive-plan parity,
+independent view/lattice closure truth, committed timeout cuts, no-op view state
+admission, field rejection/replay, join revisit order and immutable old cuts.
+ASP Policy passes both production owners with zero findings. All 48 source/SSI
+identities remain unchanged through final A/B. Full frozen provenance, discarded
+attempts, original gates and reproduction are in
+[[file:../../t/performance/view-lattice-round/README.org][the complete view/lattice qualification]].
+The preceding remote CI failed at Session POO contract validation; local native
+receipts do not clear that gate or establish its root cause. Remaining large
+flows include custom-storage workspace allocation, storage readiness preflight,
+view publication/export and actor pending-list selection. This batch does not
+qualify remote CI, those performance paths or general multicore scaling.

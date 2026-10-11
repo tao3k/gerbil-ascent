@@ -1081,3 +1081,47 @@ publication and storage-state admission remain in the evaluator.
 reductions, bounded extra allocation, controls, 113 native Cases, zero Policy
 findings and stable source/SSI evidence. These claims belong to this native
 Set/hash batch; view/custom-storage performance remains future work.
+
+* Native view and lattice publication ownership
+
+The same final layout factory now admits exact native EqRel/UF views and
+native lattice key tables with exact hash indexes. Capability flags collected
+in the provider fold decide which staging vectors exist. This extends one
+reset/write/commit flow instead of introducing separate schedulers for each
+storage kind. Derived index and storage providers keep their complete traversal
+and callback-visible version behavior; public providers remain POO values.
+
+Gerbil =std/struct/lru.ss:45-67= expresses mutation through typed projections of
+the affected nodes. Here the affected relation set governs reset and ordered
+commit, while the evaluator owns rows, budgets, indexes and immutable view cuts.
+A lattice destination enters the write set with its first effective key; later
+key revisits retain native join order. A view destination enters on every
+extension attempt, because a no-op extension still sets its storage owner to
+pending. Successful whole-round publication admits touched owners before
+clearing the write set. Failure preserves the source-replay boundary.
+
+The invocation's write membership uses a slot-mark vector and touched-slot list,
+so existing dense relation addresses avoid another hash receiver. Only touched
+marks are cleared after successful publication. Reset selection uses native
+=with-list-builder= to combine frontier members and unique nonempty stratum
+slots, excluding existing members without cloning the retained hash owner.
+There is no mark-vector sweep between rounds; row and index ownership stay with
+the evaluator. The private factories keep this extent out of public POO models.
+
+Source view append records its newly published delta. Retained timeout cuts
+carry committed frontier membership without carrying tentative writes. The old
+frontier remains in commit selection even when a relation receives no new rows,
+so clearing delta also publishes the current view identity/generation/revision.
+An unchanged empty owner preserves its existing version-owned index and cut.
+
+[[file:../../t/performance/view-lattice-round/README.org][Complete view/lattice qualification]] fixes three target engines and five controls
+before timing, with full frozen evaluator/workspace provenance, independent
+closure truth, failure/replay and timeout-cut checks. Raw receipts belong in
+ignored cache storage.
+
+Final complete-engine CPU falls 39.8% /73.3% /24.8% for view/lattice/mixed
+targets. View/mixed allocation falls 43.1% /25.8%; lattice allocation adds 4.4%,
+and the small control adds 3us /9168 bytes. These costs are retained alongside
+all five passing controls. Nine native Suites pass 132 Cases, two production
+owners pass Policy with zero findings, and 48 source/SSI identities remain
+stable. The frozen complete-engine series has one fixed 90-second bound.

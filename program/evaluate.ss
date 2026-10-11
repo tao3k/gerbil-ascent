@@ -5,7 +5,8 @@
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
-                 round-work-write! round-work-reset! round-work-commit-indices round-work-complete!)
+                 round-work-write! round-work-reset! round-work-commit-indices round-work-complete!
+                 round-work-admit-states! round-layout-view-staging? round-layout-lattice-staging?)
         (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
         (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
@@ -340,8 +341,8 @@
            (set! active-by-stratum (gerbil-ascent-activate-rules analysis)))
          (let ((pending (make-vector count []))
                (pending-seen (make-vector count #f))
-               (pending-injections (and (not round-layout) (make-vector count [])))
-               (pending-lattices (and (not round-layout) (make-vector count #f)))
+               (pending-injections (and (round-layout-view-staging? round-layout) (make-vector count [])))
+               (pending-lattices (and (round-layout-lattice-staging? round-layout) (make-vector count #f)))
                (round-work (make-round-work round-layout))
                (pending-count 0)
                (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
@@ -363,6 +364,7 @@
               (let* ((index (vector-ref atom 0))
                      (pending-table
                       (and (not (vector-ref lattice-joins index))
+                           (not (view-relation? index))
                       (or (vector-ref pending-seen index)
                           (let (fresh (make-hash-table))
                             (vector-set! pending-seen index fresh)
@@ -371,6 +373,7 @@
                   (when check (check row)))
                 (cond
                  ((view-relation? index)
+                  (round-work-write! round-work index)
                   (let (frontier (gerbil-ascent-stage-view! (vector-ref storage-states index) row
                                   (- output-limit (+ source-materialized-count derived-count pending-count))
                                   (vector-ref field-checkers index)))
@@ -399,6 +402,7 @@
                       (when check (check merged)))
                     (unless (and prior (equal? merged prior))
                       (when (lattice-frontier-stage! frontier key merged)
+                        (round-work-write! round-work index)
                         (set! pending-count (+ pending-count 1))))))
                  (else
                   (if (gerbil-ascent-canonical-set-storage-provider?
@@ -739,10 +743,13 @@
               (for-each commit! (round-work-commit-indices round-work))
               (let commit ((index 0))
                 (when (< index count) (commit! index) (commit (+ index 1)))))
-            (when round-work (round-work-complete! round-work delta-size))
             ;; Private storage state becomes reusable only after the entire
             ;; round has published rows, membership, versions and indexes.
-            (for-each gerbil-ascent-storage-admit-state! storage-owners)
+            (if round-work
+              (begin
+                (round-work-admit-states! round-work storage-states)
+                (round-work-complete! round-work delta-size))
+              (for-each gerbil-ascent-storage-admit-state! storage-owners))
             ;; Every required SCC is already closed; this one owner commit
             ;; installs the complete cut, without another shared solver round.
             (when component-mode? (set! active? #f))
@@ -868,7 +875,8 @@
                         (vector-set! view-journals index
                           (cons (gerbil-ascent-view-journal-event 'source (list row)
                                   (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index))) (vector-ref view-journals index)))
-                        (commit-view! index (gerbil-ascent-add-frontier (vector-ref delta index) frontier)))))
+                        (commit-view! index (gerbil-ascent-add-frontier (vector-ref delta index) frontier))
+                        (round-layout-source! round-layout index))))
                    (built-in-set? (append-set-source! index row))
                    (else
                   (begin

@@ -906,3 +906,39 @@ preserve the premise, with no public settings or compatibility protocol.
 
 [[file:../../t/performance/uf-axis/README.org][Fresh product and replay-axis qualification]] records complete engine CPU gains,
 unchanged native allocation and the explicit dense-closure space boundary.
+
+* Density-aware representation belongs to the adjacency owner
+
+Keep one private adjacency contract for membership, cardinality, iteration,
+commit and retirement. Choose sparse hashing or a compact native word vector
+from admitted degree and required payload, rather than adding representation
+branches throughout the engine. Build shared birth-to-root indexing lazily,
+clear retired slots, and release it on complete SCC collapse. Historical IDs
+must not force each low-degree node to allocate a matrix prefix.
+
+Gerbil's =std/vector/extensible.ss= separates owned backing storage from its
+logical span and grows geometrically. Use its native =ExtensibleVector= for
+shared root indexing. Its bit accessors also demonstrate direct private-vector
+access after typed ownership and bounds establish the primitive's premises.
+Small =defrules= expressions can preserve a hot storage contract without a
+function call; evaluate each macro operand once. Do not extend unchecked access
+to caller-owned data or omit the admission boundary.
+
+Publication may use a temporary birth-indexed table of frozen member records,
+bounded by existing bitmap span. Resolve each dense arc directly to its frozen
+record; keep scalar writer order separate. Retained cuts must borrow only the
+persistent member spines and rectangles, never mutable live indexes. Qualify
+both insertion and dense freeze: allocation savings alone can hide CPU costs
+in bitmap lookup or publication.
+
+[[file:../../t/performance/uf-dense/README.org][Dense UF storage qualification]] records rejected representations, native
+flow controls, bitmap payload and registry capacity separately from VM allocation.
+
+Read the whole native helper flow before placing it on every insertion. In
+=ExtensibleVector-fill-pointer-set!=, =let/cc= belongs to the growth boundary.
+Reserve initialized capacity geometrically and invoke that helper only across
+span boundaries. A method that usually performs no resize can still allocate
+for control flow. Likewise, a singleton product can select one writer for the
+entire source axis, eliminating per-source captured closures while preserving
+commit order. Native sparse and grouped controls must compare historical
+storage directly to expose these costs.

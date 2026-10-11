@@ -3,18 +3,127 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Private union-find SCCs and reachability between component roots.
 ;;; Concrete frontier rows are returned, never retained in this provider.
-(import :gerbil-ascent/core/relation-view)
+(import :gerbil-ascent/core/relation-view (only-in :std/vector/extensible make-ExtensibleVector ExtensibleVector-ref
+                 ExtensibleVector-set! ExtensibleVector-fill-pointer
+                 ExtensibleVector-fill-pointer-set! ExtensibleVector->list))
 (export gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze
         gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
         gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
         gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
         gerbil-ascent-trrel-uf-view-lookup
-        gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate
+        gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-resource-observation gerbil-ascent-trrel-uf-validate
         gerbil-ascent-trrel-uf-replay-insert! gerbil-ascent-trrel-uf-count-insert!)
 (defstruct uf-node (parent members size reach predecessors order))
-(defstruct uf-group (nodes roots next-order indexed? population))
+(defstruct uf-group (nodes roots next-order indexed? population registry))
 (defstruct uf-insertion (group-key group row left-node right-node a b) final: #t)
 (defstruct frozen-members (rows count) final: #t)
+;; Primitive accesses below are confined to private allocated buffers; reads
+;; check word bounds and writes establish capacity before mutation.
+;; Dense adjacency uses 32-bit words and a group-owned birth registry.
+;; Sparse maps retain eq hashing below 32 arcs or above two bytes per arc.
+;; No bitmap is indexed by a user value. Historical ID gaps stay sparse.
+(defstruct compact-reach (bits registry size) final: #t)
+;; : (-> RootTable Natural)
+(def (reach-length table)
+  (if (compact-reach? table) (compact-reach-size table) (hash-length table)))
+;; : (-> RootTable UfNode Boolean)
+;;; Membership is read-only during preflight. Evaluate each operand once and
+;;; reject words beyond owned capacity before reading the private bit buffer.
+(defrules reach-get ()
+  ((_ table-expression node-expression)
+   (let ((table table-expression) (node node-expression))
+     (if (compact-reach? table)
+       (let* ((id (uf-node-order node)) (word (fxarithmetic-shift id -5))
+              (bits (compact-reach-bits table)))
+         (and (fx< word (##u32vector-length bits))
+              (not (fxzero? (fxand (##u32vector-ref bits word)
+                                  (fxarithmetic-shift 1 (fxand id 31)))))))
+       (hash-get table node)))))
+;; : (-> RootTable UfNode Void)
+(def (reach-remove! table node)
+  (if (compact-reach? table)
+    (let* ((id (uf-node-order node)) (word (fxarithmetic-shift id -5))
+           (bits (compact-reach-bits table)) (bit (fxarithmetic-shift 1 (fxand id 31))))
+      (when (and (fx< word (##u32vector-length bits)) (not (fxzero? (fxand (##u32vector-ref bits word) bit))))
+        (##u32vector-set! bits word (fxand (##u32vector-ref bits word) (fxnot bit)))
+        (set! (compact-reach-size table) (- (compact-reach-size table) 1))))
+    (hash-remove! table node)))
+;; : (-> (-> Natural Void) CompactReach Void)
+(def (compact-reach-for-each-id consume table)
+  (let (bits (compact-reach-bits table))
+    (let words ((word 0))
+      (when (fx< word (##u32vector-length bits))
+        (let scan ((mask (##u32vector-ref bits word)))
+          (unless (fxzero? mask)
+            (consume (fx+ (fxarithmetic-shift word 5) (first-set-bit mask)))
+            (scan (fxand mask (fx- mask 1)))))
+        (words (fx+ word 1))))))
+;; : (-> (-> UfNode Boolean Void) RootTable Void)
+(def (reach-for-each consume table)
+  (if (compact-reach? table)
+    (compact-reach-for-each-id
+      (lambda (id) (consume (ExtensibleVector-ref (compact-reach-registry table) id) #t)) table)
+    (hash-for-each consume table)))
+;; : (-> RootTable [UfNode])
+(def (reach-keys table)
+  (if (compact-reach? table)
+    (let (keys []) (reach-for-each (lambda (n _) (set! keys (cons n keys))) table) keys)
+    (hash-keys table)))
+;; Caller certifies this arc is missing, including reverse-index construction.
+;; : (-> CompactReach UfNode Void)
+;;; Commit owns capacity and missing-arc admission before entering this macro.
+;;; Its cached degree changes once, without another membership probe.
+(defrules compact-reach-put! ()
+  ((_ table-expression node-expression)
+   (let ((table table-expression) (node node-expression))
+     (let* ((id (uf-node-order node)) (word (fxarithmetic-shift id -5))
+            (bits (compact-reach-bits table)))
+       (##u32vector-set! bits word
+         (fxior (##u32vector-ref bits word) (fxarithmetic-shift 1 (fxand id 31))))
+       (set! (compact-reach-size table) (+ (compact-reach-size table) 1))))))
+;; SCC retirement may leave an oversized bitmap with only a few live arcs.
+;; Normalize once after retirement, never on each individual bit removal.
+;; : (-> RootTable RootTable)
+(def (reach-retired table)
+  (if (and (compact-reach? table)
+           (> (* 4 (##u32vector-length (compact-reach-bits table)))
+              (* 4 (max 32 (compact-reach-size table)))))
+    (let (sparse (make-hash-table-eq))
+      (reach-for-each (lambda (n _) (hash-put! sparse n #t)) table) sparse)
+    table))
+;; Geometric growth follows std/vector/extensible's owned-buffer contract.
+;; Admission has succeeded before allocation, promotion or registry installation.
+;; : (-> RootTable UfNode UfGroup RootTable)
+(def (reach-put! table node group)
+  (if (compact-reach? table)
+    (let* ((bits (compact-reach-bits table)) (required (+ 1 (quotient (uf-node-order node) 32))))
+      (cond
+        ((<= required (##u32vector-length bits)) (compact-reach-put! table node) table)
+        ((<= (* required 4) (* 2 (+ (compact-reach-size table) 1)))
+         (let (grown (make-u32vector (max required (* 2 (##u32vector-length bits))) 0))
+           (subu32vector-move! bits 0 (##u32vector-length bits) grown 0)
+           (set! (compact-reach-bits table) grown)
+           (compact-reach-put! table node) table))
+        (else
+          ;; A remote birth ID never forces an oversized dense allocation.
+          (let (sparse (make-hash-table-eq))
+            (reach-for-each (lambda (n _) (hash-put! sparse n #t)) table)
+            (hash-put! sparse node #t) sparse))))
+    (begin
+      (hash-put! table node #t)
+      (let (degree (hash-length table))
+        (if (or (< degree 32) (not (zero? (bitwise-and degree (- degree 1))))) table
+          (let (maximum 0)
+            (hash-for-each (lambda (n _) (set! maximum (max maximum (uf-node-order n)))) table)
+            (let (words (+ 1 (quotient maximum 32)))
+              (if (> (* words 4) (* 2 degree)) table
+                (let* ((registry (or (uf-group-registry group)
+                                    (let (index (make-ExtensibleVector (make-vector (+ 1 (uf-group-next-order group)) #f) (+ 1 (uf-group-next-order group))))
+                                      (for-each (lambda (n) (ExtensibleVector-set! index (uf-node-order n) n)) (uf-group-roots group))
+                                      (set! (uf-group-registry group) index) index)))
+                       (packed (make-compact-reach (make-u32vector words 0) registry 0)))
+                  (hash-for-each (lambda (n _) (compact-reach-put! packed n)) table)
+                  packed)))))))))
 ;; : (-> UfState)
 (def (gerbil-ascent-trrel-uf-state) (make-hash-table))
 ;; Preflight reads parent links without compression, preserving rejected state.
@@ -23,7 +132,7 @@
   (if (uf-node-parent node) (root (uf-node-parent node)) node))
 ;; : (-> UfNode UfNode Boolean)
 (def (reachable? from to)
-  (or (eq? from to) (hash-get (uf-node-reach from) to)))
+  (or (eq? from to) (reach-get (uf-node-reach from) to)))
 ;; : (-> Value Natural Boolean UfNode)
 (def (fresh node order indexed?)
   (make-uf-node #f (list node) 1 (make-hash-table-eq)
@@ -33,28 +142,28 @@
 ;; in writer order. Selection compares a sorting bound with the population.
 ;; : (-> UfNode RootTable [UfNode] Natural [UfNode])
 (def (ordered-neighbors node table roots population)
-  (let (degree (hash-length table))
+  (let (degree (reach-length table))
     (cond
       ((zero? degree) (list node))
       ((>= (* degree (integer-length degree)) population)
-       (filter (lambda (n) (or (eq? n node) (hash-get table n))) roots))
+       (filter (lambda (n) (or (eq? n node) (reach-get table n))) roots))
       (else (list-sort (lambda (a b) (> (uf-node-order a) (uf-node-order b)))
-                      (cons node (hash-keys table)))))))
+                      (cons node (reach-keys table)))))))
 ;; : (-> [UfNode] Void)
-(def (rebuild-predecessors! roots)
+(def (rebuild-predecessors! group roots)
   (for-each (lambda (n) (set! (uf-node-predecessors n) (make-hash-table-eq))) roots)
   (for-each (lambda (n)
-    (hash-for-each (lambda (target _)
-      (hash-put! (uf-node-predecessors target) n #t)) (uf-node-reach n))) roots))
+    (reach-for-each (lambda (target _)
+      (set! (uf-node-predecessors target) (reach-put! (uf-node-predecessors target) n group))) (uf-node-reach n))) roots))
 ;; Closure supplies every external edge to/from the surviving winner already.
 ;; Retire absorbed reverse keys before clearing any component's storage.
 ;; : (-> UfNode [UfNode] Void)
 (def (retire-cycle-predecessors! winner cycle)
   (for-each (lambda (n)
     (unless (eq? n winner)
-      (hash-for-each (lambda (target _)
-        (hash-remove! (uf-node-predecessors target) n)) (uf-node-reach n)))
-    (hash-remove! (uf-node-predecessors winner) n)) cycle))
+      (reach-for-each (lambda (target _)
+        (reach-remove! (uf-node-predecessors target) n)) (uf-node-reach n)))
+    (reach-remove! (uf-node-predecessors winner) n)) cycle))
 ;; Complete closure already gives the winner every outgoing cycle edge.
 ;; Keep its owned reach table; only absorbed keys need removal.
 ;; : (-> UfGroup [UfNode] [UfNode] Void)
@@ -84,19 +193,26 @@
     (set! roots (filter (lambda (n) (not (uf-node-parent n))) roots))
     (set! (uf-group-roots group) roots)
     (set! (uf-group-population group) (length roots))
+    (when (null? (cdr roots)) (set! (uf-group-registry group) #f))
     ;; Canonical pre-merge keys plus complete closure mean any external
     ;; predecessor of an absorbed root already reaches the winner. Other DAG
     ;; keys need no rewrite. Iterate a stable list, never the changed table.
     (for-each (lambda (n)
       (if (and (eq? n winner)
                (or (null? (cdr roots))
-                   (= (hash-length (uf-node-reach n)) (- (length cycle) 1))))
+                   (= (reach-length (uf-node-reach n)) (- (length cycle) 1))))
         ;; No external target: release the old backing array as well as keys.
         (set! (uf-node-reach n) (make-hash-table-eq))
-        (when (or (eq? n winner) (hash-get (uf-node-reach n) winner))
+        (when (or (eq? n winner) (reach-get (uf-node-reach n) winner))
           (for-each (lambda (target)
             (when (or (not (eq? target winner)) (eq? n winner))
-              (hash-remove! (uf-node-reach n) target))) cycle)))) roots)))
+              (reach-remove! (uf-node-reach n) target))) cycle)))) roots)
+    (for-each (lambda (n)
+      (set! (uf-node-reach n) (reach-retired (uf-node-reach n)))
+      (when (uf-node-predecessors n)
+        (set! (uf-node-predecessors n) (reach-retired (uf-node-predecessors n))))) roots)
+    (when (uf-group-registry group)
+      (for-each (lambda (n) (unless (eq? n winner) (ExtensibleVector-set! (uf-group-registry group) (uf-node-order n) #f))) cycle))))
 
 ;; : (forall (a) (-> UfState Row Natural (-> [Rectangle] Natural Natural a) a))
 ;; : (-> UfState Row Natural FrontierPublisher Publication)
@@ -108,7 +224,7 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair)) (right (cadr pair))
          (stored (hash-get groups group-key))
-         (group (or stored (make-uf-group (make-hash-table) [] 0 #f 0)))
+         (group (or stored (make-uf-group (make-hash-table) [] 0 #f 0 #f)))
          (nodes (uf-group-nodes group))
          (left-node (hash-get nodes left)) (right-node (hash-get nodes right))
          (a (if left-node (root left-node) (fresh left (+ 2 (uf-group-next-order group)) (uf-group-indexed? group))))
@@ -200,29 +316,45 @@
       (unless right-node (hash-put! nodes right b))
       (set! (uf-group-roots group) roots)
       (set! (uf-group-population group) population)
-      (set! (uf-group-next-order group) (+ 2 (uf-group-next-order group))))
+      (set! (uf-group-next-order group) (+ 2 (uf-group-next-order group)))
+      (when (uf-group-registry group)
+        (let (registry (uf-group-registry group))
+          ;; Native fill-pointer growth captures a continuation. Enter it only
+          ;; at geometric reserved-span boundaries, not for every admitted birth.
+          (when (>= (uf-group-next-order group) (ExtensibleVector-fill-pointer registry))
+            (ExtensibleVector-fill-pointer-set! registry
+              (arithmetic-shift 1 (integer-length (uf-group-next-order group))) #f 1))
+          (for-each (lambda (n) (ExtensibleVector-set! registry (uf-node-order n) n)) new))))
     ;; Keep small components on the cheaper legacy scan. Activate the reverse
     ;; map only after successful preflight, so rejected admission is read-only.
     (unless (uf-group-indexed? group)
       (when (> population 64)
         (set! (uf-group-indexed? group) #t)
-        (rebuild-predecessors! roots)))
+        (rebuild-predecessors! group roots)))
     ;; If every root collapses, all changed arcs would immediately disappear.
     ;; Concrete rectangles were emitted above; no external reach key survives.
     (def (commit-arc! p s)
-        (hash-put! (uf-node-reach p) s #t)
+        (set! (uf-node-reach p) (reach-put! (uf-node-reach p) s group))
         (when (uf-group-indexed? group)
-          (hash-put! (uf-node-predecessors s) p #t)))
+          (set! (uf-node-predecessors s) (reach-put! (uf-node-predecessors s) p group))))
     (unless (and cycle (= (length cycle) population))
       (if rectangles?
         (for-each (lambda (change) (commit-arc! (car change) (cdr change))) changes)
         ;; Each root pair is unique. Installing its own arc changes no other
         ;; pair's admission test; no changes spine is needed for count consumers.
-        (let (targets (reverse succs))
-          (for-each (lambda (p)
-            (for-each (lambda (s)
-              (when (or fresh-product? (not (reachable? p s))) (commit-arc! p s))) targets))
-            (reverse preds)))))
+        (let ((sources (reverse preds)) (targets (reverse succs)))
+          ;; A singleton sink needs one writer for the whole source axis,
+          ;; rather than a newly captured inner writer for every source root.
+          (match targets
+            ([target]
+             (for-each (lambda (p)
+               (when (or fresh-product? (not (reachable? p target)))
+                 (commit-arc! p target))) sources))
+            (else
+             (for-each (lambda (p)
+               (for-each (lambda (s)
+                 (when (or fresh-product? (not (reachable? p s)))
+                   (commit-arc! p s))) targets)) sources))))))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
     ;; Merge toward the largest component, bounding union parent depth.
     (when cycle
@@ -236,9 +368,35 @@
     (hash-for-each (lambda (_ g)
       (set! nodes (+ nodes (hash-length (uf-group-nodes g))))
       (set! components (+ components (length (uf-group-roots g))))
-      (for-each (lambda (n) (set! arcs (+ arcs (hash-length (uf-node-reach n)))))
+      (for-each (lambda (n) (set! arcs (+ arcs (reach-length (uf-node-reach n)))))
                 (uf-group-roots g))) groups)
     (vector nodes components arcs)))
+
+;; Physical allocation units, not byte sizes or a whole-engine memory estimate.
+;; Fields: sparse entries, occupied words, packed arcs, live registry keys,
+;; bitmap payload bytes and registry backing-vector slots (including holes).
+;; Both forward and reverse adjacency are counted; the registry is counted once.
+;; : (-> UfState (Vector Natural))
+(def (gerbil-ascent-trrel-uf-resource-observation groups)
+  (let ((sparse 0) (chunks 0) (packed 0) (registry 0) (bytes 0) (slots 0))
+    (def (account table)
+      (when table
+        (if (compact-reach? table)
+          (begin (let (bits (compact-reach-bits table))
+                   (set! bytes (+ bytes (* 4 (##u32vector-length bits))))
+                   (let loop ((i 0))
+                     (when (< i (##u32vector-length bits))
+                       (unless (zero? (##u32vector-ref bits i)) (set! chunks (+ chunks 1)))
+                       (loop (+ i 1)))))
+                 (set! packed (+ packed (compact-reach-size table))))
+          (set! sparse (+ sparse (hash-length table))))))
+    (hash-for-each (lambda (_ group)
+      (when (uf-group-registry group)
+        (set! registry (+ registry (uf-group-population group)))
+        (set! slots (+ slots (length (ExtensibleVector->list (uf-group-registry group))))))
+      (for-each (lambda (n) (account (uf-node-reach n)) (account (uf-node-predecessors n)))
+                (uf-group-roots group))) groups)
+    (vector sparse chunks packed registry bytes slots)))
 
 ;; Explicit qualification audit, never called on the insertion/query hot path.
 ;; This checks the concrete representation premises used by the proof layer.
@@ -269,6 +427,10 @@
   (hash-for-each (lambda (_ group)
     (let ((nodes (uf-group-nodes group)) (roots (uf-group-roots group)))
       (require! (= (uf-group-population group) (length roots)) "ASCENT UF root population mismatch")
+      (when (uf-group-registry group)
+        (require! (= (length (filter identity (ExtensibleVector->list (uf-group-registry group)))) (length roots)) "ASCENT UF registry population mismatch")
+        (for-each (lambda (n)
+          (require! (eq? n (ExtensibleVector-ref (uf-group-registry group) (uf-node-order n))) "ASCENT UF registry owner mismatch")) roots))
       (require! (unique? roots eq?)
                 "ASCENT UF duplicate root")
       (let loop ((remaining roots) (ceiling (+ 1 (uf-group-next-order group))))
@@ -283,7 +445,7 @@
           (require! (member value (uf-node-members owner)) "ASCENT UF missing member")
           (when (uf-node-parent node)
             (require! (and (null? (uf-node-members node)) (= (uf-node-size node) 0)
-                           (= (hash-length (uf-node-reach node)) 0)
+                           (= (reach-length (uf-node-reach node)) 0)
                            (not (uf-node-predecessors node)))
                       "ASCENT UF absorbed storage retained")))) nodes)
       (for-each (lambda (n)
@@ -295,19 +457,27 @@
           (for-each (lambda (value)
             (let (node (hash-get nodes value))
               (require! (and node (eq? (checked-root node) n)) "ASCENT UF wrong member owner"))) members))
+        (for-each (lambda (table)
+          (when (and table (compact-reach? table))
+            (require! (eq? (compact-reach-registry table) (uf-group-registry group)) "ASCENT UF wrong bit registry")
+            (let (degree 0)
+              (reach-for-each (lambda (target _) (require! target "ASCENT UF missing bit owner")
+                               (set! degree (+ degree 1))) table)
+              (require! (= degree (compact-reach-size table)) "ASCENT UF bit cardinality mismatch"))))
+          (list (uf-node-reach n) (uf-node-predecessors n)))
         (if (uf-group-indexed? group)
           (begin
-            (require! (hash-table? (uf-node-predecessors n)) "ASCENT UF missing predecessor map")
-            (hash-for-each (lambda (predecessor _)
+            (require! (or (hash-table? (uf-node-predecessors n)) (compact-reach? (uf-node-predecessors n))) "ASCENT UF missing predecessor map")
+            (reach-for-each (lambda (predecessor _)
               (require! (and (not (eq? n predecessor)) (memq predecessor roots)
-                             (hash-get (uf-node-reach predecessor) n))
+                             (reach-get (uf-node-reach predecessor) n))
                         "ASCENT UF stale predecessor key")) (uf-node-predecessors n)))
           (require! (not (uf-node-predecessors n)) "ASCENT UF premature predecessor map"))
-        (hash-for-each (lambda (target _)
+        (reach-for-each (lambda (target _)
           (when (uf-group-indexed? group)
-            (require! (hash-get (uf-node-predecessors target) n) "ASCENT UF missing predecessor key"))
+            (require! (reach-get (uf-node-predecessors target) n) "ASCENT UF missing predecessor key"))
           (require! (and (not (eq? n target)) (memq target roots)) "ASCENT UF stale reach key")
-          (hash-for-each (lambda (successor _)
+          (reach-for-each (lambda (successor _)
             (require! (reachable? n successor) "ASCENT UF incomplete root closure"))
             (uf-node-reach target))) (uf-node-reach n))) roots))) groups)
   #t)
@@ -322,26 +492,40 @@
 (def (gerbil-ascent-trrel-uf-freeze groups (indexed? #t))
   (let ((blocks []) (count 0) (units 0))
     (hash-for-each (lambda (key group)
-      (let ((members (make-hash-table-eq))
-            (prefix (if (= (car key) 3) (list (cadr key)) [])))
+      (let* ((roots (uf-group-roots group))
+             (span (foldl (lambda (n bound)
+                     (let (reach (uf-node-reach n))
+                       (if (compact-reach? reach)
+                         (max bound (* 32 (##u32vector-length (compact-reach-bits reach)))) bound))) 0 roots))
+             ;; Capture-only member references, bounded by existing bitmap span.
+             ;; Sparse births beyond that span do not enlarge this array.
+             (slots (and (> span 0) (make-vector span #f)))
+             (members (make-hash-table-eq))
+             (prefix (if (= (car key) 3) (list (cadr key)) [])))
         (for-each (lambda (node)
           ;; Merge replaces member fields with append-created spines and clears
           ;; absorbed records; it never mutates an existing member pair. Like
           ;; EqRel capture, borrow that immutable spine without retaining nodes.
           (let (owned (uf-node-members node))
             (set! units (+ units (uf-node-size node)))
-            (hash-put! members node (make-frozen-members owned (uf-node-size node))))) (uf-group-roots group))
+            (let (record (make-frozen-members owned (uf-node-size node)))
+              (hash-put! members node record)
+              (when (and slots (< (uf-node-order node) span))
+                (vector-set! slots (uf-node-order node) record))))) (uf-group-roots group))
         (for-each (lambda (node)
           ;; Capture each source owner once. Counts come from committed SCC
           ;; metadata; no arc rescans a copied member spine for cardinality.
           (using (left (hash-get members node) :- frozen-members)
-            (def (capture target)
-              (using (right (hash-get members target) :- frozen-members)
+            (def (capture record)
+              (using (right record :- frozen-members)
                 (set! count (+ count (* left.count right.count)))
                 (set! units (+ units 1))
                 (set! blocks (cons (make-rectangle prefix left.rows right.rows) blocks))))
-            (capture node)
-            (hash-for-each (lambda (target _) (capture target)) (uf-node-reach node))))
+            (capture left)
+            (let (reach (uf-node-reach node))
+              (if (compact-reach? reach)
+                (compact-reach-for-each-id (lambda (id) (capture (vector-ref slots id))) reach)
+                (hash-for-each (lambda (target _) (capture (hash-get members target))) reach)))))
           (uf-group-roots group)))) groups)
     (gerbil-ascent-rectangle-view (reverse! blocks) count units indexed?)))
 

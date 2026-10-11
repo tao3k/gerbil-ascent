@@ -1,0 +1,172 @@
+#+title: Dense UF storage and unique-input resource qualification
+
+* Primary-source learning and storage contract
+
+Gerbil =1cfb032= =std/vector/extensible.ss= defines a buffer owner separately
+from its fill pointer, doubles capacity during growth, copies only owned data,
+and implements bit membership with vector access and fixnum masks. The initial
+segmented hash/mask implementation saved allocation but failed CPU admission;
+its complete failed attempt is retained under
+=.cache/ascent/uf-dense/rejected-segmented/=. The candidate applies
+native word-vector access to the same admission/commit ownership contract.
+No upstream rebuild, environment switch, process scheduler or test logic is
+added to the package build entry.
+
+One private adjacency protocol owns length, membership, iteration, insertion,
+removal and retirement. Sparse adjacency remains an eq-hash. At geometric
+cardinality boundaries starting at 32 arcs, it promotes only when the required
+=u32vector= payload is at most two bytes per arc. A group shares one birth-order
+registry using Gerbil's native =ExtensibleVector=, created only after successful
+admission and populated only with current roots.
+Each bitmap bit identifies an immutable node birth order, not a user value.
+
+A committed new birth registers its slot once. The reserved initialized span
+grows geometrically; =ExtensibleVector-fill-pointer-set!= runs only at span
+boundaries. Its =let/cc= would otherwise capture a continuation for every birth,
+even without buffer growth. Native sparse controls exposed that allocation cost.
+The explicit positive extension argument requests one slot beyond the reserved
+span; it does not change machine scheduling or add a configuration setting. Dense growth copies
+an owned word vector geometrically; growth is declined when the required
+payload exceeds two bytes per newly admitted degree, returning to a sparse
+map. Geometric spare capacity can reach four bytes per arc at growth. Thus a
+remote historical birth ID cannot request an unbounded dense matrix. A partial
+SCC retires forward and reverse bits before clearing absorbed registry slots;
+then adjacency with excessive retained bitmap capacity returns to sparse form.
+Complete SCC collapse releases both indexes and the shared registry. Existing
+value-to-node ownership remains necessary for resolving absorbed input values.
+
+Count-only commit selects a single-target writer with =match= when possible,
+avoiding a newly captured inner writer for every source root. General products
+retain the nested writer; both keep the original reversed axis commit order.
+
+Count-only commit selects a single-target writer with =match= when possible,
+avoiding a newly captured inner writer for every source root. General products
+retain the nested writer; both keep the original reversed axis commit order.
+
+Missing-arc admission is established before commit, including reverse-index
+construction. Word writes increment the cached degree once per certified new
+arc. Rejection cannot promote an index, extend its vector or register a birth.
+Qualification audits cached degrees, registry ownership/population, live roots,
+reverse correspondence and transitive closure. Scalar frontier order retains
+the ordered-neighbor contract. Freeze builds one temporary member-record array bounded by existing bitmap
+span. It resolves dense IDs directly to persistent member rectangles, omitting
+per-arc registry and member-map lookups. Sparse later births do not enlarge it.
+The published cut retains no array, bitmap, parent link or mutable registry.
+
+* Fixed baseline and experiment
+
+Five owners freeze =81f16eef7d743b0622589a4b6bf83ba09d50f334= with import
+relocation only, verified by normalized comparison with =git show=. =dense/chain/cycle= compare historical/current native fresh
+count-only states, with independent cardinalities and physical arc observations.
+Dense has 512 unique chain inputs, 513 roots and 131328 forward arcs; chain has
+256 inputs; cycle closes a 128-input chain into one SCC. These three targets
+require <=90% baseline process CPU, >=16/20 wins, and <=70% baseline allocated
+bytes +8192 bytes. Allocation is VM allocation during the measured operation,
+not retained heap size or peak RSS.
+
+=native-star/native-groups/native-small= add genuinely historical/current
+native controls: 600 sparse unique star edges, sixteen groups of 64 star edges,
+and one edge. These cover representation costs that shared engine helpers
+cannot isolate.
+
+=native-star/native-groups/native-small= add genuinely historical/current
+native controls: 600 sparse unique star edges, sixteen groups of 64 star edges,
+and one edge. These cover representation costs that shared engine helpers
+cannot isolate.
+
+=dense-cut= is an additional historical/current native freeze control: one
+unindexed snapshot of a prepared 256-edge chain; preparation is outside timing.
+It checks count 33153 and units 33410. Complete engine controls retain
+=unique/partitioned/sparse/grouped/retained/capture/cold/small/packed/adjacent/large/eqrel=.
+These engine legs share current live storage/canonical providers; they check
+regressions, not an entirely historical engine speedup. Capture retains its
+prepared 1025-member SCC and 64 snapshots. Existing independent row truth,
+output order and publication metadata checks remain in the fixture.
+
+All nineteen scenarios run in one 90-second invocation: twenty alternating
+process CPU pairs with natural GC, twenty separate ASP benchmark admissions,
+and five alternating allocation pairs. Controls retain <=110% CPU +20us and
+<=110% allocation +8192 bytes. ASP p95 <=999ms retains its 500ms target and
+499ms budget. Baseline, targets, controls and watchdog are not loosened after
+failure; the dense-cut control was added to cover the publication risk of the
+new representation. Failed and accepted attempts remain separate.
+
+* Verification and results
+
+The isolated tracked-source snapshot plus fourteen owned files passes native
+=just build= and the unit =std/make= build within their 90-second bounds.
+Dependency manifests are copied and dependency library namespaces reused;
+production and benchmark objects belong to the snapshot's own =.gerbil/lib=.
+The dirty shared workspace's newly added native shared-library build timed out
+twice at 90 seconds. Those failures remain recorded; its source files were
+preserved and are excluded from this commit qualification. Native =gxtest -v 5= passes eleven suites and 83
+cases with =HARNESS-OK=, final =OK=, no =ERROR/FAIL= and exit zero.
+ASP source policy passes with zero findings. All nineteen scenarios pass
+in one bounded invocation, with final =OK= and exit zero. All 242 selected
+source, contract, SSI, SCM, dynamic o1 object and compiler metadata fingerprints match before/after timing.
+Logs, counter profiles, failed attempts and accepted receipts remain ignored
+under =.cache/ascent/uf-dense/=. No logs enter Git.
+
+| Scenario | Median CPU us, old -> new | CPU wins /20 | Median allocated bytes, old -> new |
+|----------+--------------------------+--------------+-----------------------------------|
+| native-star | 1087 -> 1095 | 2 | 4050368 -> 4044992 |
+| native-groups | 3087 -> 3259 | 2 | 7268000 -> 7338144 |
+| native-small | 3 -> 3 | 9 | 9360 -> 9376 |
+| dense-cut | 890 -> 539 | 20 | 4314968 -> 4322696 |
+| dense | 37187 -> 21763 | 17 | 31521040 -> 14994704 |
+| chain | 8198 -> 6020 | 19 | 9451488 -> 5125368 |
+| cycle | 3195 -> 2711 | 20 | 3488976 -> 2435952 |
+| unique | 1521 -> 1528 | 9 | 2820560 -> 2820560 |
+| partitioned | 7201 -> 7083 | 15 | 11856208 -> 11856208 |
+| sparse | 924 -> 923 | 12 | 998392 -> 998392 |
+| grouped | 9398 -> 9358 | 12 | 5508944 -> 5508928 |
+| retained | 2927 -> 2965 | 7 | 2320024 -> 2320408 |
+| capture | 40 -> 40 | 8 | 256000 -> 256000 |
+| cold | 534 -> 533 | 11 | 1603280 -> 1602768 |
+| small | 94 -> 95 | 11 | 262880 -> 262880 |
+| packed | 548 -> 543 | 14 | 933880 -> 933880 |
+| adjacent | 579 -> 579 | 10 | 977080 -> 977080 |
+| large | 5511 -> 5532 | 11 | 17818288 -> 17818928 |
+| eqrel | 144 -> 143 | 10 | 464272 -> 464272 |
+
+Native dense CPU decreases 41.5% and allocation 52.4%; chain decreases 26.6%
+and 45.8%; cycle decreases 15.1% and 30.2%. Dense freeze CPU decreases 39.4%
+with 7728 additional allocated bytes (+0.18%). Native sparse star CPU increases
+8us (+0.74%) with 5376 fewer allocated bytes. Native grouped CPU increases
+172us (+5.6%) and allocation increases 70144 bytes (+0.97%); native small
+allocation increases 16 bytes. Retained engine CPU increases 38us (+1.3%) with 384 additional bytes; the large
+engine control increases 21us (+0.38%) with 640 additional bytes. All remain within their fixed envelopes;
+control jitter does not establish a whole-engine improvement.
+
+For 512 unique chain inputs, physical closure remains 513 roots and 131328
+forward arcs. Both indexes contain 262656 directional arcs: 260144 are bit
+encoded and 2512 remain sparse hash entries. Bitmap backing payload is exactly
+127072 bytes; the shared registry has 513 live roots and 2049 allocated slots.
+On this 64-bit VM those slots occupy 16392 payload bytes, excluding headers.
+This is physical representation accounting, not a retained-heap or RSS receipt.
+At 128/256 inputs bitmap payload is 6608/30672 bytes and registry capacity is
+513/1025 slots. No per-arc registry hash entry remains.
+
+Five rejected attempts are preserved separately: segmented hashes fail dense
+CPU (36801 -> 47307us despite allocation savings); direct words plus a hash
+registry fail freeze CPU (1063 -> 2305us); vector registry/capture indexing
+passes dense but fails chain CPU (9098 -> 9364us); private primitive/macro
+access passes CPU targets but fails cycle allocation (3486672 -> 2545200 bytes);
+added native sparse controls expose per-birth continuation allocation
+(4050368 -> 4711536 bytes). Final results use only the complete accepted attempt.
+Neither target admission nor watchdog was widened. Dense freeze and native
+sparse controls were added for newly exposed representation risks, retaining
+all earlier scenarios. Geometric registry reservation and singleton product
+writers resolve those measured costs.
+
+* Scope boundary
+
+The root DAG still represents a quadratic number of reachability facts in the
+worst case. This changes their physical representation and allocation cost;
+it does not claim subquadratic closure maintenance. Snapshot rectangles remain
+one per live root pair plus diagonals. Resource observations separate sparse
+hash entries, occupied words, packed arcs, live registry keys and exact bitmap
+payload bytes and registry backing-vector slots (including cleared holes).
+Shared registry capacity is geometric in historical births; cleared slots retain
+no absorbed nodes. They do not count hash backing capacity, object headers, member
+spines, source journals or whole-engine heap usage.

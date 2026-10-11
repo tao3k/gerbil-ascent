@@ -1416,3 +1416,34 @@ remain tied to those artifacts and the frozen baseline. The dense retained
 reach representation still grows quadratically; this batch improves computation
 and planning, without claiming reduced native allocation or retained-space
 growth. Dense representation and actor pending selection remain larger flows.
+
+* Dense UF storage and unique-input resource batch
+
+The preceding fresh-product batch leaves explicit eq-hash entries for each
+root reach/predecessor arc. This batch migrates both indexes together behind
+one adjacency contract, with admitted density selecting sparse hashing or a
+native =u32vector= bitmap. Gerbil's =std/vector/extensible.ss= supplies the
+shared =ExtensibleVector= birth registry and owned-buffer growth pattern.
+Partial and complete SCC retirement, budget preflight, validators and freeze
+consume the same representation contract. Frozen publication resolves dense
+IDs through a capture-only member array bounded by bitmap span.
+
+The fixed A/B adds a 512-unique-chain target and a dense freeze regression
+control. Native =dense/chain/cycle= compare frozen historical/current UF owners;
+complete engine scenarios share canonical live storage and remain controls.
+Their timings cannot establish a historical whole-engine improvement.
+The closure still contains quadratically many facts in the worst case; bitmap
+payload, registry slots and VM allocation receipts measure different resources.
+
+[[file:../../t/performance/uf-dense/README.org][Dense storage results and fixed qualification]] contains the source study,
+admission/retirement contracts, all scenario gates and rejected-attempt history.
+
+The accepted native comparison reduces 512-unique-chain CPU 41.5% and VM
+allocation 52.4%; 256-chain CPU/allocation decrease 26.6%/45.8%; cycle decreases
+15.1%/30.2%. Dense freeze CPU decreases 39.4%, with 7728 extra allocated bytes.
+All nineteen fixed scenarios, eleven native suites/83 cases and source policy
+pass. Native grouped control retains its +5.6% CPU/+0.97% allocation result;
+it remains within the predeclared regression envelope. Five rejected attempts
+are preserved separately and supply no samples to these accepted medians.
+The shared native registry exposed an additional source lesson: its fill-pointer
+API captures a continuation, so enter it only when the reserved span must grow.

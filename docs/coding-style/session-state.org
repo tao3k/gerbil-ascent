@@ -1055,3 +1055,29 @@ worker lifetime; that boundary transfers to ASCENT without replacing its
 relational or cancellation semantics.
 [[file:../../t/performance/scc-execution/README.org][The complete engine qualification]]
 records frozen owners, independent closure truth and admission limits.
+
+* Native round frontier ownership
+
+Gerbil =1cfb032= sources demonstrate final private records and typed expression
+projection in =src/std/struct/lru.ss:19-32,45-67=, allocation only when required
+in =src/gerbil/compiler/optimize-base.ss:334-340=, hygienic ordered collection in
+=src/std/list/list-builder.ss:5-24= and native accumulator flows in
+=src/std/iter/macros.ss:289-297=. =program/round-workspace.ss= applies these to
+the entire native reset/write/commit flow rather than adding per-operation
+conditionals or a runtime selector. Its factory admits the corresponding
+provider vectors in one =for/fold= over =in-range=, without list conversion.
+
+The retained layout owns stratum groups and nonempty delta membership. Each
+invocation owns a separate effective write set. Ascending declaration-order
+commit covers both old frontier and new writes; successful full publication
+alone replaces frontier membership. A callback exception drops the candidate
+set, while completed timeout cuts retain their frontier. Unchanged empty native
+index entries stay valid; custom index version semantics retain full traversal.
+Native eligibility also removes the two inapplicable view/lattice staging
+vectors. Row shape, field callbacks, membership, budgets, physical index
+publication and storage-state admission remain in the evaluator.
+
+[[file:../../t/performance/round-workspace/README.org][Complete frozen-engine qualification]] records 73.0% /72.5% target process-CPU
+reductions, bounded extra allocation, controls, 113 native Cases, zero Policy
+findings and stable source/SSI evidence. These claims belong to this native
+Set/hash batch; view/custom-storage performance remains future work.

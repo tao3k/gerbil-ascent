@@ -986,3 +986,39 @@ complete frozen provenance, controls and reproduction are in
 General callback/view workspaces, global reset/commit traversal and actor
 pending-list selection still need separate complete qualification. Local
 CPU/allocation results do not establish remote CI or general multicore scale.
+
+* Generic native round frontier and publication traversal
+
+The next complete batch addresses =program/evaluate.ss='s repeated global
+delta reset and commit walks. Every round previously visited every relation,
+including empty lanes with no candidates. =program/round-workspace.ss= now owns
+a retained nonempty frontier and an invocation-local effective write set.
+One native provider-vector fold admits the canonical Set/hash contract. Its
+factory owns private final records and containers; typed =using= projections
+and ordered =with-list-builder= construction follow installed Gerbil sources.
+
+Stratum admission resets the previous frontier plus nonempty totals in that
+stratum. Native sizes replace a redundant row recount. Ordered sparse commit
+visits previous frontier members and actual admitted destinations, so an old
+delta is cleared even when its relation receives no replacement candidate.
+Only a successful complete owner commit advances the frontier. Source append
+registers new members; timeout resumes preserve the committed frontier; pending
+writes do not survive callback rejection. Native empty unchanged lanes retain
+valid version-owned indexes. Views, lattice joins and custom provider semantics
+retain the complete traversal; single-relation engines use direct traversal.
+The native path also omits unused view/lattice staging vectors.
+
+The complete frozen evaluator at =cf706aee296a1d11ca2824c045a65f27dca3c7c7=
+changes only import locations. Full callback recursion and alternating two-lane
+recursion with 512/1024 unused relations improve 1863 ->503us (73.0%) and
+2914 ->802us (72.5%), both 20/20 CPU wins. Extra allocation is bounded at
+1.4% /2.1%; cold, keyed SCC, small and serial controls pass the original gates.
+All six native ASP scenarios pass under the fixed 90-second whole-run bound,
+with stable 38-entry source/SSI identity after root native build. Seven native
+Suites pass 113 Cases; ASP Policy reports zero findings for both production
+owners. Full source-study, fixed contract, retained initial candidate and
+reproduction are in [[file:../../t/performance/round-workspace/README.org][the round workspace qualification]].
+
+Remaining complete-flow work includes view/custom-storage workspace allocation,
+view/lattice global publication traversal and actor pending-list selection.
+This batch does not qualify those performance paths or multicore scaling.

@@ -4,7 +4,9 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
+(import (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
+                 round-work-write! round-work-reset! round-work-commit-indices round-work-complete!)
+        (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
         (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
@@ -238,6 +240,9 @@
                  (native-reuse-affected reuse))
                 all-active))
              (highest-stratum (- (vector-length active-by-stratum) 1))
+             ;; The factory admits the complete native Set/hash contract once.
+             (round-layout (make-round-layout strata delta-size
+                                              storage-providers index-providers lattice-joins))
              (lattice-feeds-relation?
               (and session?
                    (gerbil-ascent-lattice-feeds-relation?
@@ -307,6 +312,7 @@
                             (+ (vector-ref all-size index) new-count))
                           (vector-set! delta-size index
                             (+ (vector-ref delta-size index) new-count))
+                          (round-layout-source! round-layout index)
                           (vector-set! all-version index
                             (+ 1 (vector-ref all-version index)))
                           (vector-set! delta-version index
@@ -334,8 +340,9 @@
            (set! active-by-stratum (gerbil-ascent-activate-rules analysis)))
          (let ((pending (make-vector count []))
                (pending-seen (make-vector count #f))
-               (pending-injections (make-vector count []))
-               (pending-lattices (make-vector count #f))
+               (pending-injections (and (not round-layout) (make-vector count [])))
+               (pending-lattices (and (not round-layout) (make-vector count #f)))
+               (round-work (make-round-work round-layout))
                (pending-count 0)
                (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
             (def (admit-stored! index pending-table stored)
@@ -347,6 +354,8 @@
               (unless (or (hash-get (vector-ref seen index) stored)
                           (hash-get pending-table stored))
                 (hash-put! pending-table stored #t)
+                (when (and round-work (null? (vector-ref pending index)))
+                  (round-work-write! round-work index))
                 (set! pending-count (+ pending-count 1))
                 (vector-set! pending index
                   (cons stored (vector-ref pending index)))))
@@ -523,9 +532,87 @@
           (when (<= stratum highest-stratum)
             (let ((active-rules (vector-ref active-by-stratum stratum))
                   (active? #t) (round (if resume-stratum resume-round 0)))
-              (unless resume-stratum
-              (let reset-delta ((index 0))
-                (when (< index count)
+            (def (commit! index)
+                (if (view-relation? index)
+                  (let (frontier (vector-ref pending index))
+                    (if (> (gerbil-ascent-frontier-count frontier) 0)
+                      (begin
+                             (vector-set! view-journals index
+                               (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index))
+                                       (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index)))
+                                     (vector-ref view-journals index)))
+                             (commit-view! index frontier)
+                             (set! derived-count (+ derived-count (gerbil-ascent-frontier-count frontier)))
+                             (set! active? #t))
+                      (begin
+                             (let (total (vector-ref all index))
+                               (vector-set! delta index
+                                 (gerbil-ascent-view-bind gerbil-ascent-empty-view
+                                   (relation-view-identity total) (relation-view-generation total)
+                                   (relation-view-revision total) 'delta)))
+                             (vector-set! delta-size index 0)))
+                    (vector-set! pending index [])
+                    (vector-set! pending-injections index []))
+                  (begin
+                (if (vector-ref lattice-joins index)
+                  (let (frontier (vector-ref pending-lattices index))
+                    (let (staged-rows (if frontier (lattice-frontier-rows frontier) []))
+                      (vector-set! pending index staged-rows)
+                      (unless (null? staged-rows)
+                        (vector-set! all index
+                          (append
+                           (reverse staged-rows)
+                           (filter
+                            (lambda (existing)
+                              (not (lattice-frontier-ref frontier
+                                    (gerbil-ascent-lattice-key existing))))
+                            (vector-ref all index))))
+                        (for-each
+                         (lambda (row)
+                           (hash-put! (vector-ref lattice-rows index)
+                                      (gerbil-ascent-lattice-key row) row)
+                           (hash-put! (vector-ref seen index) row #t)
+                           (set! derived-count (+ derived-count 1))
+                           (set! active? #t))
+                         staged-rows))))
+                  (for-each
+                   (lambda (row)
+                     (hash-put! (vector-ref seen index) row #t)
+                     (vector-set! all index (cons row (vector-ref all index)))
+                     (set! derived-count (+ derived-count 1))
+                     (set! active? #t))
+                   (vector-ref pending index)))
+                (let (batch-size (length (vector-ref pending index)))
+                  (unless (= batch-size 0)
+                    (unless (vector-ref lattice-joins index)
+                      (advance-all-indexes! index
+                                            (vector-ref pending index)))
+                    (vector-set! all-version index
+                      (+ 1 (vector-ref all-version index)))
+                    ;; Only the exact built-in Set appends unique pending rows
+                    ;; without replacing historical rows. Restrict indexing to
+                    ;; the built-in hash Provider too: custom callbacks may
+                    ;; retain the row spine. Other Providers keep the recount.
+                    (vector-set! all-size index
+                      (if (and (not (vector-ref lattice-joins index))
+                               (gerbil-ascent-canonical-set-storage-provider?
+                                (vector-ref storage-providers index))
+                               (gerbil-ascent-canonical-hash-index-provider?
+                                (vector-ref index-providers index)))
+                        (+ (vector-ref all-size index) batch-size)
+                        (length (vector-ref all index)))))
+                  (vector-set! delta index (vector-ref pending index))
+                  (vector-set! delta-size index batch-size)
+                  (vector-set! delta-version index
+                    (+ 1 (vector-ref delta-version index))))
+                (when (pair? (vector-ref pending index))
+                  (vector-set! pending index [])
+                  (if (vector-ref lattice-joins index)
+                    (lattice-frontier-clear! (vector-ref pending-lattices index))
+                    (hash-clear! (vector-ref pending-seen index))))
+                ))
+                )
+                (def (reset-delta! index)
                   (vector-set! delta index
                     (if (= (vector-ref strata index) stratum)
                       (if (or first-run? (> stratum 0))
@@ -533,10 +620,22 @@
                         (vector-ref delta index))
                       []))
                   (vector-set! delta-size index
-                    (gerbil-ascent-row-count (vector-ref delta index)))
-                  (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index)))
-                  (reset-delta (+ index 1)))))
+                    (if (not round-work)
+                      (gerbil-ascent-row-count (vector-ref delta index))
+                      (if (= (vector-ref strata index) stratum)
+                        (if (or first-run? (> stratum 0))
+                          (vector-ref all-size index)
+                          (vector-ref delta-size index))
+                        0)))
+                  (vector-set! delta-version index (+ 1 (vector-ref delta-version index))))
+              (unless resume-stratum
+                (if round-work
+                  (round-work-reset! round-work stratum (or first-run? (> stratum 0))
+                                     all-size delta-size reset-delta!)
+                  (let reset ((index 0))
+                    (when (< index count)
+                      (reset-delta! index)
+                      (reset (+ index 1))))))
           (until (not active?)
           (set! round (+ round 1))
           (set! pending-count 0)
@@ -636,87 +735,11 @@
               ))
             )
             (set! active? #f)
-            (let commit ((index 0))
-              (when (< index count)
-                (if (view-relation? index)
-                  (let (frontier (vector-ref pending index))
-                    (if (> (gerbil-ascent-frontier-count frontier) 0)
-                      (begin
-                             (vector-set! view-journals index
-                               (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index))
-                                       (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index)))
-                                     (vector-ref view-journals index)))
-                             (commit-view! index frontier)
-                             (set! derived-count (+ derived-count (gerbil-ascent-frontier-count frontier)))
-                             (set! active? #t))
-                      (begin
-                             (let (total (vector-ref all index))
-                               (vector-set! delta index
-                                 (gerbil-ascent-view-bind gerbil-ascent-empty-view
-                                   (relation-view-identity total) (relation-view-generation total)
-                                   (relation-view-revision total) 'delta)))
-                             (vector-set! delta-size index 0)))
-                    (vector-set! pending index [])
-                    (vector-set! pending-injections index []))
-                  (begin
-                (if (vector-ref lattice-joins index)
-                  (let (frontier (vector-ref pending-lattices index))
-                    (let (staged-rows (if frontier (lattice-frontier-rows frontier) []))
-                      (vector-set! pending index staged-rows)
-                      (unless (null? staged-rows)
-                        (vector-set! all index
-                          (append
-                           (reverse staged-rows)
-                           (filter
-                            (lambda (existing)
-                              (not (lattice-frontier-ref frontier
-                                    (gerbil-ascent-lattice-key existing))))
-                            (vector-ref all index))))
-                        (for-each
-                         (lambda (row)
-                           (hash-put! (vector-ref lattice-rows index)
-                                      (gerbil-ascent-lattice-key row) row)
-                           (hash-put! (vector-ref seen index) row #t)
-                           (set! derived-count (+ derived-count 1))
-                           (set! active? #t))
-                         staged-rows))))
-                  (for-each
-                   (lambda (row)
-                     (hash-put! (vector-ref seen index) row #t)
-                     (vector-set! all index (cons row (vector-ref all index)))
-                     (set! derived-count (+ derived-count 1))
-                     (set! active? #t))
-                   (vector-ref pending index)))
-                (let (batch-size (length (vector-ref pending index)))
-                  (unless (= batch-size 0)
-                    (unless (vector-ref lattice-joins index)
-                      (advance-all-indexes! index
-                                            (vector-ref pending index)))
-                    (vector-set! all-version index
-                      (+ 1 (vector-ref all-version index)))
-                    ;; Only the exact built-in Set appends unique pending rows
-                    ;; without replacing historical rows. Restrict indexing to
-                    ;; the built-in hash Provider too: custom callbacks may
-                    ;; retain the row spine. Other Providers keep the recount.
-                    (vector-set! all-size index
-                      (if (and (not (vector-ref lattice-joins index))
-                               (gerbil-ascent-canonical-set-storage-provider?
-                                (vector-ref storage-providers index))
-                               (gerbil-ascent-canonical-hash-index-provider?
-                                (vector-ref index-providers index)))
-                        (+ (vector-ref all-size index) batch-size)
-                        (length (vector-ref all index)))))
-                  (vector-set! delta index (vector-ref pending index))
-                  (vector-set! delta-size index batch-size)
-                  (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index))))
-                (when (pair? (vector-ref pending index))
-                  (vector-set! pending index [])
-                  (if (vector-ref lattice-joins index)
-                    (lattice-frontier-clear! (vector-ref pending-lattices index))
-                    (hash-clear! (vector-ref pending-seen index))))
-                ))
-                (commit (+ index 1))))
+            (if round-work
+              (for-each commit! (round-work-commit-indices round-work))
+              (let commit ((index 0))
+                (when (< index count) (commit! index) (commit (+ index 1)))))
+            (when round-work (round-work-complete! round-work delta-size))
             ;; Private storage state becomes reusable only after the entire
             ;; round has published rows, membership, versions and indexes.
             (for-each gerbil-ascent-storage-admit-state! storage-owners)

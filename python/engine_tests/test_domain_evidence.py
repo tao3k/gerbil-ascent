@@ -9,9 +9,10 @@ import unittest
 class DomainEvidenceIntegration(unittest.TestCase):
     def test_exact_domain_constraints_retention_and_invalidation(self):
         code = '''
+import os
 from ascent_engine import Engine,EngineError
 from ascent_engine.domain_evidence import DomainEvidence
-engine=Engine('.gerbil/lib/libascent.dylib')
+engine=Engine(os.environ.get('ASCENT_ENGINE_LIBRARY', '.gerbil/lib/libascent.dylib'))
 memory=DomainEvidence(engine,'source-A')
 bad=memory.observe('graph-schedule',[['g',[1,3,7,9],[1,3],[3,1]]],'trace-g')
 assert bad['failedClaims'] and bad['currentChecks'][0]['requiredOrder']==[1,3]

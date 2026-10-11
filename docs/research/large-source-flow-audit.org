@@ -1276,3 +1276,51 @@ these duplicate-heavy complete engines. It does not isolate raw insertion CPU,
 prove peak RSS improvements or qualify large unique graphs/SMP scaling.
 Remaining large flows include nonconsecutive duplicate/resource planning,
 large unique UF closure growth, and actor pending-list selection.
+
+* Interleaved UF admission witnesses and vertex resource planning
+
+This batch addresses the previous nonconsecutive-input follow-up across fresh
+initial admission, packed replay and sparse replay. A successful UF injection
+is a monotone admission fact. Each invocation records at most 256 such input
+witnesses, after successful admission; unrecorded inputs still use the native
+kernel. Every initial source occurrence executes its source checks before
+reuse, and every replay occurrence visits the synchronous count consumer.
+Source journals, derived event order and held cut ownership remain intact.
+EqRel and external field callbacks retain their existing admission protocol.
+
+The old packed planner estimated capacity from input runs. Interleaved repeats
+could exceed its limit despite having a small actual vertex population. The
+new planner deconstructs row shapes with =match= and collects distinct endpoints
+into the eventual replay node table. =hash-key?= distinguishes =#f= placeholders
+from absent vertices; actual admission replaces placeholders with nodes.
+Matrix dimensions equal the actual population. The 513th distinct endpoint
+returns immediately through =let/cc= before matrix allocation and selects
+existing sparse replay. Consecutive equality remains a cheap planning path.
+This follows Gerbil =1cfb032= =std/hash/misc.ss:79-118,206-215= for early bounded
+decisions, explicit table membership and structural expression of row shape.
+
+[[file:../../t/performance/uf-reuse/README.org][The interleaved UF report]] freezes five historical owners at =86f6f9e=.
+Complete engines share canonical live storage/native helpers and therefore
+qualify publication/replay. A separate fresh-owner batch target compares frozen
+and current storage helpers to qualify initialization. One fixed 90-second run
+contains all eleven targets/controls, twenty alternating CPU pairs, twenty ASP
+admissions and five allocation pairs. Targets retain <=90% CPU and >=16/20 wins;
+controls retain <=110% +20us, allocations <=110% +8192 bytes. No controls or
+failed samples were discarded. All eleven passed; 172 selected source/compiler
+artifact/contract fingerprints matched before and after.
+
+Independent initial admission falls 424 ->338us (-20.3%). Complete sparse,
+grouped and retained engines fall 1987 ->1469us (-26.1%), 14219 ->10219us
+(-28.1%) and 6388 ->4893us (-23.4%). Their allocations fall by 60.9%, 52.4%
+and 72.5%. Unique packed and large sparse controls retain measured regressions:
+998 ->1062us (+6.4%) and 5597 ->5930us (+5.9%). Both satisfy the fixed gates.
+Native builds, 8 Suites /65 Cases and source Policy (zero findings) pass.
+
+During work, another shared-branch commit =57cfda6= captured the initial UF
+implementation and test sources; the final planner cleanup/report completes
+that source batch without rewriting the other commit. The frozen baseline's
+remote scheme job still failed with Session contract errors, despite its oracle
+and formal passes. Local qualification remains separate from remote CI closure.
+Remaining large flows include unique-vertex closure growth, unique packed
+planning overhead and actor pending-list selection. Allocation evidence is not
+peak RSS, and these full-lifecycle results are not solve-only or SMP claims.

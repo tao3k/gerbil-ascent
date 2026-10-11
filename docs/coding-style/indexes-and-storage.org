@@ -842,3 +842,23 @@ axes, matching native UF's early-admission boundary. It still calls the count
 consumer with zero and rejects a negative budget. Fresh pairs alone enter the
 component planning/commit helper. Representation selection must preserve the
 same admission discipline when duplicate-heavy graphs use the bounded path.
+* Bound an admission witness by its invocation
+
+For monotone native UF state, a successful injection remains admitted after
+intervening injections. Reuse that fact inside a fresh batch or one frozen-cut
+export, with a fixed witness capacity independent of journal length. Record
+only successful admissions; saturation falls back to the native kernel for
+unrecorded keys. Source occurrence checks precede reuse, and replay still visits
+the synchronous zero-count consumer. Published cuts retain no mutable witness.
+This protocol applies only where there is no external per-injection callback.
+
+Plan packed replay from distinct endpoints, rather than from input occurrences.
+Use =match= to preserve row arity/group identity and =let/cc= for early bounded
+fallback, following Gerbil's =std/hash/misc.ss=. A placeholder node table can
+serve both planning and admission: =hash-key?= tests membership even when a
+planned entry is =#f=, and actual admission installs the node. Allocate matrix
+dimensions from the admitted population after complete planning. Never retain
+an unbounded duplicate set or expand the resource cap to hide duplicate inputs.
+
+[[file:../../t/performance/uf-reuse/README.org][Interleaved UF qualification]] distinguishes isolated initial admission from
+complete engine publication/replay with shared canonical storage identity.

@@ -32,29 +32,33 @@
 (def (prepare events rows-of)
   (let/cc fallback
     (def populations (make-hash-table))
+    (def previous #f)
     (def (plan-value! nodes value)
       (unless (hash-key? nodes value)
         (when (= (hash-length nodes) 512) (fallback #f))
         (hash-put! nodes value #f)))
+    (def (plan-row! row)
+      (let* ((key (group-key row)) (arity (car key)))
+        (unless (memq arity '(2 3)) (fallback #f))
+        (let* ((nodes (or (hash-get populations key)
+                         (let (nodes (make-hash-table))
+                           (hash-put! populations key nodes) nodes)))
+               (pair (if (= arity 3) (cdr row) row)))
+          ;; Placeholder entries become replay nodes during admission. The
+          ;; same bounded table owns planning and replay, with no second set.
+          (plan-value! nodes (car pair))
+          (plan-value! nodes (cadr pair)))))
     (for-each (lambda (event)
       (for-each (lambda (row)
-        (let* ((key (group-key row)) (arity (car key)))
-          (unless (memq arity '(2 3)) (fallback #f))
-          (let* ((nodes (or (hash-get populations key)
-                           (let (nodes (make-hash-table))
-                             (hash-put! populations key nodes) nodes)))
-                 (pair (if (= arity 3) (cdr row) row)))
-            ;; Placeholder entries become replay nodes during admission. The
-            ;; same bounded table owns planning and replay, with no second set.
-            (plan-value! nodes (car pair))
-            (plan-value! nodes (cadr pair))))) (rows-of event))) events)
+        (unless (equal? previous row) (plan-row! row))
+        (set! previous row)) (rows-of event))) events)
     (let (groups (make-hash-table))
-           (hash-for-each (lambda (key nodes)
-             (let (width (hash-length nodes))
-               (hash-put! groups key (make-replay-group nodes []
-                 (make-vector width #f) 0 width
-                 (make-u16vector (quotient (+ (* width width) 15) 16) 0))))) populations)
-           groups)))
+      (hash-for-each (lambda (key nodes)
+        (let (width (hash-length nodes))
+          (hash-put! groups key (make-replay-group nodes []
+            (make-vector width #f) 0 width
+            (make-u16vector (quotient (+ (* width width) 15) 16) 0))))) populations)
+      groups)))
 (def (merge! group roots cycle)
   (let* ((winner (foldl (lambda (n best) (if (> (replay-node-size n) (replay-node-size best)) n best))
                        (car cycle) (cdr cycle)))

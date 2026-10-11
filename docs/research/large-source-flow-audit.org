@@ -1116,3 +1116,45 @@ production owners plus their source witness with zero findings.
 Prior exact-head CI failed at Session POO contract validation; local admission
 does not clear remote CI. Remaining large flows include view publication/export
 and actor pending-list selection, whose performance this batch does not qualify.
+* Frozen view publication and ordered export
+
+The complete batch addresses =program/view-state.ss='s journal-backed source,
+derived and delta export, together with =table/eqrel.ss='s injection publication
+boundary. Ordered replay formerly constructed a frozen EqRel frontier solely
+to visit it, then copied output headers while restoring order. One private
+admission kernel now owns count/budget preflight and component commit for both
+frozen frontier and synchronous replay consumers. One interleaved pair writer
+preserves fresh diagonals and symmetric forward/reverse order. Its validated
+two-/three-column shape selects the row constructor before product traversal.
+
+The synchronous writer factory observes the complete injection count before
+emission and can decline old frontiers while still reconstructing state.
+An event reuses one private collector. Fallback export restores its fresh
+derived batch/output spines in place, following Gerbil =std/list/list.ss:365-376=
+and =compiler/optimize-top.ss:704-711=. Borrowed journal/member/input spines and
+held frozen cuts remain unchanged; no tuple cache, graph or cursor is retained
+by the published cut. Bounded packed UF replay and sparse selection stay intact.
+
+The complete evaluator, view owner and replay EqRel freeze =3cfbb1a7e17beb98097510a07cecf2a9b2478284=,
+with import relocation only. Canonical live-engine insertion/storage helpers
+remain shared current dependencies; the frozen export owner reconstructs its
+own replay state with the frozen EqRel kernel. The evidence therefore qualifies
+the complete publication/export path with shared helpers, not every historical
+production dependency. Fixed target CPU improves 1644 ->1250us (24.0%),
+1048 ->917us (12.5%) and 1491 ->1155us (22.5%), with 20/20, 20/20 and
+19/20 wins. Allocation falls 23.9% /16.5% /23.6%. All five original controls
+pass; UF fallback still adds 45us CPU and native packed UF adds 17us. These
+costs do not disappear behind the target gains or reduced allocation.
+
+All eight scenarios pass in one fixed 90-second native ASP invocation after
+root native build with stable 68-entry source/SSI/contract identity. The first
+candidate missed the grouped CPU target; its entire attempt remains rejected.
+No earlier samples are combined with the admitted run. Eight native Suites pass
+95 Cases, including 512 exact three-node frontier comparisons, grouped keys,
+budget/state boundaries, historical export order and immutable old results.
+ASP source Policy passes both production owners with zero findings.
+[[file:../../t/performance/view-export/README.org][The complete publication/export report]] preserves the fixed gates and controls.
+Prior exact-head CI failed at Session POO contract validation; local receipts
+do not clear remote CI. Remaining large flows include native cut capture,
+large sparse UF replay and actor pending-list selection. Repeated-export gains
+do not qualify solve-only execution or general multicore scaling.

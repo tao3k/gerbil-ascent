@@ -6,7 +6,8 @@
 (import :gerbil-ascent/core/relation-view)
 (export gerbil-ascent-eqrel-state gerbil-ascent-eqrel-extension
         gerbil-ascent-eqrel-state? gerbil-ascent-eqrel-insert!
-        gerbil-ascent-eqrel-freeze gerbil-ascent-eqrel-publish! gerbil-ascent-eqrel-observation)
+        gerbil-ascent-eqrel-freeze gerbil-ascent-eqrel-publish! gerbil-ascent-eqrel-observation
+        gerbil-ascent-eqrel-replay-insert!)
 (defstruct eqrel-component (members size))
 (defstruct eqrel-cut (count view))
 (defstruct eqrel-state (components count published origin))
@@ -18,9 +19,9 @@
 
 (def (member-key width group node) (list width group node))
 (defstruct coordinate-key (bound? value coherent?) final: #t)
-;; : (-> Natural Columns Key CoordinateKey)
 ;;; A coordinate admits one value or no values. Bind false normally; repeated
 ;;; constraints must agree before selecting any owned member.
+;; : (-> Natural Columns Key CoordinateKey)
 (def (compile-coordinate-key coordinate columns key)
   (let ((bound? #f) (value #f) (coherent? #t))
     (for-each (lambda (column selected)
@@ -57,6 +58,16 @@
           (cond ((and forward? backward?) both) (forward? forward) (backward? backward) (else []))))) lefts)))
 ;;; Frontier order matches the eager algorithm: fresh diagonals, then each
 ;;; left/right cross pair followed immediately by its symmetric counterpart.
+;; : (-> Prefix UniqueMembers UniqueMembers UniqueMembers RowWriter Void)
+(def (write-injection! prefix diagonals lefts rights consume)
+  ;; Admission permits only two columns or one group plus two coordinates.
+  ;; Select the fixed row constructor once, outside the Cartesian writer.
+  (def emit
+    (if (null? prefix) (lambda (a b) (consume (list a b)))
+      (let (group (car prefix)) (lambda (a b) (consume (list group a b))))))
+  (for-each (lambda (node) (emit node node)) diagonals)
+  (for-each (lambda (a) (for-each (lambda (b) (emit a b) (emit b a)) rights)) lefts))
+
 (def (injection-view prefix diagonals lefts rights count)
   (def (emit consume a b) (consume (append prefix (list a b))))
   (def (visit columns key consume)
@@ -66,9 +77,7 @@
       (error "invalid ASCENT eqrel view key"))
     (if (null? columns)
       ;; Full export retains the direct interleaved writer, without query state.
-      (begin
-        (for-each (lambda (node) (emit consume node node)) diagonals)
-        (for-each (lambda (a) (for-each (lambda (b) (emit consume a b) (emit consume b a)) rights)) lefts))
+      (write-injection! prefix diagonals lefts rights consume)
       (let (offset (length prefix))
         (when (andmap (lambda (column value)
                        (or (>= column offset) (equal? (list-ref prefix column) value))) columns key)
@@ -86,7 +95,9 @@
 
 ;;; Preflight counts before changing the owner. Member spines are replaced with
 ;;; append, not destructively modified, so frontiers and old cuts remain stable.
-(def (gerbil-ascent-eqrel-insert! state row budget)
+;; : (forall (a) (-> EqRelState Row Natural (-> Prefix Members Members Members Natural a) a))
+;; : (-> EqRelState Row Natural InjectionPublisher Publication)
+(def (admit-injection! state row budget finish)
   (let* ((components (eqrel-state-components state)) (width (length row))
          (_ (unless (memq width '(2 3))
               (error "ASCENT eqrel requires two or three columns" row)))
@@ -118,7 +129,33 @@
           (eqrel-component-members-set! large (append members (eqrel-component-members large)))
           (eqrel-component-size-set! large (+ left-size right-size))))
       (eqrel-state-count-set! state (+ (eqrel-state-count state) needed))
-      (injection-view prefix diagonals lefts rights needed))))
+      (finish prefix diagonals lefts rights needed))))
+
+;; Frozen engine frontiers retain member spines; synchronous replay owns its
+;; collector instead. Both consumers use exactly the same admission kernel.
+;; : (-> EqRelState Row Natural FrozenView)
+(def (gerbil-ascent-eqrel-insert! state row budget)
+  (admit-injection! state row budget injection-view))
+
+;; gerbil-ascent-eqrel-replay-insert!
+;; : (-> EqRelState Row Natural (-> Natural (Maybe RowWriter)) Void)
+;; | doc m%
+;;     Admit one ordered replay injection, then request its synchronous writer.
+;;     The factory observes the complete count before any row is emitted and
+;;     may decline old frontiers. No temporary view or exported tuple is retained.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-eqrel-replay-insert! state '(1 2) 4 (lambda (_) displayln))
+;;     ;; => fresh diagonals followed by interleaved forward/reverse pairs
+;;     ```
+;;   %
+(def (gerbil-ascent-eqrel-replay-insert! state row budget writer)
+  (admit-injection! state row budget
+    (lambda (prefix diagonals lefts rights count)
+      (let (emit (writer count))
+        (when emit (write-injection! prefix diagonals lefts rights emit))))))
 
 ;; The public eager extension retains its row protocol for noncanonical indexes
 ;; and custom Provider compositions. Canonical engine routes consume views.

@@ -724,3 +724,30 @@ large unsigned identities. Unadmitted ordering/shapes use the original Set flow.
 allocation experiments before the combined admission/analysis/publication revision.
 All seven gates pass; small and closure-only allocation costs remain explicit.
 Native validation and independent path truths qualify the representation changes.
+* Study: one admission kernel with distinct publication consumers
+
+Gerbil =1cfb032= =std/list/list.ss:365-376= reverses newly constructed bucket
+headers in place; =compiler/optimize-top.ss:704-711= does the same for a private
+keyword accumulator. The criterion is ownership, not a blanket preference for
+mutation. Journal/event/member spines and held cuts are borrowed; exporter
+collector headers are newly allocated and private to one invocation.
+
+EqRel now separates complete injection admission from its publication
+representation. A private continuation receives prefix, fresh diagonals,
+immutable left/right member spines and the admitted count. The original
+consumer constructs a frozen frontier. Synchronous ordered replay asks its
+writer factory whether the complete injection belongs to the requested suffix,
+then emits directly. Both consumers share the count/budget preflight, component
+merge and interleaved pair writer. This expresses one flow with distinct
+consumers instead of duplicating the closure algorithm or constructing a view
+only to immediately unwrap it. Budget rejection precedes writer selection;
+declined output still reconstructs private replay state for later injections.
+
+Fallback source export reverses only its private output. Derived export links
+its private restored batch to its private accumulator before the final reversal.
+No mutation reaches frozen member/event spines or previously exported rows.
+Repeated public exports remain detached, and no mutable cursor, tuple cache or
+replay graph is retained by a published cut. Exact order, grouped coordinates,
+delta boundaries and field ownership still belong to the existing protocol.
+[[file:../../t/performance/view-export/README.org][The complete view export qualification]] records the matched engine boundary,
+historical ordered oracle, independent closure matrix and fixed controls.

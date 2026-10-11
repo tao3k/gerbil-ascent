@@ -9,7 +9,7 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-view-storage-provider?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
                  gerbil-ascent-storage-publish-view! gerbil-ascent-storage-eqrel-state?)
-        (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state gerbil-ascent-eqrel-insert!)
+        (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state gerbil-ascent-eqrel-replay-insert!)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-insert!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
@@ -136,19 +136,30 @@
       (let ((state (if eqrel? (gerbil-ascent-eqrel-state) (gerbil-ascent-trrel-uf-state))) (output []) (admitted 0))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))
+            (def emit
+              (if derived? (lambda (stored) (set! batch (cons stored batch)))
+                           (lambda (stored) (set! output (cons stored output)))))
+            ;; The writer is synchronous and invocation-owned. Whole injection
+            ;; admission precedes emission; skipped deltas still update replay state.
+            (def (writer needed)
+              (let (next (+ admitted needed))
+                (begin0
+                  (and (> next skip)
+                    (begin
+                      (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
+                      emit))
+                  (set! admitted next))))
             (for-each (lambda (row)
-              (let* ((frontier ((if eqrel? gerbil-ascent-eqrel-insert! gerbil-ascent-trrel-uf-insert!) state row budget))
-                     (next (+ admitted (relation-view-count frontier))))
-                (when (> next skip)
-                  (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
-                  (gerbil-ascent-for-each-row
-                    (if derived?
-                      (lambda (stored) (set! batch (cons stored batch)))
-                      (lambda (stored) (set! output (cons stored output)))) frontier))
-                (set! admitted next)))
+              (if eqrel?
+                (gerbil-ascent-eqrel-replay-insert! state row budget writer)
+                (let* ((frontier (gerbil-ascent-trrel-uf-insert! state row budget))
+                       (emit (writer (relation-view-count frontier))))
+                  (when emit (gerbil-ascent-for-each-row emit frontier)))))
               (view-event-rows event))
             ;; The legacy round walks reversed pending rows then prepends them;
             ;; source/append instead prepend each arrival directly.
-            (when derived? (for-each (lambda (row) (set! output (cons row output))) batch))))
+            (when derived? (set! output (append! (reverse! batch) output)))))
           (reverse events))
-        (reverse output)))
+        ;; Only fresh collector spines are reversed; journal/member spines and
+        ;; immutable held cuts are never passed to destructive list operations.
+        (reverse! output)))

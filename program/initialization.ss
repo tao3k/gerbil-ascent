@@ -70,8 +70,8 @@
   (all delta all-size delta-size storage-states seen lattice-rows) final: #t)
 
 ;; gerbil-ascent-initialize-sources!
-;; : (forall (r s b) (-> [r] s b Natural Natural (Values Natural Natural)))
-;; : (-> [Relation] Schema InitialSourceState Natural Natural (Values Natural Natural))
+;; : (forall (r s b q) (-> [r] s b Natural Natural (Optional q) (Values Natural Natural)))
+;; : (-> [Relation] Schema InitialSourceState Natural Natural (Optional StorageReadiness) (Values Natural Natural))
 ;; | doc m%
 ;;     Admit source rows in declaration order into fresh engine-owned buffers.
 ;;     Preserve field checks, input/output limits, final lattice update order
@@ -84,7 +84,8 @@
 ;;     ;; => two values: admitted input and materialized source counts
 ;;     ```
 ;;   %
-(def (gerbil-ascent-initialize-sources! relations schema buffers input-limit output-limit)
+(def (gerbil-ascent-initialize-sources! relations schema buffers input-limit output-limit
+                                      (readiness #f))
   (using (buffers :- initial-source-state)
    (let ((names (vector-ref schema 1)) (arity (vector-ref schema 2))
         (field-checkers (vector-ref schema 3))
@@ -133,7 +134,7 @@
           (when (eq? kind 'relation)
             (vector-set! storage-states index
               (gerbil-ascent-storage-engine-state
-               (vector-ref storage-providers index))))
+               (vector-ref storage-providers index) readiness)))
           (cond
            ((eq? kind 'lattice)
             (source-admission-loop callbacks rows

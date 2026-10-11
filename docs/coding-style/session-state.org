@@ -1125,3 +1125,31 @@ and the small control adds 3us /9168 bytes. These costs are retained alongside
 all five passing controls. Nine native Suites pass 132 Cases, two production
 owners pass Policy with zero findings, and 48 source/SSI identities remain
 stable. The frozen complete-engine series has one fixed 90-second bound.
+* Storage phase ownership and complete publication
+
+State readiness is a maintained invariant of the storage owner, not a repeated
+query over every declared relation. A private final readiness record belongs
+to one engine. The owner's typed phase transition updates both its local phase
+and that summary: ready-to-pending registers one outstanding owner;
+pending-to-failed preserves it; successful source/round publication admits it.
+Constant-time preflight rejects any outstanding owner, even a no-output custom
+callback that changed private state. Clearing the pending list when the count
+returns to zero retires previous admission history. No shared provider stores
+engine state, and no global registration or environment selector is needed.
+
+Gerbil =std/make.ss:296-304,350-363= publishes dependency completion after
+successful owner work and separates that barrier from joining workers.
+=std/struct/lru.ss:19-32,45-67= uses final private carriers and typed projections
+to mutate affected owners. Apply these source patterns to the complete
+publication flow: candidate extension does not authorize readiness, while the
+successful publisher does. The evaluator retains field admission, budgets,
+row/index publication and the source-replay failure boundary.
+
+Custom storage and exact native hash indexes share the existing sparse round
+layout. Their callbacks retain owned row spines, alias and duplicate ordering;
+derived/custom index callbacks still receive complete version traversal.
+Keep capability selection at construction and invariant maintenance at phase
+transitions. The public provider model remains POO, while private scheduling
+and readiness metadata remain compact final records. The qualification in
+[[file:../../t/performance/storage-round/README.org][the complete storage round study]] explicitly distinguishes frozen evaluator/
+workspace control from shared current storage and initialization helpers.

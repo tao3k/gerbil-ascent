@@ -36,6 +36,8 @@
         gerbil-ascent-storage-extension gerbil-ascent-storage-engine-extension
         gerbil-ascent-storage-engine-state gerbil-ascent-storage-owned-states
         gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
+        make-storage-readiness gerbil-ascent-storage-check-readiness!
+        gerbil-ascent-storage-admit-readiness!
         gerbil-ascent-set-batch-admit!
         gerbil-ascent-storage-extend)
 
@@ -173,12 +175,40 @@
 ;;; Stateful engine storage remains tentative until the evaluator commits the complete
 ;;; source batch or rule round. Private mutations cannot be rolled back in
 ;;; general; an interrupted owner requires source replay into a fresh engine.
-(defstruct storage-state-owner (value phase))
+(defstruct storage-readiness-state (unready pending) final: #t)
+(defstruct storage-state-owner (value phase readiness) final: #t)
 
-(def (gerbil-ascent-storage-engine-state provider)
+;; : (-> StorageReadiness)
+(def (make-storage-readiness) (make-storage-readiness-state 0 []))
+
+;; One phase transition owns both local readiness and the engine's summary.
+;; : (-> StorageOwner Symbol Void)
+(def (storage-state-transition! (state :- storage-state-owner) phase)
+  (unless (eq? state.phase phase)
+    (when state.readiness
+      (using (ready state.readiness :- storage-readiness-state)
+        (cond
+         ((eq? state.phase 'ready)
+          (set! ready.unready (+ ready.unready 1))
+          (set! ready.pending (cons state ready.pending)))
+         ((eq? phase 'ready)
+          (set! ready.unready (- ready.unready 1))
+          (when (= ready.unready 0) (set! ready.pending []))))))
+    (set! state.phase phase)))
+
+;; : (-> StorageReadiness Void)
+(def (gerbil-ascent-storage-check-readiness! (ready :- storage-readiness-state))
+  (unless (= ready.unready 0) (error "ASCENT storage state requires source replay")))
+
+;; Only the complete source/round publisher may restore touched owners.
+;; : (-> StorageReadiness Void)
+(def (gerbil-ascent-storage-admit-readiness! (ready :- storage-readiness-state))
+  (for-each gerbil-ascent-storage-admit-state! ready.pending))
+
+(def (gerbil-ascent-storage-engine-state provider (readiness #f))
   (let (state (gerbil-ascent-storage-make-state provider))
     (if (gerbil-ascent-canonical-set-storage-provider? provider) state
-      (make-storage-state-owner state 'ready))))
+      (make-storage-state-owner state 'ready readiness))))
 
 (def (gerbil-ascent-storage-owned-states states)
   (filter storage-state-owner? (vector->list states)))
@@ -190,7 +220,7 @@
 
 (def (gerbil-ascent-storage-admit-state! state)
   (when (storage-state-owner? state)
-    (storage-state-owner-phase-set! state 'ready)))
+    (storage-state-transition! state 'ready)))
 
 (def (owned-storage-rows rows)
   (map (lambda (row) (map values row)) rows))
@@ -201,11 +231,11 @@
   (when (storage-state-owner? state)
     (when (eq? (storage-state-owner-phase state) 'failed)
       (error "ASCENT storage state requires source replay"))
-    (storage-state-owner-phase-set! state 'pending))
+    (storage-state-transition! state 'pending))
   (with-catch
    (lambda (failure)
      (when (storage-state-owner? state)
-       (storage-state-owner-phase-set! state 'failed))
+       (storage-state-transition! state 'failed))
      (raise failure))
    (lambda ()
      (invoke (if (storage-state-owner? state)
@@ -213,7 +243,20 @@
 
 ;;; Public algorithm dispatch keeps native procedure identity. Custom receivers
 ;;; own argument and result spines; field values remain shared.
+;; gerbil-ascent-storage-extension
 ;; : (-> StorageProvider Nat StorageExtension)
+;; | doc m%
+;;     Select native dispatch or an owned custom row-spine boundary once.
+;;     Custom callbacks borrow raw private state and share field values, while
+;;     their input and returned list spines cannot alias engine row buffers.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-storage-extension gerbil-ascent-set-storage-provider 2)
+;;     ;; => the canonical native extension procedure
+;;     ```
+;;   %
 (def (gerbil-ascent-storage-extension provider width)
   (let (extend (.ref provider '.extend-rows))
     (if (memq provider +native-storage-providers+)

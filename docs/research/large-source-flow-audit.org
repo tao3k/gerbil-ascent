@@ -1073,3 +1073,46 @@ receipts do not clear that gate or establish its root cause. Remaining large
 flows include custom-storage workspace allocation, storage readiness preflight,
 view publication/export and actor pending-list selection. This batch does not
 qualify remote CI, those performance paths or general multicore scaling.
+* Custom storage round workspace and state preflight
+
+The next complete flow spans =table/storage.ss=, =program/initialization.ss=,
+=program/round-workspace.ss= and =program/evaluate.ss=. Custom storage formerly
+disabled sparse reset/commit for the entire engine; cached run and source
+append also scanned every storage owner. Storage phase transitions now maintain
+an engine-local readiness count and pending-owner list. Initialization attaches
+owners inside the existing relation traversal; cached run/source append use
+constant-time preflight. Failure remains pending/failed until fresh source
+replay. Individual source publication or successful complete round publication
+admits affected owners and retires the list when no owner remains outstanding.
+
+Custom storage with exact native hash indexes uses the retained nonempty
+frontier and invocation write set. Commit retains declaration order and covers
+old deltas plus actual writes; newly nonempty custom source publication records
+frontier membership. Custom all/pending aliases, copied outer/row spines,
+duplicate callback order, field and budget admission remain unchanged. Custom
+indexes retain complete callback-visible version traversal. There is one
+workspace flow, with private final records and typed owner mutation learned
+from Gerbil =std/struct/lru.ss= and successful-completion barriers from
+=std/make.ss=. No global state registry or build environment selector is added.
+
+The complete evaluator/workspace freeze =252706d119b798072f521a9321e42111804a9f9f=;
+storage dispatch and initialization are shared current helpers so canonical
+provider and private owner identities stay intact. The comparison therefore
+qualifies the complete evaluator/workspace change, not all historical
+production dependencies. Three fixed targets improve 2571 ->581us (77.4%),
+3908 ->1308us (66.5%) and 3884 ->1786us (54.0%), each with 20/20 CPU wins.
+Retained/mixed allocation falls 3.3% /32.5%; wide allocation adds 1.6%.
+Cold, small, dense, custom-index and native-view controls pass the original
+gates. Small adds 3us/9088 bytes and dense adds 26us/25520 bytes; retain these
+costs instead of generalizing the target gain to every engine shape.
+
+One fixed 90-second invocation admits all eight native ASP scenarios after
+root native build. All 57 source/SSI/contract fingerprints remain stable.
+Eleven native Suites pass 138 Cases, including source syntax, readiness,
+borrowed callback spines, duplicate order, full custom-index traces, timeout
+cuts, replay and immutable old results. ASP source Policy passes the four
+production owners plus their source witness with zero findings.
+[[file:../../t/performance/storage-round/README.org][The complete storage qualification]] records the original contract and evidence.
+Prior exact-head CI failed at Session POO contract validation; local admission
+does not clear remote CI. Remaining large flows include view publication/export
+and actor pending-list selection, whose performance this batch does not qualify.

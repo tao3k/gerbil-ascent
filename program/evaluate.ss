@@ -6,7 +6,7 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
                  round-work-write! round-work-reset! round-work-commit-indices round-work-complete!
-                 round-work-admit-states! round-layout-view-staging? round-layout-lattice-staging?)
+                 round-layout-view-staging? round-layout-lattice-staging?)
         (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
         (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
@@ -49,8 +49,8 @@
                  gerbil-ascent-call-with-bindings gerbil-ascent-extend-pattern)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-eqrel-state?
-                 gerbil-ascent-storage-owned-states
-                 gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
+                 make-storage-readiness gerbil-ascent-storage-check-readiness!
+                 gerbil-ascent-storage-admit-readiness! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-set-batch-admit!
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
@@ -145,6 +145,7 @@
                      all delta all-size delta-size all-version delta-version index-providers (pair? rules)))
            (storage-extensions (vector-ref schema 6))
            (storage-states (make-vector count #f))
+           (storage-readiness (make-storage-readiness))
            (seen (make-vector count #f))
            (lattice-joins (vector-ref schema 7))
            (kinds (vector-ref schema 8))
@@ -193,7 +194,7 @@
          (gerbil-ascent-initialize-sources! relations schema
            (make-initial-source-state all delta all-size delta-size
                                       storage-states seen lattice-rows)
-           input-limit output-limit))
+           input-limit output-limit storage-readiness))
        (lambda (inputs materialized)
          (set! source-count inputs)
          (set! source-materialized-count materialized)))
@@ -209,8 +210,7 @@
           (gerbil-ascent-seed-native-reuse! reuse schema
             (make-closure-seed-state all seen delta all-size delta-size lattice-rows)
             source-materialized-count derived-limit output-limit)))
-      (let* ((storage-owners (gerbil-ascent-storage-owned-states storage-states))
-             (analysis
+      (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
               ;; engine still owns new rows, indexes, storage and budgets.
@@ -241,7 +241,8 @@
                  (native-reuse-affected reuse))
                 all-active))
              (highest-stratum (- (vector-length active-by-stratum) 1))
-             ;; The factory admits the complete native Set/hash contract once.
+             ;; Exact native indexes allow sparse publication; custom indexes
+             ;; retain their complete callback-visible version traversal.
              (round-layout (make-round-layout strata delta-size
                                               storage-providers index-providers lattice-joins))
              (lattice-feeds-relation?
@@ -326,7 +327,7 @@
                         (not accepted-any?))
                (set! dirty? #f)))))
         (def (run-retained! (deadline #f))
-         (for-each gerbil-ascent-storage-check-state! storage-owners)
+         (gerbil-ascent-storage-check-readiness! storage-readiness)
          (when publication-failed?
            (error "ASCENT engine publication requires source replay"))
          (when dirty? (flush-staged-set-rows!))
@@ -745,11 +746,8 @@
                 (when (< index count) (commit! index) (commit (+ index 1)))))
             ;; Private storage state becomes reusable only after the entire
             ;; round has published rows, membership, versions and indexes.
-            (if round-work
-              (begin
-                (round-work-admit-states! round-work storage-states)
-                (round-work-complete! round-work delta-size))
-              (for-each gerbil-ascent-storage-admit-state! storage-owners))
+            (gerbil-ascent-storage-admit-readiness! storage-readiness)
+            (when round-work (round-work-complete! round-work delta-size))
             ;; Every required SCC is already closed; this one owner commit
             ;; installs the complete cut, without another shared solver round.
             (when component-mode? (set! active? #f))
@@ -835,7 +833,7 @@
               ;; A successful replacement retires the incremental frames.
               ;; Subsequent appends evaluate a fresh candidate from source logs.
               (unless recompute-from-source?
-                (for-each gerbil-ascent-storage-check-state! storage-owners)
+                (gerbil-ascent-storage-check-readiness! storage-readiness)
                 (when publication-failed?
                   (error "ASCENT engine publication requires source replay")))
               (when first-run?
@@ -920,7 +918,8 @@
                       (vector-set! all-version index
                         (+ 1 (vector-ref all-version index)))
                       (vector-set! delta-version index
-                        (+ 1 (vector-ref delta-version index)))))))))))
+                        (+ 1 (vector-ref delta-version index)))
+                      (round-layout-source! round-layout index)))))))))
                 (unless (or (vector-ref source-overrides index)
                             built-in-set?)
                   (vector-set! source-additions index

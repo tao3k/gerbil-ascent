@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Native Set/view/lattice rounds retain nonempty deltas and this invocation's
+;;; Exact native-index rounds retain nonempty deltas and this invocation's
 ;;; touched destinations. Slot marks deduplicate an ordered write list without
 ;;; a second hash owner. No row spine or callback lives here.
 (import (only-in :std/iter for for/fold in-range)
@@ -34,6 +34,9 @@
                  ((and (not (vector-ref joins slot))
                        (gerbil-ascent-canonical-view-storage-provider? (vector-ref providers slot)))
                   (set! views? #t) #t)
+                 ;; Custom storage callbacks still own copied row spines. Native
+                 ;; index versions are private; unchanged empty lanes need no commit.
+                 ((and (not (vector-ref joins slot)) (vector-ref providers slot)) #t)
                  (else #f))))
          (let ((groups (make-hash-table-eqv)) (frontier (make-hash-table-eqv)))
            (for (index (in-range (vector-length strata)))

@@ -1158,3 +1158,51 @@ Prior exact-head CI failed at Session POO contract validation; local receipts
 do not clear remote CI. Remaining large flows include native cut capture,
 large sparse UF replay and actor pending-list selection. Repeated-export gains
 do not qualify solve-only execution or general multicore scaling.
+
+* Sparse UF publication/export and immutable member cut capture
+
+This complete batch follows the previous view publication/export work through
+=table/trrel-uf.ss=, =core/relation-view.ss= and =program/view-state.ss=.
+UF previously built a temporary rectangle view for every replay injection and
+copied persistent SCC member spines on each cut capture. One admission kernel
+now owns whole-injection count/budget preflight and graph commit; its publication
+continuation chooses a frozen frontier or synchronous rectangle writer.
+Prefix =match= selects fixed two/three-column row construction outside product
+traversal, while arbitrary prefixes retain detached rows and descriptor order.
+
+UF merges create new prefixes with functional =append= and replace record
+fields without mutating previously captured pairs. Frozen cuts therefore borrow
+persistent members without retaining nodes, parents or mutable reach tables.
+Private descriptor accumulators use =reverse!= following Gerbil's private list
+builder and compiler keyword accumulator ownership discipline. Indexed and
+unindexed historical cuts remain intact after SCC absorption and public row
+mutation. Invocation-local replay skips repeated admission for consecutive
+identical injections by passing an empty frontier to the writer, including
+across event boundaries; neither journals nor cuts carry a deduplication cache.
+
+The complete evaluator/export owner and private UF reference freeze =3d74647dcc4a23c74cbd56e93b6d9cba91a582a5=.
+Complete engines share current canonical storage/live helpers; historical replay
+uses its own frozen private state. Prepared native cut capture is separately
+qualified against the historical UF owner, excluding population and row export.
+Exact historical row order and independent closure/size/uniqueness truth admit
+each complete-engine scenario before matched timing. Eight fixed ASP scenarios
+retain 20 alternating CPU pairs, 20 independent admissions, five allocation
+pairs, all controls and one 90-second bound. The first attempt remains rejected:
+sparse CPU fell only 7.3%, below the original 10% target, despite 18/20 wins.
+
+[[file:../../t/performance/uf-export/README.org][The sparse UF publication/export report]] records the complete result and
+control costs. Local receipts do not clear remote CI: the prior pushed head
+=3d74647= failed at Session POO contract validation. Remaining large flows include
+actor pending-list selection and replay of nonconsecutive duplicate injections.
+Repeated-export gains do not qualify solve-only execution or multicore scaling.
+
+Final admitted target CPU: sparse 1941 ->1612us (-17.0%, 19/20 wins), grouped
+11551 ->6773us (-41.4%, 18/20), retained 6035 ->4840us (-19.8%, 19/20).
+Prepared capture separately improves 199 ->38us (-80.9%, 20/20), with population
+excluded. Allocation falls 20.0% /3.1% /25.0% for complete targets and 92.5%
+for capture. Packed costs +1us; EqRel costs +2us/+96 bytes, retained as admitted
+control costs. Grouped still allocates 303819216 bytes, so shared live provider
+construction/insertion remains a large remaining flow. All eight original gates
+pass without combining the rejected attempt; 70 fingerprints remain stable.
+Native package build and seven Suites/50 Cases pass, plus zero findings across
+three production source Policy owners. These are local, bounded receipts.

@@ -751,3 +751,43 @@ replay graph is retained by a published cut. Exact order, grouped coordinates,
 delta boundaries and field ownership still belong to the existing protocol.
 [[file:../../t/performance/view-export/README.org][The complete view export qualification]] records the matched engine boundary,
 historical ordered oracle, independent closure matrix and fixed controls.
+
+* Study: persistent member spines and synchronous rectangle publication
+
+Gerbil =std/list/list.ss:365-376= groups through private list collectors and
+restores order with =reverse!=. The prerequisite is ownership of the collector
+headers, not ownership of every referenced value. UF's merge contract similarly
+uses functional =append= and field replacement: previously captured member
+pairs remain immutable even when nodes are absorbed or cleared. Capture can
+borrow those pairs while discarding mutable nodes and adjacency tables. Reverse
+only fresh descriptor headers; keep every publicly emitted row detached.
+
+=table/trrel-uf.ss= has one admission continuation for frozen frontier and
+synchronous replay publication. Budget/count preflight precedes commit and
+writer selection, so a rejected injection neither mutates state nor invokes
+output. A declined old frontier still commits the reconstructed replay state.
+=core/relation-view.ss= selects a row constructor by prefix shape before product
+traversal through =match= and higher-order callbacks; generic prefixes preserve
+the same owned-row contract. =program/view-state.ss= specializes the EqRel/UF
+kernel once at the export boundary, rather than repeating storage-kind dispatch
+inside each injection. No new object hierarchy is needed for these private
+algorithm/publication choices.
+
+Historical reference owners retain private type identity. Optional-arity calls
+in a matched benchmark must be explicit on each side: this Gerbil compiler
+specialized a dynamically selected =freeze= call to the current helper despite
+its historical branch. Wrap each direct call in a fixed-arity lambda and verify
+emitted Scheme plus both states' native regression. This is a fixture boundary
+repair, not evidence of a production compiler fix.
+
+The [[file:../../t/performance/uf-export/README.org][UF export qualification]] separates complete-engine export from prepared
+provider capture and preserves packed/EqRel/cold/small controls. An allocation
+reduction alone does not establish whole-engine CPU improvement.
+
+Consecutive identical injections in monotone replay have a proved empty
+frontier. Reuse that fact with one invocation-local previous-row reference,
+including across event boundaries; still call the current writer with zero.
+The first injection checks the fixed budget, while duplicate admission leaves
+state/count/order unchanged. Do not mutate/deduplicate the journal or retain
+this execution state in a frozen result. Native regressions compare mixed
+source/derived/append events against the historical owner for both storage kinds.

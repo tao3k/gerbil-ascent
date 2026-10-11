@@ -9,7 +9,8 @@
         gerbil-ascent-explicit-view gerbil-ascent-lazy-explicit-view gerbil-ascent-view-union gerbil-ascent-view-difference
         gerbil-ascent-row-parts? gerbil-ascent-admitted-row-parts? gerbil-ascent-for-each-row-parts gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!
         gerbil-ascent-for-each-row gerbil-ascent-any-row? gerbil-ascent-row-count
-        gerbil-ascent-view-contains? make-rectangle gerbil-ascent-rectangle-view)
+        gerbil-ascent-view-contains? make-rectangle gerbil-ascent-rectangle-view
+        gerbil-ascent-write-rectangles!)
 (defstruct relation-view (identity generation revision lane count units visit contains export parts))
 (defstruct part-visitors (checked admitted))
 (defstruct row-stream (view columns key))
@@ -114,9 +115,9 @@
 (def (gerbil-ascent-explicit-view rows count)
   (gerbil-ascent-lazy-explicit-view
     (map (lambda (row) (map values row)) rows) count))
-;; : (-> (Or Rows (Promise Rows)) Natural FrozenView)
 ;; Persistent engine rows are borrowed read-only; every emitted row spine is
 ;; detached. Count observation never forces the ordering promise.
+;; : (-> (Or Rows (Promise Rows)) Natural FrozenView)
 (def (gerbil-ascent-lazy-explicit-view snapshot count)
   (def (rows) (if (promise? snapshot) (force snapshot) snapshot))
   (make-relation-view #f #f 0 'total count count
@@ -124,8 +125,8 @@
       (let (matches? (compile-explicit-key-match columns key))
         (for-each (lambda (row) (when (matches? row) (consume (map values row)))) (rows))))
     (lambda (row) (and (member row (rows)) #t)) #f #f))
-;; : (-> FrozenView FrozenView FrozenView)
 ;; The caller establishes disjoint facts; this is not a general Set union.
+;; : (-> FrozenView FrozenView FrozenView)
 (def (gerbil-ascent-view-union left right)
   (make-relation-view #f #f 0 'delta
     (+ (relation-view-count left) (relation-view-count right))
@@ -197,6 +198,30 @@
   (unless (null? lefts)
     (visit-right-members prefix (car lefts) rights consume)
     (visit-left-members prefix (cdr lefts) rights consume)))
+
+;; gerbil-ascent-write-rectangles!
+;; : (forall (r) (-> [(Rectangle r)] (-> [r] Void) Void))
+;; : (-> [Rectangle] RowWriter Void)
+;; | doc m%
+;;     Stream admitted rectangles in descriptor/member order into fresh rows.
+;;     Select each fixed row constructor before product traversal. Member and
+;;     prefix spines remain borrowed; the caller owns emitted row spines.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-write-rectangles! (list (make-rectangle [] '(1) '(2))) displayln)
+;;     ;; => writes the fresh row (1 2)
+;;     ```
+;;   %
+(def (gerbil-ascent-write-rectangles! blocks consume)
+  (for-each (lambda (block)
+    (let* ((prefix (rectangle-prefix block))
+           (write (match prefix
+                    ([] (lambda (_prefix a b) (consume (list a b))))
+                    ([group] (lambda (_prefix a b) (consume (list group a b))))
+                    (else (lambda (prefix a b) (consume (append prefix (list a b))))))))
+      (visit-left-members prefix (rectangle-left block) (rectangle-right block) write))) blocks))
 ;; : (-> Rectangle Columns Key PartVisitor Void)
 (def (visit-rectangle-parts block columns key consume (routes #f))
   (let (offset (length (rectangle-prefix block)))
@@ -274,8 +299,8 @@
     (and (= width (+ offset 2)) (matches-prefix? row prefix)
          (member (list-ref row offset) (rectangle-left block))
          (member (list-ref row (+ offset 1)) (rectangle-right block)) #t)))
-;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 ;; Rectangles must be disjoint; member spines belong to the captured cut.
+;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
          ;; One or two descriptors are cheaper to scan than route and gather.

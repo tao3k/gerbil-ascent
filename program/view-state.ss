@@ -10,7 +10,7 @@
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
                  gerbil-ascent-storage-publish-view! gerbil-ascent-storage-eqrel-state?)
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state gerbil-ascent-eqrel-replay-insert!)
-        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-insert!)
+        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-replay-insert!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
         gerbil-ascent-view-relation? gerbil-ascent-stage-view!
@@ -133,7 +133,8 @@
   (or (and (not eqrel?) (gerbil-ascent-small-journal-export events view-event-kind view-event-rows budget skip delta?))
       (replay-events events budget skip delta? eqrel?)))
 (def (replay-events events budget skip delta? eqrel?)
-      (let ((state (if eqrel? (gerbil-ascent-eqrel-state) (gerbil-ascent-trrel-uf-state))) (output []) (admitted 0))
+      (let ((state (if eqrel? (gerbil-ascent-eqrel-state) (gerbil-ascent-trrel-uf-state))) (output []) (admitted 0) (previous #f))
+        (def insert! (if eqrel? gerbil-ascent-eqrel-replay-insert! gerbil-ascent-trrel-uf-replay-insert!))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))
             (def emit
@@ -149,12 +150,13 @@
                       (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
                       emit))
                   (set! admitted next))))
+            ;; Consecutive identical injections have an empty frontier in this
+            ;; monotone invocation. Reuse that fact across event boundaries;
+            ;; keep the writer count transition and no mutable cut cache.
             (for-each (lambda (row)
-              (if eqrel?
-                (gerbil-ascent-eqrel-replay-insert! state row budget writer)
-                (let* ((frontier (gerbil-ascent-trrel-uf-insert! state row budget))
-                       (emit (writer (relation-view-count frontier))))
-                  (when emit (gerbil-ascent-for-each-row emit frontier)))))
+              (if (equal? previous row)
+                (writer 0)
+                (begin (insert! state row budget writer) (set! previous row))))
               (view-event-rows event))
             ;; The legacy round walks reversed pending rows then prepends them;
             ;; source/append instead prepend each arrival directly.

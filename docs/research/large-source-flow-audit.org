@@ -859,3 +859,30 @@ These local results close canonical declaration construction/publication only.
 They do not establish general solver throughput or qualify remote CI. The
 retained failed attempts remain excluded; the complete evidence table and native
 reproduction entry are in =t/performance/operator-publication/README.org=.
+
+* Complete independent positive proof verification
+
+The next coordinated production unit addresses repeated expression decoding and
+association-list lookup in =candidate/provenance.ss=, through a private
+=candidate/proof-frame.ss= binding flow. Preparation resolves ordered terms,
+fixed operations and variable slots once per verification. A fresh frame owns
+one linear derivation; first/repeated/computed bindings, false scalar values and
+untrusted predecessor references retain independent checks. Successful pure
+guards justify equal later guards only within that prefix. External rows, node
+spines, completed answers and source digests still receive complete admission.
+Neither producer work accounting nor verification node bounds changes.
+
+The frozen complete module is =7bb4ba0=, blob
+=5ad5410081f196d67fa96f03d5329674ff5476dd=. Six unchanged complete consumer gates
+pass under the 90-second watchdog using gxi and compiled libraries. Wide CPU
+falls 4224 ->3409us (19.3%, 18/20 wins); mixed falls 1760 ->1410us (19.9%,
+20/20 wins). Allocations fall 4403208 ->2499800 bytes and 1414512 ->796464 bytes
+(43.2%/43.7%). Cold production, forged rejection and source controls pass. Small
+adds 3us/7840 bytes, within its preset control gate rather than a speedup.
+
+Native tests pass 63 Cases in six modules, including prefix conflicts and
+computed false bindings; production/test ASP Policy has zero findings. Failed
+syntax-only, dense-frame and prefix-only CPU variants remain rejected, as does
+the static executable's negative allocation-counter receipt. These are local
+verification results, not whole-reasoner throughput or completed remote CI.
+[[file:../../t/performance/proof-verification/README.org][The complete study]] records exact consumers, gates and native reproduction.

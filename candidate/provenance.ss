@@ -9,6 +9,7 @@
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
         :gerbil-ascent/candidate/grounding-plan
+        :gerbil-ascent/candidate/proof-frame
         (only-in :gerbil-ascent/candidate/certificate-limits
                  make-certificate-material-budget certificate-material-reserve!
                  certificate-for-each-while bounded-list-length)
@@ -20,8 +21,7 @@
                  reasoning-candidate-query reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
         (only-in :gerbil-ascent/candidate/funs
-                 candidate-same-row-set? candidate-schema-of
-                 candidate-bind-atom candidate-fixed-clause))
+                 candidate-same-row-set? candidate-schema-of))
 
 (export candidate-positive-proof candidate-positive-closed-absence
         candidate-verify-positive-proof
@@ -79,12 +79,6 @@
    positive-rule-body?
    (reasoning-candidate-rules spec)))
 
-(def (instantiate-head head bindings)
-  (map (lambda (term)
-         (if (candidate-variable? term)
-           (cdr (assq term bindings))
-           term))
-       (cdr head)))
 ;;; max-steps bounds body-row probes and fixed-clause evaluations,
 ;;; including unsuccessful unifications and filters.
 ;;; The proposal's derived-fact limit separately bounds the DAG size.
@@ -286,6 +280,39 @@
                      (hash-put! index (car entry) (cdr entry)))) entries)
        (lambda (key) (hash-get index key))))))
 
+;;; One independent verification owns this plan. Only clause syntax is prepared;
+;;; predecessor identity and every row/binding remain checked for each node.
+;;; No producer indexes, completed verdicts or external proof values are cached.
+(defstruct positive-rule-replay (relation input-count execute) final: #t)
+
+;; : (-> InspectedRule PositiveRuleReplay)
+(def (prepare-positive-rule-replay rule)
+  (with (#(head body _) rule)
+    (let* ((flow (prepare-proof-binding-flow head body))
+           (render (proof-binding-flow-head flow))
+           (fresh (proof-binding-flow-fresh flow))
+           (replay
+            (foldr
+             (lambda ((clause :- proof-binding-clause) next)
+               (let (evaluate clause.apply)
+                 (if clause.relation
+                   (lambda (inputs frame by-id before row)
+                     (let (id (car inputs))
+                       (and (exact-integer? id) (<= 0 id) (< id before)
+                            (let (input (vector-ref by-id id))
+                              (and (eq? (proof-node-relation input) clause.relation)
+                                   (evaluate (proof-node-row input) frame)
+                                   (next (cdr inputs) frame by-id before row))))))
+                   (lambda (inputs frame by-id before row)
+                     (and (evaluate frame) (next inputs frame by-id before row))))))
+             (lambda (inputs frame _by-id _before row)
+               (and (null? inputs) (equal? row (render frame))))
+             (proof-binding-flow-clauses flow))))
+      (make-positive-rule-replay
+       (car head) (length (filter positive-atom? body))
+       (lambda (inputs _bindings by-id before row)
+         (replay inputs (fresh) by-id before row))))))
+
 ;;; Recheck an externally held proof without trusting its rule nodes.
 ;;; This checks one derivation per native row, not provenance completeness
 ;;; or absence. The caller still authenticates snapshot and program digests.
@@ -340,7 +367,8 @@
                      (rule-labels (proof-metadata-lookup
                                    (map (lambda (rule)
                                           (cons (vector-ref rule 2)
-                                            (cons rule (length (filter positive-atom? (vector-ref rule 1)))))) rules))))
+                                            (prepare-positive-rule-replay rule))) rules)))
+                     (match-query (prepare-grounding-atom query)))
                 ;; Independent replay owns its lookup tables. Source vectors retain
                 ;; duplicate occurrence positions; label lookup retains find's first
                 ;; rule even when supplied labels repeat. No producer index is reused.
@@ -377,45 +405,16 @@
                                  (list (proof-node-label node) (proof-node-relation node)
                                        (proof-node-row node)))))
                          ((rule)
-                          (let* ((entry (rule-labels (proof-node-label node)))
-                                 (rule (and entry (car entry))))
-                            (and rule
+                          (let (plan (rule-labels (proof-node-label node)))
+                            (and plan
                                  (eq? (proof-node-relation node)
-                                      (car (vector-ref rule 0)))
-                                 (equal? (bounded-list-length (proof-node-inputs node) (cdr entry))
-                                         (cdr entry))
-                                 (let loop ((clauses (vector-ref rule 1))
-                                            (inputs (proof-node-inputs node))
-                                            (bindings []))
-                                   (if (null? clauses)
-                                     (and (null? inputs)
-                                          (equal?
-                                           (proof-node-row node)
-                                           (instantiate-head
-                                            (vector-ref rule 0) bindings)))
-                                     (let (clause (car clauses))
-                                       (if (positive-fixed-clause? clause)
-                                         (let (next
-                                               (candidate-fixed-clause
-                                                clause bindings))
-                                           (and next
-                                                (loop (cdr clauses)
-                                                      inputs next)))
-                                         (let (id (car inputs))
-                                           (and (existing-input? id index)
-                                                (let (input (vector-ref by-id id))
-                                                  (and
-                                                   (eq? (proof-node-relation input)
-                                                        (car clause))
-                                                   (let (next
-                                                         (candidate-bind-atom
-                                                          clause
-                                                          (proof-node-row input)
-                                                          bindings))
-                                                     (and next
-                                                          (loop (cdr clauses)
-                                                                (cdr inputs)
-                                                                next))))))))))))))
+                                      (positive-rule-replay-relation plan))
+                                 (equal? (bounded-list-length (proof-node-inputs node)
+                                          (positive-rule-replay-input-count plan))
+                                         (positive-rule-replay-input-count plan))
+                                 ((positive-rule-replay-execute plan)
+                                  (proof-node-inputs node) [] by-id index
+                                  (proof-node-row node)))))
                          (else #f))))
                 (and
                  (let loop ((remaining nodes) (index 0))
@@ -431,8 +430,7 @@
                     (and (existing-input? id node-count)
                          (eq? (proof-node-relation (vector-ref by-id id))
                               (car query))
-                         (candidate-bind-atom
-                          query (proof-node-row (vector-ref by-id id)) [])))
+                         (match-query (proof-node-row (vector-ref by-id id)) [])))
                   (positive-proof-roots proof))
                  (candidate-same-row-set?
                   (map (lambda (id)

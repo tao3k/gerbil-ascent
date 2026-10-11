@@ -93,6 +93,7 @@
     "candidate/program"
     "candidate/funs"
     "candidate/grounding-plan"
+    "candidate/proof-frame"
     "candidate/finite-plan"
     "candidate/provenance"
     "candidate/provenance-graph"

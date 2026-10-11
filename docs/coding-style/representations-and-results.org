@@ -2,6 +2,26 @@
 
 [[file:../scheme-coding-style.org][Coding Style index]]
 
+* Applied: private proof expression and binding flow
+
+=candidate/proof-frame.ss= follows Gerbil's compile-before-execution pattern and
+invocation-local facts. Closed term operations become private final records and
+ordered continuations; relation/variable names are resolved during preparation.
+Public proof values retain their existing protocol. Preparing syntax does not
+validate an external predecessor, source row, digest or answer.
+
+One fresh dense frame owns a linear rule derivation. Absence uses a private
+marker distinct from #f. Successful prefixes prove first/repeated bindings;
+fixed computation still refuses a bound output, and following atoms check its
+computed value. Pure guard facts belong only to that prefix. Failed checks
+discard the frame rather than publishing partial bindings to another node.
+The independent verifier never borrows producer membership or verdict caches.
+
+The complete six-consumer A/B and negative variants are recorded in
+[[file:../../t/performance/proof-verification/README.org][proof verification qualification]]. Target improvements are 19.3%/19.9% CPU
+for wide/mixed verification. The small control adds 3us and 7840 bytes; private
+preparation overhead remains part of the full consumer, not hidden from timing.
+
 * Upstream source patterns
 
 The installed Gerbil =2591dcd= compiler makes fixed record fields visible:

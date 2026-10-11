@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
-        (only-in :clan/poo/object .o .cc .ref)
+        (only-in :clan/poo/object .o .cc .ref uninstantiate-object!)
         (only-in :clan/poo/mop element? validate)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract
@@ -30,7 +30,10 @@
       (let* ((program (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1)))) [] 16 16 16))
              (engine (gerbil-ascent-make-engine program #t))
              (session (gerbil-ascent-open-session program))
-             (alien (.o .append-source!: void .replace-source!: void .run: void)))
+             (alien (.o .append-source!: void .replace-source!: void .run: void))
+             (prototype (.ref GerbilAscentSessionContract 'proto)))
+        (uninstantiate-object! GerbilAscentSessionContract)
+        (check-equal? (eq? prototype (.ref GerbilAscentSessionContract 'proto)) #t)
         (for-each (lambda (value)
           (check-equal? (eq? (validate GerbilAscentSessionContract value) value) #t)
           (for-each (lambda (slot)

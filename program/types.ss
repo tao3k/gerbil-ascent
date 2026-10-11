@@ -334,9 +334,12 @@
 
 ;;; Session operations are the only mutable public boundary. A run returns an
 ;;; immutable result snapshot even when later appends extend the session.
+;; Prototype identity outlives the descriptor's lazily materialized slot cache.
+;; Rematerialization must not invalidate already published native Sessions.
+(def +session-prototype+ (.o))
 (define-type (GerbilAscentSessionContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/session
-  proto: (.o)
+  proto: +session-prototype+
   responsibilities:
   (.o .append-source!: +procedure+
       .replace-source!: +procedure+

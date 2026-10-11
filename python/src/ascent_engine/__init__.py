@@ -9,6 +9,7 @@ import signal
 import contextlib
 import fcntl
 import os
+import tempfile
 from cffi import FFI
 
 CDEF = '''
@@ -24,7 +25,7 @@ _runtime_pid = None
 
 @contextlib.contextmanager
 def _preserve_host_io():
-    """Embedded Scheme must not change flags of Python-owned descriptors."""
+    """Keep Gambit flag changes off inherited host open-file descriptions."""
     descriptors = {}
     for name in os.listdir('/dev/fd'):
         fd = int(name)
@@ -33,16 +34,48 @@ def _preserve_host_io():
             descriptors[fd] = ((stat.st_dev, stat.st_ino, stat.st_mode), fcntl.fcntl(fd, fcntl.F_GETFL))
         except OSError:
             pass
+    streams = []
     try:
+        # dup alone shares status flags across spawned workers. During native
+        # entry, standard ports use independently opened files instead. Retain
+        # all native output and restore the caller's descriptors before replay.
+        for fd in (0, 1, 2):
+            if fd not in descriptors:
+                continue
+            inheritable = os.get_inheritable(fd)
+            saved = os.dup(fd)
+            try:
+                stream = tempfile.TemporaryFile()
+            except BaseException:
+                os.close(saved)
+                raise
+            streams.append((fd, saved, stream, inheritable))
+            os.dup2(stream.fileno(), fd, inheritable=inheritable)
         yield
     finally:
+        for fd, saved, stream, inheritable in streams:
+            os.dup2(saved, fd, inheritable=inheritable)
+            os.close(saved)
         for fd, (identity, flags) in descriptors.items():
+            if fd in (0, 1, 2):
+                continue  # Native code never touched these original streams.
             try:
                 stat = os.fstat(fd)
                 if identity == (stat.st_dev, stat.st_ino, stat.st_mode):
-                    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
+                    if fcntl.fcntl(fd, fcntl.F_GETFL) != flags:
+                        fcntl.fcntl(fd, fcntl.F_SETFL, flags)
             except OSError:
                 pass
+        for fd, saved, stream, inheritable in streams:
+            try:
+                if fd in (1, 2):
+                    stream.seek(0)
+                    while chunk := stream.read(65536):
+                        remaining = memoryview(chunk)
+                        while remaining:
+                            remaining = remaining[os.write(fd, remaining):]
+            finally:
+                stream.close()
 
 def _shutdown():
     if _loaded is not None and os.getpid() == _runtime_pid:

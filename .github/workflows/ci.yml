@@ -81,13 +81,26 @@ jobs:
         run: GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify public C ABI and Python CFFI against formal observations
         run: |
-          sudo apt-get install -y python3-cffi
+          sudo apt-get install -y python3-cffi python3-setuptools
           export PYTHONPATH="$PWD/python/src"
           export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
           export ASCENT_ENGINE_LIBRARY="$PWD/.gerbil/lib/libascent.so"
           gerbil env /usr/bin/python3 -m ascent_test_support.supervision --cpu-progress -- timeout 120s /usr/bin/python3 -m ascent_engine.build --output "$ASCENT_ENGINE_LIBRARY"
           GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
-          /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s /usr/bin/python3 -u -m unittest discover -s python/engine_tests -v
+          /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.api_build --library "$ASCENT_ENGINE_LIBRARY" --header bindings/c/ascent.h --out "$PWD/.cache/ascent/cffi-api" --cc gcc
+          export PYTHONPATH="$PWD/.cache/ascent/cffi-api:$PYTHONPATH"
+          # Runtime shutdown is terminal. Each file gets a fresh native owner;
+          # the existing 120-second deadline still covers the entire matrix.
+          /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s bash -euo pipefail -c '
+            export ASCENT_ENGINE_BACKEND=abi
+            for test_file in python/engine_tests/test_*.py; do
+              /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "${test_file##*/}" -v
+            done
+            export ASCENT_ENGINE_BACKEND=api
+            for test_file in test_binding_modes.py test_computational_evidence.py test_datalog.py test_review.py test_rule_source.py; do
+              /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "$test_file" -v
+            done
+          '
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry

@@ -28,9 +28,14 @@
 (def (prepare events rows-of)
   (let (sizes (make-hash-table))
     (for-each (lambda (event)
-      (for-each (lambda (row)
-        (let (key (group-key row)) (hash-put! sizes key (+ 1 (or (hash-get sizes key) 0)))))
-        (rows-of event))) events)
+      ;; Consecutive equal injections introduce no new vertex. Count one
+      ;; resource witness per run, preserving the journal and every replay
+      ;; occurrence. Twice this count still bounds the actual vertex capacity.
+      (let (previous #f)
+        (for-each (lambda (row)
+          (unless (equal? previous row)
+            (let (key (group-key row)) (hash-put! sizes key (+ 1 (or (hash-get sizes key) 0)))))
+          (set! previous row)) (rows-of event)))) events)
     (and (andmap (lambda (entry) (and (memq (caar entry) '(2 3)) (<= (cdr entry) 256)))
                  (hash->list sizes))
          (let (groups (make-hash-table))
@@ -93,10 +98,19 @@
          (known-left (hash-get nodes (car pair))) (known-right (hash-get nodes (cadr pair)))
          (a (if known-left (root known-left) (fresh! group (car pair))))
          (b (if (equal? (car pair) (cadr pair)) a
-              (if known-right (root known-right) (fresh! group (cadr pair)))))
-         (new (append (if known-left [] (list a))
-                      (if (or known-right (eq? a b)) [] (list b))))
-         (roots (append new (replay-group-roots group)))
+              (if known-right (root known-right) (fresh! group (cadr pair))))))
+    (if (and known-left known-right (reaches? group a b))
+      (begin
+        (when (< budget 0) (error "ASCENT trrel output fact budget exceeded"))
+        (consume 0))
+      (insert-components! group row budget consume a b
+        (append (if known-left [] (list a))
+                (if (or known-right (eq? a b)) [] (list b)))))))
+;; Admit an existing closure fact before collecting either matrix axis. A zero
+;; frontier still visits the synchronous count consumer; every journal entry
+;; remains replayed and the original negative-budget rejection is preserved.
+(def (insert-components! group row budget consume a b new)
+  (let* ((roots (append new (replay-group-roots group)))
          (preds (collect-roots roots (lambda (p) (reaches? group p a)) []))
          (succs (collect-roots roots (lambda (s) (reaches? group b s)) []))
          (cycle (and (not (eq? a b)) (reaches? group b a)
@@ -123,19 +137,27 @@
 (def (gerbil-ascent-small-journal-export events kind-of rows-of budget skip delta?)
   (let (groups (prepare events rows-of))
     (and groups
-      (let ((output []) (admitted 0))
+      (let ((output []) (admitted 0) (previous #f))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (kind-of event) 'derived))))
+            ;; Reuse the synchronous event writer. A repeated injection still
+            ;; advances its zero-count transition without allocating a wrapper
+            ;; or looking up its already admitted vertices again.
+            (def emit
+              (if derived? (lambda (stored) (set! batch (cons stored batch)))
+                           (lambda (stored) (set! output (cons stored output)))))
+            (def (consume needed)
+              (let (next (+ admitted needed))
+                (begin0 (and (> next skip)
+                  (begin
+                    (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
+                    emit))
+                  (set! admitted next))))
             (for-each (lambda (row)
-              (insert! (hash-get groups (group-key row)) row budget
-                (lambda (needed)
-                  (let (next (+ admitted needed))
-                    (begin0 (and (> next skip)
-                      (begin
-                        (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
-                        (if derived? (lambda (stored) (set! batch (cons stored batch)))
-                                     (lambda (stored) (set! output (cons stored output))))))
-                      (set! admitted next)))))) (rows-of event))
+              (if (equal? previous row)
+                (consume 0)
+                (begin (insert! (hash-get groups (group-key row)) row budget consume)
+                       (set! previous row)))) (rows-of event))
             (when derived? (set! output (append! (reverse! batch) output)))))
           (reverse events))
         (reverse! output)))))

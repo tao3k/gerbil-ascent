@@ -1206,3 +1206,73 @@ construction/insertion remains a large remaining flow. All eight original gates
 pass without combining the rejected attempt; 70 fingerprints remain stable.
 Native package build and seven Suites/50 Cases pass, plus zero findings across
 three production source Policy owners. These are local, bounded receipts.
+
+* Grouped UF initial source admission and failure boundary ownership
+
+The preceding grouped export scenario still allocated roughly 304 MB per
+complete engine. Stage diagnostics locate the dominant owner in initialization:
+complete engine construction allocated 298-309 MB, compared with 5.4 MB for
+raw native insertion of the same 5056 grouped source occurrences, 6800 bytes
+for run, 1.78 MB for export, and 180 KB for unindexed provider capture.
+These diagnostic single samples identify a flow, not a matched speed claim.
+
+Gerbil =gerbil/runtime/error.ss:67-73= implements =with-catch= with continuation
+capture/graft. Initial sources formerly crossed storage's scalar failure
+boundary for every occurrence. A fresh UF owner without external field callbacks
+now crosses one failure boundary around the whole source batch. Every source
+check still precedes its injection, and the native remaining output budget
+precedes graph mutation. Count publication declines temporary frontier output;
+readiness is admitted only after complete success. Source or output failure
+poisons the private owner. Scalar incremental admission, external field callbacks,
+custom storage and EqRel initialization retain their existing boundary.
+
+The complete evaluator and initial source owner freeze =d0753a12f17c7d9d26ddff3a97bf79d4ce612a3f=;
+canonical storage/provider/type identity and scalar native helpers remain shared.
+Historical initialization invokes the unchanged scalar storage path. Exact
+historical export order and independent closure/size/uniqueness truth admit
+fresh complete engines. Three targets (sparse/grouped/retained) and five controls
+(cold/small/packed/EqRel/prepared capture) keep one 90-second native ASP run,
+20 alternating CPU pairs, 20 independent admissions and five allocation pairs.
+[[file:../../t/performance/uf-insertion/README.org][The grouped initialization report]] preserves the ownership boundary and
+fixed gates. Local receipts remain distinct from exact-head GitHub CI.
+
+Initial count publication additionally suppresses native rectangle planning;
+frozen frontiers and synchronous export retain descriptor materialization.
+The same whole-injection preflight/commit remains shared. Consecutive empty
+frontiers reuse successful admission only after every occurrence's source check.
+The first two attempts remain rejected (sparse -2.4% /-7.8% CPU, both below the
+fixed 10% gate), with their complete available receipts retained separately.
+No failed attempt contributes samples to the eventual complete admission.
+
+The third whole attempt also remains rejected: sparse/grouped passed, including
+316368784 ->7730432 grouped allocation, but retained CPU fell only 1.6%.
+The final batch also corrects =program/view-replay.ss='s capacity estimate:
+consecutive equal injections within an event contribute one vertex-resource
+witness because they introduce no new vertex. Twice this run count bounds all
+actually introduced vertices, with the original 256-witness/512-vertex ceiling.
+Journals and every replay operation remain intact. Duplicate-heavy small graphs
+can use the existing packed path. Frozen view-state/replay owners now accompany
+the evaluator/initialization reference; scalar storage/UF helpers remain shared.
+
+A fourth attempt missed grouped CPU by the original gate (-9.7%); it remains
+rejected despite its allocation gain. Packed replay now shares one event writer
+and emitter, with zero-count transitions for consecutive repeats. This aligns
+its synchronous ownership discipline with sparse replay while retaining every
+journal occurrence, count transition and source budget check.
+
+Final complete admission: sparse CPU 1589 ->1074us (-32.4%, 20/20 wins), grouped
+6685 ->2752us (-58.8%, 20/20), retained 5212 ->4524us (-13.2%, 16/20).
+Allocation falls 66.1% /98.9% /71.3%; grouped complete execution drops
+321645152 ->3484400 bytes. Cold costs +7us and small +1us; EqRel adds 64 bytes.
+All five controls pass under their original bounds. All eight scenarios pass
+in one 90-second invocation with 74 stable fingerprints. Native package build,
+eight Suites/61 Cases and source Policy over four modified production owners
+with exact macro witness closure pass. Four earlier attempts remain rejected;
+no samples are combined. The preceding exact-head CI =38138315351= at =d0753a1=
+failed at Session POO contract validation, separate from these local receipts.
+
+This qualifies the combined fresh initialization/publication/replay flow for
+these duplicate-heavy complete engines. It does not isolate raw insertion CPU,
+prove peak RSS improvements or qualify large unique graphs/SMP scaling.
+Remaining large flows include nonconsecutive duplicate/resource planning,
+large unique UF closure growth, and actor pending-list selection.

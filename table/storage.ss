@@ -21,9 +21,9 @@
                  gerbil-ascent-trrel-extension)
         (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-extension
-                 gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze))
+                 gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-count-insert!))
 
-(export gerbil-ascent-canonical-view-storage-provider? gerbil-ascent-storage-eqrel-state?
+(export gerbil-ascent-storage-initialize-uf! gerbil-ascent-canonical-view-storage-provider? gerbil-ascent-storage-eqrel-state?
         gerbil-ascent-storage-publish-view! gerbil-ascent-canonical-uf-storage-provider?
         gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
         GerbilAscentStorageProviderContract
@@ -332,3 +332,34 @@
     (begin
       (unless (= count (gerbil-ascent-row-count frontier)) (error "ASCENT UF frontier count mismatch"))
       (values (gerbil-ascent-storage-freeze-view state indexed?) frontier))))
+
+
+;; gerbil-ascent-storage-initialize-uf!
+;; : (-> StorageOwner Rows SourceAdmission Natural Natural Natural)
+;; | requires: Fresh canonical UF owner, no external field callbacks.
+;; | doc m%
+;;     Admit an initial UF source batch under one private failure boundary.
+;;     Source checks precede each injection; its remaining output budget is
+;;     checked by the native kernel before commit. Count publication declines
+;;     concrete frontiers. The caller admits readiness after the complete batch.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-storage-initialize-uf! owner '((0 1)) check-source! 0 8)
+;;     ;; => 3 materialized rows, with the private owner awaiting admission
+;;     ```
+;;   %
+(def (gerbil-ascent-storage-initialize-uf! state rows check-source! count output-limit)
+  (call-with-storage-state state
+    (lambda (raw)
+      (def previous #f)
+      (for-each (lambda (row)
+        (check-source! row)
+        ;; A duplicate immediately follows its successful admission, with the
+        ;; same monotone owner and a nonnegative remaining budget. Source
+        ;; occurrence checks still execute; its empty frontier changes no count.
+        (unless (equal? previous row)
+          (set! count (+ count (gerbil-ascent-trrel-uf-count-insert! raw row (- output-limit count))))
+          (set! previous row))) rows)
+      count)))

@@ -10,7 +10,7 @@
         gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
         gerbil-ascent-trrel-uf-view-lookup
         gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate
-        gerbil-ascent-trrel-uf-replay-insert!)
+        gerbil-ascent-trrel-uf-replay-insert! gerbil-ascent-trrel-uf-count-insert!)
 (defstruct uf-node (parent members size reach predecessors order))
 (defstruct uf-group (nodes roots next-order indexed?))
 (defstruct uf-insertion (group-key group row left-node right-node a b) final: #t)
@@ -88,7 +88,7 @@
 
 ;; : (forall (a) (-> UfState Row Natural (-> [Rectangle] Natural Natural a) a))
 ;; : (-> UfState Row Natural FrontierPublisher Publication)
-(def (admit-insertion! groups row budget finish)
+(def (admit-insertion! groups row budget finish (rectangles? #t))
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))
               (error "ASCENT trrel requires two or three columns" row)))
@@ -106,7 +106,7 @@
       (begin
         (when (< budget 0) (error "ASCENT trrel output fact budget exceeded"))
         (finish [] 0 0))
-      (insert-components! groups (make-uf-insertion group-key group row left-node right-node a b) budget finish))))
+      (insert-components! groups (make-uf-insertion group-key group row left-node right-node a b) budget finish rectangles?))))
 
 ;; : (-> UfState Row Natural FrozenView)
 (def (gerbil-ascent-trrel-uf-insert! groups row budget)
@@ -134,9 +134,9 @@
 
 ;; Admission dispatch precedes rectangle planning. This branch alone owns
 ;; preflight and commit; an existing closure fact never enters the product scan.
-;; : (forall (a) (-> UfState UfInsertion Natural (-> [Rectangle] Natural Natural a) a))
-;; : (-> UfState UfInsertion Natural FrontierPublisher Publication)
-(def (insert-components! groups admission budget finish)
+;; : (forall (a) (-> UfState UfInsertion Natural (-> [Rectangle] Natural Natural a) Boolean a))
+;; : (-> UfState UfInsertion Natural FrontierPublisher Boolean Publication)
+(def (insert-components! groups admission budget finish rectangles?)
   (with (((uf-insertion group-key group row left-node right-node a b) admission))
   (let* ((width (car group-key)) (nodes (uf-group-nodes group))
          (pair (if (= width 3) (cdr row) row)) (left (car pair)) (right (cadr pair))
@@ -161,6 +161,7 @@
           (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
           (set! changes (cons (cons p s) changes)))) succs)) preds)
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
+    (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
       (for-each (lambda (n)
         (let (members (uf-node-members n))
@@ -168,7 +169,7 @@
       (for-each (lambda (change)
         (set! added (cons (make-rectangle prefix
                            (uf-node-members (car change))
-                           (uf-node-members (cdr change))) added))) changes))
+                           (uf-node-members (cdr change))) added))) changes)))
     ;; No callback occurs between preflight and commit. Budget rejection has
     ;; not installed new nodes, rewritten parents or altered adjacency.
     (unless (null? new)
@@ -327,3 +328,21 @@
     (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows)))
                               (gerbil-ascent-view-select view columns key))
     (reverse rows)))
+
+
+;; gerbil-ascent-trrel-uf-count-insert!
+;; : (-> UfState Row Natural Natural)
+;; | doc m%
+;;     Admit and commit the same whole injection as the frozen frontier kernel,
+;;     returning only its cardinality. No rectangle descriptors or emitted rows
+;;     are needed for a fresh engine's callback-free initial source accounting.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-trrel-uf-count-insert! (gerbil-ascent-trrel-uf-state) '(0 1) 8)
+;;     ;; => 3
+;;     ```
+;;   %
+(def (gerbil-ascent-trrel-uf-count-insert! groups row budget)
+  (admit-insertion! groups row budget (lambda (_blocks count _units) count) #f))

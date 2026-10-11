@@ -14,7 +14,8 @@
                  gerbil-ascent-storage-admit-state!
                  gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider?
-                 gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
+                 gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
+                 gerbil-ascent-canonical-uf-storage-provider? gerbil-ascent-storage-initialize-uf!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export make-initial-source-state gerbil-ascent-initialize-sources!)
 
@@ -157,6 +158,14 @@
                  ;; Source admission records every accepted occurrence, even
                  ;; when joining leaves its value equal to the previous row.
                  (lattice-frontier-stage! frontier key merged))))
+           ((and native-view? (not check) (gerbil-ascent-canonical-uf-storage-provider? provider))
+            ;; Initial ownership has no observable intermediate consumer. One
+            ;; batch failure boundary replaces per-row continuation capture;
+            ;; count publication avoids constructing discarded frontier views.
+            (set! source-materialized-count
+              (gerbil-ascent-storage-initialize-uf! (vector-ref storage-states index)
+                rows check-source! source-materialized-count output-limit))
+            (gerbil-ascent-storage-admit-state! (vector-ref storage-states index)))
            (native-view?
             (source-admission-loop callbacks rows
               (row check-source!)

@@ -791,3 +791,54 @@ The first injection checks the fixed budget, while duplicate admission leaves
 state/count/order unchanged. Do not mutate/deduplicate the journal or retain
 this execution state in a frozen result. Native regressions compare mixed
 source/derived/append events against the historical owner for both storage kinds.
+
+* Study: fresh UF batch ownership and count-only publication
+
+Gerbil =gerbil/runtime/error.ss:67-73= defines =with-catch= by capturing a
+continuation and grafting exceptions to it. Repeating this boundary for each
+unobserved initial source injection can allocate much more than native graph
+insertion itself. Preserve per-operation failure isolation for external field
+callbacks and incremental owners; place one catch around a fresh private batch
+with no intermediate consumer. Source occurrence checks still precede every
+injection, remaining output budget still precedes native mutation, and readiness
+is restored only after complete success. A failed private batch requires replay.
+
+=table/storage.ss='s initial UF admission uses the existing native continuation
+to publish counts and decline row emission. =program/initialization.ss= selects
+this mode for canonical UF views without field callbacks. No temporary frozen
+frontier/query wrappers or concrete closure rows are needed to count initial
+materialization. Public scalar insertion and all callback paths remain on their
+existing protocol. This is an ownership boundary specialization, not a second
+scheduler, row cache or generic dispatch system.
+
+The [[file:../../t/performance/uf-insertion/README.org][initial UF qualification]] freezes the evaluator and initial source owner;
+canonical providers and scalar storage helpers are shared to preserve identity.
+Its full-engine evidence includes source checks, native graph construction,
+publication and ordered export, with cold/small/packed/EqRel/capture controls.
+
+Within this callback-free batch, consecutive identical rows reuse an empty
+frontier after successful admission. Nonmutating source occurrence checks still
+execute before reuse, preserving input limits and failure order. The first
+injection's native preflight ensures the unchanged materialized count has a
+nonnegative remaining output budget. This invocation-local witness does not
+skip field callbacks, change the source log or retain a cache in the result.
+
+Count-only native UF admission shares the same preflight and commit kernel.
+Its publication mode suppresses rectangle construction before final count
+return, rather than creating a frontier and discarding its visitor wrappers.
+Frozen frontiers and synchronous export keep descriptor materialization enabled;
+the cardinality/units/order contract of their carriers is unchanged. Graph-level
+regression checks every three-node edge subset and rejected budget boundary.
+
+The bounded replay planner counts vertex-resource witnesses, rather than every
+identical adjacent occurrence. Equal consecutive rows introduce no new vertex;
+within each event, twice the run count remains a conservative vertex capacity.
+The 256-witness/512-vertex bound stays fixed. Keep every journal row and replay
+operation, but allow duplicate-heavy small graphs to use the existing packed
+path. Source budget accounting remains based on all original occurrences.
+
+Packed insertion admits an already reachable pair before collecting matrix
+axes, matching native UF's early-admission boundary. It still calls the count
+consumer with zero and rejects a negative budget. Fresh pairs alone enter the
+component planning/commit helper. Representation selection must preserve the
+same admission discipline when duplicate-heavy graphs use the bounded path.

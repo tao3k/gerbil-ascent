@@ -14,7 +14,8 @@
         (only-in :gerbil-ascent/table/storage
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
-(export GerbilAscentRelationContract
+(export gerbil-ascent-owned-root-contract
+        GerbilAscentRelationContract
         GerbilAscentLatticeContract
         GerbilAscentTermContract
         GerbilAscentAtomContract
@@ -271,6 +272,65 @@
       max-input-facts: +fact-budget+
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))
+
+;;; Inert construction owns every generated Term until root publication.
+;;; Refine only nested responsibilities: ordinary public contracts stay exact.
+;;; A successful Term check may be reused by identity within this one root;
+;;; list shape, atom/rule shape and every other responsibility are still checked.
+;; gerbil-ascent-owned-root-contract
+;; : (forall (c) (-> c c))
+;; : (-> DeclarationRootContract OwnedDeclarationRootContract)
+;; | doc m%
+;;     Build an invocation-local POO responsibility refinement for a private
+;;     canonical declaration graph. No supplied callback can observe or mutate
+;;     its Terms before publication. Do not use for caller-owned declarations.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-owned-root-contract GerbilAscentProgramContract)
+;;     ;; => a private root contract retaining all Program responsibilities
+;;     ```
+;;   %
+(def (gerbil-ascent-owned-root-contract root)
+  (let* ((accepted (make-hash-table-eq))
+         (owned-terms
+          (slot-contract 'ascent/terms
+            (lambda (value)
+              (and (list? value)
+                   (andmap (lambda (term)
+                             (or (hash-get accepted term)
+                                 (and (element? GerbilAscentTermContract term)
+                                      (begin (hash-put! accepted term #t) #t)))) value)))))
+         (owned-atom
+          (.o (:: @ GerbilAscentAtomContract)
+              proto: (.ref GerbilAscentAtomContract 'proto)
+              responsibilities:
+              (.o (:: @ (.ref GerbilAscentAtomContract 'responsibilities)) terms: owned-terms)))
+         (owned-heads
+          (slot-contract 'ascent/heads
+            (lambda (value)
+              (and (pair? value) (list? value) (andmap (cut element? owned-atom <>) value)))))
+         (owned-body
+          (slot-contract 'ascent/clauses
+            (lambda (value)
+              (and (list? value)
+                   (andmap (lambda (clause)
+                             (or (element? owned-atom clause)
+                                 (element? +clauses+ (list clause)))) value)))))
+         (owned-rule
+          (.o (:: @ GerbilAscentRuleContract)
+              proto: (.ref GerbilAscentRuleContract 'proto)
+              responsibilities:
+              (.o (:: @ (.ref GerbilAscentRuleContract 'responsibilities))
+                  heads: owned-heads body: owned-body)))
+         (owned-rules
+          (slot-contract 'ascent/rules
+            (lambda (value) (and (list? value) (andmap (cut element? owned-rule <>) value))))))
+    ;; The inherited proto slot is a constructor, not a shared constant.
+    ;; Bind the admitted parent's prototype explicitly on every refinement.
+    (.o (:: @ root) proto: (.ref root 'proto)
+        responsibilities: (.o (:: @ (.ref root 'responsibilities)) rules: owned-rules))))
 
 ;;; Session operations are the only mutable public boundary. A run returns an
 ;;; immutable result snapshot even when later appends extend the session.

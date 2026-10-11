@@ -805,3 +805,57 @@ bytes. Cold solve is a regression control, not a promoted speedup: 10/20 CPU
 wins and 320 extra allocated bytes. Open-cut verification has no material CPU
 change. Two competing-compiler diagnostics remain excluded in the cache.
 No proof work budget or performance gate changed after sampling.
+
+* Canonical Operator Program and Fragment publication
+
+The public declaration-construction work unit now covers the complete mixed
+Operator graph lifecycle across =program/operator.ss=, =program/objects.ss=
+and =program/types.ss=.
+Previously every term/atom/rule/Program or Fragment could recursively validate
+already canonical children. Resolve the final receiver's three constructors
+once, use the existing inert construction extent only for canonical identities,
+then independently validate the entire published root after restoring ordinary
+checks. Custom relation, rule and terminal constructors retain immediate checks,
+including inherited methods forced after the base method. Descriptor admission,
+source ownership, lexical lowering and public POO contracts retain their owners.
+
+The frozen facade is =652934cd728d7edee32df020af75e9632dffc755=,
+original blob =76b1fd04ce11e5251be193f95465a5c34e880957=. Its five relative
+imports are qualified; reversing only those rewrites reproduces the original
+bytes. Both sides share current graph admission/lowering and declaration types.
+Six complete consumer gates cover wide Program and Fragment construction,
+exports, a full cold solve, custom constructors, small graphs and nullary sources.
+See =t/performance/operator-publication/README.org= for exact measurement bounds.
+
+Native =gxtest= qualifies 89 distinct Cases in five modules with complete Case, Module,
+Harness and final =OK= markers. Recursive-contract-only failures inside each
+custom constructor prove that its callbacks do not enter the inert extent.
+Projection bindings, mixed lexical fixes, all exported handles, complete root
+contracts, failed graph admission and historical source ownership are checked.
+This delivery does not close retained-engine execution/publication recovery or
+scoped typed admission; those remain distinct audit work units.
+
+A complete Program A/B then fails the fixed ASP p95 cap (1.054665s >999ms),
+although its relative CPU/allocation gates pass. The rejected receipt is retained
+and excluded from admitted results. The production unit is extended to
+=program/types.ss= with invocation-local POO responsibility refinement: generated
+Term identities receive one full successful shape check per root, while every
+other field, list shape, atom/rule and nonatom clause contract retains admission.
+Parent native prototypes are explicitly preserved. Public contracts and custom
+constructor paths remain on ordinary validation. This completes the same
+construction/publication unit rather than starting an unrelated optimization.
+
+The complete matched native batch now passes all six original CPU, allocation
+and ASP admission gates in one process under the unchanged 90-second deadline,
+with final =OK= and exit zero. Program CPU falls 319287 ->53961 us (83.1%, 20/20
+wins), Fragment and export consumption 320101 ->53643 us (83.2%, 20/20 wins).
+Allocation falls 607511288 ->104913000 bytes and 607446200 ->104823896 bytes
+respectively (82.7%). Cold, custom-constructor, small and nullary controls also
+pass. Source and executable hashes match the qualified versions. The custom
+constructor adds 688 bytes and retains ordinary immediate admission; this is a
+passing regression control, not a claimed specialization benefit.
+
+These local results close canonical declaration construction/publication only.
+They do not establish general solver throughput or qualify remote CI. The
+retained failed attempts remain excluded; the complete evidence table and native
+reproduction entry are in =t/performance/operator-publication/README.org=.

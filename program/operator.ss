@@ -11,7 +11,8 @@
         "operator-descriptor.ss" "operator-measurement.ss" "operator-reference.ss"
         (only-in "operator-lowering.ss" lower-operator-graph)
         (only-in "objects.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
-                 gerbil-ascent-fragment))
+                 gerbil-ascent-fragment gerbil-ascent-construct-inert-program
+                 gerbil-ascent-construct-inert-fragment))
 
 (export GerbilAscentOperatorCompilerContract relational-op-compiler
         relational-op-source relational-op-union relational-op-join
@@ -49,6 +50,20 @@
 
 (def OperatorCompiler. (.ref GerbilAscentOperatorCompilerContract 'proto))
 
+;;; Resolve applicability on the final receiver before graph construction.
+;;; Procedure identity proves that no supplied constructor observes children
+;;; before root admission. Derived receivers with any custom stage keep the
+;;; ordinary immediate contracts and their callback/error order.
+;; : (forall (c d p r) (-> c d p p (-> (-> r) r) (-> (-> r) r)))
+;; : (-> RelationConstructor RuleConstructor RootConstructor RootConstructor RootReceiver RootReceiver)
+(def (publication-constructor make-relation make-rule terminal canonical receive)
+  (if (and (eq? make-relation gerbil-ascent-relation)
+           (eq? make-rule gerbil-ascent-rule) (eq? terminal canonical))
+    receive
+    (lambda (construct) (construct))))
+
+;; : (forall (i d o) (-> i d o Void))
+;; : (-> InputLimitCandidate DerivedLimitCandidate OutputLimitCandidate Void)
 (def (check-compiler-budgets! input-limit derived-limit output-limit)
   (unless (and (exact-integer? input-limit) (> input-limit 0)
                (exact-integer? derived-limit) (> derived-limit 0)
@@ -76,25 +91,33 @@
         (.make-program gerbil-ascent-program)
         (.make-fragment gerbil-ascent-fragment)
         (.compile
-         (let ((make-relation (.ref self '.make-relation))
-               (make-rule (.ref self '.make-rule))
-               (make-program (.ref self '.make-program)))
+         (let* ((make-relation (.ref self '.make-relation))
+                (make-rule (.ref self '.make-rule))
+                (make-program (.ref self '.make-program))
+                (publish (publication-constructor make-relation make-rule make-program
+                           gerbil-ascent-program gerbil-ascent-construct-inert-program)))
            (lambda (root input-limit derived-limit output-limit)
              (check-compiler-budgets! input-limit derived-limit output-limit)
-             (let-values (((relations rules sources output _labels)
-                           (lower-operator-graph root #f make-relation make-rule)))
-               (values (make-program relations rules input-limit derived-limit output-limit sources)
-                       output)))))
+             (publish
+              (lambda ()
+                (let-values (((relations rules sources output _labels)
+                              (lower-operator-graph root #f make-relation make-rule)))
+                  (values (make-program relations rules input-limit derived-limit output-limit sources)
+                          output)))))))
         (.fragment
-         (let ((make-relation (.ref self '.make-relation))
-               (make-rule (.ref self '.make-rule))
-               (make-fragment (.ref self '.make-fragment)))
+         (let* ((make-relation (.ref self '.make-relation))
+                (make-rule (.ref self '.make-rule))
+                (make-fragment (.ref self '.make-fragment))
+                (publish (publication-constructor make-relation make-rule make-fragment
+                           gerbil-ascent-fragment gerbil-ascent-construct-inert-fragment)))
            (lambda (root output-label)
              (unless (symbol? output-label)
                (error "operator fragment output label must be a symbol" output-label))
-             (let-values (((relations rules sources output labels)
-                           (lower-operator-graph root #t make-relation make-rule)))
-               (make-fragment relations rules (cons (cons output-label output) labels) sources))))))))
+             (publish
+              (lambda ()
+                (let-values (((relations rules sources output labels)
+                              (lower-operator-graph root #t make-relation make-rule)))
+                  (make-fragment relations rules (cons (cons output-label output) labels) sources))))))))))
 
 ;;; Admit the complete receiver protocol before entering either publication
 ;;; method; a constructor procedure derives a receiver with the other stages.
@@ -107,7 +130,8 @@
       compiler)))
 
 ;; relational-op-compile
-;;   : (-> RelationalOp Nat Nat Nat [OperatorCompiler | RelationConstructor] (Values Program Symbol))
+;;   : (forall (c p) (-> RelationalOp Integer Integer Integer c (Values p Symbol)))
+;;   : (-> RelationalOp InputLimit DerivedLimit OutputLimit CompilerOwner (Values Program Symbol))
 ;;   | doc m%
 ;;       Lower a descriptor graph to the same admitted positive-rule
 ;;       program consumed by the Scheme relational lifecycle.
@@ -132,6 +156,8 @@
 ;;; A builder graph can participate in the same fragment lifecycle as native
 ;;; rules. Every named source gets a fresh handle per call; output and source
 ;;; labels are the only public entry points. Composition supplies budgets.
+;; : (forall (f) (-> RelationalOp Symbol OperatorCompiler f))
+;; : (-> RelationalOp ExportLabel CompilerOwner Fragment)
 (def (relational-op-fragment root output-label (compiler relational-op-compiler))
   (unless (symbol? output-label)
     (error "operator fragment output label must be a symbol" output-label))

@@ -106,3 +106,43 @@ wire projection alone never permits reuse.
 [[file:../../t/performance/temporal-replay/README.org][Matched complete consumers]]
 qualify this semantic flow. CPU evidence from verification is not an initial
 solve or general execution throughput claim.
+
+* Study: resolve canonical construction, then admit one complete root
+
+=program/operator.ss= applies the private inert declaration extent to both
+Program and Fragment publication. The final POO receiver supplies relation,
+rule and terminal constructors. One applicability check compares all three
+procedures with the canonical implementations before selecting the publication
+receiver; inheriting a method does not prove that a child's constructors are
+canonical. Any customized stage retains the ordinary immediate declaration
+contracts. A constructor wrapper is a custom stage even when it eventually
+calls the canonical constructor.
+
+=program/objects.ss= owns the construction extent and root receivers. Native
+=call-with-values= restores ordinary checks before recursively admitting the
+complete Program or Fragment, including exceptional exits. Intermediate
+canonical children cannot escape to a supplied callback in this extent; graph
+admission still precedes construction. No declaration shape, source occurrence,
+lexical binding, generated handle or public generic method is replaced.
+
+This follows Gerbil =1cfb032= =compiler/optimize-call.ss:45-63=: establish
+applicability before specialization and retain the ordinary call when that
+applicability is unknown. The concrete study and complete consumer gates are
+in =t/performance/operator-publication/README.org=. Validation savings in this
+flow require complete root consumption; they are not a general solver claim.
+
+The same private publication now refines POO responsibilities in
+=program/types.ss=: one fresh positive membership table owns generated Term
+shape checks. Atoms, rules and roots still traverse all their responsibilities;
+nonatom clauses use the original contracts. Ordinary public contracts remain
+unchanged. This is shape admission inside one immutable construction, not a
+cache of descriptor/scoped validation, lexical bindings or evaluation results.
+
+A derived native Contract must explicitly retain its parent's =proto=. Gerbil
+POO inherited slots evaluate against the final receiver; inheriting the parent's
+=proto: (.o)= constructor creates another prototype, which cannot classify
+objects already constructed with the parent's prototype. Preserve ancestry,
+then refine the responsibility map. New native Cases compare every root slot
+and prototype, independently validate published roots with original contracts,
+reject malformed Terms, test guard clauses without invoking callbacks, and
+recheck a previously published Term identity after mutation in a later root.

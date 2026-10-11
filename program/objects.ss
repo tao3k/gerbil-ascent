@@ -11,7 +11,7 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
-                 GerbilAscentRelationContract
+                 gerbil-ascent-owned-root-contract GerbilAscentRelationContract
                  GerbilAscentLatticeContract
                  GerbilAscentTermContract
                  GerbilAscentAtomContract
@@ -41,7 +41,8 @@
         gerbil-ascent-bound-membership
         gerbil-ascent-rule
         gerbil-ascent-fragment
-        gerbil-ascent-program gerbil-ascent-construct-inert-program)
+        gerbil-ascent-program gerbil-ascent-construct-inert-program
+        gerbil-ascent-construct-inert-fragment)
 
 ;;; A private inert construction flow has no supplied procedures or escaping
 ;;; children. Its root contract recursively checks the complete POO object tree.
@@ -50,20 +51,42 @@
 (def current-declaration-check (make-parameter validate))
 (def (declaration-check contract value)
   ((current-declaration-check) contract value))
+
+;;; Only canonical, callback-free producers may borrow this construction extent.
+;;; The receiver runs after ordinary checks have been restored, including throws.
+;; : (forall (a r) (-> (-> a) (-> a r) r))
+;; : (-> InertDeclarationConstructor CheckedRootReceiver ValidatedRoot)
+(def (receive-inert-declarations construct receive)
+  (call-with-values
+   (lambda ()
+     (parameterize ((current-declaration-check (lambda (_contract value) value)))
+       (construct)))
+   receive))
+
+;;; Empty roots have no shared Terms. Rule-bearing roots borrow a fresh POO
+;;; refinement only while validating; the published value retains no checker.
+;; : (forall (c a) (-> c a a))
+;; : (-> DeclarationRootContract OwnedDeclarationRoot ValidatedRoot)
+(def (validate-inert-root contract value)
+  (validate (if (null? (.ref value 'rules)) contract
+              (gerbil-ascent-owned-root-contract contract)) value))
 ;; The producer may return a Program alone or a Program and its output handle.
 ;; Receive both outside the construction extent, validating before publication.
 ;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))
 ;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))
 (def (gerbil-ascent-construct-inert-program construct)
-  (call-with-values
-   (lambda ()
-     (parameterize ((current-declaration-check (lambda (_contract value) value)))
-       (construct)))
+  (receive-inert-declarations construct
    (case-lambda
-     ((program) (validate GerbilAscentProgramContract program))
+     ((program) (validate-inert-root GerbilAscentProgramContract program))
      ((program output)
-      (let (checked (validate GerbilAscentProgramContract program))
+      (let (checked (validate-inert-root GerbilAscentProgramContract program))
         (values checked output))))))
+
+;; : (forall (f) (-> (-> f) f))
+;; : (-> InertFragmentConstructor ValidatedFragment)
+(def (gerbil-ascent-construct-inert-fragment construct)
+  (receive-inert-declarations construct
+    (lambda (fragment) (validate-inert-root GerbilAscentFragmentContract fragment))))
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Lattice. (.ref GerbilAscentLatticeContract 'proto))

@@ -886,3 +886,23 @@ ordered scalar output, budget rejection and held snapshots together.
 
 [[file:../../t/performance/uf-growth/README.org][Unique UF qualification]] provides native-kernel and complete-engine A/B scopes,
 fixed controls, rejected attempts and the allocation boundary.
+
+* Carry state premises through the complete admission flow
+
+A fresh endpoint certifies that the non-self predecessor/successor product is
+entirely missing. Express its exact weighted count as a product of axis sums;
+carry the same premise into commit and frontier writing. Self injections and
+ordinary products retain membership checks. Preserve budget admission and
+writer order as part of the constructor/commit contract.
+
+Private monotone flags can certify singleton axes without maintaining another
+adjacency index. Set them when an external arc commits, including declined
+delta output. False must remain a sound premise after root resolution and SCC
+merging; conservative true may select a scan. Test both transitions and legal
+delta boundaries. Gerbil's =std/struct/dag.ss= separates walk-local premises and
+callbacks; =compiler/optimize-base.ss= expresses class/accessor facts in private
+structure metadata. Apply these patterns where the owner can establish and
+preserve the premise, with no public settings or compatibility protocol.
+
+[[file:../../t/performance/uf-axis/README.org][Fresh product and replay-axis qualification]] records complete engine CPU gains,
+unchanged native allocation and the explicit dense-closure space boundary.

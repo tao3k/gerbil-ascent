@@ -168,13 +168,20 @@
          ;; Succ(b) membership is already represented by b's reach table.
          (cycle (and (not (eq? a b)) (reachable? b a)
                      (filter (lambda (p) (reachable? b p)) preds)))
+         ;; A fresh source or sink has no external arc. Every pair on these
+         ;; axes is missing; self-injections retain ordinary admission.
+         (fresh-product? (and (not (eq? a b)) (or (not left-node) (not right-node))))
          (changes []) (needed (length new)) (added []))
     ;; Count each missing component rectangle before rows or graph mutation.
-    (for-each (lambda (p)
-      (for-each (lambda (s)
-        (unless (reachable? p s)
-          (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
-          (when rectangles? (set! changes (cons (cons p s) changes))))) succs)) preds)
+    (if (and fresh-product? (not rectangles?))
+      (set! needed (+ needed
+        (* (foldl (lambda (n sum) (+ sum (uf-node-size n))) 0 preds)
+           (foldl (lambda (n sum) (+ sum (uf-node-size n))) 0 succs))))
+      (for-each (lambda (p)
+        (for-each (lambda (s)
+          (when (or fresh-product? (not (reachable? p s)))
+            (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
+            (when rectangles? (set! changes (cons (cons p s) changes))))) succs)) preds))
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
     (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
@@ -213,7 +220,8 @@
         ;; pair's admission test; no changes spine is needed for count consumers.
         (let (targets (reverse succs))
           (for-each (lambda (p)
-            (for-each (lambda (s) (unless (reachable? p s) (commit-arc! p s))) targets))
+            (for-each (lambda (s)
+              (when (or fresh-product? (not (reachable? p s))) (commit-arc! p s))) targets))
             (reverse preds)))))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
     ;; Merge toward the largest component, bounding union parent depth.

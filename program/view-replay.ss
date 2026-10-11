@@ -4,7 +4,7 @@
 ;;; Invocation-local ordered export. Packed flags replace a second UF graph;
 ;;; no replay matrix, emitted tuple or cursor is retained by the frozen cut.
 (export gerbil-ascent-small-journal-export)
-(defstruct replay-node (parent members size))
+(defstruct replay-node (parent members size inbound? outbound?))
 (defstruct replay-group (nodes roots values used width bits))
 (def (root n) (if (replay-node-parent n) (root (replay-node-parent n)) n))
 (def (position group a b) (##fx+ (##fx* a (replay-group-width group)) b))
@@ -17,7 +17,7 @@
          (mask (##fxarithmetic-shift-left 1 (##fxand p 15))) (bits (replay-group-bits group)))
     (u16vector-set! bits word (##fxior (u16vector-ref bits word) mask))))
 (def (fresh! group value)
-  (let* ((id (replay-group-used group)) (n (make-replay-node #f (list id) 1)))
+  (let* ((id (replay-group-used group)) (n (make-replay-node #f (list id) 1 #f #f)))
     (vector-set! (replay-group-values group) id value)
     (replay-group-used-set! group (+ id 1))
     (hash-put! (replay-group-nodes group) value n)
@@ -91,16 +91,20 @@
 (def (count-sources group preds succs count)
   (if (null? preds) count
     (count-sources group (cdr preds) succs (count-targets group (car preds) succs count))))
-(def (write-targets! group p succs prefix emit)
+(def (write-targets! group p succs prefix emit fresh-product?)
   (unless (null? succs)
     (let (s (car succs))
-      (unless (reaches? group p s)
+      (when (or fresh-product? (not (reaches? group p s)))
+        ;; Monotone witnesses: false certifies a singleton axis. True may
+        ;; survive SCC retirement, conservatively selecting the normal scan.
+        (replay-node-outbound?-set! p #t)
+        (replay-node-inbound?-set! s #t)
         (write-block! group prefix emit (replay-node-members p) (replay-node-members s))))
-    (write-targets! group p (cdr succs) prefix emit)))
-(def (write-sources! group preds succs prefix emit)
+    (write-targets! group p (cdr succs) prefix emit fresh-product?)))
+(def (write-sources! group preds succs prefix emit fresh-product?)
   (unless (null? preds)
-    (write-targets! group (car preds) succs prefix emit)
-    (write-sources! group (cdr preds) succs prefix emit)))
+    (write-targets! group (car preds) succs prefix emit fresh-product?)
+    (write-sources! group (cdr preds) succs prefix emit fresh-product?)))
 ;; Collect a fresh private spine in the writer order, leaving roots untouched.
 (def (collect-roots roots selected? out)
   (if (null? roots) out
@@ -125,13 +129,18 @@
 ;; remains replayed and the original negative-budget rejection is preserved.
 (def (insert-components! group row budget consume a b new)
   (let* ((roots (append new (replay-group-roots group)))
-         (preds (if (memq a new) (list a)
+         (preds (if (not (replay-node-inbound? a)) (list a)
                     (collect-roots roots (lambda (p) (reaches? group p a)) [])))
-         (succs (if (memq b new) (list b)
+         (succs (if (not (replay-node-outbound? b)) (list b)
                     (collect-roots roots (lambda (s) (reaches? group b s)) [])))
          (cycle (and (not (eq? a b)) (reaches? group b a)
                      (filter (lambda (p) (reaches? group b p)) (reverse preds))))
-         (needed (count-sources group preds succs (length new)))
+         (fresh-product? (and (not (eq? a b)) (pair? new)))
+         (needed (if fresh-product?
+                   (+ (length new)
+                      (* (foldl (lambda (n sum) (+ sum (replay-node-size n))) 0 preds)
+                         (foldl (lambda (n sum) (+ sum (replay-node-size n))) 0 succs)))
+                   (count-sources group preds succs (length new))))
          (prefix (if (= (length row) 3) (list (car row)) []))
          (values (replay-group-values group)))
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
@@ -147,7 +156,7 @@
       ;; prepended change list without allocating that intermediate family.
       ;; These collected list spines are invocation-local; roots and journals
       ;; are never reversed in place. The emitted spine is likewise private.
-      (write-sources! group preds succs prefix emit))
+      (write-sources! group preds succs prefix emit fresh-product?))
     (replay-group-roots-set! group roots)
     (when cycle (merge! group roots cycle))))
 (def (gerbil-ascent-small-journal-export events kind-of rows-of budget skip delta?)

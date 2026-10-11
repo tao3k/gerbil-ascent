@@ -1373,3 +1373,46 @@ for dense DAGs. This batch reduces sorting, scans and transient ownership; it
 does not remove that retained representation cost. Remaining larger work is
 dense closure representation and actor pending-list selection. Remote CI
 closure remains separate from these local receipts.
+
+* Fresh weighted products and monotone replay axis witnesses
+
+This batch carries admission state premises through counting and commit. A
+fresh endpoint on a non-self injection certifies that every root pair in the
+predecessor/successor product is missing. Native count-only admission computes
+its exact weighted product from axis sums and skips per-pair reachability probes
+in preflight and commit. Scalar descriptor order and whole-injection budget
+admission remain intact. Self and ordinary injections retain membership tests.
+
+Packed replay adds private monotone inbound/outbound flags. False selects a
+singleton axis; admitted external arcs set the source/target flags even when
+delta output is declined. Multi-root SCC winners have admitted incoming/outgoing
+arcs, so false cannot become an unsound singleton premise after root resolution.
+Conservative true simply selects the existing scan. Fresh replay products use
+the same exact weighted count and missing-pair premise. No extra adjacency
+counter, journal reduction, global cache or resource setting is introduced.
+The 512-vertex packed limit remains unchanged.
+
+The source study uses Gerbil =1cfb032= =std/struct/dag.ss:31-47= and
+=compiler/optimize-base.ss:63-89= for owner-local state premises, metadata and
+callback boundaries. [[file:../../t/performance/uf-axis/README.org][The fresh-axis report]] freezes five owners at =e17bd86e=.
+Native chain/cycle targets compare historical/current kernels. Complete engines
+share current native storage helpers and canonical provider/type identity while
+comparing historical/current replay. All fourteen original populations and
+gates remain fixed: one 90-second invocation, twenty alternating CPU pairs,
+twenty ASP admissions and five allocation pairs. All fourteen pass; all 172
+selected source/compiler-artifact/contract fingerprints match before and after.
+
+Native chain/cycle CPU falls 11885 ->8721us (-26.6%) and 4000 ->3254us (-18.7%),
+with unchanged allocation. Complete unique/partitioned engines fall 5122 ->1555us
+(-69.6%) and 10705 ->7065us (-34.0%), allocation 0.9% /0.8%. Cold control adds
+6us (+1.1%); small allocation adds 64 bytes. Both pass the original gates and
+remain in the report. Native builds, 10 Suites /74 Cases and source Policy
+(zero findings) pass, including all 512 small replay histories/delta boundaries,
+large-SCC weighted fresh endpoints, self injections and budget rejection.
+
+The shared branch advanced to unrelated native-library commit =b262558= during
+qualification, with measured owners/artifacts unchanged. Performance claims
+remain tied to those artifacts and the frozen baseline. The dense retained
+reach representation still grows quadratically; this batch improves computation
+and planning, without claiming reduced native allocation or retained-space
+growth. Dense representation and actor pending selection remain larger flows.

@@ -1,0 +1,18 @@
+{
+  "bindingVerified": true,
+  "files": {
+    "plan.json": "7c42ffa4742ca2c04d101c21642254e6edfd3b617e620baa82db26917c1be5ae",
+    "report.json": "aa19ce1224b7844471a6ce752bf9b665d5ebba386a778722202bae145211a1b9",
+    "report.md": "8c9024c8f6aa51134312240235152eb84063d939ef6bc76ca54dc920ad90d069",
+    "pre-build-failure.json": "cf2a4ce76a325d3cbab884ed34c96e5252d0f768af11ae78bcd466950ba4d627",
+    "post-qualification-source-drift.json": "cd194237213c3d27edabe9db07e73bdd93e1f0d8777cdddfd32f346c2c15ad3b",
+    "test-receipt.json": "62d02230a86cc35f2f81b818be63ba94a0e889379fe23d8d68b9ad5644a293a0",
+    "raw.tar.gz": "3a5878959a82108c2ea31a39a6aa2ae3f1a232d8cdab89c474e86219aa0d0eaf",
+    "receipt.json": "144ea043343874eb65bad46f84ed3a578b45c480a118617c406388245211dc7c"
+  },
+  "originalFailedExperimentArchive": {
+    "path": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/docs/research/agent-inference/fact-reuse-results/raw.tar.gz",
+    "sha256": "f2aaf9fa96441a9c816d1862171cb6709923a277ffc22a39e9f264620971379d"
+  },
+  "negativePreBuildReceiptPreserved": true
+}

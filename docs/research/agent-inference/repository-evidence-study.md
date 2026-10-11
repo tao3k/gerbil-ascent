@@ -18,6 +18,10 @@ See the [real repository experiment report](real-repository-experiment-report.md
 for measured outcomes, execution faults, charged work and uniform continuation.
 The two tasks do not complete four-family coverage or establish a general cost reduction.
 
+See the [task quality and complexity audit](repository-task-quality.md) for
+per-obligation test coverage, difficulty limits, grader blind spots and the
+distinction between real-task validity and Scheme mechanism relevance.
+
 ## Paper transfer
 
 - [SWE-rebench](https://arxiv.org/html/2505.20411v2): collect real issue/fix pairs,

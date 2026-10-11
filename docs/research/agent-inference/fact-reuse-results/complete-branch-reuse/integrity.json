@@ -1,0 +1,21 @@
+{
+  "bindingVerified": true,
+  "files": {
+    "audit.json": "e99e6f3d46517867681073ca05965d9e0482c97796f9c20a0619939eb689e052",
+    "qualification.json": "a48203ae02007907f18b9697b4b6eda6719c7067eb74207e2f00a05f96d91d9b",
+    "plan.json": "43f68e392fff5740e672a6e9e433d6bc6794c69bb18bee23a8b09978b7318efc",
+    "report.json": "a8c36d977b9d8a2be236f148a1508f0d5fe383a1f98f9599905cdd75e402bec2",
+    "report.md": "0935656e51dc65c5a428ae56f38a31f7890e9b159da7b403e4d4779545d71696",
+    "qualification-raw.tar.gz": "d32b5136b131a332e3ab2b342b4cf349cef1b8bb330422381dabd1846a2c49ff",
+    "raw.tar.gz": "e3810cc21ac7721f325d2a290e8d079b0134f43287feb443a5f60810b4cf98a8",
+    "annotation-ledger.json": "3373c1620b0861120a0e034fb7019fd7ebdfa369fb55048d40c4834652319711",
+    "thinking-episodes.md": "b962f58753644be66d85c9785180a26948de0effcc8808426b7f2120f835e640",
+    "ledger.json": "f3295ee8943e7bb031f144ff63529f70cd31060f3ebd91e33a4a6829479081cf"
+  },
+  "originalNegativeAttemptArchives": {
+    "model-dialogue-reuse": "30fdaacd68c11d4c0c8491a2bc72aabd93cf32541aba1c6dbc5b5570b2b93c34",
+    "remaining-budget-reuse": "fd011369eae26587b4549e732fd2a874bf30fa0127778f9f7a8833728a428cba",
+    "complete-branch-reuse": "e3810cc21ac7721f325d2a290e8d079b0134f43287feb443a5f60810b4cf98a8"
+  },
+  "auditPassed": true
+}

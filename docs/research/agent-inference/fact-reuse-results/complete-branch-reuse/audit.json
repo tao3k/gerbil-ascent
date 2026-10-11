@@ -1,0 +1,407 @@
+{
+  "passed": true,
+  "planSha256": "43f68e392fff5740e672a6e9e433d6bc6794c69bb18bee23a8b09978b7318efc",
+  "taskAndSelectionJudgeUnchanged": true,
+  "sourceCapture": {
+    "head": "7bb4ba0cfe372357d5a30cef644407fb77582a57",
+    "sourceSha256": {
+      "table/trrel-uf.ss": "eba18bc4716b3ae67577822a2ba8ea4c9a7849d049ba0db19a4ceba984717568",
+      "program/initialization.ss": "05a44e82bbe50d5a28ae0152cd233be602c3ea92767755430c75ac05fef58221",
+      "program/scheme-session.ss": "836131ffe572c21a74d43e813a347512b17a0a0572f58128f2d06be3471b3823",
+      "program/update-selection.ss": "e244d6d253e73355bbbb64e7e8a1d78e9794c6d35a8e047bdb2abd7fbb38ba0b",
+      "program/reuse.ss": "c69b9f67d816ac3959cf4488e9b7e8de0ffd21978ca4501b1ec8818493d2697f",
+      "program/scheme-language.ss": "db6c7cf5ce3944e04153b720514a51a0450a537cbdcff490ac1cae4908f5ffaa",
+      "candidate/funs.ss": "6c5b9d17ce2fcbdcae763db275cb5c51c997a79cf323f64d7a6eb86c8ba6bfef",
+      "table/storage.ss": "8d09474dea4d30a1e7d6aedf998f0a5849a75c51875f85f45585fea2462ebea8",
+      "program/evaluate.ss": "0ac8c1c8d59cac9bd914b7c25f73b78319cd5c4917b38726f1641665a66dc6b4",
+      "program/scheme-checked.ss": "280bbd8a11cc37283fce6a785271effa35b506b4c1c8028af9f65e8f252b3688",
+      "program/view-state.ss": "87bd9d6ec3d342e33746372fcdb97f841d2f115d722a6e0c4eac3cc7ec241c95",
+      "candidate/stratified-producer.ss": "99b4731310f0363f70f016c15e9780f8a364a837790a35203346a2dedd31dcc5",
+      "core/ordered-call.ss": "7911d2d3835c44e43c728d959eabfbcc9a0aa890b4f814fa41c3f89f3910094b",
+      "program/source-snapshot.ss": "4262e270d9334a887285fbf73e2cb8d9d0a2a51a00bedfafceea5482710f5a11",
+      "candidate/stratified-proof.ss": "765c9cc6a52e6ae32a6e857cd5eecf2c89851a5351359834f74e6126a0d6951a",
+      "core/dependency-graph.ss": "371fb245942b62b974644f7960eb9ab26164f1e76f658b1d90007868f5796112",
+      "program/planning.ss": "338a3e269dd796a3756855ff172b38814fd7ed95f487c840ad333abcb4242078",
+      "program/session.ss": "d18fe12ade3fe73bfe35474633583d5460de881762882e43d98bd5cbe9440966",
+      "program/scheme-snapshot.ss": "876ed111dc52953ade5222210c8028e65e81218cfdfeb8d3f915acd04eefc071",
+      "program/scheme-admit.ss": "1ca8572d20f044150b26d508bcdfd873aa40dd013e4bb48cd2900b6e84f1e92a",
+      "program/result.ss": "7e0cc213bf4dac8f87b13d7c5bf09c871a237b95facc05e3174905a5fba090b9",
+      "gerbil.pkg": "526334723a6aad8d0ecdf8f4abad3e50afc22aa95af177827a5ef54215331cd9",
+      "core/expression-plan.ss": "2989c27fdb1a95af94aaaca23bf06b0d3222852d04fe8b4afdef97e9f0fc6029",
+      "candidate/closure-index.ss": "ef174e5258dc8addcded8a1c3597af6132cf4ea59c3f6b110ca182ec0803f30c",
+      "core/positive-plan.ss": "992c263d18992e973caca04daf98b8b593232a687c5e9c8f665c29d448386cc0",
+      "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+      "candidate/feedback.ss": "1b286ef6c6c5ce0c54cf18d5bdffdc73590e2bcc5d82c5f316e361aa4045b5df",
+      "table/funs.ss": "88b9ad822be7c6f61572a94dddc824130be2a1dccc13cc264a194832f3370bbe",
+      "core/rule-bindings.ss": "bf579732fdadbfe13249353e9b1eba34cb6c218184de76e9cf85509ab5b441f5",
+      "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+      "program/component-worker.ss": "608631a10eb89adf8d6b15acf298bba49448b510abfb697364df4c04542962f5",
+      "program/actor-round.ss": "06cd953b2b392ba343737a3522e0fcbaf4798691a325978da598e96a57b558c0",
+      "program/index.ss": "7cb483bab490110ccbc6791d83947b4b83e80d4c576457c1a3d889907bcc3564",
+      "program/aggregators.ss": "627cd7debc3d6d7430fffc73ed1f7edd236191c859fb1ddca6563050e7f23e6b",
+      "program/lattice-frontier.ss": "0189a84700dae294bcc35bd205974786851db0bdd539f578d858efd989911c99",
+      "table/access.ss": "b29c25251dbe8e1afcdbe674ffe9d8f293615668de9b87f720efbd1399b31180",
+      "candidate/program-identity.ss": "c23f4ce210c938e614acd61ef150293fcf5c90815bb9292045c27f485f3e700b",
+      "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+      "program/component-plan.ss": "f4f2c088e96df95d73283aabb5ec101e144617d192fd6207ada3e022e471e0ed",
+      "candidate/finite-evidence.ss": "baa083e4e9799c5b9bf652f631efd2eb3e38771b5d2c5cf28c75cb2ddee99127",
+      "candidate/types.ss": "7e83ce8a87183116ca820fb4c51284e9b3a19b524629009cf972957bc8e44c87",
+      "table/eqrel.ss": "95b5bc55186cb3931814befc0cd1beb395f020442cfece794a921cf9cc0a1597",
+      "program/view-replay.ss": "ff0e554d642a38301557c5787269f5571d59880676f4154a00f390a180f6050e",
+      "program/scheme-query.ss": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+      "candidate/nonmembership.ss": "a6c38ae2b000d7a39028a2b1fcbb0d79538a4756d2ba6f85a6c0ad503abe1ae2",
+      "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+      "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+      "table/index-sharing.ss": "4b7eedb676304cfd6812863d0c642331acbc4bf52ce76f911651c33ad377ecf7",
+      "candidate/certificate-limits.ss": "23f59f012ec7240ca557a84f6411083a10c20909e8f374ec195d1b32f49c1134",
+      "program/activation.ss": "d4189e85f55d3f2bb178e89134c19e5232ee0bd72f9a3f19a1b8116febbfccc4",
+      "program/objects.ss": "59bc263f7cbd9240612813e532e960b94cc9990169d6e0911619b22c0648b6ce",
+      "program/scheme-admission.ss": "599404695b27f72505428d78d7a793af7dfcb9c2527b070b7244e54f3a708fce",
+      "program/source-state.ss": "31e01b8a7a5d27542b5ddd2f7ff0202d7d78613f51902eece2e49ae0a96087c5",
+      "core/relation-view.ss": "f8dcffa002e8e771d91927179e39e96b0a8a2c70afb885adcd868a12e51d9058",
+      "candidate/datum.ss": "4c48712f7588734e4061e4375a5cceb8fde91094f3134b4ec90ebcb2afc04067",
+      "candidate/reasoning.ss": "8fac42ec17bd2e88b17e59e99e2e037bc92d02326c2f90c148e84735e0278c5e",
+      "program/types.ss": "04caab79eddc6cbcd2866729028c09cc6f8b599e3b3d4ff09033aa1333476d7f",
+      "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+      "candidate/program.ss": "41970936fc52d05ffebb968305de6d8aa3e7b11a006ff895ddcfdaab038775ef",
+      "candidate/grounding-plan.ss": "def010f1a699418c073a56265183ffb6b86eef347ba562d202cfdecd6f6735fa",
+      "core/rule-semantics.ss": "b57285ed87ae32f16f326c0196cf5e279cdeeb47346e4ffa37129817dac45282",
+      "candidate/finite-plan.ss": "081fef03012c9ba86c69c11472f294506d50c2e6989f533456b75225b1941aaa",
+      "candidate/provenance.ss": "e8426bda4631128fc15d97fdfff8d1ed21034abf6dd73f34443dd811de76e538",
+      "candidate/evidence-store.ss": "cb303c496c8c12c6353608ad23d380c02289e5be99dbe95e92fde56920e377f9",
+      "candidate/proof-frame.ss": "9c9cab650dfa59740b8f793f919ff04a654ea5db3906a0463c55793f0afdcbb2"
+    },
+    "scope": "Current Library capture for bounded transport qualification",
+    "buildReceipt": "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.cache/ascent/candidate-interaction/latest-proof-frame-rebuild"
+  },
+  "liveSourceDriftAtAudit": [],
+  "solverCalls": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 1659,
+      "output": 55711,
+      "thinking": 55699,
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 1767,
+      "output": 21920,
+      "thinking": 21908,
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "turn": 1,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 23965,
+      "output": 337,
+      "thinking": 325,
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 2256,
+      "output": 1594,
+      "thinking": 1582,
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 1,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 4803,
+      "output": 2381,
+      "thinking": 2369,
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 2,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 8199,
+      "output": 29305,
+      "thinking": 29293,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 2201,
+      "output": 11374,
+      "thinking": 11362,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 1,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 14533,
+      "output": 1144,
+      "thinking": 1132,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 2,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 16686,
+      "output": 161,
+      "thinking": 149,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 1777,
+      "output": 11667,
+      "thinking": 11655,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 1,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 13747,
+      "output": 312,
+      "thinking": 300,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 2,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 14409,
+      "output": 173,
+      "thinking": 161,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 3,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 14992,
+      "output": 502,
+      "thinking": 490,
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "turn": 0,
+      "status": "completed",
+      "model": "deepseek-flash",
+      "input": 1655,
+      "output": 15286,
+      "thinking": 14955,
+      "failure": "Expecting value: line 1 column 1 (char 0)"
+    }
+  ],
+  "outputTruncatedCalls": 0,
+  "invalidActionTrajectories": 1,
+  "unknownCostCalls": 0,
+  "budgetPerTrajectory": 65536,
+  "allActualInputAndThinkingCharged": true,
+  "rawArchiveSha256": {
+    "model-dialogue-reuse": "30fdaacd68c11d4c0c8491a2bc72aabd93cf32541aba1c6dbc5b5570b2b93c34",
+    "remaining-budget-reuse": "fd011369eae26587b4549e732fd2a874bf30fa0127778f9f7a8833728a428cba",
+    "complete-branch-reuse": "e3810cc21ac7721f325d2a290e8d079b0134f43287feb443a5f60810b4cf98a8"
+  },
+  "controls": [
+    {
+      "name": "dialogue-qualification",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 301,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 57,
+            "output_tokens_details": {
+              "reasoning_tokens": 19
+            },
+            "total_tokens": 358
+          },
+          "failure": null
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 374,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 11,
+            "output_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "total_tokens": 385
+          },
+          "failure": null
+        }
+      ],
+      "knownTokens": 743,
+      "unknownCostCalls": 0
+    },
+    {
+      "name": "required-tool-qualification",
+      "calls": [
+        {
+          "turn": 0,
+          "status": null,
+          "usage": null,
+          "failure": {
+            "type": "RuntimeError",
+            "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: d5a61e05-1f58-4491-b214-7d17cfe31397)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+          }
+        }
+      ],
+      "knownTokens": 0,
+      "unknownCostCalls": 1
+    },
+    {
+      "name": "branch-turn-qualification",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 406,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 249,
+            "output_tokens_details": {
+              "reasoning_tokens": 194
+            },
+            "total_tokens": 655
+          },
+          "failure": null,
+          "action": {
+            "parentId": 0,
+            "optionId": 0
+          },
+          "wireEncoding": "function_call"
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 716,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 95,
+            "output_tokens_details": {
+              "reasoning_tokens": 40
+            },
+            "total_tokens": 811
+          },
+          "failure": null,
+          "action": {
+            "parentId": 1,
+            "optionId": 1
+          },
+          "wireEncoding": "function_call"
+        }
+      ],
+      "knownTokens": 1466,
+      "unknownCostCalls": 0
+    },
+    {
+      "name": "structured-branch-turn-qualification",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 468,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 97,
+            "output_tokens_details": {
+              "reasoning_tokens": 85
+            },
+            "total_tokens": 565
+          },
+          "failure": null,
+          "action": {
+            "parentId": 0,
+            "optionId": 0
+          },
+          "wireEncoding": "json_message"
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 630,
+            "input_tokens_details": {
+              "cached_tokens": 384
+            },
+            "output_tokens": 45,
+            "output_tokens_details": {
+              "reasoning_tokens": 33
+            },
+            "total_tokens": 675
+          },
+          "failure": null,
+          "action": {
+            "parentId": 1,
+            "optionId": 1
+          },
+          "wireEncoding": "json_message"
+        }
+      ],
+      "knownTokens": 1240,
+      "unknownCostCalls": 0
+    }
+  ],
+  "allAttemptsKnownSolverTokens": 687181,
+  "allAttemptsKnownAnnotationTokens": 485205,
+  "controlKnownTokens": 3449,
+  "controlUnknownCostCalls": 1,
+  "repeatMeasurementScope": "Only independently true positive path/ready derivations with explicit supported premises. Negative/absence repetitions, resource/value recomputation, hidden reasoning, annotation completeness and inter-rater agreement are not established. Zero observed repeats is not evidence of zero true repeats.",
+  "liveHeadAtFinalAudit": "97e41652d7787ee8063a2388e593e893be8d2449",
+  "branchAtFinalAudit": "feature/ascent-scheme-syntax",
+  "capturedSourceStillMatchesCurrentCommittedLibrary": true
+}

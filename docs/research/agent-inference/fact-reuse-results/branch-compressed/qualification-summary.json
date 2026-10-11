@@ -1,0 +1,18 @@
+{
+  "frozenHead": "206f465ea75ad6e6d07d8735d094f230bf90176d",
+  "nativeSemanticHead": "c3be5121c3f6ef92634b4c25920ea0a53abff706",
+  "headDifference": ".gitignore only; all frozen/native source hashes verified",
+  "coldNativeBuildPassed": true,
+  "nativeApiAbiPassed": true,
+  "consumerChecks": 23,
+  "finiteQuintSampleCount": 1000,
+  "nativeQuintCorrespondenceRows": 32,
+  "scopedLeanProofDagPassed": true,
+  "committedInputGatePassed": true,
+  "sameFrozenTasksAndJudgeAndBudget": true,
+  "antiRepetitionSolverPromptAdded": false,
+  "retainedReviewTraces": 16,
+  "newReviewTraces": 17,
+  "fullSemanticRecallCertified": false,
+  "offlineReplayPassed": true
+}

@@ -11,5 +11,8 @@ description = "Provider byte IO and process supervision for native Scheme tests"
 requires-python = ">=3.10"
 dependencies = ["cffi>=1.16,<3"]
 
+[project.optional-dependencies]
+native-build = ["setuptools>=68"]
+
 [tool.setuptools.packages.find]
 where = ["src"]

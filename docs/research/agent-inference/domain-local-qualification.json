@@ -1,0 +1,81 @@
+{
+  "schema": "ascent.domain-local-qualification.v1",
+  "scope": "Local conditional contracts and bounded correspondence, not a proof of Python extraction or all upstream behavior.",
+  "artifacts": {
+    "scheme-precision.json": "1a4b836a83b740e3542269d6f8302e947b233b5fc79d82734f1ac882d2cf990e",
+    "quint-precision.json": "1315e026b84bb2ab0e16e3288ff13bb298abce87b6d402548f4671def763a437",
+    "scheme-graph.json": "c53be3eca4fd1fac659b9b63ac91b26b19a49d7d279f00c0e30caf0e5dd1cfdd",
+    "quint-graph.json": "7b5ab268c62a1eaff280f28b51ec5cfecf93f463842f9acbfe27725f36a0c892",
+    "quint-retention.log": "d0f5af01b9abc1b219f35bafbc97f39871530e3a624de65dae18df277ccb4c8a",
+    "development-executed-domain.json": "3fe6f58e1c38d606209c674b30ed63bcb68cca1b50dd73bbf01cebbf164a3e64",
+    "lean-domain-final.log": "6fba06baebfd988ec66e35c4919a0f1511a5a6de54422eed7b35daf5c7aefe3d",
+    "quint-candidate-guard.log": "9bf9504837913874e59ac82546c172b5db947a93a41ba1a25e17e833114f13d8",
+    "scheme-domain-final.log": "fa7ce73b68721a44ad154fcf0cbeb64c64d8f0a2a2af38d498e0aa33a4cd829a",
+    "python-final.log": "eae0353878f854bd37c6bd247bd1bbbee42844878785a9c79441f76ecc7454cb"
+  },
+  "precisionCases": 2400,
+  "graphUpdateCases": 500,
+  "retentionTraces": 10000,
+  "transitionsPerTrace": 30,
+  "retentionSeed": 1010,
+  "developmentCollectorNote": "Production collector observes reachable Dy mutation body and all returned series exponents. Repeated precision-budget failures refer to one defect, not independent bugs.",
+  "executedDevelopmentChecks": [
+    {
+      "task": "group-centrality-order",
+      "revision": "parent",
+      "observations": 36,
+      "failedClaims": 18
+    },
+    {
+      "task": "group-centrality-order",
+      "revision": "fixed",
+      "observations": 36,
+      "failedClaims": 0
+    },
+    {
+      "task": "series-root-precision",
+      "revision": "parent",
+      "observations": 3,
+      "failedClaims": 3
+    },
+    {
+      "task": "series-root-precision",
+      "revision": "fixed",
+      "observations": 5,
+      "failedClaims": 0
+    }
+  ],
+  "frozenProducerCheckAfterPaidRun": {
+    "allMatched": true,
+    "planSha256": "077921bdb63f540aafdec1479d31c2707a66ec977608c0c9af450534fae761ff",
+    "engineLibrarySha256": "5d91cf23006a388774ae2f114c9bee982bd7eb638f34c96e3d95767c32707f0d"
+  },
+  "candidateGuardFormal": {
+    "traces": 10000,
+    "transitionsPerTrace": 30,
+    "seed": 1010,
+    "independentGraderValidity": "assumed; admission/state proof only"
+  },
+  "localTests": {
+    "pythonUnitTests": 92,
+    "pythonSeconds": 10.372,
+    "schemeCases": 4,
+    "schemeFinalOK": true,
+    "cffiDomainIntegrationTests": 1
+  },
+  "sources": {
+    "applications/domain-evidence.ss": "ffda42ad1b25f51d68339a9c0ce95cf5859b8ee9b8d24ff642586c71773b80df",
+    "interface/engine-api.ss": "43f68d4acf8ee58b219db712f2601b2ba26a2174d6ea680c9c2401963c342fa4",
+    "packages/proofs/lean/DomainEvidence.lean": "3b2cd2839d4cfab86ce17e7022e668da04a29cc0bb1800d93605eb2ccf89755d",
+    "packages/proofs/quint/DomainEvidence.qnt": "c5989613fbb9207cecff0e250612ca3c0bc9a38fdd9b034dad44b101a5c660c8",
+    "packages/proofs/quint/VerifiedCandidate.qnt": "9cab2a1da91e0bc6b4f4769c6e0608d7abbbf3ed922d898bca8aecf76eeafea3",
+    "python/src/ascent_engine/domain_evidence.py": "08f2577b7d8380ac2c0c4c85b26029f45a13ea0472e692929bd6eb3b6f846c0b",
+    "python/src/ascent_test_support/domain_observations.py": "8f0ec3078a9ebddd2fa070898f4396a3af3a3ae0c169b7f435ca1ac19e0b42e9",
+    "python/src/ascent_test_support/repository_model_study.py": "7fad93c9b691cfcf8225f6006379147b5298c1f8f7f578e7592d11753cca92f1"
+  },
+  "checkoutAtCompletion": "652934cd728d7edee32df020af75e9632dffc755",
+  "checkoutBoundary": "Concurrent unrelated work changed HEAD; qualification binds the listed sources and frozen engine, not all checkout behavior.",
+  "guardFrozenPlanSha256": "a462d50dd5bcaf03bb7c213ec88e721f4eafae1079625cf57c94018f0593e596",
+  "guardReceiptsSha256": "0e99f3e54c647e1d0cefdfe01b615e354a27306bcbc31e5d0f10689a690466c0",
+  "postModelChanges": "New plans default to candidate checking on every edit; prose acceptance sets success only after sealing; replay also accepts public prose-wrapped edits. Frozen paid-run producers remain unchanged."
+}

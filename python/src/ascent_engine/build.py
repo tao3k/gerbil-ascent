@@ -29,7 +29,7 @@ def define(path, key):
     if not match: raise ValueError('generated linker omitted '+key)
     return match[1]
 
-def build(root, output):
+def build(root, output, relink=False):
     root = root.resolve(); output = output.resolve(); output.parent.mkdir(parents=True, exist_ok=True)
     if platform.system() == 'Darwin':
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = platform.mac_ver()[0].split('.')[0]+'.0'
@@ -56,14 +56,25 @@ def build(root, output):
     directory=output.parent; link=directory/'ascent_.c'; link_object=link.with_suffix('.o')
     runtime=directory/'runtime.o'
     print(f'ASCENT-C-ABI-LINK modules={len(sdk)+len(user)+1}',flush=True)
-    run([gsc,'-target','C','-link','-o',link,*[p.with_suffix('.c') for p in sdk],*user,entry],root)
-    run([gsc,'-target','C','-cc-options','-D___LIBRARY','-obj','-o',link_object,link],root)
-    run([gsc,'-target','C','-cc-options',
-         f'-I{root / "bindings/c"} -D___VERSION={define(link,"___VERSION")} -DASCENT_LINKER={define(link,"___LINKER_ID")}',
-         '-obj','-o',runtime,root/'bindings/c/runtime.c'],root)
+    def current(artifact, inputs):
+        if not artifact.is_file() or any(not p.is_file() or p.stat().st_mtime_ns > artifact.stat().st_mtime_ns for p in inputs):
+            raise ValueError('relink requires current compiled artifact: '+str(artifact))
+    if relink:
+        current(link,[*[p.with_suffix('.c') for p in sdk],*user,entry])
+        current(link_object,[link,home/'include/gambit.h'])
+        current(runtime,[link,root/'bindings/c/runtime.c',root/'bindings/c/ascent.h',home/'include/gambit.h'])
+    else:
+        run([gsc,'-target','C','-link','-o',link,*[p.with_suffix('.c') for p in sdk],*user,entry],root)
+        run([gsc,'-target','C','-cc-options','-D___LIBRARY','-obj','-o',link_object,link],root)
+        run([gsc,'-target','C','-cc-options',
+             f'-I{root / "bindings/c"} -D___VERSION={define(link,"___VERSION")} -DASCENT_LINKER={define(link,"___LINKER_ID")}',
+             '-obj','-o',runtime,root/'bindings/c/runtime.c'],root)
     sources=list(dict.fromkeys([*user,entry,*sdk]))
     def object_for(source):
         obj=source.with_suffix('.o'); generated=source.with_suffix('.c')
+        if relink:
+            current(generated,[source]); current(obj,[generated,home/'include/gambit.h'])
+            return obj
         if not obj.is_file() or generated.stat().st_mtime_ns > obj.stat().st_mtime_ns:
             print('ASCENT-C-ABI-OBJECT '+source.name,flush=True)
             run([gsc,'-target','C','-cc-options','-fPIC','-obj','-o',obj,generated],root)
@@ -73,13 +84,27 @@ def build(root, output):
     with ThreadPoolExecutor(max_workers=min(cores,len(sources),64)) as workers:
         objects=list(workers.map(object_for,sources))
     flags=shlex.split((home/'lib/libgerbil.ldd').read_text().strip().strip('()'))
-    shared=['-dynamiclib','-Wl,-undefined,dynamic_lookup','-Wl,-no_compact_unwind',
+    shared=['-dynamiclib','-Wl,-install_name,@rpath/'+output.name,
+            '-Wl,-undefined,dynamic_lookup','-Wl,-no_compact_unwind',
             '-mmacosx-version-min='+os.environ['MACOSX_DEPLOYMENT_TARGET']] if platform.system()=='Darwin' else ['-shared']
     candidate=output.with_name(output.name+'.pending')
-    run(['cc',*shared,'-o',candidate,*objects,link_object,runtime,
-         '-L',home/'lib','-lgambit',*flags,'-Wl,-rpath,'+str(home/'lib')],root)
+    run([os.environ.get('CC','cc'),*shared,'-o',candidate,*objects,link_object,runtime,
+         '-L',home/'lib','-lgambit',*flags,*shlex.split(os.environ.get('LDFLAGS','')),
+         '-Wl,-rpath,'+str(home/'lib')],root)
+    scheme_sources={}
+    for source in sources:
+        stem=source.stem
+        if not stem.startswith('gerbil-ascent__'):continue
+        name=stem[len('gerbil-ascent__'):].split('~',1)[0].replace('__','/')+'.ss'
+        path=root/name
+        if path.is_file():
+            if path.stat().st_mtime_ns > source.stat().st_mtime_ns:
+                raise ValueError('Scheme source newer than compiled module: '+name)
+            scheme_sources[name]=hashlib.sha256(path.read_bytes()).hexdigest()
     candidate.replace(output)
-    manifest={'schema':'ascent.c-abi-build.v1','abi':1,'sdk':str(home),
+    manifest={'schema':'ascent.c-abi-build.v1','abi':1,'sdk':str(home),'relink':relink,
+              'schemeSourceSha256':scheme_sources,
+              'linkFlags':shlex.split(os.environ.get('LDFLAGS','')),
               'librarySha256':hashlib.sha256(output.read_bytes()).hexdigest(),
               'runtimeSourceSha256':hashlib.sha256((root/'bindings/c/runtime.c').read_bytes()).hexdigest(),
               'headerSha256':hashlib.sha256((root/'bindings/c/ascent.h').read_bytes()).hexdigest(),
@@ -90,7 +115,9 @@ def build(root, output):
 
 def main():
     parser=argparse.ArgumentParser(); parser.add_argument('--root',type=Path,default=Path.cwd())
-    parser.add_argument('--output',type=Path,required=True); args=parser.parse_args()
-    build(args.root,args.output)
+    parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--relink',action='store_true',help='require current existing C/link objects and only relink')
+    args=parser.parse_args()
+    build(args.root,args.output,args.relink)
 
 if __name__=='__main__':main()

@@ -1,0 +1,9 @@
+{
+  "phase": "source_binding",
+  "failure": "live Library source changed",
+  "changedFiles": [
+    "candidate/provenance.ss",
+    "candidate/proof-frame.ss"
+  ],
+  "action": "Rebuild current Library; do not admit old binary as current."
+}

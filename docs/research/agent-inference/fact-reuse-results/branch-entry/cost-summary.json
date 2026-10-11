@@ -1,0 +1,15 @@
+{
+  "finalSolverCalls": 36,
+  "finalSolverKnownTokens": 151497,
+  "finalSolverUnknownUsageCalls": 0,
+  "thinkingTokens": 36864,
+  "qualificationCalls": 2,
+  "qualificationKnownTokens": 12156,
+  "earlierRejectedSolverCalls": 6,
+  "earlierRejectedSolverUsage": "unknown; HTTP 400 is not a zero-cost receipt",
+  "providerCallsIncludingFailures": 44,
+  "knownTokensIncludingQualifications": 163653,
+  "annotationProviderCalls": 0,
+  "perCellInputPlusAllOutputCeiling": 32768,
+  "unusedBudgetIsSavings": false
+}

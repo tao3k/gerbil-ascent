@@ -1,0 +1,65 @@
+{
+  "schema": "ascent.crosspath.post-audit.v1",
+  "planSha256": "1150d2e7ff106b48b6f16fc2b89c0c951c8f8caaba796e43ef91269aee9f40db",
+  "issues": [],
+  "matchedPairs": [
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 0,
+      "freshRetainedEqual": true,
+      "baselineRawTaskEqual": true
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 1,
+      "freshRetainedEqual": true,
+      "baselineRawTaskEqual": true
+    }
+  ],
+  "budget": [
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "baseline",
+      "gross": 10600,
+      "ceiling": 65536
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "baseline",
+      "gross": 22006,
+      "ceiling": 65536
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "fresh",
+      "gross": 12006,
+      "ceiling": 65536
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "fresh",
+      "gross": 12006,
+      "ceiling": 65536
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "retained",
+      "gross": 12006,
+      "ceiling": 65536
+    },
+    {
+      "case": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "retained",
+      "gross": 12006,
+      "ceiling": 65536
+    }
+  ],
+  "boundFiles": 3422,
+  "verified": true
+}

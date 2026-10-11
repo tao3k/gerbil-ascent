@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 from ascent_engine import Engine
 from ascent_engine.conversation import ResponseHistory
 from ascent_engine.derivations import EvidenceChain
+from ascent_engine.domain_evidence import DomainEvidence
 from ascent_engine.evidence import identity
 from .evidence_chain_study import loose_json
 from .inference_effort import until_verified, paired_reduction
@@ -81,7 +82,7 @@ def prepare(directory):
     hashes = {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     for path in paths:
         snapshot = directory/'producer-snapshot'/path.relative_to(ROOT); snapshot.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(path,snapshot)
-    plan = {'schema':'ascent.repository-model-study.v1','tasks':tasks,'arms':list(ARMS),'repetitions':2,'maxTurns':10,'maxOutputTokens':131072,'workers':2,'producerHashes':hashes,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'dependencies':audit['dependencies'],'scope':'Two independently sourced repair tasks; pilot, not four-family coverage or proof of unseen training.'}
+    plan = {'schema':'ascent.repository-model-study.v1','tasks':tasks,'arms':list(ARMS),'repetitions':2,'maxTurns':10,'maxOutputTokens':131072,'workers':2,'producerHashes':hashes,'verifyCandidatesOnEdit':True,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'dependencies':audit['dependencies'],'scope':'Two independently sourced repair tasks; pilot, not four-family coverage or proof of unseen training.'}
     (directory/'plan.json').write_text(json.dumps(plan,indent=2)+'\n')
     print('REPOSITORY-PLAN-FROZEN',len(tasks),'tasks',len(tasks)*2*3,'trajectories',flush=True)
 
@@ -126,6 +127,19 @@ def grading_scope(text, targets):
     imports=[n for n in imports if n not in future]
     selected=[n for n in parsed.body if isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in names]
     if {n.name for n in selected}!=names:raise ValueError('qualification test scope missing')
+    # Preserve referenced base classes, helpers and global symbol declarations.
+    # The extracted file remains grader-only; this does not expose hidden tests.
+    while True:
+        references={n.id for node in selected for n in ast.walk(node) if isinstance(n,ast.Name) and isinstance(n.ctx,ast.Load)}
+        extra=[]
+        for node in parsed.body:
+            if node in selected:continue
+            defined = {node.name} if isinstance(node,(ast.FunctionDef,ast.ClassDef)) else (
+                {n.id for target in node.targets for n in ast.walk(target) if isinstance(n,ast.Name)} if isinstance(node,ast.Assign) else set())
+            if defined & references:extra.append(node)
+        if not extra:break
+        selected.extend(extra)
+    selected=[node for node in parsed.body if node in selected]
     # Real import lifecycle output, not timer heartbeats.
     code=[ast.get_source_segment(text,n) for n in future]
     for node in imports:
@@ -141,16 +155,18 @@ def observed_runner(command):
 class ObservedLoader:
  def __init__(self,name,loader):self.name,self.loader=name,loader
  def __getattr__(self,name):return getattr(self.loader,name)
- def create_module(self,spec):return self.loader.create_module(spec)
+ def create_module(self,spec):
+  print('DEPENDENCY-IMPORT-CREATE',self.name,flush=True)
+  return self.loader.create_module(spec)
  def exec_module(self,module):
   print('DEPENDENCY-IMPORT-START',self.name,flush=True)
   self.loader.exec_module(module)
   print('DEPENDENCY-IMPORT-DONE',self.name,flush=True)
 class ObservedFinder:
  def find_spec(self,name,path=None,target=None):
-  if name.split('.')[0] not in ('sympy','networkx','pytest') or name.count('.')>2:return None
+  if name.split('.')[0] not in ('sympy','networkx','pytest','scipy','numpy') or name.count('.')>5:return None
   spec=importlib.machinery.PathFinder.find_spec(name,path,target)
-  if spec and isinstance(spec.loader,importlib.machinery.SourceFileLoader):spec.loader=ObservedLoader(name,spec.loader)
+  if spec and isinstance(spec.loader,(importlib.machinery.SourceFileLoader,importlib.machinery.ExtensionFileLoader)):spec.loader=ObservedLoader(name,spec.loader)
   return spec
 sys.meta_path.insert(0,ObservedFinder())
 print('EXECUTION-START',flush=True)
@@ -167,7 +183,7 @@ class Workspace:
         global ENGINE
         plan_dir=plan_dir.resolve();directory=directory.resolve()
         self.root = directory/'workspace'; copy_snapshot(plan_dir/case['name']/'parent', self.root)
-        self.directory=directory; self.case=case; self.arm=arm; self.chain=None; self.journal=[]; self.generation=0
+        self.directory=directory; self.case=case; self.arm=arm; self.chain=None; self.journal=[]; self.generation=0; self.domain=None; self.sealed_candidate=None
         self.regenerate()
         if arm!='ordinary-tools':
             if ENGINE is None: ENGINE=Engine(plan_dir/'libascent.dylib')
@@ -181,6 +197,9 @@ class Workspace:
         if self.arm!='ordinary-tools' and ENGINE:
             program=evidence_program(self.entries,self.edges,[],self.source_identity)
             self.chain=EvidenceChain(ENGINE,[r for r in program['relations'] if r['source']],self.arm=='scheme-retained')
+            if self.case.get('domainKind'):
+                if getattr(self,'domain',None):self.domain.replace_snapshot(self.source_identity)
+                else:self.domain=DomainEvidence(ENGINE,self.source_identity,self.arm=='scheme-retained')
 
     def read(self, path, start=1, end=None):
         if path not in self.case['files'] or not path.startswith(self.case['package']+'/') or not path.endswith('.py'):
@@ -208,6 +227,7 @@ class Workspace:
         return result
 
     def edit(self, edits):
+        if self.sealed_candidate:raise ValueError('independently verified candidate is sealed; source updates require a new task snapshot')
         if not isinstance(edits,list) or not edits:raise ValueError('supply a nonempty list of implementation edits')
         updates={}
         for edit in edits:
@@ -226,6 +246,26 @@ class Workspace:
         for path,text in updates.items():(self.root/path).write_text(text)
         self.generation+=1;self.regenerate()
         return {'edited':list(updates),'sourceIdentity':self.source_identity,'priorEvidenceInvalidated':True}
+
+    def seal_candidate(self, grade):
+        expected=len(self.case['expectedTestNames'])
+        actual=identity({p:hashlib.sha256((self.root/p).read_bytes()).hexdigest() for p in self.case['editable']})
+        if (grade.get('verified') is not True or grade.get('kind')!='hidden-grading'
+            or grade.get('sourceIdentity')!=self.source_identity or grade.get('exitCode')!=0
+            or actual!=self.source_identity
+            or expected==0 or grade.get('counts')!={'passed':expected,'failed':0,'skipped':0,'error':0}):
+            raise ValueError('only a current-snapshot independently verified candidate may be sealed')
+        destination=self.directory/'verified-candidate';destination.mkdir(exist_ok=False)
+        for relative in self.case['editable']:
+            target=destination/relative;target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(self.root/relative,target)
+        copied=identity({p:hashlib.sha256((destination/p).read_bytes()).hexdigest() for p in self.case['editable']})
+        if copied!=self.source_identity:raise ValueError('candidate source changed while sealing')
+        self.sealed_candidate={'sourceIdentity':self.source_identity,'graderSha256':self.case['graderSha256'],
+                               'selectedTestNames':self.case['expectedTestNames'],'grade':copy.deepcopy(grade),
+                               'path':str(destination),'scope':'Selected independent grader only; not all repository behavior.'}
+        (destination/'receipt.json').write_text(json.dumps(self.sealed_candidate,indent=2)+'\n')
+        return copy.deepcopy(self.sealed_candidate)
 
     def execute(self, *, grading=False, reproducer=False):
         number=len(list(self.directory.glob('execution-*.log')))+1
@@ -269,10 +309,16 @@ class Workspace:
         text=logpath.read_text()
         visible='\n'.join(line for line in text.splitlines() if not line.startswith(('DEPENDENCY-IMPORT-','TEST-SCOPE-IMPORT ','EXECUTION-START')))
         if reproducer:
-            return {'exitCode':status,'observedOutput':visible[-12000:],'sourceIdentity':self.source_identity,'seconds':time.monotonic()-began,'kind':'upstream-reproducer'}
+            result={'exitCode':status,'observedOutput':visible[-12000:],'sourceIdentity':self.source_identity,'seconds':time.monotonic()-began,'kind':'upstream-reproducer'}
+            if self.case.get('domainKind') and status==0:
+                observation=json.loads(visible.strip().splitlines()[-1])
+                result['domainObservations']=observation['observations']
+                if self.domain:
+                    result['checkedDomainSupport']=self.domain.observe(self.case['domainKind'],observation['observations'],hashlib.sha256(logpath.read_bytes()).hexdigest())
+            return result
         if not xml.exists():raise RuntimeError('test environment did not produce a complete receipt; exit='+str(status))
         receipt=test_receipt(xml,status);counts={state:sum(x==state for x in receipt['cases'].values()) for state in ('passed','failed','skipped','error')}
-        expected=24 if self.case['name']=='group-centrality-order' else 3
+        expected=len(self.case['expectedTestNames']) if 'expectedTestNames' in self.case else len(receipt['cases'])
         names=sorted(name for _,name in receipt['cases'])
         verified=grading and status==0 and len(receipt['cases'])==expected and counts['passed']==expected and names==self.case.get('expectedTestNames',names)
         result={'verified':verified,'allChecksPassed':status==0 and counts['passed']==len(receipt['cases']) and bool(receipt['cases']),'exitCode':status,'counts':counts,'sourceIdentity':self.source_identity,'seconds':time.monotonic()-began,'kind':'hidden-grading' if grading else 'development-tests'}
@@ -281,12 +327,13 @@ class Workspace:
 
     def close(self):
         if self.chain:self.chain.close()
+        if getattr(self,'domain',None):self.domain.close()
 
 
 def tool_definitions():
     definitions=[('read_source','Read parent/current implementation source. Lines are one-based, at most 200 per read. Scheme arms also return checked local syntactic support.',{'path':{'type':'string'},'start':{'type':'integer'},'end':{'type':'integer'}}),
                  ('search_source','Find literal text in implementation files; omitted path searches the declared implementation surfaces.',{'text':{'type':'string'},'path':{'type':'string'}}),
-                 ('edit_source','Apply edits to implementation files: each edit has path, old and new. old must match one current fragment. Source changes invalidate checked evidence.',{'edits':{'type':'array','items':{'type':'object'}}}),
+                 ('edit_source','Apply edits to implementation files: each edit has path, old and new. old must match one current fragment. Source changes invalidate checked evidence.',{'edits':{'type':'array','items':{'type':'object','properties':{'path':{'type':'string'},'old':{'type':'string'},'new':{'type':'string'}}}}}),
                  ('run_reproducer','Execute the original upstream bug reproducer against the current implementation.',{}),
                  ('run_checks','Run existing visible development controls against current code.',{}),
                  ('submit_patch','Grade the current repair independently. Returns counts and a verdict, without hidden test contents or the gold repair.',{})]
@@ -296,15 +343,22 @@ def tool_definitions():
 def episode(plan,plan_dir,output,case,rep,arm):
     directory=output/f"{case['name']}-rep-{rep}-{arm}";directory.mkdir()
     record={'task':case['name'],'repetition':rep,'arm':arm,'attempts':[],'status':'running','evidenceJournal':[]}
-    def save():(directory/'episode.json').write_text(json.dumps(record,indent=2)+'\n')
+    def save():
+        if workspace is not None and workspace.domain:record['domainJournal']=copy.deepcopy(workspace.domain.journal)
+        (directory/'episode.json').write_text(json.dumps(record,indent=2)+'\n')
     workspace=None
     try:
         workspace=Workspace(plan_dir,directory,case,arm)
         history=ResponseHistory(json.dumps({'question':case['question'],'implementationFiles':case['editable'],'allowedTools':[x['name'] for x in tool_definitions()]},sort_keys=True))
         instructions='Repair the complete real repository problem. Reason naturally; no subproblem-first plan is required. Use source reads, original reproductions and executable controls. Only declared implementation files are editable. No network, git history, grader files or runtime introspection are available. Source reads may include checked syntactic support; it is evidence about extracted references, not proof of runtime behavior. Keep code general and preserve existing semantics. Submit the current repair for independent grading; unsuccessful repairs may be revised. Function calls are automatic, not forced. Prose and an unambiguous JSON edit payload are accepted. Do not alter imports or grading infrastructure in this bounded pilot.'
+        if case.get('domainKind'):
+            instructions+=' Reproducer observations may also have Scheme-checked domain constraints. Treat them as scoped facts about observed executions. Retained domain context labels the current snapshot; edits invalidate prior-snapshot claims while checker-qualified mathematical contracts remain applicable.'
         key=provider_key();save()
         with (directory/'progress.log').open('w') as log,contextlib.redirect_stdout(log):
             for turn in range(1,plan['maxTurns']+1):
+                if workspace.domain and workspace.arm=='scheme-retained' and workspace.domain.laws:
+                    history.append_feedback({'retainedDomainContext':workspace.domain.summary(),
+                                             'guidance':'Reuse these checked contracts and current-snapshot observations when reasoning about the complete problem. Prior-snapshot claims are invalidated after edits.'})
                 request={'model':'deepseek-flash','input':history.input(),'instructions':instructions,'tools':tool_definitions(),'tool_choice':'auto','reasoning':{'effort':'high'},'max_output_tokens':plan['maxOutputTokens'],'stream':True,'store':False}
                 (directory/f'{turn}.request.json').write_text(json.dumps(request,indent=2)+'\n')
                 raw,meta=provider(request,key,directory/f'{turn}.response.json')
@@ -315,10 +369,20 @@ def episode(plan,plan_dir,output,case,rep,arm):
                 calls=history.append_response(terminal)
                 if not calls:
                     try:
-                        payload=loose_json(raw)
-                        if isinstance(payload,dict) and 'edits' in payload:workspace.edit(payload['edits'])
-                        feedback=workspace.execute(grading=True);attempt['correct']=feedback['verified'];attempt['actions'].append({'name':'implicit_submit','result':feedback});history.append_feedback(feedback)
-                    except Exception as error:history.append_feedback({'error':str(error)[:1500],'guidance':'Use the available tools to read, repair and submit the current implementation.'})
+                        try:payload=loose_json(raw)
+                        except (ValueError,TypeError):payload=None
+                        if isinstance(payload,dict) and 'edits' in payload:
+                            changed=workspace.edit(payload['edits'])
+                            attempt['actions'].append({'name':'implicit_edit','result':changed})
+                        feedback=workspace.execute(grading=True)
+                        if feedback['verified'] and plan.get('verifyCandidatesOnEdit'):workspace.seal_candidate(feedback)
+                        attempt['correct']=feedback['verified']
+                        attempt['actions'].append({'name':'implicit_submit','result':feedback});history.append_feedback(feedback)
+                    except Exception as error:
+                        attempt['correct']=False
+                        failure={'error':type(error).__name__+': '+str(error)[:1500],'guidance':'Use the available tools to read, repair and submit the current implementation.'}
+                        attempt['actions'].append({'name':'implicit_submit','result':failure});history.append_feedback(failure)
+                        if failure['error'].startswith(('RuntimeError: test environment','TimeoutError: test execution')):record['status']='harness_failure'
                 for call in calls:
                     action={'name':call['name'],'callId':call['call_id']};attempt['actions'].append(action)
                     try:
@@ -328,7 +392,14 @@ def episode(plan,plan_dir,output,case,rep,arm):
                             args=loose_json(call['arguments'])
                             if call['name']=='read_source':result=workspace.read(args['path'],args.get('start',1),args.get('end'))
                             elif call['name']=='search_source':result=workspace.search(args['text'],args.get('path'))
-                            elif call['name']=='edit_source':result=workspace.edit(args['edits'])
+                            elif call['name']=='edit_source':
+                                result=workspace.edit(args['edits'])
+                                if plan.get('verifyCandidatesOnEdit'):
+                                    grade=workspace.execute(grading=True)
+                                    attempt.setdefault('candidateChecks',[]).append(grade)
+                                    if grade['verified']:
+                                        result['verifiedCandidate']=workspace.seal_candidate(grade)
+                                        attempt['correct']=True
                             elif call['name']=='run_reproducer':result=workspace.execute(reproducer=True)
                             elif call['name']=='run_checks':result=workspace.execute()
                             elif call['name']=='submit_patch':result=workspace.execute(grading=True);attempt['correct']=result['verified']
@@ -366,9 +437,10 @@ def live(plan_dir,output):
     def add(record):
         receipt['episodes'].append(record);(output/'result.json').write_text(json.dumps(receipt,indent=2)+'\n')
     jobs=[]
+    arms=tuple(plan['arms'])
     for i,case in enumerate(plan['tasks']):
         for rep in range(plan['repetitions']):
-            offset=(i+rep)%3;order=ARMS[offset:]+ARMS[:offset]
+            offset=(i+rep)%len(arms);order=arms[offset:]+arms[:offset]
             jobs.extend((case,rep,arm) for arm in order)
     add(episode(plan,plan_dir,output,*jobs.pop(0)))
     if receipt['episodes'][-1]['status'] in ('transport_failure','harness_failure'):raise RuntimeError('first real trajectory did not qualify transport and execution; no fan-out')

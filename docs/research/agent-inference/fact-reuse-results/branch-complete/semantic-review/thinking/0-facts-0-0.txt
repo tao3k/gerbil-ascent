@@ -1,0 +1,381 @@
+Let me carefully understand the problem.
+
+We need to choose four item IDs maximizing sum of values plus bonuses for selected pairs.
+
+Constraints:
+- Every selected item must have both of its directed paths (verified present in nativeEvidence).
+- Respect branch's weight and risk limits: weightLimit=49, riskLimit=29.
+- Include at least three groups (groups are 0-3).
+- Include required item: 0.
+- Omit excluded item: 14.
+- Branch start: [0,6,8,13]. Hmm, what does "start" mean? Possibly the starting selected items? Actually maybe the start indicates which items are already selected/available? Let me think.
+
+Actually "start":[0,6,8,13] might mean the initial candidate set. But required is 0, excluded is 14.
+
+Let me parse the nativeEvidence conclusions: verified paths exist for items... Let's map.
+
+Each item has two paths. E.g., item 0: paths [[0,5],[20,200]]. Both verified (121, 102). Item 1: paths [[2,5],[21,201]] both verified (120,103).
+
+Item 3: paths [[0,5],[23,203]] — [23,203] is finite-absent (false). So item 3 fails the "both directed paths" requirement.
+
+Item 7: paths [[2,5],[27,207]] — [27,207] finite-absent → item 7 fails.
+
+Item 11: paths [[6,5],[31,211]] — [31,211] finite-absent → fails.
+
+Item 15: paths [[0,5],[35,215]] — [35,215] finite-absent → fails.
+
+So items 3,7,11,15 are invalid (their second path doesn't exist).
+
+All other items 0-15 have both paths verified.
+
+Wait, let's check: item 2: paths [[6,5],[22,202]] both verified. Item 4: [[2,5],[24,204]] both verified. Item 5: [[6,5],[25,205]] verified. Item 6: [[0,5],[26,206]] verified. Item 8: [[6,5],[28,208]] verified. Item 9: [[0,5],[29,209]] verified. Item 10: [[2,5],[30,210]] verified. Item 12: [[0,5],[32,212]] verified. 13: [[2,5],[33,213]] verified. 14: [[6,5],[34,214]] verified but excluded.
+
+So valid items: 0,1,2,4,5,6,8,9,10,12,13 (excluding 3,7,11,15 and 14 excluded).
+
+Wait item 3 is group 3, item 7 group 3, item 11 group 3, item 15 group 3. So group 3 items are all invalid! Hmm. Then "include at least three groups" — groups available: group 0 (items 0,4,8,12), group 1 (1,5,9,13), group 2 (2,6,10,14). group 3 (3,7,11,15) all invalid. So we can only use groups 0,1,2 — exactly three groups. So we need at least one from each of groups 0,1,2. Since group 3 items are all invalid, we must have at least one item from each of groups 0, 1, 2.
+
+Required item 0: group 0. So group 0 covered.
+
+We need four items total, include item 0, exclude 14, and cover groups 0,1,2.
+
+Let me list items with weight, risk, value:
+
+Group 0:
+- 0: w5, r2, v15 (required)
+- 4: w5, r10, v40
+- 8: w5, r6, v22
+- 12: w5, r2, v47
+
+Group 1:
+- 1: w12, r13, v32
+- 5: w12, r9, v57
+- 9: w12, r5, v39
+- 13: w12, r13, v21
+
+Group 2:
+- 2: w5, r12, v49
+- 6: w5, r8, v31
+- 10: w5, r4, v56
+- 14: w5, r12, v38 (excluded)
+
+Group 3 (all invalid): 3,7,11,15.
+
+Now weight limit 49, risk limit 29.
+
+We need 4 items including item 0, and cover groups 0,1,2. Since we need at least one from group 1 and group 2 (group 0 already covered by item 0), we need at least one group1 and one group2 item. Total 4 items: item0 + 3 more, and among those 3 we need at least one group1 and at least one group2, plus maybe group0.
+
+Weight: all group0 and group2 items are w5; group1 items are w12. Item 0 w5.
+
+If we pick item0 (w5) + one group1 (w12) + two others... weight: 5+12+5+5=27 ≤ 49. Fine. Risk constraint is tighter.
+
+Risk: item0 r2. Group1 items risk: 1→13, 5→9, 9→5, 13→13. Group2: 2→12, 6→8, 10→4, 14 excluded. Group0: 4→10, 8→6, 12→2.
+
+Risk limit 29. We need total risk ≤29 with 4 items including item0 (r2).
+
+Let's consider maximizing value. Values: group0 best 12(47), 4(40), 8(22). Group1 best 5(57), 9(39), 1(32),13(21). Group2 best 10(56), 2(49), 6(31).
+
+Plus bonuses for pairs.
+
+Bonuses list:
+- (0,7): 14 — 7 invalid
+- (0,14): 10 — 14 excluded
+- (1,4): 12
+- (1,11): 8 — 11 invalid
+- (2,8): 17
+- (2,15): 13 — 15 invalid
+- (3,5): 15 — 3 invalid
+- (3,12): 11 — 3 invalid
+- (4,9): 9
+- (5,6): 7
+- (5,13): 14
+- (6,10): 12
+- (7,14): 17 — both invalid/excluded
+- (8,11): 15 — 11 invalid
+- (9,15): 9 — 15 invalid
+- (10,12): 7
+- (12,13): 10
+
+So relevant bonuses: (1,4):12, (2,8):17, (4,9):9, (5,6):7, (5,13):14, (6,10):12, (10,12):7, (12,13):10.
+
+We need 4 items: item0 + 3 others, covering groups 1 and 2 at least.
+
+Let me enumerate combos.
+
+Item 0 is included. Its bonuses: (0,7) and (0,14) — both involved invalid/excluded items, so no bonus from item0.
+
+Now choose 3 items from {group1 set, group2 set, group0 set} with at least one group1 and one group2.
+
+Total risk budget: 29 - 2 = 27 for the other three.
+
+Weight budget: 49 - 5 = 44. Weight is not binding (max 12+5+5=22).
+
+Let's enumerate combos of 3 items (with at least one group1 and one group2). Since group3 impossible.
+
+Cases:
+A) one group1 + two group2
+B) two group1 + one group2
+C) one group1 + one group2 + one group0
+
+Case A: group1 item g1, group2 items a,b.
+Risk: g1 + a + b ≤ 27.
+
+Group1 risks: 1:13, 5:9, 9:5, 13:13.
+Group2 risks: 2:12, 6:8, 10:4.
+
+Let's compute total value + bonuses.
+
+Case A options:
+
+g1=1 (r13,v32): remaining risk 14 for two group2. Options: (2,6)=12+8=20>14 no. (2,10)=16>14 no. (6,10)=12 ≤14 yes. So {1,6,10}: risk 13+8+4=25, value 32+31+56=119, bonus (6,10)=12. Total 131.
+No other pairs with two group2 except (2,6),(2,10),(6,10). Only (6,10) fits.
+
+g1=5 (r9,v57): remaining 18. (2,6)=20>18 no. (2,10)=16≤18 yes: {5,2,10}: risk 9+12+4=25, value 57+49+56=162, bonuses: (5,6)no6, (5,13)no, (6,10)no6, (2,8)no. So no bonus. Total 162.
+(6,10)=12≤18 yes: {5,6,10}: risk 9+8+4=21, value 57+31+56=144, bonus (6,10)=12, (5,6)=7 → +19. Total 163.
+(5,2,6): risk 9+12+8=29>27? Wait total budget 27. 9+12+8=29>27. No.
+So case A with g1=5: best {5,6,10} = 144+19=163. Also {5,2,10}=162.
+
+g1=9 (r5,v39): remaining 22. Options (2,6)=20≤22: {9,2,6}: risk5+12+8=25, value 39+49+31=119, bonuses: (4,9) no4, (2,8)no, (6,10)no10. 0. Total 119.
+(2,10)=16≤22: {9,2,10}: risk5+12+4=21, value39+49+56=144, bonuses none. Total 144.
+(6,10)=12: {9,6,10}: risk5+8+4=17, value39+31+56=126, bonus(6,10)=12 → 138.
+Best g1=9: 144.
+
+g1=13 (r13,v21): remaining 14. (6,10)=12≤14: {13,6,10}: risk13+8+4=25, value21+31+56=108, bonus (6,10)=12, (5,13)no5, (12,13)no12. +12=120.
+(2,6)=20>14 no. (2,10)=16>14 no. Best 120.
+
+Case A best: 163 ({5,6,10}).
+
+Case B: two group1 + one group2.
+Group1 risks: 1:13,5:9,9:5,13:13. Values: 1:32,5:57,9:39,13:21.
+Group2 risk ≤ to fit.
+
+Check risk budget 27.
+
+Pairs of group1:
+(1,5): risk22, +group2 risk ≤5 → group2 10(r4) or? 2 r12 no,6 r8 no,10 r4 yes. risk26. Value 32+57+56=145. Bonuses: (5,6)no, (5,13)no. (1,4)no. (6,10)no6. (10,12)no. So 145.
+(1,9): risk18, +group2 ≤9 → 6(r8) yes,10(r4) yes,2(r12) no. 
+   +6: risk26, value32+39+31=102, bonus none? (5,6)no, (6,10)no. 102.
+   +10: risk22, value32+39+56=127, bonus none. 127.
+(1,13): risk26, +group2 ≤1 → none (min r4). No.
+(5,9): risk14, +group2 ≤13 → all: 2(12),6(8),10(4).
+   +2: risk26, value57+39+49=145, bonus none.
+   +6: risk22, value57+39+31=127, bonus (5,6)=7 → 134.
+   +10: risk18, value57+39+56=152, bonus (6,10)no6 → 152.
+(5,13): risk22, +group2 ≤5 → 10(r4): risk26, value57+21+56=134, bonus (5,13)=14 → 148.
+(9,13): risk18, +group2 ≤9 → 6(8),10(4).
+   +6: risk26, value39+21+31=91, bonus none.
+   +10: risk22, value39+21+56=116, bonus none. Also (12,13) no12.
+
+Case B best: 152 ({5,9,10} = 152). Also {5,13,10}=148, {1,5,10}=145, {5,9,2}=145.
+
+Case C: one group1 + one group2 + one group0 (besides 0). 
+Group0 options: 4(r10,v40),8(r6,v22),12(r2,v47).
+
+Risk budget 27.
+
+Subcase group0=12 (r2,v47): remaining 25 for g1+g2.
+g1=1(r13)+g2: 13+12=25(2) ok: value 32+49+47=128, bonuses (1,4)no, (2,8)no, (10,12)no10, (12,13)no. 128.
+   13+8=21(6): value32+31+47=110, bonus? none. 
+   13+4=17(10): 32+56+47=135, bonus(10,12)=7 → 142.
+g1=5(r9): +2(12)=21: value57+49+47=153, bonus none.
+   +6(8)=17: 57+31+47=135, bonus (5,6)=7 → 142.
+   +10(4)=13: 57+56+47=160, bonus (10,12)=7 → 167.
+g1=9(r5): +2(12)=17: 39+49+47=135, bonus none.
+   +6(8)=13: 39+31+47=117.
+   +10(4)=9: 39+56+47=142, bonus(10,12)=7 → 149.
+g1=13(r13): +2(12)=25: 21+49+47=117.
+   +6(8)=21: 21+31+47=99.
+   +10(4)=17: 21+56+47=124, bonus (10,12)=7, (12,13)=10 → +17 → 141.
+Subcase 12 best: {5,10,12} = 167.
+
+Subcase group0=4 (r10,v40): remaining 17 for g1+g2.
+g1=1(13)+g2: 13+12=25>17 no; 13+8=21>17; 13+4=17 ok (10): value32+56+40=128, bonus (1,4)=12, (6,10)no6 → 140. Actually (1,4)=12. 128+12=140.
+g1=5(9): +2(12)=21>17; +6(8)=17 ok: 57+31+40=128, bonus (5,6)=7, (1,4)no1 → 135. +10(4)=13: 57+56+40=153, bonus none (6,10 no6; 10,12 no) → 153.
+g1=9(5): +2(12)=17 ok: 39+49+40=128, bonus (4,9)=9 → 137. +6(8)=13: 39+31+40=110, bonus (4,9)=9 → 119. +10(4)=9: 39+56+40=135, bonus (4,9)=9 → 144.
+g1=13(13): +2(12)=25>17; +6(8)=21>17; +10(4)=17 ok: 21+56+40=117, bonus none (12,13 no12) → 117.
+Subcase 4 best: {5,10,4} = 153.
+
+Subcase group0=8 (r6,v22): remaining 19.
+g1=1(13): +2(12)=25>19; +6(8)=21>19; +10(4)=17 ok: 32+56+22=110, bonus (2,8)no2 → 110.
+g1=5(9): +2(12)=21>19; +6(8)=17 ok: 57+31+22=110, bonus(5,6)=7 → 117. +10(4)=13: 57+56+22=135.
+g1=9(5): +2(12)=17: 39+49+22=110, bonus(2,8)=17 → 127. +6(8)=13: 39+31+22=92, bonus(2,8)no → 92. +10(4)=9: 39+56+22=117, bonus(6,10)no6 → 117.
+g1=13(13): +2(12)=25>19; +6(8)=21>19; +10(4)=17: 21+56+22=99 → 99.
+Subcase 8 best: {5,10,8}=135.
+
+So overall best so far: 167 with {0,5,10,12}. Let's verify: item0 (w5,r2,v15), item5 (w12,r9,v57), item10 (w5,r4,v56), item12 (w5,r2,v47).
+Total weight = 5+12+5+5 = 27 ≤49. Risk = 2+9+4+2 = 17 ≤29. Groups: 0 (item0,12), 1 (item5), 2 (item10) → three groups. Required 0 included, excluded 14 omitted. Paths all verified for 0,5,10,12. Yes.
+
+Value = 15+57+56+47 = 175. Bonuses: (5,10)? not listed. (10,12)=7. (5,6) no. (12,13) no. (6,10) no. (5,13) no. So bonus = 7. Total = 182? Wait I computed 167 earlier. Let me recheck.
+
+Earlier for subcase 12 g1=5 +10: value 57+56+47=160 plus item0 value 15 = 175, bonus (10,12)=7 → 182, plus item0 bonus none. Hmm I forgot item0's value! Let me redo. I was computing 3 items' value excluding item0. Need to add item0 value 15.
+
+Let me redo totals including item0 value 15.
+
+Actually in cases A and B, I had 3 items excluding item0, so add 15.
+
+Case A best {5,6,10}: value 57+31+56=144, +15 = 159, bonuses (6,10)=12+(5,6)=7=19 → 178.
+
+Case B best {5,9,10}: 57+39+56=152 +15=167, bonuses: none? (5,6)no, (6,10) no6, (12,13) no. So 167.
+
+Case C: {5,10,12}: 57+56+47=160 +15=175, bonus (10,12)=7 → 182.
+
+So best is 182 for {0,5,10,12}.
+
+But wait, I need to double-check I didn't miss combos within case A and B and C. Let me systematically consider all feasible 4-item sets including item 0, at least one group1 and one group2, weight ≤49, risk ≤29, using valid items only {0,1,2,4,5,6,8,9,10,12,13} (14 excluded, 3/7/11/15 invalid).
+
+Let me just brute force mentally more carefully. We need to choose 3 items from the pool P = {1,2,4,5,6,8,9,10,12,13} (excluding 0 since fixed, excluding 14, excluding invalid). With at least one from group1 {1,5,9,13} and one from group2 {2,6,10}.
+
+Total risk of these 3 ≤ 27.
+
+Let me enumerate all triples.
+
+I'll organize: choose group1 count ≥1, group2 count ≥1. Possibilities for (g1,g2,g0) counts: (1,1,1), (2,1,0), (1,2,0), (2,1,0) done, (1,2,0) done in case A. Also (3,0,0) not allowed (need group2). (0,3,0) not allowed. (2,0,1) no group2. So only three count patterns.
+
+Let me be thorough with each.
+
+Pattern (1,1,1): one each from group1, group2, group0.
+
+Group0 candidates: 4(r10,v40),8(r6,v22),12(r2,v47).
+Group1: 1(r13,v32),5(r9,v57),9(r5,v39),13(r13,v21).
+Group2: 2(r12,v49),6(r8,v31),10(r4,v56).
+
+Risk of triple = g0+g1+g2 ≤27.
+
+Compute all:
+
+g0=12(r2):
+ g1=1(13): +g2: 2(12)→risk27≤27 yes: value32+49+47=128, bonuses: (1,4)no,(2,8)no,(10,12)no,(12,13)no →0 →128.
+         6(8)→risk23: 32+31+47=110 →110.
+         10(4)→risk19: 32+56+47=135, bonus (10,12)=7 →142.
+ g1=5(9): 2(12)→23: 57+49+47=153 (no bonus) →153.
+         6(8)→19: 57+31+47=135, bonus (5,6)=7 →142.
+         10(4)→15: 57+56+47=160, bonus (10,12)=7 →167.
+ g1=9(5): 2(12)→19: 39+49+47=135 →135.
+         6(8)→15: 117 →117.
+         10(4)→11: 39+56+47=142, bonus(10,12)=7 →149.
+ g1=13(13):2(12)→27: 21+49+47=117 →117.
+         6(8)→23:99 →99.
+         10(4)→19: 21+56+47=124, bonuses (10,12)=7,(12,13)=10 →141.
+
+g0=4(r10):
+ g1=1(13): 2(12)→35>27 no. 6(8)→31>27 no. 10(4)→27 yes: 32+56+40=128, bonuses (1,4)=12 →140.
+ g1=5(9): 2(12)→31 no. 6(8)→27 yes: 57+31+40=128, bonus(5,6)=7 →135. 10(4)→23: 57+56+40=153, bonus none →153.
+ g1=9(5): 2(12)→27: 39+49+40=128, bonus(4,9)=9 →137. 6(8)→23: 110, bonus(4,9)=9 →119. 10(4)→19: 135, bonus(4,9)=9 →144.
+ g1=13(13): 2(12)→35 no. 6(8)→31 no. 10(4)→27: 21+56+40=117, no bonus →117.
+
+g0=8(r6):
+ g1=1(13): 2(12)→31 no. 6(8)→27: 32+31+22=85, bonus (2,8)no →85. 10(4)→23: 110, no bonus (2,8 no) →110.
+ g1=5(9): 2(12)→27: 57+49+22=128 →128. 6(8)→23: 110, bonus(5,6)=7 →117. 10(4)→19: 135 →135.
+ g1=9(5): 2(12)→23: 39+49+22=110, bonus(2,8)=17 →127. 6(8)→19: 92 →92. 10(4)→15: 117 →117.
+ g1=13(13): 2(12)→31 no. 6(8)→27: 21+31+22=74 →74. 10(4)→23: 99 →99.
+
+Best pattern (1,1,1): 167 (g0=12,g1=5,g2=10). So total with item0 = 167+15=182.
+
+Pattern (2,1,0): two group1, one group2.
+Group1 pairs and risk, plus group2.
+Pairs:
+(1,5) r22: g2 2(12)→34 no. 6(8)→30>27 no. 10(4)→26 yes: value32+57+56=145 →145.
+(1,9) r18: 2(12)→30 no. 6(8)→26: 32+39+31=102 →102. 10(4)→22: 32+39+56=127 →127.
+(1,13) r26: min g2 4 →30 no.
+(5,9) r14: 2(12)→26: 57+39+49=145 →145. 6(8)→22: 57+39+31=127, bonus(5,6)=7 →134. 10(4)→18: 152, no bonus (6,10 no) →152.
+(5,13) r22: 10(4)→26: 57+21+56=134, bonus(5,13)=14 →148. 6(8)→30 no. 2(12)→34 no.
+(9,13) r18: 6(8)→26: 39+21+31=91 →91. 10(4)→22: 39+21+56=116 →116. 2(12)→30 no.
+Best: 152 → total 167.
+
+Pattern (1,2,0): one group1, two group2.
+Group2 pairs:
+(2,6) r20: g1 1(13)→33 no. 5(9)→29>27 no. 9(5)→25 yes: 39+49+31=119 →119. 13(13)→33 no.
+(2,10) r16: 1(13)→29>27 no. 5(9)→25: 57+49+56=162 →162. 9(5)→21: 39+49+56=144 →144. 13(13)→29 no.
+(6,10) r12: 1(13)→25: 32+31+56=119, bonus(6,10)=12 →131. 5(9)→21: 57+31+56=144, bonuses(5,6)=7,(6,10)=12 →163. 9(5)→17: 39+31+56=126, bonus(6,10)=12 →138. 13(13)→25: 21+31+56=108, bonus(6,10)=12 →120.
+Best pattern: 163 ({5,6,10}) → total 178.
+
+So overall best triple is {5,10,12} → total 182.
+
+Hmm, but wait — should I consider whether "start":[0,6,8,13] means something? The branch info "start":[0,6,8,13] might mean the starting items already in the branch. But the question says "Choose four item IDs". Maybe start is just a hint of feasible starting point. Actually maybe start means the items allowed to be selected? Hmm.
+
+Let me reconsider. The problem statement: "Choose four item IDs maximizing sum of values plus bonuses for selected pairs. Every selected item must have both of its directed paths. Respect this branch's weight and risk limits, include at least three groups, include its required item, and omit its excluded item."
+
+So we need exactly four items. The "start" might be the initial set for the search but not a constraint on the answer. Actually "start":[0,6,8,13] — 0 is required anyway, 6,8,13 could be suggestions. But they may not be required.
+
+Hmm, but maybe the intended interpretation: the branch provides a "start" set of items already selected, and we must build from there? The question says "Choose four item IDs" though. I think start is just search metadata.
+
+Let me reconsider whether item 0 is required and start includes 0, consistent.
+
+Now, is there any chance group3 items are valid? Let me recheck the conclusions: "finite-absent",false for [23,203],[27,207],[31,211],[35,215]. These correspond to item 3 path2 ([23,203]), item7 ([27,207]), item11 ([31,211]), item15 ([35,215]). So indeed invalid.
+
+Also check item0's paths both verified: [0,5] verified node 121; [20,200] verified 102. Good.
+
+Now double-check whether all four-chosen items need both paths verified — yes.
+
+Now is {0,5,10,12} optimal? Let me also double check bonuses: pairs among {0,5,10,12}: (0,?) none relevant; (5,10) not in list; (5,12) not; (10,12)=7 yes. (0,10)? no. So bonus 7.
+
+Total = 15+57+56+47 +7 = 182.
+
+Could there be a better set? Let me search more broadly maybe including two group0 items etc. Actually pattern (1,1,1) covers one group0; could we have (1,1,1) with group0=12, g1=5, g2=10 → best. What about (2,0,2)? no group2? Actually group2 needed. (1,0,3)? no group2. So patterns requiring group2 presence: counts (g1≥1, g2≥1, g0≥0, total 3). Options: (1,1,1),(2,1,0),(1,2,0). That's all. Good.
+
+But wait, do we need to include at least three groups? Groups are 0..3. With group3 impossible, we need groups 0,1,2 all present. My patterns ensure group1 and group2, and item0 gives group0. But pattern (2,1,0) means two group1 + one group2 + item0 → groups 0,1,2 present. Fine. So all patterns satisfy.
+
+Thus optimum is {0,5,10,12} total 182.
+
+Hold on, let me reconsider the weight/risk: risk limit 29. {0,5,10,12}: 2+9+4+2=17, fine.
+
+Could there be a higher-value set using items like 9 (v39) + 10 + 12 + 0: 15+39+56+47=157 + bonuses (10,12)=7 →164, lower.
+
+What about {0,4,5,10}: value 15+40+57+56=168, bonuses (1,4)no, (5,6)no, (6,10)no, (4,9)no → 168. Lower than 182.
+
+{0,4,9,10}: 15+40+39+56=150 + (4,9)=9 =159.
+
+{0,12,4,10}: 15+47+40+56=158 + (10,12)=7 =165? plus bonus? (4,?) no. 165.
+
+{0,12,8,10}: 15+47+22+56=140 + (10,12)=7=147.
+
+{0,5,9,10}: 15+57+39+56=167, bonus? (5,9)? no; (9,10)? no; (5,6)/(6,10) need 6. →167.
+
+{0,5,10,12}=182 clearly best.
+
+Could a combo with two group0 give more? e.g., {0,4,12} plus one group1 and ... wait that's 4 items: 0,4,12 group0 ×3 + need group1 and group2 → can't with 4 items (only one more). Actually 0 already group0. To have group1 and group2 plus extra group0 = 4 items: 0 + g0 + g1 + g2, that's pattern (1,1,1). Yes we covered including another group0. Best there was 182.
+
+So answer {0,5,10,12}.
+
+Wait, but maybe I should double check "bonuses for selected pairs" — any pair among selected. Yes.
+
+Let me also verify item 12 paths: [0,5] and [32,212]. [32,212] verified node 114. Good. Item 10: [2,5] verified 120, [30,210] verified 112. Item 5: [6,5] verified 101, [25,205] verified 107. Item 0 both verified. Good.
+
+Now weight: 5+12+5+5=27 ≤49, risk 2+9+4+2=17 ≤29.
+
+Groups included: 0,1,2 = three groups. Required 0 present. Excluded 14 absent.
+
+So selected = [0,5,10,12].
+
+Hmm, but let me reconsider whether "include at least three groups" might be stricter given group3 invalid — we include exactly 3 groups, satisfying "at least three". Good.
+
+Let me double-check no alternative yields >182. The max possible values: three highest valid values: 57(5),56(10),49(2),47(12),40(4),39(9),32(1),31(6),22(8),21(13). Plus item0 15.
+
+Consider set {0,5,10,12}: values 15+57+56+47=175, bonus 7 =182.
+Consider {0,5,10,2}: 15+57+56+49=177, bonuses: (5,2)? no; (2,10)? no; (5,6)no; (2,8)no →177. Lower.
+Consider {0,5,10,4}: 15+57+56+40=168, bonus none? (4,5)? no →168.
+{0,5,2,12}: 15+57+49+47=168, bonuses none →168.
+{0,10,2,12}: 15+56+49+47=167 +7=174.
+{0,5,10,9}: 167.
+{0,5,6,10}=178 (with bonuses 19). Actually 15+57+31+56=159+19=178.
+{0,4,5,10}: 168.
+What about {0,12,4,5}? groups: 0,0,0,1 — no group2. Invalid.
+{0,12,5,10} is our 182.
+{0,12,5,2}: 15+47+57+49=168.
+{0,12,9,10}: 15+47+39+56=157+7=164.
+{0,4,12,10}: 15+40+47+56=158+7=165.
+{0,4,12,5}: no group2.
+{0,4,10,5}: 168.
+
+So 182 stands.
+
+Actually wait, what about using item 4 and 12 both group0 plus group1 and group2? That's 0,4,12 + g1 + g2 = 5 items. Too many. Not allowed. Right.
+
+Thus final answer [0,5,10,12].
+
+Let me just double check case (1,2,0) with {5,6,10}: total 178 <182. Yes.
+
+Therefore submit [0,5,10,12].
+
+Let me reconsider whether item0 must be counted among four. Yes required.
+
+Final: {"selected":[0,5,10,12]}.

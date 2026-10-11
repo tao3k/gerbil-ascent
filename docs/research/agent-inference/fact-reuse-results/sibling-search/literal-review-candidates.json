@@ -1,0 +1,1067 @@
+[
+  {
+    "case": 0,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Let me look at edges: [0,1],[1,2],[2,3],[3,4],[4,5] forms 0->1->2->3->4->5, so path [0,5] exists (0->1->2->3->4->5).",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Also [0,6],[6,7],[7,5] forms 0->6->7->5, so path 0->5 also exists via that.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        6
+      ],
+      [
+        "edge",
+        6,
+        7
+      ],
+      [
+        "edge",
+        7,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Item 0 paths: [0,5] and [20,200]. Edges: 0->1->2->3->4->5 gives 0 to 5 reachable. 20->100->200 gives 20 to 200 reachable. So valid.",
+    "atom": [
+      "path",
+      20,
+      200
+    ],
+    "premises": [
+      [
+        "edge",
+        20,
+        100
+      ],
+      [
+        "edge",
+        100,
+        200
+      ]
+    ]
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Item 1 paths: [2,5] and [21,201]. 2->3->4->5 reachable. 21->101->201 reachable. Valid.",
+    "atom": [
+      "path",
+      21,
+      201
+    ],
+    "premises": [
+      [
+        "edge",
+        21,
+        101
+      ],
+      [
+        "edge",
+        101,
+        201
+      ]
+    ]
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Item 2 paths: [6,5] and [22,202]. 6->7->5 reachable. 22->102->202 reachable. Valid.",
+    "atom": [
+      "path",
+      22,
+      202
+    ],
+    "premises": [
+      [
+        "edge",
+        22,
+        102
+      ],
+      [
+        "edge",
+        102,
+        202
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[0,1],[1,2],[2,3],[3,4],[4,5] -> path 0 to 5.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[0,6],[6,7],[7,5] -> path 0 to 5 (via 6,7).",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        6
+      ],
+      [
+        "edge",
+        6,
+        7
+      ],
+      [
+        "edge",
+        7,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[20,100],[100,200] -> path 20 to 200.",
+    "atom": [
+      "path",
+      20,
+      200
+    ],
+    "premises": [
+      [
+        "edge",
+        20,
+        100
+      ],
+      [
+        "edge",
+        100,
+        200
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[21,101],[101,201] -> path 21 to 201.",
+    "atom": [
+      "path",
+      21,
+      201
+    ],
+    "premises": [
+      [
+        "edge",
+        21,
+        101
+      ],
+      [
+        "edge",
+        101,
+        201
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Some are reversed: [202,102],[102,22] means 202->102->22, but item path claims [22,202] (22 to 202).",
+    "atom": [
+      "path",
+      202,
+      22
+    ],
+    "premises": [
+      [
+        "edge",
+        202,
+        102
+      ],
+      [
+        "edge",
+        102,
+        22
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[206,106],[106,26]: 206->106->26, item path [26,206] invalid.",
+    "atom": [
+      "path",
+      206,
+      26
+    ],
+    "premises": [
+      [
+        "edge",
+        206,
+        106
+      ],
+      [
+        "edge",
+        106,
+        26
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[210,110],[110,30]: 210->110->30, path [30,210] invalid.",
+    "atom": [
+      "path",
+      210,
+      30
+    ],
+    "premises": [
+      [
+        "edge",
+        210,
+        110
+      ],
+      [
+        "edge",
+        110,
+        30
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[214,114],[114,34]: 214->114->34, path [34,214] invalid.",
+    "atom": [
+      "path",
+      214,
+      34
+    ],
+    "premises": [
+      [
+        "edge",
+        214,
+        114
+      ],
+      [
+        "edge",
+        114,
+        34
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Now [2,5]: is there a directed path 2->5? edges 2->3->4->5 yes.",
+    "atom": [
+      "path",
+      2,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[6,5]: 6->7->5 yes.",
+    "atom": [
+      "path",
+      6,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        6,
+        7
+      ],
+      [
+        "edge",
+        7,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "[0,5]: 0->1->2->3->4->5 yes.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "item3: [23,203] valid (23->103->203)",
+    "atom": [
+      "path",
+      23,
+      203
+    ],
+    "premises": [
+      [
+        "edge",
+        23,
+        103
+      ],
+      [
+        "edge",
+        103,
+        203
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "And [20,100],[100,200] path 20->200.",
+    "atom": [
+      "path",
+      20,
+      200
+    ],
+    "premises": [
+      [
+        "edge",
+        20,
+        100
+      ],
+      [
+        "edge",
+        100,
+        200
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "Edges include paths:\n0->5 via 0,1,2,3,4,5.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "20->200 via 20,100,200.",
+    "atom": [
+      "path",
+      20,
+      200
+    ],
+    "premises": [
+      [
+        "edge",
+        20,
+        100
+      ],
+      [
+        "edge",
+        100,
+        200
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "21->201 via 21,101,201.",
+    "atom": [
+      "path",
+      21,
+      201
+    ],
+    "premises": [
+      [
+        "edge",
+        21,
+        101
+      ],
+      [
+        "edge",
+        101,
+        201
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[0,1],[1,2],[2,3],[3,4],[4,5] => path 0 to 5.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[0,6],[6,7],[7,5] => path 0 to 5 too.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        6
+      ],
+      [
+        "edge",
+        6,
+        7
+      ],
+      [
+        "edge",
+        7,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[20,100],[100,200] => 20->200.",
+    "atom": [
+      "path",
+      20,
+      200
+    ],
+    "premises": [
+      [
+        "edge",
+        20,
+        100
+      ],
+      [
+        "edge",
+        100,
+        200
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[21,101],[101,201] => 21->201.",
+    "atom": [
+      "path",
+      21,
+      201
+    ],
+    "premises": [
+      [
+        "edge",
+        21,
+        101
+      ],
+      [
+        "edge",
+        101,
+        201
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[23,103],[103,203] => 23->203.",
+    "atom": [
+      "path",
+      23,
+      203
+    ],
+    "premises": [
+      [
+        "edge",
+        23,
+        103
+      ],
+      [
+        "edge",
+        103,
+        203
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[24,104],[104,204] => 24->204.",
+    "atom": [
+      "path",
+      24,
+      204
+    ],
+    "premises": [
+      [
+        "edge",
+        24,
+        104
+      ],
+      [
+        "edge",
+        104,
+        204
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[25,105],[105,205] => 25->205.",
+    "atom": [
+      "path",
+      25,
+      205
+    ],
+    "premises": [
+      [
+        "edge",
+        25,
+        105
+      ],
+      [
+        "edge",
+        105,
+        205
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[27,107],[107,207] => 27->207.",
+    "atom": [
+      "path",
+      27,
+      207
+    ],
+    "premises": [
+      [
+        "edge",
+        27,
+        107
+      ],
+      [
+        "edge",
+        107,
+        207
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[28,108],[108,208] => 28->208.",
+    "atom": [
+      "path",
+      28,
+      208
+    ],
+    "premises": [
+      [
+        "edge",
+        28,
+        108
+      ],
+      [
+        "edge",
+        108,
+        208
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[29,109],[109,209] => 29->209.",
+    "atom": [
+      "path",
+      29,
+      209
+    ],
+    "premises": [
+      [
+        "edge",
+        29,
+        109
+      ],
+      [
+        "edge",
+        109,
+        209
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[31,111],[111,211] => 31->211.",
+    "atom": [
+      "path",
+      31,
+      211
+    ],
+    "premises": [
+      [
+        "edge",
+        31,
+        111
+      ],
+      [
+        "edge",
+        111,
+        211
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[32,112],[112,212] => 32->212.",
+    "atom": [
+      "path",
+      32,
+      212
+    ],
+    "premises": [
+      [
+        "edge",
+        32,
+        112
+      ],
+      [
+        "edge",
+        112,
+        212
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[33,113],[113,213] => 33->213.",
+    "atom": [
+      "path",
+      33,
+      213
+    ],
+    "premises": [
+      [
+        "edge",
+        33,
+        113
+      ],
+      [
+        "edge",
+        113,
+        213
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[35,115],[115,215] => 35->215.",
+    "atom": [
+      "path",
+      35,
+      215
+    ],
+    "premises": [
+      [
+        "edge",
+        35,
+        115
+      ],
+      [
+        "edge",
+        115,
+        215
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[2,5] exists via [2,3],[3,4],[4,5].",
+    "atom": [
+      "path",
+      2,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "pass": 1,
+    "turn": 0,
+    "step": 0,
+    "quote": "[6,5] exists via [6,7],[7,5].",
+    "atom": [
+      "path",
+      6,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        6,
+        7
+      ],
+      [
+        "edge",
+        7,
+        5
+      ]
+    ]
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "pass": 0,
+    "turn": 1,
+    "step": 0,
+    "quote": "Item 0 paths: [0,5] and [20,200]. Edge [0,5]? Not directly, but 0->1->2->3->4->5 is a path, and 0->6->7->5 is another path. So [0,5] reachable. [20,200]: 20->100->200 reachable. So item 0's paths are valid.",
+    "atom": [
+      "path",
+      0,
+      5
+    ],
+    "premises": [
+      [
+        "edge",
+        0,
+        1
+      ],
+      [
+        "edge",
+        1,
+        2
+      ],
+      [
+        "edge",
+        2,
+        3
+      ],
+      [
+        "edge",
+        3,
+        4
+      ],
+      [
+        "edge",
+        4,
+        5
+      ]
+    ]
+  }
+]

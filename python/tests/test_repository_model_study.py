@@ -39,6 +39,41 @@ class RepositoryModelStudy(unittest.TestCase):
             self.assertEqual(edges,workspace.edges)
             self.assertNotEqual(first['relations'][-1]['rows'],second['relations'][-1]['rows'])
 
+    def test_verified_candidate_cannot_be_overwritten_or_bound_to_another_snapshot(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workspace=self.workspace(Path(temp));workspace.case.update(graderSha256='grader',expectedTestNames=['control'])
+            grade={'verified':True,'kind':'hidden-grading','exitCode':0,'counts':{'passed':1,'failed':0,'skipped':0,'error':0},'sourceIdentity':'other'}
+            with self.assertRaises(ValueError):workspace.seal_candidate(grade)
+            grade['sourceIdentity']=workspace.source_identity
+            receipt=workspace.seal_candidate(grade)
+            self.assertEqual((Path(receipt['path'])/'demo/core.py').read_text(),(workspace.root/'demo/core.py').read_text())
+            with self.assertRaises(ValueError):workspace.edit([{'path':'demo/core.py','old':'return 1','new':'return 2'}])
+
+    def test_guard_stops_after_first_verified_edit_without_another_provider_call(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            terminal={'status':'completed','usage':{'input_tokens':1,'output_tokens':1,'output_tokens_details':{'reasoning_tokens':1}},'output':[{'type':'function_call','name':'edit_source','call_id':'call-1','arguments':'{"edits": []}'}]}
+            with patch('ascent_test_support.repository_model_study.Workspace') as factory,patch('ascent_test_support.repository_model_study.provider_key',return_value='unused'),patch('ascent_test_support.repository_model_study.provider',return_value=('',{'terminal':terminal,'providerSeconds':0,'error':None})) as provider:
+                workspace=factory.return_value;workspace.source_identity='source';workspace.journal=[];workspace.domain=None
+                workspace.edit.return_value={'edited':['source.py']};workspace.execute.return_value={'verified':True};workspace.seal_candidate.return_value={'sourceIdentity':'source'}
+                record=episode({'maxTurns':10,'maxOutputTokens':131072,'verifyCandidatesOnEdit':True},root,root,{'name':'task','editable':[],'question':'Repair.'},0,'ordinary-tools')
+                self.assertEqual(record['status'],'verified');self.assertEqual(provider.call_count,1)
+                workspace.seal_candidate.assert_called_once()
+
+    def test_plain_final_prose_is_graded_without_a_json_format_rejection(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            terminal={'status':'completed','usage':{'input_tokens':1,'output_tokens':1,'output_tokens_details':{'reasoning_tokens':1}},'output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':'The repair is complete.'}]}]}
+            with patch('ascent_test_support.repository_model_study.Workspace') as factory,patch('ascent_test_support.repository_model_study.provider_key',return_value='unused'),patch('ascent_test_support.repository_model_study.provider',return_value=('The repair is complete.',{'terminal':terminal,'providerSeconds':0,'error':None})) as provider:
+                workspace=factory.return_value;workspace.source_identity='source';workspace.journal=[];workspace.domain=None;workspace.execute.return_value={'verified':True}
+                record=episode({'maxTurns':10,'maxOutputTokens':131072},root,root,{'name':'task','editable':[],'question':'Repair.'},0,'ordinary-tools')
+                self.assertEqual(record['status'],'verified');workspace.execute.assert_called_once_with(grading=True)
+                workspace.seal_candidate.side_effect=ValueError('source changed while sealing')
+                failed=episode({'maxTurns':1,'maxOutputTokens':131072,'verifyCandidatesOnEdit':True},root,root,{'name':'changed-task','editable':[],'question':'Repair.'},0,'ordinary-tools')
+                self.assertEqual(failed['status'],'censored')
+                self.assertFalse(failed['attempts'][0]['correct'])
+                self.assertIn('source changed',failed['attempts'][0]['actions'][0]['result']['error'])
+
     def test_evaluator_introspection_and_import_changes_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             workspace=self.workspace(Path(temp))
@@ -58,7 +93,7 @@ class RepositoryModelStudy(unittest.TestCase):
             root=Path(temp)
             terminal={'status':'completed','usage':{'input_tokens':1,'output_tokens':1,'output_tokens_details':{'reasoning_tokens':1}},'output':[{'type':'function_call','name':'run_checks','call_id':'call-1','arguments':'{}'}]}
             with patch('ascent_test_support.repository_model_study.Workspace') as factory,patch('ascent_test_support.repository_model_study.provider_key',return_value='unused'),patch('ascent_test_support.repository_model_study.provider',return_value=('',{'terminal':terminal,'providerSeconds':0,'error':None})) as provider:
-                factory.return_value.source_identity='source';factory.return_value.journal=[]
+                factory.return_value.source_identity='source';factory.return_value.journal=[];factory.return_value.domain=None
                 factory.return_value.execute.side_effect=RuntimeError('test environment did not produce a complete receipt')
                 record=episode({'maxTurns':10,'maxOutputTokens':131072},root,root,{'name':'task','editable':[],'question':'Repair.'},0,'ordinary-tools')
                 self.assertEqual(record['status'],'harness_failure')

@@ -1,0 +1,405 @@
+Let me carefully parse this problem.
+
+We have items 0-15, each with paths (two directed paths), group, weight, risk, value. We need to choose four item IDs maximizing sum of values plus bonuses for selected pairs.
+
+Constraints from branch:
+- weightLimit: 53
+- riskLimit: 32
+- required: 1
+- excluded: 13
+- start: [0,1,6,8]
+
+"Every selected item must have both of its directed paths." Each item has paths, and the nativeEvidence gives conclusions about which paths are verified/absent.
+
+Let me look at the native evidence conclusions. The paths in items are like [0,5] and [20,200] for item 0. The evidence lists:
+
+- ["verified",true,["path",0,5],[121]]
+- ["verified",true,["path",20,200],[102]]
+- ["verified",true,["path",2,5],[120]]
+- ["verified",true,["path",21,201],[103]]
+- ["verified",true,["path",6,5],[101]]
+- ["verified",true,["path",22,202],[104]]
+- ["finite-absent",false,["path",23,203],[]]
+- ["verified",true,["path",24,204],[106]]
+- ["verified",true,["path",25,205],[107]]
+- ["verified",true,["path",26,206],[108]]
+- ["finite-absent",false,["path",27,207],[]]
+- ["verified",true,["path",28,208],[110]]
+- ["verified",true,["path",29,209],[111]]
+- ["verified",true,["path",30,210],[112]]
+- ["finite-absent",false,["path",31,211],[]]
+- ["verified",true,["path",32,212],[114]]
+- ["verified",true,["path",33,213],[115]]
+- ["verified",true,["path",34,214],[116]]
+- ["finite-absent",false,["path",35,215],[]]
+
+So some paths are "finite-absent" meaning they don't exist / are invalid. An item with a finite-absent path cannot be selected (since every selected item must have both of its directed paths verified).
+
+Let's map items to their paths:
+
+Item 0: [0,5] verified, [20,200] verified → OK
+Item 1: [2,5] verified, [21,201] verified → OK (and required)
+Item 2: [6,5] verified, [22,202] verified → OK
+Item 3: [0,5] verified, [23,203] finite-absent → NOT OK
+Item 4: [2,5] verified, [24,204] verified → OK
+Item 5: [6,5] verified, [25,205] verified → OK
+Item 6: [0,5] verified, [26,206] verified → OK
+Item 7: [2,5] verified, [27,207] finite-absent → NOT OK
+Item 8: [6,5] verified, [28,208] verified → OK
+Item 9: [0,5] verified, [29,209] verified → OK
+Item 10: [2,5] verified, [30,210] verified → OK
+Item 11: [6,5] verified, [31,211] finite-absent → NOT OK
+Item 12: [0,5] verified, [32,212] verified → OK
+Item 13: [2,5] verified, [33,213] verified → OK but excluded
+Item 14: [6,5] verified, [34,214] verified → OK
+Item 15: [0,5] verified, [35,215] finite-absent → NOT OK
+
+So selectable items: 0,1,2,4,5,6,8,9,10,12,13(excluded),14.
+
+Excluded: 13. Required: 1.
+
+Now constraints: weight limit 53, risk limit 32, at least three groups, include required item 1, omit excluded 13.
+
+Also "start": [0,1,6,8] — hmm, maybe start means these are candidate start items? Let me think. Actually maybe "start" is a hint about something. Hmm, in these puzzles "start" might be the items initially considered? Let me just consider the optimization.
+
+Let me list selectable items with weight, risk, value, group:
+
+Item 0: w5, r2, v15, g0
+Item 1: w12, r13, v32, g1 (required)
+Item 2: w5, r12, v49, g2
+Item 4: w5, r10, v40, g0
+Item 5: w12, r9, v57, g1
+Item 6: w5, r8, v31, g2
+Item 8: w5, r6, v22, g0
+Item 9: w12, r5, v39, g1
+Item 10: w5, r4, v56, g2
+Item 12: w5, r2, v47, g0
+Item 13: excluded (w12,r13,v21,g1)
+Item 14: w5, r12, v38, g2
+
+Bonuses (pairs):
+(0,7):14 — 7 not selectable
+(0,14):10
+(1,4):12
+(1,11):8 — 11 not selectable
+(2,8):17
+(2,15):13 — 15 not selectable
+(3,5):15 — 3 not selectable
+(3,12):11 — 3 not selectable
+(4,9):9
+(5,6):7
+(5,13):14 — 13 excluded
+(6,10):12
+(7,14):17 — 7 not selectable
+(8,11):15 — 11 not selectable
+(9,15):9 — 15 not selectable
+(10,12):7
+(12,13):10 — 13 excluded
+
+So relevant bonuses among selectable: (0,14):10, (1,4):12, (2,8):17, (4,9):9, (5,6):7, (6,10):12, (10,12):7.
+
+We need exactly four items? "Choose four item IDs" — yes, four items.
+
+We need at least three groups among the four items.
+
+Required item 1 must be included.
+
+Weight limit 53, risk limit 32. Four items with weights: groups... Let's see weights: items 0,2,4,6,8,10,12,14 have weight 5; items 1,5,9 have weight 12. So four items of weight 5 = 20 ≤53 fine. If include item 1 (w12), plus three weight-5 = 27. Or include 1,5,9 (12+12+12=36) plus one 5 = 41. All ≤53. Weight is not binding really (max 12*4=48 ≤53). Actually four items all weight 12? Only 1,5,9 are weight 12 among selectable. So max weight = 12+12+12+5=41. So weight limit not binding.
+
+Risk limit 32 is binding.
+
+Let's compute risk for candidate sets including item 1 (r13).
+
+Item 1 risk 13. Need 3 more items with total risk ≤19.
+
+Risks: item0:2, item2:12, item4:10, item5:9, item6:8, item8:6, item9:5, item10:4, item12:2, item14:12.
+
+We need at least three groups. Groups: item0 g0, item1 g1, item2 g2, item4 g0, item5 g1, item6 g2, item8 g0, item9 g1, item10 g2, item12 g0, item14 g2.
+
+Only groups 0,1,2 exist. At least three groups means must include at least one from each of g0, g1, g2. Since item1 is g1, we need at least one g0 and at least one g2 among the remaining three.
+
+Total value = sum of values + bonuses for pairs both selected.
+
+Let me enumerate. We pick 4 items including item1, at least one g0, at least one g2, risk total ≤32.
+
+Value = v1(32) + values + bonuses.
+
+Let's consider combos. We want to maximize.
+
+Available g0 items: 0(v15,r2),4(v40,r10),8(v22,r6),12(v47,r2).
+g2 items: 2(v49,r12),6(v31,r8),10(v56,r4),14(v38,r12).
+Hmm item5,9 are g1 too.
+
+We need 3 more items from remaining (10 items).
+
+Let's think of bonuses. Relevant bonuses among selectable:
+(0,14):10
+(1,4):12
+(2,8):17
+(4,9):9
+(5,6):7
+(6,10):12
+(10,12):7
+
+Item1 pairs: (1,4):12.
+
+So including item4 with item1 gives +12 bonus. Item4 is g0, value40. Great.
+
+Now consider set {1,4,?,?}. Need at least one g2. Remaining two items: one g2 at least.
+
+Option: {1,4,2,x}. Let's compute values and risk.
+
+Let me just enumerate candidate high-value sets.
+
+Values sorted: item10 v56 r4 g2; item5 v57 r9 g1; item2 v49 r12 g2; item12 v47 r2 g0; item4 v40 r10 g0; item9 v39 r5 g1; item14 v38 r12 g2; item1 v32 r13 g1(required); item6 v31 r8 g2; item8 v22 r6 g0; item0 v15 r2 g0.
+
+We must include item1 (32, r13). Remaining budget risk ≤19, need 3 items, at least one g0 and one g2.
+
+Let's consider maximizing value + bonuses.
+
+Candidate: items 1,4,10,12. Groups: 1(g1),4(g0),10(g2),12(g0) → groups {0,1,2} ✓. Risks: 13+10+4+2=29 ≤32 ✓. Weight: 12+5+5+5=27 ✓.
+Values: 32+40+56+47=175. Bonuses: (1,4)=12, (10,12)=7. Total =175+19=194.
+
+Candidate: 1,4,5,2? Groups 1,4(g0),5(g1),2(g2) ✓. Risks 13+10+9+12=44 >32. No.
+
+Candidate: 1,4,10,2: risks 13+10+4+12=39>32. No.
+
+Candidate: 1,4,8,10: groups g1,g0,g0,g2 ✓. risks 13+10+6+4=33>32. Just over. No.
+
+Candidate: 1,4,12,2: risks 13+10+2+12=37>32 no.
+
+Candidate: 1,4,0,10: risks 13+10+2+4=29 ✓. groups 0,0,2,1 ✓. values 32+40+15+56=143; bonuses (1,4)=12, (0,14)no, (10,12)no, (6,10)no. total 155. Lower.
+
+Candidate: 1,4,14,12: risks 13+10+12+2=37>32 no.
+
+Candidate: 1,4,9,12: groups g1,g0,g1,g0 → only groups {0,1}, missing g2. Not allowed (need 3 groups). So no.
+
+Hmm need g2.
+
+Candidate: 1,4,10,12 is 194. Let's look for better.
+
+What about using item5 (v57) and item9 (v39) but they're g1, need g0 and g2 too. 4 items: need at least one g0 and one g2 and item1. We only have 4 slots: item1 g1. If we add another g1, we still need g0 and g2, total 4 items: 1 + g1 + g0 + g2. So set {1,5, g0, g2}.
+
+{1,5,12(g0),10(g2)}: risks 13+9+2+4=28 ✓. values 32+57+47+56=192. bonuses: (5,6)no, (10,12)=7. total 199. 
+
+Wait compute: 192+7=199. That beats 194.
+
+Check weight: 12+12+5+5=34 ✓.
+
+Groups: 1,5(g1),12(g0),10(g2) → groups {1,0,2} ✓.
+
+Total 199.
+
+{1,5,12,2}: risks 13+9+2+12=36>32 no.
+
+{1,5,4(g0),10(g2)}: risks 13+9+10+4=36>32 no.
+
+{1,5,12(g0),6(g2)}: risks 13+9+2+8=32 ✓. values 32+57+47+31=167. bonuses: (5,6)=7, (10,12)no. total 174.
+
+{1,5,0(g0),10(g2)}: risks 13+9+2+4=28 ✓. values 32+57+15+56=160; bonuses (5,6)no. total 160.
+
+{1,9,12,10}: risks 13+5+2+4=24 ✓. values 32+39+47+56=174; bonuses (10,12)=7 → 181.
+
+{1,5,14(g2),12(g0)}: risks 13+9+12+2=36>32 no.
+
+{1,9,10,12} done.
+
+What about {1,6,10,12}? That's groups g1,g2,g2,g0 → {0,1,2} ✓ but no g1 besides required... fine. items 1,6,10,12: risks 13+8+4+2=27 ✓. values 32+31+56+47=166; bonuses (5,6)no,(6,10)=12,(10,12)=7 → 185. Less.
+
+What about including item2 (v49, r12)? {1,2, g0, and ...} we need 4 items: 1,2,g0,g? need at least 3 groups already {1,2,0}. 4th item can be anything. 
+{1,2,12(g0),10(g2)}: risks 13+12+2+4=31 ✓. values 32+49+47+56=184; bonuses (2,8)no,(10,12)=7 →191.
+{1,2,4(g0),10}: risks 13+12+10+4=39 no.
+{1,2,8(g0),10}: risks 13+12+6+4=35 no.
+{1,2,12,14}: risks 13+12+2+12=39 no.
+{1,2,0,10}: risks 13+12+2+4=31 ✓. values 32+49+15+56=152; bonus none relevant (2,8)no →152.
+
+What about item4 g0 with (1,4)=12 bonus and item2 g2 (v49)? {1,4,2,x}: risk 13+10+12=35 already >32. No.
+
+So set {1,5,12,10} gives 199 so far.
+
+Can we get more? Consider {1,5,9,?} needs g0 and g2 but 4th slot only one item → can't have both g0 and g2. {1,5,9} is three g1. Need g0 and g2, but only one slot. So no.
+
+Consider using item0? low value.
+
+Let's check sets not including item4 but with 5,9,10,12 etc. Must include 1 though.
+
+Best values: 5(57),10(56),2(49),12(47),4(40),9(39),14(38),1(32),6(31),8(22),0(15).
+
+With required 1. Need 3 items with risk sum ≤19 and covering g0 and g2.
+
+Available risks for items other than 1: 5:9, 10:4, 12:2, 0:2, 9:5, 8:6, 6:8, 4:10, 2:12, 14:12.
+
+We need at least one g0 (0,4,8,12) and at least one g2 (2,6,10,14).
+
+Max value combination: consider picks.
+
+Let's try {1,5,12,10}=199 (computed).
+
+Try {1,5,10, g0}. g0 options: 12(r2,v47) → total as above 28 risk, vs 8(r6,v22): risk 13+9+4+6=32, value 32+57+56+22=167, bonus (2,8)no →167. vs 0(r2,v15): risk 28, value 160. vs 4(r10): risk 36 no.
+
+So best g0 with {1,5,10} is 12 → gives bonuses? (10,12)=7 bonus. Yes 199.
+
+Try {1,9,10,12}=181. Try {1,5,2,?}: risk 13+9+12=34 >32 already. no.
+
+Try {1,4,10,?}: risk 13+10+4=27, remaining risk 5 → need cover g0 already (4), need g2 covered (10). 3 groups: g1,g0,g2 ✓. 4th item any with risk ≤5: 12(r2,v47) → value 32+40+56+47=175, bonuses (1,4)=12,(10,12)=7 →194. Or 9(r5,v39): risk 32, value 32+40+56+39=167, bonuses (1,4)=12,(4,9)=9 →188. Or 0(r2,v15):175? value 143, bonus 12 →155. Or 8(r6) exceeds.
+
+So {1,4,10,12}=194 best for that.
+
+Try {1,4,2,...} risk too high.
+
+Try {1,4,6,?}: risk 13+10+8=31, remaining ≤1 → none (min risk 2). no.
+
+Try {1,4,8,...}: risk 13+10+6=29, remaining ≤3 → 12(r2): value 32+40+22+47=141, bonuses (1,4)=12, (2,8)no, (10,12)no →153. Or 0(r2):value 32+40+22+15=109+12=121.
+
+Try {1,4,14,...}: risk 13+10+12=35 no.
+
+Try {1,2,10,?}: risk 13+12+4=29, remain ≤3 → 12(r2): computed 191. Or 0(r2):152.
+
+{1,2,6,?}: risk 13+12+8=33 no.
+
+{1,2,12,?}: risk 13+12+2=27 remain ≤5. Cover g0 (12), g2(2), g1(1) ✓. 4th item any risk ≤5: 10(r4,v56): 191. 9(r5,v39): value 32+49+47+39=167, bonuses (4,9)no,(10,12)no,(2,8)no... none →167. 5(r9) no. 0(r2,v15):143.
+
+So 191.
+
+{1,5,12,10}=199 seems good. Any set with 5 and 10 and 9? that's 3 g1: 1,5,9 plus one item can't cover both g0&g2. no.
+
+What about {1,5,12,6}: 174. {1,5,12,10} best.
+
+What about {1,5,12,2}? risk 36 no. {1,5,10,12} yes.
+
+What about {1,9,12,10}=181. {1,9,12,14}? risk 13+5+2+12=32, groups g1,g1,g0,g2 ✓. value 32+39+47+38=156, bonuses (12,13)no,(10,12)no... (6,10)no. →156.
+
+What about {1,5,14,12}? risk 36 no.
+
+What about {1,10,12,14}? groups g1,g2,g0,g2 ✓. risk 13+4+2+12=31 ✓. value 32+56+47+38=173; bonuses (10,12)=7, (0,14)no, (7,14)no →180.
+
+What about {1,5,10,4}? risk 36 no.
+
+Hmm what about {1,4,10,12}=194 vs {1,5,10,12}=199. 199 wins.
+
+Could there be a set with item5(57) and item2(49) plus g0? {1,5,2,12}: risk 13+9+12+2=36 no. {1,5,2,10}: risk 38 no. So no.
+
+What about not including item5 or 10? lower value probably.
+
+Let's double check {1,5,10,12}: items 1,5,10,12.
+- Groups: 1→g1, 5→g1, 10→g2, 12→g0. Groups = {1,2,0} = three groups ✓.
+- Weight: 12+12+5+5 = 34 ≤53 ✓.
+- Risk: 13+9+4+2 = 28 ≤32 ✓.
+- Required item 1 included ✓. Excluded 13 not included ✓.
+- Bonuses: pairs among {1,5,10,12}: (1,4)no, (5,6)no, (6,10)no, (10,12)yes 7. Also (12,13)no, (5,13)no. So bonus 7.
+- Value: 32+57+56+47=192 +7 = 199.
+
+Any better? Let's brute-force mentally more systematically, but I think 199 is high. Let me consider all sets including item1 and exactly 4 items with risk≤32.
+
+Actually let me reconsider: is item13 excluded but could there be a reason "excluded" just means omit. Yes.
+
+Let me systematically enumerate the best. We want max value+bonus. Let me consider combos of the 4 items (besides required 1, choose 3 from the selectable set S={0,2,4,5,6,8,9,10,12,14}) with risk constraint and group constraint and also... wait group constraint is on all selected items.
+
+Wait, also "every selected item must have both of its directed paths" - we've handled.
+
+Also "start": [0,1,6,8] — maybe this indicates the initial feasible set or something. Hmm. Could "start" be a constraint that selected items must be within some reachable set? Actually maybe it's the "start" of a search frontier: items from which search begins. Possibly it means the items that are "start" enabled? Not sure. Let me consider it might mean the four items should include or be chosen from start? Hmm.
+
+Actually in these puzzle tasks, "start" might denote nodes that are considered "start" and the answer might need... Let me not over-think. Actually maybe "start" is a list of items that are initially given as part of the search? But we choose 4 items. Hmm, maybe the branch specifies a "start" set that is the initial selection? Unclear.
+
+Let me re-read: "Respect this branch's weight and risk limits, include at least three groups, include its required item, and omit its excluded item."
+
+The branch has fields: id, weightLimit, riskLimit, required, excluded, start. The constraints mentioned: weight limit, risk limit, at least three groups, required item, excluded item. No mention of start. So start is probably irrelevant metadata (maybe the starting node of search). I'll ignore it.
+
+So answer {1,5,10,12} with total 199.
+
+But let me double check there's nothing higher. Let's consider sets with high values: 5(57)+10(56)+2(49)+12(47)+4(40)+9(39)+14(38)+1(32)+6(31)+8(22)+0(15). Required 1.
+
+We need 3 more. Let's try to include 5,10,12 (that's 57+56+47=160+32=192, bonus 7 → 199).
+
+Try 5,10,4: risk 13+9+4+10=36 >32.
+Try 5,10,2: risk 38 no.
+Try 5,10,9: only two groups (g1,g1,g1,g2) missing g0. Actually 1,5,9,10 → groups g1,g1,g1,g2 = {1,2} two groups. Not allowed.
+Try 5,10,8: risk 13+9+4+6=32 ✓; groups g1,g1,g2,g0 ✓. value 32+57+56+22=167; bonus (2,8)no →167.
+Try 5,10,0: risk 28; value 160; no bonus →160.
+Try 5,10,12 best among g0.
+
+Try 5,2,4: risk 13+9+12+10=44 no.
+Try 5,2,12: 36 no.
+Try 5,2,8: 13+9+12+6=40 no.
+Try 5,2,0: 13+9+12+2=36 no.
+So 5&2 never fit (risk 9+12=21 +13=34 already>32).
+
+Try 5,4,x: risk 13+9+10=32, remain 0 → only item with risk 0 none. But we need 4 items total (1,5,4 + 1). Since 32 is limit and no remaining budget. Actually 3 items 1,5,4 risk =32 exactly, need a 4th item, min risk 2 → 34>32. So {1,5,4,...} invalid.
+
+Try 5,12,x: risk 13+9+2=24, remain 8. x options g2: 10(r4,v56)→199, 6(r8,v31)→13+9+2+8=32, value 32+57+47+31=167, bonus (5,6)=7 →174. 2(r12) no. 14(r12) no.
+So best 199.
+
+Try 5,0,x: risk 24, remain 8, x g2: 10 → value 32+57+15+56=160 no bonus; 6 → risk 13+9+2+8=32, value 32+57+15+31=135, bonus (5,6)=7 →142. 
+Try 5,8,x: risk 13+9+6=28, remain4 → x=10(r4) but then groups g1,g1,g0,g2 ✓ value 32+57+22+56=167 →167.
+
+Now without 5. Try 4,10,12 plus 1: 194 (computed).
+Try 4,10,2: risk 39 no. 4,10,14: 13+10+4+12=39 no. 4,10,6: risk 35 no. 4,10,9: risk 32, groups g1,g0,g2,g1 ✓. value 32+40+56+39=167, bonuses (1,4)=12,(4,9)=9,(10,12)no →188.
+Try 4,10,8: risk 33 no. 4,10,0: 29, value 143, bonus (1,4)=12 →155.
+Try 4,9,12: groups g1,g0,g1,g0 → missing g2. invalid.
+Try 4,2,...: risk high.
+Try 4,14,...: 13+10+12=35 no.
+
+Without 4, without 5: use 10,12,2? {1,2,10,12}=191. {1,2,10,8}: risk 13+12+4+6=35 no. {1,2,10,0}: risk 31, value 32+49+56+15=152, bonus (2,8)no →152. {1,2,10,14}: risk 41 no.
+{1,2,12,9}: 167. {1,2,12,6}: 13+12+2+8=35 no. {1,2,12,10}=191 best.
+{1,2,12,5}: 36 no.
+
+What about {1,9,10,12}=181, {1,6,10,12}=185, {1,9,10,4}=188, {1,9,10,14}: risk 13+5+4+12=34 no. {1,9,10,2}: 34 no.
+
+{1,9,4,10}=188. {1,4,9,12} invalid groups. {1,4,9,10} 188.
+
+{1,10,12,14}=180.
+
+So the maximum seems 199 with {1,5,10,12}.
+
+Wait, let me double-check {1,4,10,12}=194 vs any with bonus (2,8)=17? To get (2,8) include items 2 and 8: {1,2,8,x}. risk 13+12+6=31, remain 1 → no 4th item possible (min risk 2). Actually need 4 items so invalid. {1,2,8,...} can't add.
+
+Bonus (4,9)=9 requires 4 and 9: {1,4,9,x}: risk 13+10+5=28, remain4. x must cover g2 (since groups: 1 g1,4 g0,9 g1 → need g2). x g2 with risk ≤4: 10(r4,v56) → {1,4,9,10}=188. 
+Bonus (5,6)=7: {1,5,6,x}: risk 13+9+8=30, remain2 → x must cover g0 (groups 1g1,5g1,6g2 → need g0). g0 with risk≤2: 12(r2,v47) → value 32+57+31+47=167, bonus (5,6)=7 →174; 0(r2,v15) →135+7=142.
+Bonus (6,10)=12: {1,6,10,x}: risk 13+8+4=25, remain7, x cover g0: 12(r2,v47)→166 +bonuses(6,10)=12,(10,12)=7 →185. 8(r6,v22)→154? value 32+31+56+22=141 +12=153. 4(r10) no. 0(r2):134+12=146.
+Bonus (10,12)=7 included in many.
+
+So 199 is the max.
+
+Hmm, but let me reconsider whether "start":[0,1,6,8] is a constraint. Possibly it means the set of items that are "reachable" or allowed? If start means the items that must be selected... but we need 4 items and start has 4: [0,1,6,8]. That includes required 1 and g0 item 0, g2 item 6, g0 item 8. Groups: 0 g0, 1 g1, 6 g2, 8 g0 → {0,1,2} three groups ✓. Weight 5+12+5+5=27 ✓. Risk 2+13+8+6=29 ✓. Value 15+32+31+22=100. Bonuses: (2,8)no, (5,6)no, ... none. total 100. That's low. Unlikely to be the intended answer since we're maximizing.
+
+Hmm, "start" might mean the items the search started with, i.e., the current partial selection? But the task says "Choose four item IDs maximizing sum". Maybe start = items already selected (given), and we add to reach four? But it already has 4.
+
+Actually maybe "start" are items that are "starting points" and the answer must include at least one of them? Not stated.
+
+Given ambiguity, I'll go with optimization maximizing value+bonus subject to stated constraints: 199 with {1,5,10,12}.
+
+Hmm wait, but actually let me reconsider the bonus pairs. Bonus pairs given: (0,7),(0,14),(1,4),(1,11),(2,8),(2,15),(3,5),(3,12),(4,9),(5,6),(5,13),(6,10),(7,14),(8,11),(9,15),(10,12),(12,13).
+
+For {1,5,10,12}: pairs check: (5,6)? no 6. (6,10)? no 6. (10,12)? yes 7. (12,13)? no. (5,13)? no. So 7. Total 199. Good.
+
+Let me reconsider if there might be a set with total >199 using item5(57) and item2(49) — impossible due to risk.
+
+What about item14 v38 with bonus (0,14)=10? need 0 and 14: {1,0,14,x}: risk 13+2+12=27, remain5, x cover g2 (groups 1g1,0g0,14g2 → already three groups; x any). x best with risk≤5: 10(r4,v56) value 32+15+38+56=141 +bonus(0,14)=10 →151. no.
+
+OK, 199.
+
+Actually wait — I should double check the group constraint: "include at least three groups". With only 4 items and 3 groups available, we need one from each group. {1,5,10,12} = g1,g1,g2,g0 ✓.
+
+Let me also verify there's no 4-item set with even higher value that I dismissed. The absolute top 4 values among selectable including required 1: 57(5)+56(10)+49(2)+47(12)+32(1) → top four distinct: 57,56,49,47 sum 209 but includes 1? 57+56+49+47=209 doesn't include 1 (required). With 1: 57+56+49+47+32 pick 4 including 32: best is 57+56+49+32=194 plus bonuses, but risk of {1,5,10,2}: 13+9+4+12=38>32. So invalid.
+
+Next: 1,5,10,12 = 192 + 7 = 199. 1,5,12,2 = 185 but risk 36 invalid. 1,5,10,4 invalid risk 36.
+
+So yes 199.
+
+Let me also consider {1,5,12,4}: risk 13+9+2+10=34 invalid.
+
+{1,10,12,2}: 184+7=191. {1,10,12,4}: 175+12+7=194. {1,10,12,5}:199.
+
+Could there be {1,5,10,12} vs {1,5,10,0}? no.
+
+Final: [1,5,10,12].
+
+Total value+bonus = 199.
+
+Let me write the answer.
+
+Actually, let me double-check item 5's paths: [6,5] verified, [25,205] verified → OK. Item 10: [2,5] verified, [30,210] verified → OK. Item 12: [0,5] verified, [32,212] verified → OK. Item 1: [2,5],[21,201] verified → OK.
+
+Good.
+
+Answer {"selected":[1,5,10,12]}.

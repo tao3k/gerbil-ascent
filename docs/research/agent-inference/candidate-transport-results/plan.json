@@ -1,0 +1,25 @@
+{
+  "consumerSha256": "a88090a65d43e6da1cf7b46b069f91fa3a89de8dc8e88ab0cd23af6f547f6994",
+  "testSha256": "af035530d26a524ad3d0d5782f62724c4a3826ab091a018d3a7393873f3adfaf",
+  "binarySha256": "c3a49809d7bae0c76ab91c11075beff0abbaeffd6ad02e99cca036fe485dc7ed",
+  "taskPlanSha256": "c67369ece530ae8784b8cb8f9d074cea98c7d43a826d26d80b27dea20a093451",
+  "sourceCaptureSha256": "57b2d3774026d1c36807662eaed22a82fa938c3ec9967aa15e1db97767ff3cc7",
+  "iterations": 3,
+  "cases": [
+    0,
+    1
+  ],
+  "modes": [
+    "native",
+    "dynamic-module",
+    "full-gxi"
+  ],
+  "loadSeconds": {
+    "native": 20,
+    "dynamic-module": 60,
+    "full-gxi": 60
+  },
+  "rpcSeconds": 20,
+  "shutdownSeconds": 5,
+  "criteria": "Unchanged frozen tasks; ready rows and every Fact match independent judge; repeat packet proof nodes identical and ancestor-closed, build once; original contract checks remain enforced; no terminate/kill accepted as clean."
+}

@@ -1,0 +1,804 @@
+{
+  "planSha256": "0cfbc01f3f41a8140f74511d78f21cc76193b291aba0c14c2367497c16c59dad",
+  "summaries": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "grossTokens": 32313,
+      "stop": "failure",
+      "failure": "thinking incomplete under total budget; no nonthinking salvage",
+      "submittedBranches": 1,
+      "feasibleSubmittedBranches": 0,
+      "optimalSubmittedBranches": 0,
+      "truncatedThinkingCalls": 1,
+      "finalizationCalls": 0,
+      "startScores": [
+        89,
+        100,
+        116,
+        134,
+        132,
+        106
+      ],
+      "incumbentScores": [
+        89,
+        100,
+        116,
+        134,
+        132,
+        106
+      ],
+      "optimumScores": [
+        182,
+        199,
+        202,
+        184,
+        217,
+        217
+      ],
+      "meanNormalizedImprovement": 0.0,
+      "nativeStats": {
+        "entries": 0,
+        "attempts": 0,
+        "proof-builds": 0,
+        "hits": 0,
+        "evictions": 0
+      },
+      "unusedBudget": 455,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 80,
+          "crossBranchRepeats": 35,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 54,
+          "suppliedPremiseRederivations": 0,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 16,
+          "coveredCharacters": 81352,
+          "visibleCharacters": 81352,
+          "unresolvedSemanticLines": 221,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "grossTokens": 32313,
+      "stop": "failure",
+      "failure": "thinking incomplete under total budget; no nonthinking salvage",
+      "submittedBranches": 2,
+      "feasibleSubmittedBranches": 2,
+      "optimalSubmittedBranches": 2,
+      "truncatedThinkingCalls": 1,
+      "finalizationCalls": 0,
+      "startScores": [
+        89,
+        100,
+        116,
+        134,
+        132,
+        106
+      ],
+      "incumbentScores": [
+        182,
+        199,
+        116,
+        134,
+        132,
+        106
+      ],
+      "optimumScores": [
+        182,
+        199,
+        202,
+        184,
+        217,
+        217
+      ],
+      "meanNormalizedImprovement": 0.3333333333333333,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 3,
+        "evictions": 0
+      },
+      "unusedBudget": 455,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 28,
+          "crossBranchRepeats": 0,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 9,
+          "suppliedPremiseRederivations": 20,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 4,
+          "coveredCharacters": 59574,
+          "visibleCharacters": 59574,
+          "unresolvedSemanticLines": 329,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "grossTokens": 32313,
+      "stop": "failure",
+      "failure": "thinking incomplete under total budget; no nonthinking salvage",
+      "submittedBranches": 2,
+      "feasibleSubmittedBranches": 2,
+      "optimalSubmittedBranches": 2,
+      "truncatedThinkingCalls": 1,
+      "finalizationCalls": 0,
+      "startScores": [
+        89,
+        100,
+        116,
+        134,
+        132,
+        106
+      ],
+      "incumbentScores": [
+        182,
+        199,
+        116,
+        134,
+        132,
+        106
+      ],
+      "optimumScores": [
+        182,
+        199,
+        202,
+        184,
+        217,
+        217
+      ],
+      "meanNormalizedImprovement": 0.3333333333333333,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 3,
+        "evictions": 0
+      },
+      "unusedBudget": 455,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 0,
+          "crossBranchRepeats": 0,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 0,
+          "suppliedPremiseRederivations": 0,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 0,
+          "coveredCharacters": 51930,
+          "visibleCharacters": 51930,
+          "unresolvedSemanticLines": 235,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "grossTokens": 32310,
+      "stop": "failure",
+      "failure": "thinking incomplete under total budget; no nonthinking salvage",
+      "submittedBranches": 2,
+      "feasibleSubmittedBranches": 2,
+      "optimalSubmittedBranches": 2,
+      "truncatedThinkingCalls": 1,
+      "finalizationCalls": 0,
+      "startScores": [
+        104,
+        105,
+        123,
+        115,
+        87,
+        87
+      ],
+      "incumbentScores": [
+        189,
+        222,
+        123,
+        115,
+        87,
+        87
+      ],
+      "optimumScores": [
+        189,
+        222,
+        207,
+        185,
+        188,
+        189
+      ],
+      "meanNormalizedImprovement": 0.3333333333333333,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 3,
+        "evictions": 0
+      },
+      "unusedBudget": 458,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 0,
+          "crossBranchRepeats": 0,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 0,
+          "suppliedPremiseRederivations": 0,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 0,
+          "coveredCharacters": 56661,
+          "visibleCharacters": 56661,
+          "unresolvedSemanticLines": 285,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "grossTokens": 31864,
+      "stop": "budget_reservation",
+      "failure": null,
+      "submittedBranches": 3,
+      "feasibleSubmittedBranches": 3,
+      "optimalSubmittedBranches": 3,
+      "truncatedThinkingCalls": 0,
+      "finalizationCalls": 0,
+      "startScores": [
+        104,
+        105,
+        123,
+        115,
+        87,
+        87
+      ],
+      "incumbentScores": [
+        189,
+        222,
+        207,
+        115,
+        87,
+        87
+      ],
+      "optimumScores": [
+        189,
+        222,
+        207,
+        185,
+        188,
+        189
+      ],
+      "meanNormalizedImprovement": 0.5,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 4,
+        "evictions": 0
+      },
+      "unusedBudget": 904,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 0,
+          "crossBranchRepeats": 0,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 0,
+          "suppliedPremiseRederivations": 0,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 0,
+          "coveredCharacters": 63848,
+          "visibleCharacters": 63848,
+          "unresolvedSemanticLines": 305,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "grossTokens": 31855,
+      "stop": "budget_reservation",
+      "failure": null,
+      "submittedBranches": 2,
+      "feasibleSubmittedBranches": 2,
+      "optimalSubmittedBranches": 1,
+      "truncatedThinkingCalls": 0,
+      "finalizationCalls": 0,
+      "startScores": [
+        104,
+        105,
+        123,
+        115,
+        87,
+        87
+      ],
+      "incumbentScores": [
+        185,
+        222,
+        123,
+        115,
+        87,
+        87
+      ],
+      "optimumScores": [
+        189,
+        222,
+        207,
+        185,
+        188,
+        189
+      ],
+      "meanNormalizedImprovement": 0.3254901960784314,
+      "nativeStats": {
+        "entries": 0,
+        "attempts": 0,
+        "proof-builds": 0,
+        "hits": 0,
+        "evictions": 0
+      },
+      "unusedBudget": 913,
+      "annotation": [
+        {
+          "pass": 0,
+          "qualifiedDerivations": 143,
+          "crossBranchRepeats": 55,
+          "sameBranchRepeats": 0,
+          "withinResponseRepeats": 105,
+          "suppliedPremiseRederivations": 0,
+          "consumedPremises": 0,
+          "newConsequencesAfterFirst": 0,
+          "coveredCharacters": 76846,
+          "visibleCharacters": 76846,
+          "unresolvedSemanticLines": 198,
+          "rejectedLabels": 0,
+          "failedCalls": 0
+        }
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "case": 0,
+      "cap": 4096,
+      "arms": [
+        {
+          "arm": "baseline",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "scheme",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "cap": 8192,
+      "arms": [
+        {
+          "arm": "baseline",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "scheme",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "cap": 16384,
+      "arms": [
+        {
+          "arm": "baseline",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            182,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "scheme",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            182,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "cap": 24576,
+      "arms": [
+        {
+          "arm": "baseline",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            182,
+            199,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "scheme",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            182,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        }
+      ]
+    },
+    {
+      "case": 0,
+      "cap": 32768,
+      "arms": [
+        {
+          "arm": "baseline",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            89,
+            100,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            182,
+            199,
+            116,
+            134,
+            132,
+            106
+          ]
+        },
+        {
+          "arm": "scheme",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            182,
+            199,
+            116,
+            134,
+            132,
+            106
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "cap": 4096,
+      "arms": [
+        {
+          "arm": "scheme",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "baseline",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "cap": 8192,
+      "arms": [
+        {
+          "arm": "scheme",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "baseline",
+          "submittedBranches": 0,
+          "incumbentScores": [
+            104,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "cap": 16384,
+      "arms": [
+        {
+          "arm": "scheme",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            189,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            189,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "baseline",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            185,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "cap": 24576,
+      "arms": [
+        {
+          "arm": "scheme",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            189,
+            222,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            189,
+            222,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "baseline",
+          "submittedBranches": 1,
+          "incumbentScores": [
+            185,
+            105,
+            123,
+            115,
+            87,
+            87
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "cap": 32768,
+      "arms": [
+        {
+          "arm": "scheme",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            189,
+            222,
+            123,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "facts",
+          "submittedBranches": 3,
+          "incumbentScores": [
+            189,
+            222,
+            207,
+            115,
+            87,
+            87
+          ]
+        },
+        {
+          "arm": "baseline",
+          "submittedBranches": 2,
+          "incumbentScores": [
+            185,
+            222,
+            123,
+            115,
+            87,
+            87
+          ]
+        }
+      ]
+    }
+  ],
+  "solverKnownTokens": 192968,
+  "solverUnknownUsageCalls": 0,
+  "annotationKnownTokens": 0,
+  "annotationUnknownUsageCalls": 0,
+  "claims": "Two finite fixtures and one stochastic trajectory per cell. Native reuse, model tool consumption, literal derivation counts and optimization quality are separate. Literal chain counts have limited grammar recall; complete character partition does not certify semantic completeness. Unresolved lines are retained. Thinking truncated at a checkpoint remains censored even if finalization returns an answer. Unused budget is not savings. Budget/call stops are censored and all failures remain."
+}

@@ -1,0 +1,196 @@
+{
+  "prospectiveRangeRevision": true,
+  "doesNotChangePriorCoverageFailure": true,
+  "solverPlanSha256": "0cfbc01f3f41a8140f74511d78f21cc76193b291aba0c14c2367497c16c59dad",
+  "lineClassesAreUnverifiedModelProposals": true,
+  "usage": {
+    "input_tokens": 199536,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 14467,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 214003
+  },
+  "knownTokens": 214003,
+  "records": [
+    {
+      "trace": 0,
+      "case": 0,
+      "arm": "baseline",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 40743
+    },
+    {
+      "trace": 1,
+      "case": 0,
+      "arm": "baseline",
+      "turn": 1,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 40609
+    },
+    {
+      "trace": 2,
+      "case": 0,
+      "arm": "facts",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 19672
+    },
+    {
+      "trace": 3,
+      "case": 0,
+      "arm": "facts",
+      "turn": 1,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 18132
+    },
+    {
+      "trace": 4,
+      "case": 0,
+      "arm": "facts",
+      "turn": 2,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 21770
+    },
+    {
+      "trace": 5,
+      "case": 0,
+      "arm": "scheme",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 22002
+    },
+    {
+      "trace": 6,
+      "case": 0,
+      "arm": "scheme",
+      "turn": 1,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 20212
+    },
+    {
+      "trace": 7,
+      "case": 0,
+      "arm": "scheme",
+      "turn": 2,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 9716
+    },
+    {
+      "trace": 8,
+      "case": 1,
+      "arm": "scheme",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 19142
+    },
+    {
+      "trace": 9,
+      "case": 1,
+      "arm": "scheme",
+      "turn": 1,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 24678
+    },
+    {
+      "trace": 10,
+      "case": 1,
+      "arm": "scheme",
+      "turn": 2,
+      "failure": "invalid semantic range coverage",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 12841
+    },
+    {
+      "trace": 11,
+      "case": 1,
+      "arm": "facts",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 23030
+    },
+    {
+      "trace": 12,
+      "case": 1,
+      "arm": "facts",
+      "turn": 1,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 16725
+    },
+    {
+      "trace": 13,
+      "case": 1,
+      "arm": "facts",
+      "turn": 2,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 24093
+    },
+    {
+      "trace": 14,
+      "case": 1,
+      "arm": "baseline",
+      "turn": 0,
+      "failure": "semantic range coverage incomplete",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 39667
+    },
+    {
+      "trace": 15,
+      "case": 1,
+      "arm": "baseline",
+      "turn": 1,
+      "failure": "invalid semantic range coverage",
+      "lineRanges": [],
+      "accepted": [],
+      "rejected": [],
+      "characters": 37179
+    }
+  ]
+}

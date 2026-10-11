@@ -354,12 +354,16 @@
   (call-with-storage-state state
     (lambda (raw)
       (def previous #f)
+      ;; A bounded, batch-local witness records successful injections only.
+      ;; UF closure is monotone; intervening admissions cannot invalidate it.
+      (def admitted (make-hash-table))
       (for-each (lambda (row)
         (check-source! row)
-        ;; A duplicate immediately follows its successful admission, with the
-        ;; same monotone owner and a nonnegative remaining budget. Source
+        ;; A witnessed duplicate follows successful admission to the same
+        ;; monotone owner with a nonnegative remaining budget. Source
         ;; occurrence checks still execute; its empty frontier changes no count.
-        (unless (equal? previous row)
+        (unless (or (equal? previous row) (hash-get admitted row))
           (set! count (+ count (gerbil-ascent-trrel-uf-count-insert! raw row (- output-limit count))))
-          (set! previous row))) rows)
+          (when (< (hash-length admitted) 256) (hash-put! admitted row #t)))
+        (set! previous row)) rows)
       count)))

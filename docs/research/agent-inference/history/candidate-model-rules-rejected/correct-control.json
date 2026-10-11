@@ -1,0 +1,120 @@
+[
+  {
+    "extra": [],
+    "status": "inconclusive",
+    "missing": [],
+    "reason": "rejected",
+    "expected": [],
+    "edges": [],
+    "diagnostics": [
+      {
+        "detail": "\n*** ERROR IN \"types.ss\"@238.25-238.33 [TypeError]: type error\n--- irritants: contract #0=#<object #44 supers: (#1=#<object #3 supers: () %slots: () %defaults: () %instance: #f %precedence-list: (#1#) %slot-funs: #f %all-slots: #f>) %slots:",
+        "code": "planner-rejected"
+      }
+    ],
+    "actual": [],
+    "generation": 0,
+    "nativeStatus": "rejected"
+  },
+  {
+    "edges": [
+      [
+        0,
+        1
+      ]
+    ],
+    "reason": "rejected",
+    "diagnostics": [
+      {
+        "detail": "\n*** ERROR IN \"types.ss\"@238.25-238.33 [TypeError]: type error\n--- irritants: contract #0=#<object #65 supers: (#1=#<object #3 supers: () %slots: () %defaults: () %instance: #f %precedence-list: (#1#) %slot-funs: #f %all-slots: #f>) %slots:",
+        "code": "planner-rejected"
+      }
+    ],
+    "expected": [
+      [
+        0,
+        1
+      ]
+    ],
+    "actual": [],
+    "generation": 1,
+    "nativeStatus": "rejected",
+    "status": "inconclusive",
+    "extra": [],
+    "missing": []
+  },
+  {
+    "missing": [],
+    "status": "inconclusive",
+    "extra": [],
+    "diagnostics": [
+      {
+        "detail": "\n*** ERROR IN \"types.ss\"@238.25-238.33 [TypeError]: type error\n--- irritants: contract #0=#<object #86 supers: (#1=#<object #3 supers: () %slots: () %defaults: () %instance: #f %precedence-list: (#1#) %slot-funs: #f %all-slots: #f>) %slots:",
+        "code": "planner-rejected"
+      }
+    ],
+    "nativeStatus": "rejected",
+    "actual": [],
+    "generation": 3,
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "reason": "rejected",
+    "expected": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ]
+    ]
+  },
+  {
+    "missing": [],
+    "status": "inconclusive",
+    "diagnostics": [
+      {
+        "detail": "\n*** ERROR IN \"types.ss\"@238.25-238.33 [TypeError]: type error\n--- irritants: contract #0=#<object #107 supers: (#1=#<object #3 supers: () %slots: () %defaults: () %instance: #f %precedence-list: (#1#) %slot-funs: #f %all-slots: #f>) %slots",
+        "code": "planner-rejected"
+      }
+    ],
+    "extra": [],
+    "actual": [],
+    "generation": 9,
+    "nativeStatus": "rejected",
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "reason": "rejected",
+    "expected": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ]
+    ]
+  }
+]

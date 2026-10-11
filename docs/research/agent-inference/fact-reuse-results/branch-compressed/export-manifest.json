@@ -1,0 +1,458 @@
+{
+  "head": "206f465ea75ad6e6d07d8735d094f230bf90176d",
+  "originalSolverHead": "f6c36359f6a891dd38b5466de7212e1176605f8e",
+  "planSha256": "d2c80931097ea4511d59b49e41011e1b3f9a7fc6a2f57b5f68a1171443525b29",
+  "maxNewSolverCalls": 18,
+  "maxRetainedAnnotationCalls": 16,
+  "maxNewAnnotationCalls": 18,
+  "solverTotalCeiling": 196608,
+  "annotationCostsSeparate": true,
+  "provider": "https://api.deepseek.com/responses",
+  "model": "deepseek-flash",
+  "exports": "Synthetic graph tasks and facts, native computational proof packets, visible synthetic thinking. No source code, independent grader or gold scores.",
+  "referenceContractUnchanged": true,
+  "reviewPreviews": [
+    {
+      "file": "0-baseline-0-0.json",
+      "sha256": "675f34d31a71b4996afcdcc5ff1a08108d9b47c28a46c6ecfa73fe785a3e8276",
+      "blocks": 24
+    },
+    {
+      "file": "0-baseline-1-0.json",
+      "sha256": "9c1675c6e01a65c76ef36efd8d6af954de0280d5b691d50a07601cf05bae0fa5",
+      "blocks": 25
+    },
+    {
+      "file": "0-facts-0-0.json",
+      "sha256": "d83f5c2fe82720291ccdb036d04f9523cc6444c4b78094efb0a786cc44bd6e7b",
+      "blocks": 12
+    },
+    {
+      "file": "0-facts-1-0.json",
+      "sha256": "2feeaacfe1dc7c807fee19d0195c3a20ba48df9d2339d89ba51ca5b27eafdce5",
+      "blocks": 11
+    },
+    {
+      "file": "0-facts-2-0.json",
+      "sha256": "78bbfb72d1c4ad837eb1dfe74e739e5775fe9df7e93572d09ace64d921c1461f",
+      "blocks": 13
+    },
+    {
+      "file": "0-scheme-0-0.json",
+      "sha256": "ad52bc573028d8d8c10cfd6afd6f08cbc3c10797fc9068a2ee7ae60aae44bb9c",
+      "blocks": 13
+    },
+    {
+      "file": "0-scheme-1-0.json",
+      "sha256": "1456b96a1021f4ed0976b373d89bd664d6e3e169866e0bf4addd2b74e58e2f70",
+      "blocks": 12
+    },
+    {
+      "file": "0-scheme-2-0.json",
+      "sha256": "b78cfe37917bc0d6e47d8fda3e774ba8ab920b29771ee9a5373c84e05326f0e1",
+      "blocks": 6
+    },
+    {
+      "file": "1-scheme-0-0.json",
+      "sha256": "6ca34230bdb7bced8231c70dda179ac8ffacea9a5f098729f5acc37b7051953f",
+      "blocks": 12
+    },
+    {
+      "file": "1-scheme-1-0.json",
+      "sha256": "849a4a69400286a10fcba5b3ad633f0067eeb47338e83a632aac1614258dc9e3",
+      "blocks": 15
+    },
+    {
+      "file": "1-scheme-2-0.json",
+      "sha256": "fa17fbbe2f5c2dcbe435ba5b17530cf63c068f660a3427954ffb29e99c1cd97b",
+      "blocks": 8
+    },
+    {
+      "file": "1-facts-0-0.json",
+      "sha256": "31c10dfa74d21862538457f94e1749f1bee1def189630c5587f451fb1d3ace07",
+      "blocks": 14
+    },
+    {
+      "file": "1-facts-1-0.json",
+      "sha256": "8cbe0593ff19c6397d94ff01ec79cdf2ea894c9509944a86f860c2adc10aa0a3",
+      "blocks": 10
+    },
+    {
+      "file": "1-facts-2-0.json",
+      "sha256": "c0ff610e5897a45f576ff3188ba392708cf6e8ab3b2b4d8091a03fb55694bf5f",
+      "blocks": 14
+    },
+    {
+      "file": "1-baseline-0-0.json",
+      "sha256": "eec9d2395f002245c1224fcfcec8d2ed29d58e6903e91530123b503952c9272b",
+      "blocks": 24
+    },
+    {
+      "file": "1-baseline-1-0.json",
+      "sha256": "b65d510d80c4e1b6db94bfb24eeccc8da793fbd4c10e9d22d09dd8a3ff545f53",
+      "blocks": 23
+    }
+  ],
+  "solverPreviews": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 0,
+      "file": "0-baseline-0.json",
+      "sha256": "947cce7687f96f645b5601c08a99533a16e85f534a26615c96e45977f1661c54",
+      "inputReservation": 3454,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29314
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 1,
+      "file": "0-baseline-1.json",
+      "sha256": "fe78ea7172e424624b65a62788a6a2bb03cd93e6cd38149e84f54a45c2c77831",
+      "inputReservation": 3453,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29315
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 2,
+      "file": "0-baseline-2.json",
+      "sha256": "fcef32ee8c4972a9cb54507739993f74efe9240b37cb8c124aaefdab463a2670",
+      "inputReservation": 3454,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29314
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 3,
+      "file": "0-baseline-3.json",
+      "sha256": "f097fd865798e1ca371ef974d50a6efdb91a4c1202de63fe5ce7da33cd35d539",
+      "inputReservation": 3453,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29315
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 4,
+      "file": "0-baseline-4.json",
+      "sha256": "b583b8ab9acbb27a757af4d525275a02f8fec84f6c4d579b8c1be8fe3faebda5",
+      "inputReservation": 3452,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29316
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "branch": 5,
+      "file": "0-baseline-5.json",
+      "sha256": "d3a16408e7b96f15070e264adbeefc33c5913615e431ca373e789a380d282150",
+      "inputReservation": 3453,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29315
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 0,
+      "file": "0-facts-0.json",
+      "sha256": "2f7afefe3f0d96b966b3490b3e0a422f85c2219d552f98b9911a7a9071f3f16e",
+      "inputReservation": 4787,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27981
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 1,
+      "file": "0-facts-1.json",
+      "sha256": "582f2accf3f2bd45699e7878946a9fe90692d830a58c8f093e28ec68e6913fe3",
+      "inputReservation": 4786,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27982
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 2,
+      "file": "0-facts-2.json",
+      "sha256": "4e5bd6b404c80ca483bf1f9ffefe109e278e2432b0b2f09fd6678f07a219d2d4",
+      "inputReservation": 4787,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27981
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 3,
+      "file": "0-facts-3.json",
+      "sha256": "da6bd8a768a456f1794e77895e7f6fff7b0631a1269f00c072e9021ea2d7b343",
+      "inputReservation": 4786,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27982
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 4,
+      "file": "0-facts-4.json",
+      "sha256": "4495ba0c41db23436bc5be1f411b43bf797b676565fd26e82277ae78f431f7da",
+      "inputReservation": 4785,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27983
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "branch": 5,
+      "file": "0-facts-5.json",
+      "sha256": "5190b65c9585a097da69cc14f312c1c4a80c6e91b9da66adc688d42458729d15",
+      "inputReservation": 4786,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27982
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 0,
+      "file": "0-scheme-0.json",
+      "sha256": "a12a57fc78ec2d874edc13a1f305aa658674648b9d4577b984ad913fc36955b8",
+      "inputReservation": 6977,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25791
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 1,
+      "file": "0-scheme-1.json",
+      "sha256": "97a58dbc3fda2cb49335bd85a32c0f94347682da50c9a227d55802639cf8c6b0",
+      "inputReservation": 6976,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25792
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 2,
+      "file": "0-scheme-2.json",
+      "sha256": "f74b02eb3970be4258d536a2dd7a37489ecb9e435c084ef123a821e141d5e811",
+      "inputReservation": 6977,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25791
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 3,
+      "file": "0-scheme-3.json",
+      "sha256": "d94b7b57ebbde41da8da61f85f37c48f969d441cf342535395dc294bcb31b041",
+      "inputReservation": 6976,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25792
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 4,
+      "file": "0-scheme-4.json",
+      "sha256": "2a41bfbc528893e71399d68b53f9729b4fbcda1294cc033effb5db57682929c2",
+      "inputReservation": 6975,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25793
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "branch": 5,
+      "file": "0-scheme-5.json",
+      "sha256": "7126c9350a596231c4d3bd048b7a34f53100dbaf6e7dfde0382a0594036cdfe3",
+      "inputReservation": 6976,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25792
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 0,
+      "file": "1-baseline-0.json",
+      "sha256": "4dd77e56582e32eea8b038625df1e242142e958c9c846c55a303aa78c2bd667c",
+      "inputReservation": 3451,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29317
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 1,
+      "file": "1-baseline-1.json",
+      "sha256": "22d2ca2bfb2c06b4323afdf47022a123901bf1e64d15fd9680779cc1a4c31aee",
+      "inputReservation": 3452,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29316
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 2,
+      "file": "1-baseline-2.json",
+      "sha256": "27c19bd926d53aff1885faea0a73d9c9197848cfb545e88a305eb116b2629263",
+      "inputReservation": 3452,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29316
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 3,
+      "file": "1-baseline-3.json",
+      "sha256": "a68d7a122fd698dc38c94f0fe73fbf278c14b371f20701b25a9bbd636bec09f9",
+      "inputReservation": 3451,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29317
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 4,
+      "file": "1-baseline-4.json",
+      "sha256": "e792cf4812853864512787597f2ba3854bd86ef12e8809f02cbee868c0803f0d",
+      "inputReservation": 3451,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29317
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "branch": 5,
+      "file": "1-baseline-5.json",
+      "sha256": "638ab50e0d5203fcafd2b9fdcc844a6e1172e6cb20dbfdd0469957356235eae5",
+      "inputReservation": 3451,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 29317
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 0,
+      "file": "1-facts-0.json",
+      "sha256": "0a9b65a377f686b7053698f6391a70d5a47d18a71d9565b4baec37b193ff85d5",
+      "inputReservation": 4784,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27984
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 1,
+      "file": "1-facts-1.json",
+      "sha256": "4605e9ae36d6247eaa3f69307f239427a942b1b7bc6e4fee2fa582c76f57b65b",
+      "inputReservation": 4785,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27983
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 2,
+      "file": "1-facts-2.json",
+      "sha256": "b9d432dcdf88315c37ca66d02c4169cdb042f71b6e6f0381d058fa82dc86934e",
+      "inputReservation": 4785,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27983
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 3,
+      "file": "1-facts-3.json",
+      "sha256": "e77ff96ca66f293ca3a29156c8708c9e7392cf1e6f145b6d205bba85391905f3",
+      "inputReservation": 4784,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27984
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 4,
+      "file": "1-facts-4.json",
+      "sha256": "eaae2f40db41cbb3f3231500dc4441fda491798e36a841e3936c7374d2e9e93c",
+      "inputReservation": 4784,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27984
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "branch": 5,
+      "file": "1-facts-5.json",
+      "sha256": "547f9d9cb3d191905e792b8965911ad4872f28a3e155a5b83cb9ec5fd4878dbf",
+      "inputReservation": 4784,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 27984
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 0,
+      "file": "1-scheme-0.json",
+      "sha256": "112e1bfb75d02a59e456f838833c55fc19897f1c3879b366eea2eee488d2fa28",
+      "inputReservation": 6974,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25794
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 1,
+      "file": "1-scheme-1.json",
+      "sha256": "7d80b46820928ecc3397788b191c0e560e5f868ab6eea1b2cb097b8f58a5b675",
+      "inputReservation": 6975,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25793
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 2,
+      "file": "1-scheme-2.json",
+      "sha256": "6fce8766a38dbee5a536963b8bd93e3c0b471ab96ba20f1486567d6231f3922e",
+      "inputReservation": 6975,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25793
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 3,
+      "file": "1-scheme-3.json",
+      "sha256": "45aa3ae9913621a8e89969855385d4ae97ea1d64d4d414c5c6639eb3e8747cb2",
+      "inputReservation": 6974,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25794
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 4,
+      "file": "1-scheme-4.json",
+      "sha256": "871b21838e3a86b75e55ec2849b2cc85c1bfad6d8a06920a2f0f4a4d0a452f12",
+      "inputReservation": 6974,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25794
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "branch": 5,
+      "file": "1-scheme-5.json",
+      "sha256": "1a07775832f4a205ec925170573a0ab10004acdcef248844f1d836595d62869a",
+      "inputReservation": 6974,
+      "entryBeforeThinking": true,
+      "initialOutputCap": 25794
+    }
+  ]
+}

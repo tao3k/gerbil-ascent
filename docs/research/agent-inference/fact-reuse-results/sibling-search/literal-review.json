@@ -1,0 +1,136 @@
+{
+  "scope": "Post-run literal review of every 38 validator-qualified positive span; no frozen task, judge, rubric, label or solver result changed. Not a complete independent annotation of all thinking.",
+  "reviewedPositiveSpans": 38,
+  "literalOrderedChainVisible": true,
+  "sampleExplicitChains": [
+    {
+      "case": 0,
+      "arm": "scheme",
+      "pass": 0,
+      "turn": 1,
+      "step": 0,
+      "quote": "Let me look at edges: [0,1],[1,2],[2,3],[3,4],[4,5] forms 0->1->2->3->4->5, so path [0,5] exists (0->1->2->3->4->5).",
+      "atom": [
+        "path",
+        0,
+        5
+      ],
+      "premises": [
+        [
+          "edge",
+          0,
+          1
+        ],
+        [
+          "edge",
+          1,
+          2
+        ],
+        [
+          "edge",
+          2,
+          3
+        ],
+        [
+          "edge",
+          3,
+          4
+        ],
+        [
+          "edge",
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "pass": 0,
+      "turn": 1,
+      "step": 0,
+      "quote": "[0,5]: 0->1->2->3->4->5 yes.",
+      "atom": [
+        "path",
+        0,
+        5
+      ],
+      "premises": [
+        [
+          "edge",
+          0,
+          1
+        ],
+        [
+          "edge",
+          1,
+          2
+        ],
+        [
+          "edge",
+          2,
+          3
+        ],
+        [
+          "edge",
+          3,
+          4
+        ],
+        [
+          "edge",
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "pass": 0,
+      "turn": 1,
+      "step": 0,
+      "quote": "Item 0 paths: [0,5] and [20,200]. Edge [0,5]? Not directly, but 0->1->2->3->4->5 is a path, and 0->6->7->5 is another path. So [0,5] reachable. [20,200]: 20->100->200 reachable. So item 0's paths are valid.",
+      "atom": [
+        "path",
+        0,
+        5
+      ],
+      "premises": [
+        [
+          "edge",
+          0,
+          1
+        ],
+        [
+          "edge",
+          1,
+          2
+        ],
+        [
+          "edge",
+          2,
+          3
+        ],
+        [
+          "edge",
+          3,
+          4
+        ],
+        [
+          "edge",
+          4,
+          5
+        ]
+      ]
+    }
+  ],
+  "limitations": [
+    "626 rejected candidates remain rejected; no post-hoc salvage.",
+    "Same-model annotation passes are correlated and have substantially different coverage: source 1 Scheme pass 0 qualifies turn 1; pass 1 qualifies turn 0.",
+    "Cross-branch zero is missing measurement coverage, not proof of zero repeats.",
+    "Report withinResponseRepeats includes premise_consumed labels; this is not a pure repeated-derivation count.",
+    "newConsequencesAfterFirst means first annotated occurrence after branch zero, not objectively deeper search.",
+    "premise_consumed may refer to conclusions established within the same response, not necessarily the Scheme tool packet.",
+    "The generic report lower-bound description is insufficient: literal and chain validation does not certify exhaustive coverage or category semantics."
+  ]
+}

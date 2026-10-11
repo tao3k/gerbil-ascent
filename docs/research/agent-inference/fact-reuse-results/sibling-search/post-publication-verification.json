@@ -1,0 +1,17 @@
+{
+  "primaryConsumerTests": 8,
+  "primaryLockedPythonProjectRestored": true,
+  "sourceBundleVerified": true,
+  "offlineReportAndAuditByteIdentical": true,
+  "correctedVerificationInvocations": [
+    {
+      "failure": "uv offline cache miss for setuptools using mistaken .cache/uv path",
+      "correction": "Use the actual cold-producer uv-cache; locked extra installed offline; no network fallback required"
+    },
+    {
+      "failure": "System Python test collection lacked PYTHONPATH and could not import ascent_test_support",
+      "correction": "PYTHONPATH=python/src: all eight consumer tests passed"
+    }
+  ],
+  "scope": "These primary environment checks do not replace the frozen clean-producer qualification."
+}

@@ -1,0 +1,24 @@
+{
+  "originalFrozenRunArchiveVerified": true,
+  "originalCapturedConsumerVerified": true,
+  "liveProducerChangesAfterFreeze": [
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/tools/research/candidate-model.py"
+  ],
+  "reason": "Disclosed annotation judge fragment dispatch correction; solver not rerun.",
+  "sixSolverFailuresRetained": true,
+  "unknownCostCalls": 0,
+  "files": {
+    "initial-report.json": "71810ec112bafacd53f036b53b0c080fc11d7d01a53d24c63738f509553dbbda",
+    "qualification.json": "3d70cf4ede14fba945e923086a61ddbe9a56960bd4091d2d9d9fbc3fa44925b6",
+    "plan.json": "c67369ece530ae8784b8cb8f9d074cea98c7d43a826d26d80b27dea20a093451",
+    "report.json": "2bd9dc52e2107ce29f8573611234eb10f7ef05016628d75582dd5979e12bb134",
+    "report.md": "dd31c55786e287ba7a990193f81ff863f7a03b87585dadf4a3127cda0ad1f3ff",
+    "annotation-correction.json": "b7e30a4685992524c7f37c88fefb594ad454556df95023e8102b3ef07738ae81",
+    "measurement-erratum.md": "ec2efe4f1630e8cef4dc078ec2b6693dc528024791038ed75696c03a591221ec",
+    "raw.tar.gz": "f2aaf9fa96441a9c816d1862171cb6709923a277ffc22a39e9f264620971379d",
+    "measurement-correction.tar.gz": "7f485fe56655a88d5f9b475991fb2af82b1816a46ba769c4d48561897ba9e781",
+    "annotation-ledger.json": "2d83abd761ed42b933e7cf8a19757e8e2d0d5eed160538f71dce58341efcd804",
+    "thinking-episodes.md": "349955635a072179115e8903f1e65f7082c005c7f666f16e3181e79455d5d2dc",
+    "ledger.json": "a8b4751e17f83604390eece8dfd4053d092eb8b07accf8ee66e710e3c9b2b9a7"
+  }
+}

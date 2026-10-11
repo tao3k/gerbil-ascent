@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/opt/homebrew/bin/gxi",
+    "-e",
+    "(import :std/test/base :gerbil-ascent/t/qualification/ascent-candidate-feedback-test)",
+    "-e",
+    "(parameterize ((current-test-config (TestConfig verbosity: 3 capture-output?: #f))) (let (result (test-suite! ascent-candidate-feedback-test)) (if (test-result-ok? result) (displayln \"CANDIDATE-REGRESSION-OK\") (exit 1))))"
+  ],
+  "exit": 0,
+  "passed": true,
+  "failure": null,
+  "seconds": 56.748938374978025
+}

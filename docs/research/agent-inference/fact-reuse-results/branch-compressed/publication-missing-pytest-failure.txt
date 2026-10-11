@@ -1,0 +1,25 @@
+....................E....................MOVIE-STUDY-PREPARED cases=6 scheduledCalls=9 executedCalls=0
+...........................REPOSITORY-EPISODE task 0 ordinary-tools verified calls=1
+.REPOSITORY-EPISODE task 0 ordinary-tools harness_failure calls=1
+.REPOSITORY-EPISODE task 0 ordinary-tools verified calls=1
+REPOSITORY-EPISODE changed-task 0 ordinary-tools censored calls=1
+..............................................
+======================================================================
+ERROR: test_factor_budget (unittest.loader._FailedTest.test_factor_budget)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_factor_budget
+Traceback (most recent call last):
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/tests/test_factor_budget.py", line 2, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+
+
+----------------------------------------------------------------------
+Ran 116 tests in 11.244s
+
+FAILED (errors=1)

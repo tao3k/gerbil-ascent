@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/opt/homebrew/bin/gxi",
+    "-e",
+    "(import :gerbil-ascent/program/objects :gerbil-ascent/program/types :gerbil-ascent/candidate/program :gerbil-ascent/candidate/reasoning :clan/poo/mop)",
+    "-e",
+    "(begin\n (def (must-reject thunk) (unless (with-catch (lambda (e) #t) (lambda () (thunk) #f)) (error \"invalid declaration admitted\")))\n (must-reject (lambda () (gerbil-ascent-construct-inert-program (lambda () (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 [])) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'seed '(99))) [])) 8 8 16)))))\n (must-reject (lambda () (gerbil-ascent-rule '(99) [])))\n (let* ((s (reasoning-source-snapshot 'qual 0 '((edge 2 ((0 1) (1 2))))))\n        (p '(candidate (relation path 2) (rule (path ?x ?y) (edge ?x ?y)) (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z)) (query path ?x ?y) (limits 16 64 128)))\n        (program (candidate-program s (candidate-inspect s p))))\n  (unless (eq? program (validate GerbilAscentProgramContract program)) (error \"public contract failed\"))\n  (unless (eq? (reasoning-receipt-status (reasoning-attempt s p #f)) 'complete) (error \"incomplete\")))\n (displayln \"DYNAMIC-CONTRACT-CONTROL-OK\"))"
+  ],
+  "exit": 0,
+  "passed": true,
+  "failure": null,
+  "seconds": 31.279561790986918
+}

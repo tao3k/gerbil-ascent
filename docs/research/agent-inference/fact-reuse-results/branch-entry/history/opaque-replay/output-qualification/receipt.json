@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "planSha256": "fc76458dce7589aa33c123672ac5ed0f18425f1e39a2d79de3c1558f2c0839ad",
+  "fixtureSha256": "65caf06287e97cec421713eb0de6df9ae5e8578cfb5c008421fc87a103e517bb",
+  "costBoundary": "Transport qualification separately charged, not a solver trajectory",
+  "inputReservation": 28690,
+  "usage": {
+    "input_tokens": 1245,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 44,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 1289
+  },
+  "failure": null,
+  "selected": [
+    1,
+    7,
+    12,
+    15
+  ]
+}

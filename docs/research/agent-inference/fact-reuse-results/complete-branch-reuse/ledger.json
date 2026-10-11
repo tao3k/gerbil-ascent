@@ -1,0 +1,1140 @@
+[
+  {
+    "case": 0,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 57370,
+        "outputCap": 60824,
+        "reservation": 65536,
+        "inputReservation": 4712,
+        "usage": {
+          "input_tokens": 1659,
+          "input_tokens_details": {
+            "cached_tokens": 128
+          },
+          "output_tokens": 55711,
+          "output_tokens_details": {
+            "reasoning_tokens": 55699
+          },
+          "total_tokens": 57370
+        },
+        "thinkingSha256": "6094f8f6283276eb1ac978feede817f5e86706a4c0d630ca6fa0d99980c2b38c",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 57370,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 0,
+          "optionId": 3
+        },
+        "selection": [
+          3
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 7,
+          "risk": 4,
+          "depth": 1,
+          "value": 45
+        },
+        "evidenceStats": null,
+        "incumbentValue": 79,
+        "maxDepth": 1
+      }
+    ],
+    "grossTokens": 57370,
+    "maxDepth": 1,
+    "expandedPrefixes": [
+      [
+        3
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 59103,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015441670002473984,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 8166
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 23687,
+        "outputCap": 60453,
+        "reservation": 65536,
+        "inputReservation": 5083,
+        "usage": {
+          "input_tokens": 1767,
+          "input_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "output_tokens": 21920,
+          "output_tokens_details": {
+            "reasoning_tokens": 21908
+          },
+          "total_tokens": 23687
+        },
+        "thinkingSha256": "001abe104e182a90606a411c0c1174628c2407430b21af2b1063df2c2716b07b",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 23687,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 0,
+          "optionId": 3
+        },
+        "selection": [
+          3
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 7,
+          "risk": 4,
+          "depth": 1,
+          "value": 45
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            1
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "grossTokens": 24302,
+        "outputCap": 16909,
+        "reservation": 41849,
+        "inputReservation": 24940,
+        "usage": {
+          "input_tokens": 23965,
+          "input_tokens_details": {
+            "cached_tokens": 23680
+          },
+          "output_tokens": 337,
+          "output_tokens_details": {
+            "reasoning_tokens": 325
+          },
+          "total_tokens": 24302
+        },
+        "thinkingSha256": "dc6fc2cd1721b853520fe3017065ecb83fbe2c7cdb35b8fea9a3a001f019856e",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 47989,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 1,
+          "optionId": 6
+        },
+        "selection": [
+          3,
+          6
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 10,
+          "risk": 6,
+          "depth": 2,
+          "value": 78
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            2
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 2
+      }
+    ],
+    "grossTokens": 47989,
+    "maxDepth": 2,
+    "expandedPrefixes": [
+      [
+        3
+      ],
+      [
+        3,
+        6
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 26685,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015571250000903092,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 17547
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 3850,
+        "outputCap": 59273,
+        "reservation": 65536,
+        "inputReservation": 6263,
+        "usage": {
+          "input_tokens": 2256,
+          "input_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "output_tokens": 1594,
+          "output_tokens_details": {
+            "reasoning_tokens": 1582
+          },
+          "total_tokens": 3850
+        },
+        "thinkingSha256": "8c08fe328f6fc9d531101e86d8be717c6584e2575550b9a8a43526326a5ba8ff",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 3850,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 0,
+          "optionId": 3
+        },
+        "selection": [
+          3
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 7,
+          "risk": 4,
+          "depth": 1,
+          "value": 45
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            1
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "grossTokens": 7184,
+        "outputCap": 54978,
+        "reservation": 61686,
+        "inputReservation": 6708,
+        "usage": {
+          "input_tokens": 4803,
+          "input_tokens_details": {
+            "cached_tokens": 3840
+          },
+          "output_tokens": 2381,
+          "output_tokens_details": {
+            "reasoning_tokens": 2369
+          },
+          "total_tokens": 7184
+        },
+        "thinkingSha256": "a4015f9846761dd4e3fe87ca30102a8c7691bdc5168dae020d533143ab288a4c",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 11034,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 1,
+          "optionId": 6
+        },
+        "selection": [
+          3,
+          6
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 10,
+          "risk": 6,
+          "depth": 2,
+          "value": 78
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            2
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 2
+      },
+      {
+        "turn": 2,
+        "failure": null,
+        "grossTokens": 37504,
+        "outputCap": 44279,
+        "reservation": 54502,
+        "inputReservation": 10223,
+        "usage": {
+          "input_tokens": 8199,
+          "input_tokens_details": {
+            "cached_tokens": 7168
+          },
+          "output_tokens": 29305,
+          "output_tokens_details": {
+            "reasoning_tokens": 29293
+          },
+          "total_tokens": 37504
+        },
+        "thinkingSha256": "523956866e59320130aab78e64f61451c5d124cf72ec8d619bbc4593ca8caf80",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 48538,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 2,
+          "optionId": 10
+        },
+        "selection": [
+          3,
+          6,
+          10
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 13,
+          "risk": 12,
+          "depth": 3,
+          "value": 121
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            3
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 3
+      }
+    ],
+    "grossTokens": 48538,
+    "maxDepth": 3,
+    "expandedPrefixes": [
+      [
+        3
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        3,
+        6,
+        10
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 41938,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.001554417000079411,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 16998
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 13575,
+        "outputCap": 59385,
+        "reservation": 65536,
+        "inputReservation": 6151,
+        "usage": {
+          "input_tokens": 2201,
+          "input_tokens_details": {
+            "cached_tokens": 128
+          },
+          "output_tokens": 11374,
+          "output_tokens_details": {
+            "reasoning_tokens": 11362
+          },
+          "total_tokens": 13575
+        },
+        "thinkingSha256": "94e842651e5cce34d4227d98d98ebbb652e88c2071f9b38e6ecd4702e849626e",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 13575,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 0,
+          "optionId": 1
+        },
+        "selection": [
+          1
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 3,
+          "risk": 3,
+          "depth": 1,
+          "value": 29
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            1
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "grossTokens": 15677,
+        "outputCap": 35483,
+        "reservation": 51961,
+        "inputReservation": 16478,
+        "usage": {
+          "input_tokens": 14533,
+          "input_tokens_details": {
+            "cached_tokens": 13568
+          },
+          "output_tokens": 1144,
+          "output_tokens_details": {
+            "reasoning_tokens": 1132
+          },
+          "total_tokens": 15677
+        },
+        "thinkingSha256": "6ded9553391370f5a628cbbb6f73a42bb10e40d87ab28b70ce5f0dd44f2112e5",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 29252,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 1,
+          "optionId": 5
+        },
+        "selection": [
+          1,
+          5
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 11,
+          "risk": 5,
+          "depth": 2,
+          "value": 86
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            2
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 2
+      },
+      {
+        "turn": 2,
+        "failure": null,
+        "grossTokens": 16847,
+        "outputCap": 17535,
+        "reservation": 36284,
+        "inputReservation": 18749,
+        "usage": {
+          "input_tokens": 16686,
+          "input_tokens_details": {
+            "cached_tokens": 15616
+          },
+          "output_tokens": 161,
+          "output_tokens_details": {
+            "reasoning_tokens": 149
+          },
+          "total_tokens": 16847
+        },
+        "thinkingSha256": "d175c3f782eff3db70c1467f98bb1fc9e5940fdd1f44e791a97f6ce123bdbafb",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 46099,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 2,
+          "optionId": 9
+        },
+        "selection": [
+          1,
+          5,
+          9
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 16,
+          "risk": 6,
+          "depth": 3,
+          "value": 133
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            3
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 3
+      }
+    ],
+    "grossTokens": 46099,
+    "maxDepth": 3,
+    "expandedPrefixes": [
+      [
+        1
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        5,
+        9
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 21377,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015438330001416034,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 19437
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 13444,
+        "outputCap": 60418,
+        "reservation": 65536,
+        "inputReservation": 5118,
+        "usage": {
+          "input_tokens": 1777,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 11667,
+          "output_tokens_details": {
+            "reasoning_tokens": 11655
+          },
+          "total_tokens": 13444
+        },
+        "thinkingSha256": "9219ee7d4df5619e7acc1d34cd22a1d7cafde808fbe562eaea414e1c11dfffad",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 13444,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 0,
+          "optionId": 1
+        },
+        "selection": [
+          1
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 3,
+          "risk": 3,
+          "depth": 1,
+          "value": 29
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            1
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "grossTokens": 14059,
+        "outputCap": 37306,
+        "reservation": 52092,
+        "inputReservation": 14786,
+        "usage": {
+          "input_tokens": 13747,
+          "input_tokens_details": {
+            "cached_tokens": 13440
+          },
+          "output_tokens": 312,
+          "output_tokens_details": {
+            "reasoning_tokens": 300
+          },
+          "total_tokens": 14059
+        },
+        "thinkingSha256": "a88c4d677c3a256a30792964893f167496cb6be3ca995ecec7034ba28885ca38",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 27503,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 1,
+          "optionId": 5
+        },
+        "selection": [
+          1,
+          5
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 11,
+          "risk": 5,
+          "depth": 2,
+          "value": 86
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            2
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 2
+      },
+      {
+        "turn": 2,
+        "failure": null,
+        "grossTokens": 14582,
+        "outputCap": 22482,
+        "reservation": 38033,
+        "inputReservation": 15551,
+        "usage": {
+          "input_tokens": 14409,
+          "input_tokens_details": {
+            "cached_tokens": 13952
+          },
+          "output_tokens": 173,
+          "output_tokens_details": {
+            "reasoning_tokens": 161
+          },
+          "total_tokens": 14582
+        },
+        "thinkingSha256": "e4eed58ad4f22fadf880511864e78a7bb59d6f9ecc9379a85a960cc14a67b26d",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 42085,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 2,
+          "optionId": 9
+        },
+        "selection": [
+          1,
+          5,
+          9
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 16,
+          "risk": 6,
+          "depth": 3,
+          "value": 133
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            3
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 3
+      },
+      {
+        "turn": 3,
+        "failure": null,
+        "grossTokens": 15494,
+        "outputCap": 7183,
+        "reservation": 23451,
+        "inputReservation": 16268,
+        "usage": {
+          "input_tokens": 14992,
+          "input_tokens_details": {
+            "cached_tokens": 14464
+          },
+          "output_tokens": 502,
+          "output_tokens_details": {
+            "reasoning_tokens": 490
+          },
+          "total_tokens": 15494
+        },
+        "thinkingSha256": "bac734fa5cd5c15a50baff935eeb210890990a48ea5c0de4b0864788a1100052",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 57579,
+        "wireEncoding": "json_message",
+        "action": {
+          "parentId": 3,
+          "optionId": 12
+        },
+        "selection": [
+          1,
+          5,
+          9,
+          12
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 17,
+          "risk": 7,
+          "depth": 4,
+          "value": 142
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            4
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 4
+      }
+    ],
+    "grossTokens": 57579,
+    "maxDepth": 4,
+    "expandedPrefixes": [
+      [
+        1
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        5,
+        9
+      ],
+      [
+        1,
+        5,
+        9,
+        12
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 18228,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.001547124999888183,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 7957
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": "Expecting value: line 1 column 1 (char 0)",
+        "grossTokens": 16941,
+        "outputCap": 60834,
+        "reservation": 65536,
+        "inputReservation": 4702,
+        "usage": {
+          "input_tokens": 1655,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 15286,
+          "output_tokens_details": {
+            "reasoning_tokens": 14955
+          },
+          "total_tokens": 16941
+        },
+        "thinkingSha256": "8af88c25020dd86f96295aad6669fe3062db2105c6021efb28e5736b7183074a",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 16941
+      }
+    ],
+    "grossTokens": 16941,
+    "maxDepth": 0,
+    "expandedPrefixes": [],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "Expecting value: line 1 column 1 (char 0)",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.001539875000162283,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 48595
+  }
+]

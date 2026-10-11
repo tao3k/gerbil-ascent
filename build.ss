@@ -86,6 +86,7 @@
     "applications/scoped-reachability-mask"
     "applications/scoped-composition"
     "applications/movie-cast-query"
+    "applications/domain-evidence"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"
@@ -113,6 +114,7 @@
     "candidate/stratified-proof"
     "candidate/stratified-producer"
     "candidate/reasoning"
+    "candidate/evidence-store"
     "candidate/feedback"
     "candidate/withholding"
     "candidate/withdrawal-session"
@@ -121,6 +123,7 @@
     "temporal/projection"
     "temporal/lens"
     "interface/request"
+    "interface/rule-source"
     "interface/engine-api"))
 
 (asp-gerbil-scheme-package-spec!

@@ -1,0 +1,574 @@
+[
+  {
+    "case": 0,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 22368,
+        "outputCap": 32768,
+        "reservation": 37229,
+        "inputReservation": 4461,
+        "usage": {
+          "input_tokens": 1597,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 20771,
+          "output_tokens_details": {
+            "reasoning_tokens": 20716
+          },
+          "total_tokens": 22368
+        },
+        "thinkingSha256": "d502d6793b9754aa43a7df19e9931f02b67e47176801d491f9a31c9ff44b3fa2",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 22368,
+        "action": {
+          "parentId": 0,
+          "optionId": 3
+        },
+        "selection": [
+          3
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 7,
+          "risk": 4,
+          "depth": 1,
+          "value": 45
+        },
+        "evidenceStats": null,
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "grossTokens": 22924,
+        "outputCap": 20188,
+        "reservation": 43168,
+        "inputReservation": 22980,
+        "usage": {
+          "input_tokens": 22469,
+          "input_tokens_details": {
+            "cached_tokens": 22272
+          },
+          "output_tokens": 455,
+          "output_tokens_details": {
+            "reasoning_tokens": 400
+          },
+          "total_tokens": 22924
+        },
+        "thinkingSha256": "9214e5cf08a33f8566d0a873cb4f7002a3f56a6d9c4d032b5bb6c4f8325f8763",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 45292,
+        "action": {
+          "parentId": 1,
+          "optionId": 6
+        },
+        "selection": [
+          3,
+          6
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 10,
+          "risk": 6,
+          "depth": 2,
+          "value": 78
+        },
+        "evidenceStats": null,
+        "incumbentValue": 79,
+        "maxDepth": 2
+      }
+    ],
+    "grossTokens": 45292,
+    "maxDepth": 2,
+    "expandedPrefixes": [
+      [
+        3
+      ],
+      [
+        3,
+        6
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "budget_reservation",
+    "nextReservation": 24621,
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0013325420000001031,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 20244
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": "incomplete_provider",
+        "grossTokens": 34472,
+        "outputCap": 32768,
+        "reservation": 37600,
+        "inputReservation": 4832,
+        "usage": {
+          "input_tokens": 1704,
+          "input_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "output_tokens": 32768,
+          "output_tokens_details": {
+            "reasoning_tokens": 32768
+          },
+          "total_tokens": 34472
+        },
+        "thinkingSha256": "f4d1d3cffd9915a9fbb922b32018696927dce4442625e91d7996fe7d1dbf1db3",
+        "status": "incomplete",
+        "incompleteDetails": {
+          "reason": "max_output_tokens"
+        },
+        "providerError": null,
+        "atGrossTokens": 34472
+      }
+    ],
+    "grossTokens": 34472,
+    "maxDepth": 0,
+    "expandedPrefixes": [],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "incomplete_provider",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0013232080000307178,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 31064
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": "incomplete_provider",
+        "grossTokens": 34962,
+        "outputCap": 32768,
+        "reservation": 38780,
+        "inputReservation": 6012,
+        "usage": {
+          "input_tokens": 2194,
+          "input_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "output_tokens": 32768,
+          "output_tokens_details": {
+            "reasoning_tokens": 32768
+          },
+          "total_tokens": 34962
+        },
+        "thinkingSha256": "4bd4290586ab72e9f1c21f3951fd388a6c9bbfb22eb5fc9572fafe3e92f1099b",
+        "status": "incomplete",
+        "incompleteDetails": {
+          "reason": "max_output_tokens"
+        },
+        "providerError": null,
+        "atGrossTokens": 34962
+      }
+    ],
+    "grossTokens": 34962,
+    "maxDepth": 0,
+    "expandedPrefixes": [],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "incomplete_provider",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015419159999510157,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 30574
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": "invalid_action",
+        "grossTokens": 17466,
+        "outputCap": 32768,
+        "reservation": 38668,
+        "inputReservation": 5900,
+        "usage": {
+          "input_tokens": 2141,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 15325,
+          "output_tokens_details": {
+            "reasoning_tokens": 15313
+          },
+          "total_tokens": 17466
+        },
+        "thinkingSha256": "02718eaeebacc588daa7bd37990ae7e4b66dbd1dafe989042bb9b48d38dde40b",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 17466
+      }
+    ],
+    "grossTokens": 17466,
+    "maxDepth": 0,
+    "expandedPrefixes": [],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "invalid_action",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015482909998354444,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 48070
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 16671,
+        "outputCap": 32768,
+        "reservation": 37635,
+        "inputReservation": 4867,
+        "usage": {
+          "input_tokens": 1715,
+          "input_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "output_tokens": 14956,
+          "output_tokens_details": {
+            "reasoning_tokens": 14661
+          },
+          "total_tokens": 16671
+        },
+        "thinkingSha256": "50daaac92148dcff40e1baa82ce19c919c4c80b7da9c136021762a76bf796491",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 16671,
+        "action": {
+          "parentId": 0,
+          "optionId": 1
+        },
+        "selection": [
+          1
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 3,
+          "risk": 3,
+          "depth": 1,
+          "value": 29
+        },
+        "evidenceStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            1
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": "invalid_action",
+        "grossTokens": 17324,
+        "outputCap": 30949,
+        "reservation": 48865,
+        "inputReservation": 17916,
+        "usage": {
+          "input_tokens": 16956,
+          "input_tokens_details": {
+            "cached_tokens": 16640
+          },
+          "output_tokens": 368,
+          "output_tokens_details": {
+            "reasoning_tokens": 112
+          },
+          "total_tokens": 17324
+        },
+        "thinkingSha256": "ad71a49a44cc74934faf916292e6bcacf221e7cd37b47ebf9565f88c827f7976",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 33995
+      }
+    ],
+    "grossTokens": 33995,
+    "maxDepth": 1,
+    "expandedPrefixes": [
+      [
+        1
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "invalid_action",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015370829999028501,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 31541
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "grossTokens": 17518,
+        "outputCap": 32768,
+        "reservation": 37219,
+        "inputReservation": 4451,
+        "usage": {
+          "input_tokens": 1593,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 15925,
+          "output_tokens_details": {
+            "reasoning_tokens": 15870
+          },
+          "total_tokens": 17518
+        },
+        "thinkingSha256": "ec7ac3b00c4c17e569485c35674babebe708cf7489dbf8b628b5665c9f41777a",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 17518,
+        "action": {
+          "parentId": 0,
+          "optionId": 1
+        },
+        "selection": [
+          1
+        ],
+        "evaluation": {
+          "valid": true,
+          "cost": 3,
+          "risk": 3,
+          "depth": 1,
+          "value": 29
+        },
+        "evidenceStats": null,
+        "incumbentValue": 79,
+        "maxDepth": 1
+      },
+      {
+        "turn": 1,
+        "failure": "invalid_action",
+        "grossTokens": 18137,
+        "outputCap": 29888,
+        "reservation": 48018,
+        "inputReservation": 18130,
+        "usage": {
+          "input_tokens": 17619,
+          "input_tokens_details": {
+            "cached_tokens": 17408
+          },
+          "output_tokens": 518,
+          "output_tokens_details": {
+            "reasoning_tokens": 447
+          },
+          "total_tokens": 18137
+        },
+        "thinkingSha256": "31c3fe6760da9aae279832292a01c789a1b543ecbe58685ff11ab062ed8518e8",
+        "status": "completed",
+        "incompleteDetails": null,
+        "providerError": null,
+        "atGrossTokens": 35655
+      }
+    ],
+    "grossTokens": 35655,
+    "maxDepth": 1,
+    "expandedPrefixes": [
+      [
+        1
+      ]
+    ],
+    "incumbent": {
+      "selection": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "evaluation": {
+        "valid": true,
+        "cost": 8,
+        "risk": 8,
+        "depth": 8,
+        "value": 79
+      }
+    },
+    "stop": "failure",
+    "failure": "invalid_action",
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.001539750000119966,
+      "graceSeconds": 5
+    },
+    "unusedBudget": 29881
+  }
+]

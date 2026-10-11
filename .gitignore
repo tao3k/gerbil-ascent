@@ -8,3 +8,9 @@ manifest.ss
 *.log.license
 .cache/
 .lake/
+
+# Python Project environments and generated package metadata.
+python/.venv/
+python/src/*.egg-info/
+__pycache__/
+*.pyc

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "producerHead": "01f00e23c2eb90dfd24f834d1324487f643b49b9",
+  "providerCalls": 0,
+  "nativeEntryRequestsByteIdentical": 36,
+  "literalReferenceMatched": 38,
+  "visibleThinkingCharactersByteIdentical": 104643,
+  "allModelCostsAndIndependentGradesReplayed": true,
+  "reportByteIdentical": true,
+  "scope": "Local qualified Darwin API replay; source cold rebuild is separately recorded"
+}

@@ -8,6 +8,7 @@ No Python implementation of relational inference is used here.
 """
 import copy
 from .evidence import EvidenceStore,identity
+from .operators import dependencies
 
 
 def normalize_contract(contract):
@@ -28,7 +29,7 @@ def components(program):
         for head in heads:
             if head not in graph:raise ValueError('rule head must be a declared derived relation')
             graph[head].update(heads-{head})
-            graph[head].update(a['relation'] for a in rule['body'] if a['relation'] in graph)
+            graph[head].update(dependencies(rule['body']) & set(graph))
     # Tarjan follows dependency edges, therefore emits dependencies first.
     index={};low={};stack=[];active=set();result=[]
     def visit(name):
@@ -50,12 +51,16 @@ def components(program):
 def canonical_rule(rule):
     # Alpha-renaming is safe; conjunction reordering is intentionally not inferred.
     value=copy.deepcopy(rule);variables={}
+    def rename(name):
+        variables.setdefault(name,str(len(variables)))
+        return variables[name]
     for atom in value['head']+value['body']:
-        atom.setdefault('not',False)
+        if 'mode' not in atom: atom.setdefault('not',False)
         for term in atom['terms']:
             if 'var' in term:
-                variables.setdefault(term['var'],str(len(variables)))
-                term['var']=variables[term['var']]
+                term['var']=rename(term['var'])
+        if 'output' in atom: atom['output']=rename(atom['output'])
+        if 'inputs' in atom: atom['inputs']=[rename(name) for name in atom['inputs']]
     return value
 
 
@@ -64,6 +69,7 @@ class EvidenceChain:
     def __init__(self,engine,sources,retain=True):
         self.engine=engine;self.sources=copy.deepcopy(sources);self.retain=retain
         self.store=EvidenceStore(engine,sources);self.certificates={};self.results={}
+        self.requests={}
 
     @property
     def source_identity(self):return self.store.source_identity
@@ -85,12 +91,14 @@ class EvidenceChain:
                 raise ValueError('derived evidence cannot introduce source facts')
         if not {r['name'] for r in self.sources}<=seen:raise ValueError('query omitted source authority')
         if any(a['relation'] in trusted for rule in program['rules'] for a in rule['head']):raise ValueError('query defines source heads')
+        request_key=identity(program)
         declarations={r['name']:r for r in program['relations'] if not r['source']}
         keys={};groups=[];mapping={};reused=[]
         for group in components(program):
             rules=[r for r in program['rules'] if any(a['relation'] in group for a in r['head'])]
-            external=sorted({a['relation'] for r in rules for a in r['body'] if a['relation'] not in group})
-            recursive=len(group)>1 or any(a['relation'] in group for r in rules for a in r['body'])
+            used=dependencies([a for r in rules for a in r['body']])
+            external=sorted(used-set(group))
+            recursive=len(group)>1 or bool(used & set(group))
             key=identity({'sourceIdentity':self.source_identity,'relations':[declarations[n] for n in group],
                           'rules':sorted([canonical_rule(r) for r in rules],key=identity),
                           'dependencies':{n:keys.get(n,identity(trusted.get(n))) for n in external}})
@@ -103,14 +111,22 @@ class EvidenceChain:
         lowered['relations']=[r for r in lowered['relations'] if r['name'] not in mapping]
         lowered['rules']=[r for r in lowered['rules'] if not any(a['relation'] in mapping for a in r['head'])]
         for rule in lowered['rules']:
-            for atom in rule['body']:atom['relation']=mapping.get(atom['relation'],atom['relation'])
+            for atom in rule['body']:
+                if 'relation' in atom: atom['relation']=mapping.get(atom['relation'],atom['relation'])
         # Every completed intermediate component is available to later rounds,
         # but only requested rows are exposed to the model.
         wanted=program['queries']
         lowered['queries']=list(dict.fromkeys(mapping.get(n,n) for n in wanted+list(declarations)))
+        fresh=[{'relations':g,'fingerprint':k,'recursive':r,'dependencies':d}
+               for g,k,r,d in groups if not any(n in mapping for n in g)]
+        # Replay the admitted native path, not base facts plus its own outputs.
+        # Re-importing completed components can exceed the input fact budget.
+        if self.retain and request_key in self.requests:
+            lowered,mapping=copy.deepcopy(self.requests[request_key])
         receipt=self.store.query(lowered)
         rows=receipt['result']['relations'];aliases={p['originRelation']:p['relation'] for p in receipt['publishedEvidence']}
         if self.retain:
+            self.requests[request_key]=copy.deepcopy((lowered,mapping))
             for group,key,recursive,external in groups:
                 if key not in self.certificates:self.certificates[key]={n:mapping.get(n,aliases.get(n)) for n in group}
         result={n:copy.deepcopy(rows[mapping.get(n,n)]) for n in wanted}
@@ -118,7 +134,7 @@ class EvidenceChain:
         self.results[handle]={'sourceIdentity':self.source_identity,'relations':result,'columns':{n:declarations[n]['columns'] for n in wanted if n in declarations}}
         feedback={'sourceIdentity':self.source_identity,'resultReference':handle,'pathIdentity':receipt['pathIdentity'],
                   'result':{'complete':True,'relations':result},'reusedComponents':reused,
-                  'freshComponents':[{'relations':g,'fingerprint':k,'recursive':r,'dependencies':d} for g,k,r,d in groups if not any(n in mapping for n in g)],
+                  'freshComponents':fresh,
                   'retainedCompleted':receipt['retainedCompleted'],
                   'availableClaims':[{'name':n,'fingerprint':keys[n],'rows':len(rows[mapping.get(n,n)])} for n in declarations] if self.retain else []}
         if not self.retain:
@@ -135,8 +151,8 @@ class EvidenceChain:
 
     def replace(self,sources):
         self.store.replace(sources);self.sources=copy.deepcopy(sources)
-        self.certificates.clear();self.results.clear()
+        self.certificates.clear();self.results.clear();self.requests.clear()
 
-    def close(self):self.store.close();self.certificates.clear();self.results.clear()
+    def close(self):self.store.close();self.certificates.clear();self.results.clear();self.requests.clear()
     def __enter__(self):return self
     def __exit__(self,*exc):self.close()

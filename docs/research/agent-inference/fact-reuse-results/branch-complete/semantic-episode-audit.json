@@ -1,0 +1,5899 @@
+{
+  "exploratoryPostRunAudit": true,
+  "fullCoverageFailureUnchanged": true,
+  "scope": "Only individually admitted completed atomic proposals; all other characters remain unreviewed semantics. Not preregistered full semantic recall or successful full annotation. No independent arithmetic correctness claim.",
+  "results": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "turn": 0,
+      "originalCoverageFailure": "semantic schema",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "no atomic episode proposals",
+      "thinkingSha256": "bc4aa9b14e3f325817cfdf044ec4ce5c69726e3b65a37bb086aecdae53909511",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            40743
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 40743,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 0,
+      "arm": "baseline",
+      "turn": 1,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [],
+      "rejected": [
+        {
+          "proposal": {
+            "quote": "Edges define DAG paths.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "path 0->5.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                0,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "path 0->7->5.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                0,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                0,
+                6
+              ],
+              [
+                6,
+                7
+              ],
+              [
+                7,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "path 20->200.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                20,
+                200
+              ]
+            ],
+            "premises": [
+              [
+                20,
+                100
+              ],
+              [
+                100,
+                200
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "path 21->101->201",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                21,
+                201
+              ]
+            ],
+            "premises": [
+              [
+                21,
+                101
+              ],
+              [
+                101,
+                201
+              ]
+            ]
+          },
+          "failure": "quote not verbatim"
+        },
+        {
+          "proposal": {
+            "quote": "path 22->102->202",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                22,
+                202
+              ]
+            ],
+            "premises": [
+              [
+                22,
+                102
+              ],
+              [
+                102,
+                202
+              ]
+            ]
+          },
+          "failure": "quote not verbatim"
+        },
+        {
+          "proposal": {
+            "quote": "path 203->103->23",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                203,
+                23
+              ]
+            ],
+            "premises": [
+              [
+                203,
+                103
+              ],
+              [
+                103,
+                23
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "20->100->200",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                20,
+                200
+              ]
+            ],
+            "premises": [
+              [
+                20,
+                100
+              ],
+              [
+                100,
+                200
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "21->101->201",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                21,
+                201
+              ]
+            ],
+            "premises": [
+              [
+                21,
+                101
+              ],
+              [
+                101,
+                201
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "22->102->202",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                22,
+                202
+              ]
+            ],
+            "premises": [
+              [
+                22,
+                102
+              ],
+              [
+                102,
+                202
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "203->103->23",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                203,
+                23
+              ]
+            ],
+            "premises": [
+              [
+                203,
+                103
+              ],
+              [
+                103,
+                23
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "24->104->204",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                24,
+                204
+              ]
+            ],
+            "premises": [
+              [
+                24,
+                104
+              ],
+              [
+                104,
+                204
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "25->105->205",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                25,
+                205
+              ]
+            ],
+            "premises": [
+              [
+                25,
+                105
+              ],
+              [
+                105,
+                205
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "26->106->206",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                26,
+                206
+              ]
+            ],
+            "premises": [
+              [
+                26,
+                106
+              ],
+              [
+                106,
+                206
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "207->107->27",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                207,
+                27
+              ]
+            ],
+            "premises": [
+              [
+                207,
+                107
+              ],
+              [
+                107,
+                27
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "28->108->208",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                28,
+                208
+              ]
+            ],
+            "premises": [
+              [
+                28,
+                108
+              ],
+              [
+                108,
+                208
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "29->109->209",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                29,
+                209
+              ]
+            ],
+            "premises": [
+              [
+                29,
+                109
+              ],
+              [
+                109,
+                209
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "30->110->210",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                30,
+                210
+              ]
+            ],
+            "premises": [
+              [
+                30,
+                110
+              ],
+              [
+                110,
+                210
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "211->111->31",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                211,
+                31
+              ]
+            ],
+            "premises": [
+              [
+                211,
+                111
+              ],
+              [
+                111,
+                31
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "32->112->212",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                32,
+                212
+              ]
+            ],
+            "premises": [
+              [
+                32,
+                112
+              ],
+              [
+                112,
+                212
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "33->113->213",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                33,
+                213
+              ]
+            ],
+            "premises": [
+              [
+                33,
+                113
+              ],
+              [
+                113,
+                213
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "34->114->214",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                34,
+                214
+              ]
+            ],
+            "premises": [
+              [
+                34,
+                114
+              ],
+              [
+                114,
+                214
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "215->115->35",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                215,
+                35
+              ]
+            ],
+            "premises": [
+              [
+                215,
+                115
+              ],
+              [
+                115,
+                35
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Edges for first network: 0->5 via 1-4; 0->6->7->5; 2->5? edges [1,2],[2,3],[3,4],[4,5] path 2->5. 6->5 via 6->7->5? Actually [6,7],[7,5] yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                2,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "First paths:\n- [0,5] exists: 0->1->2->3->4->5.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                0,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "- [2,5] exists: 2->3->4->5.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                2,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "- [6,5] exists: 6->7->5.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                6,
+                5
+              ]
+            ],
+            "premises": [
+              [
+                6,
+                7
+              ],
+              [
+                7,
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "[20,200]: edges 20->100->200 yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                20,
+                200
+              ]
+            ],
+            "premises": [
+              [
+                20,
+                100
+              ],
+              [
+                100,
+                200
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "1 [21,201]: 21->101->201 yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                21,
+                201
+              ]
+            ],
+            "premises": [
+              [
+                21,
+                101
+              ],
+              [
+                101,
+                201
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "2 [22,202]: 22->102->202 yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                22,
+                202
+              ]
+            ],
+            "premises": [
+              [
+                22,
+                102
+              ],
+              [
+                102,
+                202
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "4 [24,204]: 24->104->204 yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                24,
+                204
+              ]
+            ],
+            "premises": [
+              [
+                24,
+                104
+              ],
+              [
+                104,
+                204
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "5 [25,205]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                25,
+                205
+              ]
+            ],
+            "premises": [
+              [
+                25,
+                105
+              ],
+              [
+                105,
+                205
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "6 [26,206]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                26,
+                206
+              ]
+            ],
+            "premises": [
+              [
+                26,
+                106
+              ],
+              [
+                106,
+                206
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "8 [28,208]: 28->108->208 yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                28,
+                208
+              ]
+            ],
+            "premises": [
+              [
+                28,
+                108
+              ],
+              [
+                108,
+                208
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "9 [29,209]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                29,
+                209
+              ]
+            ],
+            "premises": [
+              [
+                29,
+                109
+              ],
+              [
+                109,
+                209
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "10 [30,210]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                30,
+                210
+              ]
+            ],
+            "premises": [
+              [
+                30,
+                110
+              ],
+              [
+                110,
+                210
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "12 [32,212]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                32,
+                212
+              ]
+            ],
+            "premises": [
+              [
+                32,
+                112
+              ],
+              [
+                112,
+                212
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "13 [33,213]: yes (excluded by branch anyway).",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                33,
+                213
+              ]
+            ],
+            "premises": [
+              [
+                33,
+                113
+              ],
+              [
+                113,
+                213
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "14 [34,214]: yes.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              [
+                34,
+                214
+              ]
+            ],
+            "premises": [
+              [
+                34,
+                114
+              ],
+              [
+                114,
+                214
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "3 [23,203]: edges 203->103->23, so directed path 23->203? No.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              [
+                23,
+                203
+              ]
+            ],
+            "premises": [
+              [
+                203,
+                103
+              ],
+              [
+                103,
+                23
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "7 [27,207]: edges 207->107->27, so 27->207 no.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              [
+                27,
+                207
+              ]
+            ],
+            "premises": [
+              [
+                207,
+                107
+              ],
+              [
+                107,
+                27
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "11 [31,211]: edges 211->111->31, so 31->211 no.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              [
+                31,
+                211
+              ]
+            ],
+            "premises": [
+              [
+                211,
+                111
+              ],
+              [
+                111,
+                31
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "15 [35,215]: edges 215->115->35, so 35->215 no.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              [
+                35,
+                215
+              ]
+            ],
+            "premises": [
+              [
+                215,
+                115
+              ],
+              [
+                115,
+                35
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        }
+      ],
+      "unavailable": null,
+      "thinkingSha256": "8d709c204c23d898341ed39e63a2b76cbd6b8471a1f7dff16b35da201e4473ba",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            40609
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 40609,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "turn": 0,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [
+        {
+          "quote": "If we pick item0 (w5) + one group1 (w12) + two others... weight: 5+12+5+5=27 \u2264 49. Fine.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            3251,
+            3339
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Total risk budget: 29 - 2 = 27 for the other three.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            4512,
+            4563
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Weight budget: 49 - 5 = 44. Weight is not binding (max 12+5+5=22).",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            4565,
+            4631
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Case A: group1 item g1, group2 items a,b.\nRisk: g1 + a + b \u2264 27.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            4838,
+            4902
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=1 (r13,v32): remaining risk 14 for two group2. Options: (2,6)=12+8=20>14 no. (2,10)=16>14 no. (6,10)=12 \u226414 yes. So {1,6,10}: risk 13+8+4=25, value 32+31+56=119, bonus (6,10)=12. Total 131.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            5028,
+            5220
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=5 (r9,v57): remaining 18. (2,6)=20>18 no. (2,10)=16\u226418 yes: {5,2,10}: risk 9+12+4=25, value 57+49+56=162, bonuses: (5,6)no6, (5,13)no, (6,10)no6, (2,8)no. So no bonus. Total 162.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            5299,
+            5480
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "(6,10)=12\u226418 yes: {5,6,10}: risk 9+8+4=21, value 57+31+56=144, bonus (6,10)=12, (5,6)=7 \u2192 +19. Total 163.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            5481,
+            5586
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "(5,2,6): risk 9+12+8=29>27? Wait total budget 27. 9+12+8=29>27. No.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            5587,
+            5654
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=9 (r5,v39): remaining 22. Options (2,6)=20\u226422: {9,2,6}: risk5+12+8=25, value 39+49+31=119, bonuses: (4,9) no4, (2,8)no, (6,10)no10. 0. Total 119.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            5724,
+            5872
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=13 (r13,v21): remaining 14. (6,10)=12\u226414: {13,6,10}: risk13+8+4=25, value21+31+56=108, bonus (6,10)=12, (5,13)no5, (12,13)no12. +12=120.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            6049,
+            6188
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "(1,5): risk22, +group2 risk \u22645 \u2192 group2 10(r4) or? 2 r12 no,6 r8 no,10 r4 yes. risk26. Value 32+57+56=145. Bonuses: (5,6)no, (5,13)no. (1,4)no. (6,10)no6. (10,12)no. So 145.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            6423,
+            6596
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "(5,9): risk14, +group2 \u226413 \u2192 all: 2(12),6(8),10(4).\n   +2: risk26, value57+39+49=145, bonus none.\n   +6: risk22, value57+39+31=127, bonus (5,6)=7 \u2192 134.\n   +10: risk18, value57+39+56=152, bonus (6,10)no6 \u2192 152.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            6828,
+            7038
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Subcase group0=12 (r2,v47): remaining 25 for g1+g2.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            7488,
+            7539
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=5(r9): +2(12)=21: value57+49+47=153, bonus none.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            7745,
+            7796
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "+10(4)=13: 57+56+47=160, bonus (10,12)=7 \u2192 167.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            7848,
+            7895
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "g1=5(9): +2(12)=21>17; +6(8)=17 ok: 57+31+40=128, bonus (5,6)=7, (1,4)no1 \u2192 135. +10(4)=13: 57+56+40=153, bonus none (6,10 no6; 10,12 no) \u2192 153.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            8379,
+            8523
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Total weight = 5+12+5+5 = 27 \u226449. Risk = 2+9+4+2 = 17 \u226429. Groups: 0 (item0,12), 1 (item5), 2 (item10) \u2192 three groups. Required 0 included, excluded 14 omitted. Paths all verified for 0,5,10,12. Yes.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            9405,
+            9604
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Value = 15+57+56+47 = 175. Bonuses: (5,10)? not listed. (10,12)=7. (5,6) no. (12,13) no. (6,10) no. (5,13) no. So bonus = 7. Total = 182? Wait I computed 167 earlier. Let me recheck.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            9606,
+            9788
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Earlier for subcase 12 g1=5 +10: value 57+56+47=160 plus item0 value 15 = 175, bonus (10,12)=7 \u2192 182, plus item0 bonus none. Hmm I forgot item0's value! Let me redo. I was computing 3 items' value excluding item0. Need to add item0 value 15.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            9790,
+            10031
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Case A best {5,6,10}: value 57+31+56=144, +15 = 159, bonuses (6,10)=12+(5,6)=7=19 \u2192 178.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            10149,
+            10237
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Case B best {5,9,10}: 57+39+56=152 +15=167, bonuses: none? (5,6)no, (6,10) no6, (12,13) no. So 167.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            10239,
+            10338
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Case C: {5,10,12}: 57+56+47=160 +15=175, bonus (10,12)=7 \u2192 182.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            10340,
+            10403
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Total = 15+57+56+47 +7 = 182.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            16006,
+            16035
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Now weight: 5+12+5+5=27 \u226449, risk 2+9+4+2=17 \u226429.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            18107,
+            18156
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Consider {0,5,10,2}: 15+57+56+49=177, bonuses: (5,2)? no; (2,10)? no; (5,6)no; (2,8)no \u2192177. Lower.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            18684,
+            18783
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Consider {0,5,10,4}: 15+57+56+40=168, bonus none? (4,5)? no \u2192168.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            18784,
+            18849
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        }
+      ],
+      "rejected": [
+        {
+          "proposal": {
+            "quote": "Item 3: paths [[0,5],[23,203]] \u2014 [23,203] is finite-absent (false). So item 3 fails the \"both directed paths\" requirement.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 7: paths [[2,5],[27,207]] \u2014 [27,207] finite-absent \u2192 item 7 fails.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 11: paths [[6,5],[31,211]] \u2014 [31,211] finite-absent \u2192 fails.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 15: paths [[0,5],[35,215]] \u2014 [35,215] finite-absent \u2192 fails.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So items 3,7,11,15 are invalid (their second path doesn't exist).",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Group 3 (all invalid): 3,7,11,15.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Weight: all group0 and group2 items are w5; group1 items are w12. Item 0 w5.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Risk limit 29. We need total risk \u226429 with 4 items including item0 (r2).",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 0 is included. Its bonuses: (0,7) and (0,14) \u2014 both involved invalid/excluded items, so no bonus from item0.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "We need 4 items: item0 + 3 others, covering groups 1 and 2 at least.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Case A best: 163 ({5,6,10}).",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Case B best: 152 ({5,9,10} = 152). Also {5,13,10}=148, {1,5,10}=145, {5,9,2}=145.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Subcase 12 best: {5,10,12} = 167.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Subcase 4 best: {5,10,4} = 153.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Subcase 8 best: {5,10,8}=135.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "So overall best so far: 167 with {0,5,10,12}. Let's verify: item0 (w5,r2,v15), item5 (w12,r9,v57), item10 (w5,r4,v56), item12 (w5,r2,v47).",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "So best is 182 for {0,5,10,12}.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Best pattern (1,1,1): 167 (g0=12,g1=5,g2=10). So total with item0 = 167+15=182.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Best pattern: 163 ({5,6,10}) \u2192 total 178.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "So overall best triple is {5,10,12} \u2192 total 182.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "{0,5,10,12}=182 clearly best.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Thus optimum is {0,5,10,12} total 182.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "So selected = [0,5,10,12].",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Consider {0,5,10,12}: values 15+57+56+47=175, bonus 7 =182.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "quote not verbatim"
+        },
+        {
+          "proposal": {
+            "quote": "So 182 stands.",
+            "occurrence": 0,
+            "category": "optimization",
+            "atom": [],
+            "premises": []
+          },
+          "failure": ""
+        },
+        {
+          "proposal": {
+            "quote": "Thus final answer [0,5,10,12].",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Final: {\"selected\":[0,5,10,12]}.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        }
+      ],
+      "unavailable": null,
+      "thinkingSha256": "de0c73530b742cf590d44d17c56dd8e48c6108c176e2875a54ec6b348b31cf1b",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            3251
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            3251,
+            3339
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            3339,
+            4512
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            4512,
+            4563
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            4563,
+            4565
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            4565,
+            4631
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            4631,
+            4838
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            4838,
+            4902
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            4902,
+            5028
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            5028,
+            5220
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            5220,
+            5299
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            5299,
+            5480
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            5480,
+            5481
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            5481,
+            5586
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            5586,
+            5587
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            5587,
+            5654
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            5654,
+            5724
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            5724,
+            5872
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            5872,
+            6049
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            6049,
+            6188
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            6188,
+            6423
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            6423,
+            6596
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            6596,
+            6828
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            6828,
+            7038
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            7038,
+            7488
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            7488,
+            7539
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            7539,
+            7745
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            7745,
+            7796
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            7796,
+            7848
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            7848,
+            7895
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            7895,
+            8379
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            8379,
+            8523
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            8523,
+            9405
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            9405,
+            9604
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            9604,
+            9606
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            9606,
+            9788
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            9788,
+            9790
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            9790,
+            10031
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            10031,
+            10149
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            10149,
+            10237
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            10237,
+            10239
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            10239,
+            10338
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            10338,
+            10340
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            10340,
+            10403
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            10403,
+            16006
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            16006,
+            16035
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            16035,
+            18107
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            18107,
+            18156
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            18156,
+            18684
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            18684,
+            18783
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            18783,
+            18784
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            18784,
+            18849
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            18849,
+            19672
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 19672,
+      "admittedQuoteCharacters": 2891
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "turn": 1,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [
+        {
+          "quote": "0\u21921\u21922\u21923\u21924\u21925 exists",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "path",
+            0,
+            5
+          ],
+          "premises": [
+            [
+              "edge",
+              0,
+              1
+            ],
+            [
+              "edge",
+              1,
+              2
+            ],
+            [
+              "edge",
+              2,
+              3
+            ],
+            [
+              "edge",
+              3,
+              4
+            ],
+            [
+              "edge",
+              4,
+              5
+            ]
+          ],
+          "span": [
+            783,
+            801
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "suppliedPremiseRederived": true,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "20\u2192100\u2192200 exists",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "path",
+            20,
+            200
+          ],
+          "premises": [
+            [
+              "edge",
+              20,
+              100
+            ],
+            [
+              "edge",
+              100,
+              200
+            ]
+          ],
+          "span": [
+            816,
+            833
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "suppliedPremiseRederived": true,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "21\u2192101\u2192201 exists",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "path",
+            21,
+            201
+          ],
+          "premises": [
+            [
+              "edge",
+              21,
+              101
+            ],
+            [
+              "edge",
+              101,
+              201
+            ]
+          ],
+          "span": [
+            880,
+            897
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "suppliedPremiseRederived": true,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "6\u21927\u21925 exists",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "path",
+            6,
+            5
+          ],
+          "premises": [
+            [
+              "edge",
+              6,
+              7
+            ],
+            [
+              "edge",
+              7,
+              5
+            ]
+          ],
+          "span": [
+            928,
+            940
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "suppliedPremiseRederived": true,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "31\u2192211? Edges: 211\u2192111\u219231. Absent \u2192 finite-absent.",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "path",
+            31,
+            211
+          ],
+          "premises": [
+            [
+              "edge",
+              211,
+              111
+            ],
+            [
+              "edge",
+              111,
+              31
+            ]
+          ],
+          "span": [
+            1466,
+            1516
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "35\u2192215? Edges: 215\u2192115\u219235. Absent \u2192 finite-absent.",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "path",
+            35,
+            215
+          ],
+          "premises": [
+            [
+              "edge",
+              215,
+              115
+            ],
+            [
+              "edge",
+              115,
+              35
+            ]
+          ],
+          "span": [
+            1673,
+            1723
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 1,
+          "crossBranchRepeat": false
+        }
+      ],
+      "rejected": [
+        {
+          "proposal": {
+            "quote": "2\u21923\u21924\u21925 exists",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "path",
+              2,
+              5
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "overlapping or unordered episode"
+        },
+        {
+          "proposal": {
+            "quote": "22\u2192102\u2192202.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "path",
+              22,
+              202
+            ],
+            "premises": [
+              [
+                "edge",
+                22,
+                102
+              ],
+              [
+                "edge",
+                102,
+                202
+              ]
+            ]
+          },
+          "failure": "endpoints absent from quote"
+        },
+        {
+          "proposal": {
+            "quote": "0\u21925 exists",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "path",
+              0,
+              5
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                1
+              ],
+              [
+                "edge",
+                1,
+                2
+              ],
+              [
+                "edge",
+                2,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                5
+              ]
+            ]
+          },
+          "failure": "endpoints absent from quote"
+        },
+        {
+          "proposal": {
+            "quote": "path from 23 to 203 doesn't exist \u2192 finite-absent.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "path",
+              23,
+              203
+            ],
+            "premises": [
+              [
+                "edge",
+                203,
+                103
+              ],
+              [
+                "edge",
+                103,
+                23
+              ]
+            ]
+          },
+          "failure": "endpoints absent from quote"
+        },
+        {
+          "proposal": {
+            "quote": "27 to 207 absent \u2192 finite-absent.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "path",
+              27,
+              207
+            ],
+            "premises": [
+              [
+                "edge",
+                207,
+                107
+              ],
+              [
+                "edge",
+                107,
+                27
+              ]
+            ]
+          },
+          "failure": "endpoints absent from quote"
+        }
+      ],
+      "unavailable": null,
+      "thinkingSha256": "8888a7693c18db034b13634f05a744c5ce5f08111581531603f6f8dfdf3bdb32",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            783
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            783,
+            801
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            801,
+            816
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            816,
+            833
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            833,
+            880
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            880,
+            897
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            897,
+            928
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            928,
+            940
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            940,
+            1466
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1466,
+            1516
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1516,
+            1673
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1673,
+            1723
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1723,
+            18132
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 18132,
+      "admittedQuoteCharacters": 164
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "turn": 2,
+      "originalCoverageFailure": "Expecting ',' delimiter: line 1 column 5863 (char 5862)",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "Expecting ',' delimiter: line 1 column 5863 (char 5862)",
+      "thinkingSha256": "ad10f3336d885c97f50c62789184974af57b1df98ff8a8adf07353e38e334d75",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            21770
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 21770,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 0,
+      "originalCoverageFailure": "semantic provider incomplete or failed",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "incomplete annotation; no JSON salvage",
+      "thinkingSha256": "882c5204c82c043bb4887cbfeb38557468d85ef11b6b74435e55727ad321c337",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            22002
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 22002,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 1,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [
+        {
+          "quote": "{1,5,12(g0),10(g2)}: risks 13+9+2+4=28 \u2713. values 32+57+47+56=192. bonuses: (5,6)no, (10,12)=7. total 199. \n",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            7377,
+            7484
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 1,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Total value+bonus = 199.",
+          "occurrence": 0,
+          "category": "arithmetic",
+          "atom": [],
+          "premises": [],
+          "span": [
+            19898,
+            19922
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "turn": 1,
+          "crossBranchRepeat": false
+        }
+      ],
+      "rejected": [
+        {
+          "proposal": {
+            "quote": "An item with a finite-absent path cannot be selected (since every selected item must have both of its directed paths verified).",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "item",
+              3
+            ],
+            "premises": [
+              [
+                "path",
+                23,
+                203
+              ],
+              [
+                "path",
+                31,
+                211
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 0: [0,5] verified, [20,200] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                0,
+                5
+              ],
+              [
+                "path",
+                20,
+                200
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 1: [2,5] verified, [21,201] verified \u2192 OK (and required)",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                2,
+                5
+              ],
+              [
+                "path",
+                21,
+                201
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 2: [6,5] verified, [22,202] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                6,
+                5
+              ],
+              [
+                "path",
+                22,
+                202
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 3: [0,5] verified, [23,203] finite-absent \u2192 NOT OK",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                23,
+                203
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 4: [2,5] verified, [24,204] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                2,
+                5
+              ],
+              [
+                "path",
+                24,
+                204
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 5: [6,5] verified, [25,205] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                6,
+                5
+              ],
+              [
+                "path",
+                25,
+                205
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 6: [0,5] verified, [26,206] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                0,
+                5
+              ],
+              [
+                "path",
+                26,
+                206
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 7: [2,5] verified, [27,207] finite-absent \u2192 NOT OK",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                27,
+                207
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 8: [6,5] verified, [28,208] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                6,
+                5
+              ],
+              [
+                "path",
+                28,
+                208
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 9: [0,5] verified, [29,209] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                0,
+                5
+              ],
+              [
+                "path",
+                29,
+                209
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 10: [2,5] verified, [30,210] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                2,
+                5
+              ],
+              [
+                "path",
+                30,
+                210
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 11: [6,5] verified, [31,211] finite-absent \u2192 NOT OK",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                31,
+                211
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 12: [0,5] verified, [32,212] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                0,
+                5
+              ],
+              [
+                "path",
+                32,
+                212
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 13: [2,5] verified, [33,213] verified \u2192 OK but excluded",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                2,
+                5
+              ],
+              [
+                "path",
+                33,
+                213
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 14: [6,5] verified, [34,214] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                6,
+                5
+              ],
+              [
+                "path",
+                34,
+                214
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Item 15: [0,5] verified, [35,215] finite-absent \u2192 NOT OK",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                35,
+                215
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Candidate: 1,4,10,12. Groups: 1(g1),4(g0),10(g2),12(g0) \u2192 groups {0,1,2} \u2713. Risks: 13+10+4+2=29 \u226432 \u2713. Weight: 12+5+5+5=27 \u2713.\nValues: 32+40+56+47=175. Bonuses: (1,4)=12, (10,12)=7. Total =175+19=194.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "quote not verbatim"
+        },
+        {
+          "proposal": {
+            "quote": "So selectable items: 0,1,2,4,5,6,8,9,10,12,13(excluded),14.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Items 0,2,4,6,8,10,12,14 have weight 5; items 1,5,9 have weight 12.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "quote not verbatim"
+        },
+        {
+          "proposal": {
+            "quote": "Weight is not binding really (max 12*4=48 \u226453).",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "overlapping or unordered episode"
+        },
+        {
+          "proposal": {
+            "quote": "Risk limit 32 is binding.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "overlapping or unordered episode"
+        },
+        {
+          "proposal": {
+            "quote": "Item 1 risk 13. Need 3 more items with total risk \u226419.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "overlapping or unordered episode"
+        },
+        {
+          "proposal": {
+            "quote": "Only groups 0,1,2 exist. At least three groups means must include at least one from each of g0, g1, g2. Since item1 is g1, we need at least one g0 and at least one g2 among the remaining three.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So including item4 with item1 gives +12 bonus. Item4 is g0, value40. Great.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "{1,5,12,10}=199 (computed).",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So 199 is the max.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Final: [1,5,10,12].",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Let me also verify there's no 4-item set with even higher value that I dismissed. The absolute top 4 values among selectable including required 1: 57(5)+56(10)+49(2)+47(12)+32(1) \u2192 top four distinct: 57,56,49,47 sum 209 but includes 1? 57+56+49+47=209 doesn't include 1 (required). With 1: 57+56+49+47+32 pick 4 including 32: best is 57+56+49+32=194 plus bonuses, but risk of {1,5,10,2}: 13+9+4+12=38>32. So invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "overlapping or unordered episode"
+        },
+        {
+          "proposal": {
+            "quote": "Actually, let me double-check item 5's paths: [6,5] verified, [25,205] verified \u2192 OK. Item 10: [2,5] verified, [30,210] verified \u2192 OK. Item 12: [0,5] verified, [32,212] verified \u2192 OK. Item 1: [2,5],[21,201] verified \u2192 OK.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": [
+              [
+                "path",
+                6,
+                5
+              ],
+              [
+                "path",
+                25,
+                205
+              ],
+              [
+                "path",
+                2,
+                5
+              ],
+              [
+                "path",
+                30,
+                210
+              ],
+              [
+                "path",
+                0,
+                5
+              ],
+              [
+                "path",
+                32,
+                212
+              ],
+              [
+                "path",
+                21,
+                201
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So answer {1,5,10,12} with total 199.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Candidate: 1,4,10,12. Groups: 1(g1),4(g0),10(g2),12(g0) \u2192 groups {0,1,2} \u2713. Risks: 13+10+4+2=29 \u226432 \u2713. Weight: 12+5+5+5=27 \u2713.\nValues: 32+40+56+47=175. Bonuses: (1,4)=12, (10,12)=7. Total =175+19=194.",
+            "occurrence": 1,
+            "category": "arithmetic",
+            "atom": [],
+            "premises": []
+          },
+          "failure": "quote not verbatim"
+        }
+      ],
+      "unavailable": null,
+      "thinkingSha256": "73fdb610634c6da0fcc5c3e5c8e92b032983aa528ea303ad9ac30540e021c690",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            7377
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            7377,
+            7484
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            7484,
+            19898
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            19898,
+            19922
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            19922,
+            20212
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 20212,
+      "admittedQuoteCharacters": 131
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "turn": 2,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [],
+      "rejected": [
+        {
+          "proposal": {
+            "quote": "item0: [0,5] verified (121), [20,200] verified (102) \u2192 both present. OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item0"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "20",
+                200
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item1: [2,5] verified (120), [21,201] verified (103) \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item1"
+            ],
+            "premises": [
+              [
+                "2",
+                5
+              ],
+              [
+                "21",
+                201
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item2: [6,5] verified (101), [22,202] verified (104) \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item2"
+            ],
+            "premises": [
+              [
+                "6",
+                5
+              ],
+              [
+                "22",
+                202
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item3: [0,5] verified, [23,203] finite-absent \u2192 NOT allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "item3"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "23",
+                203
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item4: [2,5] verified, [24,204] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item4"
+            ],
+            "premises": [
+              [
+                "2",
+                5
+              ],
+              [
+                "24",
+                204
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item5: [6,5] verified, [25,205] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item5"
+            ],
+            "premises": [
+              [
+                "6",
+                5
+              ],
+              [
+                "25",
+                205
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item6: [0,5] verified, [26,206] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item6"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "26",
+                206
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item7: [2,5] verified, [27,207] finite-absent \u2192 NOT allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "item7"
+            ],
+            "premises": [
+              [
+                "2",
+                5
+              ],
+              [
+                "27",
+                207
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item8: [6,5] verified, [28,208] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item8"
+            ],
+            "premises": [
+              [
+                "6",
+                5
+              ],
+              [
+                "28",
+                208
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item9: [0,5] verified, [29,209] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item9"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "29",
+                209
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item10: [2,5] verified, [30,210] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item10"
+            ],
+            "premises": [
+              [
+                "2",
+                5
+              ],
+              [
+                "30",
+                210
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item11: [6,5] verified, [31,211] finite-absent \u2192 NOT allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "item11"
+            ],
+            "premises": [
+              [
+                "6",
+                5
+              ],
+              [
+                "31",
+                211
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item12: [0,5] verified, [32,212] verified \u2192 OK (but excluded)",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item12"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "32",
+                212
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item13: [2,5] verified, [33,213] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item13"
+            ],
+            "premises": [
+              [
+                "2",
+                5
+              ],
+              [
+                "33",
+                213
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item14: [6,5] verified, [34,214] verified \u2192 OK",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "item14"
+            ],
+            "premises": [
+              [
+                "6",
+                5
+              ],
+              [
+                "34",
+                214
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "item15: [0,5] verified, [35,215] finite-absent \u2192 NOT allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "item15"
+            ],
+            "premises": [
+              [
+                "0",
+                5
+              ],
+              [
+                "35",
+                215
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So allowed items: 0,1,2,4,5,6,8,9,10,12,13,14. Excluded item: 12. Required item: 2.",
+            "occurrence": 0,
+            "category": "premise_consumed",
+            "atom": [
+              "allowed items"
+            ],
+            "premises": [
+              [
+                "0",
+                1,
+                2,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                12,
+                13,
+                14
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Group3 items: 3,7,11,15 all not allowed (finite-absent). So no group3 allowed. So group3 unavailable.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "group3"
+            ],
+            "premises": [
+              [
+                "3",
+                7,
+                11,
+                15
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Groups available: 0,1,2. Need at least three groups \u2192 must include items from group0, group1, group2. But we only select 4 items. So select at least one from each group 0,1,2.",
+            "occurrence": 0,
+            "category": "new_residual",
+            "atom": [
+              "must include items from group0, group1, group2"
+            ],
+            "premises": [
+              [
+                "group3"
+              ],
+              [
+                "groups available"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(0,7)=14 \u2014 7 not allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (0,7)"
+            ],
+            "premises": [
+              [
+                "0",
+                7
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(1,11)=8 \u2014 11 not allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (1,11)"
+            ],
+            "premises": [
+              [
+                "1",
+                11
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(2,15)=13 \u2014 not allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (2,15)"
+            ],
+            "premises": [
+              [
+                "2",
+                15
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(3,5)=15 \u2014 3 not allowed",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (3,5)"
+            ],
+            "premises": [
+              [
+                "3",
+                5
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(7,14)=17 \u2014 7 no",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (7,14)"
+            ],
+            "premises": [
+              [
+                "7",
+                14
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(8,11)=15 \u2014 11 no",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (8,11)"
+            ],
+            "premises": [
+              [
+                "8",
+                11
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(9,15)=9 \u2014 no",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (9,15)"
+            ],
+            "premises": [
+              [
+                "9",
+                15
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(10,12)=7 \u2014 12 excluded",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (10,12)"
+            ],
+            "premises": [
+              [
+                "10",
+                12
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "(12,13)=10 \u2014 12 excluded",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "bonus (12,13)"
+            ],
+            "premises": [
+              [
+                "12",
+                13
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Case C: 2 G0 + 1 G1 + 1 G2 = 5+5+12+5 = 27 \u226457 fine.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "Case C weight 27"
+            ],
+            "premises": [
+              [
+                "5",
+                5,
+                12,
+                5
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "Case B: 1 G0 + 2 G1 + 1 G2 = 5+24+5=34 \u226457.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "Case B weight 34"
+            ],
+            "premises": [
+              [
+                "5",
+                24,
+                5
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "Case A: 1 G0 +1 G1 +2 G2 = 5+12+10=27.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "Case A weight 27"
+            ],
+            "premises": [
+              [
+                "5",
+                12,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: 105+40+57=202, bonuses: (1,4) no, (4,9) no. Any pair among {2,10,4,5}? (3,5) no, (5,6) no. So 202. Risk: 2(12)+10(4)+4(10)+5(9)=35 \u226435 OK! weight 5+5+5+12=27.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,10,4,5} value 202, risk 35, weight 27"
+            ],
+            "premises": [
+              [
+                "105",
+                40,
+                57
+              ],
+              [
+                "12",
+                4,
+                10,
+                9
+              ],
+              [
+                "5",
+                5,
+                5,
+                12
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: 105+22+57=184 + bonus (2,8)=17 =201. Risk 12+4+6+9=31. weight 27.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,10,8,5} value 201, risk 31, weight 27"
+            ],
+            "premises": [
+              [
+                "105",
+                22,
+                57,
+                17
+              ],
+              [
+                "12",
+                4,
+                6,
+                9
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=1: 105+40+32=177 + (1,4)12=189. Less.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,10,4,1} value 189"
+            ],
+            "premises": [
+              [
+                "105",
+                40,
+                32,
+                12
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=9: 105+40+39=184 + (4,9)9=193.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,10,4,9} value 193"
+            ],
+            "premises": [
+              [
+                "105",
+                40,
+                39,
+                9
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "So V=202 for {2,10,4,5}. risk exactly 35. Good.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "V=202 for {2,10,4,5}"
+            ],
+            "premises": [
+              [
+                "{2,10,4,5}"
+              ],
+              [
+                "risk exactly 35"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40 =184, plus (1,4)? no. So 184. risk: 2(12)+6(8)+5(9)+4(10)=39 >35. Not allowed.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,4,5} value 184 risk 39 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                184
+              ],
+              [
+                "12",
+                8,
+                9,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=0: +15=159. risk 12+8+9+2=31 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,0,5} value 159 risk 31"
+            ],
+            "premises": [
+              [
+                "15",
+                159
+              ],
+              [
+                "12",
+                8,
+                9,
+                2
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22=166 + (2,8)=17 =183. risk 12+8+9+6=35 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,8,5} value 183 risk 35"
+            ],
+            "premises": [
+              [
+                "22",
+                166,
+                17
+              ],
+              [
+                "12",
+                8,
+                9,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "Hmm G0=8: total 80+57+7+22+17=183. Check bonus (2,8)=17 yes. So 183.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,8,5} total 183"
+            ],
+            "premises": [
+              [
+                "80",
+                57,
+                7,
+                22,
+                17
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4 gives 184 but risk 39 >35, invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,4,5} invalid risk 39"
+            ],
+            "premises": [
+              [
+                "184"
+              ],
+              [
+                "39"
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "With G1=1 (32): 80+32=112 +(1,4) if 4. G0=4: +40+12=164. risk 12+8+13+10=43 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,6,4,1} value 164 risk 43 invalid"
+            ],
+            "premises": [
+              [
+                "80",
+                32,
+                40,
+                12
+              ],
+              [
+                "12",
+                8,
+                13,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "So best 183 for {2,6,8,5}.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "best 183 for {2,6,8,5}"
+            ],
+            "premises": [
+              [
+                "{2,6,8,5}"
+              ],
+              [
+                "183"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40 =184. risk 12+12+9+10=43 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,14,4,5} value 184 risk 43 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                184
+              ],
+              [
+                "12",
+                12,
+                9,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=0: +15 +10(0,14 bonus)=112+... let's compute: 87+57+15+10=169. risk 12+12+9+2=35 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,14,0,5} value 169 risk 35"
+            ],
+            "premises": [
+              [
+                "87",
+                57,
+                15,
+                10
+              ],
+              [
+                "12",
+                12,
+                9,
+                2
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22 +(2,8)17 =183. risk 12+12+9+6=39 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,14,8,5} value 183 risk 39 invalid"
+            ],
+            "premises": [
+              [
+                "22",
+                17,
+                183
+              ],
+              [
+                "12",
+                12,
+                9,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=1: 87+32 + G0(4)=+40+12=171. risk 12+12+13+10=47 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,14,4,1} value 171 risk 47 invalid"
+            ],
+            "premises": [
+              [
+                "87",
+                32,
+                40,
+                12
+              ],
+              [
+                "12",
+                12,
+                13,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=9: 87+39=126 +G0=4:40 +9(4,9)=175. risk 12+12+5+10=39 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,14,4,9} value 175 risk 39 invalid"
+            ],
+            "premises": [
+              [
+                "87",
+                39,
+                40,
+                9
+              ],
+              [
+                "12",
+                12,
+                5,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "So best 169.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "best 169"
+            ],
+            "premises": [
+              [
+                "169"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Case A best so far 202 ({2,10,4,5}).",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "Case A best 202 {2,10,4,5}"
+            ],
+            "premises": [
+              [
+                "202"
+              ],
+              [
+                "{2,10,4,5}"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40 =132. bonuses (1,4) no, (4,9) no. total 132. risk:2(12)+5(9)+13(13)+4(10)=44 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,5,13} value 132 risk 44 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                132
+              ],
+              [
+                "12",
+                9,
+                13,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22 +(2,8)17 =131. risk 12+9+13+6=40 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,8,5,13} value 131 risk 40 invalid"
+            ],
+            "premises": [
+              [
+                "22",
+                17,
+                131
+              ],
+              [
+                "12",
+                9,
+                13,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40+9=145. risk 12+9+5+10=36 >35 invalid (just over).",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,5,9} value 145 risk 36 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                9,
+                145
+              ],
+              [
+                "12",
+                9,
+                5,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22+17=135. risk 12+9+5+6=32 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,8,5,9} value 135 risk 32"
+            ],
+            "premises": [
+              [
+                "22",
+                17,
+                135
+              ],
+              [
+                "12",
+                9,
+                5,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40+12(1,4)=141. risk 12+9+13+10=44 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,5,1} value 141 risk 44 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                12,
+                141
+              ],
+              [
+                "12",
+                9,
+                13,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22+17=128. risk 12+9+13+6=40 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,8,5,1} value 128 risk 40 invalid"
+            ],
+            "premises": [
+              [
+                "22",
+                17,
+                128
+              ],
+              [
+                "12",
+                9,
+                13,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4: +40 +12(1,4)+9(4,9)=132. risk 12+5+13+10=40 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,9,1} value 132 risk 40 invalid"
+            ],
+            "premises": [
+              [
+                "40",
+                12,
+                9,
+                132
+              ],
+              [
+                "12",
+                5,
+                13,
+                10
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=8: +22+17=110. risk 12+5+13+6=36 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,8,9,1} value 110 risk 36 invalid"
+            ],
+            "premises": [
+              [
+                "22",
+                17,
+                110
+              ],
+              [
+                "12",
+                5,
+                13,
+                6
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4:+40+12=105.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,13,1} value 105"
+            ],
+            "premises": [
+              [
+                "40",
+                12,
+                105
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G0=4:+40+9=109.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,9,13} value 109"
+            ],
+            "premises": [
+              [
+                "40",
+                9,
+                109
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "Case B best = 135 ({2,8,5,9}). Others lower.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "Case B best 135 {2,8,5,9}"
+            ],
+            "premises": [
+              [
+                "135"
+              ],
+              [
+                "{2,8,5,9}"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "G1=5: +57 =119 + (2,8)17 =136. risk: 12+10+6+9=37 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,8,5} value 136 risk 37 invalid"
+            ],
+            "premises": [
+              [
+                "57",
+                119,
+                17,
+                136
+              ],
+              [
+                "12",
+                10,
+                6,
+                9
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=1: +32=94 +17 =111 + (1,4)12 =123. risk 12+10+6+13=41 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,8,1} value 123 risk 41 invalid"
+            ],
+            "premises": [
+              [
+                "32",
+                94,
+                17,
+                111,
+                12,
+                123
+              ],
+              [
+                "12",
+                10,
+                6,
+                13
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=9: +39=101 +17 + (4,9)9 =127. risk 12+10+6+5=33 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,8,9} value 127 risk 33"
+            ],
+            "premises": [
+              [
+                "39",
+                101,
+                17,
+                9,
+                127
+              ],
+              [
+                "12",
+                10,
+                6,
+                5
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=13:+21=83+17=100. risk 12+10+6+13=41 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,4,8,13} value 100 risk 41 invalid"
+            ],
+            "premises": [
+              [
+                "21",
+                83,
+                17,
+                100
+              ],
+              [
+                "12",
+                10,
+                6,
+                13
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=5:+57=112. risk 12+2+10+9=33 OK \u2192112.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,4,5} value 112 risk 33"
+            ],
+            "premises": [
+              [
+                "57",
+                112
+              ],
+              [
+                "12",
+                2,
+                10,
+                9
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=1:+32+(1,4)12=99. risk 12+2+10+13=37 invalid.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,4,1} value 99 risk 37 invalid"
+            ],
+            "premises": [
+              [
+                "32",
+                12,
+                99
+              ],
+              [
+                "12",
+                2,
+                10,
+                13
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=9:+39+(4,9)9=103. risk 12+2+10+5=29 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,4,9} value 103 risk 29"
+            ],
+            "premises": [
+              [
+                "39",
+                9,
+                103
+              ],
+              [
+                "12",
+                2,
+                10,
+                5
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=5:+57=111. risk 12+2+6+9=29 OK.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,8,5} value 111 risk 29"
+            ],
+            "premises": [
+              [
+                "57",
+                111
+              ],
+              [
+                "12",
+                2,
+                6,
+                9
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=1:+32=86.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,8,1} value 86"
+            ],
+            "premises": [
+              [
+                "32",
+                86
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=9:+39=93.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,8,9} value 93"
+            ],
+            "premises": [
+              [
+                "39",
+                93
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "G1=13:+21=75.",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,0,8,13} value 75"
+            ],
+            "premises": [
+              [
+                "21",
+                75
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        },
+        {
+          "proposal": {
+            "quote": "Case C best = 136 for {2,4,8,5}? Wait that combo risk 37 invalid. Next 127 {2,4,8,9}. Then 112 {2,0,4,5}, etc.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "Case C best 127 {2,4,8,9}"
+            ],
+            "premises": [
+              [
+                "136",
+                "{2,4,8,5}"
+              ],
+              [
+                "risk 37 invalid"
+              ],
+              [
+                "127",
+                "{2,4,8,9}"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "So overall best so far: 202 from {2,10,4,5}.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "overall best 202 {2,10,4,5}"
+            ],
+            "premises": [
+              [
+                "202"
+              ],
+              [
+                "{2,10,4,5}"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Let me double-check {2,10,4,5}: values 49+56+40+57 = 202. Bonuses: pairs among {2,10,4,5}: (2,10)? not listed. (2,4) no. (2,5) no. (10,4) no. (10,5) no. (4,5) no. So no bonuses. Total 202. Risk 12+4+10+9=35 \u226435. Weight 5+5+5+12=27 \u226457. Groups: 2\u2192g2,10\u2192g2,4\u2192g0,5\u2192g1. Groups {0,1,2} = 3 groups \u2713. Required 2 \u2713. Excluded 12 not included \u2713.",
+            "occurrence": 0,
+            "category": "positive_derivation",
+            "atom": [
+              "{2,10,4,5} feasible value 202"
+            ],
+            "premises": [
+              [
+                "49",
+                56,
+                40,
+                57
+              ],
+              [
+                "total 202"
+              ],
+              [
+                "risk 35"
+              ],
+              [
+                "weight 27"
+              ],
+              [
+                "groups {0,1,2}"
+              ],
+              [
+                "required 2"
+              ],
+              [
+                "excluded 12 not included"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "Consider {2,10,4,5} =202. Could {1,4,10,5}? includes no 2 required. Must include 2.",
+            "occurrence": 0,
+            "category": "absence_recheck",
+            "atom": [
+              "{1,4,10,5} invalid"
+            ],
+            "premises": [
+              [
+                "{1,4,10,5}"
+              ],
+              [
+                "no 2"
+              ]
+            ]
+          },
+          "failure": "unknown fixture atom"
+        },
+        {
+          "proposal": {
+            "quote": "{2,10,8,5}? =49+56+22+57=184 + (2,8)17 =201,",
+            "occurrence": 0,
+            "category": "arithmetic",
+            "atom": [
+              "{2,10,8,5} value 201"
+            ],
+            "premises": [
+              [
+                "49",
+                56,
+                22,
+                57,
+                184,
+                17,
+                201
+              ]
+            ]
+          },
+          "failure": "nonsemantic category must not assign atoms"
+        }
+      ],
+      "unavailable": null,
+      "thinkingSha256": "41b47f36abfcacc3dc0c87f1a548403f412b66cc6de0af34b34f9933c4bae7c1",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            9716
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 9716,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 0,
+      "originalCoverageFailure": "semantic line coverage",
+      "accepted": [
+        {
+          "quote": "Item 0: paths [0,5] verified, [20,200] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            0
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              20,
+              200
+            ]
+          ],
+          "span": [
+            1110,
+            1162
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 1: [2,5] verified, [21,201] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            1
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              21,
+              201
+            ]
+          ],
+          "span": [
+            1163,
+            1209
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 2: [6,5] verified, [22,202] absent \u2192 NOT selectable",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "ready",
+            2
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              22,
+              202
+            ]
+          ],
+          "span": [
+            1210,
+            1266
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 3: [0,5] verified, [23,203] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            3
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              23,
+              203
+            ]
+          ],
+          "span": [
+            1267,
+            1313
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 4: [2,5] verified, [24,204] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            4
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              24,
+              204
+            ]
+          ],
+          "span": [
+            1314,
+            1360
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 5: [6,5] verified, [25,205] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            5
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              25,
+              205
+            ]
+          ],
+          "span": [
+            1361,
+            1407
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 6: [0,5] verified, [26,206] absent \u2192 NOT",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "ready",
+            6
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              26,
+              206
+            ]
+          ],
+          "span": [
+            1408,
+            1453
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 7: [2,5] verified, [27,207] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            7
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              27,
+              207
+            ]
+          ],
+          "span": [
+            1454,
+            1500
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 8: [6,5] verified, [28,208] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            8
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              28,
+              208
+            ]
+          ],
+          "span": [
+            1501,
+            1547
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 9: [0,5] verified, [29,209] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            9
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              29,
+              209
+            ]
+          ],
+          "span": [
+            1548,
+            1594
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 10: [2,5] verified, [30,210] absent \u2192 NOT",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "ready",
+            10
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              30,
+              210
+            ]
+          ],
+          "span": [
+            1595,
+            1641
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 11: [6,5] verified, [31,211] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            11
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              31,
+              211
+            ]
+          ],
+          "span": [
+            1642,
+            1689
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 12: [0,5] verified, [32,212] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            12
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              32,
+              212
+            ]
+          ],
+          "span": [
+            1690,
+            1737
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 13: [2,5] verified, [33,213] verified \u2192 OK",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            13
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              33,
+              213
+            ]
+          ],
+          "span": [
+            1738,
+            1785
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 14: [6,5] verified, [34,214] absent \u2192 NOT",
+          "occurrence": 0,
+          "category": "absence_recheck",
+          "atom": [
+            "ready",
+            14
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              34,
+              214
+            ]
+          ],
+          "span": [
+            1786,
+            1832
+          ],
+          "qualifiedPositive": false,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": false,
+          "absenceArgumentCompletenessVerified": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        },
+        {
+          "quote": "Item 15: [0,5] verified, [35,215] verified \u2192 OK but excluded",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            15
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              35,
+              215
+            ]
+          ],
+          "span": [
+            1833,
+            1893
+          ],
+          "qualifiedPositive": true,
+          "repeatFact": false,
+          "exactRepeat": false,
+          "newConsequence": true,
+          "suppliedPremiseRederived": false,
+          "turn": 0,
+          "crossBranchRepeat": false
+        }
+      ],
+      "rejected": [],
+      "unavailable": null,
+      "thinkingSha256": "bf3974eee9363f38f9b1f4e9768aea77c0b56899eb73559ba7991850cb47d9e2",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            1110
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1110,
+            1162
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1162,
+            1163
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1163,
+            1209
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1209,
+            1210
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1210,
+            1266
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1266,
+            1267
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1267,
+            1313
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1313,
+            1314
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1314,
+            1360
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1360,
+            1361
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1361,
+            1407
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1407,
+            1408
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1408,
+            1453
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1453,
+            1454
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1454,
+            1500
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1500,
+            1501
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1501,
+            1547
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1547,
+            1548
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1548,
+            1594
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1594,
+            1595
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1595,
+            1641
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1641,
+            1642
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1642,
+            1689
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1689,
+            1690
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1690,
+            1737
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1737,
+            1738
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1738,
+            1785
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1785,
+            1786
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1786,
+            1832
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1832,
+            1833
+          ],
+          "category": "unreviewed_semantics"
+        },
+        {
+          "span": [
+            1833,
+            1893
+          ],
+          "category": "admitted_atomic_proposal"
+        },
+        {
+          "span": [
+            1893,
+            19142
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 19142,
+      "admittedQuoteCharacters": 768
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 1,
+      "originalCoverageFailure": "semantic provider incomplete or failed",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "incomplete annotation; no JSON salvage",
+      "thinkingSha256": "1a11f417a9f8f0739660f4f1c7112797a60e0fabb7af4ba3e3492580f2bbd26a",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            24678
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 24678,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "turn": 2,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "40ef734c53032bdeacf78c56b1fb0ba2a0449fd47b4576e9ab39a16334fd80f0",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            12841
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 12841,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 0,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "29403fbf4731ca261b799a18d477edabcaea63ece8fb0ab6d0eeed5290518768",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            23030
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 23030,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 1,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "ffa0a6fdac391683a789af727f87cd8ef5c787cd02e533a122990b083a5d4f0e",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            16725
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 16725,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "turn": 2,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "894c641db9a8d35e6f8f5d15610792b5e1465b8bb92f2a9d07a8109f3d2df742",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            24093
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 24093,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "turn": 0,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "ec554842227ecb5312bc99592c8266fa3fb4c9881b13b3009c7cfc07f221e23e",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            39667
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 39667,
+      "admittedQuoteCharacters": 0
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "turn": 1,
+      "originalCoverageFailure": "semantic call bound; unreviewed trace retained",
+      "accepted": [],
+      "rejected": [],
+      "unavailable": "not reviewed under frozen annotation call bound",
+      "thinkingSha256": "4e796e6eef1058fb6afddd4a60c3c0bc1f1353575bc631d11ce67043b9a541bf",
+      "characterPartition": [
+        {
+          "span": [
+            0,
+            37179
+          ],
+          "category": "unreviewed_semantics"
+        }
+      ],
+      "totalCharacters": 37179,
+      "admittedQuoteCharacters": 0
+    }
+  ]
+}

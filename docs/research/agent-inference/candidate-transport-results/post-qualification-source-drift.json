@@ -1,0 +1,12 @@
+{
+  "failure": "source changed after successful qualification",
+  "head": "7bb4ba0cfe372357d5a30cef644407fb77582a57",
+  "drift": [
+    {
+      "file": "candidate/proof-frame.ss",
+      "captured": "871ca6b2253eeb257371cff0fc081fdc16b6f5b469b5cb3c75d040135d87456e",
+      "live": "e2c4a1db954ff86dba96a086fc3aa87c2fd8f5f4e21bcc92dfab9614f4e9571b"
+    }
+  ],
+  "currentSourceAdmission": false
+}

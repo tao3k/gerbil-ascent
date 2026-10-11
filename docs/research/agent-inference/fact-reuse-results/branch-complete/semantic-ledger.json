@@ -1,0 +1,320 @@
+[
+  {
+    "case": 0,
+    "arm": "baseline",
+    "turn": 0,
+    "thinkingSha256": "bc4aa9b14e3f325817cfdf044ec4ce5c69726e3b65a37bb086aecdae53909511",
+    "modelCalled": true,
+    "grossTokens": 23035,
+    "failure": "semantic schema",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 40743,
+    "usage": {
+      "input_tokens": 20153,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 2882,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 23035
+    }
+  },
+  {
+    "case": 0,
+    "arm": "baseline",
+    "turn": 1,
+    "thinkingSha256": "8d709c204c23d898341ed39e63a2b76cbd6b8471a1f7dff16b35da201e4473ba",
+    "modelCalled": true,
+    "grossTokens": 23585,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 40609,
+    "usage": {
+      "input_tokens": 17960,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 5625,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 23585
+    }
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "turn": 0,
+    "thinkingSha256": "de0c73530b742cf590d44d17c56dd8e48c6108c176e2875a54ec6b348b31cf1b",
+    "modelCalled": true,
+    "grossTokens": 17703,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 19672,
+    "usage": {
+      "input_tokens": 12206,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 5497,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 17703
+    }
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "turn": 1,
+    "thinkingSha256": "8888a7693c18db034b13634f05a744c5ce5f08111581531603f6f8dfdf3bdb32",
+    "modelCalled": true,
+    "grossTokens": 14670,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 18132,
+    "usage": {
+      "input_tokens": 11594,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 3076,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 14670
+    }
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "turn": 2,
+    "thinkingSha256": "ad10f3336d885c97f50c62789184974af57b1df98ff8a8adf07353e38e334d75",
+    "modelCalled": true,
+    "grossTokens": 19022,
+    "failure": "Expecting ',' delimiter: line 1 column 5863 (char 5862)",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 21770,
+    "usage": {
+      "input_tokens": 14008,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 5014,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 19022
+    }
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "turn": 0,
+    "thinkingSha256": "882c5204c82c043bb4887cbfeb38557468d85ef11b6b74435e55727ad321c337",
+    "modelCalled": true,
+    "grossTokens": 22014,
+    "failure": "semantic provider incomplete or failed",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 22002,
+    "usage": {
+      "input_tokens": 13822,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 8192,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 22014
+    }
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "turn": 1,
+    "thinkingSha256": "73fdb610634c6da0fcc5c3e5c8e92b032983aa528ea303ad9ac30540e021c690",
+    "modelCalled": true,
+    "grossTokens": 16975,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 20212,
+    "usage": {
+      "input_tokens": 12100,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 4875,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 16975
+    }
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "turn": 2,
+    "thinkingSha256": "41b47f36abfcacc3dc0c87f1a548403f412b66cc6de0af34b34f9933c4bae7c1",
+    "modelCalled": true,
+    "grossTokens": 14972,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 9716,
+    "usage": {
+      "input_tokens": 6895,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 8077,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 14972
+    }
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "turn": 0,
+    "thinkingSha256": "bf3974eee9363f38f9b1f4e9768aea77c0b56899eb73559ba7991850cb47d9e2",
+    "modelCalled": true,
+    "grossTokens": 13906,
+    "failure": "semantic line coverage",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 19142,
+    "usage": {
+      "input_tokens": 10509,
+      "input_tokens_details": {
+        "cached_tokens": 640
+      },
+      "output_tokens": 3397,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 13906
+    }
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "turn": 1,
+    "thinkingSha256": "1a11f417a9f8f0739660f4f1c7112797a60e0fabb7af4ba3e3492580f2bbd26a",
+    "modelCalled": true,
+    "grossTokens": 22613,
+    "failure": "semantic provider incomplete or failed",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 24678,
+    "usage": {
+      "input_tokens": 14421,
+      "input_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "output_tokens": 8192,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 22613
+    }
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "turn": 2,
+    "thinkingSha256": "40ef734c53032bdeacf78c56b1fb0ba2a0449fd47b4576e9ab39a16334fd80f0",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 12841
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "turn": 0,
+    "thinkingSha256": "29403fbf4731ca261b799a18d477edabcaea63ece8fb0ab6d0eeed5290518768",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 23030
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "turn": 1,
+    "thinkingSha256": "ffa0a6fdac391683a789af727f87cd8ef5c787cd02e533a122990b083a5d4f0e",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 16725
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "turn": 2,
+    "thinkingSha256": "894c641db9a8d35e6f8f5d15610792b5e1465b8bb92f2a9d07a8109f3d2df742",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 24093
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "turn": 0,
+    "thinkingSha256": "ec554842227ecb5312bc99592c8266fa3fb4c9881b13b3009c7cfc07f221e23e",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 39667
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "turn": 1,
+    "thinkingSha256": "4e796e6eef1058fb6afddd4a60c3c0bc1f1353575bc631d11ce67043b9a541bf",
+    "modelCalled": false,
+    "grossTokens": null,
+    "failure": "semantic call bound; unreviewed trace retained",
+    "accepted": [],
+    "rejected": [],
+    "lineProposals": [],
+    "characters": 37179
+  }
+]

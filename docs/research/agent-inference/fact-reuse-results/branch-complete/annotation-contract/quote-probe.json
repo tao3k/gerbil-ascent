@@ -1,0 +1,857 @@
+[
+  {
+    "case": 0,
+    "arm": "facts",
+    "turn": 1,
+    "thinkingSha256": "8888a7693c18db034b13634f05a744c5ce5f08111581531603f6f8dfdf3bdb32",
+    "modelCalled": true,
+    "grossTokens": 12380,
+    "failure": null,
+    "accepted": [
+      {
+        "quote": "Path 0\u21925: 0\u21921\u21922\u21923\u21924\u21925 exists.",
+        "occurrence": 0,
+        "category": "premise_consumed",
+        "atom": [
+          "path",
+          0,
+          5
+        ],
+        "premises": [
+          [
+            "edge",
+            0,
+            1
+          ],
+          [
+            "edge",
+            1,
+            2
+          ],
+          [
+            "edge",
+            2,
+            3
+          ],
+          [
+            "edge",
+            3,
+            4
+          ],
+          [
+            "edge",
+            4,
+            5
+          ]
+        ],
+        "span": [
+          773,
+          802
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "Path 20\u2192200: 20\u2192100\u2192200 exists.",
+        "occurrence": 0,
+        "category": "premise_consumed",
+        "atom": [
+          "path",
+          20,
+          200
+        ],
+        "premises": [
+          [
+            "edge",
+            20,
+            100
+          ],
+          [
+            "edge",
+            100,
+            200
+          ]
+        ],
+        "span": [
+          803,
+          834
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "21\u2192101\u2192201 exists.",
+        "occurrence": 0,
+        "category": "premise_consumed",
+        "atom": [
+          "path",
+          21,
+          201
+        ],
+        "premises": [
+          [
+            "edge",
+            21,
+            101
+          ],
+          [
+            "edge",
+            101,
+            201
+          ]
+        ],
+        "span": [
+          880,
+          898
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "6\u21927\u21925 exists.",
+        "occurrence": 0,
+        "category": "premise_consumed",
+        "atom": [
+          "path",
+          6,
+          5
+        ],
+        "premises": [
+          [
+            "edge",
+            6,
+            7
+          ],
+          [
+            "edge",
+            7,
+            5
+          ]
+        ],
+        "span": [
+          928,
+          941
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "23\u2192203? Edges: 203\u2192103\u219223 (reverse direction). So path from 23 to 203 doesn't exist \u2192 finite-absent.",
+        "occurrence": 0,
+        "category": "absence_recheck",
+        "atom": [
+          "path",
+          23,
+          203
+        ],
+        "premises": [],
+        "span": [
+          995,
+          1095
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "absenceArgumentCompletenessVerified": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "27\u2192207? Edges: 207\u2192107\u219227. So 27 to 207 absent \u2192 finite-absent.",
+        "occurrence": 0,
+        "category": "absence_recheck",
+        "atom": [
+          "path",
+          27,
+          207
+        ],
+        "premises": [],
+        "span": [
+          1248,
+          1311
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "absenceArgumentCompletenessVerified": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "31\u2192211? Edges: 211\u2192111\u219231. Absent \u2192 finite-absent.",
+        "occurrence": 0,
+        "category": "absence_recheck",
+        "atom": [
+          "path",
+          31,
+          211
+        ],
+        "premises": [],
+        "span": [
+          1466,
+          1516
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "absenceArgumentCompletenessVerified": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "35\u2192215? Edges: 215\u2192115\u219235. Absent \u2192 finite-absent.",
+        "occurrence": 0,
+        "category": "absence_recheck",
+        "atom": [
+          "path",
+          35,
+          215
+        ],
+        "premises": [],
+        "span": [
+          1673,
+          1723
+        ],
+        "qualifiedPositive": false,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": false,
+        "absenceArgumentCompletenessVerified": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "Item 5 paths: [6,5] and [25,205]. Both verified. Yes eligible.",
+        "occurrence": 0,
+        "category": "positive_derivation",
+        "atom": [
+          "ready",
+          5
+        ],
+        "premises": [
+          [
+            "path",
+            6,
+            5
+          ],
+          [
+            "path",
+            25,
+            205
+          ]
+        ],
+        "span": [
+          16137,
+          16199
+        ],
+        "qualifiedPositive": true,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": true,
+        "suppliedPremiseRederived": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "Item 10: paths [2,5] and [30,210]. Both verified. Eligible.",
+        "occurrence": 0,
+        "category": "positive_derivation",
+        "atom": [
+          "ready",
+          10
+        ],
+        "premises": [
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            30,
+            210
+          ]
+        ],
+        "span": [
+          16201,
+          16260
+        ],
+        "qualifiedPositive": true,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": true,
+        "suppliedPremiseRederived": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "Item 12: paths [0,5] and [32,212]. Both verified. Eligible.",
+        "occurrence": 0,
+        "category": "positive_derivation",
+        "atom": [
+          "ready",
+          12
+        ],
+        "premises": [
+          [
+            "path",
+            0,
+            5
+          ],
+          [
+            "path",
+            32,
+            212
+          ]
+        ],
+        "span": [
+          16262,
+          16321
+        ],
+        "qualifiedPositive": true,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": true,
+        "suppliedPremiseRederived": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      },
+      {
+        "quote": "Item 1: paths [2,5] and [21,201]. Both verified. Required.",
+        "occurrence": 0,
+        "category": "positive_derivation",
+        "atom": [
+          "ready",
+          1
+        ],
+        "premises": [
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            21,
+            201
+          ]
+        ],
+        "span": [
+          16323,
+          16381
+        ],
+        "qualifiedPositive": true,
+        "repeatFact": false,
+        "exactRepeat": false,
+        "newConsequence": true,
+        "suppliedPremiseRederived": false,
+        "turn": 1,
+        "step": 0,
+        "crossBranchRepeat": false
+      }
+    ],
+    "rejected": [
+      {
+        "proposal": {
+          "quote": "2\u21923\u21924\u21925 exists.",
+          "occurrence": 0,
+          "category": "premise_consumed",
+          "atom": [
+            "path",
+            2,
+            5
+          ],
+          "premises": [
+            [
+              "edge",
+              2,
+              3
+            ],
+            [
+              "edge",
+              3,
+              4
+            ],
+            [
+              "edge",
+              4,
+              5
+            ]
+          ]
+        },
+        "failure": "overlapping or unordered quote"
+      },
+      {
+        "proposal": {
+          "quote": "22\u2192102\u2192202.",
+          "occurrence": 0,
+          "category": "premise_consumed",
+          "atom": [
+            "path",
+            22,
+            202
+          ],
+          "premises": [
+            [
+              "edge",
+              22,
+              102
+            ],
+            [
+              "edge",
+              102,
+              202
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "[\"finite-absent\",false,[\"path\",23,203],[]] - item3 path2 absent",
+          "occurrence": 0,
+          "category": "absent_premise_consumed",
+          "atom": [
+            "path",
+            23,
+            203
+          ],
+          "premises": []
+        },
+        "failure": "negative use must explicitly reference supplied evidence, not invent a proof"
+      },
+      {
+        "proposal": {
+          "quote": "[\"finite-absent\",false,[\"path\",27,207],[]] - item7",
+          "occurrence": 0,
+          "category": "absent_premise_consumed",
+          "atom": [
+            "path",
+            27,
+            207
+          ],
+          "premises": []
+        },
+        "failure": "negative use must explicitly reference supplied evidence, not invent a proof"
+      },
+      {
+        "proposal": {
+          "quote": "[\"finite-absent\",false,[\"path\",31,211],[]] - item11",
+          "occurrence": 0,
+          "category": "absent_premise_consumed",
+          "atom": [
+            "path",
+            31,
+            211
+          ],
+          "premises": []
+        },
+        "failure": "negative use must explicitly reference supplied evidence, not invent a proof"
+      },
+      {
+        "proposal": {
+          "quote": "[\"finite-absent\",false,[\"path\",35,215],[]] - item15",
+          "occurrence": 0,
+          "category": "absent_premise_consumed",
+          "atom": [
+            "path",
+            35,
+            215
+          ],
+          "premises": []
+        },
+        "failure": "negative use must explicitly reference supplied evidence, not invent a proof"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            0
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              20,
+              200
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            1
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              21,
+              201
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            2
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              22,
+              202
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            5
+          ],
+          "premises": [
+            [
+              "path",
+              6,
+              5
+            ],
+            [
+              "path",
+              25,
+              205
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            6
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              26,
+              206
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            10
+          ],
+          "premises": [
+            [
+              "path",
+              2,
+              5
+            ],
+            [
+              "path",
+              30,
+              210
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      },
+      {
+        "proposal": {
+          "quote": "So items with both paths verified: 0,1,2,4,5,6,8,9,10,12,13,14.",
+          "occurrence": 0,
+          "category": "positive_derivation",
+          "atom": [
+            "ready",
+            12
+          ],
+          "premises": [
+            [
+              "path",
+              0,
+              5
+            ],
+            [
+              "path",
+              32,
+              212
+            ]
+          ]
+        },
+        "failure": "endpoints absent from quote"
+      }
+    ],
+    "lineProposals": [],
+    "characters": 18132,
+    "usage": {
+      "input_tokens": 10483,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 1897,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 12380
+    },
+    "characterPartition": [
+      {
+        "span": [
+          0,
+          773
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          773,
+          802
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          802,
+          803
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          803,
+          834
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          834,
+          880
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          880,
+          898
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          898,
+          928
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          928,
+          941
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          941,
+          995
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          995,
+          1095
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          1095,
+          1248
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          1248,
+          1311
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          1311,
+          1466
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          1466,
+          1516
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          1516,
+          1673
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          1673,
+          1723
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          1723,
+          16137
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          16137,
+          16199
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          16199,
+          16201
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          16201,
+          16260
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          16260,
+          16262
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          16262,
+          16321
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          16321,
+          16323
+        ],
+        "category": "unreviewed_semantics"
+      },
+      {
+        "span": [
+          16323,
+          16381
+        ],
+        "category": "admitted_quote_proposal"
+      },
+      {
+        "span": [
+          16381,
+          18132
+        ],
+        "category": "unreviewed_semantics"
+      }
+    ],
+    "unreviewedCharacters": 17540,
+    "fullSemanticRecallCertified": false
+  }
+]

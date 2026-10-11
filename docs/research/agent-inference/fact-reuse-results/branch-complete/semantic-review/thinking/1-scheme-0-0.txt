@@ -1,0 +1,350 @@
+Let me parse this problem carefully.
+
+We need to choose four item IDs maximizing sum of values plus bonuses for selected pairs.
+
+Constraints:
+- Every selected item must have both of its directed paths. This relates to the native evidence: some paths are "verified" (present) and some are "finite-absent" (absent). An item's "paths" field lists two paths, e.g., item 0 paths [[0,5],[20,200]]. Both paths must be verified/present for the item to be selectable.
+
+Let me check item paths against the evidence.
+
+Evidence conclusions:
+- ["path",0,5] verified
+- ["path",20,200] verified
+- ["path",2,5] verified
+- ["path",21,201] verified
+- ["path",6,5] verified
+- ["path",22,202] finite-absent (false)
+- ["path",23,203] verified
+- ["path",24,204] verified
+- ["path",25,205] verified
+- ["path",26,206] finite-absent
+- ["path",27,207] verified
+- ["path",28,208] verified
+- ["path",29,209] verified
+- ["path",30,210] finite-absent
+- ["path",31,211] verified
+- ["path",32,212] verified
+- ["path",33,213] verified
+- ["path",34,214] finite-absent
+- ["path",35,215] verified
+
+Now each item has two paths. Let's list items:
+
+Item 0: paths [0,5] verified, [20,200] verified → OK
+Item 1: [2,5] verified, [21,201] verified → OK
+Item 2: [6,5] verified, [22,202] absent → NOT selectable
+Item 3: [0,5] verified, [23,203] verified → OK
+Item 4: [2,5] verified, [24,204] verified → OK
+Item 5: [6,5] verified, [25,205] verified → OK
+Item 6: [0,5] verified, [26,206] absent → NOT
+Item 7: [2,5] verified, [27,207] verified → OK
+Item 8: [6,5] verified, [28,208] verified → OK
+Item 9: [0,5] verified, [29,209] verified → OK
+Item 10: [2,5] verified, [30,210] absent → NOT
+Item 11: [6,5] verified, [31,211] verified → OK
+Item 12: [0,5] verified, [32,212] verified → OK
+Item 13: [2,5] verified, [33,213] verified → OK
+Item 14: [6,5] verified, [34,214] absent → NOT
+Item 15: [0,5] verified, [35,215] verified → OK but excluded
+
+Wait, but the item's paths reference edges? Actually item paths are like [[0,5],[20,200]] which match evidence paths. So selectable items: 0,1,3,4,5,7,8,9,11,12,13. (excluding 15 as excluded item, and 2,6,10,14 absent).
+
+Branch: id 0, weightLimit 49, riskLimit 29, required item 0, excluded item 15, start [0,5,7,12].
+
+"include at least three groups" - groups are 0,1,2,3.
+
+Start [0,5,7,12]? These might be initially selected/forced items? Hmm "start" could mean the initial set of selected items. Actually the branch has "start":[0,5,7,12]. Maybe these are already selected items we start with. But required is 0 and excluded 15.
+
+Hmm, the task: "Choose four item IDs maximizing sum of values plus bonuses for selected pairs. Every selected item must have both of its directed paths. Respect this branch's weight and risk limits, include at least three groups, include its required item, and omit its excluded item."
+
+So we need to select exactly four items? "Choose four item IDs". Yes, choose 4.
+
+Constraints: weight ≤ 49, risk ≤ 29, at least three distinct groups among selected, must include item 0 (required), must not include item 15.
+
+"start":[0,5,7,12] might be a hint or the current partial selection... Actually maybe start is a set of items already fixed. Let me consider they're fixed as part of selection? Then we'd need four total, with 0,5,7,12 already... that's 4 items already. Hmm.
+
+Let me just treat start as given initial selection maybe. But then required 0 already included, excluded 15 not. Let's evaluate start [0,5,7,12]: groups 0,1,3,0 → groups {0,1,3} =3 groups OK. Weight: item0=8, item5=15, item7=15, item12=8 =46 ≤49. Risk: 7+2+12+7=28 ≤29. Value: 28+27+18+17=90. Bonuses: pairs among {0,5,7,12}: check bonuses list: [0,7]=14, others: [0,14]no,[1,4]no,[1,11]no,[2,8]no,[2,15]no,[3,5]no,[3,12]no,[4,9]no,[5,6]no,[5,13]no,[6,10]no,[7,14]no,[8,11]no,[9,15]no,[10,12]no,[12,13]no. So only [0,7]=14. Total 90+14=104.
+
+But maybe start isn't forced; it's just a hint of where search begins. Let's consider we can choose any 4 items.
+
+Let me just do optimization. Select 4 items from allowed set S = {0,1,3,4,5,7,8,9,11,12,13} (15 excluded; 2,6,10,14 absent paths).
+
+Wait, must double-check item 3: paths [0,5] and [23,203], both verified. Item 3 group 3, weight 15, risk 4, value 36.
+
+Let's list allowed items with (group, weight, risk, value):
+0: g0, w8, r7, v28
+1: g1, w15, r6, v45
+3: g3, w15, r4, v36
+4: g0, w8, r3, v53
+5: g1, w15, r2, v27
+7: g3, w15, r12, v18
+8: g0, w8, r11, v35
+9: g1, w15, r10, v52
+11: g3, w15, r8, v43
+12: g0, w8, r7, v17
+13: g1, w15, r6, v34
+
+Bonuses (pairs):
+0-7:14
+0-14:10 (14 not selectable)
+1-4:12
+1-11:8
+2-8:17 (2 not selectable)
+2-15:13
+3-5:15
+3-12:11
+4-9:9
+5-6:7
+5-13:14
+6-10:12
+7-14:17
+8-11:15
+9-15:9
+10-12:7
+12-13:10
+
+Now we want 4 items, weight ≤49, risk ≤29, groups ≥3, include 0, exclude 15.
+
+Total weight limit 49 is fairly tight. Items in group 0 have weight 8; groups 1&3 have weight 15.
+
+To have ≥3 groups with 4 items: groups from {0,1,3} (group 2 items are absent: items 2,6,10,14 all absent). Wait group 2 items: 2,6,10,14 - all have absent paths! So group 2 cannot be included at all. So only groups 0,1,3 available. Need at least 3 groups → must include at least one item from each of groups 0,1,3.
+
+Group 0 items: 0(required),4,8,12 (weight 8 each).
+Group 1 items: 1,5,9,13 (weight 15 each).
+Group 3 items: 3,7,11 (weight 15 each).
+
+4 items, need all 3 groups. So either (2 from group0, 1 from g1, 1 from g3) or (1 from g0, 2 from g1, 1 from g3) etc.
+
+Weight: group0 items w8, group1 w15, group3 w15.
+
+Option A: 2 g0 + 1 g1 + 1 g3: weight = 16+15+15=46 ≤49. OK.
+Option B: 1 g0 + 2 g1 + 1 g3: weight = 8+30+15=53 >49. Not allowed.
+Option C: 1 g0 + 1 g1 + 2 g3: same 53 >49. Not allowed.
+Option D: 1 g0+1 g1+1 g3 +... we need 4 items so one more; combos above.
+
+Actually could also be 2 g0 + 2 g1 (groups {0,1} only 2 groups) not allowed. 2 g0+2 g3 (2 groups) no. So must be exactly one of each group plus an extra group-0 item. So selection: exactly 2 items from group 0 (including required item 0), 1 from group1, 1 from group3.
+
+Wait could also be 2 g0 +1 g1+1 g3 = groups {0,1,3} three groups. Yes that's option A. Or 3 g0? weight 24, plus... need g1,g3 → total 5 items. No, only 4 items. 2 g0 +1 g1+1 g3 is the only group-distribution with 4 items and ≥3 groups (since groups only 3 available and weights constrain). Actually 2 g1+2 g3 = weight 60 no. So indeed exactly option A.
+
+So group0: item 0 plus one of {4,8,12}.
+Group1: one of {1,5,9,13}.
+Group3: one of {3,7,11}.
+
+Weight = 8+8+15+15 = 46 ≤49 always. Risk constraint: 29. Let's enumerate.
+
+Risk: g0 chosen: 0 r7, plus {4:3,8:11,12:7}. g1 {1:6,5:2,9:10,13:6}. g3 {3:4,7:12,11:8}.
+
+Risk total = r0(7) + r_g0extra + r_g1 + r_g3 ≤29.
+So r_extra + r_g1 + r_g3 ≤22.
+
+Max possible if 12(7),9(10),11(8)=25 >22. Need combos.
+
+Value = v0(28) + v_extra + v_g1 + v_g3 + bonuses among the 4 items.
+
+Bonuses relevant among selectable: 
+0-7:14 (0 and 7)
+1-4:12
+1-11:8
+3-5:15
+3-12:11
+4-9:9
+5-13:14
+8-11:15
+12-13:10
+(and 0-14,2-8,2-15,5-6,6-10,7-14,9-15 involve non-selectable.)
+
+Let's enumerate combos.
+
+Let me define candidates:
+g0 extra: 
+- 4: w8 r3 v53
+- 8: w8 r11 v35
+- 12: w8 r7 v17
+(0 fixed: r7 v28)
+
+g1: 
+- 1: r6 v45
+- 5: r2 v27
+- 9: r10 v52
+- 13: r6 v34
+
+g3:
+- 3: r4 v36
+- 7: r12 v18
+- 11: r8 v43
+
+Compute for each combination: value total + bonuses, risks.
+
+Base value v0=28.
+
+Combos (extra, g1, g3):
+
+Let me list bonuses per pair:
+If extra=4: bonus 1-4 if g1=1 (12). Also 4-9 if g1=9 (9).
+If extra=8: bonus 8-11 if g3=11 (15).
+If extra=12: bonus 3-12 if g3=3 (11); 12-13 if g1=13 (10).
+If g3=7: bonus 0-7 (14).
+If g1=1 and g3=11: bonus 1-11 (8).
+If g1=5 and g3=3: bonus 3-5 (15).
+If g1=5 and g3=... 5-13? that's g1=5,g1=13 both g1. 13 is g1. So 5-13 bonus only if both 5 and 13 selected but they're both group1, impossible (only one g1). So ignore.
+g1=13 and extra=12: bonus 12-13 (10).
+
+OK let's enumerate all 3*4*3=36 combos, filter risk ≤29, compute value.
+
+Actually risk: r0=7 + r_extra + r_g1 + r_g3 ≤29 → r_extra+r_g1+r_g3 ≤22.
+
+Let's go:
+
+extra=4 (r3):
+ g1=1 (r6): sum r=3+6=9, need r_g3 ≤13 → all g3 ok (4,12,8).
+   g3=3 (r4): total risk=7+3+6+4=20. value=28+53+45+36=162 + bonuses: extra4 with g1=1 →12; g3=3 with g1=1? 3-5 no (g1=5). g3=3 and extra=12? no. So bonus 12. total 174.
+   g3=7 (r12): risk=7+3+6+12=28 ≤29. value=28+53+45+18=144 + bonus 0-7=14 + 1-4=12 =170.
+   g3=11 (r8): risk=7+3+6+8=24. value=28+53+45+43=169 + bonuses: 1-4=12 (extra4,g1=1), 1-11=8 (g1=1,g3=11), 8-11 no. total 169+20=189.
+ g1=5 (r2): sum 3+2=5, all g3 ok.
+   g3=3: value=28+53+27+36=144 + bonuses: 3-5=15. Also 1-4 no. total 159.
+   g3=7: value=28+53+27+18=126 + 0-7=14 =140.
+   g3=11: value=28+53+27+43=151 + bonuses: none? 8-11 no, 1-11 no. =151.
+ g1=9 (r10): sum 3+10=13, need r_g3≤9 → g3=3(r4),g3=11(r8) ok; g3=7(r12) →13+12=25>22 no... wait sum r_extra+r_g1+r_g3 =3+10+12=25>22 not allowed. Actually total risk would be 7+25=32>29. Exclude.
+   g3=3: risk=7+3+10+4=24. value=28+53+52+36=169 + bonuses: 4-9=9 (extra4,g1=9); 3-9? no. total 178.
+   g3=11: risk=7+3+10+8=28. value=28+53+52+43=176 + bonus 4-9=9; 1-11 no. total 185.
+ g1=13 (r6): sum 3+6=9, all g3 ok.
+   g3=3: risk=20. value=28+53+34+36=151 + bonuses: 12-13? extra=4 not 12. 3-13? no. total 151.
+   g3=7: risk=28. value=28+53+34+18=133 + 0-7=14 =147.
+   g3=11: risk=24. value=28+53+34+43=158 + bonuses none =158.
+
+extra=8 (r11):
+ Need r_extra+r_g1+r_g3=11+r_g1+r_g3 ≤22 → r_g1+r_g3 ≤11.
+ g1=1(6): r_g3≤5 → g3=3(4) ok, 7(12)no, 11(8)no.
+   g3=3: risk=7+11+6+4=28. value=28+35+45+36=144 + bonuses: 8-3? no; 1-? 1-4 no (extra 8); 1-11 no. total 144.
+ g1=5(2): r_g3≤9 → g3=3(4),11(8) ok; 7 no.
+   g3=3: risk=7+11+2+4=24. value=28+35+27+36=126 + 3-5=15 =141.
+   g3=11: risk=28. value=28+35+27+43=133 + 8-11=15 =148.
+ g1=9(10): r_g3≤1 → none (min 4). no.
+ g1=13(6): r_g3≤5 → g3=3(4).
+   g3=3: risk=7+11+6+4=28. value=28+35+34+36=133 + bonuses none =133.
+
+extra=12 (r7):
+ Need 7+r_g1+r_g3 ≤22 → r_g1+r_g3≤15.
+ g1=1(6): r_g3≤9 → 3(4),11(8) ok;7 no.
+   g3=3: risk=7+7+6+4=24. value=28+17+45+36=126 + bonus 3-12=11 =137.
+   g3=11: risk=28. value=28+17+45+43=133 + bonus 3? no. 1-11=8? g1=1,g3=11 → bonus 1-11=8; also 3-12 no (g3=11). total 141.
+ g1=5(2): r_g3≤13 → all.
+   g3=3: risk=7+7+2+4=20. value=28+17+27+36=108 + 3-5=15 +3-12=11 =134.
+   g3=7: risk=28. value=28+17+27+18=90 +0-7=14 =104.
+   g3=11: risk=7+7+2+8=24. value=28+17+27+43=115 + none =115.
+ g1=9(10): r_g3≤5 → g3=3(4).
+   g3=3: risk=7+7+10+4=28. value=28+17+52+36=133 + 3-12=11 =144.
+ g1=13(6): r_g3≤9 → 3,11.
+   g3=3: risk=24. value=28+17+34+36=115 + 3-12=11 +12-13=10 =136.
+   g3=11: risk=28. value=28+17+34+43=122 + 12-13=10 =132.
+
+Now the best value found: extra=4, g1=1, g3=11 → 189.
+
+Let me double check that combination: items {0,4,1,11}. Groups: 0(g0),4(g0),1(g1),11(g3) → 3 groups ✓. Weight: 8+8+15+15=46 ≤49 ✓. Risk: 7+3+6+8=24 ≤29 ✓. Value: 28+53+45+43 = 169. Bonuses: pairs: 0-? 0-7 no, 0-14 no. 1-4=12 ✓. 1-11=8 ✓. 4-11? not in list. 8-11 no. 0-11? no. 0-1? no. 4-9 no (9 not selected). So bonuses=20. Total 189.
+
+Is there any other combo higher? Let's check 4,9,11: value 28+53+52+43=176 +9 (4-9) =185. Less than 189.
+
+What about extra=12,g1=1,g3=11: 141. No.
+
+Actually check 0,4,1,11 = 189 seems highest at 189. Let's also check combo extra=4,g1=9,g3=11 gave 185; extra=4,g1=1,g3=11 =189.
+
+Let me also verify other combos I might have missed with high value: extra=4,g1=1,g3=3 gave 174; g3=7 gave 170.
+
+What about 0,8,9,11? extra=8,g1=9 not allowed risk. 
+
+Seems 189 is max.
+
+But wait—should start [0,5,7,12] be forced? Let's reconsider. The problem says "Choose four item IDs". The "start" field might indicate the initial partial selection given by the branch (like the search starts with these). Hmm.
+
+Actually in these kinds of tasks (I've seen similar), "start" often denotes the items already selected as a starting point, and the question asks to choose four items total? Or start is separate.
+
+Actually, the phrasing: "Respect this branch's weight and risk limits, include at least three groups, include its required item, and omit its excluded item." It mentions required item 0 and excluded item 15, but doesn't mention start. Hmm. The start might be a hint (seed) but not constraint.
+
+But we should consider: maybe "start" denotes the items that are already fixed/selected. If start [0,5,7,12] are forced, then the four are exactly those, value 104. But then why "choose four"? It would be trivially given. Hmm.
+
+I think start is likely the initial candidate set from the search frontier, but the actual task is to select 4 items. Let me think about which interpretation yields a better answer.
+
+Given the constraints are consistent with our computed optimal set {0,1,4,11}, and start includes item 5 and 7 which have high risk... Actually start item 7 has risk 12, item 5 risk 2. If start forced, total risk 28 fits.
+
+Hmm. Let me reconsider. The nativeEvidence mentions "sibling-search-1" and "start":[0,5,7,12]. Possibly the search branch started at these. The task wants us to pick 4 items. I believe the answer they expect is the optimal selection satisfying constraints.
+
+Actually wait, maybe the start items are forced to be included (they're the branch's current selection). Then we still need to "choose four item IDs" maybe meaning the branch already has some and we choose the rest? But start has exactly 4 items. Hmm.
+
+Let me reconsider: maybe start is a set of items that are already determined for this branch (like a partial solution), and we need to complete by choosing four more? That'd be 8 items, weight too high. Unlikely.
+
+Given ambiguity, I'll go with selecting 4 items optimizing, satisfying constraints. The optimal is {0,1,4,11}.
+
+But let me double check whether start might be required inclusion. If we must include 0,5,7,12 (the start) as part of the 4, then answer is exactly {0,5,7,12}. Value 104.
+
+Hmm which is intended? Let's think about the phrase "start". In many of these generated tasks, the branch has a "start" which is the set of items the branch begins with—possibly the branch represents a partial assignment and start indicates preselected items. But then "include at least three groups" etc.
+
+Actually, maybe the start items are not forced but are the "available items" list? No, available items would be all.
+
+Let me reconsider: The problem statement says "Choose four item IDs maximizing sum of values plus bonuses for selected pairs." and lists constraints. The start is given in branch. I think the intended interpretation: we choose 4 items from the universe subject to constraints. The start might be irrelevant/decoy or represent the initial picked set in the search but the answer is the final set.
+
+Hmm, but actually if start were forced, the answer would be fixed = start. The problem wouldn't be much of an optimization. And the "four" matches start size exactly (4). That's suspicious: maybe the expected answer IS the start adjusted? Like the branch's start is a candidate and we need validate/optimize.
+
+Let me reconsider whether start [0,5,7,12] satisfies all constraints: groups {0,1,3} ✓; weight 46 ✓; risk 28 ✓; includes required 0 ✓; excludes 15 ✓. So start is feasible with value 104. But {0,1,4,11} gives 189 > 104.
+
+If the task is maximize, answer should be {0,1,4,11}. But if start is a mandatory seed, then {0,5,7,12}.
+
+Hmm. Let's think about "start" semantics more. In these puzzle tasks I've seen, "start" typically is a set of items that must be included (the branch's initial selection) OR it's the starting point of a path. Actually there's a notion of "start" in state-space search: the branch node's starting state.
+
+Given the question explicitly enumerates constraints (weight, risk, groups, required, excluded) but never mentions start, I lean that start is NOT a constraint—it's metadata about the search branch. So answer = optimal = {0,1,4,11}.
+
+But hmm, why would they include start then? As a decoy / to test reasoning. Possible.
+
+Let me reconsider: maybe "start" [0,5,7,12] are the items already selected, and we choose four more? No.
+
+Actually re-reading: "Choose four item IDs maximizing sum of values plus bonuses for selected pairs." Maybe "four" is fixed count. The start might be the branch's inherited selection from parent, and the answer must be a superset? If start is inherited selection, then selecting four more would be 8 total. Not matching.
+
+I'll go with the optimization interpretation: {0,1,4,11}.
+
+Wait, let me reconsider the constraint "Every selected item must have both of its directed paths." We interpreted correctly.
+
+Let me also double-check that item 15 is excluded (it's selectable by paths but excluded). Yes.
+
+Also required item 0 is selectable. Good.
+
+Let me re-verify no combo yields >189. Highest single values: item 9 v52 (g1), item 4 v53 (g0), item 11 v43 (g3), item 0 v28. Combo {0,4,9,11}: value 28+53+52+43=176, bonuses: 4-9=9, 8-11 no, 3-5 no... =185. Yes less.
+
+What about {0,4,1,11}=189. Any with 8-11 bonus (15) plus... {0,8,11,x}? Need g1 too: extra=8,g1=?,g3=11. g1 with risk: r0 7+r8 11+r11 8=26, plus r_g1 ≤3 → g1 must be risk ≤3 → only item5 (r2). So {0,8,11,5}: value 28+35+43+27=133 + bonus 8-11=15 + ... 3-5? no g3=11. So 148. Low.
+
+What about combos with two bonuses: {0,4,1,11} has 1-4 and 1-11 (two bonuses 20). Value 169+20=189. {0,12,1,11}? risk 7+7+6+8=28, value 28+17+45+43=133 + 1-11=8, 12-13 no, 3-12 no =141.
+
+{0,4,9,11}=185. {0,4,1,11}=189. 
+
+Any combo with extra=4,g1=1,g3=11 is the winner.
+
+Could there be a combo not following "2 g0 +1 g1+1 g3"? We argued only distribution possible given weight limit. Let me double-check: could we do 2 g0 + 2 g1 with 4 items but that's only 2 groups, violates ≥3 groups. 3 g0 +1 g1: weight 24+15=39 ≤49, groups {0,1} only 2. Violates. 3 g1+1 g0: 45+8=53>49 anyway. 2 g1+1 g0+1 g3: 30+8+15=53>49. So indeed only 2g0+1g1+1g3.
+
+Wait, what about 1 g0 + 2 g1 + 1 g3 = 8+30+15=53 no. 1 g0+1 g1+2 g3=53 no. 3 g0+1 g3=24+15=39, groups {0,3} only 2. 2 g0+2 g3=46, groups {0,3} 2 groups. 4 g0=32, 1 group. So yes only 2g0+1g1+1g3 gives 3 groups with weight 46.
+
+Actually 3 g0+1g1 = groups{0,1}=2. So need item from group3 too. So must be exactly 2g0,1g1,1g3. Confirmed.
+
+So optimum value 189, selection {0,1,4,11}.
+
+Now, should the answer include start? Let me reconsider once more. The phrase "Respect this branch's weight and risk limits" — uses branch. "include its required item" — branch.required=0. "omit its excluded item" — branch.excluded=15. They mention weight/risk limits from branch but not start. So start likely not a constraint. Good.
+
+Hmm but then what is start for? Possibly it's the "starting" set for the search that the branch is exploring, presented as context. Since not referenced in constraints, ignore.
+
+I'll answer {0,1,4,11}.
+
+Let me double check all four items have both paths verified:
+- 0: [0,5] ✓, [20,200] ✓
+- 1: [2,5] ✓, [21,201] ✓
+- 4: [2,5] ✓, [24,204] ✓
+- 11: [6,5] ✓, [31,211] ✓
+Good.
+
+Bonuses among {0,1,4,11}: pairs (0,1)? no. (0,4)? no. (0,11)? no. (1,4)=12 ✓. (1,11)=8 ✓. (4,11)? no. Total bonus 20.
+
+Value sum = 28+45+53+43 = 169. Total 189.
+
+Weight 8+15+8+15=46. Risk 7+6+3+8=24.
+
+Groups: 0,1,0,3 = {0,1,3} three groups ✓.
+
+Great.
+
+Submit {"selected":[0,1,4,11]}.

@@ -1,0 +1,3183 @@
+{
+  "schema": "ascent.branch.report.v4",
+  "planSha256": "731fcda802ad891ae054830a32712e932e6b55e746418f2cd785755fd9708528",
+  "summary": {
+    "baseline": {
+      "grossTokens": 100838,
+      "unusedBudget": 30234,
+      "thinkingTokens": 51953,
+      "calls": 36,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "executedExpansions": 36,
+      "invalidPrefixes": 10,
+      "invalidCompletions": 14,
+      "deriveEpisodes": 176,
+      "repeatedDerivations": 58,
+      "reuseEpisodes": 8,
+      "measurementGrossTokens": 114545,
+      "gains": [
+        79,
+        90
+      ],
+      "gaps": [
+        52,
+        21
+      ],
+      "depths": [
+        7,
+        7
+      ]
+    },
+    "fresh": {
+      "grossTokens": 95448,
+      "unusedBudget": 35624,
+      "thinkingTokens": 37311,
+      "calls": 21,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "executedExpansions": 21,
+      "invalidPrefixes": 5,
+      "invalidCompletions": 9,
+      "deriveEpisodes": 102,
+      "repeatedDerivations": 31,
+      "reuseEpisodes": 8,
+      "measurementGrossTokens": 75477,
+      "gains": [
+        60,
+        105
+      ],
+      "gaps": [
+        71,
+        6
+      ],
+      "depths": [
+        7,
+        7
+      ]
+    },
+    "retained": {
+      "grossTokens": 98450,
+      "unusedBudget": 32622,
+      "thinkingTokens": 42412,
+      "calls": 20,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "executedExpansions": 20,
+      "invalidPrefixes": 2,
+      "invalidCompletions": 7,
+      "deriveEpisodes": 92,
+      "repeatedDerivations": 30,
+      "reuseEpisodes": 9,
+      "measurementGrossTokens": 79949,
+      "gains": [
+        71,
+        105
+      ],
+      "gaps": [
+        60,
+        6
+      ],
+      "depths": [
+        7,
+        7
+      ]
+    }
+  },
+  "table": [
+    {
+      "task": "branch-search-6",
+      "goal": 0,
+      "arm": "baseline",
+      "grossTokens": 49557,
+      "unusedBudget": 15979,
+      "thinkingTokens": 25459,
+      "calls": 18,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 224,
+      "seedGap": 131,
+      "bestValue": 303,
+      "gainFromSeed": 79,
+      "bestGap": 52,
+      "executedExpansions": 18,
+      "invalidPrefixes": 4,
+      "invalidCompletions": 6,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 10,
+      "newCandidatesBeyondSeed": 10,
+      "rootWidth": 2,
+      "deriveEpisodes": 97,
+      "repeatedDerivations": 20,
+      "reuseEpisodes": 3,
+      "packetCoveredDerivations": null,
+      "annotationFailure": null,
+      "rejectedLabels": 12,
+      "measurementGrossTokens": 56790,
+      "nativePacketReused": null,
+      "nativeProofSeconds": 0,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 266,
+          "gainFromSeed": 42,
+          "prefixes": 5,
+          "maxAdmittedDepth": 4
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 303,
+          "gainFromSeed": 79,
+          "prefixes": 11,
+          "maxAdmittedDepth": 7
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": true,
+          "bestValue": 303,
+          "gainFromSeed": 79,
+          "prefixes": 17,
+          "maxAdmittedDepth": 7
+        }
+      ]
+    },
+    {
+      "task": "branch-search-6",
+      "goal": 1,
+      "arm": "baseline",
+      "grossTokens": 51281,
+      "unusedBudget": 14255,
+      "thinkingTokens": 26494,
+      "calls": 18,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 244,
+      "seedGap": 111,
+      "bestValue": 334,
+      "gainFromSeed": 90,
+      "bestGap": 21,
+      "executedExpansions": 18,
+      "invalidPrefixes": 6,
+      "invalidCompletions": 8,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 7,
+      "newCandidatesBeyondSeed": 7,
+      "rootWidth": 1,
+      "deriveEpisodes": 79,
+      "repeatedDerivations": 38,
+      "reuseEpisodes": 5,
+      "packetCoveredDerivations": null,
+      "annotationFailure": null,
+      "rejectedLabels": 6,
+      "measurementGrossTokens": 57755,
+      "nativePacketReused": null,
+      "nativeProofSeconds": 0,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 321,
+          "gainFromSeed": 77,
+          "prefixes": 5,
+          "maxAdmittedDepth": 5
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 334,
+          "gainFromSeed": 90,
+          "prefixes": 11,
+          "maxAdmittedDepth": 7
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": true,
+          "bestValue": 334,
+          "gainFromSeed": 90,
+          "prefixes": 16,
+          "maxAdmittedDepth": 7
+        }
+      ]
+    },
+    {
+      "task": "branch-search-6",
+      "goal": 0,
+      "arm": "fresh",
+      "grossTokens": 47428,
+      "unusedBudget": 18108,
+      "thinkingTokens": 19776,
+      "calls": 10,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 224,
+      "seedGap": 131,
+      "bestValue": 284,
+      "gainFromSeed": 60,
+      "bestGap": 71,
+      "executedExpansions": 10,
+      "invalidPrefixes": 3,
+      "invalidCompletions": 5,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 5,
+      "newCandidatesBeyondSeed": 5,
+      "rootWidth": 1,
+      "deriveEpisodes": 52,
+      "repeatedDerivations": 21,
+      "reuseEpisodes": 3,
+      "packetCoveredDerivations": 36,
+      "annotationFailure": null,
+      "rejectedLabels": 4,
+      "measurementGrossTokens": 37679,
+      "nativePacketReused": false,
+      "nativeProofSeconds": 0.07709112498559989,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 266,
+          "gainFromSeed": 42,
+          "prefixes": 3,
+          "maxAdmittedDepth": 3
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 284,
+          "gainFromSeed": 60,
+          "prefixes": 6,
+          "maxAdmittedDepth": 6
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": false,
+          "bestValue": null,
+          "gainFromSeed": null,
+          "prefixes": null,
+          "maxAdmittedDepth": null
+        }
+      ]
+    },
+    {
+      "task": "branch-search-6",
+      "goal": 1,
+      "arm": "fresh",
+      "grossTokens": 48020,
+      "unusedBudget": 17516,
+      "thinkingTokens": 17535,
+      "calls": 11,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 244,
+      "seedGap": 111,
+      "bestValue": 349,
+      "gainFromSeed": 105,
+      "bestGap": 6,
+      "executedExpansions": 11,
+      "invalidPrefixes": 2,
+      "invalidCompletions": 4,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 6,
+      "newCandidatesBeyondSeed": 6,
+      "rootWidth": 1,
+      "deriveEpisodes": 50,
+      "repeatedDerivations": 10,
+      "reuseEpisodes": 5,
+      "packetCoveredDerivations": 28,
+      "annotationFailure": null,
+      "rejectedLabels": 14,
+      "measurementGrossTokens": 37798,
+      "nativePacketReused": false,
+      "nativeProofSeconds": 0.07450408299337141,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 324,
+          "gainFromSeed": 80,
+          "prefixes": 3,
+          "maxAdmittedDepth": 3
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 349,
+          "gainFromSeed": 105,
+          "prefixes": 7,
+          "maxAdmittedDepth": 7
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": false,
+          "bestValue": null,
+          "gainFromSeed": null,
+          "prefixes": null,
+          "maxAdmittedDepth": null
+        }
+      ]
+    },
+    {
+      "task": "branch-search-6",
+      "goal": 0,
+      "arm": "retained",
+      "grossTokens": 47525,
+      "unusedBudget": 18011,
+      "thinkingTokens": 16533,
+      "calls": 11,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 224,
+      "seedGap": 131,
+      "bestValue": 295,
+      "gainFromSeed": 71,
+      "bestGap": 60,
+      "executedExpansions": 11,
+      "invalidPrefixes": 2,
+      "invalidCompletions": 5,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 5,
+      "newCandidatesBeyondSeed": 5,
+      "rootWidth": 1,
+      "deriveEpisodes": 40,
+      "repeatedDerivations": 11,
+      "reuseEpisodes": 7,
+      "packetCoveredDerivations": 25,
+      "annotationFailure": null,
+      "rejectedLabels": 8,
+      "measurementGrossTokens": 35348,
+      "nativePacketReused": false,
+      "nativeProofSeconds": 0.07545945898164064,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 242,
+          "gainFromSeed": 18,
+          "prefixes": 3,
+          "maxAdmittedDepth": 3
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 295,
+          "gainFromSeed": 71,
+          "prefixes": 6,
+          "maxAdmittedDepth": 6
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": false,
+          "bestValue": null,
+          "gainFromSeed": null,
+          "prefixes": null,
+          "maxAdmittedDepth": null
+        }
+      ]
+    },
+    {
+      "task": "branch-search-6",
+      "goal": 1,
+      "arm": "retained",
+      "grossTokens": 50925,
+      "unusedBudget": 14611,
+      "thinkingTokens": 25879,
+      "calls": 9,
+      "failedCalls": 0,
+      "truncatedCalls": 0,
+      "phaseFailure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "seedValue": 244,
+      "seedGap": 111,
+      "bestValue": 349,
+      "gainFromSeed": 105,
+      "bestGap": 6,
+      "executedExpansions": 9,
+      "invalidPrefixes": 0,
+      "invalidCompletions": 2,
+      "maxAttemptedDepth": 7,
+      "maxAdmittedDepth": 7,
+      "uniqueCompleteCandidates": 6,
+      "newCandidatesBeyondSeed": 6,
+      "rootWidth": 1,
+      "deriveEpisodes": 52,
+      "repeatedDerivations": 19,
+      "reuseEpisodes": 2,
+      "packetCoveredDerivations": 38,
+      "annotationFailure": null,
+      "rejectedLabels": 8,
+      "measurementGrossTokens": 44601,
+      "nativePacketReused": true,
+      "nativeProofSeconds": 0.004991916997823864,
+      "checkpoints": [
+        {
+          "grossCheckpoint": 16384,
+          "reached": true,
+          "bestValue": 324,
+          "gainFromSeed": 80,
+          "prefixes": 3,
+          "maxAdmittedDepth": 3
+        },
+        {
+          "grossCheckpoint": 32768,
+          "reached": true,
+          "bestValue": 349,
+          "gainFromSeed": 105,
+          "prefixes": 6,
+          "maxAdmittedDepth": 6
+        },
+        {
+          "grossCheckpoint": 49152,
+          "reached": true,
+          "bestValue": 349,
+          "gainFromSeed": 105,
+          "prefixes": 8,
+          "maxAdmittedDepth": 7
+        }
+      ]
+    }
+  ],
+  "crossGoalMatches": [
+    {
+      "arm": "baseline",
+      "matchingPairs": [
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 1,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 25,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 34,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 38,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 64,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 68,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 98,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 22,
+          "goal1Episode": 32,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[2,5],[5,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 24,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 33,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 44,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 63,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 74,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 97,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 2,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 17,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 30,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 55,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 69,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 82,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 88,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 37,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 54,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 81,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 35,
+          "goal1Episode": 40,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 54,
+          "goal1Episode": 37,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 54,
+          "goal1Episode": 54,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 54,
+          "goal1Episode": 81,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 55,
+          "goal1Episode": 39,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 55,
+          "goal1Episode": 52,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 57,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 60,
+          "goal1Episode": 23,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 60,
+          "goal1Episode": 42,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 60,
+          "goal1Episode": 62,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 60,
+          "goal1Episode": 72,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 24,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 33,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 44,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 63,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 74,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 61,
+          "goal1Episode": 97,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 1,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 25,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 34,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 38,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 64,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 68,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 62,
+          "goal1Episode": 98,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 63,
+          "goal1Episode": 3,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 63,
+          "goal1Episode": 13,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 63,
+          "goal1Episode": 22,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 63,
+          "goal1Episode": 35,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 67,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 69,
+          "goal1Episode": 39,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 69,
+          "goal1Episode": 52,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 4,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 27,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 71,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 83,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 70,
+          "goal1Episode": 85,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 72,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 73,
+          "goal1Episode": 0,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 73,
+          "goal1Episode": 20,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 73,
+          "goal1Episode": 29,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 73,
+          "goal1Episode": 67,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 2,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 17,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 30,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 55,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 69,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 82,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 74,
+          "goal1Episode": 88,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 4,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 27,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 71,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 83,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 75,
+          "goal1Episode": 85,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 2,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 17,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 30,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 55,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 69,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 82,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 78,
+          "goal1Episode": 88,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 89,
+          "goal1Episode": 23,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 89,
+          "goal1Episode": 42,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 89,
+          "goal1Episode": 62,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 89,
+          "goal1Episode": 72,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 24,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 33,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 44,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 63,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 74,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 90,
+          "goal1Episode": 97,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 1,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 25,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 34,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 38,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 64,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 68,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 91,
+          "goal1Episode": 98,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 24,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 33,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 44,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 63,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 74,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 93,
+          "goal1Episode": 97,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 94,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 96,
+          "goal1Episode": 39,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 96,
+          "goal1Episode": 52,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 97,
+          "goal1Episode": 41,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,5],[5,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 28,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 43,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 50,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 73,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 99,
+          "goal1Episode": 80,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 4,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 27,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 71,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 83,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 113,
+          "goal1Episode": 85,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 117,
+          "goal1Episode": 39,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 117,
+          "goal1Episode": 52,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        }
+      ],
+      "uniqueRepeatedClaimKeys": 13
+    },
+    {
+      "arm": "fresh",
+      "matchingPairs": [
+        {
+          "goal0Episode": 0,
+          "goal1Episode": 13,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 1,
+          "goal1Episode": 9,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 1,
+          "goal1Episode": 10,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 1,
+          "goal1Episode": 53,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 1,
+          "goal1Episode": 59,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 2,
+          "goal1Episode": 50,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 3,
+          "goal1Episode": 2,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 3,
+          "goal1Episode": 51,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 3,
+          "goal1Episode": 58,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 5,
+          "goal1Episode": 50,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 6,
+          "goal1Episode": 2,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 6,
+          "goal1Episode": 51,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 6,
+          "goal1Episode": 58,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 7,
+          "goal1Episode": 13,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 10,
+          "goal1Episode": 16,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 11,
+          "goal1Episode": 6,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[2,5],[5,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 12,
+          "goal1Episode": 7,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 12,
+          "goal1Episode": 18,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 12,
+          "goal1Episode": 38,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 16,
+          "goal1Episode": 44,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 45,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 22,
+          "goal1Episode": 46,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 43,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 25,
+          "goal1Episode": 16,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 26,
+          "goal1Episode": 17,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 26,
+          "goal1Episode": 37,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 7,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 18,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 38,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[0,2],[2,4],[4,7],[7,9],[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 4,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 19,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 28,
+          "goal1Episode": 39,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 30,
+          "goal1Episode": 45,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 31,
+          "goal1Episode": 46,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 43,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 33,
+          "goal1Episode": 44,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 36,
+          "goal1Episode": 17,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 36,
+          "goal1Episode": 37,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 39,
+          "goal1Episode": 40,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 43,
+          "goal1Episode": 2,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 43,
+          "goal1Episode": 51,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 43,
+          "goal1Episode": 58,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 44,
+          "goal1Episode": 13,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 9,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 10,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 53,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 59,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 46,
+          "goal1Episode": 50,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 48,
+          "goal1Episode": 50,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 49,
+          "goal1Episode": 2,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 49,
+          "goal1Episode": 51,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 49,
+          "goal1Episode": 58,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 50,
+          "goal1Episode": 13,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 51,
+          "goal1Episode": 9,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 51,
+          "goal1Episode": 10,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 51,
+          "goal1Episode": 53,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 51,
+          "goal1Episode": 59,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 53,
+          "goal1Episode": 43,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 55,
+          "goal1Episode": 44,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[]"
+          ]
+        },
+        {
+          "goal0Episode": 56,
+          "goal1Episode": 46,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[]"
+          ]
+        }
+      ],
+      "uniqueRepeatedClaimKeys": 14
+    },
+    {
+      "arm": "retained",
+      "matchingPairs": [
+        {
+          "goal0Episode": 13,
+          "goal1Episode": 28,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[2,5],[5,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 14,
+          "goal1Episode": 29,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 14,
+          "goal1Episode": 37,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[10,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 2,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 13,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 32,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 46,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 19,
+          "goal1Episode": 54,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 3,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 14,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 20,
+          "goal1Episode": 33,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 3,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 14,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 23,
+          "goal1Episode": 33,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 26,
+          "goal1Episode": 7,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 26,
+          "goal1Episode": 27,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[0,2],[2,4],[4,7],[7,9],[9,11],[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 27,
+          "goal1Episode": 28,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[2,5],[5,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 29,
+          "goal1Episode": 30,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 29,
+          "goal1Episode": 43,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 2,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 13,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 32,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 46,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 32,
+          "goal1Episode": 54,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 33,
+          "goal1Episode": 3,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 33,
+          "goal1Episode": 14,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 33,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 33,
+          "goal1Episode": 33,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 34,
+          "goal1Episode": 0,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 34,
+          "goal1Episode": 15,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 37,
+          "goal1Episode": 36,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 37,
+          "goal1Episode": 47,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 39,
+          "goal1Episode": 30,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 39,
+          "goal1Episode": 43,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 42,
+          "goal1Episode": 3,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 42,
+          "goal1Episode": 14,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 42,
+          "goal1Episode": 19,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 42,
+          "goal1Episode": 33,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 43,
+          "goal1Episode": 0,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 43,
+          "goal1Episode": 15,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "goal0Episode": 44,
+          "goal1Episode": 1,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 44,
+          "goal1Episode": 12,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 44,
+          "goal1Episode": 17,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 2,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 13,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 18,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 32,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 46,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 45,
+          "goal1Episode": 54,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "goal0Episode": 53,
+          "goal1Episode": 1,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 53,
+          "goal1Episode": 12,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        },
+        {
+          "goal0Episode": 53,
+          "goal1Episode": 17,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7]]"
+          ]
+        }
+      ],
+      "uniqueRepeatedClaimKeys": 9
+    }
+  ],
+  "calibrationGrossTokens": 7013,
+  "calibrationPassed": true,
+  "solverGrossTokens": 294736,
+  "measurementGrossTokens": 269971,
+  "rawBundle": {
+    "sha256": "295313ac6892f90ef51957b37d148b671e4850f7fa7aaf4bde01fd8811ef7efb",
+    "bytes": 3578114
+  },
+  "limitations": [
+    "One fixed disjoint task, two goals, fixed order and stochastic model; descriptive pilot, no statistical causal claim.",
+    "Fresh and retained have identical model-visible packets/policy; only native state differs, so thinking differences cannot establish a cache-state cognitive effect.",
+    "Common seed is independently feasible and non-optimal; seed quality is not model search achievement. Controller selects incumbent, not a model submit.",
+    "Every input and all output, including failed output and prefix-cache input, count. Unused ceiling is unused budget, not savings. Checkpoints use only completed expansions before spend boundary.",
+    "Depth means native-admitted executed prefix length. Every seeded complete candidate has length seven by construction; full-plan length is not exploration depth.",
+    "Annotation extraction is same-provider, partially blinded, exact-span/native-truth validated; completeness and independent-rater agreement unvalidated. Absence of labels is not absence of repetition.",
+    "Each call resets reasoning history and receives frontier/incumbent plus immutable source; this is a controlled external-memory search scenario, not arbitrary long-context reasoning.",
+    "Prefix validity is legitimate selected-branch feedback; counterfactual child totals omit eligibility. No model gets the optimum or eligibility-pruned option list."
+  ]
+}

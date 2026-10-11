@@ -1,0 +1,15 @@
+ENTRY_NATIVE_PREFLIGHT_OK 36
+OUTPUT_QUALIFICATION_REQUEST_IDENTITY_OK
+BRANCH_ENTRY_RUN_AUDIT_OK [(0, 'baseline', 32313, 2, 'thinking incomplete under total budget; no nonthinking salvage'), (0, 'facts', 32313, 2, 'thinking incomplete under total budget; no nonthinking salvage'), (0, 'scheme', 32313, 2, 'thinking incomplete under total budget; no nonthinking salvage'), (1, 'scheme', 32310, 2, 'thinking incomplete under total budget; no nonthinking salvage'), (1, 'facts', 29708, 3, None), (1, 'baseline', 32311, 1, 'thinking incomplete under total budget; no nonthinking salvage')]
+BRANCH_LITERAL_COVERAGE_OK 380374
+BRANCH_REPORT_OK /private/var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/ascent-compressed-replay.bzacrnet/source/docs/research/agent-inference/fact-reuse-results/branch-complete
+SEMANTIC_AUDIT_OK 16 reviewed 330460 of 390211 characters failed 2 tokens 232676
+SEMANTIC_AUDIT_OK 17 reviewed 380374 of 380374 characters failed 0 tokens 235421
+CONTEXTUAL_REVIEW_REPLAY_OK 390211 characters 30454 manual original failures 2 manual cross-branch reconstructions 3
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 2.245s
+
+OK
+COMPRESSED_EXACT_SOURCE_OFFLINE_REPLAY_OK: committed inputs, 36 native inputs, all solver costs/grades, literal annotations, both semantic audits, original failures and manual supplement
+REPLAY_RECEIPTS /private/var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/ascent-compressed-replay.bzacrnet

@@ -1,0 +1,8076 @@
+[
+  {
+    "case": 0,
+    "initial": {
+      "status": "completed",
+      "usage": {
+        "input_tokens": 614,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 402,
+        "output_tokens_details": {
+          "reasoning_tokens": 304
+        },
+        "total_tokens": 1016
+      },
+      "failure": null,
+      "rules": [
+        [
+          [
+            "path",
+            "?x",
+            "?y"
+          ],
+          [
+            "edge",
+            "?x",
+            "?y"
+          ]
+        ],
+        [
+          [
+            "path",
+            "?x",
+            "?z"
+          ],
+          [
+            "path",
+            "?x",
+            "?y"
+          ],
+          [
+            "edge",
+            "?y",
+            "?z"
+          ]
+        ]
+      ],
+      "grossTokens": 1016
+    },
+    "revisions": [],
+    "development": [
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [],
+        "edges": [],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 0
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 1
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 3,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 9,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": []
+      }
+    ],
+    "grade": [
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            0,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 2
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 4,
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 5,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 6,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 7,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 8,
+        "edges": [
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": []
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 10
+      },
+      {
+        "generation": 11,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 12,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 13,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 14,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 15,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "edges": [
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            2,
+            0
+          ]
+        ],
+        "actual": [
+          [
+            2,
+            0
+          ]
+        ],
+        "generation": 16,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "generation": 17,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 18,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 19,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": []
+      },
+      {
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 20,
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 21,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 22
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 23,
+        "nativeStatus": "complete"
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 24,
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 25,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 26,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 27,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "generation": 28,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 29,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 30
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 31,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            2,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 32
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 33,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 34,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 35,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 36,
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 37,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 38,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 39,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 40,
+        "nativeStatus": "complete"
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 41,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 42,
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 43
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 44,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 45,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 46,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 47,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "generation": 48
+      },
+      {
+        "nativeStatus": "complete",
+        "generation": 49,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 50,
+        "nativeStatus": "complete"
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 51,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "generation": 52,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 53,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 54,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 55,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 56,
+        "nativeStatus": "complete"
+      },
+      {
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 57,
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 58,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 59,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 60
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 61,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 62,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 63,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      }
+    ]
+  },
+  {
+    "case": 1,
+    "initial": {
+      "status": "completed",
+      "usage": {
+        "input_tokens": 594,
+        "input_tokens_details": {
+          "cached_tokens": 128
+        },
+        "output_tokens": 1240,
+        "output_tokens_details": {
+          "reasoning_tokens": 1131
+        },
+        "total_tokens": 1834
+      },
+      "failure": null,
+      "rules": [
+        [
+          [
+            "path",
+            "?x",
+            "?y"
+          ],
+          [
+            "edge",
+            "?x",
+            "?z"
+          ],
+          [
+            "edge",
+            "?z",
+            "?y"
+          ]
+        ],
+        [
+          [
+            "path",
+            "?x",
+            "?y"
+          ],
+          [
+            "path",
+            "?x",
+            "?z"
+          ],
+          [
+            "path",
+            "?z",
+            "?y"
+          ]
+        ]
+      ],
+      "grossTokens": 1834
+    },
+    "revisions": [],
+    "development": [
+      {
+        "diagnostics": [],
+        "actual": [],
+        "nativeStatus": "complete",
+        "generation": 0,
+        "reason": false,
+        "expected": [],
+        "edges": [],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            0,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [],
+        "generation": 1,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [],
+        "actual": [],
+        "generation": 3,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 9,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ]
+        ]
+      }
+    ],
+    "grade": [
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 2,
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            1,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [],
+        "actual": [],
+        "nativeStatus": "complete",
+        "generation": 4
+      },
+      {
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 5,
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 6,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 7,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            1,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 8
+      },
+      {
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [],
+        "generation": 10,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 11,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 12,
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 13,
+        "nativeStatus": "complete"
+      },
+      {
+        "nativeStatus": "complete",
+        "generation": 14,
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 15,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 16,
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            2,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 17,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 18,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 19,
+        "nativeStatus": "complete"
+      },
+      {
+        "reason": false,
+        "expected": [],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [],
+        "generation": 20,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "generation": 21,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 22,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 23,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            1,
+            0
+          ]
+        ],
+        "generation": 24
+      },
+      {
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 25,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": []
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 26,
+        "nativeStatus": "complete",
+        "status": "match",
+        "extra": [],
+        "missing": []
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 27,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ]
+        ],
+        "generation": 28,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 29,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 30,
+        "nativeStatus": "complete"
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 31,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 32
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 33,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 34,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 35,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            2,
+            0
+          ]
+        ],
+        "generation": 36,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 37,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 38,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 39,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 40
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 41,
+        "nativeStatus": "complete"
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 42,
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 43,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 44,
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "generation": 45,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 46,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "missing": [],
+        "extra": [],
+        "status": "match",
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "generation": 47,
+        "nativeStatus": "complete",
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [],
+        "nativeStatus": "complete",
+        "actual": [],
+        "generation": 48
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            2,
+            1
+          ]
+        ],
+        "generation": 49,
+        "reason": false,
+        "expected": [
+          [
+            2,
+            1
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "generation": 50,
+        "nativeStatus": "complete",
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "diagnostics": [],
+        "extra": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 51
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            2,
+            0
+          ]
+        ],
+        "actual": [
+          [
+            2,
+            0
+          ]
+        ],
+        "generation": 52,
+        "nativeStatus": "complete"
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 53
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "generation": 54,
+        "nativeStatus": "complete"
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 55,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "extra": [],
+        "status": "match",
+        "missing": [],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "generation": 56
+      },
+      {
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "generation": 57,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 58,
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "missing": [],
+        "extra": [],
+        "status": "match"
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "generation": 59,
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "edges": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 60,
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "diagnostics": []
+      },
+      {
+        "status": "match",
+        "extra": [],
+        "missing": [],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "diagnostics": [],
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "generation": 61,
+        "nativeStatus": "complete"
+      },
+      {
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "diagnostics": [],
+        "actual": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "generation": 62,
+        "nativeStatus": "complete",
+        "extra": [],
+        "status": "match",
+        "missing": []
+      },
+      {
+        "nativeStatus": "complete",
+        "actual": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "generation": 63,
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "reason": false,
+        "expected": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "missing": [],
+        "status": "match",
+        "extra": [],
+        "diagnostics": []
+      }
+    ]
+  },
+  {
+    "case": 2,
+    "initial": {
+      "status": "completed",
+      "usage": {
+        "input_tokens": 622,
+        "input_tokens_details": {
+          "cached_tokens": 128
+        },
+        "output_tokens": 675,
+        "output_tokens_details": {
+          "reasoning_tokens": 548
+        },
+        "total_tokens": 1297
+      },
+      "failure": "invalid_submission",
+      "rules": null,
+      "grossTokens": 1297
+    },
+    "revisions": []
+  }
+]

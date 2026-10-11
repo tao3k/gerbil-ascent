@@ -135,6 +135,7 @@
 (def (replay-events events budget skip delta? eqrel?)
       (let ((state (if eqrel? (gerbil-ascent-eqrel-state) (gerbil-ascent-trrel-uf-state))) (output []) (admitted 0) (previous #f))
         (def insert! (if eqrel? gerbil-ascent-eqrel-replay-insert! gerbil-ascent-trrel-uf-replay-insert!))
+        (def injections (and (not eqrel?) (make-hash-table)))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))
             (def emit
@@ -150,13 +151,16 @@
                       (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
                       emit))
                   (set! admitted next))))
-            ;; Consecutive identical injections have an empty frontier in this
-            ;; monotone invocation. Reuse that fact across event boundaries;
-            ;; keep the writer count transition and no mutable cut cache.
+            ;; Successful UF injections remain admitted throughout this
+            ;; monotone invocation. Bound the witness independently of journal
+            ;; length; every occurrence still visits the count transition.
             (for-each (lambda (row)
-              (if (equal? previous row)
+              (if (or (equal? previous row) (and injections (hash-get injections row)))
                 (writer 0)
-                (begin (insert! state row budget writer) (set! previous row))))
+                (begin (insert! state row budget writer)
+                       (when (and injections (< (hash-length injections) 256))
+                         (hash-put! injections row #t))))
+              (set! previous row))
               (view-event-rows event))
             ;; The legacy round walks reversed pending rows then prepends them;
             ;; source/append instead prepend each arrival directly.

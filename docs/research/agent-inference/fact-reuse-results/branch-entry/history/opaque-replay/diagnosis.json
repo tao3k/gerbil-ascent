@@ -1,0 +1,18 @@
+{
+  "structuralSubmissionPassed": true,
+  "usage": {
+    "input_tokens": 1245,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 44,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 1289
+  },
+  "inputUsageExpectedToReflectThinking": false,
+  "comparisonStarted": false,
+  "admission": "Input usage too small to establish historical thinking consumption; do not proceed with this protocol",
+  "correction": "Prospective lossless assistant-message projection, no new instructions; input increment must be checked in live qualification."
+}

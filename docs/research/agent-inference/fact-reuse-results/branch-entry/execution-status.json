@@ -1,0 +1,24 @@
+{
+  "status": "COMPLETED_BOUNDED_DIAGNOSTIC",
+  "producerHead": "01f00e23c2eb90dfd24f834d1324487f643b49b9",
+  "planSha256": "8c8077a85d4a52b36b845c2e4f78ec87b53a13ba65e196ea24edcfd6f0ab1074",
+  "cells": 6,
+  "calls": 36,
+  "conclusion": "Explicit literal reconstruction reduced; deeper exploration and general quality gain not established",
+  "allFailuresRetained": true,
+  "cost": {
+    "finalSolverCalls": 36,
+    "finalSolverKnownTokens": 151497,
+    "finalSolverUnknownUsageCalls": 0,
+    "thinkingTokens": 36864,
+    "qualificationCalls": 2,
+    "qualificationKnownTokens": 12156,
+    "earlierRejectedSolverCalls": 6,
+    "earlierRejectedSolverUsage": "unknown; HTTP 400 is not a zero-cost receipt",
+    "providerCallsIncludingFailures": 44,
+    "knownTokensIncludingQualifications": 163653,
+    "annotationProviderCalls": 0,
+    "perCellInputPlusAllOutputCeiling": 32768,
+    "unusedBudgetIsSavings": false
+  }
+}

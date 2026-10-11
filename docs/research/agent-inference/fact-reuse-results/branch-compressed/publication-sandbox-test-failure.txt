@@ -1,0 +1,145 @@
+....................E....................MOVIE-STUDY-PREPARED cases=6 scheduledCalls=9 executedCalls=0
+...........................REPOSITORY-EPISODE task 0 ordinary-tools verified calls=1
+.REPOSITORY-EPISODE task 0 ordinary-tools harness_failure calls=1
+.REPOSITORY-EPISODE task 0 ordinary-tools verified calls=1
+REPOSITORY-EPISODE changed-task 0 ordinary-tools censored calls=1
+.......................................FFF....
+======================================================================
+ERROR: test_factor_budget (unittest.loader._FailedTest.test_factor_budget)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_factor_budget
+Traceback (most recent call last):
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/tests/test_factor_budget.py", line 2, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+
+
+======================================================================
+FAIL: test_child_failure_propagates (test_supervision.BuildActivity.test_child_failure_propagates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/tests/test_supervision.py", line 31, in test_child_failure_propagates
+    self.assertEqual(result.returncode, 7, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 7 : Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 123, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 80, in main
+    current_cpu = group_cpu(child.pid)
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 15, in group_cpu
+    listing = subprocess.check_output(
+        ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
+    )
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 472, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1991, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 1] Operation not permitted: 'ps'
+
+
+======================================================================
+FAIL: test_cpu_work_can_continue_without_output (test_supervision.BuildActivity.test_cpu_work_can_continue_without_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/tests/test_supervision.py", line 21, in test_cpu_work_can_continue_without_output
+    self.assertEqual(result.returncode, 0, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 123, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 80, in main
+    current_cpu = group_cpu(child.pid)
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 15, in group_cpu
+    listing = subprocess.check_output(
+        ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
+    )
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 472, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1991, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 1] Operation not permitted: 'ps'
+
+
+======================================================================
+FAIL: test_sleeping_child_is_stopped (test_supervision.BuildActivity.test_sleeping_child_is_stopped)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/tests/test_supervision.py", line 26, in test_sleeping_child_is_stopped
+    self.assertEqual(result.returncode, 124, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 124 : Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 123, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 80, in main
+    current_cpu = group_cpu(child.pid)
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/supervision.py", line 15, in group_cpu
+    listing = subprocess.check_output(
+        ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
+    )
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 472, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/subprocess.py", line 1991, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 1] Operation not permitted: 'ps'
+
+
+----------------------------------------------------------------------
+Ran 116 tests in 5.324s
+
+FAILED (failures=3, errors=1)

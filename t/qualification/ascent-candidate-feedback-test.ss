@@ -2,6 +2,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-suite test-case)
+        (only-in :clan/poo/mop validate)
+        (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
+        (only-in :gerbil-ascent/candidate/program candidate-program candidate-inspect)
         :gerbil-ascent/candidate/feedback
         (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
@@ -39,6 +42,15 @@
   (reasoning-compare-rows source p (reasoning-attempt source p #f) wanted))
 (def ascent-candidate-feedback-test
   (test-suite "Candidate execution feedback"
+    (test-case "candidate root refinement preserves original native rule ancestry"
+      (let* ((source (snapshot 0 '((0 1) (1 2))))
+             (p (proposal 'correct))
+             (program (candidate-program source (candidate-inspect source p))))
+        ;; Publication uses a private responsibility refinement. Its admitted
+        ;; graph must also satisfy the unchanged public native contract.
+        (check-equal? (eq? (validate GerbilAscentProgramContract program) program) #t)
+        (check-equal? (reasoning-receipt-status (reasoning-attempt source p #f)) 'complete)
+        (check-equal? (reasoning-feedback-status (compare source p '((0 1) (1 2) (0 2)))) 'match)))
     (test-case "frozen proposals on 64 held-out graphs with exact differences"
       (let (kills (make-hash-table-eq))
         (for-each

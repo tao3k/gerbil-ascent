@@ -22,29 +22,39 @@
     (replay-group-used-set! group (+ id 1))
     (hash-put! (replay-group-nodes group) value n)
     (mark! group id id) n))
-(def (group-key row) (list (length row) (if (= (length row) 3) (car row) #f)))
+(def (group-key row)
+  (match row
+    ([left right] '(2 #f))
+    ([group left right] (list 3 group))
+    (else (list (length row) #f))))
 ;; Bound the temporary matrix before allocating it. Large sparse populations
 ;; keep the existing local-adjacency UF replay; they never allocate n^2 flags.
 (def (prepare events rows-of)
-  (let (sizes (make-hash-table))
+  (let/cc fallback
+    (def populations (make-hash-table))
+    (def (plan-value! nodes value)
+      (unless (hash-key? nodes value)
+        (when (= (hash-length nodes) 512) (fallback #f))
+        (hash-put! nodes value #f)))
     (for-each (lambda (event)
-      ;; Consecutive equal injections introduce no new vertex. Count one
-      ;; resource witness per run, preserving the journal and every replay
-      ;; occurrence. Twice this count still bounds the actual vertex capacity.
-      (let (previous #f)
-        (for-each (lambda (row)
-          (unless (equal? previous row)
-            (let (key (group-key row)) (hash-put! sizes key (+ 1 (or (hash-get sizes key) 0)))))
-          (set! previous row)) (rows-of event)))) events)
-    (and (andmap (lambda (entry) (and (memq (caar entry) '(2 3)) (<= (cdr entry) 256)))
-                 (hash->list sizes))
-         (let (groups (make-hash-table))
-           (hash-for-each (lambda (key size)
-             (let (width (* 2 size))
-               (hash-put! groups key (make-replay-group (make-hash-table) []
+      (for-each (lambda (row)
+        (let* ((key (group-key row)) (arity (car key)))
+          (unless (memq arity '(2 3)) (fallback #f))
+          (let* ((nodes (or (hash-get populations key)
+                           (let (nodes (make-hash-table))
+                             (hash-put! populations key nodes) nodes)))
+                 (pair (if (= arity 3) (cdr row) row)))
+            ;; Placeholder entries become replay nodes during admission. The
+            ;; same bounded table owns planning and replay, with no second set.
+            (plan-value! nodes (car pair))
+            (plan-value! nodes (cadr pair))))) (rows-of event))) events)
+    (let (groups (make-hash-table))
+           (hash-for-each (lambda (key nodes)
+             (let (width (hash-length nodes))
+               (hash-put! groups key (make-replay-group nodes []
                  (make-vector width #f) 0 width
-                 (make-u16vector (quotient (+ (* width width) 15) 16) 0))))) sizes)
-           groups))))
+                 (make-u16vector (quotient (+ (* width width) 15) 16) 0))))) populations)
+           groups)))
 (def (merge! group roots cycle)
   (let* ((winner (foldl (lambda (n best) (if (> (replay-node-size n) (replay-node-size best)) n best))
                        (car cycle) (cdr cycle)))
@@ -137,7 +147,7 @@
 (def (gerbil-ascent-small-journal-export events kind-of rows-of budget skip delta?)
   (let (groups (prepare events rows-of))
     (and groups
-      (let ((output []) (admitted 0) (previous #f))
+      (let ((output []) (admitted 0) (previous #f) (injections (make-hash-table)))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (kind-of event) 'derived))))
             ;; Reuse the synchronous event writer. A repeated injection still
@@ -154,10 +164,11 @@
                     emit))
                   (set! admitted next))))
             (for-each (lambda (row)
-              (if (equal? previous row)
+              (if (or (equal? previous row) (hash-get injections row))
                 (consume 0)
                 (begin (insert! (hash-get groups (group-key row)) row budget consume)
-                       (set! previous row)))) (rows-of event))
+                       (when (< (hash-length injections) 256) (hash-put! injections row #t))))
+              (set! previous row)) (rows-of event))
             (when derived? (set! output (append! (reverse! batch) output)))))
           (reverse events))
         (reverse! output)))))

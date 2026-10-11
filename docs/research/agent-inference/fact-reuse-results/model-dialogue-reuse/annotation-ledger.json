@@ -1,0 +1,5819 @@
+[
+  {
+    "case": 0,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              2770,
+              3076
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",0,7]",
+              "[[\"edge\",0,2],[\"edge\",2,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 22368,
+            "repeatFact": false
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              3079,
+              3372
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",4]",
+              "[[\"path\",0,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 22368,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [
+                [
+                  "edge",
+                  1,
+                  3
+                ],
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                2
+              ],
+              "premises": [
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                3
+              ],
+              "premises": [
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                1,
+                7
+              ],
+              "premises": [
+                [
+                  "edge",
+                  1,
+                  3
+                ],
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                3,
+                7
+              ],
+              "premises": [
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                7,
+                0
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                8,
+                11
+              ],
+              "premises": [
+                [
+                  "edge",
+                  8,
+                  9
+                ],
+                [
+                  "edge",
+                  9,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                10,
+                11
+              ],
+              "premises": [
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                5
+              ],
+              "premises": [
+                [
+                  "path",
+                  1,
+                  7
+                ],
+                [
+                  "path",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                6
+              ],
+              "premises": [
+                [
+                  "path",
+                  12,
+                  14
+                ],
+                [
+                  "path",
+                  0,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                7
+              ],
+              "premises": [
+                [
+                  "path",
+                  12,
+                  14
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [
+                [
+                  "path",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                9
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  11,
+                  8
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  14
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [
+                [
+                  "path",
+                  12,
+                  14
+                ],
+                [
+                  "path",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                5
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                9
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "S0: opt3 frag4 c7 r4 v45\nS1: opt6 frag3 c3 r2 v33\nS2: opt10 frag7 c3 r6 v43\nS3: opt15 frag3 c5 r4 v45\nS4: opt18 frag0 c3 r1 v31\nS5: opt22 frag2 c5 r2 v31\nS6: opt24 frag2 c1 r1 v9\nS7: opt31 frag1 c3 r1 v31\nBonuses: (3,15)=21.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                3
+              ],
+              "premises": [
+                [
+                  "ready",
+                  3
+                ],
+                [
+                  "ready",
+                  15
+                ]
+              ],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "unknown fragment"
+          },
+          {
+            "item": {
+              "quote": "S0: opt3 frag4 c7 r4 v45\nS1: opt6 frag3 c3 r2 v33\nS2: opt10 frag7 c3 r6 v43\nS3: opt15 frag3 c5 r4 v45\nS4: opt18 frag0 c3 r1 v31\nS5: opt22 frag2 c5 r2 v31\nS6: opt24 frag2 c1 r1 v9\nS7: opt31 frag1 c3 r1 v31\nBonuses: (3,15)=21.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                15
+              ],
+              "premises": [
+                [
+                  "ready",
+                  3
+                ],
+                [
+                  "ready",
+                  15
+                ]
+              ],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "unknown fragment"
+          }
+        ],
+        "grossTokens": 26387,
+        "usage": {
+          "input_tokens": 22159,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 4228,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 26387
+        },
+        "raw": [
+          {
+            "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "0: frag0 cost1 risk1 value9\n1: frag6 cost8 risk3 value45\n2: frag7 cost8 risk4 value26\n3: frag4 cost7 risk4 value45",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              3
+            ],
+            "premises": [
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              3,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                9
+              ],
+              [
+                "edge",
+                9,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Graph components: 0->2->4->6->7, 0->5->4, 1->3->4, 4->6->7. So from 0 can reach 2,5,4,6,7. positive path. 0->7 yes. 1->7? 1->3->4->6->7 yes. 2->7 yes. 3->7 yes. 7->0? No (no incoming? edges 6->7, no out from 7). 8->9->11 and 8->10->11. 8->11 yes, 9->11 yes, 10->11 yes, 11->8 no. 12->13->14 yes. 0->14? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              10,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [
+              [
+                "path",
+                1,
+                7
+              ],
+              [
+                "path",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                0,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              7
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus ready:\nf0: path(0,7) yes, 8->11 yes => true\nf1: 1->7 yes, 8->11 yes => true\nf2: 2->7 yes,10->11 yes => true\nf3: 3->7 yes,8->11 yes => true\nf4: 0->7 yes,9->11 yes => true\nf5: 1->7 yes,10->11 yes => true\nf6: 12->14 yes,0->7 yes => true\nf7: 12->14 yes,8->11 yes => true\nf8: 7->0? no => false",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [
+              [
+                "path",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              9
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                11,
+                8
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "So only fragments 0-7 ready. But options have fragments 8-11 in some stages. Those are not ready, so cannot select options with fragment 8,9,10,11.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Feasible options per stage: stage0 {0,1,2,3}; stage1 {4,6} (5,7 invalid); stage2 {8,9,10} (11 invalid); stage3 {12,13,14,15}; stage4 {16,18} (17,19 invalid); stage5 {20,22} (21,23 invalid); stage6 {24,25,26} (27 invalid); stage7 {28,30,31} (29 invalid).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              9
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "S0: opt3 frag4 c7 r4 v45\nS1: opt6 frag3 c3 r2 v33\nS2: opt10 frag7 c3 r6 v43\nS3: opt15 frag3 c5 r4 v45\nS4: opt18 frag0 c3 r1 v31\nS5: opt22 frag2 c5 r2 v31\nS6: opt24 frag2 c1 r1 v9\nS7: opt31 frag1 c3 r1 v31\nBonuses: (3,15)=21.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              3
+            ],
+            "premises": [
+              [
+                "ready",
+                3
+              ],
+              [
+                "ready",
+                15
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "S0: opt3 frag4 c7 r4 v45\nS1: opt6 frag3 c3 r2 v33\nS2: opt10 frag7 c3 r6 v43\nS3: opt15 frag3 c5 r4 v45\nS4: opt18 frag0 c3 r1 v31\nS5: opt22 frag2 c5 r2 v31\nS6: opt24 frag2 c1 r1 v9\nS7: opt31 frag1 c3 r1 v31\nBonuses: (3,15)=21.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              15
+            ],
+            "premises": [
+              [
+                "ready",
+                3
+              ],
+              [
+                "ready",
+                15
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          }
+        ]
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "We should expand parentId 1 selection [3] with option 6?",
+            "occurrence": 0,
+            "atom": [
+              "edge",
+              1,
+              3
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "uncertain",
+            "span": [
+              1185,
+              1241
+            ],
+            "nativeTruth": true,
+            "truthMatches": false,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"edge\",1,3]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 1,
+            "atGrossTokens": 45292,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "parentId 1 selection [3] optionIds [4,5,6,7]",
+              "occurrence": 0,
+              "atom": [
+                "edge",
+                1,
+                3
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "check if option5 or7 invalid (frag10 not ready)",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "uncertain"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Option6 ready",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                6
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "So expand 1,6.",
+              "occurrence": 0,
+              "atom": [
+                "edge",
+                1,
+                6
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          }
+        ],
+        "grossTokens": 1691,
+        "usage": {
+          "input_tokens": 1396,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 295,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1691
+        },
+        "raw": [
+          {
+            "quote": "We should expand parentId 1 selection [3] with option 6?",
+            "occurrence": 0,
+            "atom": [
+              "edge",
+              1,
+              3
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "uncertain"
+          },
+          {
+            "quote": "parentId 1 selection [3] optionIds [4,5,6,7]",
+            "occurrence": 0,
+            "atom": [
+              "edge",
+              1,
+              3
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "check if option5 or7 invalid (frag10 not ready)",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "uncertain"
+          },
+          {
+            "quote": "Option6 ready",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "So expand 1,6.",
+            "occurrence": 0,
+            "atom": [
+              "edge",
+              1,
+              6
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "mention"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015421660000356496,
+      "graceSeconds": 5
+    }
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "1: [1,1,7,8,11] -> f1: path(1,7) true (1->3->4->6->7), path(8,11) true. ready 1 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [
+              [
+                "path",
+                1,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              3881,
+              3966
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",1]",
+              "[[\"path\",1,7],[\"path\",8,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "2: [2,2,7,10,11] -> f2: path(2,7) true (2->4->6->7), path(10,11) true. ready 2 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [
+              [
+                "path",
+                2,
+                7
+              ],
+              [
+                "path",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              4004,
+              4088
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",2]",
+              "[[\"path\",2,7],[\"path\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "3: [3,3,7,8,11] -> f3: path(3,7) true, path(8,11) true. ready 3 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              3
+            ],
+            "premises": [
+              [
+                "path",
+                3,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              4089,
+              4158
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",3]",
+              "[[\"path\",3,7],[\"path\",8,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "4: [4,0,7,9,11] -> f4: path(0,7) true, path(9,11) true. ready 4 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                9,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              4159,
+              4238
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",4]",
+              "[[\"path\",0,7],[\"path\",9,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "5: [5,1,7,10,11] -> f5: path(1,7) true, path(10,11) true. ready 5 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [
+              [
+                "path",
+                1,
+                7
+              ],
+              [
+                "path",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              4239,
+              4310
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",5]",
+              "[[\"path\",1,7],[\"path\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "6: [6,12,14,0,7] -> f6: path(12,14) true, path(0,7) true. ready 6 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                0,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              4311,
+              4392
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",6]",
+              "[[\"path\",12,14],[\"path\",0,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          },
+          {
+            "quote": "7: [7,12,14,8,11] -> f7: path(12,14) true, path(8,11) true. ready 7 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              7
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              4393,
+              4476
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",7]",
+              "[[\"path\",12,14],[\"path\",8,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34472,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "Need(f,a,b,c,d) makes ready(f) true iff path(a,b) and path(c,d).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Evidence facts: ready 0 true, path 0 7, path 8 11, ready 4, path 9 11, ready 6, path 12 14, ready 7.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "8: [8,7,0,8,11] -> f8: path(7,0)? Is there path 7->0? No edges from 7 to anywhere. So false. Need path(7,0) and path(8,11). So ready 8 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [
+                [
+                  "path",
+                  7,
+                  0
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "9: [9,0,7,11,8] -> f9: path(0,7) true, path(11,8)? No edges 11->? 11 has no outgoing. So false. ready 9 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                9
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  11,
+                  8
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "10: [10,0,14,8,11] -> f10: path(0,14)? 0 reaches 7, but no 7->14. So false. path(8,11) true. And requires both, so false. ready 10 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  14
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "11: [11,12,14,7,0] -> f11: path(12,14) true, path(7,0) false. So false. ready 11 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [
+                [
+                  "path",
+                  12,
+                  14
+                ],
+                [
+                  "path",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "0->2, 0->5\n2->4\n5->4\n4->6\n6->7\nSo 0 reaches 2,5,4,6,7.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                0,
+                7
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          }
+        ],
+        "grossTokens": 36542,
+        "usage": {
+          "input_tokens": 35089,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 1453,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 36542
+        },
+        "raw": [
+          {
+            "quote": "Need(f,a,b,c,d) makes ready(f) true iff path(a,b) and path(c,d).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Evidence facts: ready 0 true, path 0 7, path 8 11, ready 4, path 9 11, ready 6, path 12 14, ready 7.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "1: [1,1,7,8,11] -> f1: path(1,7) true (1->3->4->6->7), path(8,11) true. ready 1 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [
+              [
+                "path",
+                1,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "2: [2,2,7,10,11] -> f2: path(2,7) true (2->4->6->7), path(10,11) true. ready 2 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [
+              [
+                "path",
+                2,
+                7
+              ],
+              [
+                "path",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "3: [3,3,7,8,11] -> f3: path(3,7) true, path(8,11) true. ready 3 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              3
+            ],
+            "premises": [
+              [
+                "path",
+                3,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "4: [4,0,7,9,11] -> f4: path(0,7) true, path(9,11) true. ready 4 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                9,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "5: [5,1,7,10,11] -> f5: path(1,7) true, path(10,11) true. ready 5 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [
+              [
+                "path",
+                1,
+                7
+              ],
+              [
+                "path",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "6: [6,12,14,0,7] -> f6: path(12,14) true, path(0,7) true. ready 6 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                0,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "7: [7,12,14,8,11] -> f7: path(12,14) true, path(8,11) true. ready 7 true. Evidence.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              7
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "8: [8,7,0,8,11] -> f8: path(7,0)? Is there path 7->0? No edges from 7 to anywhere. So false. Need path(7,0) and path(8,11). So ready 8 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [
+              [
+                "path",
+                7,
+                0
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "9: [9,0,7,11,8] -> f9: path(0,7) true, path(11,8)? No edges 11->? 11 has no outgoing. So false. ready 9 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              9
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                11,
+                8
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "10: [10,0,14,8,11] -> f10: path(0,14)? 0 reaches 7, but no 7->14. So false. path(8,11) true. And requires both, so false. ready 10 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "11: [11,12,14,7,0] -> f11: path(12,14) true, path(7,0) false. So false. ready 11 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "0->2, 0->5\n2->4\n5->4\n4->6\n6->7\nSo 0 reaches 2,5,4,6,7.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015369999998711137,
+      "graceSeconds": 5
+    }
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "0: [0,0,7,8,11] -> fragment 0 needs path(0,7) and path(8,11). facts ready0 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1120,
+              1200
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",0]",
+              "[[\"path\",0,7],[\"path\",8,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34962,
+            "repeatFact": false
+          },
+          {
+            "quote": "4: [0,7,9,11] wait tuple [4,0,7,9,11] length 5? Actually [4,0,7,9,11] is 5 elements: fragment 4, a=0,b=7,c=9,d=11. So ready4 true from facts (path 0,7 and 9,11).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                9,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1386,
+              1547
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"ready\",4]",
+              "[[\"path\",0,7],[\"path\",9,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 34962,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+              "occurrence": 1,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+              "occurrence": 2,
+              "atom": [
+                "ready",
+                6
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+              "occurrence": 3,
+              "atom": [
+                "ready",
+                7
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          }
+        ],
+        "grossTokens": 35165,
+        "usage": {
+          "input_tokens": 34670,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 495,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 35165
+        },
+        "raw": [
+          {
+            "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+            "occurrence": 1,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+            "occurrence": 2,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "First element likely fragment id? Given facts ready 0,4,6,7 true.",
+            "occurrence": 3,
+            "atom": [
+              "ready",
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "0: [0,0,7,8,11] -> fragment 0 needs path(0,7) and path(8,11). facts ready0 true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "4: [0,7,9,11] wait tuple [4,0,7,9,11] length 5? Actually [4,0,7,9,11] is 5 elements: fragment 4, a=0,b=7,c=9,d=11. So ready4 true from facts (path 0,7 and 9,11).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                9,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015325410001878481,
+      "graceSeconds": 5
+    }
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              3241,
+              3379
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",0,7]",
+              "[]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17466,
+            "repeatFact": false
+          },
+          {
+            "quote": "1->3->4->6->7. So path 1 to 7 yes.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              5856,
+              5890
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",1,7]",
+              "[[\"edge\",1,3],[\"edge\",3,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17466,
+            "repeatFact": false
+          },
+          {
+            "quote": "8->9, 8->10->11. So path 8 to 11 yes.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              5891,
+              5928
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",8,11]",
+              "[[\"edge\",8,10],[\"edge\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17466,
+            "repeatFact": false
+          },
+          {
+            "quote": "path 8->9 but no 9->11? Wait 8->9, but 9 has no outgoing? Actually edges include [8,9], [8,10], [10,11]. 9 has no outgoing. So path 9->11 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "uncertain",
+            "span": [
+              5929,
+              6073
+            ],
+            "nativeTruth": false,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",9,11]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17466,
+            "repeatFact": false
+          },
+          {
+            "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              12,
+              14
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              6192,
+              6276
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",12,14]",
+              "[]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17466,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "Semantics: need(f,a,b,c,d): ready(f) iff path(a,b) and path(c,d).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                "f"
+              ],
+              "premises": [
+                [
+                  "path",
+                  "a",
+                  "b"
+                ],
+                [
+                  "path",
+                  "c",
+                  "d"
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "malformed label atom"
+          },
+          {
+            "item": {
+              "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+              "occurrence": 1,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+              "occurrence": 2,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+              "occurrence": 3,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                8,
+                11
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                1,
+                7
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                9,
+                11
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                7,
+                0
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Edges: 0->2->4->6->7; also 0->5->4. So path 0 to 7 yes.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                0,
+                7
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                7,
+                0
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                0,
+                14
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+              "occurrence": 1,
+              "atom": [
+                "path",
+                11,
+                8
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "quote missing verbatim"
+          }
+        ],
+        "grossTokens": 18549,
+        "usage": {
+          "input_tokens": 16702,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 1847,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 18549
+        },
+        "raw": [
+          {
+            "quote": "Semantics: need(f,a,b,c,d): ready(f) iff path(a,b) and path(c,d).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              "f"
+            ],
+            "premises": [
+              [
+                "path",
+                "a",
+                "b"
+              ],
+              [
+                "path",
+                "c",
+                "d"
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence: ready 0 true (facts), ready1 true, ready4 false, ready8 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+            "occurrence": 1,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+            "occurrence": 2,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "So at stage 0, options available: id0 frag0 (ready true), id1 frag1 (ready true), id2 frag4 (ready false), id3 frag8 (ready false? ready8 false).",
+            "occurrence": 3,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Evidence only contains some paths. Facts given include path 0->7 true, path 8->11 true, path 1->7 true, path 9->11 false, path 7->0 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Edges: 0->2->4->6->7; also 0->5->4. So path 0 to 7 yes.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "1->3->4->6->7. So path 1 to 7 yes.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "8->9, 8->10->11. So path 8 to 11 yes.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "path 8->9 but no 9->11? Wait 8->9, but 9 has no outgoing? Actually edges include [8,9], [8,10], [10,11]. 9 has no outgoing. So path 9->11 false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "uncertain"
+          },
+          {
+            "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              12,
+              14
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              14
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "path 12->14 yes. path 7->0? no. path 0->14? 0->...->7, no 14. So no. path 11->8? no.",
+            "occurrence": 1,
+            "atom": [
+              "path",
+              11,
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.001531666000119003,
+      "graceSeconds": 5
+    }
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "From 0: 0→2→4→6→7, 0→5→4→6→7. So reachable from 0: {2,4,5,6,7}. So path(0,7) = true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1421,
+              1505
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",0,7]",
+              "[[\"edge\",0,2],[\"edge\",2,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 1: 1→3→4→6→7, so {3,4,6,7}. path(1,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1506,
+              1554
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",1,7]",
+              "[[\"edge\",1,3],[\"edge\",3,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 2: 2→4→6→7 → {4,6,7}. path(2,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              2,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1555,
+              1597
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",2,7]",
+              "[[\"edge\",2,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 3: 3→4→6→7 → path(3,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              3,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1598,
+              1631
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",3,7]",
+              "[[\"edge\",3,4],[\"edge\",4,6],[\"edge\",6,7]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 8: 8→9, 8→10→11. So {9,10,11}. path(8,11)=true, path(10,11)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1632,
+              1702
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",8,11]",
+              "[[\"edge\",8,10],[\"edge\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 9: 9 has no outgoing edges. path(9,11)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention",
+            "span": [
+              1703,
+              1753
+            ],
+            "nativeTruth": false,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",9,11]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 12: 12→13→14. {13,14}. path(12,14)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              12,
+              14
+            ],
+            "premises": [
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              1754,
+              1799
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": true,
+            "qualifiedPositiveDerivation": true,
+            "claimKey": [
+              "[\"path\",12,14]",
+              "[[\"edge\",12,13],[\"edge\",13,14]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 7: no outgoing edges. path(7,0)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention",
+            "span": [
+              1800,
+              1843
+            ],
+            "nativeTruth": false,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",7,0]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 11: no outgoing. path(11,8)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              11,
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention",
+            "span": [
+              1844,
+              1883
+            ],
+            "nativeTruth": false,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",11,8]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "From 0: path(0,14)? 0 reaches {2,4,5,6,7}, not 14. false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              14
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention",
+            "span": [
+              1884,
+              1941
+            ],
+            "nativeTruth": false,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"path\",0,14]",
+              "[]",
+              false
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse",
+            "span": [
+              2691,
+              2880
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",0]",
+              "[]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 16671,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "Let me list:\n- need 0: [0,0,7,8,11] → f=0, path(0,7) and path(8,11)",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "- f4: path(0,7) && path(9,11) = true && false = false. ready(4)=false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  9,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "- f8: path(7,0) && path(8,11) = false && true = false. ready(8)=false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [
+                [
+                  "path",
+                  7,
+                  0
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "- f9: path(0,7) && path(11,8) = true && false = false. ready(9)=false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                9
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  7
+                ],
+                [
+                  "path",
+                  11,
+                  8
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "- f10: path(0,14) && path(8,11) = false. ready(10)=false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [
+                [
+                  "path",
+                  0,
+                  14
+                ],
+                [
+                  "path",
+                  8,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "- f11: path(12,14) && path(7,0) = true && false = false. ready(11)=false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [
+                [
+                  "path",
+                  12,
+                  14
+                ],
+                [
+                  "path",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                0,
+                7
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                8,
+                11
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                1,
+                7
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                9,
+                11
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+              "occurrence": 0,
+              "atom": [
+                "path",
+                7,
+                0
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "reuse"
+            },
+            "failure": "overlapping_or_unsorted_quotes"
+          },
+          {
+            "item": {
+              "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                2
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                6
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "mention"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          },
+          {
+            "item": {
+              "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [],
+              "polarity": false,
+              "kind": "mention"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          }
+        ],
+        "grossTokens": 19321,
+        "usage": {
+          "input_tokens": 16692,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 2629,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 19321
+        },
+        "raw": [
+          {
+            "quote": "Let me list:\n- need 0: [0,0,7,8,11] → f=0, path(0,7) and path(8,11)",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "From 0: 0→2→4→6→7, 0→5→4→6→7. So reachable from 0: {2,4,5,6,7}. So path(0,7) = true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 1: 1→3→4→6→7, so {3,4,6,7}. path(1,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 2: 2→4→6→7 → {4,6,7}. path(2,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              2,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 3: 3→4→6→7 → path(3,7)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              3,
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 8: 8→9, 8→10→11. So {9,10,11}. path(8,11)=true, path(10,11)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 9: 9 has no outgoing edges. path(9,11)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention"
+          },
+          {
+            "quote": "From 12: 12→13→14. {13,14}. path(12,14)=true.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              12,
+              14
+            ],
+            "premises": [
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "From 7: no outgoing edges. path(7,0)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention"
+          },
+          {
+            "quote": "From 11: no outgoing. path(11,8)=false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              11,
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention"
+          },
+          {
+            "quote": "From 0: path(0,14)? 0 reaches {2,4,5,6,7}, not 14. false.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              14
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention"
+          },
+          {
+            "quote": "- f4: path(0,7) && path(9,11) = true && false = false. ready(4)=false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                9,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "- f8: path(7,0) && path(8,11) = false && true = false. ready(8)=false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [
+              [
+                "path",
+                7,
+                0
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "- f9: path(0,7) && path(11,8) = true && false = false. ready(9)=false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              9
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                7
+              ],
+              [
+                "path",
+                11,
+                8
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "- f10: path(0,14) && path(8,11) = false. ready(10)=false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [
+              [
+                "path",
+                0,
+                14
+              ],
+              [
+                "path",
+                8,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "- f11: path(12,14) && path(7,0) = true && false = false. ready(11)=false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [
+              [
+                "path",
+                12,
+                14
+              ],
+              [
+                "path",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              0,
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              8,
+              11
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              1,
+              7
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              9,
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Now the evidence facts confirm: ready(0) true, path(0,7) true, path(8,11) true, ready(1) true, path(1,7) true, ready(4) false, path(9,11) false, ready(8) false, path(7,0) false. Consistent.",
+            "occurrence": 0,
+            "atom": [
+              "path",
+              7,
+              0
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "reuse"
+          },
+          {
+            "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "mention"
+          },
+          {
+            "quote": "Ready fragments: 0,1,2,3,5,6,7 (true); fragments 4,8,9,10,11 false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [],
+            "polarity": false,
+            "kind": "mention"
+          }
+        ]
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "accepted": [],
+        "rejected": [
+          {
+            "item": {
+              "quote": "The expansion succeeded. Now frontier has two nodes:\n- parentId 0, options [0,2,3]\n- parentId 1 (selection [1]), options [4,5,6,7]",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                0
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "uncertain"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          }
+        ],
+        "grossTokens": 1220,
+        "usage": {
+          "input_tokens": 1101,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 119,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1220
+        },
+        "raw": [
+          {
+            "quote": "The expansion succeeded. Now frontier has two nodes:\n- parentId 0, options [0,2,3]\n- parentId 1 (selection [1]), options [4,5,6,7]",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "uncertain"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015323330001137947,
+      "graceSeconds": 5
+    }
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "failure": null,
+        "accepted": [
+          {
+            "quote": "path(0,7): 0->2->4->6->7 yes. path(8,11): 8->10->11 yes. So ready(0) true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              3171,
+              3245
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",0]",
+              "[[\"edge\",0,2],[\"edge\",2,4],[\"edge\",4,6],[\"edge\",6,7],[\"edge\",8,10],[\"edge\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17518,
+            "repeatFact": false
+          },
+          {
+            "quote": "Fragment 2 need path(2,7) yes (2->4->6->7); path(10,11) yes (10->11). ready(2).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive",
+            "span": [
+              3326,
+              3405
+            ],
+            "nativeTruth": true,
+            "truthMatches": true,
+            "supportQualified": false,
+            "qualifiedPositiveDerivation": false,
+            "claimKey": [
+              "[\"ready\",2]",
+              "[[\"edge\",2,4],[\"edge\",4,6],[\"edge\",6,7],[\"edge\",10,11]]",
+              true
+            ],
+            "prior": null,
+            "definiteRepeat": false,
+            "turn": 0,
+            "atGrossTokens": 17518,
+            "repeatFact": false
+          }
+        ],
+        "rejected": [
+          {
+            "item": {
+              "quote": "Fragment 1 need path(1,7)? 1->3->4->6->7 yes; path(8,11) yes. So ready(1) true.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [
+                [
+                  "edge",
+                  1,
+                  3
+                ],
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ],
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Fragment 3 need path(3,7) yes (3->4->6->7); path(8,11) yes. So fragments 0,1,2,3 ready initially.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                3
+              ],
+              "premises": [
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ],
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Need for frag4: path(0,7) and path(9,11). path(0,7) yes; path(9,11)? 9 has no outgoing? edges from 9 none. So path(9,11) false. Thus frag4 not ready.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "Frag8 need path(7,0) and path(8,11). path(7,0)? no. So not ready.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [
+                [
+                  "edge",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "f4: path(0,7) true, path(9,11)? 9 no out false => false.",
+              "occurrence": 1,
+              "atom": [
+                "ready",
+                4
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "quote missing verbatim"
+          },
+          {
+            "item": {
+              "quote": "f5: path(1,7) true, path(10,11) true => true.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                5
+              ],
+              "premises": [
+                [
+                  "edge",
+                  1,
+                  3
+                ],
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "f6: path(12,14) true, path(0,7) true => true.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                6
+              ],
+              "premises": [
+                [
+                  "edge",
+                  12,
+                  13
+                ],
+                [
+                  "edge",
+                  13,
+                  14
+                ],
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "f7: path(12,14) true, path(8,11) true => true.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                7
+              ],
+              "premises": [
+                [
+                  "edge",
+                  12,
+                  13
+                ],
+                [
+                  "edge",
+                  13,
+                  14
+                ],
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "f8: path(7,0) false (7 no out), path(8,11) true => false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                8
+              ],
+              "premises": [
+                [
+                  "edge",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "f9: path(0,7) true, path(11,8)? 11 no out false => false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                9
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "f10: path(0,14)? 0 cannot reach 12..14 (separate component) false, path(8,11) true => false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                10
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ],
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          },
+          {
+            "item": {
+              "quote": "f11: path(12,14) true, path(7,0) false => false.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                11
+              ],
+              "premises": [
+                [
+                  "edge",
+                  12,
+                  13
+                ],
+                [
+                  "edge",
+                  13,
+                  14
+                ],
+                [
+                  "edge",
+                  7,
+                  0
+                ]
+              ],
+              "polarity": false,
+              "kind": "derive"
+            },
+            "failure": "false stated premise"
+          },
+          {
+            "item": {
+              "quote": "Thus any selected option must have fragment in {0,1,2,3,5,6,7}.",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                5
+              ],
+              "premises": [],
+              "polarity": true,
+              "kind": "reuse"
+            },
+            "failure": "fragment ID absent or mismatched; no silent repair"
+          }
+        ],
+        "grossTokens": 18892,
+        "usage": {
+          "input_tokens": 17297,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 1595,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 18892
+        },
+        "raw": [
+          {
+            "quote": "path(0,7): 0->2->4->6->7 yes. path(8,11): 8->10->11 yes. So ready(0) true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              0
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Fragment 1 need path(1,7)? 1->3->4->6->7 yes; path(8,11) yes. So ready(1) true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Fragment 2 need path(2,7) yes (2->4->6->7); path(10,11) yes (10->11). ready(2).",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              2
+            ],
+            "premises": [
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Fragment 3 need path(3,7) yes (3->4->6->7); path(8,11) yes. So fragments 0,1,2,3 ready initially.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              3
+            ],
+            "premises": [
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "Need for frag4: path(0,7) and path(9,11). path(0,7) yes; path(9,11)? 9 has no outgoing? edges from 9 none. So path(9,11) false. Thus frag4 not ready.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "Frag8 need path(7,0) and path(8,11). path(7,0)? no. So not ready.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [
+              [
+                "edge",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "f4: path(0,7) true, path(9,11)? 9 no out false => false.",
+            "occurrence": 1,
+            "atom": [
+              "ready",
+              4
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "f5: path(1,7) true, path(10,11) true => true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "f6: path(12,14) true, path(0,7) true => true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              6
+            ],
+            "premises": [
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ],
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "f7: path(12,14) true, path(8,11) true => true.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              7
+            ],
+            "premises": [
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          },
+          {
+            "quote": "f8: path(7,0) false (7 no out), path(8,11) true => false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              8
+            ],
+            "premises": [
+              [
+                "edge",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "f9: path(0,7) true, path(11,8)? 11 no out false => false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              9
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "f10: path(0,14)? 0 cannot reach 12..14 (separate component) false, path(8,11) true => false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              10
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "f11: path(12,14) true, path(7,0) false => false.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              11
+            ],
+            "premises": [
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ],
+              [
+                "edge",
+                7,
+                0
+              ]
+            ],
+            "polarity": false,
+            "kind": "derive"
+          },
+          {
+            "quote": "Thus any selected option must have fragment in {0,1,2,3,5,6,7}.",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              5
+            ],
+            "premises": [],
+            "polarity": true,
+            "kind": "reuse"
+          }
+        ]
+      },
+      {
+        "turn": 1,
+        "failure": null,
+        "accepted": [],
+        "rejected": [
+          {
+            "item": {
+              "quote": "We expanded option 1. Now frontier has two nodes: parent 0 with remaining options [0,2,3], and parent 1 (selection [1]) with stage1 options [4,5,6,7].",
+              "occurrence": 0,
+              "atom": [
+                "ready",
+                1
+              ],
+              "premises": [
+                [
+                  "edge",
+                  0,
+                  2
+                ],
+                [
+                  "edge",
+                  1,
+                  3
+                ],
+                [
+                  "edge",
+                  2,
+                  4
+                ],
+                [
+                  "edge",
+                  3,
+                  4
+                ],
+                [
+                  "edge",
+                  0,
+                  5
+                ],
+                [
+                  "edge",
+                  5,
+                  4
+                ],
+                [
+                  "edge",
+                  4,
+                  6
+                ],
+                [
+                  "edge",
+                  6,
+                  7
+                ],
+                [
+                  "edge",
+                  8,
+                  9
+                ],
+                [
+                  "edge",
+                  8,
+                  10
+                ],
+                [
+                  "edge",
+                  10,
+                  11
+                ],
+                [
+                  "edge",
+                  12,
+                  13
+                ],
+                [
+                  "edge",
+                  13,
+                  14
+                ]
+              ],
+              "polarity": true,
+              "kind": "derive"
+            },
+            "failure": "claimed endpoints absent from literal quote"
+          }
+        ],
+        "grossTokens": 1675,
+        "usage": {
+          "input_tokens": 1438,
+          "input_tokens_details": {
+            "cached_tokens": 768
+          },
+          "output_tokens": 237,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1675
+        },
+        "raw": [
+          {
+            "quote": "We expanded option 1. Now frontier has two nodes: parent 0 with remaining options [0,2,3], and parent 1 (selection [1]) with stage1 options [4,5,6,7].",
+            "occurrence": 0,
+            "atom": [
+              "ready",
+              1
+            ],
+            "premises": [
+              [
+                "edge",
+                0,
+                2
+              ],
+              [
+                "edge",
+                1,
+                3
+              ],
+              [
+                "edge",
+                2,
+                4
+              ],
+              [
+                "edge",
+                3,
+                4
+              ],
+              [
+                "edge",
+                0,
+                5
+              ],
+              [
+                "edge",
+                5,
+                4
+              ],
+              [
+                "edge",
+                4,
+                6
+              ],
+              [
+                "edge",
+                6,
+                7
+              ],
+              [
+                "edge",
+                8,
+                9
+              ],
+              [
+                "edge",
+                8,
+                10
+              ],
+              [
+                "edge",
+                10,
+                11
+              ],
+              [
+                "edge",
+                12,
+                13
+              ],
+              [
+                "edge",
+                13,
+                14
+              ]
+            ],
+            "polarity": true,
+            "kind": "derive"
+          }
+        ]
+      }
+    ],
+    "shutdown": {
+      "protocol": "stdin EOF",
+      "dynamic": false,
+      "clean": true,
+      "exit": 0,
+      "fallback": [],
+      "error": null,
+      "seconds": 0.0015334170002461178,
+      "graceSeconds": 5
+    }
+  }
+]

@@ -1,0 +1,112 @@
+[
+  {
+    "receipt": "preflight/uv-sync.log",
+    "sha256": "739131ad470fc55041187a11cc0c68351d1f99529f65f7f08be8fff094aa9547",
+    "reason": "Dependency preflight DNS failure; later authorized sync succeeded",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/cffi-api-build.log",
+    "sha256": "ac2ba96c4c1908cc57c4da05368ee2d823fbd8fecc4846df7bdb17548cac9dee",
+    "reason": "Incorrect API builder arguments rejected",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/cffi-api-build-gcc.log",
+    "sha256": "fc75f1f94bf9763410faf4a7f1063f4131f2d4811ea6a29606ca8e25aae152c6",
+    "reason": "Requested GCC executable absent",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/cffi-api-build-success.log",
+    "sha256": "8507d39ae53108d4d04972efbafaf93fbcd23f68fc5138b81dc76982169be185",
+    "reason": "Compiler selection preflight retained; explicit GCC qualification is separate",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/native-source-manifest-build.log",
+    "sha256": "c2a17e53c1fca4dab599968edbbd5494eb5582c7ac8019eb0007f62dab8e2f45",
+    "reason": "Source newer than compiled module rejected; not bypassed",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/freeze.log",
+    "sha256": "cee60e39c94bba9a14a45073fb154a64d26d51050600a1817d6a3360e9070a06",
+    "reason": "Moving workspace source hash rejected during freeze",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/snapshot-freeze.log",
+    "sha256": "57c5cb43d6815de1ed990ec612b1e0a0ad78732c069ef729ece8c22f3d7be5cc",
+    "reason": "Missing os import in consumer freezer; fixed before paid calls",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/diagnostic-freeze.log",
+    "sha256": "b0cd277a255655cfbde2b1419432efed5480b1bf7afc405eff0075c0b7850ab7",
+    "reason": "Lean version lookup attempted unrelated dependency resolution; fixed before paid calls",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/quint-typecheck.log",
+    "sha256": "60f0d9190ff69873be753b08ff61530418b0f548f0a98af27d4ea7b544d4c5d0",
+    "reason": "Finite model set/list type mismatch rejected; fixed model checked separately",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "preflight/quint-run.log",
+    "sha256": "60f0d9190ff69873be753b08ff61530418b0f548f0a98af27d4ea7b544d4c5d0",
+    "reason": "Same ill-typed model refused execution",
+    "countsAsPass": false,
+    "solverCalled": false
+  },
+  {
+    "receipt": "native/shared-premise-final-qualification/receipt.json",
+    "reason": "Earlier full-Gxi EOF cleanup exceeded five seconds and required termination",
+    "result": {
+      "repeat": 1,
+      "mode": "full-gxi",
+      "passed": false,
+      "checks": [
+        {
+          "case": "library-crosspath-0",
+          "rows": 8,
+          "facts": 23,
+          "nodes": 47,
+          "proofBuilds": 1
+        },
+        {
+          "case": "library-crosspath-1",
+          "rows": 7,
+          "facts": 23,
+          "nodes": 43,
+          "proofBuilds": 1
+        }
+      ],
+      "shutdown": {
+        "protocol": "stdin EOF",
+        "dynamic": true,
+        "clean": false,
+        "exit": -15,
+        "fallback": [
+          "terminate"
+        ],
+        "error": null,
+        "seconds": 5.012091708998923,
+        "graceSeconds": 5
+      },
+      "seconds": 14.461227250001684
+    },
+    "countsAsPass": false,
+    "solverCalled": false
+  }
+]

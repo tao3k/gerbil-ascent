@@ -1,0 +1,24 @@
+{
+  "kind": "post-hoc diagnostic review, outside frozen repeat metric",
+  "observations": [
+    {
+      "path": "paid/0-prune/0.thinking.txt",
+      "thinkingSha256": "2a0ab505346958bed3e31a7306e24e406c85a671217b8c30f738141820603765",
+      "span": [
+        2474,
+        2538
+      ],
+      "quote": "Actually bonuses are defined as pairs [fragment, stage?, value]?"
+    },
+    {
+      "path": "paid/0-prune/1.thinking.txt",
+      "thinkingSha256": "03bd8929ad934dd5e045801473474dbd5d1d14fbfb8df01d2bc3083cea1a40d1",
+      "span": [
+        6906,
+        6959
+      ],
+      "quote": "Maybe bonuses are between options by fragment not id?"
+    }
+  ],
+  "interpretation": "Observed task-contract interpretation work. Bonus triples use option IDs in the native judge, but the ordinary task input says only selected pairs. This can confound effectiveness attribution; it is not evidence of repeated Fact derivation."
+}

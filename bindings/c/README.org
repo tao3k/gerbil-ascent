@@ -24,8 +24,17 @@ trailing input and unknown contract fields. Errors return a typed status.
 =describe= returns the ABI and operators. =open= admits a program containing
 finite relations, typed scalar columns with optional finite domains, source
 facts, rules and query relation names. Rules support variables, literals,
-positive relational atoms and stratified negation. No executable expressions,
-host callbacks, aggregates or arbitrary predicate serialization are supported.
+positive relational atoms and stratified negation. Checked body operators are
+also available through inert descriptors: =where= (=<= and =even?=), =compute=
+(=+= and =identity=), and =reduce= (=count/sum/min/max=). These delegate to the
+existing =program/scheme-checked.ss= constructors, not a second evaluator.
+=describe.clauseOperators= reports this surface. Operands are variable/literal
+terms; compute/reduce declare their output variable, and reduce additionally
+declares a relation, its terms and value-input variables. Scheme checks binding
+order, exact integer operands, reduction arity and stratification. No executable
+expressions, host callbacks or arbitrary predicate serialization are supported.
+The reverse =ascent-engine-program-wire= serializer remains relational-only;
+opaque Scheme procedures cannot acquire wire authority from an attached label.
 
 =run= returns completion and query rows with an execution deadline of at most
 one second. A fresh zero-budget run is incomplete; an already completed clean

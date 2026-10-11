@@ -1,0 +1,18 @@
+{
+  "producerHead": "e6177acddbb3bd4edd2efb955c55aecc4d057e95",
+  "cleanColdBundleRebuildPassed": true,
+  "committedInputsVerified": 102,
+  "publicApiAndAbiPassed": true,
+  "consumerChecks": 13,
+  "nativeQuintObservationRows": 32,
+  "quintSampledTraces": 1000,
+  "leanProof": "ProofDag.lean",
+  "entryRequestCount": 36,
+  "nativeProofBuildsPerSourceAndArm": 1,
+  "nativeHitsInSixBranchPreview": 5,
+  "factsAndSchemePathConclusionsIdentical": true,
+  "frozenTaskJudgeQuestionAndBudgetUnchanged": true,
+  "outputTransportLiveQualified": false,
+  "solverCallsExecuted": 0,
+  "scope": "Local Darwin with explicit SDK, CPython 3.13, GCC 16, OpenSSL, Quint and Lean. No external model or remote CI result."
+}

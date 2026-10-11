@@ -1,0 +1,1881 @@
+{
+  "schema": "ascent.shared-premise-diagnostic.v1",
+  "tasks": [
+    {
+      "id": "sibling-search-0",
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          20,
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          21,
+          101
+        ],
+        [
+          101,
+          201
+        ],
+        [
+          22,
+          102
+        ],
+        [
+          102,
+          202
+        ],
+        [
+          203,
+          103
+        ],
+        [
+          103,
+          23
+        ],
+        [
+          24,
+          104
+        ],
+        [
+          104,
+          204
+        ],
+        [
+          25,
+          105
+        ],
+        [
+          105,
+          205
+        ],
+        [
+          26,
+          106
+        ],
+        [
+          106,
+          206
+        ],
+        [
+          207,
+          107
+        ],
+        [
+          107,
+          27
+        ],
+        [
+          28,
+          108
+        ],
+        [
+          108,
+          208
+        ],
+        [
+          29,
+          109
+        ],
+        [
+          109,
+          209
+        ],
+        [
+          30,
+          110
+        ],
+        [
+          110,
+          210
+        ],
+        [
+          211,
+          111
+        ],
+        [
+          111,
+          31
+        ],
+        [
+          32,
+          112
+        ],
+        [
+          112,
+          212
+        ],
+        [
+          33,
+          113
+        ],
+        [
+          113,
+          213
+        ],
+        [
+          34,
+          114
+        ],
+        [
+          114,
+          214
+        ],
+        [
+          215,
+          115
+        ],
+        [
+          115,
+          35
+        ]
+      ],
+      "needs": [
+        [
+          0,
+          0,
+          5,
+          20,
+          200
+        ],
+        [
+          1,
+          2,
+          5,
+          21,
+          201
+        ],
+        [
+          2,
+          6,
+          5,
+          22,
+          202
+        ],
+        [
+          3,
+          0,
+          5,
+          23,
+          203
+        ],
+        [
+          4,
+          2,
+          5,
+          24,
+          204
+        ],
+        [
+          5,
+          6,
+          5,
+          25,
+          205
+        ],
+        [
+          6,
+          0,
+          5,
+          26,
+          206
+        ],
+        [
+          7,
+          2,
+          5,
+          27,
+          207
+        ],
+        [
+          8,
+          6,
+          5,
+          28,
+          208
+        ],
+        [
+          9,
+          0,
+          5,
+          29,
+          209
+        ],
+        [
+          10,
+          2,
+          5,
+          30,
+          210
+        ],
+        [
+          11,
+          6,
+          5,
+          31,
+          211
+        ],
+        [
+          12,
+          0,
+          5,
+          32,
+          212
+        ],
+        [
+          13,
+          2,
+          5,
+          33,
+          213
+        ],
+        [
+          14,
+          6,
+          5,
+          34,
+          214
+        ],
+        [
+          15,
+          0,
+          5,
+          35,
+          215
+        ]
+      ],
+      "items": [
+        {
+          "id": 0,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              20,
+              200
+            ]
+          ],
+          "group": 0,
+          "weight": 5,
+          "risk": 2,
+          "value": 15
+        },
+        {
+          "id": 1,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              21,
+              201
+            ]
+          ],
+          "group": 1,
+          "weight": 12,
+          "risk": 13,
+          "value": 32
+        },
+        {
+          "id": 2,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              22,
+              202
+            ]
+          ],
+          "group": 2,
+          "weight": 5,
+          "risk": 12,
+          "value": 49
+        },
+        {
+          "id": 3,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              23,
+              203
+            ]
+          ],
+          "group": 3,
+          "weight": 12,
+          "risk": 11,
+          "value": 23
+        },
+        {
+          "id": 4,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              24,
+              204
+            ]
+          ],
+          "group": 0,
+          "weight": 5,
+          "risk": 10,
+          "value": 40
+        },
+        {
+          "id": 5,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              25,
+              205
+            ]
+          ],
+          "group": 1,
+          "weight": 12,
+          "risk": 9,
+          "value": 57
+        },
+        {
+          "id": 6,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              26,
+              206
+            ]
+          ],
+          "group": 2,
+          "weight": 5,
+          "risk": 8,
+          "value": 31
+        },
+        {
+          "id": 7,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              27,
+              207
+            ]
+          ],
+          "group": 3,
+          "weight": 12,
+          "risk": 7,
+          "value": 48
+        },
+        {
+          "id": 8,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              28,
+              208
+            ]
+          ],
+          "group": 0,
+          "weight": 5,
+          "risk": 6,
+          "value": 22
+        },
+        {
+          "id": 9,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              29,
+              209
+            ]
+          ],
+          "group": 1,
+          "weight": 12,
+          "risk": 5,
+          "value": 39
+        },
+        {
+          "id": 10,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              30,
+              210
+            ]
+          ],
+          "group": 2,
+          "weight": 5,
+          "risk": 4,
+          "value": 56
+        },
+        {
+          "id": 11,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              31,
+              211
+            ]
+          ],
+          "group": 3,
+          "weight": 12,
+          "risk": 3,
+          "value": 30
+        },
+        {
+          "id": 12,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              32,
+              212
+            ]
+          ],
+          "group": 0,
+          "weight": 5,
+          "risk": 2,
+          "value": 47
+        },
+        {
+          "id": 13,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              33,
+              213
+            ]
+          ],
+          "group": 1,
+          "weight": 12,
+          "risk": 13,
+          "value": 21
+        },
+        {
+          "id": 14,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              34,
+              214
+            ]
+          ],
+          "group": 2,
+          "weight": 5,
+          "risk": 12,
+          "value": 38
+        },
+        {
+          "id": 15,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              35,
+              215
+            ]
+          ],
+          "group": 3,
+          "weight": 12,
+          "risk": 11,
+          "value": 55
+        }
+      ],
+      "bonuses": [
+        {
+          "pair": [
+            0,
+            7
+          ],
+          "value": 14
+        },
+        {
+          "pair": [
+            0,
+            14
+          ],
+          "value": 10
+        },
+        {
+          "pair": [
+            1,
+            4
+          ],
+          "value": 12
+        },
+        {
+          "pair": [
+            1,
+            11
+          ],
+          "value": 8
+        },
+        {
+          "pair": [
+            2,
+            8
+          ],
+          "value": 17
+        },
+        {
+          "pair": [
+            2,
+            15
+          ],
+          "value": 13
+        },
+        {
+          "pair": [
+            3,
+            5
+          ],
+          "value": 15
+        },
+        {
+          "pair": [
+            3,
+            12
+          ],
+          "value": 11
+        },
+        {
+          "pair": [
+            4,
+            9
+          ],
+          "value": 9
+        },
+        {
+          "pair": [
+            5,
+            6
+          ],
+          "value": 7
+        },
+        {
+          "pair": [
+            5,
+            13
+          ],
+          "value": 14
+        },
+        {
+          "pair": [
+            6,
+            10
+          ],
+          "value": 12
+        },
+        {
+          "pair": [
+            7,
+            14
+          ],
+          "value": 17
+        },
+        {
+          "pair": [
+            8,
+            11
+          ],
+          "value": 15
+        },
+        {
+          "pair": [
+            9,
+            15
+          ],
+          "value": 9
+        },
+        {
+          "pair": [
+            10,
+            12
+          ],
+          "value": 7
+        },
+        {
+          "pair": [
+            12,
+            13
+          ],
+          "value": 10
+        }
+      ],
+      "sharedAtom": [
+        "path",
+        0,
+        5
+      ],
+      "branches": [
+        {
+          "id": 0,
+          "weightLimit": 49,
+          "riskLimit": 29,
+          "required": 0,
+          "excluded": 14,
+          "start": [
+            0,
+            6,
+            8,
+            13
+          ]
+        },
+        {
+          "id": 1,
+          "weightLimit": 53,
+          "riskLimit": 32,
+          "required": 1,
+          "excluded": 13,
+          "start": [
+            0,
+            1,
+            6,
+            8
+          ]
+        },
+        {
+          "id": 2,
+          "weightLimit": 57,
+          "riskLimit": 35,
+          "required": 2,
+          "excluded": 12,
+          "start": [
+            0,
+            2,
+            6,
+            13
+          ]
+        },
+        {
+          "id": 3,
+          "weightLimit": 49,
+          "riskLimit": 29,
+          "required": 4,
+          "excluded": 10,
+          "start": [
+            0,
+            4,
+            6,
+            9
+          ]
+        },
+        {
+          "id": 4,
+          "weightLimit": 53,
+          "riskLimit": 32,
+          "required": 5,
+          "excluded": 9,
+          "start": [
+            0,
+            5,
+            6,
+            8
+          ]
+        },
+        {
+          "id": 5,
+          "weightLimit": 57,
+          "riskLimit": 35,
+          "required": 6,
+          "excluded": 8,
+          "start": [
+            0,
+            6,
+            9,
+            13
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sibling-search-1",
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          20,
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          21,
+          101
+        ],
+        [
+          101,
+          201
+        ],
+        [
+          202,
+          102
+        ],
+        [
+          102,
+          22
+        ],
+        [
+          23,
+          103
+        ],
+        [
+          103,
+          203
+        ],
+        [
+          24,
+          104
+        ],
+        [
+          104,
+          204
+        ],
+        [
+          25,
+          105
+        ],
+        [
+          105,
+          205
+        ],
+        [
+          206,
+          106
+        ],
+        [
+          106,
+          26
+        ],
+        [
+          27,
+          107
+        ],
+        [
+          107,
+          207
+        ],
+        [
+          28,
+          108
+        ],
+        [
+          108,
+          208
+        ],
+        [
+          29,
+          109
+        ],
+        [
+          109,
+          209
+        ],
+        [
+          210,
+          110
+        ],
+        [
+          110,
+          30
+        ],
+        [
+          31,
+          111
+        ],
+        [
+          111,
+          211
+        ],
+        [
+          32,
+          112
+        ],
+        [
+          112,
+          212
+        ],
+        [
+          33,
+          113
+        ],
+        [
+          113,
+          213
+        ],
+        [
+          214,
+          114
+        ],
+        [
+          114,
+          34
+        ],
+        [
+          35,
+          115
+        ],
+        [
+          115,
+          215
+        ]
+      ],
+      "needs": [
+        [
+          0,
+          0,
+          5,
+          20,
+          200
+        ],
+        [
+          1,
+          2,
+          5,
+          21,
+          201
+        ],
+        [
+          2,
+          6,
+          5,
+          22,
+          202
+        ],
+        [
+          3,
+          0,
+          5,
+          23,
+          203
+        ],
+        [
+          4,
+          2,
+          5,
+          24,
+          204
+        ],
+        [
+          5,
+          6,
+          5,
+          25,
+          205
+        ],
+        [
+          6,
+          0,
+          5,
+          26,
+          206
+        ],
+        [
+          7,
+          2,
+          5,
+          27,
+          207
+        ],
+        [
+          8,
+          6,
+          5,
+          28,
+          208
+        ],
+        [
+          9,
+          0,
+          5,
+          29,
+          209
+        ],
+        [
+          10,
+          2,
+          5,
+          30,
+          210
+        ],
+        [
+          11,
+          6,
+          5,
+          31,
+          211
+        ],
+        [
+          12,
+          0,
+          5,
+          32,
+          212
+        ],
+        [
+          13,
+          2,
+          5,
+          33,
+          213
+        ],
+        [
+          14,
+          6,
+          5,
+          34,
+          214
+        ],
+        [
+          15,
+          0,
+          5,
+          35,
+          215
+        ]
+      ],
+      "items": [
+        {
+          "id": 0,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              20,
+              200
+            ]
+          ],
+          "group": 0,
+          "weight": 8,
+          "risk": 7,
+          "value": 28
+        },
+        {
+          "id": 1,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              21,
+              201
+            ]
+          ],
+          "group": 1,
+          "weight": 15,
+          "risk": 6,
+          "value": 45
+        },
+        {
+          "id": 2,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              22,
+              202
+            ]
+          ],
+          "group": 2,
+          "weight": 8,
+          "risk": 5,
+          "value": 19
+        },
+        {
+          "id": 3,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              23,
+              203
+            ]
+          ],
+          "group": 3,
+          "weight": 15,
+          "risk": 4,
+          "value": 36
+        },
+        {
+          "id": 4,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              24,
+              204
+            ]
+          ],
+          "group": 0,
+          "weight": 8,
+          "risk": 3,
+          "value": 53
+        },
+        {
+          "id": 5,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              25,
+              205
+            ]
+          ],
+          "group": 1,
+          "weight": 15,
+          "risk": 2,
+          "value": 27
+        },
+        {
+          "id": 6,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              26,
+              206
+            ]
+          ],
+          "group": 2,
+          "weight": 8,
+          "risk": 13,
+          "value": 44
+        },
+        {
+          "id": 7,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              27,
+              207
+            ]
+          ],
+          "group": 3,
+          "weight": 15,
+          "risk": 12,
+          "value": 18
+        },
+        {
+          "id": 8,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              28,
+              208
+            ]
+          ],
+          "group": 0,
+          "weight": 8,
+          "risk": 11,
+          "value": 35
+        },
+        {
+          "id": 9,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              29,
+              209
+            ]
+          ],
+          "group": 1,
+          "weight": 15,
+          "risk": 10,
+          "value": 52
+        },
+        {
+          "id": 10,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              30,
+              210
+            ]
+          ],
+          "group": 2,
+          "weight": 8,
+          "risk": 9,
+          "value": 26
+        },
+        {
+          "id": 11,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              31,
+              211
+            ]
+          ],
+          "group": 3,
+          "weight": 15,
+          "risk": 8,
+          "value": 43
+        },
+        {
+          "id": 12,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              32,
+              212
+            ]
+          ],
+          "group": 0,
+          "weight": 8,
+          "risk": 7,
+          "value": 17
+        },
+        {
+          "id": 13,
+          "paths": [
+            [
+              2,
+              5
+            ],
+            [
+              33,
+              213
+            ]
+          ],
+          "group": 1,
+          "weight": 15,
+          "risk": 6,
+          "value": 34
+        },
+        {
+          "id": 14,
+          "paths": [
+            [
+              6,
+              5
+            ],
+            [
+              34,
+              214
+            ]
+          ],
+          "group": 2,
+          "weight": 8,
+          "risk": 5,
+          "value": 51
+        },
+        {
+          "id": 15,
+          "paths": [
+            [
+              0,
+              5
+            ],
+            [
+              35,
+              215
+            ]
+          ],
+          "group": 3,
+          "weight": 15,
+          "risk": 4,
+          "value": 25
+        }
+      ],
+      "bonuses": [
+        {
+          "pair": [
+            0,
+            7
+          ],
+          "value": 14
+        },
+        {
+          "pair": [
+            0,
+            14
+          ],
+          "value": 10
+        },
+        {
+          "pair": [
+            1,
+            4
+          ],
+          "value": 12
+        },
+        {
+          "pair": [
+            1,
+            11
+          ],
+          "value": 8
+        },
+        {
+          "pair": [
+            2,
+            8
+          ],
+          "value": 17
+        },
+        {
+          "pair": [
+            2,
+            15
+          ],
+          "value": 13
+        },
+        {
+          "pair": [
+            3,
+            5
+          ],
+          "value": 15
+        },
+        {
+          "pair": [
+            3,
+            12
+          ],
+          "value": 11
+        },
+        {
+          "pair": [
+            4,
+            9
+          ],
+          "value": 9
+        },
+        {
+          "pair": [
+            5,
+            6
+          ],
+          "value": 7
+        },
+        {
+          "pair": [
+            5,
+            13
+          ],
+          "value": 14
+        },
+        {
+          "pair": [
+            6,
+            10
+          ],
+          "value": 12
+        },
+        {
+          "pair": [
+            7,
+            14
+          ],
+          "value": 17
+        },
+        {
+          "pair": [
+            8,
+            11
+          ],
+          "value": 15
+        },
+        {
+          "pair": [
+            9,
+            15
+          ],
+          "value": 9
+        },
+        {
+          "pair": [
+            10,
+            12
+          ],
+          "value": 7
+        },
+        {
+          "pair": [
+            12,
+            13
+          ],
+          "value": 10
+        }
+      ],
+      "sharedAtom": [
+        "path",
+        0,
+        5
+      ],
+      "branches": [
+        {
+          "id": 0,
+          "weightLimit": 49,
+          "riskLimit": 29,
+          "required": 0,
+          "excluded": 15,
+          "start": [
+            0,
+            5,
+            7,
+            12
+          ]
+        },
+        {
+          "id": 1,
+          "weightLimit": 53,
+          "riskLimit": 32,
+          "required": 1,
+          "excluded": 13,
+          "start": [
+            1,
+            7,
+            12,
+            15
+          ]
+        },
+        {
+          "id": 2,
+          "weightLimit": 57,
+          "riskLimit": 35,
+          "required": 3,
+          "excluded": 12,
+          "start": [
+            0,
+            3,
+            13,
+            15
+          ]
+        },
+        {
+          "id": 3,
+          "weightLimit": 49,
+          "riskLimit": 29,
+          "required": 4,
+          "excluded": 11,
+          "start": [
+            4,
+            5,
+            7,
+            12
+          ]
+        },
+        {
+          "id": 4,
+          "weightLimit": 53,
+          "riskLimit": 32,
+          "required": 5,
+          "excluded": 9,
+          "start": [
+            5,
+            7,
+            12,
+            15
+          ]
+        },
+        {
+          "id": 5,
+          "weightLimit": 57,
+          "riskLimit": 35,
+          "required": 7,
+          "excluded": 8,
+          "start": [
+            5,
+            7,
+            12,
+            15
+          ]
+        }
+      ]
+    }
+  ],
+  "candidate": [
+    "candidate",
+    [
+      "relation",
+      "path",
+      2
+    ],
+    [
+      "relation",
+      "ready",
+      1
+    ],
+    [
+      "rule",
+      [
+        "path",
+        "?x",
+        "?y"
+      ],
+      [
+        "edge",
+        "?x",
+        "?y"
+      ]
+    ],
+    [
+      "rule",
+      [
+        "path",
+        "?x",
+        "?z"
+      ],
+      [
+        "path",
+        "?x",
+        "?y"
+      ],
+      [
+        "edge",
+        "?y",
+        "?z"
+      ]
+    ],
+    [
+      "rule",
+      [
+        "ready",
+        "?f"
+      ],
+      [
+        "need",
+        "?f",
+        "?a",
+        "?b",
+        "?c",
+        "?d"
+      ],
+      [
+        "path",
+        "?a",
+        "?b"
+      ],
+      [
+        "path",
+        "?c",
+        "?d"
+      ]
+    ],
+    [
+      "query",
+      "ready",
+      "?f"
+    ],
+    [
+      "limits",
+      256,
+      1024,
+      1024
+    ]
+  ],
+  "question": "Choose four item IDs maximizing sum of values plus bonuses for selected pairs. Every selected item must have both of its directed paths. Respect this branch's weight and risk limits, include at least three groups, include its required item, and omit its excluded item. Return {\"selected\":[IDs]}.",
+  "tool": {
+    "type": "function",
+    "name": "submit_selection",
+    "description": "Submit four selected item IDs.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "selected": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "selected"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "arms": [
+    "baseline",
+    "facts",
+    "scheme"
+  ],
+  "orders": [
+    [
+      "baseline",
+      "facts",
+      "scheme"
+    ],
+    [
+      "scheme",
+      "facts",
+      "baseline"
+    ]
+  ],
+  "model": "deepseek-flash",
+  "reasoningEffort": "low",
+  "totalBudget": 32768,
+  "maxOutputTokens": 2048,
+  "minimumOutputTokens": 1024,
+  "inputPadding": 256,
+  "maxCalls": 3,
+  "checkpoints": [
+    4096,
+    8192,
+    16384,
+    24576,
+    32768
+  ],
+  "library": "libascent.dylib",
+  "librarySha256": "785e648b447cb3447f7e5ac0e6f4ccafe07a828ffd642d33143412e316655d0d",
+  "inputs": {
+    "core/relation-view.ss": "f8dcffa002e8e771d91927179e39e96b0a8a2c70afb885adcd868a12e51d9058",
+    "table/trrel-uf.ss": "eba18bc4716b3ae67577822a2ba8ea4c9a7849d049ba0db19a4ceba984717568",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+    "table/eqrel.ss": "95b5bc55186cb3931814befc0cd1beb395f020442cfece794a921cf9cc0a1597",
+    "table/storage.ss": "8d09474dea4d30a1e7d6aedf998f0a5849a75c51875f85f45585fea2462ebea8",
+    "table/funs.ss": "88b9ad822be7c6f61572a94dddc824130be2a1dccc13cc264a194832f3370bbe",
+    "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+    "core/rule-bindings.ss": "bf579732fdadbfe13249353e9b1eba34cb6c218184de76e9cf85509ab5b441f5",
+    "core/dependency-graph.ss": "371fb245942b62b974644f7960eb9ab26164f1e76f658b1d90007868f5796112",
+    "core/rule-semantics.ss": "b57285ed87ae32f16f326c0196cf5e279cdeeb47346e4ffa37129817dac45282",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "core/expression-plan.ss": "2989c27fdb1a95af94aaaca23bf06b0d3222852d04fe8b4afdef97e9f0fc6029",
+    "core/positive-plan.ss": "992c263d18992e973caca04daf98b8b593232a687c5e9c8f665c29d448386cc0",
+    "program/aggregators.ss": "627cd7debc3d6d7430fffc73ed1f7edd236191c859fb1ddca6563050e7f23e6b",
+    "program/types.ss": "04caab79eddc6cbcd2866729028c09cc6f8b599e3b3d4ff09033aa1333476d7f",
+    "program/objects.ss": "59bc263f7cbd9240612813e532e960b94cc9990169d6e0911619b22c0648b6ce",
+    "program/scheme-checked.ss": "280bbd8a11cc37283fce6a785271effa35b506b4c1c8028af9f65e8f252b3688",
+    "program/activation.ss": "d4189e85f55d3f2bb178e89134c19e5232ee0bd72f9a3f19a1b8116febbfccc4",
+    "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+    "program/source-snapshot.ss": "4262e270d9334a887285fbf73e2cb8d9d0a2a51a00bedfafceea5482710f5a11",
+    "program/update-selection.ss": "e244d6d253e73355bbbb64e7e8a1d78e9794c6d35a8e047bdb2abd7fbb38ba0b",
+    "program/result.ss": "597957e423922234f82e0258082d3ca30cc892454374aa77bc5810a247d57b45",
+    "program/reuse.ss": "c69b9f67d816ac3959cf4488e9b7e8de0ffd21978ca4501b1ec8818493d2697f",
+    "table/access.ss": "b29c25251dbe8e1afcdbe674ffe9d8f293615668de9b87f720efbd1399b31180",
+    "table/index-sharing.ss": "4b7eedb676304cfd6812863d0c642331acbc4bf52ce76f911651c33ad377ecf7",
+    "program/index.ss": "7cb483bab490110ccbc6791d83947b4b83e80d4c576457c1a3d889907bcc3564",
+    "program/planning.ss": "338a3e269dd796a3756855ff172b38814fd7ed95f487c840ad333abcb4242078",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "program/lattice-frontier.ss": "0189a84700dae294bcc35bd205974786851db0bdd539f578d858efd989911c99",
+    "program/initialization.ss": "05a44e82bbe50d5a28ae0152cd233be602c3ea92767755430c75ac05fef58221",
+    "program/source-state.ss": "31e01b8a7a5d27542b5ddd2f7ff0202d7d78613f51902eece2e49ae0a96087c5",
+    "program/actor-round.ss": "06cd953b2b392ba343737a3522e0fcbaf4798691a325978da598e96a57b558c0",
+    "program/component-plan.ss": "65993f0b374ffba08e20d3c1511796c7cd424baaa79b36bd56f81fe6c33edac3",
+    "program/component-worker.ss": "01827b5e0b678f60b0e8e89541632aa821e2441305c22d20448c7a3d9c35b02c",
+    "program/positive-components.ss": "7c942b2f41f1817d73be436d9d1c785b532599f6eb3d76c2a8407e968a0ec97e",
+    "program/view-replay.ss": "ff0e554d642a38301557c5787269f5571d59880676f4154a00f390a180f6050e",
+    "program/view-state.ss": "87bd9d6ec3d342e33746372fcdb97f841d2f115d722a6e0c4eac3cc7ec241c95",
+    "program/execution-publication.ss": "55be823e474da2d05d60488a2cb94ebf7e5bb7207ee28e4703106d403abca9fc",
+    "program/round-workspace.ss": "48b4d0951f2a1b4b1c95f0fceddc6644c4e19d974e9d2ac859cecbc5c261eb56",
+    "program/evaluate.ss": "b2ad3f42bcebf87c44f10b4e1774760411007ed885815d350b235f5ad3b6a91e",
+    "program/session.ss": "d18fe12ade3fe73bfe35474633583d5460de881762882e43d98bd5cbe9440966",
+    "candidate/datum.ss": "4c48712f7588734e4061e4375a5cceb8fde91094f3134b4ec90ebcb2afc04067",
+    "candidate/types.ss": "7e83ce8a87183116ca820fb4c51284e9b3a19b524629009cf972957bc8e44c87",
+    "candidate/program.ss": "41970936fc52d05ffebb968305de6d8aa3e7b11a006ff895ddcfdaab038775ef",
+    "candidate/funs.ss": "6c5b9d17ce2fcbdcae763db275cb5c51c997a79cf323f64d7a6eb86c8ba6bfef",
+    "candidate/program-identity.ss": "c23f4ce210c938e614acd61ef150293fcf5c90815bb9292045c27f485f3e700b",
+    "candidate/certificate-limits.ss": "23f59f012ec7240ca557a84f6411083a10c20909e8f374ec195d1b32f49c1134",
+    "candidate/grounding-plan.ss": "def010f1a699418c073a56265183ffb6b86eef347ba562d202cfdecd6f6735fa",
+    "candidate/reduction-plan.ss": "423907ff137ba9dc5a66500c76bfade1ecc259a9245b54c6188d4e14da736c7e",
+    "candidate/finite-plan.ss": "b6d24b303a1a58b2d6f3e09ea43023c6b8dbc6b9125b3df421272e04ba59b400",
+    "candidate/finite-evidence.ss": "e9681fee675ce687f09059a20a4f3e91a2e5a1024ecbfd5599667944e6a0c3cf",
+    "candidate/proof-frame.ss": "9c9cab650dfa59740b8f793f919ff04a654ea5db3906a0463c55793f0afdcbb2",
+    "candidate/provenance.ss": "e8426bda4631128fc15d97fdfff8d1ed21034abf6dd73f34443dd811de76e538",
+    "program/scheme-query.ss": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+    "program/scheme-snapshot.ss": "876ed111dc52953ade5222210c8028e65e81218cfdfeb8d3f915acd04eefc071",
+    "program/scheme-session.ss": "836131ffe572c21a74d43e813a347512b17a0a0572f58128f2d06be3471b3823",
+    "program/scheme-admit.ss": "1ca8572d20f044150b26d508bcdfd873aa40dd013e4bb48cd2900b6e84f1e92a",
+    "candidate/closure-index.ss": "ef174e5258dc8addcded8a1c3597af6132cf4ea59c3f6b110ca182ec0803f30c",
+    "candidate/stratified-plan.ss": "6797fa2753152322661ba8f073cfe754f6c6c6b366d0433c660c317bc5631ff8",
+    "candidate/stratified-proof.ss": "e84930028355b27612ef6ba79eca2e107ab6880adf6cfd479748bc9a7a7febc8",
+    "candidate/stratified-producer.ss": "aebf095a301308b2cc5d15343f732ca5a52815cf0027e2a4663a90b07e163753",
+    "candidate/nonmembership.ss": "a6c38ae2b000d7a39028a2b1fcbb0d79538a4756d2ba6f85a6c0ad503abe1ae2",
+    "candidate/reasoning.ss": "8fac42ec17bd2e88b17e59e99e2e037bc92d02326c2f90c148e84735e0278c5e",
+    "candidate/evidence-store.ss": "cb303c496c8c12c6353608ad23d380c02289e5be99dbe95e92fde56920e377f9",
+    "applications/domain-evidence.ss": "ffda42ad1b25f51d68339a9c0ce95cf5859b8ee9b8d24ff642586c71773b80df",
+    "interface/rule-source.ss": "f2aab8a7ed1eece4fbcd2ad45980e55d48604c302061cd64dad9a4f3c8beda53",
+    "interface/engine-api.ss": "75f45ae014f9dfd81d9c2cfb5005d4c88d00a60024c58df09e07fcf25156eac9",
+    "interface/c-api.ss": "cdc61840529db9a55271655b941075f07a3b98feb2cf4a0e6f54e32f4d651ac2",
+    "gerbil.pkg": "526334723a6aad8d0ecdf8f4abad3e50afc22aa95af177827a5ef54215331cd9",
+    "bindings/c/runtime.c": "1b3e956ff33dbd7fa0ca584caa7e5ded728dba32a5d46bcd2ebdb5b271c3fffc",
+    "bindings/c/ascent.h": "f1b7cba2d4b63f4cf35198b4f89f52f320fdfe085d8b9147fe40268f20370974",
+    "python/pyproject.toml": "c88b8d71965cbf9eaf7df1d262891601c4f3f82e63b1ebb74316be6c2fe72c8f",
+    "build.ss": "6472c708f928ba6a73938e9b4ece18b58b60daad90f06c3394d3727ccf4fc0c1",
+    "python/src/ascent_engine/__init__.py": "7489bd8cd1a4718b7d454e72fb2e93b809024a652ea4eed38741e6eb3de9671b",
+    "python/src/ascent_engine/evidence.py": "29a23ed3728f285354b3a10cd5fed98fb59b05d3301b64f36ee76caca15cef86",
+    "python/src/ascent_engine/conversation.py": "975a4c0518ce207a513ff23c6479ed900521bb2c8da8720ffcc11e1320672045",
+    "python/src/ascent_engine/build.py": "7d926d77b71a2d9f98a011c101a434ef23a22eec7ed23a2d3752859c236bb22a",
+    "python/src/ascent_engine/api_build.py": "0344fa6887fe8ff424fc4183390819a40f5f22358f8bb0f9b7c96699ef5146ca",
+    "python/src/ascent_test_support/evidence_chain_study.py": "b747c73714ba9463cf94f696e1e447fe3a97248ea607984320a5d9505658b958",
+    "python/src/ascent_test_support/model_study.py": "69e19658d5da399d81a0e7f989123fe9466aff800ff724f09be6861f606cf7aa",
+    "python/src/ascent_test_support/movie_study.py": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
+    "python/src/ascent_test_support/inference_reuse_study.py": "0a77a71780666dac35711a971fea080bae09ca087c27dff509d9403327c8c159",
+    "python/src/ascent_test_support/complex_movie_study.py": "ad70937810023689a731d30476f884fa98e55a85d4e0d7923eaf3377054f52a3",
+    "python/src/ascent_test_support/evidence_chain_workload.py": "bd2f963a0e62d2078099f4ee3379c5dfd3982380fb22597d20a4548eff98b40b",
+    "python/src/ascent_test_support/query_contract.py": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+    "packages/proofs/quint/SharedPremiseReuse.qnt": "8b993818b5acdb989c721f3c38bf3135ae89b9ba4cc86b48e3d7806938bc11e6",
+    "packages/proofs/quint/VerifiedCandidate.qnt": "9cab2a1da91e0bc6b4f4769c6e0608d7abbbf3ed922d898bca8aecf76eeafea3",
+    "packages/proofs/lean/ProofDag.lean": "5bc615fe49fbf3c202f453c17461eb3b6d5fa2db222fe6af8970eaec1fdf7040",
+    "docs/research/agent-inference/factor-reuse-2026-study.org": "486583dac2fe1a805002a04ca64d106f80d17d1465ace748ec684e183433832c",
+    "python/src/ascent_test_support/__init__.py": "3addd7c27ea1f2eb1df82df3fd078073faacd3317a1791d12b0c7681a0f8982c",
+    "python/src/ascent_engine/operators.py": "7067e79fb0c4eb9fee2400a98eed866f420e94c16a4f8e8275a7278564adb5ab",
+    "python/src/ascent_engine/derivations.py": "f6dd2b58ccc57a9728a0d4fd781f38b72339b6b5b4a2c34856659347515eed44",
+    "python/src/ascent_test_support/inference_effort.py": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
+    "python/engine_tests/test_computational_evidence.py": "01a1e333f55b8c0119d3b10ee2300e5f0f40fb9d9f8832e60762fd817aa477d8",
+    "python/tests/test_shared_premise.py": "db3a4cd71c4fa2a6af40f9e06fb63bcb11274d112fd53a851dfb8f77a65d3f29",
+    "python/RESEARCH.md": "a8d82309b1cd2a8da51ab7144e1e8869c8d8774b92a9bb64529ce4a8b8d2ff66",
+    "python/uv.lock": "ea52085c087db622bdad93d07e1a34ee23d6fe9808f3c4165744295cdd9b9de8",
+    "packages/proofs/quint/package.json": "305b261e3e76ea2d0bd32723c6916b5b5ca59bd633097c9593dc5d64b0fa29b4",
+    "packages/proofs/quint/package-lock.json": "1277d1b7820af6668fe4ee2ad883336f9136b13eda2dbf82b4b274cfdb24e203",
+    "packages/proofs/lean/lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
+    "tools/research/reproduce-clean.sh": "3323d72f2d1f702dd2ca49b69e4629eab798bf6fbde69e857fe657de644ae841",
+    "tools/research/output-check-fixture.json": "65caf06287e97cec421713eb0de6df9ae5e8578cfb5c008421fc87a103e517bb"
+  },
+  "qualificationSha256": "0eb06db8d96253a2c861f2df1f9a9f92d1016277c725d09b571f4c69231d8800",
+  "annotationRubric": "Frozen literal grammar: arrow chains with at least three nodes; adjacent explicit edge-pair lists; endpoint-preserving via node lists. Truth and direction checked independently. One occurrence per overlapping encoding. All lines partitioned, unresolved semantic lines retained. No unseen premise constructed.",
+  "annotationTool": null,
+  "annotationPasses": 1,
+  "annotationOutputCap": 8192,
+  "annotationRules": "Exact nonoverlapping quotes; endpoint literals; independent finite truth; explicit ordered edge/path chain or ready conjunction for positive inference. premise_consumed must refer to an earlier or supplied true atom. new_residual is derived by classification after validation, never trusted from label name. A repeated positive atom is counted across different questions in the same source scope. Exact-premise repeat reported separately. Negative claims require an explicit negative argument and independently absent atom, but completeness of the quoted absence argument is unproven. Arithmetic and ambiguity are reported without assigning cached-atom savings. Rejected/empty/missing labels remain visible. Two blind passes of the SAME model are correlated annotations, not independent-rater validation. Repetition is split into within-response, same-branch and cross-branch dimensions. Supplied evidence is only evidence returned before the labeled response, never later tool results.",
+  "claims": {
+    "correctReuse": "Equal native support nodes across different obligations; source/handle binding and independent answer agreement.",
+    "reducedRepetition": "Requires directly supported baseline repetitions plus validated annotation coverage; native hits alone are insufficient.",
+    "newInference": "Distinct correct downstream answers and qualified nonsupplied consequences after the first obligation. No optimization or depth claim."
+  },
+  "controls": "Same task, sibling schedule, history policy, answer schema and input-plus-all-output cap. No pruning, ranking, optimal answer or anti-repetition instruction. Fact and Scheme supply identical atomic outcomes; Scheme adds checked ancestor-closed fragments. Unused reservations are censored, not savings. All failed calls and unknown usage retained.",
+  "sourceState": {
+    "head": "01f00e23c2eb90dfd24f834d1324487f643b49b9",
+    "dirtySourceSnapshot": false,
+    "cleanCheckoutReproductionVerified": true,
+    "scope": "Local clean checkout rebuild and native qualification; not a cross-machine or remote CI claim."
+  },
+  "formalToolVersions": {
+    "quint": "0.33.0",
+    "lean": "Lean (version 4.34.0, arm64-apple-darwin24.6.0, commit 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b, Release)"
+  },
+  "papers": [
+    {
+      "id": "BYODS",
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "role": "concretization/delta semantics; separate from model efficacy"
+    },
+    {
+      "id": "DatalogBench-v1",
+      "url": "https://arxiv.org/html/2609.37233v1",
+      "role": "held-out execution and oracle mutation tests"
+    },
+    {
+      "id": "MiniCache-v1",
+      "url": "https://arxiv.org/html/2607.20507v1",
+      "role": "shared computation with different request variables"
+    }
+  ],
+  "formalBoundary": "SharedPremiseReuse.qnt models finite fixture truth and source-generation admission. ProofDag.lean proves specified ordered positive-DAG soundness under premises, not CFFI correctness or model behavior. VerifiedCandidate assumes independent grader validity. Native correspondence receipts are separate.",
+  "readTool": {
+    "type": "function",
+    "name": "read_paths",
+    "description": "Read directed path conclusions from the current Scheme-checked finite source. Each pair is [from,to].",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "required": [
+        "pairs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "experiment": "sibling-search",
+  "maxCallsPerBranch": 2,
+  "evidenceAtBranchEntry": true,
+  "maxTotalSolverCalls": 65,
+  "artifactDirectory": "branch-entry",
+  "finalizationOutputCap": 256,
+  "annotationMode": "literal-partition",
+  "outputProtocol": "Thinking call with automatic tool choice. On known max-output truncation of reasoning only, one non-thinking submission call projects exact partial reasoning text into an ordinary assistant message, with no added instruction. Both calls and all replay input charged; truncated thinking remains explicitly censored.",
+  "annotationCoverage": "Every visible character partitioned; only literal ordered chains counted. Unresolved semantic lines retained; syntactic coverage is not exhaustive semantic certification.",
+  "historyPolicy": "Each sibling forks the same root task. No sibling reasoning is imported into another sibling; identical policy in all arms. Native store spans siblings.",
+  "independentJudge": {
+    "algorithm": "Enumerate all four-item subsets independently of Scheme; directed BFS, sum resource constraints, group count and exact pair bonus scoring.",
+    "frozenOptima": [
+      [
+        182,
+        199,
+        202,
+        184,
+        217,
+        217
+      ],
+      [
+        189,
+        222,
+        207,
+        185,
+        188,
+        189
+      ]
+    ]
+  },
+  "branchQualification": [
+    {
+      "id": "sibling-search-0",
+      "proofBuilds": 1,
+      "sharedSupportIdenticalAcrossBranches": true,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 6,
+        "evictions": 0
+      }
+    },
+    {
+      "id": "sibling-search-1",
+      "proofBuilds": 1,
+      "sharedSupportIdenticalAcrossBranches": true,
+      "nativeStats": {
+        "entries": 1,
+        "attempts": 1,
+        "proof-builds": 1,
+        "hits": 6,
+        "evictions": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "ascent.cffi-api-build.v1",
+  "backend": "out-of-line-api",
+  "producerInputs": {
+    "library": "a576216be698b015bc5d17543327b29e753b12c35b56db07f938e9cfc3d3481c",
+    "header": "f1b7cba2d4b63f4cf35198b4f89f52f320fdfe085d8b9147fe40268f20370974"
+  },
+  "producerReceiptSha256": "b629792d925507daf615e08bfa197fb5fba20c796446b51936a38f9b4450a414",
+  "compiler": "gcc-16 (Homebrew GCC 16.2.0) 16.2.0",
+  "localDeploymentTarget": "26.6.1",
+  "extension": "_ascent_cffi.cpython-313-darwin.so",
+  "extensionSha256": "a413ea520c6d03f18404ae37fd98767a16f345e234c286dfa5d0f154bfec748f",
+  "library": "libascent.dylib",
+  "librarySha256": "215b99778e0a5c706dff9159011952ea7fee40a07aac0a991fe1b16115081dbf",
+  "portableWheelQualified": false
+}

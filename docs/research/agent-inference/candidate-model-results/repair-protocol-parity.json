@@ -1,0 +1,11 @@
+{
+  "tasks": true,
+  "tool": true,
+  "model": true,
+  "budgetPerTrajectory": true,
+  "outputCap": true,
+  "developmentMasks": true,
+  "heldOutMasks": true,
+  "protocol": true,
+  "limits": true
+}

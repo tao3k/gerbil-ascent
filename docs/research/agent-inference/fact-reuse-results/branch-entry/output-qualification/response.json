@@ -1,0 +1,97 @@
+{
+  "terminal": {
+    "id": "9f18cfab-af16-43c8-86b6-88f03aa4aa02",
+    "object": "response",
+    "created_at": 1791713448,
+    "status": "completed",
+    "background": false,
+    "completed_at": 1791713448,
+    "content_filters": null,
+    "error": null,
+    "frequency_penalty": 0.0,
+    "incomplete_details": null,
+    "instructions": null,
+    "max_output_tokens": 256,
+    "max_tool_calls": null,
+    "model": "deepseek-flash",
+    "moderation": null,
+    "output": [
+      {
+        "type": "function_call",
+        "id": "d6f50040-dc6e-409a-83f9-28c2a7f1181e",
+        "status": "completed",
+        "arguments": "{\"selected\": [1, 4, 9, 11]}",
+        "call_id": "call_00_hCy0nH9PJu01T5ZMBp364631",
+        "name": "submit_selection"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "presence_penalty": 0.0,
+    "previous_response_id": null,
+    "prompt_cache_key": null,
+    "prompt_cache_retention": null,
+    "reasoning": {
+      "effort": "none",
+      "summary": null
+    },
+    "safety_identifier": null,
+    "service_tier": "default",
+    "store": false,
+    "temperature": 1.0,
+    "text": {
+      "format": {
+        "type": "text"
+      },
+      "verbosity": null
+    },
+    "tool_choice": {
+      "type": "function",
+      "name": "submit_selection"
+    },
+    "tools": [
+      {
+        "type": "function",
+        "name": "submit_selection",
+        "description": "Submit four selected item IDs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "selected": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "required": [
+            "selected"
+          ],
+          "additionalProperties": false
+        },
+        "strict": null
+      }
+    ],
+    "top_logprobs": 0,
+    "top_p": 1.0,
+    "truncation": "disabled",
+    "usage": {
+      "input_tokens": 10823,
+      "input_tokens_details": {
+        "cached_tokens": 1152
+      },
+      "output_tokens": 44,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 10867
+    },
+    "user": null,
+    "metadata": {}
+  },
+  "error": null,
+  "reasoningEvents": 0,
+  "providerSeconds": 0.7470274170009361,
+  "firstVisibleTextSeconds": null,
+  "progressIdleSeconds": 45,
+  "absoluteWallDeadlineSeconds": null
+}

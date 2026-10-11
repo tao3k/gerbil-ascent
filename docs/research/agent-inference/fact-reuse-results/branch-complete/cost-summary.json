@@ -1,0 +1,18 @@
+{
+  "solverCalls": 16,
+  "solverKnownTokens": 192968,
+  "solverUnknownUsageCalls": 0,
+  "semanticCalls": 10,
+  "semanticKnownTokens": 188495,
+  "semanticUnknownUsageCalls": 0,
+  "priorRetainedProviderAttempts": 44,
+  "providerAttemptsIncludingHistory": 72,
+  "unusedAllocationIsSavings": false,
+  "rangeRevisionCalls": 1,
+  "rangeRevisionKnownTokens": 214003,
+  "newKnownTokensIncludingAnnotations": 607846,
+  "allHistoricalKnownTokens": 771499,
+  "historicalUnknownUsageCalls": 6,
+  "quoteContractProbeCalls": 1,
+  "quoteContractProbeKnownTokens": 12380
+}

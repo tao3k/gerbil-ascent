@@ -6,6 +6,12 @@ Scheme owns query semantics, typed admission, source updates and execution.
 Python adapts inert JSON and compares results through the Scheme engine; it does
 not implement a separate semantic oracle.
 
+See [[file:NATIVE.md][Scheme AOT to Python]] for the compiled CFFI API path,
+ownership contract, local build and remaining binary-wheel qualification.
+See [[file:REVIEW.md][Evidence Review]] for reusable research evidence and fail-closed review.
+See [[file:DATALOG.md][Datalog and checked operators]] for native filters, arithmetic,
+aggregates and retained derivation contracts exposed through Python.
+
 Scheme owns artifact admission in =t/native/artifact-admission.ss= and inert prediction
 projection in =t/model/response-projection.ss=. Native Cases cover staged compilation
 failure, owner/source/binary changes, prediction ambiguity, size and nesting
@@ -43,3 +49,12 @@ Producer receipts hash the actual loaded Python modules, not an assumed
 installation path. The package has standard pyproject metadata and a src layout. Model calls still
 require a newly frozen plan and explicit source/cost authorization. Package
 migration does not reuse an older approval or establish a new model score.
+
+* Reproducible Library research
+
+[[file:RESEARCH.md][Research evidence and reproduction]] connects the existing Python Project consumer to
+Scheme computational evidence, Quint/Lean assumptions, source-bound native
+receipts and frozen model diagnostics. =ComputationalEvidence= is the native
+proof-store transport; it is separate from materialized =EvidenceStore= /
+=EvidenceChain= caches. Published negative outcomes and raw failures remain
+part of the evidence chain.

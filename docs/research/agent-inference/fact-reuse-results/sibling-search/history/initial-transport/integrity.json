@@ -1,0 +1,16 @@
+{
+  "annotation-ledger.json": "27ea4d49c5aee4cf2f3bd3e8748ba6043238a8e3ac2b85a195d585481432f4bd",
+  "audit.json": "bdb3f26a34af2a9b7f4a04b67e32788a7b6ae012564bebc6fb1133678440982b",
+  "audit.py": "088c2372751da027b126433b3776bea468e7facd1f0810727957269ac8eada99",
+  "cffi-api-receipt.json": "47c65299a02e91d17aa8e5bee154c758bef7d4477e5e2e21c198f77bc5f4914a",
+  "ledger.json": "7e0bba74f135acaa3e10dc566c73f784b08cb5ed821166a3c15fdf9ac91218ab",
+  "native-build-receipt.json": "9b1b9ed1da10545d9c8bda6f842850fa903e5ac14c790a3f722b20f861685013",
+  "plan.json": "5a1744d6a2f17b9b37ae044fdf52e63655037c9334f606065fd8e6dedc11cf71",
+  "plan.sha256": "5a1ba1c65a2a83e0bddfa094fd2286907da411a82b656b5b09bddd12ced49c67",
+  "qualification.json": "9f0c8ab64b7174c5dbbe97c84762c131ed640556535dabe1864b5ffe852f8f08",
+  "raw.tar.gz": "231d6e3e8c42e9eb6fcf7427f3aee01917e174d1651b6a2e76895e3ca073db8c",
+  "report.json": "6d96e06c7b176a9b8e2beef0e8c0063896478195bb62436b733f66e09c7b79c3",
+  "report.md": "ad53b39b662963635b346c66fa4cea879a236920b39e88238ac7f082210e0a76",
+  "reproduce-clean.sh": "3323d72f2d1f702dd2ca49b69e4629eab798bf6fbde69e857fe657de644ae841",
+  "source.bundle": "cf408b9e0513a5d8240fa40bd4cec16a01adc92bfa00727f4ee9acaced79c991"
+}

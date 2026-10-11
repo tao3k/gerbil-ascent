@@ -1,0 +1,63 @@
+{
+  "passed": true,
+  "planSha256": "5a1744d6a2f17b9b37ae044fdf52e63655037c9334f606065fd8e6dedc11cf71",
+  "producerHead": "5a2be8b206d30c5534ee6a9b7431f7b8cd3014fc",
+  "inputsMatchCommittedHead": true,
+  "audits": "Actual complete sibling history and paired tool IO; no solver instructions; input/output costs; prior-only supplied evidence; native outcomes vs BFS; independent objective grading. Known failures remain censored.",
+  "outcomes": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "grossTokens": 30576,
+      "readCalls": 0,
+      "submittedBranches": 1,
+      "stop": "failure",
+      "failure": "provider failure or incomplete"
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "grossTokens": 21720,
+      "readCalls": 2,
+      "submittedBranches": 1,
+      "stop": "budget_reservation",
+      "failure": null
+    },
+    {
+      "case": 0,
+      "arm": "scheme",
+      "grossTokens": 12451,
+      "readCalls": 1,
+      "submittedBranches": 0,
+      "stop": "budget_reservation",
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "scheme",
+      "grossTokens": 6770,
+      "readCalls": 1,
+      "submittedBranches": 0,
+      "stop": "budget_reservation",
+      "failure": null
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "grossTokens": 30312,
+      "readCalls": 1,
+      "submittedBranches": 1,
+      "stop": "failure",
+      "failure": "provider failure or incomplete"
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "grossTokens": 30577,
+      "readCalls": 0,
+      "submittedBranches": 1,
+      "stop": "failure",
+      "failure": "provider failure or incomplete"
+    }
+  ]
+}

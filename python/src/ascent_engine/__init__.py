@@ -20,6 +20,7 @@ int32_t ascent_request(const uint8_t *, size_t, ascent_result *);
 void ascent_result_release(ascent_result *);
 '''
 _loaded = None
+_runtime_pid = None
 
 @contextlib.contextmanager
 def _preserve_host_io():
@@ -44,7 +45,7 @@ def _preserve_host_io():
                 pass
 
 def _shutdown():
-    if _loaded is not None:
+    if _loaded is not None and os.getpid() == _runtime_pid:
         with _preserve_host_io(): _loaded[2].ascent_runtime_shutdown()
 atexit.register(_shutdown)
 
@@ -59,17 +60,31 @@ class Engine:
     Close sessions individually; shutdown is explicit and terminal for the
     entire loaded runtime. Never dlclose a live Gambit runtime.
     """
-    def __init__(self, library):
-        global _loaded
+    def __init__(self, library=None):
+        global _loaded, _runtime_pid
+        if _runtime_pid is not None and os.getpid() != _runtime_pid:
+            raise EngineError(-2, 'inherited runtime after fork; start a fresh process')
         if threading.get_ident() != threading.main_thread().ident:
             raise EngineError(-3, 'Python binding initialization requires the main OS thread')
-        path = str(Path(library).resolve())
+        self.backend = 'api' if library is None else 'abi'
+        if _loaded is not None and _loaded[3] != self.backend:
+            raise EngineError(-2, 'one binding backend per Python process')
+        if library is None:
+            # Compiled API mode: checked against ascent.h, never silently
+            # fall back to loading another library when the extension is absent.
+            import _ascent_cffi
+            path = str(Path(_ascent_cffi.__file__).resolve())
+            ffi, lib = _ascent_cffi.ffi, _ascent_cffi.lib
+        else:
+            path = str(Path(library).resolve())
+            if _loaded is None:
+                ffi = FFI(); ffi.cdef(CDEF); lib = ffi.dlopen(path)
         if _loaded is None:
-            ffi = FFI(); ffi.cdef(CDEF); lib = ffi.dlopen(path)
-            _loaded = (path, ffi, lib)  # Keep library mapped for the runtime lifetime.
+            _loaded = (path, ffi, lib, self.backend)  # Keep mapped for the runtime lifetime.
+            _runtime_pid = os.getpid()
         elif _loaded[0] != path:
             raise EngineError(-2, 'one engine library per Python process')
-        _, self.ffi, self.lib = _loaded
+        _, self.ffi, self.lib, _ = _loaded
         if self.lib.ascent_abi_version() != 1: raise EngineError(-2, 'ABI mismatch')
         child_handler = signal.getsignal(signal.SIGCHLD)
         with _preserve_host_io():
@@ -83,6 +98,8 @@ class Engine:
         self.owner = threading.get_ident(); self.closed = False
 
     def request(self, request):
+        if os.getpid() != _runtime_pid:
+            raise EngineError(-2, 'inherited runtime after fork')
         if self.closed: raise EngineError(-2, 'runtime shut down')
         if threading.get_ident() != self.owner: raise EngineError(-3, 'wrong OS thread')
         data = json.dumps(request, ensure_ascii=False, allow_nan=False).encode()
@@ -100,7 +117,13 @@ class Engine:
     def open(self, program):
         return Session(self, self.request({'operation': 'open', 'program': program})['handle'])
 
+    def read_rules(self, *sources):
+        """Read inert native ASCENT text in the installed engine, never a compiler."""
+        return self.request({'operation': 'read-rules', 'sources': list(sources)})
+
     def shutdown(self):
+        if os.getpid() != _runtime_pid:
+            raise EngineError(-2, 'inherited runtime after fork')
         if self.closed: return
         with _preserve_host_io():
             status = self.lib.ascent_runtime_shutdown()

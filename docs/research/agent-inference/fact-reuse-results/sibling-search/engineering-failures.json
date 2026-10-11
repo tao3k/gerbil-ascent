@@ -1,0 +1,27 @@
+[
+  {
+    "phase": "First clean Scheme compilation",
+    "receipt": "attempts/ascent-clean-reuse-build.log",
+    "reason": "SCC constructor arity mismatch in concurrent source cut; matched dependency sources recaptured, no validator bypass"
+  },
+  {
+    "phase": "Wrong-directory build excluded",
+    "receipt": "attempts/ascent-clean-reuse-build-matched.log",
+    "reason": "Own invocation used primary cwd with temporary output; generated Library artifacts discarded, never admitted as clean reproduction"
+  },
+  {
+    "phase": "Fresh CFFI environment",
+    "receipt": "attempts/ascent-clean-reuse-api.log",
+    "reason": "setuptools missing; explicit native-build extra and lockfile added"
+  },
+  {
+    "phase": "First bundle-based native link",
+    "receipt": "5eO1hh/native-build.log",
+    "reason": "SDK OpenSSL Cellar path absent; -lcrypto not found; explicit local link configuration declared"
+  },
+  {
+    "phase": "Second bundle-based freeze",
+    "receipt": "Ct04sv/freeze.log",
+    "reason": "macOS /var and /private/var alias mismatch; real paths normalized before root/hash checks"
+  }
+]

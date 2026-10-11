@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "planSha256": "ecc701fc3d3116ab0e178830ebafbe589080c9e949157332d4372c896ef08863",
+  "fixtureSha256": "65caf06287e97cec421713eb0de6df9ae5e8578cfb5c008421fc87a103e517bb",
+  "costBoundary": "Transport qualification separately charged, not a solver trajectory",
+  "inputReservation": 28558,
+  "usage": {
+    "input_tokens": 10823,
+    "input_tokens_details": {
+      "cached_tokens": 1152
+    },
+    "output_tokens": 44,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 10867
+  },
+  "failure": null,
+  "historicalThinkingInputIncrement": 9562,
+  "selected": [
+    1,
+    4,
+    9,
+    11
+  ],
+  "acceptedForPlanSha256": "0cfbc01f3f41a8140f74511d78f21cc76193b291aba0c14c2367497c16c59dad",
+  "qualificationRequestSha256": "f4992233718098083ea14cb45a9cd2342f87abef50f74d19658c365d10ad4c9a",
+  "reuseScope": "Byte-identical nonthinking transport request only; does not qualify thinking tool choice or native semantics"
+}

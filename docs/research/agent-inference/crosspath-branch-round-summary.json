@@ -1,0 +1,590 @@
+{
+  "schema": "ascent.crosspath.round-summary.v1",
+  "scope": "Descriptive post-outcome audit of separately frozen v3 and v4; no pooled treatment estimate. Fixed common 32768 checkpoint chosen in solver plans. Bounded label extraction frozen separately after whole-phase failures.",
+  "mainProtocol": "v4",
+  "v4SolverCalls": 77,
+  "v4SolverTruncations": 0,
+  "v3FailedSolverCalls": 15,
+  "originalAnnotationFailures": 6,
+  "boundedChunks": 40,
+  "boundedFailedChunks": 0,
+  "boundedAcceptedLabels": 437,
+  "boundedRejectedLabels": 52,
+  "matchedCheckpointRows": [
+    {
+      "arm": "baseline",
+      "goal": 0,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 303,
+      "gainFromSeed": 79,
+      "prefixes": 11,
+      "maxAdmittedDepth": 7,
+      "labeledEpisodes": 78,
+      "labeledDerivations": 65,
+      "labeledPositiveRepeats": 11,
+      "labeledReuses": 2,
+      "repeatLinkMethods": {
+        "within_chunk": 2,
+        "deterministic_cross_chunk_identical_key": 9
+      },
+      "nativePacketReused": null,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0
+    },
+    {
+      "arm": "baseline",
+      "goal": 1,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 334,
+      "gainFromSeed": 90,
+      "prefixes": 11,
+      "maxAdmittedDepth": 7,
+      "labeledEpisodes": 59,
+      "labeledDerivations": 48,
+      "labeledPositiveRepeats": 20,
+      "labeledReuses": 2,
+      "repeatLinkMethods": {
+        "within_chunk": 2,
+        "deterministic_cross_chunk_identical_key": 18
+      },
+      "nativePacketReused": null,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0
+    },
+    {
+      "arm": "fresh",
+      "goal": 0,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 284,
+      "gainFromSeed": 60,
+      "prefixes": 6,
+      "maxAdmittedDepth": 6,
+      "labeledEpisodes": 41,
+      "labeledDerivations": 37,
+      "labeledPositiveRepeats": 10,
+      "labeledReuses": 2,
+      "repeatLinkMethods": {
+        "within_chunk": 3,
+        "deterministic_cross_chunk_identical_key": 7
+      },
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.07709112498559989
+    },
+    {
+      "arm": "fresh",
+      "goal": 1,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 349,
+      "gainFromSeed": 105,
+      "prefixes": 7,
+      "maxAdmittedDepth": 7,
+      "labeledEpisodes": 42,
+      "labeledDerivations": 38,
+      "labeledPositiveRepeats": 6,
+      "labeledReuses": 3,
+      "repeatLinkMethods": {
+        "within_chunk": 1,
+        "deterministic_cross_chunk_identical_key": 5
+      },
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.07450408299337141
+    },
+    {
+      "arm": "retained",
+      "goal": 0,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 295,
+      "gainFromSeed": 71,
+      "prefixes": 6,
+      "maxAdmittedDepth": 6,
+      "labeledEpisodes": 37,
+      "labeledDerivations": 31,
+      "labeledPositiveRepeats": 7,
+      "labeledReuses": 4,
+      "repeatLinkMethods": {
+        "within_chunk": 1,
+        "deterministic_cross_chunk_identical_key": 6
+      },
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.07545945898164064
+    },
+    {
+      "arm": "retained",
+      "goal": 1,
+      "grossCheckpoint": 32768,
+      "reached": true,
+      "bestValue": 349,
+      "gainFromSeed": 105,
+      "prefixes": 6,
+      "maxAdmittedDepth": 6,
+      "labeledEpisodes": 37,
+      "labeledDerivations": 32,
+      "labeledPositiveRepeats": 11,
+      "labeledReuses": 0,
+      "repeatLinkMethods": {
+        "within_chunk": 3,
+        "deterministic_cross_chunk_identical_key": 8
+      },
+      "nativePacketReused": true,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0.004991916997823864
+    }
+  ],
+  "literalIdentityDiagnostics": [
+    {
+      "phaseKey": "paid/branch-search-6-baseline-0",
+      "episode": 2,
+      "annotatedFragment": 1,
+      "literalFragmentIds": [
+        2
+      ],
+      "span": [
+        544,
+        609
+      ],
+      "quote": "Option1 fragment 2: [2,4,11,5,9] => 4->11? edges 4->7->9->11 yes.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-0",
+      "episode": 4,
+      "annotatedFragment": 2,
+      "literalFragmentIds": [
+        4
+      ],
+      "span": [
+        640,
+        684
+      ],
+      "quote": "Option2 fragment4: [4,1,7,6,11] => 1->7 yes;",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-0",
+      "episode": 8,
+      "annotatedFragment": 4,
+      "literalFragmentIds": [
+        8
+      ],
+      "span": [
+        796,
+        839
+      ],
+      "quote": "Option4 fragment8: [8,0,8,1,7] => 0->8 yes;",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-0",
+      "episode": 10,
+      "annotatedFragment": 4,
+      "literalFragmentIds": [
+        8
+      ],
+      "span": [
+        2284,
+        2329
+      ],
+      "quote": "Fragment 8 need [0,0,8,1,7] both paths exist.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-1",
+      "episode": 1,
+      "annotatedFragment": 1,
+      "literalFragmentIds": [
+        2
+      ],
+      "span": [
+        856,
+        929
+      ],
+      "quote": "fragment 2: 2->9 and 3->11. 2->4->7->9 yes. 3->6->8->9->11 yes. eligible.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-1",
+      "episode": 2,
+      "annotatedFragment": 2,
+      "literalFragmentIds": [
+        4
+      ],
+      "span": [
+        930,
+        997
+      ],
+      "quote": "fragment 4: 4->11 and 5->9. 4->7->9->11 yes. 5->7->9 yes. eligible.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-1",
+      "episode": 3,
+      "annotatedFragment": 3,
+      "literalFragmentIds": [
+        6
+      ],
+      "span": [
+        998,
+        1074
+      ],
+      "quote": "fragment 6: 0->11 and 3->9. 0->2->4->7->9->11 yes. 3->6->8->9 yes. eligible.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-1",
+      "episode": 4,
+      "annotatedFragment": 4,
+      "literalFragmentIds": [
+        8
+      ],
+      "span": [
+        1075,
+        1145
+      ],
+      "quote": "fragment 8: 1->7 and 6->11. 1->2->4->7 yes. 6->8->9->11 yes. eligible.",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-fresh-0",
+      "episode": 16,
+      "annotatedFragment": 2,
+      "literalFragmentIds": [
+        4
+      ],
+      "span": [
+        16111,
+        16137
+      ],
+      "quote": "Eligible.\n\nFragment 4 need",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-fresh-0",
+      "episode": 19,
+      "annotatedFragment": 4,
+      "literalFragmentIds": [
+        6
+      ],
+      "span": [
+        16226,
+        16252
+      ],
+      "quote": "Eligible.\n\nFragment 6 need",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-fresh-0",
+      "episode": 22,
+      "annotatedFragment": 6,
+      "literalFragmentIds": [
+        0
+      ],
+      "span": [
+        16304,
+        16330
+      ],
+      "quote": "Eligible.\n\nFragment 0 need",
+      "admittedRepeat": false,
+      "scope": "Retrospective literal-ID/boundary diagnostic, not a replacement preregistered count. Some quotes include the next fragment heading; all original labels retained."
+    }
+  ],
+  "illustrativePairs": [
+    {
+      "phaseKey": "paid/branch-search-6-baseline-0",
+      "sourceTextSha256": "bc99afdab7bc083a16964eb6160eb737b24df0a1a3c169d009b816e28cd806ae",
+      "first": {
+        "quote": "13 fragment 0: row [0,0,7,1,9]. first 0->7: 0->2->4->7 yes. second 1->9: 1->2->5->7->9 yes. eligible.",
+        "occurrence": 0,
+        "fragment": 0,
+        "claim": "Fragment 0 both paths exist so option 13 eligible",
+        "ready": true,
+        "premiseEdges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            7,
+            9
+          ]
+        ],
+        "paths": [
+          [
+            0,
+            7
+          ],
+          [
+            1,
+            9
+          ]
+        ],
+        "kind": "derive",
+        "prior": null,
+        "explanation": "Derives 0->7 and 1->9 from explicit edge chains, concluding fragment 0 eligible.",
+        "index": 28,
+        "span": [
+          14854,
+          14955
+        ],
+        "textSha256": "bc99afdab7bc083a16964eb6160eb737b24df0a1a3c169d009b816e28cd806ae",
+        "claimKey": [
+          0,
+          true,
+          "[[0,7],[1,9]]",
+          "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+        ],
+        "nativeTruthMatches": true,
+        "pathTruths": [
+          true,
+          true
+        ],
+        "definiteRepeatedDerivation": false,
+        "repeatAdmissionNote": null,
+        "repeatLinkMethod": null
+      },
+      "later": {
+        "quote": "fragment 0: [0,0,7,1,9] => paths 0->7 and 1->9. Are both directed paths exist? 0->? edges: 0->2, 2->4/5, 4->7, so 0->2->4->7 yes. 1->9? 1->2->5->7->9 or 1->2->4->7->9 yes. Eligible.",
+        "occurrence": 0,
+        "fragment": 0,
+        "claim": "fragment 0 is eligible because 0->7 and 1->9 both exist",
+        "ready": true,
+        "premiseEdges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            7,
+            9
+          ]
+        ],
+        "paths": [
+          [
+            0,
+            7
+          ],
+          [
+            1,
+            9
+          ]
+        ],
+        "kind": "derive",
+        "prior": 28,
+        "explanation": "Derives both required paths and concludes conjunction eligibility for fragment 0.",
+        "index": 54,
+        "span": [
+          27701,
+          27882
+        ],
+        "textSha256": "bc99afdab7bc083a16964eb6160eb737b24df0a1a3c169d009b816e28cd806ae",
+        "claimKey": [
+          0,
+          true,
+          "[[0,7],[1,9]]",
+          "[[0,2],[2,4],[4,7],[1,2],[2,5],[5,7],[7,9]]"
+        ],
+        "nativeTruthMatches": true,
+        "pathTruths": [
+          true,
+          true
+        ],
+        "definiteRepeatedDerivation": true,
+        "repeatAdmissionNote": null,
+        "repeatLinkMethod": "deterministic_cross_chunk_identical_key"
+      },
+      "scope": "Post-outcome illustrative source-span pair; semantic completeness and all alternative-witness edges have not been independently certified."
+    },
+    {
+      "phaseKey": "paid/branch-search-6-baseline-1",
+      "sourceTextSha256": "2da921cbfaa186b9c7b856c7a8daaf847e0c1d12326d4879a0d82f0bafeb3b43",
+      "first": {
+        "quote": "fragment 6 (id12): 3->8? 3->6->8 yes. 9->11 yes. Eligible.",
+        "occurrence": 0,
+        "fragment": 6,
+        "claim": "Fragment 6 is eligible: path 3→8 via 3→6→8 and path 9→11 exist.",
+        "ready": true,
+        "premiseEdges": [
+          [
+            3,
+            6
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            9,
+            11
+          ]
+        ],
+        "paths": [
+          [
+            3,
+            8
+          ],
+          [
+            9,
+            11
+          ]
+        ],
+        "kind": "derive",
+        "prior": null,
+        "explanation": "Concludes both required directed paths for fragment 6 using explicit edge chains.",
+        "index": 19,
+        "span": [
+          11081,
+          11139
+        ],
+        "textSha256": "2da921cbfaa186b9c7b856c7a8daaf847e0c1d12326d4879a0d82f0bafeb3b43",
+        "claimKey": [
+          6,
+          true,
+          "[[3,8],[9,11]]",
+          "[[3,6],[6,8],[9,11]]"
+        ],
+        "nativeTruthMatches": true,
+        "pathTruths": [
+          true,
+          true
+        ],
+        "definiteRepeatedDerivation": false,
+        "repeatAdmissionNote": null,
+        "repeatLinkMethod": null
+      },
+      "later": {
+        "quote": "21 fragment 6: needs [3,8,9,11]? Wait row 6 [6,3,8,9,11] -> first 3->8, second 9->11. Edges: 3->6? [3,6], 6->8 yes 3->6->8. 9->11 direct [9,11]. Eligible.",
+        "occurrence": 0,
+        "fragment": 6,
+        "claim": "Fragment 6 paths 3->8 and 9->11 exist, so option 21 is eligible.",
+        "ready": true,
+        "premiseEdges": [
+          [
+            3,
+            6
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            9,
+            11
+          ]
+        ],
+        "paths": [
+          [
+            3,
+            8
+          ],
+          [
+            9,
+            11
+          ]
+        ],
+        "kind": "derive",
+        "prior": 19,
+        "explanation": "Derives both required fragment-6 paths from explicit edge chains.",
+        "index": 28,
+        "span": [
+          25382,
+          25536
+        ],
+        "textSha256": "2da921cbfaa186b9c7b856c7a8daaf847e0c1d12326d4879a0d82f0bafeb3b43",
+        "claimKey": [
+          6,
+          true,
+          "[[3,8],[9,11]]",
+          "[[3,6],[6,8],[9,11]]"
+        ],
+        "nativeTruthMatches": true,
+        "pathTruths": [
+          true,
+          true
+        ],
+        "definiteRepeatedDerivation": true,
+        "repeatAdmissionNote": null,
+        "repeatLinkMethod": "deterministic_cross_chunk_identical_key"
+      },
+      "scope": "Post-outcome illustrative source-span pair; semantic completeness and all alternative-witness edges have not been independently certified."
+    }
+  ],
+  "nativeProofOnly": {
+    "baseline": {
+      "builds": 0,
+      "seconds": 0
+    },
+    "fresh": {
+      "builds": 2,
+      "seconds": 0.1515952079789713
+    },
+    "retained": {
+      "builds": 1,
+      "seconds": 0.0804513759794645
+    }
+  },
+  "cost": {
+    "solverGrossTokens": 623911,
+    "calibrationGrossTokens": 16419,
+    "originalAnnotationGrossTokens": 382878,
+    "boundedAnnotationGrossTokens": 269971,
+    "allStudyGrossTokens": 1293179
+  },
+  "conclusion": "Output/control-flow repair passed this real-model pilot. Accepted-label counts show fewer positive repeats in evidence arms at common spend, but evidence arms execute fewer expansions; quality is mixed and admitted depth is not consistently greater. Semantic label identity/completeness remains unvalidated, with literal-ID/boundary ambiguity observed. No reliable causal claim of reduced repeated thinking or increased depth/quality is established. Fresh/retained differ only in private native state: only fewer native proof builds is directly demonstrated."
+}

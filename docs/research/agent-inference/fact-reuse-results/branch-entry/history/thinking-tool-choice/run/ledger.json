@@ -1,0 +1,3450 @@
+[
+  {
+    "case": 0,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [],
+        "inputReservation": 3496,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": null,
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 462a2025-48b0-4a0b-9a8b-12c086791f7c)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 0,
+      "attempts": 0,
+      "proof-builds": 0,
+      "hits": 0,
+      "evictions": 0
+    }
+  },
+  {
+    "case": 0,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [
+          [
+            "path",
+            0,
+            5
+          ],
+          [
+            "path",
+            20,
+            200
+          ],
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            21,
+            201
+          ],
+          [
+            "path",
+            6,
+            5
+          ],
+          [
+            "path",
+            22,
+            202
+          ],
+          [
+            "path",
+            24,
+            204
+          ],
+          [
+            "path",
+            25,
+            205
+          ],
+          [
+            "path",
+            26,
+            206
+          ],
+          [
+            "path",
+            28,
+            208
+          ],
+          [
+            "path",
+            29,
+            209
+          ],
+          [
+            "path",
+            30,
+            210
+          ],
+          [
+            "path",
+            32,
+            212
+          ],
+          [
+            "path",
+            33,
+            213
+          ],
+          [
+            "path",
+            34,
+            214
+          ]
+        ],
+        "inputReservation": 6893,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": {
+          "observations": [
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  0,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  121
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  20,
+                  200
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  102
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  2,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  120
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  21,
+                  201
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  103
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  6,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  101
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  22,
+                  202
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  104
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  23,
+                  203
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  24,
+                  204
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  106
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  25,
+                  205
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  107
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  26,
+                  206
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  108
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  27,
+                  207
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  28,
+                  208
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  110
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  29,
+                  209
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  111
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  30,
+                  210
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  112
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  31,
+                  211
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  32,
+                  212
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  114
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  33,
+                  213
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  115
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  34,
+                  214
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  116
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  35,
+                  215
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            }
+          ],
+          "scope": {
+            "source-identity": "sibling-search-0",
+            "generation": 0,
+            "source-digest": "fe6ee5bb6a0807b506f40ed067a834d96fc7782eb754d7ad847d7cc58d47c645",
+            "candidate-digest": "554fdc728c406292880e5e67c644ec2272db27c136c38935b28278061822172e",
+            "query": [
+              "ready",
+              "?f"
+            ]
+          }
+        },
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 6d393dbf-6372-4b63-b6f1-66effe5d2911)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 1,
+      "attempts": 1,
+      "proof-builds": 1,
+      "hits": 1,
+      "evictions": 0
+    }
+  },
+  {
+    "case": 0,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [
+          [
+            "path",
+            0,
+            5
+          ],
+          [
+            "path",
+            20,
+            200
+          ],
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            21,
+            201
+          ],
+          [
+            "path",
+            6,
+            5
+          ],
+          [
+            "path",
+            22,
+            202
+          ],
+          [
+            "path",
+            24,
+            204
+          ],
+          [
+            "path",
+            25,
+            205
+          ],
+          [
+            "path",
+            26,
+            206
+          ],
+          [
+            "path",
+            28,
+            208
+          ],
+          [
+            "path",
+            29,
+            209
+          ],
+          [
+            "path",
+            30,
+            210
+          ],
+          [
+            "path",
+            32,
+            212
+          ],
+          [
+            "path",
+            33,
+            213
+          ],
+          [
+            "path",
+            34,
+            214
+          ]
+        ],
+        "inputReservation": 12985,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": {
+          "observations": [
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  0,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  121
+                ]
+              },
+              "support": {
+                "roots": [
+                  121
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  20,
+                  200
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  102
+                ]
+              },
+              "support": {
+                "roots": [
+                  102
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  2,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  120
+                ]
+              },
+              "support": {
+                "roots": [
+                  120
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  21,
+                  201
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  103
+                ]
+              },
+              "support": {
+                "roots": [
+                  103
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  6,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  101
+                ]
+              },
+              "support": {
+                "roots": [
+                  101
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  22,
+                  202
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  104
+                ]
+              },
+              "support": {
+                "roots": [
+                  104
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  23,
+                  203
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  24,
+                  204
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  106
+                ]
+              },
+              "support": {
+                "roots": [
+                  106
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  25,
+                  205
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  107
+                ]
+              },
+              "support": {
+                "roots": [
+                  107
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  26,
+                  206
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  108
+                ]
+              },
+              "support": {
+                "roots": [
+                  108
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  27,
+                  207
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  28,
+                  208
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  110
+                ]
+              },
+              "support": {
+                "roots": [
+                  110
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  29,
+                  209
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  111
+                ]
+              },
+              "support": {
+                "roots": [
+                  111
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  30,
+                  210
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  112
+                ]
+              },
+              "support": {
+                "roots": [
+                  112
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  31,
+                  211
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  32,
+                  212
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  114
+                ]
+              },
+              "support": {
+                "roots": [
+                  114
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  33,
+                  213
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  115
+                ]
+              },
+              "support": {
+                "roots": [
+                  115
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  34,
+                  214
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  116
+                ]
+              },
+              "support": {
+                "roots": [
+                  116
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  35,
+                  215
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            }
+          ],
+          "scope": {
+            "source-identity": "sibling-search-0",
+            "generation": 0,
+            "source-digest": "fe6ee5bb6a0807b506f40ed067a834d96fc7782eb754d7ad847d7cc58d47c645",
+            "candidate-digest": "554fdc728c406292880e5e67c644ec2272db27c136c38935b28278061822172e",
+            "query": [
+              "ready",
+              "?f"
+            ]
+          },
+          "supportNodes": [
+            {
+              "id": 5,
+              "kind": "source",
+              "atom": [
+                "edge",
+                0,
+                6
+              ],
+              "ruleLabel": 6,
+              "parents": []
+            },
+            {
+              "id": 61,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                6
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                5
+              ]
+            },
+            {
+              "id": 6,
+              "kind": "source",
+              "atom": [
+                "edge",
+                6,
+                7
+              ],
+              "ruleLabel": 7,
+              "parents": []
+            },
+            {
+              "id": 100,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                7
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                61,
+                6
+              ]
+            },
+            {
+              "id": 7,
+              "kind": "source",
+              "atom": [
+                "edge",
+                7,
+                5
+              ],
+              "ruleLabel": 8,
+              "parents": []
+            },
+            {
+              "id": 121,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                100,
+                7
+              ]
+            },
+            {
+              "id": 8,
+              "kind": "source",
+              "atom": [
+                "edge",
+                20,
+                100
+              ],
+              "ruleLabel": 9,
+              "parents": []
+            },
+            {
+              "id": 64,
+              "kind": "rule",
+              "atom": [
+                "path",
+                20,
+                100
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                8
+              ]
+            },
+            {
+              "id": 9,
+              "kind": "source",
+              "atom": [
+                "edge",
+                100,
+                200
+              ],
+              "ruleLabel": 10,
+              "parents": []
+            },
+            {
+              "id": 102,
+              "kind": "rule",
+              "atom": [
+                "path",
+                20,
+                200
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                64,
+                9
+              ]
+            },
+            {
+              "id": 2,
+              "kind": "source",
+              "atom": [
+                "edge",
+                2,
+                3
+              ],
+              "ruleLabel": 3,
+              "parents": []
+            },
+            {
+              "id": 58,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                3
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                2
+              ]
+            },
+            {
+              "id": 3,
+              "kind": "source",
+              "atom": [
+                "edge",
+                3,
+                4
+              ],
+              "ruleLabel": 4,
+              "parents": []
+            },
+            {
+              "id": 98,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                4
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                58,
+                3
+              ]
+            },
+            {
+              "id": 4,
+              "kind": "source",
+              "atom": [
+                "edge",
+                4,
+                5
+              ],
+              "ruleLabel": 5,
+              "parents": []
+            },
+            {
+              "id": 120,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                98,
+                4
+              ]
+            },
+            {
+              "id": 10,
+              "kind": "source",
+              "atom": [
+                "edge",
+                21,
+                101
+              ],
+              "ruleLabel": 11,
+              "parents": []
+            },
+            {
+              "id": 66,
+              "kind": "rule",
+              "atom": [
+                "path",
+                21,
+                101
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                10
+              ]
+            },
+            {
+              "id": 11,
+              "kind": "source",
+              "atom": [
+                "edge",
+                101,
+                201
+              ],
+              "ruleLabel": 12,
+              "parents": []
+            },
+            {
+              "id": 103,
+              "kind": "rule",
+              "atom": [
+                "path",
+                21,
+                201
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                66,
+                11
+              ]
+            },
+            {
+              "id": 62,
+              "kind": "rule",
+              "atom": [
+                "path",
+                6,
+                7
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                6
+              ]
+            },
+            {
+              "id": 101,
+              "kind": "rule",
+              "atom": [
+                "path",
+                6,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                62,
+                7
+              ]
+            },
+            {
+              "id": 12,
+              "kind": "source",
+              "atom": [
+                "edge",
+                22,
+                102
+              ],
+              "ruleLabel": 13,
+              "parents": []
+            },
+            {
+              "id": 68,
+              "kind": "rule",
+              "atom": [
+                "path",
+                22,
+                102
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                12
+              ]
+            },
+            {
+              "id": 13,
+              "kind": "source",
+              "atom": [
+                "edge",
+                102,
+                202
+              ],
+              "ruleLabel": 14,
+              "parents": []
+            },
+            {
+              "id": 104,
+              "kind": "rule",
+              "atom": [
+                "path",
+                22,
+                202
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                68,
+                13
+              ]
+            },
+            {
+              "id": 16,
+              "kind": "source",
+              "atom": [
+                "edge",
+                24,
+                104
+              ],
+              "ruleLabel": 17,
+              "parents": []
+            },
+            {
+              "id": 72,
+              "kind": "rule",
+              "atom": [
+                "path",
+                24,
+                104
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                16
+              ]
+            },
+            {
+              "id": 17,
+              "kind": "source",
+              "atom": [
+                "edge",
+                104,
+                204
+              ],
+              "ruleLabel": 18,
+              "parents": []
+            },
+            {
+              "id": 106,
+              "kind": "rule",
+              "atom": [
+                "path",
+                24,
+                204
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                72,
+                17
+              ]
+            },
+            {
+              "id": 18,
+              "kind": "source",
+              "atom": [
+                "edge",
+                25,
+                105
+              ],
+              "ruleLabel": 19,
+              "parents": []
+            },
+            {
+              "id": 74,
+              "kind": "rule",
+              "atom": [
+                "path",
+                25,
+                105
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                18
+              ]
+            },
+            {
+              "id": 19,
+              "kind": "source",
+              "atom": [
+                "edge",
+                105,
+                205
+              ],
+              "ruleLabel": 20,
+              "parents": []
+            },
+            {
+              "id": 107,
+              "kind": "rule",
+              "atom": [
+                "path",
+                25,
+                205
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                74,
+                19
+              ]
+            },
+            {
+              "id": 20,
+              "kind": "source",
+              "atom": [
+                "edge",
+                26,
+                106
+              ],
+              "ruleLabel": 21,
+              "parents": []
+            },
+            {
+              "id": 76,
+              "kind": "rule",
+              "atom": [
+                "path",
+                26,
+                106
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                20
+              ]
+            },
+            {
+              "id": 21,
+              "kind": "source",
+              "atom": [
+                "edge",
+                106,
+                206
+              ],
+              "ruleLabel": 22,
+              "parents": []
+            },
+            {
+              "id": 108,
+              "kind": "rule",
+              "atom": [
+                "path",
+                26,
+                206
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                76,
+                21
+              ]
+            },
+            {
+              "id": 24,
+              "kind": "source",
+              "atom": [
+                "edge",
+                28,
+                108
+              ],
+              "ruleLabel": 25,
+              "parents": []
+            },
+            {
+              "id": 80,
+              "kind": "rule",
+              "atom": [
+                "path",
+                28,
+                108
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                24
+              ]
+            },
+            {
+              "id": 25,
+              "kind": "source",
+              "atom": [
+                "edge",
+                108,
+                208
+              ],
+              "ruleLabel": 26,
+              "parents": []
+            },
+            {
+              "id": 110,
+              "kind": "rule",
+              "atom": [
+                "path",
+                28,
+                208
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                80,
+                25
+              ]
+            },
+            {
+              "id": 26,
+              "kind": "source",
+              "atom": [
+                "edge",
+                29,
+                109
+              ],
+              "ruleLabel": 27,
+              "parents": []
+            },
+            {
+              "id": 82,
+              "kind": "rule",
+              "atom": [
+                "path",
+                29,
+                109
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                26
+              ]
+            },
+            {
+              "id": 27,
+              "kind": "source",
+              "atom": [
+                "edge",
+                109,
+                209
+              ],
+              "ruleLabel": 28,
+              "parents": []
+            },
+            {
+              "id": 111,
+              "kind": "rule",
+              "atom": [
+                "path",
+                29,
+                209
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                82,
+                27
+              ]
+            },
+            {
+              "id": 28,
+              "kind": "source",
+              "atom": [
+                "edge",
+                30,
+                110
+              ],
+              "ruleLabel": 29,
+              "parents": []
+            },
+            {
+              "id": 84,
+              "kind": "rule",
+              "atom": [
+                "path",
+                30,
+                110
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                28
+              ]
+            },
+            {
+              "id": 29,
+              "kind": "source",
+              "atom": [
+                "edge",
+                110,
+                210
+              ],
+              "ruleLabel": 30,
+              "parents": []
+            },
+            {
+              "id": 112,
+              "kind": "rule",
+              "atom": [
+                "path",
+                30,
+                210
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                84,
+                29
+              ]
+            },
+            {
+              "id": 32,
+              "kind": "source",
+              "atom": [
+                "edge",
+                32,
+                112
+              ],
+              "ruleLabel": 33,
+              "parents": []
+            },
+            {
+              "id": 88,
+              "kind": "rule",
+              "atom": [
+                "path",
+                32,
+                112
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                32
+              ]
+            },
+            {
+              "id": 33,
+              "kind": "source",
+              "atom": [
+                "edge",
+                112,
+                212
+              ],
+              "ruleLabel": 34,
+              "parents": []
+            },
+            {
+              "id": 114,
+              "kind": "rule",
+              "atom": [
+                "path",
+                32,
+                212
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                88,
+                33
+              ]
+            },
+            {
+              "id": 34,
+              "kind": "source",
+              "atom": [
+                "edge",
+                33,
+                113
+              ],
+              "ruleLabel": 35,
+              "parents": []
+            },
+            {
+              "id": 90,
+              "kind": "rule",
+              "atom": [
+                "path",
+                33,
+                113
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                34
+              ]
+            },
+            {
+              "id": 35,
+              "kind": "source",
+              "atom": [
+                "edge",
+                113,
+                213
+              ],
+              "ruleLabel": 36,
+              "parents": []
+            },
+            {
+              "id": 115,
+              "kind": "rule",
+              "atom": [
+                "path",
+                33,
+                213
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                90,
+                35
+              ]
+            },
+            {
+              "id": 36,
+              "kind": "source",
+              "atom": [
+                "edge",
+                34,
+                114
+              ],
+              "ruleLabel": 37,
+              "parents": []
+            },
+            {
+              "id": 92,
+              "kind": "rule",
+              "atom": [
+                "path",
+                34,
+                114
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                36
+              ]
+            },
+            {
+              "id": 37,
+              "kind": "source",
+              "atom": [
+                "edge",
+                114,
+                214
+              ],
+              "ruleLabel": 38,
+              "parents": []
+            },
+            {
+              "id": 116,
+              "kind": "rule",
+              "atom": [
+                "path",
+                34,
+                214
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                92,
+                37
+              ]
+            }
+          ]
+        },
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 71059fd3-27f4-488d-bf17-48b62dd330db)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 1,
+      "attempts": 1,
+      "proof-builds": 1,
+      "hits": 1,
+      "evictions": 0
+    }
+  },
+  {
+    "case": 1,
+    "arm": "scheme",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [
+          [
+            "path",
+            0,
+            5
+          ],
+          [
+            "path",
+            20,
+            200
+          ],
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            21,
+            201
+          ],
+          [
+            "path",
+            6,
+            5
+          ],
+          [
+            "path",
+            23,
+            203
+          ],
+          [
+            "path",
+            24,
+            204
+          ],
+          [
+            "path",
+            25,
+            205
+          ],
+          [
+            "path",
+            27,
+            207
+          ],
+          [
+            "path",
+            28,
+            208
+          ],
+          [
+            "path",
+            29,
+            209
+          ],
+          [
+            "path",
+            31,
+            211
+          ],
+          [
+            "path",
+            32,
+            212
+          ],
+          [
+            "path",
+            33,
+            213
+          ],
+          [
+            "path",
+            35,
+            215
+          ]
+        ],
+        "inputReservation": 12982,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": {
+          "observations": [
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  0,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  121
+                ]
+              },
+              "support": {
+                "roots": [
+                  121
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  20,
+                  200
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  102
+                ]
+              },
+              "support": {
+                "roots": [
+                  102
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  2,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  120
+                ]
+              },
+              "support": {
+                "roots": [
+                  120
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  21,
+                  201
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  103
+                ]
+              },
+              "support": {
+                "roots": [
+                  103
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  6,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  101
+                ]
+              },
+              "support": {
+                "roots": [
+                  101
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  22,
+                  202
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  23,
+                  203
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  105
+                ]
+              },
+              "support": {
+                "roots": [
+                  105
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  24,
+                  204
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  106
+                ]
+              },
+              "support": {
+                "roots": [
+                  106
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  25,
+                  205
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  107
+                ]
+              },
+              "support": {
+                "roots": [
+                  107
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  26,
+                  206
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  27,
+                  207
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  109
+                ]
+              },
+              "support": {
+                "roots": [
+                  109
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  28,
+                  208
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  110
+                ]
+              },
+              "support": {
+                "roots": [
+                  110
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  29,
+                  209
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  111
+                ]
+              },
+              "support": {
+                "roots": [
+                  111
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  30,
+                  210
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  31,
+                  211
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  113
+                ]
+              },
+              "support": {
+                "roots": [
+                  113
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  32,
+                  212
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  114
+                ]
+              },
+              "support": {
+                "roots": [
+                  114
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  33,
+                  213
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  115
+                ]
+              },
+              "support": {
+                "roots": [
+                  115
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  34,
+                  214
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  35,
+                  215
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  117
+                ]
+              },
+              "support": {
+                "roots": [
+                  117
+                ]
+              }
+            }
+          ],
+          "scope": {
+            "source-identity": "sibling-search-1",
+            "generation": 0,
+            "source-digest": "5d23aa40d38dbd0ab94eb416042a4e5766c3d5354e6846970ed4e7e3d3d8dfa6",
+            "candidate-digest": "554fdc728c406292880e5e67c644ec2272db27c136c38935b28278061822172e",
+            "query": [
+              "ready",
+              "?f"
+            ]
+          },
+          "supportNodes": [
+            {
+              "id": 5,
+              "kind": "source",
+              "atom": [
+                "edge",
+                0,
+                6
+              ],
+              "ruleLabel": 6,
+              "parents": []
+            },
+            {
+              "id": 61,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                6
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                5
+              ]
+            },
+            {
+              "id": 6,
+              "kind": "source",
+              "atom": [
+                "edge",
+                6,
+                7
+              ],
+              "ruleLabel": 7,
+              "parents": []
+            },
+            {
+              "id": 100,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                7
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                61,
+                6
+              ]
+            },
+            {
+              "id": 7,
+              "kind": "source",
+              "atom": [
+                "edge",
+                7,
+                5
+              ],
+              "ruleLabel": 8,
+              "parents": []
+            },
+            {
+              "id": 121,
+              "kind": "rule",
+              "atom": [
+                "path",
+                0,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                100,
+                7
+              ]
+            },
+            {
+              "id": 8,
+              "kind": "source",
+              "atom": [
+                "edge",
+                20,
+                100
+              ],
+              "ruleLabel": 9,
+              "parents": []
+            },
+            {
+              "id": 64,
+              "kind": "rule",
+              "atom": [
+                "path",
+                20,
+                100
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                8
+              ]
+            },
+            {
+              "id": 9,
+              "kind": "source",
+              "atom": [
+                "edge",
+                100,
+                200
+              ],
+              "ruleLabel": 10,
+              "parents": []
+            },
+            {
+              "id": 102,
+              "kind": "rule",
+              "atom": [
+                "path",
+                20,
+                200
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                64,
+                9
+              ]
+            },
+            {
+              "id": 2,
+              "kind": "source",
+              "atom": [
+                "edge",
+                2,
+                3
+              ],
+              "ruleLabel": 3,
+              "parents": []
+            },
+            {
+              "id": 58,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                3
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                2
+              ]
+            },
+            {
+              "id": 3,
+              "kind": "source",
+              "atom": [
+                "edge",
+                3,
+                4
+              ],
+              "ruleLabel": 4,
+              "parents": []
+            },
+            {
+              "id": 98,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                4
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                58,
+                3
+              ]
+            },
+            {
+              "id": 4,
+              "kind": "source",
+              "atom": [
+                "edge",
+                4,
+                5
+              ],
+              "ruleLabel": 5,
+              "parents": []
+            },
+            {
+              "id": 120,
+              "kind": "rule",
+              "atom": [
+                "path",
+                2,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                98,
+                4
+              ]
+            },
+            {
+              "id": 10,
+              "kind": "source",
+              "atom": [
+                "edge",
+                21,
+                101
+              ],
+              "ruleLabel": 11,
+              "parents": []
+            },
+            {
+              "id": 66,
+              "kind": "rule",
+              "atom": [
+                "path",
+                21,
+                101
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                10
+              ]
+            },
+            {
+              "id": 11,
+              "kind": "source",
+              "atom": [
+                "edge",
+                101,
+                201
+              ],
+              "ruleLabel": 12,
+              "parents": []
+            },
+            {
+              "id": 103,
+              "kind": "rule",
+              "atom": [
+                "path",
+                21,
+                201
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                66,
+                11
+              ]
+            },
+            {
+              "id": 62,
+              "kind": "rule",
+              "atom": [
+                "path",
+                6,
+                7
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                6
+              ]
+            },
+            {
+              "id": 101,
+              "kind": "rule",
+              "atom": [
+                "path",
+                6,
+                5
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                62,
+                7
+              ]
+            },
+            {
+              "id": 14,
+              "kind": "source",
+              "atom": [
+                "edge",
+                23,
+                103
+              ],
+              "ruleLabel": 15,
+              "parents": []
+            },
+            {
+              "id": 70,
+              "kind": "rule",
+              "atom": [
+                "path",
+                23,
+                103
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                14
+              ]
+            },
+            {
+              "id": 15,
+              "kind": "source",
+              "atom": [
+                "edge",
+                103,
+                203
+              ],
+              "ruleLabel": 16,
+              "parents": []
+            },
+            {
+              "id": 105,
+              "kind": "rule",
+              "atom": [
+                "path",
+                23,
+                203
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                70,
+                15
+              ]
+            },
+            {
+              "id": 16,
+              "kind": "source",
+              "atom": [
+                "edge",
+                24,
+                104
+              ],
+              "ruleLabel": 17,
+              "parents": []
+            },
+            {
+              "id": 72,
+              "kind": "rule",
+              "atom": [
+                "path",
+                24,
+                104
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                16
+              ]
+            },
+            {
+              "id": 17,
+              "kind": "source",
+              "atom": [
+                "edge",
+                104,
+                204
+              ],
+              "ruleLabel": 18,
+              "parents": []
+            },
+            {
+              "id": 106,
+              "kind": "rule",
+              "atom": [
+                "path",
+                24,
+                204
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                72,
+                17
+              ]
+            },
+            {
+              "id": 18,
+              "kind": "source",
+              "atom": [
+                "edge",
+                25,
+                105
+              ],
+              "ruleLabel": 19,
+              "parents": []
+            },
+            {
+              "id": 74,
+              "kind": "rule",
+              "atom": [
+                "path",
+                25,
+                105
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                18
+              ]
+            },
+            {
+              "id": 19,
+              "kind": "source",
+              "atom": [
+                "edge",
+                105,
+                205
+              ],
+              "ruleLabel": 20,
+              "parents": []
+            },
+            {
+              "id": 107,
+              "kind": "rule",
+              "atom": [
+                "path",
+                25,
+                205
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                74,
+                19
+              ]
+            },
+            {
+              "id": 22,
+              "kind": "source",
+              "atom": [
+                "edge",
+                27,
+                107
+              ],
+              "ruleLabel": 23,
+              "parents": []
+            },
+            {
+              "id": 78,
+              "kind": "rule",
+              "atom": [
+                "path",
+                27,
+                107
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                22
+              ]
+            },
+            {
+              "id": 23,
+              "kind": "source",
+              "atom": [
+                "edge",
+                107,
+                207
+              ],
+              "ruleLabel": 24,
+              "parents": []
+            },
+            {
+              "id": 109,
+              "kind": "rule",
+              "atom": [
+                "path",
+                27,
+                207
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                78,
+                23
+              ]
+            },
+            {
+              "id": 24,
+              "kind": "source",
+              "atom": [
+                "edge",
+                28,
+                108
+              ],
+              "ruleLabel": 25,
+              "parents": []
+            },
+            {
+              "id": 80,
+              "kind": "rule",
+              "atom": [
+                "path",
+                28,
+                108
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                24
+              ]
+            },
+            {
+              "id": 25,
+              "kind": "source",
+              "atom": [
+                "edge",
+                108,
+                208
+              ],
+              "ruleLabel": 26,
+              "parents": []
+            },
+            {
+              "id": 110,
+              "kind": "rule",
+              "atom": [
+                "path",
+                28,
+                208
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                80,
+                25
+              ]
+            },
+            {
+              "id": 26,
+              "kind": "source",
+              "atom": [
+                "edge",
+                29,
+                109
+              ],
+              "ruleLabel": 27,
+              "parents": []
+            },
+            {
+              "id": 82,
+              "kind": "rule",
+              "atom": [
+                "path",
+                29,
+                109
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                26
+              ]
+            },
+            {
+              "id": 27,
+              "kind": "source",
+              "atom": [
+                "edge",
+                109,
+                209
+              ],
+              "ruleLabel": 28,
+              "parents": []
+            },
+            {
+              "id": 111,
+              "kind": "rule",
+              "atom": [
+                "path",
+                29,
+                209
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                82,
+                27
+              ]
+            },
+            {
+              "id": 30,
+              "kind": "source",
+              "atom": [
+                "edge",
+                31,
+                111
+              ],
+              "ruleLabel": 31,
+              "parents": []
+            },
+            {
+              "id": 86,
+              "kind": "rule",
+              "atom": [
+                "path",
+                31,
+                111
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                30
+              ]
+            },
+            {
+              "id": 31,
+              "kind": "source",
+              "atom": [
+                "edge",
+                111,
+                211
+              ],
+              "ruleLabel": 32,
+              "parents": []
+            },
+            {
+              "id": 113,
+              "kind": "rule",
+              "atom": [
+                "path",
+                31,
+                211
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                86,
+                31
+              ]
+            },
+            {
+              "id": 32,
+              "kind": "source",
+              "atom": [
+                "edge",
+                32,
+                112
+              ],
+              "ruleLabel": 33,
+              "parents": []
+            },
+            {
+              "id": 88,
+              "kind": "rule",
+              "atom": [
+                "path",
+                32,
+                112
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                32
+              ]
+            },
+            {
+              "id": 33,
+              "kind": "source",
+              "atom": [
+                "edge",
+                112,
+                212
+              ],
+              "ruleLabel": 34,
+              "parents": []
+            },
+            {
+              "id": 114,
+              "kind": "rule",
+              "atom": [
+                "path",
+                32,
+                212
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                88,
+                33
+              ]
+            },
+            {
+              "id": 34,
+              "kind": "source",
+              "atom": [
+                "edge",
+                33,
+                113
+              ],
+              "ruleLabel": 35,
+              "parents": []
+            },
+            {
+              "id": 90,
+              "kind": "rule",
+              "atom": [
+                "path",
+                33,
+                113
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                34
+              ]
+            },
+            {
+              "id": 35,
+              "kind": "source",
+              "atom": [
+                "edge",
+                113,
+                213
+              ],
+              "ruleLabel": 36,
+              "parents": []
+            },
+            {
+              "id": 115,
+              "kind": "rule",
+              "atom": [
+                "path",
+                33,
+                213
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                90,
+                35
+              ]
+            },
+            {
+              "id": 38,
+              "kind": "source",
+              "atom": [
+                "edge",
+                35,
+                115
+              ],
+              "ruleLabel": 39,
+              "parents": []
+            },
+            {
+              "id": 94,
+              "kind": "rule",
+              "atom": [
+                "path",
+                35,
+                115
+              ],
+              "ruleLabel": 3,
+              "parents": [
+                38
+              ]
+            },
+            {
+              "id": 39,
+              "kind": "source",
+              "atom": [
+                "edge",
+                115,
+                215
+              ],
+              "ruleLabel": 40,
+              "parents": []
+            },
+            {
+              "id": 117,
+              "kind": "rule",
+              "atom": [
+                "path",
+                35,
+                215
+              ],
+              "ruleLabel": 4,
+              "parents": [
+                94,
+                39
+              ]
+            }
+          ]
+        },
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 0ede9c68-bc5a-4c74-be16-ab57d0bc1c45)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 1,
+      "attempts": 1,
+      "proof-builds": 1,
+      "hits": 1,
+      "evictions": 0
+    }
+  },
+  {
+    "case": 1,
+    "arm": "facts",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [
+          [
+            "path",
+            0,
+            5
+          ],
+          [
+            "path",
+            20,
+            200
+          ],
+          [
+            "path",
+            2,
+            5
+          ],
+          [
+            "path",
+            21,
+            201
+          ],
+          [
+            "path",
+            6,
+            5
+          ],
+          [
+            "path",
+            23,
+            203
+          ],
+          [
+            "path",
+            24,
+            204
+          ],
+          [
+            "path",
+            25,
+            205
+          ],
+          [
+            "path",
+            27,
+            207
+          ],
+          [
+            "path",
+            28,
+            208
+          ],
+          [
+            "path",
+            29,
+            209
+          ],
+          [
+            "path",
+            31,
+            211
+          ],
+          [
+            "path",
+            32,
+            212
+          ],
+          [
+            "path",
+            33,
+            213
+          ],
+          [
+            "path",
+            35,
+            215
+          ]
+        ],
+        "inputReservation": 6890,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": {
+          "observations": [
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  0,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  121
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  20,
+                  200
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  102
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  2,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  120
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  21,
+                  201
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  103
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  6,
+                  5
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  101
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  22,
+                  202
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  23,
+                  203
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  105
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  24,
+                  204
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  106
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  25,
+                  205
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  107
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  26,
+                  206
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  27,
+                  207
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  109
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  28,
+                  208
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  110
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  29,
+                  209
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  111
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  30,
+                  210
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  31,
+                  211
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  113
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  32,
+                  212
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  114
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  33,
+                  213
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  115
+                ]
+              }
+            },
+            {
+              "conclusion": {
+                "status": "finite-absent",
+                "present": false,
+                "atom": [
+                  "path",
+                  34,
+                  214
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": []
+              }
+            },
+            {
+              "conclusion": {
+                "status": "verified",
+                "present": true,
+                "atom": [
+                  "path",
+                  35,
+                  215
+                ],
+                "handle": 1,
+                "basis": "verified-finite-closure",
+                "support-nodes": [
+                  117
+                ]
+              }
+            }
+          ],
+          "scope": {
+            "source-identity": "sibling-search-1",
+            "generation": 0,
+            "source-digest": "5d23aa40d38dbd0ab94eb416042a4e5766c3d5354e6846970ed4e7e3d3d8dfa6",
+            "candidate-digest": "554fdc728c406292880e5e67c644ec2272db27c136c38935b28278061822172e",
+            "query": [
+              "ready",
+              "?f"
+            ]
+          }
+        },
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 7a3ad63a-4a8d-42e7-bf5a-65ab81caa776)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 1,
+      "attempts": 1,
+      "proof-builds": 1,
+      "hits": 1,
+      "evictions": 0
+    }
+  },
+  {
+    "case": 1,
+    "arm": "baseline",
+    "calls": [
+      {
+        "turn": 0,
+        "step": 0,
+        "usage": null,
+        "grossTokens": null,
+        "failure": "unknown usage",
+        "suppliedAtoms": [],
+        "inputReservation": 3493,
+        "outputCap": 2048,
+        "nativePacket": null,
+        "entryEvidence": null,
+        "outputTruncated": false,
+        "status": null,
+        "providerError": {
+          "type": "RuntimeError",
+          "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: a2ca2e05-982c-4d80-8b7b-b5c9d0ab803c)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        "incompleteDetails": null,
+        "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "branches": [],
+    "grossTokens": 0,
+    "stop": "failure",
+    "failure": "unknown usage",
+    "unusedBudget": 32768,
+    "nativeStats": {
+      "entries": 0,
+      "attempts": 0,
+      "proof-builds": 0,
+      "hits": 0,
+      "evictions": 0
+    }
+  }
+]

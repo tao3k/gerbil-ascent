@@ -1,0 +1,12 @@
+{
+  "terminal": null,
+  "error": {
+    "type": "RuntimeError",
+    "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: a2ca2e05-982c-4d80-8b7b-b5c9d0ab803c)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+  },
+  "reasoningEvents": 0,
+  "providerSeconds": 0.22591983299935237,
+  "firstVisibleTextSeconds": null,
+  "progressIdleSeconds": 45,
+  "absoluteWallDeadlineSeconds": null
+}

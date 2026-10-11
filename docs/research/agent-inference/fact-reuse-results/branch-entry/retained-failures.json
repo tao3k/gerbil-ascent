@@ -1,0 +1,27 @@
+{
+  "earlierRetainedFailures": [
+    {
+      "stage": "External retained-thinking transport qualification",
+      "status": "not executed",
+      "reason": "Automatic approval rejected specific DeepSeek export; no workaround attempted"
+    },
+    {
+      "stage": "Initial literal coverage calibration",
+      "status": "36/38 reference spans matched",
+      "reason": "exists-via lines not recognized as semantic; broadened explicit keyword recognition before final freeze; final38/38 reference replay passes",
+      "scope": "Syntax reference set only, not general semantic completeness"
+    }
+  ],
+  "finalRun": {
+    "infeasibleSelections": 7,
+    "censoredThinkingCalls": 18,
+    "budgetStoppedCells": 6,
+    "structuredSubmissions": 18,
+    "allRawPreserved": true
+  },
+  "providerProtocolFailures": {
+    "opaqueReplayInputConsumptionUnconfirmed": "history/opaque-replay",
+    "thinkingSpecificToolChoiceHttp400": "history/thinking-tool-choice",
+    "unknownUsageCalls": 6
+  }
+}

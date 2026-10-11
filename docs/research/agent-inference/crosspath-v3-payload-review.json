@@ -1,0 +1,25 @@
+{
+  "destination": "https://api.deepseek.com/responses",
+  "payloadOrigin": "Fixed artificial 12-edge, 12-fragment graph; fixed PRNG-generated options and numeric bonuses. No repository documents, implementation source, real business data, credentials, file paths or user files in model input. ASCENT packet consists of numeric fixture rows, relation labels, proof indices and source/candidate hashes for this artificial fixture.",
+  "authorizationContext": "User explicitly requested continuing real-model experiments, same provider as prior retained rounds.",
+  "maxCalibrationCalls": 3,
+  "confirmatoryPhases": 6,
+  "grossBudgetPerPhase": 65536,
+  "requests": [
+    {
+      "arm": "baseline",
+      "requestSha256": "22bcb22c6938365512d235be63a0c6c67a7cb29dbae8a323b2b686eb94b1a44c",
+      "contentBytes": 1703
+    },
+    {
+      "arm": "fresh",
+      "requestSha256": "adca42b94e365e497891f30326ca3fe48d6f6d8adb0c19cb0be96110c78dfc01",
+      "contentBytes": 4516
+    },
+    {
+      "arm": "retained",
+      "requestSha256": "adca42b94e365e497891f30326ca3fe48d6f6d8adb0c19cb0be96110c78dfc01",
+      "contentBytes": 4516
+    }
+  ]
+}

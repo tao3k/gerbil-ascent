@@ -1,0 +1,390 @@
+{
+  "schema": "ascent.crosspath.report.v1",
+  "planSha256": "1150d2e7ff106b48b6f16fc2b89c0c951c8f8caaba796e43ef91269aee9f40db",
+  "summary": {
+    "baseline": {
+      "phases": 2,
+      "submittedValid": 0,
+      "failures": 2,
+      "grossTokens": 32606,
+      "thinkingTokens": 20347,
+      "uniqueCandidates": 1,
+      "prefixes": 2,
+      "repeatedDerivations": 0,
+      "derivationEpisodes": 30,
+      "reuses": 8,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0,
+      "gaps": [
+        null,
+        47
+      ],
+      "annotationFailures": 0,
+      "usageUnknownCalls": 0
+    },
+    "fresh": {
+      "phases": 2,
+      "submittedValid": 0,
+      "failures": 2,
+      "grossTokens": 24012,
+      "thinkingTokens": 16384,
+      "uniqueCandidates": 0,
+      "prefixes": 0,
+      "repeatedDerivations": 0,
+      "derivationEpisodes": 21,
+      "reuses": 4,
+      "nativeProofBuilds": 2,
+      "nativeProofSeconds": 0.765310540999053,
+      "gaps": [
+        null,
+        null
+      ],
+      "annotationFailures": 0,
+      "usageUnknownCalls": 0
+    },
+    "retained": {
+      "phases": 2,
+      "submittedValid": 0,
+      "failures": 2,
+      "grossTokens": 24012,
+      "thinkingTokens": 16384,
+      "uniqueCandidates": 0,
+      "prefixes": 0,
+      "repeatedDerivations": 0,
+      "derivationEpisodes": 28,
+      "reuses": 2,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.051171042025089264,
+      "gaps": [
+        null,
+        null
+      ],
+      "annotationFailures": 0,
+      "usageUnknownCalls": 0
+    }
+  },
+  "table": [
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "baseline",
+      "solverGrossTokens": 10600,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 8192,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": null,
+      "gap": null,
+      "uniqueCandidates": 0,
+      "distinctPrefixes": 0,
+      "maxPrefixDepth": 0,
+      "maxVerifiedCompleteDepth": 0,
+      "branchWidth": 0,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 22,
+      "derivationEpisodes": 18,
+      "repeatedDerivations": 0,
+      "reuses": 1,
+      "uncertain": 0,
+      "rejectedAnnotations": 1,
+      "annotationFailure": null,
+      "packetCoveredRederivations": null,
+      "measurementGrossTokens": 12661,
+      "nativePacketReused": null,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "baseline",
+      "solverGrossTokens": 22006,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 12155,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": 283,
+      "gap": 47,
+      "uniqueCandidates": 1,
+      "distinctPrefixes": 2,
+      "maxPrefixDepth": 4,
+      "maxVerifiedCompleteDepth": 7,
+      "branchWidth": 1,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 19,
+      "derivationEpisodes": 12,
+      "repeatedDerivations": 0,
+      "reuses": 7,
+      "uncertain": 0,
+      "rejectedAnnotations": 2,
+      "annotationFailure": null,
+      "packetCoveredRederivations": null,
+      "measurementGrossTokens": 16339,
+      "nativePacketReused": null,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "fresh",
+      "solverGrossTokens": 12006,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 8192,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": null,
+      "gap": null,
+      "uniqueCandidates": 0,
+      "distinctPrefixes": 0,
+      "maxPrefixDepth": 0,
+      "maxVerifiedCompleteDepth": 0,
+      "branchWidth": 0,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 22,
+      "derivationEpisodes": 9,
+      "repeatedDerivations": 0,
+      "reuses": 1,
+      "uncertain": 0,
+      "rejectedAnnotations": 3,
+      "annotationFailure": null,
+      "packetCoveredRederivations": 9,
+      "measurementGrossTokens": 12838,
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.6124274159956258
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "fresh",
+      "solverGrossTokens": 12006,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 8192,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": null,
+      "gap": null,
+      "uniqueCandidates": 0,
+      "distinctPrefixes": 0,
+      "maxPrefixDepth": 0,
+      "maxVerifiedCompleteDepth": 0,
+      "branchWidth": 0,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 15,
+      "derivationEpisodes": 12,
+      "repeatedDerivations": 0,
+      "reuses": 3,
+      "uncertain": 0,
+      "rejectedAnnotations": 3,
+      "annotationFailure": null,
+      "packetCoveredRederivations": 8,
+      "measurementGrossTokens": 12510,
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.15288312500342727
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 0,
+      "arm": "retained",
+      "solverGrossTokens": 12006,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 8192,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": null,
+      "gap": null,
+      "uniqueCandidates": 0,
+      "distinctPrefixes": 0,
+      "maxPrefixDepth": 0,
+      "maxVerifiedCompleteDepth": 0,
+      "branchWidth": 0,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 18,
+      "derivationEpisodes": 15,
+      "repeatedDerivations": 0,
+      "reuses": 2,
+      "uncertain": 0,
+      "rejectedAnnotations": 0,
+      "annotationFailure": null,
+      "packetCoveredRederivations": 15,
+      "measurementGrossTokens": 12267,
+      "nativePacketReused": false,
+      "nativeProofBuilds": 1,
+      "nativeProofSeconds": 0.046644584013847634
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "goal": 1,
+      "arm": "retained",
+      "solverGrossTokens": 12006,
+      "usageUnknownCalls": 0,
+      "thinkingTokens": 8192,
+      "submittedValid": false,
+      "failure": "output_budget_exhausted",
+      "bestValue": null,
+      "gap": null,
+      "uniqueCandidates": 0,
+      "distinctPrefixes": 0,
+      "maxPrefixDepth": 0,
+      "maxVerifiedCompleteDepth": 0,
+      "branchWidth": 0,
+      "crossCandidateSharedFragments": [],
+      "annotationEpisodes": 15,
+      "derivationEpisodes": 13,
+      "repeatedDerivations": 0,
+      "reuses": 0,
+      "uncertain": 0,
+      "rejectedAnnotations": 1,
+      "annotationFailure": null,
+      "packetCoveredRederivations": 8,
+      "measurementGrossTokens": 12342,
+      "nativePacketReused": true,
+      "nativeProofBuilds": 0,
+      "nativeProofSeconds": 0.00452645801124163
+    }
+  ],
+  "rawBundle": {
+    "file": "docs/research/agent-inference/crosspath-search-v2-raw.tar.gz",
+    "sha256": "88c77243f02a680a6a97a24a67e63beb2a725a12c742692c8d1dc960297b5b32",
+    "bytes": 846476
+  },
+  "solverCalls": 7,
+  "annotationCalls": 6,
+  "crossGoalRepeatedDerivations": [
+    {
+      "task": "no-oracle-shared-search-3",
+      "arm": "baseline",
+      "sourceContextMatches": [],
+      "interpretation": "Repeated grounded derivation across reset goals; distinct from within-trace prior-link duplication."
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "arm": "fresh",
+      "sourceContextMatches": [
+        {
+          "phase0Episode": 12,
+          "phase1Episode": 0,
+          "claimKey": [
+            0,
+            true,
+            "[[0,7],[1,9]]",
+            "[[0,2],[2,4],[4,7],[1,2],[7,9]]"
+          ]
+        },
+        {
+          "phase0Episode": 13,
+          "phase1Episode": 1,
+          "claimKey": [
+            1,
+            true,
+            "[[2,9],[3,11]]",
+            "[[2,4],[4,7],[7,9],[3,6],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "phase0Episode": 14,
+          "phase1Episode": 2,
+          "claimKey": [
+            2,
+            true,
+            "[[4,11],[5,9]]",
+            "[[4,7],[7,9],[9,11],[5,7],[7,9]]"
+          ]
+        },
+        {
+          "phase0Episode": 15,
+          "phase1Episode": 3,
+          "claimKey": [
+            3,
+            true,
+            "[[0,11],[3,9]]",
+            "[[3,6],[6,8],[8,9]]"
+          ]
+        },
+        {
+          "phase0Episode": 16,
+          "phase1Episode": 4,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "phase0Episode": 17,
+          "phase1Episode": 5,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "phase0Episode": 19,
+          "phase1Episode": 7,
+          "claimKey": [
+            7,
+            true,
+            "[[0,9],[10,11]]",
+            "[[10,11]]"
+          ]
+        }
+      ],
+      "interpretation": "Repeated grounded derivation across reset goals; distinct from within-trace prior-link duplication."
+    },
+    {
+      "task": "no-oracle-shared-search-3",
+      "arm": "retained",
+      "sourceContextMatches": [
+        {
+          "phase0Episode": 8,
+          "phase1Episode": 5,
+          "claimKey": [
+            4,
+            true,
+            "[[1,7],[6,11]]",
+            "[[1,2],[2,4],[4,7],[6,8],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "phase0Episode": 9,
+          "phase1Episode": 6,
+          "claimKey": [
+            5,
+            true,
+            "[[2,7],[8,11]]",
+            "[[2,4],[4,7],[8,9],[9,11]]"
+          ]
+        },
+        {
+          "phase0Episode": 10,
+          "phase1Episode": 7,
+          "claimKey": [
+            6,
+            true,
+            "[[3,8],[9,11]]",
+            "[[3,6],[6,8],[9,11]]"
+          ]
+        }
+      ],
+      "interpretation": "Repeated grounded derivation across reset goals; distinct from within-trace prior-link duplication."
+    }
+  ],
+  "measurementGrossTokens": 78957,
+  "limitations": [
+    "One disjoint fixed task / two task-goal pairs: descriptive instrumentation replay; fixed arm ordering, no statistical or general cognitive claim.",
+    "Same packets/control policy in fresh and retained: native cache state alone is not a visible model treatment.",
+    "No-evidence baseline may acquire certificates via common fragment tool: initial-packet intervention, not an evidence prohibition.",
+    "Same budget ceiling, actual gross input+all output charged; conservative reservation may stop early with unused budget.",
+    "Direct annotation is same-provider blinded semantic extraction with exact source spans/native fact truth, not validated exhaustive ground truth or independent-rater agreement.",
+    "Arm/outcome metadata are withheld from the annotator, but reasoning content can reveal packet availability; blinding is partial.",
+    "This replay changes common source-schema clarification and tool eligibility feedback together; v1 vs v2 is an instrumentation comparison, not an isolated treatment estimate.",
+    "Audit instructions identify Fact IDs in every arm and may alter spontaneous reasoning/repetition.",
+    "Search depth measures executed prefixes and valid full plans, not an unobserved mental search tree. No hidden reasoning inferred.",
+    "Packet-covered rederivation and within-trace duplicates are separate; absent/ambiguous labels do not demonstrate zero repeated thinking."
+  ]
+}

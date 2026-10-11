@@ -1,0 +1,20 @@
+{
+  "turn": 0,
+  "step": 0,
+  "usage": null,
+  "grossTokens": null,
+  "failure": "unknown usage",
+  "suppliedAtoms": [],
+  "inputReservation": 3496,
+  "outputCap": 2048,
+  "nativePacket": null,
+  "entryEvidence": null,
+  "outputTruncated": false,
+  "status": null,
+  "providerError": {
+    "type": "RuntimeError",
+    "message": "provider HTTP status 400: {\"error\":{\"message\":\"Thinking mode does not support this tool_choice (request_id: 462a2025-48b0-4a0b-9a8b-12c086791f7c)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+  },
+  "incompleteDetails": null,
+  "thinkingSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,3481 @@
+{
+  "planSha256": "4fb3007edebca0429923ac4d58cdf72d8c67c0d81040d32a84fc38cf808ef111",
+  "phases": [
+    {
+      "case": 0,
+      "arm": "baseline",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2138,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 3502,
+            "output_tokens_details": {
+              "reasoning_tokens": 3211
+            },
+            "total_tokens": 5640
+          },
+          "failure": null,
+          "providerSeconds": 17.268789749999996,
+          "thinkingSha256": "63c84fe17c2d4f3296cde8c7a9d5385b77d1cc31d99f90a113bd2300871794bc",
+          "inputReserve": 9790,
+          "grossTokens": 5640,
+          "atGrossTokens": 5640
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2138,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 2208,
+            "output_tokens_details": {
+              "reasoning_tokens": 2170
+            },
+            "total_tokens": 4346
+          },
+          "failure": null,
+          "providerSeconds": 11.186205375008285,
+          "thinkingSha256": "0ba3224b001c83ce7332903dc48f2d24c6898f5f99dd85880f734488b2b1aa26",
+          "inputReserve": 9804,
+          "grossTokens": 4346,
+          "atGrossTokens": 9986
+        },
+        {
+          "turn": 2,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2140,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10332
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 34.34184120898135,
+          "thinkingSha256": "1af8fe62cb07c0bc4d50f5333930f47ac9c9254d9511224a22743c7dcf75e956",
+          "inputReserve": 9818,
+          "grossTokens": 10332,
+          "atGrossTokens": 20318
+        },
+        {
+          "turn": 3,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2140,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10332
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 37.719426541007124,
+          "thinkingSha256": "7ba4881df50c1610be65288323949be942e790888910f82512755c587999faa7",
+          "inputReserve": 9818,
+          "grossTokens": 10332,
+          "atGrossTokens": 30650
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2140,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10332
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 35.385986249981215,
+          "thinkingSha256": "1996029fcacb6098701e538534a25dc6b2bfae76ce8d275fec6c7181255a9faf",
+          "inputReserve": 9818,
+          "grossTokens": 10332,
+          "atGrossTokens": 40982
+        }
+      ],
+      "expansions": [
+        {
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "prefix": {
+            "valid": true,
+            "value": 35,
+            "cost": 3,
+            "risk": 7,
+            "depth": 1
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "evaluation": {
+            "cost": 15,
+            "risk": 13,
+            "depth": 7,
+            "valid": true,
+            "value": 134
+          },
+          "turn": 0,
+          "atGrossTokens": 5640
+        },
+        {
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "evaluation": {
+            "depth": 7,
+            "cost": 24,
+            "valid": true,
+            "value": 189,
+            "risk": 18
+          },
+          "prefix": {
+            "valid": true,
+            "value": 66,
+            "cost": 14,
+            "risk": 13,
+            "depth": 2
+          },
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 1,
+          "atGrossTokens": 9986
+        }
+      ],
+      "grossTokens": 40982,
+      "failure": "consecutive_failed_calls",
+      "stopReason": "failed_calls",
+      "budget": 65536,
+      "seedGrade": {
+        "risk": 7,
+        "depth": 7,
+        "cost": 14,
+        "gap": 225,
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true,
+        "oracle": {
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "feasibleLeaves": 8828
+        },
+        "value": 78
+      },
+      "state": {
+        "nativeStats": [
+          [
+            "entries",
+            3
+          ],
+          [
+            "attempts",
+            3
+          ],
+          [
+            "proof-builds",
+            3
+          ],
+          [
+            "hits",
+            5
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "prunings": [],
+        "incumbent": {
+          "evaluation": {
+            "depth": 7,
+            "cost": 24,
+            "valid": true,
+            "value": 189,
+            "risk": 18
+          },
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ]
+        },
+        "expansions": [
+          {
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            "prefix": {
+              "valid": true,
+              "value": 35,
+              "cost": 3,
+              "risk": 7,
+              "depth": 1
+            },
+            "child": [
+              2
+            ],
+            "parent": [],
+            "evaluation": {
+              "cost": 15,
+              "risk": 13,
+              "depth": 7,
+              "valid": true,
+              "value": 134
+            }
+          },
+          {
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ],
+            "evaluation": {
+              "depth": 7,
+              "cost": 24,
+              "valid": true,
+              "value": 189,
+              "risk": 18
+            },
+            "prefix": {
+              "valid": true,
+              "value": 66,
+              "cost": 14,
+              "risk": 13,
+              "depth": 2
+            },
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          }
+        ]
+      },
+      "grade": {
+        "risk": 18,
+        "depth": 7,
+        "cost": 24,
+        "gap": 114,
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true,
+        "oracle": {
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "feasibleLeaves": 8828
+        },
+        "value": 189
+      },
+      "unusedBudget": 24554
+    },
+    {
+      "case": 0,
+      "arm": "facts",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 3061,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 3884,
+            "output_tokens_details": {
+              "reasoning_tokens": 3846
+            },
+            "total_tokens": 6945
+          },
+          "failure": null,
+          "providerSeconds": 17.47287258299184,
+          "thinkingSha256": "6944e9a44c14389e9da48453607c959e6be410a66996cba453d31decb5bfb4d6",
+          "inputReserve": 12256,
+          "grossTokens": 6945,
+          "atGrossTokens": 6945
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 3030,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 2288,
+            "output_tokens_details": {
+              "reasoning_tokens": 2020
+            },
+            "total_tokens": 5318
+          },
+          "failure": null,
+          "providerSeconds": 10.455153040995356,
+          "thinkingSha256": "ad96ec485cf4c526edb4acfba96dd90bb6cd90be4cfd9c2a6e22b3204420310b",
+          "inputReserve": 12204,
+          "grossTokens": 5318,
+          "atGrossTokens": 12263
+        },
+        {
+          "turn": 2,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3061,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11253
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 35.74622912501218,
+          "thinkingSha256": "c9880d24aae2813d0a186a897a0fb5347b48b8dc8fc8c629c9a4797db57a481b",
+          "inputReserve": 12289,
+          "grossTokens": 11253,
+          "atGrossTokens": 23516
+        },
+        {
+          "turn": 3,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3061,
+            "input_tokens_details": {
+              "cached_tokens": 2816
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11253
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 37.325124875002075,
+          "thinkingSha256": "99c8b5686ea129b5195937be15877456360dab3ac55afa1912027f579afdc155",
+          "inputReserve": 12289,
+          "grossTokens": 11253,
+          "atGrossTokens": 34769
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3061,
+            "input_tokens_details": {
+              "cached_tokens": 2816
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11253
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 34.02096891700057,
+          "thinkingSha256": "67469b0f89b0761fb166ae6b8db718757c32daa2a3dc21b1ef510e9bfc99b20c",
+          "inputReserve": 12289,
+          "grossTokens": 11253,
+          "atGrossTokens": 46022
+        }
+      ],
+      "expansions": [
+        {
+          "evaluation": {
+            "valid": true,
+            "value": 134,
+            "cost": 15,
+            "risk": 13,
+            "depth": 7
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "prefix": {
+            "value": 35,
+            "risk": 7,
+            "depth": 1,
+            "cost": 3,
+            "valid": true
+          },
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 0,
+          "atGrossTokens": 6945
+        },
+        {
+          "prefix": {
+            "valid": true,
+            "value": 66,
+            "risk": 13,
+            "depth": 2,
+            "cost": 14
+          },
+          "evaluation": {
+            "risk": 18,
+            "depth": 7,
+            "cost": 24,
+            "valid": true,
+            "value": 189
+          },
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 1,
+          "atGrossTokens": 12263
+        }
+      ],
+      "grossTokens": 46022,
+      "failure": "consecutive_failed_calls",
+      "stopReason": "failed_calls",
+      "budget": 65536,
+      "seedGrade": {
+        "gap": 225,
+        "value": 78,
+        "risk": 7,
+        "depth": 7,
+        "cost": 14,
+        "oracle": {
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "feasibleLeaves": 8828
+        },
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true
+      },
+      "state": {
+        "expansions": [
+          {
+            "evaluation": {
+              "valid": true,
+              "value": 134,
+              "cost": 15,
+              "risk": 13,
+              "depth": 7
+            },
+            "child": [
+              2
+            ],
+            "parent": [],
+            "prefix": {
+              "value": 35,
+              "risk": 7,
+              "depth": 1,
+              "cost": 3,
+              "valid": true
+            },
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          },
+          {
+            "prefix": {
+              "valid": true,
+              "value": 66,
+              "risk": 13,
+              "depth": 2,
+              "cost": 14
+            },
+            "evaluation": {
+              "risk": 18,
+              "depth": 7,
+              "cost": 24,
+              "valid": true,
+              "value": 189
+            },
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ],
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          }
+        ],
+        "nativeStats": [
+          [
+            "entries",
+            3
+          ],
+          [
+            "attempts",
+            3
+          ],
+          [
+            "proof-builds",
+            3
+          ],
+          [
+            "hits",
+            5
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "prunings": [],
+        "incumbent": {
+          "evaluation": {
+            "risk": 18,
+            "depth": 7,
+            "cost": 24,
+            "valid": true,
+            "value": 189
+          },
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ]
+        }
+      },
+      "grade": {
+        "cost": 24,
+        "risk": 18,
+        "depth": 7,
+        "gap": 114,
+        "optimal": false,
+        "valid": true,
+        "ineligibleOrWrongStage": [],
+        "oracle": {
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "feasibleLeaves": 8828
+        },
+        "value": 189
+      },
+      "unusedBudget": 19514
+    },
+    {
+      "case": 0,
+      "arm": "prune",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2987,
+            "input_tokens_details": {
+              "cached_tokens": 2688
+            },
+            "output_tokens": 5365,
+            "output_tokens_details": {
+              "reasoning_tokens": 4954
+            },
+            "total_tokens": 8352
+          },
+          "failure": null,
+          "providerSeconds": 21.221241582999937,
+          "thinkingSha256": "2a0ab505346958bed3e31a7306e24e406c85a671217b8c30f738141820603765",
+          "inputReserve": 12026,
+          "grossTokens": 8352,
+          "atGrossTokens": 8352
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2956,
+            "input_tokens_details": {
+              "cached_tokens": 2688
+            },
+            "output_tokens": 4396,
+            "output_tokens_details": {
+              "reasoning_tokens": 3942
+            },
+            "total_tokens": 7352
+          },
+          "failure": null,
+          "providerSeconds": 20.01468329099589,
+          "thinkingSha256": "03bd8929ad934dd5e045801473474dbd5d1d14fbfb8df01d2bc3083cea1a40d1",
+          "inputReserve": 11970,
+          "grossTokens": 7352,
+          "atGrossTokens": 15704
+        },
+        {
+          "turn": 2,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2987,
+            "input_tokens_details": {
+              "cached_tokens": 2688
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11179
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 37.04239654101548,
+          "thinkingSha256": "b84d57a935d58798f3acef418a8a2e0575abc9bd3df2ede5e7f5a9a6ef447a09",
+          "inputReserve": 12054,
+          "grossTokens": 11179,
+          "atGrossTokens": 26883
+        },
+        {
+          "turn": 3,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2909,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11101
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 31.799442875024397,
+          "thinkingSha256": "b551cb4b456c77d3bcf6fd7f33299033bba652002d6cae66b77a0c389be3a2ad",
+          "inputReserve": 11778,
+          "grossTokens": 11101,
+          "atGrossTokens": 37984
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2909,
+            "input_tokens_details": {
+              "cached_tokens": 2688
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11101
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 35.2087042920175,
+          "thinkingSha256": "25ef53f7e667f0dd63111d0b5a1d50062c8ef72f746d425989ce3ad3a948918c",
+          "inputReserve": 11778,
+          "grossTokens": 11101,
+          "atGrossTokens": 49085
+        }
+      ],
+      "expansions": [
+        {
+          "prefix": {
+            "valid": true,
+            "value": 35,
+            "risk": 7,
+            "depth": 1,
+            "cost": 3
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "evaluation": {
+            "valid": true,
+            "value": 134,
+            "cost": 15,
+            "risk": 13,
+            "depth": 7
+          },
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 0,
+          "atGrossTokens": 8352
+        },
+        {
+          "evaluation": {
+            "valid": true,
+            "value": 189,
+            "cost": 24,
+            "risk": 18,
+            "depth": 7
+          },
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "prefix": {
+            "value": 66,
+            "cost": 14,
+            "risk": 13,
+            "depth": 2,
+            "valid": true
+          },
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 1,
+          "atGrossTokens": 15704
+        }
+      ],
+      "grossTokens": 49085,
+      "failure": "consecutive_failed_calls",
+      "stopReason": "failed_calls",
+      "budget": 65536,
+      "seedGrade": {
+        "oracle": {
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "feasibleLeaves": 8828
+        },
+        "optimal": false,
+        "valid": true,
+        "ineligibleOrWrongStage": [],
+        "gap": 225,
+        "value": 78,
+        "cost": 14,
+        "risk": 7,
+        "depth": 7
+      },
+      "state": {
+        "incumbent": {
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "evaluation": {
+            "valid": true,
+            "value": 189,
+            "cost": 24,
+            "risk": 18,
+            "depth": 7
+          }
+        },
+        "nativeStats": [
+          [
+            "entries",
+            3
+          ],
+          [
+            "attempts",
+            3
+          ],
+          [
+            "proof-builds",
+            3
+          ],
+          [
+            "hits",
+            5
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "prunings": [
+          [
+            [],
+            [
+              [
+                "eligible",
+                [
+                  0,
+                  1,
+                  2,
+                  4
+                ]
+              ],
+              [
+                "pruned",
+                [
+                  3
+                ]
+              ],
+              [
+                "unresolved",
+                []
+              ],
+              [
+                "allowed",
+                [
+                  0,
+                  1,
+                  2,
+                  4
+                ]
+              ],
+              [
+                "claims",
+                [
+                  [
+                    0,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            0
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            64
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    1,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            2
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            60
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    2,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            4
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            61
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    3,
+                    [
+                      [
+                        [
+                          "status",
+                          "finite-absent"
+                        ],
+                        [
+                          "present",
+                          false
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            8
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          []
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    4,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            0
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            64
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          [
+            [
+              2
+            ],
+            [
+              [
+                "eligible",
+                [
+                  5,
+                  6,
+                  7,
+                  9
+                ]
+              ],
+              [
+                "pruned",
+                [
+                  8
+                ]
+              ],
+              [
+                "unresolved",
+                []
+              ],
+              [
+                "allowed",
+                [
+                  5,
+                  6,
+                  7,
+                  9
+                ]
+              ],
+              [
+                "claims",
+                [
+                  [
+                    5,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            1
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            65
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    6,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            3
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            67
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    7,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            5
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            54
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    8,
+                    [
+                      [
+                        [
+                          "status",
+                          "finite-absent"
+                        ],
+                        [
+                          "present",
+                          false
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            9
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          []
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    9,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            1
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            65
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              [
+                "eligible",
+                [
+                  10,
+                  11,
+                  12,
+                  14
+                ]
+              ],
+              [
+                "pruned",
+                [
+                  13
+                ]
+              ],
+              [
+                "unresolved",
+                []
+              ],
+              [
+                "allowed",
+                [
+                  10,
+                  11,
+                  12,
+                  14
+                ]
+              ],
+              [
+                "claims",
+                [
+                  [
+                    10,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            2
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            60
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    11,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            4
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            61
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    12,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            6
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            55
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    13,
+                    [
+                      [
+                        [
+                          "status",
+                          "finite-absent"
+                        ],
+                        [
+                          "present",
+                          false
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            10
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          []
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    14,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            2
+                          ]
+                        ],
+                        [
+                          "handle",
+                          3
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            60
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-0/sha256:5c486fa658c38957b3466f8843b5f2ffddb7897efd92de3d62adf9ead809f6ad"
+                            ],
+                            [
+                              "generation",
+                              35
+                            ],
+                            [
+                              "source-digest",
+                              "b8e05e5d37d0f30e0067c83403ee4bee15d6f111cbd5e578fd488ddf9b036e2b"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        "expansions": [
+          {
+            "prefix": {
+              "valid": true,
+              "value": 35,
+              "risk": 7,
+              "depth": 1,
+              "cost": 3
+            },
+            "child": [
+              2
+            ],
+            "parent": [],
+            "evaluation": {
+              "valid": true,
+              "value": 134,
+              "cost": 15,
+              "risk": 13,
+              "depth": 7
+            },
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          },
+          {
+            "evaluation": {
+              "valid": true,
+              "value": 189,
+              "cost": 24,
+              "risk": 18,
+              "depth": 7
+            },
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ],
+            "prefix": {
+              "value": 66,
+              "cost": 14,
+              "risk": 13,
+              "depth": 2,
+              "valid": true
+            },
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          }
+        ]
+      },
+      "grade": {
+        "gap": 114,
+        "value": 189,
+        "cost": 24,
+        "risk": 18,
+        "depth": 7,
+        "oracle": {
+          "visitedNodes": 13580,
+          "optimum": 303,
+          "winner": [
+            1,
+            7,
+            11,
+            16,
+            22,
+            26,
+            32
+          ],
+          "feasibleLeaves": 8828
+        },
+        "optimal": false,
+        "valid": true,
+        "ineligibleOrWrongStage": []
+      },
+      "unusedBudget": 16451
+    },
+    {
+      "case": 1,
+      "arm": "prune",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3131,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11323
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 34.101878457993735,
+          "thinkingSha256": "4e73074484f0b7c9c7aea9463ddeb6dbd07f79dbd98d929d02b680de4b6aeb1e",
+          "inputReserve": 12420,
+          "grossTokens": 11323,
+          "atGrossTokens": 11323
+        },
+        {
+          "turn": 1,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3131,
+            "input_tokens_details": {
+              "cached_tokens": 2944
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11323
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 33.31068479199894,
+          "thinkingSha256": "d6883198f8aa42915c25fed7586e117d30c1aff3bc74323ae4fb4a85f69ac4db",
+          "inputReserve": 12420,
+          "grossTokens": 11323,
+          "atGrossTokens": 22646
+        },
+        {
+          "turn": 2,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 3131,
+            "input_tokens_details": {
+              "cached_tokens": 2944
+            },
+            "output_tokens": 1633,
+            "output_tokens_details": {
+              "reasoning_tokens": 1595
+            },
+            "total_tokens": 4764
+          },
+          "failure": null,
+          "providerSeconds": 7.889132583019091,
+          "thinkingSha256": "ee152fcd26c80364338c5de47eb0a9b5960e360e7cacfeb402eb499253971d85",
+          "inputReserve": 12420,
+          "grossTokens": 4764,
+          "atGrossTokens": 27410
+        },
+        {
+          "turn": 3,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2957,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 6894,
+            "output_tokens_details": {
+              "reasoning_tokens": 6856
+            },
+            "total_tokens": 9851
+          },
+          "failure": null,
+          "providerSeconds": 29.346564290986862,
+          "thinkingSha256": "71ee9f22bcbb89ad711e67b4168e02d0a7aec63f098ff4c031802cc915fd0f67",
+          "inputReserve": 11974,
+          "grossTokens": 9851,
+          "atGrossTokens": 37261
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3129,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11321
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 36.847729708999395,
+          "thinkingSha256": "ad21bb05abb4ef277904afe8222b18a50abc2ff02d7880ae3e40c817b5030cd1",
+          "inputReserve": 12449,
+          "grossTokens": 11321,
+          "atGrossTokens": 48582
+        }
+      ],
+      "expansions": [
+        {
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "prefix": {
+            "valid": true,
+            "value": 31,
+            "cost": 4,
+            "risk": 1,
+            "depth": 1
+          },
+          "evaluation": {
+            "valid": true,
+            "value": 190,
+            "cost": 16,
+            "risk": 7,
+            "depth": 7
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "turn": 2,
+          "atGrossTokens": 27410
+        },
+        {
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "evaluation": {
+            "value": 220,
+            "risk": 13,
+            "depth": 7,
+            "cost": 26,
+            "valid": true
+          },
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "prefix": {
+            "value": 66,
+            "cost": 16,
+            "risk": 8,
+            "depth": 2,
+            "valid": true
+          },
+          "turn": 3,
+          "atGrossTokens": 37261
+        }
+      ],
+      "grossTokens": 48582,
+      "failure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "budget": 65536,
+      "seedGrade": {
+        "oracle": {
+          "feasibleLeaves": 20570,
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ],
+          "visitedNodes": 29938,
+          "optimum": 312
+        },
+        "optimal": false,
+        "valid": true,
+        "ineligibleOrWrongStage": [],
+        "gap": 178,
+        "value": 134,
+        "cost": 14,
+        "risk": 7,
+        "depth": 7
+      },
+      "state": {
+        "nativeStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            6
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "prunings": [
+          [
+            [
+              2
+            ],
+            [
+              [
+                "eligible",
+                [
+                  5,
+                  6,
+                  7,
+                  9
+                ]
+              ],
+              [
+                "pruned",
+                [
+                  8
+                ]
+              ],
+              [
+                "unresolved",
+                []
+              ],
+              [
+                "allowed",
+                [
+                  5,
+                  6,
+                  7,
+                  9
+                ]
+              ],
+              [
+                "claims",
+                [
+                  [
+                    5,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            1
+                          ]
+                        ],
+                        [
+                          "handle",
+                          1
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            72
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-1/sha256:5a823776ceba505c0a942c55c2fb758b40da95dd5214c5ad68d90fc328d85569"
+                            ],
+                            [
+                              "generation",
+                              15
+                            ],
+                            [
+                              "source-digest",
+                              "7e361b7a4bd26d455825aeda71916c6e69f1b9c9d2e5c2f8cf1a297353446eeb"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    6,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            3
+                          ]
+                        ],
+                        [
+                          "handle",
+                          1
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            74
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-1/sha256:5a823776ceba505c0a942c55c2fb758b40da95dd5214c5ad68d90fc328d85569"
+                            ],
+                            [
+                              "generation",
+                              15
+                            ],
+                            [
+                              "source-digest",
+                              "7e361b7a4bd26d455825aeda71916c6e69f1b9c9d2e5c2f8cf1a297353446eeb"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    7,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            5
+                          ]
+                        ],
+                        [
+                          "handle",
+                          1
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            59
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-1/sha256:5a823776ceba505c0a942c55c2fb758b40da95dd5214c5ad68d90fc328d85569"
+                            ],
+                            [
+                              "generation",
+                              15
+                            ],
+                            [
+                              "source-digest",
+                              "7e361b7a4bd26d455825aeda71916c6e69f1b9c9d2e5c2f8cf1a297353446eeb"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    8,
+                    [
+                      [
+                        [
+                          "status",
+                          "finite-absent"
+                        ],
+                        [
+                          "present",
+                          false
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            9
+                          ]
+                        ],
+                        [
+                          "handle",
+                          1
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          []
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-1/sha256:5a823776ceba505c0a942c55c2fb758b40da95dd5214c5ad68d90fc328d85569"
+                            ],
+                            [
+                              "generation",
+                              15
+                            ],
+                            [
+                              "source-digest",
+                              "7e361b7a4bd26d455825aeda71916c6e69f1b9c9d2e5c2f8cf1a297353446eeb"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    9,
+                    [
+                      [
+                        [
+                          "status",
+                          "verified"
+                        ],
+                        [
+                          "present",
+                          true
+                        ],
+                        [
+                          "atom",
+                          [
+                            "ready",
+                            1
+                          ]
+                        ],
+                        [
+                          "handle",
+                          1
+                        ],
+                        [
+                          "basis",
+                          "verified-finite-closure"
+                        ],
+                        [
+                          "support-nodes",
+                          [
+                            72
+                          ]
+                        ],
+                        [
+                          "scope",
+                          [
+                            [
+                              "source-identity",
+                              "evidence-search-1/sha256:5a823776ceba505c0a942c55c2fb758b40da95dd5214c5ad68d90fc328d85569"
+                            ],
+                            [
+                              "generation",
+                              15
+                            ],
+                            [
+                              "source-digest",
+                              "7e361b7a4bd26d455825aeda71916c6e69f1b9c9d2e5c2f8cf1a297353446eeb"
+                            ],
+                            [
+                              "candidate-digest",
+                              "4acc0b4ecce1e6fdc2ac8787de5ef9a5e3d2b3ec409948323a3ce3168433da7e"
+                            ],
+                            [
+                              "query",
+                              [
+                                "ready",
+                                "?f"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        "incumbent": {
+          "evaluation": {
+            "value": 220,
+            "risk": 13,
+            "depth": 7,
+            "cost": 26,
+            "valid": true
+          },
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ]
+        },
+        "expansions": [
+          {
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            "prefix": {
+              "valid": true,
+              "value": 31,
+              "cost": 4,
+              "risk": 1,
+              "depth": 1
+            },
+            "evaluation": {
+              "valid": true,
+              "value": 190,
+              "cost": 16,
+              "risk": 7,
+              "depth": 7
+            },
+            "child": [
+              2
+            ],
+            "parent": []
+          },
+          {
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            "evaluation": {
+              "value": 220,
+              "risk": 13,
+              "depth": 7,
+              "cost": 26,
+              "valid": true
+            },
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ],
+            "prefix": {
+              "value": 66,
+              "cost": 16,
+              "risk": 8,
+              "depth": 2,
+              "valid": true
+            }
+          }
+        ]
+      },
+      "grade": {
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true,
+        "oracle": {
+          "feasibleLeaves": 20570,
+          "visitedNodes": 29938,
+          "optimum": 312,
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ]
+        },
+        "value": 220,
+        "risk": 13,
+        "depth": 7,
+        "cost": 26,
+        "gap": 92
+      },
+      "unusedBudget": 16954
+    },
+    {
+      "case": 1,
+      "arm": "facts",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3131,
+            "input_tokens_details": {
+              "cached_tokens": 2944
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11323
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 33.636830417002784,
+          "thinkingSha256": "4cbc3fd5b0283ab24a160969b1951afb189f818e938583b408e8209b03df4a1a",
+          "inputReserve": 12420,
+          "grossTokens": 11323,
+          "atGrossTokens": 11323
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 3131,
+            "input_tokens_details": {
+              "cached_tokens": 2944
+            },
+            "output_tokens": 3652,
+            "output_tokens_details": {
+              "reasoning_tokens": 3258
+            },
+            "total_tokens": 6783
+          },
+          "failure": null,
+          "providerSeconds": 14.937348499981454,
+          "thinkingSha256": "8176d5365a10172e65389b62734f4f21e7f665117b96f108b302426ed5e110f8",
+          "inputReserve": 12420,
+          "grossTokens": 6783,
+          "atGrossTokens": 18106
+        },
+        {
+          "turn": 2,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3031,
+            "input_tokens_details": {
+              "cached_tokens": 2688
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11223
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 34.82876000000397,
+          "thinkingSha256": "f2132c3bfefd929d6802c5960cb7679bddf54dcaa10b84902d5cbba244cadb2b",
+          "inputReserve": 12207,
+          "grossTokens": 11223,
+          "atGrossTokens": 29329
+        },
+        {
+          "turn": 3,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 3031,
+            "input_tokens_details": {
+              "cached_tokens": 2816
+            },
+            "output_tokens": 6341,
+            "output_tokens_details": {
+              "reasoning_tokens": 5911
+            },
+            "total_tokens": 9372
+          },
+          "failure": null,
+          "providerSeconds": 28.506344166002236,
+          "thinkingSha256": "598da731af2f12b7b5295bd32eaecb923596a2b3ce76bb18182565a663792bde",
+          "inputReserve": 12207,
+          "grossTokens": 9372,
+          "atGrossTokens": 38701
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 3129,
+            "input_tokens_details": {
+              "cached_tokens": 2944
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 11321
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 36.496718999987934,
+          "thinkingSha256": "54ba62c297840149ef5f0ee4ef0ffa69658b020d321b8d22dde173a020bf1ddd",
+          "inputReserve": 12449,
+          "grossTokens": 11321,
+          "atGrossTokens": 50022
+        }
+      ],
+      "expansions": [
+        {
+          "prefix": {
+            "valid": true,
+            "value": 31,
+            "risk": 1,
+            "depth": 1,
+            "cost": 4
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "evaluation": {
+            "valid": true,
+            "value": 190,
+            "risk": 7,
+            "depth": 7,
+            "cost": 16
+          },
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 1,
+          "atGrossTokens": 18106
+        },
+        {
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "evaluation": {
+            "valid": true,
+            "value": 220,
+            "cost": 26,
+            "risk": 13,
+            "depth": 7
+          },
+          "prefix": {
+            "valid": true,
+            "value": 66,
+            "risk": 8,
+            "depth": 2,
+            "cost": 16
+          },
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "turn": 3,
+          "atGrossTokens": 38701
+        }
+      ],
+      "grossTokens": 50022,
+      "failure": null,
+      "stopReason": "remaining_below_input_output_reservation",
+      "budget": 65536,
+      "seedGrade": {
+        "valid": true,
+        "ineligibleOrWrongStage": [],
+        "oracle": {
+          "feasibleLeaves": 20570,
+          "visitedNodes": 29938,
+          "optimum": 312,
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ]
+        },
+        "value": 134,
+        "cost": 14,
+        "risk": 7,
+        "depth": 7,
+        "gap": 178,
+        "optimal": false
+      },
+      "state": {
+        "expansions": [
+          {
+            "prefix": {
+              "valid": true,
+              "value": 31,
+              "risk": 1,
+              "depth": 1,
+              "cost": 4
+            },
+            "child": [
+              2
+            ],
+            "parent": [],
+            "evaluation": {
+              "valid": true,
+              "value": 190,
+              "risk": 7,
+              "depth": 7,
+              "cost": 16
+            },
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          },
+          {
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ],
+            "evaluation": {
+              "valid": true,
+              "value": 220,
+              "cost": 26,
+              "risk": 13,
+              "depth": 7
+            },
+            "prefix": {
+              "valid": true,
+              "value": 66,
+              "risk": 8,
+              "depth": 2,
+              "cost": 16
+            },
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ]
+          }
+        ],
+        "nativeStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            6
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "incumbent": {
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "evaluation": {
+            "valid": true,
+            "value": 220,
+            "cost": 26,
+            "risk": 13,
+            "depth": 7
+          }
+        },
+        "prunings": []
+      },
+      "grade": {
+        "oracle": {
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ],
+          "visitedNodes": 29938,
+          "optimum": 312,
+          "feasibleLeaves": 20570
+        },
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true,
+        "gap": 92,
+        "value": 220,
+        "risk": 13,
+        "depth": 7,
+        "cost": 26
+      },
+      "unusedBudget": 15514
+    },
+    {
+      "case": 1,
+      "arm": "baseline",
+      "calls": [
+        {
+          "turn": 0,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2142,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10334
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 36.982126957998844,
+          "thinkingSha256": "c6b90cefba597dc37aed59f73fe20be24ceaac0fffd2b1c50702ef703794c0a6",
+          "inputReserve": 9801,
+          "grossTokens": 10334,
+          "atGrossTokens": 10334
+        },
+        {
+          "turn": 1,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2142,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 4565,
+            "output_tokens_details": {
+              "reasoning_tokens": 4264
+            },
+            "total_tokens": 6707
+          },
+          "failure": null,
+          "providerSeconds": 20.598696041997755,
+          "thinkingSha256": "f77f07a11f284f9b461c7568e2728d3cfbb85cd88a1a10191bb99a287288aebb",
+          "inputReserve": 9801,
+          "grossTokens": 6707,
+          "atGrossTokens": 17041
+        },
+        {
+          "turn": 2,
+          "status": "completed",
+          "usage": {
+            "input_tokens": 2142,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 2054,
+            "output_tokens_details": {
+              "reasoning_tokens": 1810
+            },
+            "total_tokens": 4196
+          },
+          "failure": null,
+          "providerSeconds": 10.741888082993682,
+          "thinkingSha256": "d7517001dcc4a361c238e9e655ef6917e2e6285c67ad323f3b02c099b651e402",
+          "inputReserve": 9807,
+          "grossTokens": 4196,
+          "atGrossTokens": 21237
+        },
+        {
+          "turn": 3,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2144,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10336
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 38.535747250018176,
+          "thinkingSha256": "4a9e5deba4e449ebe3258c3f9225bcb77c2439c52b5b67b13d4ecefa89ff2b7f",
+          "inputReserve": 9824,
+          "grossTokens": 10336,
+          "atGrossTokens": 31573
+        },
+        {
+          "turn": 4,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2144,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10336
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 35.531910874997266,
+          "thinkingSha256": "f94903e56cb337a9bd30178fbe33f205f2881fa50958d5af820451803bc97228",
+          "inputReserve": 9824,
+          "grossTokens": 10336,
+          "atGrossTokens": 41909
+        },
+        {
+          "turn": 5,
+          "status": "incomplete",
+          "usage": {
+            "input_tokens": 2144,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 8192,
+            "output_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "total_tokens": 10336
+          },
+          "failure": "provider_incomplete_or_error",
+          "providerSeconds": 34.25953599999775,
+          "thinkingSha256": "b5aad965eff177d423ae378a42f8671f19ed941f6b4eac2cbc7e47527454b43d",
+          "inputReserve": 9824,
+          "grossTokens": 10336,
+          "atGrossTokens": 52245
+        }
+      ],
+      "expansions": [
+        {
+          "completion": [
+            2,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "evaluation": {
+            "risk": 7,
+            "depth": 7,
+            "cost": 16,
+            "valid": true,
+            "value": 190
+          },
+          "child": [
+            2
+          ],
+          "parent": [],
+          "prefix": {
+            "valid": true,
+            "value": 31,
+            "risk": 1,
+            "depth": 1,
+            "cost": 4
+          },
+          "turn": 1,
+          "atGrossTokens": 17041
+        },
+        {
+          "completion": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "prefix": {
+            "valid": true,
+            "value": 66,
+            "risk": 8,
+            "depth": 2,
+            "cost": 16
+          },
+          "evaluation": {
+            "risk": 13,
+            "depth": 7,
+            "cost": 26,
+            "valid": true,
+            "value": 220
+          },
+          "child": [
+            2,
+            6
+          ],
+          "parent": [
+            2
+          ],
+          "turn": 2,
+          "atGrossTokens": 21237
+        }
+      ],
+      "grossTokens": 52245,
+      "failure": "consecutive_failed_calls",
+      "stopReason": "failed_calls",
+      "budget": 65536,
+      "seedGrade": {
+        "ineligibleOrWrongStage": [],
+        "optimal": false,
+        "valid": true,
+        "oracle": {
+          "feasibleLeaves": 20570,
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ],
+          "visitedNodes": 29938,
+          "optimum": 312
+        },
+        "value": 134,
+        "risk": 7,
+        "depth": 7,
+        "cost": 14,
+        "gap": 178
+      },
+      "state": {
+        "expansions": [
+          {
+            "completion": [
+              2,
+              5,
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            "evaluation": {
+              "risk": 7,
+              "depth": 7,
+              "cost": 16,
+              "valid": true,
+              "value": 190
+            },
+            "child": [
+              2
+            ],
+            "parent": [],
+            "prefix": {
+              "valid": true,
+              "value": 31,
+              "risk": 1,
+              "depth": 1,
+              "cost": 4
+            }
+          },
+          {
+            "completion": [
+              2,
+              6,
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            "prefix": {
+              "valid": true,
+              "value": 66,
+              "risk": 8,
+              "depth": 2,
+              "cost": 16
+            },
+            "evaluation": {
+              "risk": 13,
+              "depth": 7,
+              "cost": 26,
+              "valid": true,
+              "value": 220
+            },
+            "child": [
+              2,
+              6
+            ],
+            "parent": [
+              2
+            ]
+          }
+        ],
+        "nativeStats": [
+          [
+            "entries",
+            1
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "proof-builds",
+            1
+          ],
+          [
+            "hits",
+            6
+          ],
+          [
+            "evictions",
+            0
+          ]
+        ],
+        "prunings": [],
+        "incumbent": {
+          "selection": [
+            2,
+            6,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "evaluation": {
+            "risk": 13,
+            "depth": 7,
+            "cost": 26,
+            "valid": true,
+            "value": 220
+          }
+        }
+      },
+      "grade": {
+        "valid": true,
+        "ineligibleOrWrongStage": [],
+        "oracle": {
+          "winner": [
+            4,
+            7,
+            11,
+            19,
+            22,
+            26,
+            31
+          ],
+          "visitedNodes": 29938,
+          "optimum": 312,
+          "feasibleLeaves": 20570
+        },
+        "value": 220,
+        "cost": 26,
+        "risk": 13,
+        "depth": 7,
+        "gap": 92,
+        "optimal": false
+      },
+      "unusedBudget": 13291
+    }
+  ]
+}

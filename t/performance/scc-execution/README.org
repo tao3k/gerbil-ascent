@@ -1,0 +1,154 @@
+#+TITLE: Complete engine SCC workspace and dependency admission
+
+* One execution flow
+
+This batch spans =program/component-plan.ss=, =program/component-worker.ss= and
+=program/positive-components.ss=. A component compiles immutable dense relation
+addressing from its output members and referenced input atoms. The pure plan's
+relation descriptors are copied into that namespace; compiled term readers,
+matchers, frame extent, action order and delta ordinals remain unchanged.
+The emission boundary restores the exact original atom descriptor before owner
+membership, unique-row charging, global budgets and merge credit.
+
+A private final layout contains slots, local member/rule metadata and descriptor
+restoration. Native weak identity caching retains no row, frame or physical
+index state. Compilation runs outside the native primitive-operation lock.
+Ready admission copies only referenced row roots and sizes into fresh compact
+vectors; an assignment owns compact all/delta/version/candidate/index vectors.
+Borrowed persistent row spines are not mutated. Full transferred snapshots used
+by existing worker callers retain their committed output/header contract on
+normal and exceptional exit; unrelated input slots keep their original roots.
+
+The immutable SCC plan also records reverse dependency edges. Each invocation
+counts only unfinished rule-owning predecessors; source-only predecessors are
+already complete. Actor readiness becomes a constant-time counter lookup.
+Only the coordinator decrements successors after all terminal owner merges.
+Task selection order, pool lifecycle, bounded batches, credit/refusal, first
+failure propagation and cancellation cleanup remain the existing actor kernel.
+This improves dependency admission, not the pending-list selection algorithm.
+
+* Gerbil source study
+
+Installed Gerbil =1cfb032= =compiler/optimize-base.ss:334-340= constructs mutable
+method state at its actual use; =compiler/optimize-top.ss:1269-1281= avoids
+unneeded expression wrappers. The transferable boundary is to prepare only
+referenced mutable state, rather than copying the whole program into every task.
+=std/list/list-builder.ss:5-24= provides the hygienic ordered collector used
+by dense slot construction. =std/make.ss:296-304,350-363= separates dependency
+completion from worker lifetime and joins the pool after admission closes.
+ASCENT keeps its own terminal merge-credit contract while reducing dependency
+predicate work. These patterns do not prove relational semantics; native
+exhaustive graph, timeout, budget and ownership tests provide that evidence.
+
+* Full baseline and fixed scenarios
+
+The complete baseline is =652ebddd2fee62707d72e0d92db798847dd849bc=. Four frozen
+owners (=reference-evaluate=, =reference-component-plan=,
+=reference-component-worker= and =reference-positive-components=) change only
+imports. Reversing their relocations reproduces all four baseline blobs byte
+for byte. Existing core positive traversal, physical index and Result helpers
+remain shared unchanged implementations. This is a complete engine comparison,
+not a direct microbenchmark of one compact helper.
+
+=wide= evaluates 128 independent output SCCs with eight source rows and 512
+unrelated empty relations. =chain= evaluates 96 dependent output SCCs with the
+same padding; outputs have high global relation positions, so prefix truncation
+cannot qualify as compact addressing. Both clocks include fresh engine setup,
+SCC admission/closure, owner merges, commits, publication and all relation
+size/row queries plus canonical sorting. Declaration and cached analysis
+preparation are outside warm clocks. The independent expected answer follows
+copy-rule mathematics and original declaration order, not either solver.
+
+=indexed= closes a real recursive keyed 31-edge reachability chain against the
+independent set of all ordered pairs i<j. =cold= constructs declarations and a
+fresh one-row engine within every clock. =small= executes one one-row SCC.
+=serial= runs the unchanged single-worker engine path. Actor scenarios use
+native =##cpu-count= capacity on both sides; the pool still admits only ready
+work. These are workload-specific CPU results, not evidence of multicore scale.
+
+The native ASP fixture API generates =benchmark.ss=. Gates fixed before any
+sample: targets require CPU <=90% of baseline and >=16/20 wins; controls permit
+<=110% +20us; all allocations permit <=110% +8192 bytes. Each scenario includes
+20 alternating natural-GC CPU pairs, 20 ASP admission samples (p95 <=999ms)
+and five alternating allocation pairs. Allocation legs collect before reading
+the cumulative VM counter, outside the interval; negative deltas are rejected.
+ASP owns separate state and cannot alter paired inputs. A single 90-second
+watchdog bounds all six scenarios. No scenario or gate may be dropped/widened.
+
+* Native reproduction and ownership
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" just build
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN)" \
+  GERBIL_PATH="$PWD/.gerbil" \
+  gxi t/performance/scc-execution/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  gxi -:max-heap=3G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-scc-execution-test.ss \
+  t/qualification/ascent-positive-components-test.ss \
+  t/qualification/ascent-component-construction-test.ss \
+  t/qualification/ascent-component-index-test.ss \
+  t/qualification/ascent-actor-round-test.ss \
+  t/qualification/ascent-positive-plan-test.ss \
+  t/qualification/ascent-timeout-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/scc-execution/runner all \
+  .cache/ascent/scc-execution/
+#+end_src
+
+Apply the existing macOS compiler environment boundary from =justfile= when
+building the family. Native root build uses machine resource concurrency and
+registers production only. Tests/benchmark owners stay in =t/=. Source and SSI
+manifests must match across the final post-root-build A/B. Logs, failed builds,
+raw samples and manifests remain ignored in =.cache/ascent/scc-execution/=.
+
+* Audit limits and rejected directions
+
+The baseline already commits complete SCC closure once; an extra global solver
+round is not the selected bottleneck. A generic core relation-remapping API was
+withdrawn: local addressing belongs to the private component workspace and
+needs no new core/public expression capability. Existing unrelated core Policy
+findings were not changed or claimed cleared. Optional-field construction and
+an unavailable list-count import failed native compilation; the private record
+uses explicit fields and dependency counts use native =for/fold/in-list=.
+These failed build receipts are retained. Worker capacity and native runtime
+configuration remain those of the existing caller/toolchain.
+
+* Final local qualification (2026-10-11)
+
+Native root build succeeds. Seven native Suites pass 95 Cases; the final owned
+Suite additionally verifies full-snapshot prior-round commits on emission
+failure, bringing this batch to 96 Cases. The two exhaustive graph owners each
+cover 512 three-relation graphs. Tests also cover original descriptor identity,
+high global positions, worker capacities, exact unique-row/output budgets,
+seeded outputs/source roots, keyed indexes, partial timeout/resumption, credit
+refusal and first-failure drain/join. ASP Policy passes the three production
+owners with zero findings. The generic core implementation remains unchanged.
+
+After external Gerbil/Java build and test processes naturally ended, the final
+post-root-build A/B passes all six fixed gates under one 90-second watchdog,
+with final =OK= and exit zero. Source and SSI identities match before/after the
+series. Routine persistent desktop/development services remain; measurements
+use matched alternating process CPU and do not claim an exclusive host.
+
+| Complete engine consumer | Old CPU us | New CPU us | CPU wins | Old bytes | New bytes |
+|--------------------------+------------+------------+----------+-----------+-----------|
+| 128 independent SCCs     |       2815 |       1487 |       20 |   9593248 |   3946872 |
+| 96 dependent SCCs        |       2476 |       1343 |       20 |   7481528 |   3257360 |
+| cold one-row construction|       1613 |       1618 |        8 |   4806496 |   4820192 |
+| recursive keyed join     |       1513 |       1554 |        3 |   3456112 |   3460560 |
+| small one-row SCC        |         24 |         26 |        6 |     77024 |     79008 |
+| serial engine            |         18 |         18 |        7 |     46096 |     46096 |
+
+Targets improve CPU 47.2%/45.8% and allocation 58.9%/56.5%, both 20/20 wins.
+The keyed control adds 41us (2.7%) and 4448 bytes; cold adds 5us and 13696 bytes;
+small adds 2us and 1984 bytes. These costs pass the preset bounds and are not
+presented as speedups. The serial control is unchanged. These are matched local
+workload results, not remote CI success or universal solver/multicore gains.
+Final raw log: =.cache/ascent/scc-execution/complete-ab.log=.
+
+General callback/view round workspace, global delta reset/commit traversal and
+the actor pending-list selection cost remain separate audit items. This batch
+closes compact pure-SCC assignment and predecessor readiness, preserving the
+existing general execution/recovery path.

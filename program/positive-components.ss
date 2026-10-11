@@ -5,7 +5,8 @@
 ;;; Only the coordinator owns global unique-row charging, ready admission and
 ;;; completed frontiers. Planning and one worker's local closure have owners.
 (import "component-plan.ss"
-        (only-in "component-worker.ss" make-component-snapshot gerbil-ascent-run-positive-component!)
+        (only-in :std/iter for/fold in-list)
+        (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
         gerbil-ascent-component-mode? gerbil-ascent-run-positive-components!
@@ -34,17 +35,23 @@
          ;; Only rule-owning SCC members can receive candidates. Source-only
          ;; relations keep their persistent roots without another membership table.
          (known (make-vector (vector-length initial) #f))
-         (done (make-vector (length components) #f))
+         (by-id (list->vector components))
+         (remaining (make-vector (length components) 0))
          (snapshots (make-vector (length components) #f)))
     (for-each (lambda (component)
                 (if (null? (positive-component-rules component))
-                  (vector-set! done (positive-component-id component) #t)
+                  (void)
                   (for-each
                    (lambda (index)
                      (let (table (make-hash-table))
                        (for-each (lambda (row) (hash-put! table row #t)) (vector-ref frontier index))
                        (vector-set! known index table)))
-                   (positive-component-members component)))) components)
+                   (positive-component-members component)))
+                ;; Source-only predecessors are complete before task admission.
+                ;; Only the owner updates dependency counts after terminal merges.
+                (vector-set! remaining (positive-component-id component)
+                  (for/fold (blocked 0) (id (in-list (positive-component-predecessors component)))
+                    (+ blocked (if (pair? (positive-component-rules (vector-ref by-id id))) 1 0))))) components)
     (gerbil-ascent-run-actor-round!
      (vector analysis initial 'components)
      (filter (lambda (component) (pair? (positive-component-rules component))) components) workers
@@ -63,13 +70,15 @@
            (vector-set! sizes index (+ 1 (vector-ref sizes index))))))
      canceled?
      (lambda (component)
-       (and (andmap (lambda (id) (vector-ref done id)) (positive-component-predecessors component))
+       (and (zero? (vector-ref remaining (positive-component-id component)))
             (begin
               (vector-set! snapshots (positive-component-id component)
-                (make-component-snapshot (vector-copy frontier) (vector-copy sizes))) #t)))
+                (gerbil-ascent-component-snapshot component frontier sizes)) #t)))
      (lambda (component)
        (let (id (positive-component-id component))
          ;; Completion follows all owner merges; the snapshot is no longer
          ;; needed for dependency admission or round cleanup.
          (vector-set! snapshots id #f)
-         (vector-set! done id #t))))))
+         (for-each (lambda (successor)
+                     (vector-set! remaining successor (- (vector-ref remaining successor) 1)))
+                   (positive-component-successors component)))))))

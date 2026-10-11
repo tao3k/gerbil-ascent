@@ -11,8 +11,8 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
         gerbil-ascent-component-mode? positive-component-id
-        positive-component-members positive-component-rules positive-component-predecessors)
-(defstruct positive-component (id members rules predecessors))
+        positive-component-members positive-component-rules positive-component-predecessors positive-component-successors)
+(defstruct positive-component (id members rules predecessors successors))
 
 ;;; Publication owns the rule wrapper; full survivors retain admitted identity.
 (def (publish-component-rule! component plan pivots)
@@ -121,7 +121,7 @@
          (count (vector-length successors))
          (groups (gerbil-ascent-graph-components successors))
          (membership (make-vector count #f))
-         (components (map (lambda (id members) (make-positive-component id members [] []))
+         (components (map (lambda (id members) (make-positive-component id members [] [] []))
                           (iota (length groups)) groups))
          (predecessors-seen (make-vector (length groups) #f)))
     (for-each
@@ -140,4 +140,13 @@
           (register-component-predecessor! (vector-ref membership source)
                                            (vector-ref membership target) predecessors-seen))
         (vector-ref successors source))) (iota count))
+    (let (by-id (list->vector components))
+      (for-each
+       (lambda (component)
+         (for-each
+          (lambda (id)
+            (let (predecessor (vector-ref by-id id))
+              (positive-component-successors-set! predecessor
+                (cons (positive-component-id component) (positive-component-successors predecessor)))))
+          (positive-component-predecessors component))) components))
     components))

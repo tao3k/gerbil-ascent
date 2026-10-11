@@ -945,3 +945,44 @@ remote CI speedups. Round workspace/SCC scheduling still require their own
 coherent audit and qualification. Gerbil private-state, applicability and ordered
 list-construction patterns and full reproduction are recorded in
 [[file:../../t/performance/engine-publication/README.org][the complete publication qualification]].
+
+* Complete SCC assignment workspace and predecessor admission (2026-10-11)
+
+This batch spans immutable =program/component-plan.ss= metadata, assignment-owned
+=program/component-worker.ss= state and =program/positive-components.ss= owner
+admission. Audit confirmed complete SCC closure already avoids another global
+solver round. The dominant selected waste was program-wide root/size copies
+and all/delta/version/candidate/index vectors per SCC assignment, plus repeated
+predecessor-list readiness checks.
+
+The worker compiles dense addressing over output members and actual referenced
+inputs. Immutable private layout caching retains no row/frame/physical state;
+ready admission transfers fresh compact root/size vectors. Pure plan headers
+are projected without changing term readers, matchers, body/output order or
+delta ordinals. Emission restores the original descriptor before owner budget
+charging and merge credit. Full transferred snapshots preserve earlier committed
+outputs on normal and exceptional exits; external source roots stay intact.
+Reverse dependency metadata supplies invocation-local unfinished counts.
+Terminal completion after all merges releases successors. Actor pending order,
+credit/refusal, cancellation, first-failure propagation and pool joins remain.
+
+Four full owners are frozen at =652ebddd2fee62707d72e0d92db798847dd849bc= with
+import relocation only. After native root build and external task completion,
+all six fixed native ASP A/B scenarios pass under one 90-second bound.
+Complete independent/dependent SCC engine CPU falls 2815 ->1487us (47.2%) and
+2476 ->1343us (45.8%), both 20/20 wins; allocation falls
+9593248 ->3946872 (58.9%) and 7481528 ->3257360 (56.5%). Cold/keyed/small controls
+add 5/41/2us and 13696/4448/1984 bytes, within preset bounds; serial is unchanged.
+These control costs are retained, not claimed as improvements. Source/SSI
+identities remain unchanged over the final series.
+
+Seven native Suites plus the final owned exceptional-snapshot Case pass 96
+Cases, including two exhaustive 512-graph owners. ASP Policy passes all three
+production owners with zero findings; generic core findings are outside this
+batch and not claimed cleared. Gerbil =1cfb032= compiler allocation/wrapper,
+ordered list-construction and native dependency-completion/pool-lifetime study,
+complete frozen provenance, controls and reproduction are in
+[[file:../../t/performance/scc-execution/README.org][the complete engine qualification]].
+General callback/view workspaces, global reset/commit traversal and actor
+pending-list selection still need separate complete qualification. Local
+CPU/allocation results do not establish remote CI or general multicore scale.

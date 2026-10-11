@@ -1025,3 +1025,33 @@ whole generation-plus-verification improvements for wide/reduction inputs. Small
 inputs have measured overhead. Exact work controls and unchanged reduction scans
 ensure expression preparation does not become uncharged evaluation or cached
 verification trust.
+
+* Study: compile SCC relation addressing before assigning mutable workspace
+
+=program/component-worker.ss= compiles each immutable SCC's output members and
+input descriptors into a dense local relation namespace. Native ordered list
+construction owns slot discovery; copied plan headers preserve term readers,
+matchers, slot extent, delta ordinals and original action order. An emission
+restores the original global descriptor before owner charging and merge credit.
+Private final records separate immutable layout from assignment-owned compact
+snapshots. The native weak cache retains no frames, row roots or physical state.
+Every assignment owns its row/size/version/candidate/index vectors; persistent
+input row spines remain borrowed. Full transferred snapshots still return only
+owned committed output slots, including exceptional exit.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:334-340= allocates method state when
+needed, and =compiler/optimize-top.ss:1269-1281= avoids redundant expression
+wrappers. These source patterns motivate an extent tied to actual consumers,
+rather than a program-wide mutable vector per SCC. Native
+=std/list/list-builder.ss:5-24= provides the ordered constructor extent.
+
+=program/component-plan.ss= retains reverse dependency edges. The coordinator
+uses native =for/fold/in-list= to count unfinished rule-owning predecessors,
+then checks readiness with one counter lookup. Source-only predecessors start
+complete. Only terminal completion after all owner merges releases successors;
+existing actor task selection, credit/refusal and drain/join remain unchanged.
+Gerbil =std/make.ss:296-304,350-363= distinguishes dependency completion from
+worker lifetime; that boundary transfers to ASCENT without replacing its
+relational or cancellation semantics.
+[[file:../../t/performance/scc-execution/README.org][The complete engine qualification]]
+records frozen owners, independent closure truth and admission limits.

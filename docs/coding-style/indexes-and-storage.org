@@ -862,3 +862,27 @@ an unbounded duplicate set or expand the resource cap to hide duplicate inputs.
 
 [[file:../../t/performance/uf-reuse/README.org][Interleaved UF qualification]] distinguishes isolated initial admission from
 complete engine publication/replay with shared canonical storage identity.
+
+* Select ordered axes from their existing owner
+
+Gerbil's =runtime/hash.ss= owns newly collected key lists, and
+=std/hash/misc.ss= sorts those keys when an ordered consumer requires it.
+A UF owner already has an ordered root list. Use sparse adjacency keys when
+sorting is cheaper; filter that ordered owner when adjacency becomes dense.
+The selection cost estimate must not affect the returned root order. Retain
+population metadata under the same successful-admission/SCC-retirement contract
+as the root list and verify their equality in qualification.
+
+Fresh endpoints have singleton axes before their first injection commits.
+Express that state premise before collecting either axis. For count consumers,
+preflight the complete product and commit each unique missing pair in order;
+avoid retaining a pair record when no frontier consumer needs it. Reverse only
+private axis copies, preserving root/member/cut spines.
+
+When a whole owner retires into one SCC, its private reverse tables can be
+released as owners. When external roots survive, preserve their canonical key
+retirement protocol. Admission precedes both paths. Qualify the state premise,
+ordered scalar output, budget rejection and held snapshots together.
+
+[[file:../../t/performance/uf-growth/README.org][Unique UF qualification]] provides native-kernel and complete-engine A/B scopes,
+fixed controls, rejected attempts and the allocation boundary.

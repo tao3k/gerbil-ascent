@@ -1324,3 +1324,52 @@ and formal passes. Local qualification remains separate from remote CI closure.
 Remaining large flows include unique-vertex closure growth, unique packed
 planning overhead and actor pending-list selection. Allocation evidence is not
 peak RSS, and these full-lifecycle results are not solve-only or SMP claims.
+
+* Unique UF closure axes, count commit and complete SCC retirement
+
+The next batch addresses transient work as unique inputs grow. Each group now
+owns component population alongside its roots, updated after successful
+admission and recomputed after SCC retirement. Indexed adjacency selects a
+singleton for degree zero, sorts sparse keys, or filters already ordered roots
+when =degree * integer-length(degree) >= population=. Both selections preserve
+the same writer order. Fresh endpoints have singleton axes in native UF and
+packed replay, avoiding full root scans for their first injection.
+
+Count-only native admission preflights all missing rectangles, then commits
+their unique root pairs through the original reversed-axis order. It retains
+no per-arc changes spine. Scalar descriptors/order keep their existing flow.
+Whole-group SCC retirement releases private reverse-table owners directly;
+partial SCC retirement still removes canonical keys from surviving external
+owners. Frozen cuts share no mutable adjacency table. Native validation checks
+population equality, budget rejection, ordered scalar frontiers and dense/late
+SCC transitions. The design learns Gerbil =1cfb032= =runtime/hash.ss:621-625=,
+=std/hash/misc.ss:287-292= and =compiler/optimize-top.ss:704-711= for ordered
+collection ownership and explicit consumer boundaries.
+
+[[file:../../t/performance/uf-growth/README.org][The unique UF report]] freezes five owners at =f58d9647=. Native count-only
+chain/cycle targets compare historical/current kernels. Complete unique-input
+engines compare historical/current publication/replay with shared current
+native storage helpers and canonical provider/type identity. The two evidence
+scopes remain explicit; kernel improvement does not imply a full historical
+engine comparison.
+
+The first attempt failed cycle CPU (5020 ->4576us, only -8.8%), despite its
+allocation gain and chain pass. It remains rejected in its entirety. The final
+candidate adds whole-group reverse-table retirement and reruns all fourteen
+fixed scenarios under one 90-second bound: twenty alternating CPU pairs, twenty
+ASP admissions and five allocation pairs. Targets retain <=90% CPU and
+>=16/20 wins; controls <=110% +20us; allocations <=110% +8192 bytes. All fourteen
+pass. All 172 selected source/compiler-artifact/contract fingerprints match.
+
+Native chain/cycle CPU falls 14574 ->11530us (-20.9%) and 4985 ->3979us (-20.2%),
+allocation 32.5% /44.0%. Complete unique/partitioned engines fall 8468 ->5026us
+(-40.6%) and 14469 ->10852us (-25.0%); allocation falls 1.7% in both.
+Large sparse fallback retains +61us (+1.1%) with unchanged allocation and passes
+the original control gate. Native builds, 9 Suites /68 Cases and source Policy
+(zero findings) pass.
+
+The explicit inter-component reach representation still grows quadratically
+for dense DAGs. This batch reduces sorting, scans and transient ownership; it
+does not remove that retained representation cost. Remaining larger work is
+dense closure representation and actor pending-list selection. Remote CI
+closure remains separate from these local receipts.

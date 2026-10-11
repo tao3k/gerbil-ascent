@@ -125,8 +125,10 @@
 ;; remains replayed and the original negative-budget rejection is preserved.
 (def (insert-components! group row budget consume a b new)
   (let* ((roots (append new (replay-group-roots group)))
-         (preds (collect-roots roots (lambda (p) (reaches? group p a)) []))
-         (succs (collect-roots roots (lambda (s) (reaches? group b s)) []))
+         (preds (if (memq a new) (list a)
+                    (collect-roots roots (lambda (p) (reaches? group p a)) [])))
+         (succs (if (memq b new) (list b)
+                    (collect-roots roots (lambda (s) (reaches? group b s)) [])))
          (cycle (and (not (eq? a b)) (reaches? group b a)
                      (filter (lambda (p) (reaches? group b p)) (reverse preds))))
          (needed (count-sources group preds succs (length new)))

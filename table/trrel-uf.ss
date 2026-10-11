@@ -12,7 +12,7 @@
         gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate
         gerbil-ascent-trrel-uf-replay-insert! gerbil-ascent-trrel-uf-count-insert!)
 (defstruct uf-node (parent members size reach predecessors order))
-(defstruct uf-group (nodes roots next-order indexed?))
+(defstruct uf-group (nodes roots next-order indexed? population))
 (defstruct uf-insertion (group-key group row left-node right-node a b) final: #t)
 (defstruct frozen-members (rows count) final: #t)
 ;; : (-> UfState)
@@ -29,10 +29,17 @@
   (make-uf-node #f (list node) 1 (make-hash-table-eq)
                 (and indexed? (make-hash-table-eq)) order))
 ;; Match the legacy prepended root scan without touching unrelated components.
-;; : (-> UfNode RootTable [UfNode])
-(def (ordered-neighbors node table)
-  (list-sort (lambda (a b) (> (uf-node-order a) (uf-node-order b)))
-             (cons node (hash-keys table))))
+;; Sparse adjacency sorts only its keys; dense adjacency filters roots already
+;; in writer order. Selection compares a sorting bound with the population.
+;; : (-> UfNode RootTable [UfNode] Natural [UfNode])
+(def (ordered-neighbors node table roots population)
+  (let (degree (hash-length table))
+    (cond
+      ((zero? degree) (list node))
+      ((>= (* degree (integer-length degree)) population)
+       (filter (lambda (n) (or (eq? n node) (hash-get table n))) roots))
+      (else (list-sort (lambda (a b) (> (uf-node-order a) (uf-node-order b)))
+                      (cons node (hash-keys table)))))))
 ;; : (-> [UfNode] Void)
 (def (rebuild-predecessors! roots)
   (for-each (lambda (n) (set! (uf-node-predecessors n) (make-hash-table-eq))) roots)
@@ -58,7 +65,11 @@
          (merged (uf-node-members winner))
          (size (uf-node-size winner)))
     (when (uf-group-indexed? group)
-      (retire-cycle-predecessors! winner cycle))
+      (if (= (length cycle) (uf-group-population group))
+        ;; Every reverse key belongs to a retiring root. No external owner
+        ;; survives to observe it; release the winner's whole backing table.
+        (set! (uf-node-predecessors winner) (make-hash-table-eq))
+        (retire-cycle-predecessors! winner cycle)))
     (for-each (lambda (n)
       (unless (eq? n winner)
         (set! merged (append (uf-node-members n) merged))
@@ -72,6 +83,7 @@
     (set! (uf-node-size winner) size)
     (set! roots (filter (lambda (n) (not (uf-node-parent n))) roots))
     (set! (uf-group-roots group) roots)
+    (set! (uf-group-population group) (length roots))
     ;; Canonical pre-merge keys plus complete closure mean any external
     ;; predecessor of an absorbed root already reaches the winner. Other DAG
     ;; keys need no rewrite. Iterate a stable list, never the changed table.
@@ -96,7 +108,7 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair)) (right (cadr pair))
          (stored (hash-get groups group-key))
-         (group (or stored (make-uf-group (make-hash-table) [] 0 #f)))
+         (group (or stored (make-uf-group (make-hash-table) [] 0 #f 0)))
          (nodes (uf-group-nodes group))
          (left-node (hash-get nodes left)) (right-node (hash-get nodes right))
          (a (if left-node (root left-node) (fresh left (+ 2 (uf-group-next-order group)) (uf-group-indexed? group))))
@@ -143,12 +155,15 @@
          (new (append (if left-node [] (list a))
                       (if (or right-node (eq? a b)) [] (list b))))
          (roots (append new (uf-group-roots group)))
-         (preds (if (uf-group-indexed? group)
-                  (ordered-neighbors a (uf-node-predecessors a))
-                  (filter (lambda (p) (reachable? p a)) roots)))
-         (succs (if (uf-group-indexed? group)
-                  (ordered-neighbors b (uf-node-reach b))
-                  (filter (lambda (s) (reachable? b s)) roots)))
+         (population (+ (uf-group-population group) (length new)))
+         (preds (cond ((not left-node) (list a))
+                      ((uf-group-indexed? group)
+                       (ordered-neighbors a (uf-node-predecessors a) roots population))
+                      (else (filter (lambda (p) (reachable? p a)) roots))))
+         (succs (cond ((not right-node) (list b))
+                      ((uf-group-indexed? group)
+                       (ordered-neighbors b (uf-node-reach b) roots population))
+                      (else (filter (lambda (s) (reachable? b s)) roots))))
          ;; Capture the intersection in root order before adjacency mutation.
          ;; Succ(b) membership is already represented by b's reach table.
          (cycle (and (not (eq? a b)) (reachable? b a)
@@ -159,7 +174,7 @@
       (for-each (lambda (s)
         (unless (reachable? p s)
           (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
-          (set! changes (cons (cons p s) changes)))) succs)) preds)
+          (when rectangles? (set! changes (cons (cons p s) changes))))) succs)) preds)
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
     (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
@@ -177,20 +192,29 @@
       (unless left-node (hash-put! nodes left a))
       (unless right-node (hash-put! nodes right b))
       (set! (uf-group-roots group) roots)
+      (set! (uf-group-population group) population)
       (set! (uf-group-next-order group) (+ 2 (uf-group-next-order group))))
     ;; Keep small components on the cheaper legacy scan. Activate the reverse
     ;; map only after successful preflight, so rejected admission is read-only.
     (unless (uf-group-indexed? group)
-      (when (> (length roots) 64)
+      (when (> population 64)
         (set! (uf-group-indexed? group) #t)
         (rebuild-predecessors! roots)))
     ;; If every root collapses, all changed arcs would immediately disappear.
     ;; Concrete rectangles were emitted above; no external reach key survives.
-    (unless (and cycle (= (length cycle) (length roots)))
-      (for-each (lambda (change)
-        (hash-put! (uf-node-reach (car change)) (cdr change) #t)
+    (def (commit-arc! p s)
+        (hash-put! (uf-node-reach p) s #t)
         (when (uf-group-indexed? group)
-          (hash-put! (uf-node-predecessors (cdr change)) (car change) #t))) changes))
+          (hash-put! (uf-node-predecessors s) p #t)))
+    (unless (and cycle (= (length cycle) population))
+      (if rectangles?
+        (for-each (lambda (change) (commit-arc! (car change) (cdr change))) changes)
+        ;; Each root pair is unique. Installing its own arc changes no other
+        ;; pair's admission test; no changes spine is needed for count consumers.
+        (let (targets (reverse succs))
+          (for-each (lambda (p)
+            (for-each (lambda (s) (unless (reachable? p s) (commit-arc! p s))) targets))
+            (reverse preds)))))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
     ;; Merge toward the largest component, bounding union parent depth.
     (when cycle
@@ -236,6 +260,7 @@
       (parent (checked-root parent (cons node seen)))))
   (hash-for-each (lambda (_ group)
     (let ((nodes (uf-group-nodes group)) (roots (uf-group-roots group)))
+      (require! (= (uf-group-population group) (length roots)) "ASCENT UF root population mismatch")
       (require! (unique? roots eq?)
                 "ASCENT UF duplicate root")
       (let loop ((remaining roots) (ceiling (+ 1 (uf-group-next-order group))))

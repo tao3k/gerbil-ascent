@@ -81,7 +81,9 @@ jobs:
         run: GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify public C ABI and Python CFFI against formal observations
         run: |
-          sudo apt-get install -y python3-cffi python3-setuptools
+          sudo apt-get install -y nodejs npm python3-cffi python3-setuptools
+          just prepare-quint
+          export PATH="$PWD/.cache/ascent/tools/quint/node_modules/.bin:$PATH"
           export PYTHONPATH="$PWD/python/src"
           export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
           export ASCENT_ENGINE_LIBRARY="$PWD/.gerbil/lib/libascent.so"

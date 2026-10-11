@@ -2,34 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite check-equal? test-case)
-        (only-in :clan/poo/object .ref object? object-supers compute-precedence-list!)
-        (only-in :std/error Error? Error-irritants)
-        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine))
 (export ascent-result-publication-test)
-;; Read-only rejection diagnostics preserve the frozen reference and verdict.
-(def (reference-engine . args)
-  (let* ((cached (##global-var-ref
-                   (##make-global-var 'gerbil-ascent/t/qualification/ascent-result-reference-evaluate#Session.)))
-         (expected (.ref GerbilAscentSessionContract 'proto)))
-    (displayln "REFERENCE-SESSION-PROTOTYPE same=" (eq? cached expected))
-    (with-exception-catcher
-      (lambda (failure)
-        (when (Error? failure)
-          (for-each (lambda (value)
-            (when (object? value)
-              (displayln "REFERENCE-SESSION-ANCESTRY expected="
-                (and (memq expected (compute-precedence-list! value)) #t)
-                " cached=" (and (memq cached (compute-precedence-list! value)) #t)
-                " direct=" (map (lambda (parent) (list (eq? parent expected) (eq? parent cached)))
-                                (object-supers value)))))
-            (Error-irritants failure)))
-        (raise failure))
-      (lambda () (apply ascent-result-reference-make-engine args)))))
 (def (rowsof result name) ((.ref result 'rows-of) name))
 (def (compare new old)
   (check-equal? (.ref new 'finished) (.ref old 'finished))
@@ -43,7 +22,7 @@
              (p (gerbil-ascent-program
                  (list (gerbil-ascent-relation 'static 1 source)
                        (gerbil-ascent-relation 'changing 1 [])) [] 128 128 256))
-             (old (reference-engine p #t))
+             (old (ascent-result-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
              (first-old ((.ref old '.run))) (first-new ((.ref new '.run)))
              (history (list first-new)))
@@ -64,7 +43,7 @@
         (check-equal? (rowsof first-new 'changing) (rowsof first-old 'changing))))
     (test-case "clean reruns duplicate appends and source replacement preserve publication metadata"
       (let* ((p (gerbil-ascent-program (list (gerbil-ascent-relation 'item 1 '((1) (1)))) [] 64 64 128))
-             (old (reference-engine p #t))
+             (old (ascent-result-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
              (first ((.ref new '.run))))
         (compare first ((.ref old '.run)))
@@ -91,7 +70,7 @@
         (check-equal? (rowsof first 'item) '((0)))))
     (test-case "unknown relation errors and rule timing metadata remain exact"
       (let* ((p (gerbil-ascent-program (list (gerbil-ascent-relation 'item 1 '((0)))) [] 32 32 64))
-             (old ((.ref (reference-engine p #t #f #f #t) '.run)))
+             (old ((.ref (ascent-result-reference-make-engine p #t #f #f #t) '.run)))
              (new ((.ref (gerbil-ascent-make-engine p #t #f #f #t) '.run))))
         (compare new old)
         (def (unknown result)
@@ -109,7 +88,7 @@
                         (list (gerbil-ascent-atom 'reach (list y)))
                         (list (gerbil-ascent-atom 'reach (list x))
                               (gerbil-ascent-atom 'edge (list x y))))) 16 16 32))
-             (old (reference-engine p #t))
+             (old (ascent-result-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
              (partial-old ((.ref old '.run-timeout) 0))
              (partial-new ((.ref new '.run-timeout) 0))

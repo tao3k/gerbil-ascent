@@ -6,7 +6,8 @@
 ;;; Check an externally supplied, founded derivation against an exact finite
 ;;; stratum replay. This is a bounded proof for one inspected candidate, not
 ;;; provenance completeness or source authentication. The producer is separate.
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
+(import :gerbil-ascent/candidate/stratified-plan
+        (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/closure-index
                  make-closure-index closure-index-rows closure-index-member? closure-index-source)
         (only-in :gerbil-ascent/candidate/types
@@ -14,10 +15,10 @@
                  reasoning-candidate-relations
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query)
-        (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
+        (only-in :gerbil-ascent/candidate/program candidate-variable?)
         (only-in :gerbil-ascent/candidate/funs
                  candidate-schema-of candidate-required-entry
-                 candidate-bind-atom candidate-fixed-clause
+                 candidate-bind-atom
                  candidate-strata-of)
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-verified-finite-closure))
@@ -27,14 +28,16 @@
 (def +max-proof-nodes+ 4096)
 (def +max-proof-datum-nodes+ 65536)
 
-;; : (forall (a) (-> (List a) Nat Boolean))
-;; : (-> GroundRow Arity Boolean)
-(def (ground-row? row arity)
-  (and (list? row) (= (length row) arity)
-       (andmap (lambda (term)
-                 (and (scalar? term) (not (candidate-variable? term))
-                      (not (eq? term '?_))))
-               row)))
+;;; Exact membership in the independently verified closure proves scalar shape
+;;; and declared arity. Only the proof grammar's stricter symbol exclusion
+;;; remains: variable-looking source values and the wildcard are not ground.
+;; : (forall (a) (-> (List a) Boolean))
+;; : (-> VerifiedClosureRow Boolean)
+(def (ground-symbols? row)
+  (andmap (lambda (term)
+            (or (not (symbol? term))
+                (and (not (eq? term '?_)) (not (candidate-variable? term)))))
+          row))
 
 ;;; Exact set equality also rejects a repeated group row. Count each row
 ;;; insertion/probe against the caller's proof-check budget.
@@ -42,15 +45,18 @@
 ;; : (-> Rows Rows BudgetStep Boolean)
 (def (same-distinct-rows? supplied actual step!)
   (and (= (length supplied) (length actual))
-       (let (index (make-hash-table))
+       (let ((index (make-hash-table size: (length actual))) (present? #f))
+         ;; One native update hashes/probes a wide row once. The callback is
+         ;; private, synchronous and shared for this exact set comparison.
+         (def (consume! previous) (set! present? previous) #f)
          (and
           (andmap (lambda (row)
                     (and (step!)
                          (begin (hash-put! index row #t) #t)))
                   actual)
           (andmap (lambda (row)
-                    (and (step!) (hash-get index row)
-                         (begin (hash-put! index row #f) #t)))
+                    (and (step!)
+                         (begin (hash-update! index row consume! #f) present?)))
                   supplied)))))
 
 ;;; Data grammar:
@@ -105,8 +111,9 @@
         (if (null? native-rows)
           'unsupported
           (let* ((schema (candidate-schema-of snapshot spec))
-                 (rules (reasoning-candidate-rules spec))
-                 (levels (candidate-strata-of schema rules))
+                 (source-rules (reasoning-candidate-rules spec))
+                 (rules (map prepare-stratified-rule source-rules))
+                 (levels (candidate-strata-of schema source-rules))
                  (model (make-closure-index closure (reasoning-snapshot-relations snapshot)))
                  (nodes (cadr proof))
                  (roots (caddr proof))
@@ -127,30 +134,31 @@
             (def (strict-lower? head dependency)
               (> (cdr (candidate-required-entry head levels))
                  (cdr (candidate-required-entry dependency levels))))
-            (def (no-match? atom bindings)
+            (def (no-match? clause bindings)
               (andmap (lambda (row)
                         (and (step!)
-                             (not (candidate-bind-atom atom row bindings))))
-                      (rows (car atom))))
+                             (not ((stratified-clause-apply clause) row bindings))))
+                      (rows (stratified-clause-relation clause))))
             (def (reduction-bindings clause witness bindings before head)
-              (let ((atom (cadddr clause))
-                    (operator (caddr clause)))
+              (let ((match-row (stratified-clause-apply clause))
+                    (name (stratified-clause-relation clause))
+                    (operator (stratified-clause-operator clause)))
                 (and (list? witness) (= (length witness) 2)
                      (eq? (car witness) 'reduce)
                      (list? (cadr witness))
-                     (strict-lower? head (car atom))
+                     (strict-lower? head name)
                      (let ((matched
                             (filter (lambda (row)
                                       (and (step!)
-                                           (candidate-bind-atom atom row bindings)))
-                                    (rows (car atom))))
+                                           (match-row row bindings)))
+                                    (rows name)))
                            (supplied []))
                        (and (not bounded?)
                             (andmap
                              (lambda (id)
-                               (let (node (node-ref id before (car atom)))
+                               (let (node (node-ref id before name))
                                  (and (step!) node
-                                      (candidate-bind-atom atom (caddr node) bindings)
+                                      (match-row (caddr node) bindings)
                                       (begin
                                         (set! supplied
                                           (cons (caddr node) supplied))
@@ -163,11 +171,7 @@
                                       []
                                       (map
                                        (lambda (row)
-                                         (let (next
-                                               (candidate-bind-atom atom row bindings))
-                                           (and next
-                                                (cdr (candidate-required-entry
-                                                      (cadr operator) next)))))
+                                         ((stratified-clause-value clause) row bindings))
                                        supplied)))
                                    (value
                                     (case (car operator)
@@ -182,56 +186,47 @@
                                                   (apply max values)))
                                       (else #f))))
                               (and value
-                                   (cons (cons (cadr clause) value)
+                                   (cons (cons (stratified-clause-output clause) value)
                                          bindings))))))))
             (def (rule-node-valid? node index)
               (let* ((rule
                       (find (lambda (candidate)
                               (equal? (cadddr node)
-                                      (vector-ref candidate 2)))
+                                      (stratified-rule-label candidate)))
                             rules))
-                     (head (and rule (vector-ref rule 0)))
-                     (body (and rule (vector-ref rule 1)))
+                     (head (and rule (stratified-rule-name rule)))
+                     (body (and rule (stratified-rule-body rule)))
                      (witnesses (list-ref node 4)))
-                (and rule (eq? (cadr node) (car head))
+                (and rule (eq? (cadr node) head)
                      (list? witnesses) (= (length witnesses) (length body))
                      (let loop ((clauses body) (evidence witnesses)
                                 (bindings []))
                        (if (null? clauses)
                          (and (null? evidence)
-                              (andmap (lambda (term)
-                                        (or (not (candidate-variable? term))
-                                            (assq term bindings)))
-                                      (cdr head))
-                              (equal?
-                               (caddr node)
-                               (map (lambda (term)
-                                      (if (candidate-variable? term)
-                                        (cdr (candidate-required-entry
-                                              term bindings)) term))
-                                    (cdr head))))
+                              (equal? (caddr node)
+                                      ((stratified-rule-head rule) bindings)))
                          (let ((clause (car clauses))
                                (witness (car evidence)))
-                           (case (car clause)
+                           (case (stratified-clause-kind clause)
                              ((where compute)
                               (and (equal? witness '(fixed))
                                    (step!)
-                                   (let (next (candidate-fixed-clause clause bindings))
+                                   (let (next ((stratified-clause-apply clause) bindings))
                                      (and next
                                           (loop (cdr clauses)
                                                 (cdr evidence) next)))))
                              ((not)
                               (and (equal? witness '(not))
-                                   (strict-lower? (car head)
-                                                  (caadr clause))
-                                   (no-match? (cadr clause) bindings)
+                                   (strict-lower? head
+                                                  (stratified-clause-relation clause))
+                                   (no-match? clause bindings)
                                    (loop (cdr clauses) (cdr evidence)
                                          bindings)))
                              ((reduce)
                               (let (next
                                     (reduction-bindings
                                      clause witness bindings index
-                                     (car head)))
+                                     head))
                                 (and next
                                      (loop (cdr clauses) (cdr evidence)
                                            next))))
@@ -241,12 +236,11 @@
                                    (eq? (car witness) 'atom)
                                    (let (input
                                          (node-ref (cadr witness) index
-                                                   (car clause)))
+                                                   (stratified-clause-relation clause)))
                                      (and (step!) input
                                           (let (next
-                                                (candidate-bind-atom
-                                                 clause (caddr input)
-                                                 bindings))
+                                                ((stratified-clause-apply clause)
+                                                 (caddr input) bindings))
                                             (and next
                                                  (loop (cdr clauses)
                                                        (cdr evidence)
@@ -258,8 +252,8 @@
                    (symbol? (cadr node))
                    (let (declaration (assq (cadr node) schema))
                      (and declaration
-                          (ground-row? (caddr node) (cdr declaration))
-                          (closure-index-member? model (cadr node) (caddr node))))
+                          (closure-index-member? model (cadr node) (caddr node))
+                          (ground-symbols? (caddr node))))
                    (list? (list-ref node 4))
                    (case (car node)
                      ((source)

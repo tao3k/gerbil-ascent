@@ -886,3 +886,33 @@ syntax-only, dense-frame and prefix-only CPU variants remain rejected, as does
 the static executable's negative allocation-counter receipt. These are local
 verification results, not whole-reasoner throughput or completed remote CI.
 [[file:../../t/performance/proof-verification/README.org][The complete study]] records exact consumers, gates and native reproduction.
+
+* Complete stratified expression replay
+
+The coordinated unit now covers =candidate/finite-evidence.ss=,
+=candidate/finite-plan.ss=, =candidate/stratified-producer.ss= and
+=candidate/stratified-proof.ss= through pure group-local
+=candidate/reduction-plan.ss= and ordered =candidate/stratified-plan.ss=.
+Reduction-local values no longer require unused binding pairs at each row probe.
+The independent producer/checker retain separate plans, original finite replay,
+stratum and budget accounting, complete group evidence and source occurrences.
+Exact closure membership proves row shape; the stricter proof ground-symbol
+condition is still checked. Native hash-update consumes distinct evidence with
+one hash/probe, preserving duplicate rejection and charged sequence.
+
+The frozen complete baseline is =97e41652d7787ee8063a2388e593e893be8d2449=:
+finite replay/plan and producer/checker differ only in relocated imports. The
+final native package build and gxi six-scenario batch pass unchanged 90-second
+and ASP gates. Verification CPU falls 2915 ->2442us (16.2%); complete production
+falls 5449 ->4323us (20.7%), both 20/20 wins. Allocation falls
+2913464 ->1054808 and 5682136 ->2348232 bytes (63.8%/58.7%). Cold/small controls
+add 6us/23456 bytes and 2us/11664 bytes within preset bounds, not speedups.
+
+Five native Suites pass 51 Cases, including frozen finite/producer/checker budget
+boundaries, local/outer scopes and strict ground symbols. ASP Policy passes all
+six production owners with zero findings; source and SSI hashes match before
+and after timing. Failed binding-hash, partial-flow, cold-allocation and 9.4%
+package-build CPU series are rejected and retained in ignored cache. These are
+local proof-consumer results, not overall solver or remote CI success. The
+retained engine execution/publication recovery audit remains open.
+[[file:../../t/performance/stratified-replay/README.org][The full qualification]] records controls, provenance and native reproduction.

@@ -6,7 +6,8 @@
 ;;; Build one founded proof from a verified finite candidate closure. Search
 ;;; order is stratum then rule/fact order; the separate checker remains the
 ;;; authority for the returned proof. This is not a Why-Not producer.
-(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+(import :gerbil-ascent/candidate/stratified-plan
+        (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/closure-index
                  make-closure-index closure-index-rows closure-index-member?)
         (only-in :std/hash/misc hash-ensure-modify!)
@@ -14,11 +15,9 @@
                  reasoning-snapshot-relations
                  reasoning-candidate-relations reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?)
         (only-in :gerbil-ascent/candidate/funs
                  candidate-schema-of
-                 candidate-required-entry candidate-bind-atom
-                 candidate-fixed-clause candidate-strata-of)
+                 candidate-required-entry candidate-strata-of)
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-verified-finite-closure)
         (only-in :gerbil-ascent/candidate/stratified-proof
@@ -63,8 +62,9 @@
       (if (null? native-rows)
         (values 'unsupported [])
         (let* ((schema (candidate-schema-of snapshot spec))
-               (rules (reasoning-candidate-rules spec))
-               (levels (candidate-strata-of schema rules))
+               (source-rules (reasoning-candidate-rules spec))
+               (rules (map prepare-stratified-rule source-rules))
+               (levels (candidate-strata-of schema source-rules))
                (model (make-closure-index closure))
                (nodes (make-vector +maximum-nodes+ #f))
                (by-row (make-hash-table))
@@ -100,10 +100,10 @@
                   (set! node-count (+ node-count 1))
                   (set! added? #t)))))
           (def (reduction clause bindings head)
-            (let* ((output (cadr clause))
-                   (operator (caddr clause))
-                   (atom (cadddr clause))
-                   (name (car atom))
+            (let* ((output (stratified-clause-output clause))
+                   (operator (stratified-clause-operator clause))
+                   (match-row (stratified-clause-apply clause))
+                   (name (stratified-clause-relation clause))
                    (ids [])
                    (values [])
                    (ready? (> (level head) (level name))))
@@ -111,7 +111,7 @@
                 (for-each
                  (lambda (row)
                    (when (step!)
-                     (let (next (candidate-bind-atom atom row bindings))
+                     (let (next (match-row row bindings))
                        (when next
                          (let (id (node-id name row))
                            (if (not id)
@@ -120,8 +120,7 @@
                                (set! ids (cons id ids))
                                (unless (eq? (car operator) 'count)
                                  (set! values
-                                   (cons (cdr (candidate-required-entry
-                                               (cadr operator) next))
+                                   (cons ((stratified-clause-value clause) row bindings)
                                          values))))))))))
                  (rows name)))
               (and (not bounded?) ready?
@@ -141,40 +140,36 @@
                           (cons (cons (cons output value) bindings)
                                 (list 'reduce (reverse ids))))))))
           (def (evaluate-rule rule)
-            (let* ((head (vector-ref rule 0))
-                   (head-name (car head))
-                   (body (vector-ref rule 1))
-                   (label (vector-ref rule 2)))
+            (let* ((head (stratified-rule-head rule))
+                   (head-name (stratified-rule-name rule))
+                   (body (stratified-rule-body rule))
+                   (label (stratified-rule-label rule)))
               (def (walk clauses bindings evidence)
                 (unless bounded?
                   (if (null? clauses)
                     (let (row
-                          (map (lambda (term)
-                                 (if (candidate-variable? term)
-                                   (cdr (candidate-required-entry
-                                         term bindings)) term))
-                               (cdr head)))
+                          (head bindings))
                       (when (step!)
                         (add-node! 'rule head-name row label
                                    (reverse evidence))))
                     (let (clause (car clauses))
-                      (case (car clause)
+                      (case (stratified-clause-kind clause)
                         ((where compute)
                          (when (step!)
-                           (let (next (candidate-fixed-clause clause bindings))
+                           (let (next ((stratified-clause-apply clause) bindings))
                              (when next
                                (walk (cdr clauses) next
                                      (cons '(fixed) evidence))))))
                         ((not)
-                         (let* ((atom (cadr clause))
-                                (name (car atom))
+                         (let* ((match-row (stratified-clause-apply clause))
+                                (name (stratified-clause-relation clause))
                                 (absent? (> (level head-name)
                                             (level name))))
                            (when absent?
                              (for-each
                               (lambda (row)
                                 (when (step!)
-                                  (when (candidate-bind-atom atom row bindings)
+                                  (when (match-row row bindings)
                                     (set! absent? #f))))
                               (rows name)))
                            (when (and (not bounded?) absent?)
@@ -192,12 +187,12 @@
                             (when (step!)
                               (let* ((node (vector-ref nodes id))
                                      (next
-                                      (candidate-bind-atom clause (caddr node)
-                                                           bindings)))
+                                      ((stratified-clause-apply clause) (caddr node)
+                                                                     bindings)))
                                 (when next
                                   (walk (cdr clauses) next
                                         (cons (list 'atom id) evidence))))))
-                          (or (hash-get by-relation (car clause)) []))))))))
+                          (or (hash-get by-relation (stratified-clause-relation clause)) []))))))))
               (walk body [] [])))
           (if (not levels)
             (values 'invalid [])
@@ -227,7 +222,7 @@
                     (for-each
                      (lambda (rule)
                        (when (and (not bounded?)
-                                  (= (level (car (vector-ref rule 0)))
+                                  (= (level (stratified-rule-name rule))
                                      current))
                          (evaluate-rule rule)))
                      rules)

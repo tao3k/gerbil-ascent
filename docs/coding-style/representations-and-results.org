@@ -166,3 +166,31 @@ then refine the responsibility map. New native Cases compare every root slot
 and prototype, independently validate published roots with original contracts,
 reject malformed Terms, test guard clauses without invoking callbacks, and
 recheck a previously published Term identity after mutation in a later root.
+
+* Prepare group-local expressions across a complete proof flow
+
+Gerbil =1cfb032= resolves operation applicability before call specialization in
+=compiler/optimize-call.ss:45-63=. Its native table updater in
+=runtime/table.ss:440-464= hashes/probes once and invokes a synchronous callback.
+The lesson here spans finite replay, proof production and independent checking.
+
+=candidate/reduction-plan.ss= separates constrained row matching from aggregate
+operand reading. The successful rule prefix fixes outer bindings; variables
+introduced only inside a reduction are local to that group. They need checks for
+repetition and literals, but unused locals need no runtime binding pairs.
+=candidate/stratified-plan.ss= resolves ordered atom/scalar/reduction operations
+and fuses checked head rendering. Private final records carry syntax operations;
+each independent consumer prepares its own instance without retaining rows or
+verdicts. All original row-probe and proof budget charges stay at their callers.
+
+Exact independently verified closure membership proves scalar shape and arity.
+The external proof checker can reuse that invariant, while separately rejecting
+variable-looking symbols and wildcards required by the stricter proof grammar.
+One private native hash updater consumes distinct rows in the original charged
+order. None of these changes trusts producer indexes or a cached verdict.
+
+The complete six-scenario native qualification includes cold, forged, small and
+source controls. Target verification/production CPU improves 16.2%/20.7%, with
+63.8%/58.7% less allocation; cold/small add bounded preparation overhead.
+Failed CPU and allocation stages remain rejected. See
+[[file:../../t/performance/stratified-replay/README.org][the frozen complete study]] for fixed gates, all control results and independent semantics.

@@ -166,7 +166,7 @@
                                   (if (eq? mode 'count)
                                     (set! accumulator (+ accumulator 1))
                                     (when numeric?
-                                      (let (value (cdr (candidate-required-entry (cadr operator) next)))
+                                      (let (value (clause.value (car remaining) bindings))
                                         (if (exact-integer? value)
                                           (set! accumulator
                                             (case mode

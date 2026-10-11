@@ -7,6 +7,8 @@
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (import :gerbil-ascent/core/relation-view
+        (only-in :std/iter for in-range)
+        (only-in :std/list/list-builder with-list-builder)
         (only-in :clan/poo/object .o))
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
@@ -180,7 +182,11 @@
       (rule-time-nanoseconds (vector-ref observation 3))
       (representation-observation
        (lambda () (map (lambda (row) (map values row)) representations)))
-      (relation-sizes (lambda () (map cons (vector->list names) (vector->list sizes))))
+      (relation-sizes
+       (lambda ()
+         (with-list-builder (collect!)
+           (for (index (in-range (vector-length names)))
+             (collect! (cons (vector-ref names index) (vector-ref sizes index)))))))
       (visit-rows (lambda (name columns key consume)
         (let (index (position-of name))
           (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)

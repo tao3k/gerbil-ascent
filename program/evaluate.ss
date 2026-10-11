@@ -4,7 +4,8 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import :gerbil-ascent/core/relation-view
+(import (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
+        :gerbil-ascent/core/relation-view
         (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
                  gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
@@ -25,8 +26,7 @@
         (only-in "admission.ss" gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
         (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-                 gerbil-ascent-result-observation gerbil-ascent-make-owned-result)
+                 gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
@@ -268,7 +268,8 @@
              (first-run? #t)
              (dirty? #t)
              (last-result #f)
-             (owned-publication #f))
+             (owned-publication #f)
+             (execution-publication (make-execution-publication)))
         (def (flush-staged-set-rows!)
           (when session?
             (let (accepted-any? #f)
@@ -737,21 +738,12 @@
            (set! first-run? #f)
            (set! dirty? #f)
            (set! materialized-dirty? #f))
-         (let* ((snapshots
-                 (if (vector? deadline)
-                     (gerbil-ascent-publish-rows all deadline all-size)
-                     (vector-map (lambda (rows) (if (relation-view? rows) rows (reverse rows))) all)))
-                (sizes (vector-copy all-size))
-                (representations (map (lambda (name rows size)
-                                   (list name (if (relation-view? rows) 'rectangles 'explicit)
-                                         size (if (relation-view? rows) (relation-view-units rows) size)))
-                                     (vector->list names) (vector->list all) (vector->list sizes)))
-                (observation
+         (let ((observation
                  (gerbil-ascent-result-observation
                   (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (let-values (((result publication)
-                         (gerbil-ascent-make-owned-result names arity snapshots sizes
-                           representations observation position-of complete? session?)))
+                         (gerbil-ascent-publish-execution! execution-publication
+                           names arity all all-size deadline observation position-of complete? session?)))
              (set! owned-publication publication)
              (set! last-result result))))
          (when (and reuse complete?)

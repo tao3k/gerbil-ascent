@@ -916,3 +916,32 @@ package-build CPU series are rejected and retained in ignored cache. These are
 local proof-consumer results, not overall solver or remote CI success. The
 retained engine execution/publication recovery audit remains open.
 [[file:../../t/performance/stratified-replay/README.org][The full qualification]] records controls, provenance and native reproduction.
+
+* Retained engine execution and publication cut (2026-10-11)
+
+This batch addresses =program/evaluate.ss= together with its complete Result
+publication/reading phase. Audit showed clean calls already bypass publication;
+whole-result caching was therefore discarded. The changed-execution boundary
+now prepares one detached cut in =program/execution-publication.ss=, fuses row
+snapshot and representation traversal, and reuses only applicable private
+representation entries. Native list construction in =program/result.ss= removes
+public size-query vector-list intermediates. Round execution, ordered callbacks,
+source replay, storage checks, failure guards and partial-timeout commits retain
+baseline semantics. No production test scheduling or environment knob is added.
+
+The complete baseline evaluator and Result are frozen at
+=07c03062b417a95c09e0aadb80b7bc9249fd8102= with import relocation only. After native
+root build, all six fixed A/B scenarios pass: 1026/258-relation incremental
+consumers improve CPU 1770 ->1511us (14.6%) and 632 ->532us (15.8%), with 19/20 and 20/20
+wins; allocation improves 14300480 ->7347264 (48.6%) and 5453120 ->3710016 (32.0%).
+Cold, duplicate, clean small and fresh controls pass preset bounds. ASP samples
+use separate state so paired inputs remain matched. Negative VM deltas,
+unmatched input series and the 9.5% CPU variant remain rejected in ignored cache.
+
+Five native Suites pass 58 Cases and ASP Policy passes all three production
+owners with zero findings. Source/SSI manifests remain identical over the final
+run. Local complete-consumer evidence does not claim general initial-solver or
+remote CI speedups. Round workspace/SCC scheduling still require their own
+coherent audit and qualification. Gerbil private-state, applicability and ordered
+list-construction patterns and full reproduction are recorded in
+[[file:../../t/performance/engine-publication/README.org][the complete publication qualification]].

@@ -194,3 +194,24 @@ source controls. Target verification/production CPU improves 16.2%/20.7%, with
 63.8%/58.7% less allocation; cold/small add bounded preparation overhead.
 Failed CPU and allocation stages remain rejected. See
 [[file:../../t/performance/stratified-replay/README.org][the frozen complete study]] for fixed gates, all control results and independent semantics.
+
+* Study: one execution publication cut with applicable private metadata
+
+=program/execution-publication.ss= owns the publication phase extracted from the
+retained evaluator. Native =for/in-range= combines snapshot and representation
+preparation in declaration order. Private final records own detached vectors;
+no public Result enters the cache. Existing storage checks precede this phase.
+Snapshot identity plus exact size permits reuse of an unchanged private
+representation entry. Changed/partial cuts prepare fresh vectors and install
+the metadata cache only after Result construction succeeds. Public metadata
+methods still detach their lists, and clean calls retain baseline Result identity.
+
+Gerbil =1cfb032= =std/struct/lru.ss:19-32= motivates explicit private state
+ownership; =compiler/optimize-call.ss:45-72= motivates checking applicability
+before specializing. Native =std/list/list-builder.ss:5-24= supplies the ordered
+construction extent used by =program/result.ss= for fresh public size pairs,
+removing two temporary vector lists without exposing mutable builder state.
+The complete frozen evaluator and Result consumer qualify this combined flow:
+[[file:../../t/performance/engine-publication/README.org][matched incremental publication and controls]].
+This rule applies to publication contracts; it does not justify skipping source
+admission, mutable storage checks, index failure guards or round budgets.

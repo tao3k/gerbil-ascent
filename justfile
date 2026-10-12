@@ -4,11 +4,11 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # Match the repository's mrr-gerbil environment boundary. Homebrew's configured
-# compiler must not inherit Nix compiler flags or its macOS SDK. Resolve the
+# compiler must not inherit Nix compiler flags, tools, or its macOS SDK. Resolve the
 # active Homebrew OpenSSL library after clearing inherited search paths; Gerbil
 # release metadata can retain a removed Cellar directory after a formula upgrade.
 gerbil_environment := if os() == "macos" {
-    "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
+    "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT PATH=\"/usr/bin:/bin:$PATH\" LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
 } else { "env" }
 gerbil_command := gerbil_environment + " gerbil"
 # gxpkg env only selects the package prefix and prepends its bin directory.

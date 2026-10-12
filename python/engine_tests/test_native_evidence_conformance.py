@@ -100,6 +100,7 @@ class NativeEvidenceConformance(unittest.TestCase):
 
         try:
             self.assertEqual(observation(), expected[0])
+            print(f"EVIDENCE-CONFORMANCE-CHECK limit={limit} before={before} after={after} step=0", flush=True)
             for index, event in enumerate(events):
                 if event in (0, 7):
                     if result is not None: result.close()
@@ -136,6 +137,7 @@ class NativeEvidenceConformance(unittest.TestCase):
                 else:
                     self.fail(f'unknown Quint event {event}')
                 self.assertEqual(observation(), expected[index + 1])
+                print(f"EVIDENCE-CONFORMANCE-CHECK limit={limit} before={before} after={after} step={index + 1}", flush=True)
         finally:
             if result is not None: result.close()
             if proof is not None: proof.close()

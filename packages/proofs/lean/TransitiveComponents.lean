@@ -129,4 +129,47 @@ theorem retirement_mask_exact (present retired : N → Prop) (winner n : N) :
   · rintro ⟨hp, hkeep⟩
     exact ⟨hp, fun ⟨hr, hne⟩ => hkeep.elim (fun h => h hr) (fun h => hne h)⟩
 
+-- Singleton left axes can share one concatenated right spine. The ordered
+-- row list, not only the set or cardinality, is preserved by this law.
+theorem singleton_frontier_order (left : N) (targets : List (List N)) :
+    targets.flatMap (fun members => members.map (fun right => (left, right))) =
+      targets.flatten.map (fun right => (left, right)) := by
+  induction targets with
+  | nil => simp
+  | cons members rest ih => simp [ih]
+
+-- Positive root sizes split into a singleton base and heavy-root excess.
+-- The bitmap selection/partition is a refinement premise: apply this law to
+-- each word's selected live roots. Retired roots cannot contribute a bit.
+theorem selected_weight_excess (selected : List N) (weight : N → Nat)
+    (positive : ∀ n ∈ selected, 0 < weight n) :
+    (selected.map weight).sum = selected.length +
+      (selected.map (fun n => weight n - 1)).sum := by
+  induction selected with
+  | nil => simp
+  | cons n rest ih =>
+    have hn := positive n (by simp)
+    have hr : ∀ m ∈ rest, 0 < weight m := fun m hm => positive m (by simp [hm])
+    have tail := ih hr
+    simp only [List.map_cons, List.sum_cons, List.length_cons]
+    omega
+
+-- A sparse source subtracts the disjoint present partition (including its
+-- implicit diagonal when selected) from the cached whole target-axis mass.
+theorem sparse_difference_mass (missing present : List N) (weight : N → Nat) :
+    ((missing ++ present).map weight).sum - (present.map weight).sum =
+      (missing.map weight).sum := by
+  simp [List.map_append, List.sum_append]
+
+theorem acyclic_axes_disjoint (reach : N → N → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (a b n : N) (acyclic : ¬ reach b a) (pred : reach n a) (succ : reach b n) : False :=
+  acyclic (trans b n a succ pred)
+
+theorem singleton_axis_mass (selected : List N) :
+    (selected.map (fun _ => (1 : Nat))).sum = selected.length := by
+  induction selected with
+  | nil => simp
+  | cons n rest ih => simp [ih, Nat.add_comm]
+
 end Ascent.TransitiveComponents

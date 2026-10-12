@@ -41,3 +41,14 @@ example (nodes : List Nat) (targets present : Nat → Prop) (a : Nat)
 #print axioms difference_exact
 #print axioms difference_weighted
 #print axioms retirement_mask_exact
+
+example : ([2,1,4].map id).sum = 3 + ([2,1,4].map (fun n => n-1)).sum := by decide
+example : ([[(1,2),(3,2)],[(1,4),(3,4)]] : List (List (Nat × Nat))).flatten ≠
+    [(1,2),(1,4),(3,2),(3,4)] := by decide
+#print axioms singleton_frontier_order
+#print axioms selected_weight_excess
+
+#print axioms sparse_difference_mass
+#print axioms acyclic_axes_disjoint
+
+#print axioms singleton_axis_mass

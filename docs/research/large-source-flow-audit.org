@@ -1507,3 +1507,35 @@ A/B retains exact independent logical/component counts. Actual C ABI artifacts
 bind a physical base-plus-UF snapshot, excluding concurrent loading/naming edits.
 Future scalar-frontier bitmap planning and weighted set-bit accounting remain
 separate opportunities; the logical closure's quadratic worst case remains.
+
+* UF scalar frontier publication and weighted component admission
+
+The next shared flow replaces scalar component-pair journals with admitted
+word differences and immutable singleton-source right-axis sharing. Weighted
+sources keep target rectangles separate to preserve exact row order. Count
+admission caches target mass, sums sparse heavy-root excess by word and
+subtracts sparse present partitions, including the implicit diagonal. Fresh
+singleton axes use cardinality. Acyclic axes borrow stable adjacency until
+commit; no preflight installs live state or retains mutable planning buffers.
+
+[[file:../../t/performance/uf-frontier/README.org][Complete frontier/count qualification]] freezes =64742af=. Relative to that
+kernel, calibrated scalar publication saves 34.5% CPU /64.7% allocation;
+weighted counting saves 15.1% CPU; dual-weighted publication saves 18.7% CPU
+/29.7% allocation. Each target wins 20/20 pairs. Seven fixed scenarios pass,
+including partial SCC, sparse, small and pure chain controls. Sparse/small CPU
+increases 2.3%/4.2% within the declared envelope. Measurements use eight complete
+independent trajectories per sample, native process CPU with natural GC, and
+unchanged ratios/win/watchdog gates. Single/four-trajectory failed candidates
+remain failed; final weighted CPU samples include eighteen collections on each
+kernel. No RSS, whole-engine, cold-loader or portable-wheel gain is claimed.
+
+Lean laws cover exact ordered singleton concatenation, positive cardinality
+plus excess, sparse mass subtraction and acyclic disjointness. Quint checks
+thirteen UF defects and existing retained-view lifetimes. Seventeen native
+Cases compare exact ordered frontiers and rejection/retention; four independent
+Python DFS-oracle Cases per actual binding validate the producer UF hash.
+Source fingerprints remain stable across final A/B. One physical provider
+snapshot independently builds through current native std/make, with strict
+source/resource identity; concurrent loader/naming work keeps separate ownership
+and qualification. Dense closures still have quadratic logical cardinality;
+public full row materialization remains proportional to that output.

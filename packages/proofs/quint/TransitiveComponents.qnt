@@ -80,6 +80,31 @@ module TransitiveComponents {
       acc.union(targets.exclude(Roots.filter(s => Reach(p,s))).map(s => (p,s))))
     scalar == masked
   })
+  // Sparse heavy-root excess equals selected concrete mass. Each selected
+  // live root contributes one base bit; retired roots are outside Roots.
+  val ExcessWeightExact = Pairs.forall(edge => {
+    val a = q.parent.get(edge._1)
+    val b = q.parent.get(edge._2)
+    Roots.filter(p => Reach(p,a)).forall(p => {
+      val selected = Roots.filter(s => Reach(b,s) and not(Reach(p,s)))
+      val heavy = selected.filter(s => q.size.get(s) > 1)
+      val summarized = selected.size() + (if (Mutation == "excess") 0 else
+        heavy.fold(0,(acc,s) => acc + q.size.get(s)-1))
+      summarized == selected.fold(0,(acc,s) => acc + q.size.get(s))
+    })
+  })
+  val SparseMassExact = Pairs.forall(edge => {
+    val targets = Roots.filter(s => Reach(q.parent.get(edge._2),s))
+    Roots.forall(p => {
+      val present = targets.filter(s => if (Mutation == "sparseSelf")
+        q.arcs.contains((p,s)) else Reach(p,s))
+      val totalMass = targets.fold(0,(acc,s) => acc+q.size.get(s))
+      val presentMass = present.fold(0,(acc,s) => acc+q.size.get(s))
+      val missingMass = targets.filter(s => not(Reach(p,s))).fold(0,(acc,s) => acc+q.size.get(s))
+      val remainingMass = totalMass - presentMass
+      remainingMass == missingMass
+    })
+  })
   val SizeExact
  = Nodes.forall(r => q.size.get(r) == q.members.get(r).size())
 

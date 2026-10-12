@@ -40,10 +40,12 @@
         (when pending? (consume node))))
     (for-each consume axis)))
 ;; : (-> (Union ClosureAxis [UfNode]) Natural)
-(def (axis-weight axis)
+(def (axis-weight axis (singleton? #f))
+  (if singleton?
+    (if (closure-axis? axis) (+ 1 (reach-length (closure-axis-table axis))) (length axis))
   (let (weight 0)
     (axis-for-each (lambda (n) (set! weight (+ weight (uf-node-size n)))) axis)
-    weight))
+    weight)))
 ;; : (-> RootTable Natural)
 (def (reach-length table)
   (if (compact-reach? table) (compact-reach-size table) (hash-length table)))
@@ -152,19 +154,91 @@
     (unless (fxzero? mask)
       (consume (ExtensibleVector-ref registry (fx+ (fxarithmetic-shift word 5) (first-set-bit mask))))
       (loop (fxand mask (fx- mask 1))))))
-(def (reach-difference-weight targets source singleton?)
-  (let ((weight 0) (registry (compact-reach-registry targets)))
+;; Target weights are stable for this admission. Most roots remain singleton
+;; even after an SCC merge: count all selected bits, then add only heavy-root
+;; excess. Summaries are private and never retained by a published frontier.
+(def (target-excess targets succs singleton?)
+  (and (not singleton?)
+    (let ((words #f) (span (##u32vector-length (compact-reach-bits targets))))
+      (axis-for-each (lambda (n)
+        (when (> (uf-node-size n) 1)
+          (unless words (set! words (make-vector span [])))
+          (let* ((id (uf-node-order n)) (word (fxarithmetic-shift id -5))
+                 (entry (cons (fxarithmetic-shift 1 (fxand id 31)) (- (uf-node-size n) 1))))
+            (vector-set! words word (cons entry (vector-ref words word)))))) succs)
+      words)))
+(def (reach-difference-weight targets source excess target-weight)
+  (if (compact-reach? (uf-node-reach source))
+  (let (weight 0)
     (reach-difference-for-each-word
       (lambda (word mask)
-        (if singleton? (set! weight (+ weight (bit-count mask)))
-          (word-for-each-node (lambda (n) (set! weight (+ weight (uf-node-size n)))) word mask registry)))
+        (set! weight (+ weight (bit-count mask)))
+        (when excess
+          (for-each (lambda (entry)
+            (unless (fxzero? (fxand mask (car entry)))
+              (set! weight (+ weight (cdr entry))))) (vector-ref excess word))))
       targets source)
-    (* (uf-node-size source) weight)))
+    (* (uf-node-size source) weight))
+    ;; Sparse sources subtract their few present keys from one stable axis
+    ;; mass, avoiding a target scan for every short predecessor tail.
+    (let (weight (- target-weight (if (reach-get targets source) (uf-node-size source) 0)))
+      (reach-for-each (lambda (target _)
+        (when (reach-get targets target)
+          (set! weight (- weight (uf-node-size target))))) (uf-node-reach source))
+      (* (uf-node-size source) weight))))
+;; Dense scalar publication shares the admitted difference traversal. A
+;; singleton source may concatenate target member spines without changing row
+;; order; a heavy source must keep target rectangles separate. Only freshly
+;; allocated descriptor/right spines are reversed, never persistent members.
+(def (targets-disjoint? targets source)
+  (and (not (reach-get targets source))
+    (let ((table (uf-node-reach source)) (disjoint? #t))
+      (if (compact-reach? table)
+        (let ((old (compact-reach-bits table)) (wanted (compact-reach-bits targets)))
+          (let loop ((word 0))
+            (when (and disjoint? (fx< word (fxmin (##u32vector-length old) (##u32vector-length wanted))))
+              (unless (fxzero? (fxand (##u32vector-ref old word) (##u32vector-ref wanted word)))
+                (set! disjoint? #f))
+              (loop (fx+ word 1)))))
+        (reach-for-each (lambda (target _) (when (reach-get targets target) (set! disjoint? #f))) table))
+      disjoint?)))
+(def (difference-rectangles prefix targets preds succs)
+  (let ((blocks []) (registry (compact-reach-registry targets)) (shared-rights #f))
+    (def (whole-rights)
+      (or shared-rights
+        (let (rights [])
+          (for-each (lambda (target)
+            (for-each (lambda (member) (set! rights (cons member rights))) (uf-node-members target)))
+            (reverse succs))
+          (set! shared-rights (reverse! rights)) shared-rights)))
+    (for-each (lambda (source)
+      (let ((single? (= (uf-node-size source) 1)) (rights []))
+        (def (capture target)
+          (if single?
+            (for-each (lambda (member) (set! rights (cons member rights))) (uf-node-members target))
+            (set! blocks (cons (make-rectangle prefix (uf-node-members source)
+                                             (uf-node-members target)) blocks))))
+        (if (and single? (targets-disjoint? targets source))
+          ;; A complete identical right axis is constructed once, then shared
+          ;; immutably by singleton-source descriptors in this publication.
+          (set! blocks (cons (make-rectangle prefix (uf-node-members source) (whole-rights)) blocks))
+          (begin
+            (if (compact-reach? (uf-node-reach source))
+              (reach-difference-for-each-word
+                (lambda (word mask) (word-for-each-node capture word mask registry)) targets source)
+              (for-each (lambda (target) (unless (reachable? source target) (capture target))) (reverse succs)))
+            (when (pair? rights)
+              (set! blocks (cons (make-rectangle prefix (uf-node-members source) (reverse! rights)) blocks)))))))
+      (reverse preds))
+    blocks))
 ;; The sparse fallback owns promotion/growth. A dense table with sufficient
 ;; capacity installs each missing word once and updates only the reverse arcs.
 (def (reach-difference-commit! targets source group)
   (let* ((table (uf-node-reach source)) (bits (compact-reach-bits table))
          (registry (compact-reach-registry targets)))
+    (def (commit-reverse! target)
+      (set! (uf-node-predecessors target)
+        (reach-put! (uf-node-predecessors target) source group)))
     (let (required (##u32vector-length (compact-reach-bits targets)))
       (when (and (fx< (##u32vector-length bits) required)
                  (<= (* required 4) (* 2 (+ (compact-reach-size table) (compact-reach-size targets)))))
@@ -177,9 +251,7 @@
         (lambda (word mask)
           (##u32vector-set! bits word (fxior (##u32vector-ref bits word) mask))
           (set! (compact-reach-size table) (+ (compact-reach-size table) (bit-count mask)))
-          (word-for-each-node (lambda (target)
-            (set! (uf-node-predecessors target)
-              (reach-put! (uf-node-predecessors target) source group))) word mask registry)) targets source)
+          (word-for-each-node commit-reverse! word mask registry)) targets source)
       (reach-difference-for-each-word
         (lambda (word mask)
           (word-for-each-node (lambda (target)
@@ -409,14 +481,14 @@
          (population (+ (uf-group-population group) (length new)))
          (fresh-product? (and (not (eq? a b)) (or (not left-node) (not right-node))))
          (preds (cond ((not left-node) (list a))
-                      ((and fresh-product? (not rectangles?) (uf-group-indexed? group)
+                      ((and (not rectangles?) (not (reachable? b a)) (uf-group-indexed? group)
                             (compact-reach? (uf-node-predecessors a)))
                        (make-closure-axis a (uf-node-predecessors a)))
                       ((uf-group-indexed? group)
                        (ordered-neighbors a (uf-node-predecessors a) roots population (not rectangles?)))
                       (else (select-neighbors (lambda (p) (reachable? p a)) roots (not rectangles?)))))
          (succs (cond ((not right-node) (list b))
-                      ((and fresh-product? (not rectangles?) (compact-reach? (uf-node-reach b)))
+                      ((and (not rectangles?) (not (reachable? b a)) (compact-reach? (uf-node-reach b)))
                        (make-closure-axis b (uf-node-reach b)))
                       ((uf-group-indexed? group)
                        (ordered-neighbors b (uf-node-reach b) roots population (not rectangles?)))
@@ -431,27 +503,32 @@
          ;; A fresh source or sink has no external arc. Every pair on these
          ;; axes is missing; self-injections retain ordinary admission.
          (changes []) (needed (length new)) (added [])
-         (target-mask (and (not rectangles?) (not fresh-product?)
+         (target-mask (and (not fresh-product?)
                            (uf-group-indexed? group) (reach-copyable? (uf-node-reach b) b)
                            (reach-copy-with-node (uf-node-reach b) b)))
-         (singleton? (= population (hash-length nodes))))
+         (singleton? (= (uf-group-population group) (hash-length nodes)))
+         (excess (and target-mask (target-excess target-mask succs singleton?)))
+         (target-weight (and target-mask (axis-weight succs singleton?))))
     ;; Count each missing component rectangle before rows or graph mutation.
     (if (and fresh-product? (not rectangles?))
       (set! needed (+ needed
-        (* (axis-weight preds) (axis-weight succs))))
-      (for-each (lambda (p)
-        (if (and target-mask (compact-reach? (uf-node-reach p)))
-          (set! needed (+ needed (reach-difference-weight target-mask p singleton?)))
-          (for-each (lambda (s)
+        (* (axis-weight preds singleton?) (axis-weight succs singleton?))))
+      (axis-for-each (lambda (p)
+        (if target-mask
+          (set! needed (+ needed (reach-difference-weight target-mask p excess target-weight)))
+          (axis-for-each (lambda (s)
             (when (or fresh-product? (not (reachable? p s)))
               (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
-              (when rectangles? (set! changes (cons (cons p s) changes))))) succs))) preds))
+              (when (and rectangles? (not target-mask)) (set! changes (cons (cons p s) changes))))) succs))) preds))
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
     (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
       (for-each (lambda (n)
         (let (members (uf-node-members n))
           (set! added (cons (make-rectangle prefix members members) added)))) new)
+      (when target-mask
+        (let (blocks (difference-rectangles prefix target-mask preds succs))
+          (set! added (if (null? added) blocks (append blocks added)))))
       (for-each (lambda (change)
         (set! added (cons (make-rectangle prefix
                            (uf-node-members (car change))
@@ -501,7 +578,7 @@
         (when (and (uf-group-indexed? group) (not copied-sources?))
           (set! (uf-node-predecessors s) (reach-put! (uf-node-predecessors s) p group))))
     (unless (and cycle (= (length cycle) population))
-      (if rectangles?
+      (if (and rectangles? (not target-mask))
         (for-each (lambda (change) (commit-arc! (car change) (cdr change))) changes)
         ;; Each root pair is unique. Installing its own arc changes no other
         ;; pair's admission test; no changes spine is needed for count consumers.

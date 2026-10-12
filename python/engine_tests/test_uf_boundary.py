@@ -3,6 +3,8 @@
 """Python oracle against actual exported UF procedures in both ABI bindings."""
 import os
 import unittest
+import hashlib
+from pathlib import Path
 from ascent_engine import Engine, EngineError
 
 UF = ':gerbil-ascent/table/trrel-uf'
@@ -79,6 +81,13 @@ class UFBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.engine = Engine(os.environ.get('ASCENT_NATIVE_LIBRARY'))
+        receipt = cls.engine.build_receipt or {}
+        producer = receipt.get('producerBuild', receipt)
+        expected = hashlib.sha256((Path(__file__).resolve().parents[2] / 'table/trrel-uf.ss').read_bytes()).hexdigest()
+        actual = producer.get('sourceInputs', {}).get('table/trrel-uf.ss')
+        if actual != expected:
+            raise AssertionError('UF producer source identity differs from this checkout')
+        print(f'UF-ORACLE-BACKEND {cls.engine.backend} UF-SHA256 {actual}', flush=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -127,3 +136,34 @@ class UFBoundaryTests(unittest.TestCase):
 
     def test_complete_scc_releases_root_arcs(self):
         self.exercise([[i, i+1] for i in range(96)], [96, 0])
+
+    def test_scalar_weighted_frontier_and_retained_publication(self):
+        for heavy_source in (False, True):
+            edges = [[i, i+1] for i in range(64)] + [[i, i+1] for i in range(65, 129)]
+            edges += ([[48, 16]] if heavy_source else []) + [[113, 81]]
+            tail = [64, 65]
+            with self.subTest(heavy_source=heavy_source), self.engine.module(UF) as owner:
+                with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                    ref = state.reference()
+                    for edge in edges:
+                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', ref, edge, 100000):
+                            pass
+                    before = closure(edges)
+                    expected = closure(edges + [tail]) - before
+                    with owner.call('gerbil-ascent-trrel-uf-resource-observation', ref) as value:
+                        physical = decode(value.graph)
+                    with self.assertRaisesRegex(EngineError, 'fact budget exceeded'):
+                        owner.call('gerbil-ascent-trrel-uf-insert!', ref, tail, len(expected)-1)
+                    with owner.call('gerbil-ascent-trrel-uf-resource-observation', ref) as value:
+                        self.assertEqual(decode(value.graph), physical)
+                    with owner.call('gerbil-ascent-trrel-uf-insert!', ref, tail, len(expected)) as frontier:
+                        with owner.call('gerbil-ascent-view-rows', frontier.reference(), module=VIEW) as value:
+                            rows = decode_rows(value.graph)
+                        self.assertEqual(len(rows), len(expected))
+                        self.assertEqual({tuple(row) for row in rows}, expected)
+                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', ref, tail[::-1], 100000) as value:
+                            self.assertEqual(decode(value.graph), len(closure(edges+[tail,tail[::-1]])-closure(edges+[tail])))
+                        with owner.call('gerbil-ascent-view-rows', frontier.reference(), module=VIEW) as value:
+                            self.assertEqual(decode_rows(value.graph), rows)
+                    with owner.call('gerbil-ascent-trrel-uf-validate', ref) as value:
+                        self.assertTrue(decode(value.graph))

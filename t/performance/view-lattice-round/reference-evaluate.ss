@@ -6,38 +6,38 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "reference-round-workspace.ss" make-round-layout round-layout-source! make-round-work
                  round-work-write! round-work-reset! round-work-commit-indices round-work-complete!)
-        (only-in "../../../program/execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
+        (only-in :gerbil-ascent/program/execution-publication make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
-        (only-in "../../../program/view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
+        (only-in :gerbil-ascent/program/view-state gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
                  gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
                  make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
-        (only-in "../../../program/positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
-        (only-in "../../../program/actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
-        (only-in "../../../program/source-snapshot.ss" source-snapshot-program)
-        (only-in "../../../program/source-state.ss" gerbil-ascent-source-state
+        (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
+        (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+        (only-in :gerbil-ascent/program/source-snapshot source-snapshot-program)
+        (only-in :gerbil-ascent/program/source-state gerbil-ascent-source-state
                  source-state-originals source-state-additions source-state-overrides
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
                  gerbil-ascent-commit-source-replacement!)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "../../../program/initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
-        (only-in "../../../program/lattice-frontier.ss" make-lattice-frontier lattice-frontier-ref
+        (only-in :gerbil-ascent/program/initialization make-initial-source-state gerbil-ascent-initialize-sources!)
+        (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-ref
                  lattice-frontier-stage! lattice-frontier-rows lattice-frontier-clear!)
-        (only-in "../../../program/admission.ss" gerbil-ascent-admit-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "../../../program/result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-result-observation)
-        (only-in "../../../program/planning.ss" gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "../../../program/index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
-        (only-in "../../../program/types.ss" GerbilAscentSessionContract)
-        (only-in "../../../program/reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
-        (only-in "../../../program/analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key

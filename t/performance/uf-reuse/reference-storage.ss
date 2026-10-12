@@ -13,13 +13,13 @@
         (only-in :core/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
-        (only-in "../../../table/eqrel.ss" gerbil-ascent-eqrel-state
+        (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state
                  gerbil-ascent-eqrel-extension gerbil-ascent-eqrel-state?
                  gerbil-ascent-eqrel-insert! gerbil-ascent-eqrel-freeze
                  gerbil-ascent-eqrel-publish!)
-        (only-in "../../../table/trrel.ss" gerbil-ascent-trrel-state
+        (only-in :gerbil-ascent/table/trrel gerbil-ascent-trrel-state
                  gerbil-ascent-trrel-extension)
-        (only-in "../../../table/trrel-uf.ss" gerbil-ascent-trrel-uf-state
+        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-extension
                  gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-count-insert!))
 

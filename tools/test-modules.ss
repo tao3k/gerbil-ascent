@@ -18,7 +18,7 @@
                  testing-interface-test-file-batches
                  +testing-memory-profile+ +testing-process-isolation-profile+)
         (only-in :gerbil-ascent/t/native/artifact-admission artifact-directory!))
-(export main)
+(export main striped-module-files)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -34,6 +34,16 @@
         (map (cut string-append path "/" <>)
           (filter (cut string-suffix? "-test.ss" <>) (list-sort string<? (directory-files path))))
         (list path))) paths)))
+(def (striped-module-files files workers)
+  ;; Native batching takes contiguous, balanced slices. Transpose the ordered
+  ;; inventory first so neighboring expensive UF/reference modules occupy
+  ;; different workers; native profiles and capacity still own the batches.
+  (let (lanes (make-vector workers []))
+    (for-each (lambda (file index)
+      (let (lane (modulo index workers))
+        (vector-set! lanes lane (cons file (vector-ref lanes lane)))))
+      files (iota (length files)))
+    (apply append (map reverse (vector->list lanes)))))
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
@@ -43,7 +53,10 @@
   (let* ((profiled (testing-interface profiles:
                     (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
                       (if (string=? mode "isolated") (list +testing-process-isolation-profile+) []))))
-         (batches (testing-interface-test-file-batches profiled files))
+         (batches (testing-interface-test-file-batches profiled
+                    (if (string=? mode "batched")
+                      (striped-module-files files (testing-interface-worker-count (length files)))
+                      files)))
          (workers (testing-interface-worker-count (length batches)))
          (group (make-wg workers))
          (failures (make-vector (length batches) #f))

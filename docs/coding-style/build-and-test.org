@@ -79,3 +79,18 @@ process exit 0.
 Startup latency remains an open performance question until matched
 measurements under a stable host load are available.
 
+* Shared production identity in reference fixtures
+
+A frozen reference algorithm retains its own implementation but imports shared
+production dependencies through canonical =:gerbil-ascent/...= Library names.
+Do not use relative production source paths alongside native Library imports.
+Gerbil's expander caches library and normalized file paths separately; importing
+a source path can evaluate another context with the same runtime namespace.
+POO prototypes and private structure identities are therefore part of the
+module-loading contract, even when both files contain identical declarations.
+
+The source-import regression checks prototype identity after late fixture
+imports and admits both held and fresh reference Sessions. Its negative control
+restores one relative =program/types.ss= import and produces a real native
+=ERROR CHECK=. This protects the reference/production boundary without altering
+reference algorithms, weakening validation, or resetting contract caches.

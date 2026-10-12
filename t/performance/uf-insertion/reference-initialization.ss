@@ -5,9 +5,9 @@
 ;;; Initial source admission owns the engine's fresh row/state buffers.
 (import :gerbil-ascent/core/relation-view
         (only-in :clan/poo/object .ref)
-        (only-in "../../../program/lattice-frontier.ss" make-lattice-frontier lattice-frontier-stage!
+        (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-stage!
                  lattice-frontier-rows)
-        (only-in "../../../program/admission.ss" gerbil-ascent-initialize-source-row!)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value gerbil-ascent-joined-row)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state

@@ -4,7 +4,7 @@
 ;;; Publication over one relation owner's staged representation. The frozen
 ;;; total/delta and their counts move together; no concrete UF membership map.
 (import :gerbil-ascent/core/relation-view
-        (only-in "../../../program/view-replay.ss" gerbil-ascent-small-journal-export)
+        (only-in :gerbil-ascent/program/view-replay gerbil-ascent-small-journal-export)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-view-storage-provider?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view

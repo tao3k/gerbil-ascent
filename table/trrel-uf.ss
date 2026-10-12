@@ -805,10 +805,7 @@
   (unless (and (list? columns) (list? key) (= (length columns) (length key))
                (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
     (error "invalid ASCENT UF view key"))
-  (let (rows [])
-    (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows)))
-                              (gerbil-ascent-view-select view columns key))
-    (reverse rows)))
+  (gerbil-ascent-view-rows view columns key))
 
 
 ;; gerbil-ascent-trrel-uf-count-insert!

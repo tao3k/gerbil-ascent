@@ -656,3 +656,42 @@ theorem bind_right_order (rs : List (Rectangle α)) (members : List α) :
     expand (bindRight rs members) = rs.flatMap (fun r => rows ⟨r.left, members⟩) := by
   simp [expand, bindRight, List.flatMap_map]
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Extensional refinement of an invocation-owned forward list builder. -/
+def collectRows (xs : List α) (acc : List α) :=
+  xs.foldl (fun rows x => rows ++ [x]) acc
+
+theorem collect_rows_order (xs : List α) (acc : List α) :
+    collectRows xs acc = acc ++ xs := by
+  induction xs generalizing acc with
+  | nil => simp [collectRows]
+  | cons x xs ih =>
+    change collectRows xs (acc ++ [x]) = acc ++ (x :: xs)
+    rw [ih]
+    simp [List.append_assoc]
+
+theorem selected_materialization (xs : List α) (accept : α → Bool) :
+    collectRows (xs.filter accept) [] = xs.filter accept := by
+  simp [collect_rows_order]
+
+-- Cons-cell accounting for complete query results, excluding constant heads,
+-- runtime metadata and payload objects. This is not a VM allocation theorem.
+def legacyQueryCells (width rows : Nat) := rows * (width + 2)
+def ownedQueryCells (width rows : Nat) := rows * (width + 1)
+
+theorem one_spine_released (width rows : Nat) :
+    legacyQueryCells width rows = ownedQueryCells width rows + rows := by
+  simp [legacyQueryCells, ownedQueryCells, Nat.mul_add, Nat.mul_succ, Nat.add_assoc]
+
+theorem grouped_cell_ratio (rows : Nat) :
+    ownedQueryCells 3 rows * 5 = legacyQueryCells 3 rows * 4 := by
+  simp [ownedQueryCells, legacyQueryCells, Nat.mul_assoc]
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Sharing a frozen owner plan requires equal axes; Scheme checks identity. -/
+theorem self_owner_selection (r : Rectangle α) (same : r.left = r.right)
+    (accept : α → Bool) : r.left.filter accept = r.right.filter accept := by
+  rw [same]
+end Ascent.ProviderRectangles

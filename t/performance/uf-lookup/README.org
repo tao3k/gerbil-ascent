@@ -1,0 +1,132 @@
+#+TITLE: Complete UF lookup and fallback export qualification
+#+LANGUAGE: en
+
+* Architecture and reference contract
+The complete public query boundary currently creates a temporary row-stream,
+collects an outer list, and copies that list with =reverse=. The candidate
+routes =gerbil-ascent-trrel-uf-view-lookup= through the view materializer with
+a native one-/three-argument contract. The same invocation-owned native list builder
+serves ordinary visitor fallback exports and selected queries. Existing full
+rectangle exporters retain their direct product builder. Visitors own detached
+public tuples; the collector owns its outer spine. For self-component cuts whose left/right member axes are the same object,
+left queries reuse the frozen right-owner descriptor plan with the orientation
+bound at visitation. This removes repeated owner-map and sort work without
+allocating another plan or changing arbitrary cut handling. No query cursor is stored in
+a captured view. UF's existing argument admission runs before visiting any row.
+
+Gerbil =std/list/list-builder.ss= provides a scoped head/tail owner and
+=defrules= for append. Its documentation warns that continuation reentry shares
+the builder: this refinement applies to the synchronous single-pass visitor
+contract already used by public lookup, not arbitrary resumed continuations.
+The model's forward append is extensional; it does not implement the native
+constant-time tail mutation or prove Scheme pointers/GC behavior.
+
+Lean proves ordered forward collection and exact filtered materialization.
+A separate cons-cell law accounts for one removed outer spine: legacy storage
+is n*(width+2), owned storage n*(width+1), excluding constant heads, payloads
+and runtime metadata. For grouped three-column rows this predicts a 20% cell
+reduction, not a VM byte or end-to-end performance theorem.
+
+=OwnedLookup.qnt= executes six selectors, including empty, repeated conflicting,
+reordered and missing keys; independent results can be mutated and the backing
+storage retired. Invalid selector admission must leave the frozen cut stable.
+Exporter substitution, order, empty-key, duplicate, shared-result, borrowed-source,
+retirement and rejection mutants must fail. The weighted export model additionally checks
+that self-axis selection can reuse the opposite axis, with a wrong-orientation
+mutant. Lean makes the equal-axis prerequisite explicit; native identity guards
+are stronger than the model's extensional equality. Python checks the actual Library API and ABI
+against an independent closure oracle and the held cut's exact order.
+
+* Fixed complete consumer A/B
+The frozen baseline is =a9d624a7c21526b0b6fe8ca19fd6dba40942c310=; reference UF
+redirects only its view import. Left/right lookups use a prepared 1024-member
+SCC; grouped lookup uses two 512-member SCCs. Every measured operation consumes
+the complete native public lookup result. Union fallback exports, absent queries
+and a small chain are controls. Preparation and independent answer checks are
+outside timing and are reported separately.
+
+The initial 128-operation sample failed the paired-win gate (14/20) despite
+21.4% lower CPU and 25.0% lower allocation. That failure remains recorded.
+Both arms now use 2048 complete operations per sample, 20 alternating natural-GC
+CPU pairs, 20 ASP admissions and five allocation pairs with GC outside the
+counter. Targets require CPU <=90%, >=16/20 wins and allocation <=80%+8192B.
+Controls require CPU <=110%+20us and allocation <=110%+8192B. ASP p95 <=999ms,
+parent timeout 90 seconds, heap 3GB. Gates are fixed before measurement.
+Raw logs, failures, receipts and binaries remain in ignored
+=.cache/ascent/uf-lookup/=. No improvement is qualified until these gates pass.
+
+* Final results and boundaries
+The final six-scenario run passes in 22.94/90 seconds. CPU includes natural GC;
+medians are microseconds per fixed 2048-operation complete consumer sample.
+
+| Scenario | CPU before | CPU after | CPU reduction | Bytes before | Bytes after | Wins |
+|----------+------------+-----------+---------------+--------------+-------------+------|
+| Left endpoint | 91353 | 64000 | 29.9% | 403374080 | 302645248 | 20/20 |
+| Right endpoint | 93490 | 68210 | 27.0% | 403374080 | 302645248 | 20/20 |
+| Grouped endpoint | 108658 | 80906 | 25.5% | 510820352 | 403308544 | 19/20 |
+| Union fallback control | 39918 | 39059 | control | 901612608 | 899679296 | 15/20 |
+| Absent control | 392 | 335 | control | 720896 | 655360 | 20/20 |
+| Small control | 587 | 516 | control | 1900544 | 1540096 | 20/20 |
+
+Endpoint allocation decreases 24.97%; grouped allocation decreases 21.05%.
+The union control reduces allocation by 0.21% and passes its original tolerance.
+Preparation is excluded from these prepared-query timings. The final self-axis
+optimization shares an existing plan and allocates no additional descriptor
+plan; it adds a guarded identity scan during indexed freeze. These results do
+not establish a whole-engine or transport speedup.
+
+The first 128-operation run missed the win gate. The next 2048-operation run
+passed both endpoints but grouped allocation decreased only 19.72%, below the
+20% gate. Sharing self-owner plans removed repeated query metadata and passed
+that same gate. No CPU, allocation, win or timeout threshold was widened.
+Both failed receipts remain. The initial native fixture had repeated axis
+members, violating the disjoint rectangle precondition; it was replaced by
+unique axes while retaining repeated selector constraints. Model API/map-domain
+errors and the sandbox-denied local checker port remain failed logs.
+
+Lean passes all 158 jobs. =OwnedLookup= passes 14581 generated / 2916 distinct
+states and rejects eight mutants; the extended =WeightedExport= passes 955 /
+433 states and rejects six mutants including wrong shared-plan orientation.
+Native validation passes seven Suites / 48 Cases, including the final nine-case
+dense regression with correct =gxtest -v 5= on a complete matching helper graph.
+
+Actual Library =062-lookup-001= freezes =059-current-001= other interfaces plus
+final UF/view sources. Build/package/API pass in 86.85/120, 0.61/15 and 1.60/45
+seconds. API and ABI independently pass two Cases in 2.852/15 and 2.546/15
+seconds. All three production source hashes match its receipt (132 inputs,
+127 linked sources, 1264 resources). Initial host builds failed on Darwin
+module linking and a stale OpenSSL path; failures are retained. The successful
+build uses native SDK dynamic-link options and current Homebrew library paths.
+No Gerbil/Gambit source was rebuilt. This producer excludes concurrent ROOT
+Evidence/DSL/Python interfaces and does not qualify their complete current graph.
+
+The exact baseline GitHub run =38222458264= completed with Formal and all three
+oracle jobs successful. Scheme build and compiled performance passed, but the
+complete source test step reported 31 Case errors and exited 124 at its 180s
+cap; the aggregate job failed. A matching standalone source reference probe
+passes four Cases locally, so it does not reproduce that complete grouped-test
+failure. The previous CI failure is retained, and remote CI on the next commit
+is a separate unresolved gate.
+
+A retained old-producer native negative control reveals that explicit empty
+queries must use visitor order even when a custom complete exporter differs.
+The final native case-lambda separates one-argument complete export from
+three-argument query; the new native control and exporter-substitution model
+cover this admission. The prior 062 qualification covers canonical UF inputs
+only and is superseded by a separate final producer qualification below.
+
+Final producer =064-lookup-order-001= freezes the complete 063 interfaces plus
+the repaired core and the same generic native export fixture. Build/package/API
+pass in 77.67/120, 0.65/15 and 1.70/45 seconds. Actual API/ABI each pass all
+three Cases in 4.279/15 and 3.856/15 seconds; source identities are checked.
+The final actual Library passes all five lookup Cases and the nine-case dense
+regression in 33.65/60 seconds with the matching complete helper closure.
+The combined native inventory is seven Suites / 48 Cases.
+
+A separate =065-lookup-negative-001= preserves the old 063 runtime and changes
+only the identical test factory. Its native test reproduces the same TestError;
+API/ABI independently produce one exact order AssertionError in 3.669/15 and
+3.655/15 seconds. Both negative arms assert old runtime hashes and the identical
+fixture hash. Original 063 and all failed logs remain unchanged. The final API
+receipt SHA is =4c40397e44584412d70a169307a07a3627c6cef3b604c4d15d669aa179163ad1=.
+Complete downstream graph qualification and new remote CI remain separate gates.

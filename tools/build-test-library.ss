@@ -73,6 +73,13 @@
                             '("t/performance/nonmembership-index/reference" "t/performance/nonmembership-index/input") [])
                           (if (member "t/qualification/ascent-temporal-projection-test.ss" tests)
                             '("t/performance/temporal-projection/reference") [])
+                          (if (member "t/qualification/ascent-uf-dense-test.ss" tests)
+                            '("t/performance/uf-dense/reference-view-replay"
+                              "t/performance/uf-dense/reference-view-state"
+                              "t/performance/uf-dense/reference-initialization"
+                              "t/performance/uf-dense/reference-evaluate"
+                              "t/performance/uf-dense/reference-trrel-uf"
+                              "t/performance/uf-dense/fixture") [])
                           (if (member "t/qualification/ascent-uf-weighted-test.ss" tests)
                             '("t/performance/uf-weighted/reference-relation-view"
                               "t/performance/uf-weighted/reference-trrel-uf"

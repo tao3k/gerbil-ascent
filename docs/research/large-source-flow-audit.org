@@ -1672,8 +1672,75 @@ Concurrent Evidence interfaces are outside this qualification.
 
 The old dense-cut oracle now compares semantic rows rather than heterogeneous
 layout units; the new exact unit contract is separately checked. Prior source
-CI POO run/run-timeout failures remain unresolved. Expanded local dense tests
-exposed mixed constructor entries, reproduced with the baseline; after closing
-the helper graph, the final attempt stopped at a gxtest =fixnum? value: #f=
-entry contract. No broader-suite PASS or full current graph is claimed.
+CI POO run/run-timeout failures remain unresolved. Expanded local dense tests exposed mixed constructor entries, reproduced with
+the baseline. Closing the helper graph and correcting the native command to
+=gxi :gerbil/tools/gxtest -v 5= now passes all nine Cases with final OK. The
+entry error was an omitted numeric verbosity argument, not a Gerbil defect.
+All earlier failures remain recorded. The test build helper explicitly includes
+the complete dense reference graph. No full current consumer graph is claimed.
 See [[file:../../t/performance/uf-weighted/README.org][weighted export/query qualification]] for measurements and limits.
+
+* Complete UF query materialization and shared self-owner plans
+The complete public lookup flow now shares the view materializer instead of
+creating a row-stream and copying a reversed result list. A native scoped
+list builder owns one forward outer spine; existing visitors construct detached
+public tuples. Empty selectors retain specialized complete exporters, while
+selected and generic fallback exports share the owned collector.
+
+Multiple grouped self-component owners can reuse the existing frozen right-axis
+descriptor plan for left queries when every left/right member axis is the same
+object. The visitor binds its orientation once. Other cuts retain their previous
+query-local owner selection. No second descriptor plan or shared cursor is
+introduced. This removes repeated per-query map/sort work; the strict identity
+condition is stronger than the formal model's extensional equal-axis prerequisite.
+
+Lean passes 158 jobs for collection order, filtered result equivalence, one
+removed outer spine and the self-axis prerequisite. OwnedLookup explores 14581
+states / 2916 distinct and rejects eight mutants; extended WeightedExport explores
+955 / 433 and rejects six mutants. Native validation passes seven Suites / 48
+Cases, including dense regression on final independent production and a matching
+complete helper graph. The entry-contract rejection was corrected with native
+=-v 5=; the original failed invocation remains recorded.
+
+The fixed complete-consumer six-scenario A/B passes in 22.94/90 seconds against
+=a9d624a7=. Left/right/grouped query CPU decreases 29.9%/27.0%/25.5%; allocation
+decreases 24.97%/24.97%/21.05%. Union, absent and small controls pass. Union reduces
+allocation by 0.21%. These are prepared native query/fallback consumers, not whole
+engine or transport timings. An initial 14/20 win miss and intermediate grouped
+19.72% allocation reduction failed admission and remain recorded; no gate was
+widened. Both arms use the same fixed 2048 complete operations per final sample.
+
+Actual 062-lookup-001 freezes 059 other interfaces with the final UF/view modules.
+Build/package/API pass 86.85/120, 0.61/15, 1.60/45; Python API/ABI each pass two
+independent closure/order Cases in 2.852/15 and 2.546/15. Producer hashes match;
+132 inputs / 127 linked Scheme / 1264 resources. Native host-link failures on
+Darwin flags and obsolete OpenSSL paths are retained. Concurrent ROOT interfaces
+and their complete current graph need a separate combined producer qualification.
+
+Baseline exact-head GitHub CI run 38222458264 finished: Formal and three oracles
+passed; Scheme build/compiled performance passed, but complete source tests had
+31 Case errors then exit124 at 180 seconds, so aggregate CI failed. A standalone
+source reference probe passes four Cases and does not close the grouped full
+source failure. New exact-head CI remains a separate gate.
+See [[file:../../t/performance/uf-lookup/README.org][complete lookup qualification]] for models, measurements and limits.
+
+A custom exporter/visitor order negative control fails on the prior actual
+producer. The final case-lambda retains exporter order for complete export and
+visitor order for explicit selectors, including the empty query. This distinction
+is covered by the eighth OwnedLookup mutant and a native regression.
+
+Final producer =064-lookup-order-001= freezes the complete 063 interfaces plus
+the repaired core and the same generic native export fixture. Build/package/API
+pass in 77.67/120, 0.65/15 and 1.70/45 seconds. Actual API/ABI each pass all
+three Cases in 4.279/15 and 3.856/15 seconds; source identities are checked.
+The final actual Library passes all five lookup Cases and the nine-case dense
+regression in 33.65/60 seconds with the matching complete helper closure.
+The combined native inventory is seven Suites / 48 Cases.
+
+A separate =065-lookup-negative-001= preserves the old 063 runtime and changes
+only the identical test factory. Its native test reproduces the same TestError;
+API/ABI independently produce one exact order AssertionError in 3.669/15 and
+3.655/15 seconds. Both negative arms assert old runtime hashes and the identical
+fixture hash. Original 063 and all failed logs remain unchanged. The final API
+receipt SHA is =4c40397e44584412d70a169307a07a3627c6cef3b604c4d15d669aa179163ad1=.
+Complete downstream graph qualification and new remote CI remain separate gates.

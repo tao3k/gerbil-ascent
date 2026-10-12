@@ -688,11 +688,11 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-    models+=(WeightedExport RectangleCompaction RectangleExport ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
+    models+=(OwnedLookup WeightedExport RectangleCompaction RectangleExport ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
-      ProviderViews) models=(ProviderViews ReaderLifetime RectangleExport RectangleCompaction WeightedExport) ;;
+      ProviderViews) models=(ProviderViews ReaderLifetime RectangleExport RectangleCompaction WeightedExport OwnedLookup) ;;
       *) found=0; for model in "${models[@]}"; do if [[ "$model" = "$group" ]]; then found=1; fi; done; [[ "$found" = 1 ]] || { echo "Unknown Quint feature: $group" >&2; exit 2; }; models=("$group") ;;
     esac
     export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
@@ -765,7 +765,8 @@ _check-quint group='all': prepare-quint
         NegativeProbe) constants='Mutation = "none"'; invariants='AbsenceSound WitnessSound FailureTerminal Bounds' ;;
         NumericProbe) constants='Mutation = "none"'; invariants='TypedPrefix PrefixValue PublicationExact Unpublished Bounds' ;;
         CountProbe) constants='Mutation = "none"'; invariants='PrefixCount CompleteExact PublishedOnlyComplete FailureTerminal Bounds' ;;
-        WeightedExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads AxisExact CountExact' ;;
+        OwnedLookup) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact RejectedStable' ;;
+        WeightedExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads AxisExact CountExact SharedPlanExact' ;;
         RectangleCompaction) constants='Mutation = "none"'; invariants='OrderedExact WeightedCount IndependentReaders' ;;
         RectangleExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads CountExact' ;;
         ProviderViews) constants="Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff"; invariants='AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget'; constraint=Explore ;;
@@ -890,7 +891,8 @@ _check-quint group='all': prepare-quint
             ProviderReplay) fault scope PublishedExact; fault early JournalExact; fault drop JournalExact; fault kind OrderExact; fault cut HeldExact; fault reject RefusalAtomic ;;
             ProviderAdmission) fault nocap MatchingExact; fault set MatchingExact; fault allwitness CountCaps; fault early NoEarlyCallbacks; fault borrow DetachedPacket; fault retain FailedCacheRevoked ;;
             ProviderRouting) for mutation in drop order representative prefix; do fault "$mutation" CompleteExact; done ;;
-            WeightedExport) fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
+            OwnedLookup) fault export OrderedExact; fault order OrderedExact; fault empty OrderedExact; fault duplicate OrderedExact; fault shared OrderedExact; fault borrow FrozenExact; fault retire FrozenExact; fault reject RejectedStable ;;
+            WeightedExport) fault plan-axis SharedPlanExact; fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
             RectangleCompaction) fault heavy OrderedExact; fault order OrderedExact; fault alias OrderedExact; fault mass WeightedCount; fault shared IndependentReaders ;;
             RectangleExport) fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads ;;
             ProviderViews) fault alias FrozenRead; fault retire ReaderAlive; fault early AtomicPublication; fault stale CurrentReply; fault budget LogicalBudget ;;

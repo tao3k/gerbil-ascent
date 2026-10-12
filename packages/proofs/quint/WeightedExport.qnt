@@ -17,6 +17,9 @@ module WeightedExport {
       else (b._1, if (Has(b._2,key)) List(key) else List()))))
   pure def Select(rows: List[Row], axis: int, key: int): List[Row] =
     rows.foldl(List(), (acc,p) => if ((if (axis == 0) p._1 else p._2) == key) acc.append(p) else acc)
+  pure def SelfAxes(bs: List[Block]): bool = bs.foldl(true, (ok,b) => ok and b._1 == b._2)
+  pure def SharedLeft(bs: List[Block], key: int): List[Row] = bs.foldl(List(), (acc,b) =>
+    if (Has(b._2,key)) acc.concat(Product(if (Mutation == "plan-axis") (b._1,List(key)) else (List(key),b._2))) else acc)
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State
@@ -25,7 +28,8 @@ module WeightedExport {
   action Capture = {
     nondet left = Set(List(0,1), List(1,0), List()).oneOf()
     nondet right = Set(List(0,2), List(2,1), List()).oneOf()
-    val blocks = List((left,right),(List(2),List(0,1)))
+    nondet mode = Set("normal","self").oneOf()
+    val blocks = if (mode == "self") List((left,left),(right,right)) else List((left,right),(List(2),List(0,1)))
     all {q.phase == "new", q' = {...q, blocks: blocks, held: ProductRows(blocks), count: if (Mutation == "mass") blocks.length()
       else blocks.foldl(0, (total,b) => total + b._1.length() * b._2.length()), phase: "captured"}}
   }
@@ -44,6 +48,7 @@ module WeightedExport {
   action Mutate = all {q.phase == "exported", not(q.mutated), q' = {...q,
     mutated: true, public: List((99,99)), sibling: if (Mutation == "shared") List((99,99)) else q.sibling}}
   action step = any {Capture, Export, Retire, Read, Mutate}
+  val SharedPlanExact = SelfAxes(q.blocks) implies SharedLeft(q.blocks,0) == Select(q.held,0,0)
   val FrozenExact = q.phase != "new" implies ProductRows(q.blocks) == q.held
   val OrderedExact = q.phase == "exported" and not(q.mutated) implies q.public == q.held
   val IndependentReads = q.phase == "exported" implies q.sibling == q.held

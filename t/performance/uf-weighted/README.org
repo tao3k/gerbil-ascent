@@ -87,10 +87,16 @@ Previous full source CI at =bdae4a2= failed. This batch corrects its dense-cut
 fixture's comparison of heterogeneous physical units: logical count remains
 33153, while the new layout's exact 33635 units are checked independently.
 That CI also reports POO run/run-timeout contract failures outside this batch.
-An expanded dense regression was attempted locally: mixed constructor entries
-caused exit 139 with both baseline and candidate overlays. After compiling the
-complete helper graph against the independent producer, gxtest rejected its
-entry argument with =fixnum? value: #f= before test execution. These remain
-failed receipts, not an expanded-suite PASS. Concurrent Evidence interfaces,
-complete current consumer graphs, remote CI and portable wheels remain separate
-gates. Raw evidence is retained under =.cache/ascent/uf-weighted/=.
+Expanded dense regression is now qualified on the same independent producer
+and its complete debug helper graph: all nine Cases, MODULE-OK, HARNESS-OK and
+final OK pass without errors. The original constructor-entry failures remain
+recorded. The last entry rejection was an invocation mistake: =-v= requires a
+numeric verbosity argument; =-v test-file= parses the path as =#f=. The correct
+native invocation is =gxi :gerbil/tools/gxtest -v 5 test-file=. No Gerbil patch,
+timeout change or upstream rebuild is needed. The test-library helper now
+explicitly declares all six dense reference/support modules to prevent reuse
+of a partial helper graph.
+
+Concurrent Evidence interfaces, complete current consumer graphs, remote CI and
+portable wheels remain separate gates. Raw evidence is retained under
+=.cache/ascent/uf-weighted/=.

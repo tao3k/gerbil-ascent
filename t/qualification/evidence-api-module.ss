@@ -1,9 +1,16 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil-ascent/evidence/interface (only-in :clan/poo/object .ref))
+(import :gerbil-ascent/evidence/interface (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/core/relation-view
+                 gerbil-ascent-view-with-export gerbil-ascent-explicit-view))
 (export make-values make-lattice make-operator make-aggregate make-graph-values
-        make-projection-transformer native-values)
+        make-projection-transformer native-values make-export-view)
+
+(def (make-export-view rows exported)
+  (gerbil-ascent-view-with-export
+   (gerbil-ascent-explicit-view rows (length rows))
+   (lambda () exported)))
 
 (def (make-projection-transformer)
   (relational-op-function 2 (lambda (input) (relational-op-project input '(1)))))

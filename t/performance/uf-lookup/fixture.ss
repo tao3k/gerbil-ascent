@@ -1,0 +1,41 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil-ascent/core/relation-view :gerbil-ascent/table/trrel-uf
+        (prefix-in :gerbil-ascent/t/performance/uf-lookup/reference-relation-view old-view-)
+        (prefix-in :gerbil-ascent/t/performance/uf-lookup/reference-trrel-uf old-))
+(export ui-prepare ui-consume ui-expected)
+(def (cycle n) (map (lambda (i) (list i (modulo (+ i 1) n))) (iota n)))
+(def (ui-prepare old? scenario)
+  (case scenario
+    ((union)
+     (let (explicit (if old? old-view-gerbil-ascent-explicit-view gerbil-ascent-explicit-view))
+       ((if old? old-view-gerbil-ascent-view-union gerbil-ascent-view-union)
+         (explicit (map (lambda (i) (list i 0)) (iota 256)) 256)
+         (explicit (map (lambda (i) (list i 1)) (iota 256)) 256))))
+    (else
+     (let* ((state ((if old? old-gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-state)))
+            (edges (case scenario
+                     ((grouped) (apply append (map (lambda (g) (map (cut cons g <>) (cycle 512))) '(0 7))))
+                     ((small absent) '((0 1) (1 2)))
+                     (else (cycle 1024)))))
+       (for-each (lambda (row)
+         ((if old? old-gerbil-ascent-trrel-uf-count-insert! gerbil-ascent-trrel-uf-count-insert!)
+           state row 4000000)) edges)
+       ((if old? old-gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-freeze) state #t)))))
+(def (public view scenario old?)
+  (if (eq? scenario 'union)
+    ((if old? old-view-gerbil-ascent-view-rows gerbil-ascent-view-rows) view)
+    ((if old? old-gerbil-ascent-trrel-uf-view-lookup gerbil-ascent-trrel-uf-view-lookup)
+      view (if (memq scenario '(right grouped)) '(1) '(0))
+      (if (eq? scenario 'absent) '(999) '(0)))))
+(def (ui-consume view scenario old?) (list (length (public view scenario old?))))
+(def (ui-expected view scenario)
+  (let* ((before (public view scenario #t))
+         (after (public (ui-prepare #f scenario) scenario #f))
+         (expected (case scenario ((left right grouped) 1024) ((union) 512) ((absent) 0) (else 3)))
+         (truth (list->hash-table (map (cut cons <> #t) before))))
+    (unless (and (= (length before) expected) (= (length after) expected)
+                 (= (hash-length truth) expected) (andmap (cut hash-get truth <>) after))
+      (error "complete lookup differs from independent cardinality and baseline" scenario))
+    (list expected)))

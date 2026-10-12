@@ -82,13 +82,18 @@
 (def (materialize-rows visit)
   ;; The invocation owns only this outer spine. Visitors control tuple
   ;; construction; frozen member and journal spines are never reversed.
-  (let (rows [])
-    (visit (lambda (row) (set! rows (cons row rows))))
-    (reverse! rows)))
-(def (gerbil-ascent-view-rows view)
-  (if (relation-view-export view)
-    ((relation-view-export view))
-    (materialize-rows (cut gerbil-ascent-for-each-row <> view))))
+  (with-list-builder (collect!)
+    (visit collect!)))
+;; Selected materialization shares the owned collector with fallback exports.
+;; Complete export and explicit query have distinct ordering contracts.
+(def gerbil-ascent-view-rows
+  (case-lambda
+    ((view)
+     (if (relation-view-export view)
+       ((relation-view-export view))
+       (materialize-rows (cut (relation-view-visit view) [] [] <>))))
+    ((view columns key)
+     (materialize-rows (cut (relation-view-visit view) columns key <>)))))
 ;; : (-> Row Columns Key Boolean)
 (def (matches-key? row columns key)
   (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key))
@@ -378,6 +383,11 @@
                        (let (width (length (rectangle-prefix (car blocks))))
                          (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
          (right-plans (ordered-right-plans routes blocks uniform?))
+         ;; A self-component cut has the same owner axis on both sides.
+         ;; Its frozen descriptor plan can serve either endpoint unchanged.
+         (left-plans (and right-plans
+                          (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)
+                          right-plans))
          (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
   (def (selected columns key)
     (if routes (routed-rectangles routes blocks columns key uniform?) blocks))
@@ -387,14 +397,15 @@
       (error "invalid ASCENT UF view key")))
   (def (selection-for columns)
     (and routes (pair? columns) (make-rectangle-query routes #f)))
-  (def (planned-right columns key)
-    (and right-plans (pair? columns) (null? (cdr columns))
-         (= (car columns) (- (vector-length routes) 1))
-         (hash-get right-plans (car key))))
-  (def (visit-right-plan hits consume)
+  (def (planned-axis column key)
+    (let (plans (if (= column (- (vector-length routes) 2)) left-plans right-plans))
+      (and plans (hash-get plans key))))
+  (def (visit-axis-plan hits consume left?)
     (for-each (lambda (hit)
       (using (hit :- rectangle-selection)
-        (visit-left-members (rectangle-prefix hit.block) (rectangle-left hit.block) hit.members consume))) hits))
+        (visit-left-members (rectangle-prefix hit.block)
+          (if left? hit.members (rectangle-left hit.block))
+          (if left? (rectangle-right hit.block) hit.members) consume))) hits))
   (def (visit-indexed-axis columns key consume)
     (and routes uniform? (pair? columns) (null? (cdr columns))
          (let* ((column (car columns)) (left-column (- (vector-length routes) 2)))
@@ -410,8 +421,8 @@
                         (if (= column left-column) (rectangle-right block) members) consume))
                       (rectangle-bucket-plain bucket)))
                   #t)
-                 ((planned-right columns key) =>
-                  (lambda (plans) (visit-right-plan plans consume) #t))
+                 ((planned-axis column (car key)) =>
+                  (lambda (plans) (visit-axis-plan plans consume (= column left-column)) #t))
                  (else #f)))))))
   (def (visit-admitted columns key consume)
     (cond

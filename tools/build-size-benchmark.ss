@@ -1,6 +1,0 @@
-(import (only-in :std/make make))
-(make '("program/evaluate" "t/qualification/ascent-size-reference-evaluate")
-      srcdir: (current-directory)
-      libdir: (getenv "ASCENT_SIZE_BENCH_LIB")
-      build-deps: ".gerbil/size-benchmark/build-deps")
-(exit 0)

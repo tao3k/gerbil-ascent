@@ -162,14 +162,17 @@
          (error "positive plan changed source-only control")))
      1 #f)))
 
-(let (receipts (append (map solver '(16 256 1024))
-                       (list (join 50 1) (join 100 100) (wide-join) (source-control))))
-  (call-with-output-file (getenv "ASCENT_POSITIVE_PLAN_RECEIPT")
-    (lambda (port) (write receipts port) (newline port)))
-  (for-each
-   (lambda (receipt)
-     (unless (and (<= (cdr (assq 'new-p50-bytes receipt)) (cdr (assq 'old-p50-bytes receipt)))
-                  (or (not (cdr (assq 'require-wins? receipt)))
-                      (>= (cdr (assq 'paired-wins receipt)) 900)))
-       (error "positive plan failed matched allocation admission" (car receipt)))) receipts)
-  (displayln "OK"))
+(export main)
+(def (main receipt-path)
+  (let (receipts (append (map solver '(16 256 1024))
+                         (list (join 50 1) (join 100 100) (wide-join) (source-control))))
+    (call-with-output-file receipt-path
+      (lambda (port) (write receipts port) (newline port)))
+    (for-each
+     (lambda (receipt)
+       (unless (and (<= (cdr (assq 'new-p50-bytes receipt)) (cdr (assq 'old-p50-bytes receipt)))
+                    (or (not (cdr (assq 'require-wins? receipt)))
+                        (>= (cdr (assq 'paired-wins receipt)) 900)))
+         (error "positive plan failed matched allocation admission" (car receipt)))) receipts)
+    (displayln "OK"))
+)

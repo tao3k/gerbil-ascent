@@ -2,7 +2,7 @@
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!))
 (export main)
 (def (main . args)
-  (compile-exe "tools/factor-budget.ss"
+  (compile-exe "t/research/factor-budget.ss"
     [output-dir: (path-expand "lib" (gerbil-path))
      output-file: (path-expand "bin/factor-budget" (gerbil-path))
      invoke-gsc: #t keep-scm: #t parallel: #t])

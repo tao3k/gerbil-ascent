@@ -54,7 +54,7 @@
                            (main eqrel-program-main)) eqrel-program-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-query-output
                            (main byods-query-main)) byods-query-main))
-(import (only-in (rename-in :gerbil-ascent/tools/model-source-closure
+(import (only-in (rename-in :gerbil-ascent/t/model/source-closure
                            (main source-closure-main)) source-closure-main))
 
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-data (main steensgaard-data-main)) steensgaard-data-main))

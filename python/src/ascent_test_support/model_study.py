@@ -50,7 +50,7 @@ def producer_hashes():
     paths = {'python/src/ascent_test_support/model_study.py': Path(__file__),
              'python/src/ascent_test_support/supervision.py': Path(supervision.__file__),
              't/model/response-projection.ss': ROOT/'t/model/response-projection.ss',
-             'tools/model-source-closure.ss': ROOT/'tools/model-source-closure.ss'}
+             't/model/source-closure.ss': ROOT/'t/model/source-closure.ss'}
     return {name: digest(path.read_bytes()) for name, path in paths.items()}
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env gxi
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import "../interface/native-loader.ss"
+(import "../interface/generated-resources.ss"
         (only-in :std/source this-source-file))
 (extern namespace: gx eval-syntax)
 (export main)

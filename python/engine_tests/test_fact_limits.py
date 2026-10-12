@@ -55,7 +55,7 @@ class FactLimitTests(unittest.TestCase):
                 self.assertIn('value', value.receipt)
 
     def test_native_reference_and_positive_change_have_no_default_count_ceiling(self):
-        from test_native_module_calls import decode
+        from test_module_calls import decode
         with self.engine.dsl(SOURCE, trusted=True) as owner:
             with owner.call('reference-count', [[n] for n in range(5000)]) as value:
                 self.assertEqual(decode(value.graph), 5000)
@@ -108,7 +108,7 @@ class FactLimitTests(unittest.TestCase):
             self.assertEqual(session.fact_limits['input'], 'unlimited')
 
     def test_large_request_default_and_explicit_caller_byte_policy(self):
-        from test_native_module_calls import decode
+        from test_module_calls import decode
         data = 'x' * (1048576 + 1)
         with self.engine.dsl(SOURCE, trusted=True) as owner:
             with owner.call('echo-value', data) as value:

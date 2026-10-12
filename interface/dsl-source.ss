@@ -7,7 +7,7 @@
         (only-in :gerbil/runtime/init gerbil-load-expander! __scheme-source)
         :gerbil-ascent/program/syntax
         :gerbil-ascent/program/interface
-        "native-loader.ss"
+        "generated-resources.ss"
         (only-in :clan/poo/object .ref)
         (only-in :gerbil/runtime/gambit current-readtable
                  readtable-eval-allowed?-set readtable-sharing-allowed?-set))

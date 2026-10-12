@@ -7,7 +7,7 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+        (only-in "evaluate.ss" gerbil-ascent-make-engine)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
@@ -102,11 +102,13 @@
                                             (lambda ()
                                               (with-catch (lambda (failure) (vector #f failure))
                                                (lambda ()
-                                                 (vector #t (gerbil-ascent-evaluate-program cut workers: workers
-                                                            canceled?: (lambda ()
+                                                 ;; Source cuts retain the admitted declarations; only
+                                                 ;; their immutable schema and rule plan are shared.
+                                                 (vector #t ((gerbil-ascent-make-engine cut #f analysis schema #f #f #f workers
+                                                               (lambda ()
                                                                          (mutex-lock! (vector-ref token 0))
                                                                          (let (canceled (vector-ref token 1))
-                                                                           (mutex-unlock! (vector-ref token 0)) canceled)))))))))
+                                                                           (mutex-unlock! (vector-ref token 0)) canceled))))))))))
                                    (monitor (spawn/name 'ascent-session-monitor
                                              (lambda ()
                                                (let (outcome (with-catch (lambda (failure) (vector #f failure))

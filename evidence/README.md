@@ -19,20 +19,22 @@ from ascent_engine import Engine
 
 dsl = """
 (define-evidence (make-scene rows)
-  (gerbil-ascent-program
-    (list (gerbil-ascent-relation 'facts 1 rows))
-    [] 32 64 96 '(facts)))
+  (sources facts)
+  (outputs answers)
+  (relation facts (value) rows)
+  (relation answers (value))
+  ((answers value) <-- (facts value)))
 """
 with Engine() as engine:
     with engine.evidence(dsl, 'make-scene', [[1], [2]], trusted=True) as session:
         receipt = session.run()
         with session.result(receipt) as result:
-            graph = result.rows('facts')
+            graph = result.rows('answers')
 ```
 
 `Engine.dsl(source, trusted=True)` supports arbitrary user constructors,
 hygienic macros, closures and reusable inference components through native
-calls. `Engine.evidence` is the Program/session convenience entry. Fragment
+calls. `Engine.evidence` opens the declared Evidence session. Fragment
 remains available for composition, not the sole entry. Native handles, including
 gensyms, retain their identity; Python does not reconstruct printed names.
 
@@ -43,17 +45,57 @@ identities. Library maintenance builds remain owned by `build.ss`,
 `defbuild-script` and upstream `std/make`; runtime DSL expansion does not invoke
 a downstream compiler.
 
-Source is bounded to 262144 UTF-8 bytes and 256 top-level definitions. The native
-runtime admits at most 64 source scopes over its lifetime, including failed
-expansions after reader admission. Closing a scope releases ABI-owned values;
-it does not unload expander contexts or reset this bound. Retain and reuse a
-scope, and explicitly manage any user-defined external resource protocol.
+Source is bounded to 262144 UTF-8 bytes and 256 top-level definitions. Source
+scope admission defaults to unlimited; `Engine(max_source_scopes=N)` supplies
+an optional process-lifetime ceiling, including failed expansions after reader
+admission. Closing a scope releases ABI-owned values; it does not unload
+expander contexts or reset the admission count. Retain and reuse a scope, and
+explicitly manage any user-defined external resource protocol.
+
+## Declarative Evidence
+
+`define-evidence` accepts upstream relation declarations and rules directly.
+`sources` names the relations that the caller may replace; `outputs` declares
+public result bindings. Both are explicit, even for a source-free program.
+The Library's hygienic macro lowers this declaration through upstream `ascent`;
+Python neither parses these clauses nor evaluates rules.
+
+```scheme
+(define-evidence (make-review)
+  (sources claim dependency)
+  (outputs (requirements reachable) missing)
+  (relation claim (subject))
+  (relation dependency (subject premise))
+  (relation reachable (subject premise))
+  (relation missing (subject premise))
+  ((reachable subject premise) <-- (dependency subject premise))
+  ((reachable subject premise) <--
+    (dependency subject intermediate) (reachable intermediate premise))
+  ((missing subject premise) <--
+    (claim subject) (reachable subject premise) (not (claim premise))))
+```
+
+The result alias `requirements` binds the declared relation `reachable`.
+An identifier binding names a relation, not a Scheme variable; an operator's
+computed handle can instead use `(public-name (relational-export op 'name))`.
+Constructors may take parameters, and reusable hygienic macros can emit rules.
+Aggregators, lattices, negation, operators and explicit upstream `bounds`
+retain their upstream contracts. Fragment is useful for reusable rule groups,
+not required around every relation declaration or single-use rule.
+
+An optional `(explain callback)` follows the binding clauses. The default
+records native rule dependencies and current source rows, with an explicit
+per-row-proof gap. Source and output bindings are validated against the native
+Program; a result alias cannot authorize source replacement. Public bindings
+do not filter the Program's execution or make unprojectable values disappear.
+The older Program-returning `define-evidence` form remains available for
+constructors that need general Scheme composition, not as the primary example.
 
 ## General Native Module Calls
 
 `Engine.module` also exposes Library-bundled modules. It does not require a Program
-return value or an inert Fragment document. `NativeModule.call` invokes an
-actual exported Scheme procedure; `NativeValue.reference` transports its
+return value or an inert Fragment document. `Module.call` invokes an
+actual exported Scheme procedure; `Value.reference` transports its
 owned native object to subsequent calls. An optional `module=` selects another
 compiled module in the same ownership scope. Ordinary Scheme modules own
 constructors, hygienic macros, builders and contracts; Python neither expands
@@ -77,7 +119,7 @@ with engine.module(':gerbil-ascent/program/interface') as module:
                                 graph = rows.graph
 ```
 
-Upstream prepared queries return actual native procedures; `NativeValue.apply`
+Upstream prepared queries return actual native procedures; `Value.apply`
 calls those procedures in Scheme. Prepared change plans and retained operator
 sessions remain upstream objects too. Multiple Scheme return values retain
 their order in a native vector, with explicit `valueCount` metadata. A single
@@ -139,9 +181,9 @@ A completed, source-matched build, fresh-process loading, actual upstream
 queries, updates, negative controls and teardown are separate checks. Timeout
 protection and historical binaries are not evidence that loading was repaired.
 The current native module regression controls are in
-`python/engine_tests/test_native_modules.py`; run them against the newly built
+`python/engine_tests/test_modules.py`; run them against the newly built
 artifact, not a previous receipt.
-`python/engine_tests/test_native_module_calls.py` additionally exercises general
+`python/engine_tests/test_module_calls.py` additionally exercises general
 calls, cross-module lattice objects, checked-session rejection, native POO
 readers, retained updates/withdrawal, prepared changes, closures, multiple
 values, ownership bounds and repeated explanation cleanup.

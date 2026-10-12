@@ -111,7 +111,7 @@ def same_check(a, b):
         if a.get(key) != b.get(key): raise ValueError('independent judge disagreement: '+key)
 
 def binding():
-    paths = [ROOT/'tools/research/evidence-interaction.py', ROOT/'tools/research/evidence-search.ss',
+    paths = [ROOT/'t/research/evidence-interaction.py', ROOT/'t/research/evidence-search.ss',
         ROOT/'python/src/ascent_test_support/model_study.py', ROOT/'python/src/ascent_test_support/movie_study.py',
         ROOT/'candidate/evidence-store.ss', KERNEL/'.gerbil/bin/crosspath-search', RUNTIME/'bin/evidence-search']
     for folder in [RUNTIME/'lib', ROOT/'.cache/ascent/evidence-store/lib', KERNEL/'.gerbil/lib']:
@@ -206,7 +206,7 @@ def freeze(run):
     # Exact executable study sources are artifacts, not copied active modules.
     producers=run/'producers'; producers.mkdir()
     for name in plan['binding']:
-        if name.endswith('.py') or name in ('tools/research/evidence-search.ss','candidate/evidence-store.ss'):
+        if name.endswith('.py') or name in ('t/research/evidence-search.ss','candidate/evidence-store.ss'):
             dest=producers/name; dest.parent.mkdir(parents=True,exist_ok=True); dest.write_bytes((ROOT/name).read_bytes())
         elif name.startswith('/'):
             dest=producers/'poo-flow'/Path(name).relative_to('/Users/guangtao/ghq/github.com/tao3k/poo-flow');dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(Path(name).read_bytes())

@@ -115,11 +115,14 @@ class Engine:
     Close sessions individually; shutdown is explicit and terminal for the
     entire loaded runtime. Never dlclose a live Gambit runtime.
     """
-    def __init__(self, library=None, *, max_request_bytes=None):
+    def __init__(self, library=None, *, max_request_bytes=None, max_source_scopes=None):
         global _loaded, _runtime_pid
         if max_request_bytes is not None and (type(max_request_bytes) is not int or max_request_bytes <= 0):
             raise ValueError('max_request_bytes must be a positive integer or None')
         self.max_request_bytes = max_request_bytes
+        if max_source_scopes is not None and (type(max_source_scopes) is not int or max_source_scopes <= 0):
+            raise ValueError('max_source_scopes must be a positive integer or None')
+        self.max_source_scopes = max_source_scopes
         if _runtime_pid is not None and os.getpid() != _runtime_pid:
             raise EngineError(-2, 'inherited runtime after fork; start a fresh process')
         if threading.get_ident() != threading.main_thread().ident:
@@ -182,6 +185,13 @@ class Engine:
             raise EngineError(-2, 'inherited runtime after fork')
         if self.closed: raise EngineError(-2, 'runtime shut down')
         if threading.get_ident() != self.owner: raise EngineError(-3, 'wrong OS thread')
+        if self.max_source_scopes is not None and request.get('operation') in (
+                'dsl-open', 'open-evidence', 'components-open', 'open-components'):
+            request = dict(request)
+            ceiling = request.get('maxSourceScopes', self.max_source_scopes)
+            if type(ceiling) is not int or ceiling <= 0:
+                raise ValueError('maxSourceScopes must be a positive integer')
+            request['maxSourceScopes'] = min(ceiling, self.max_source_scopes)
         data = json.dumps(request, ensure_ascii=False, allow_nan=False).encode()
         if not data or (self.max_request_bytes is not None and len(data) > self.max_request_bytes):
             raise EngineError(-4, 'caller input byte bound')
@@ -213,7 +223,7 @@ class Engine:
 
     def module(self, module):
         """Own arbitrary values from trusted, compiled native module exports."""
-        return NativeModule(self, self.request({'operation': 'module-open', 'module': module})['owner'])
+        return Module(self, self.request({'operation': 'module-open', 'module': module})['owner'])
 
     def dsl(self, source, *, trusted=False):
         """Own values from scenario DSL definitions in the native Library.
@@ -223,7 +233,7 @@ class Engine:
         """
         if trusted is not True:
             raise ValueError('trusted host Scheme execution must be explicitly authorized')
-        return NativeModule(self, self.request({'operation': 'dsl-open',
+        return Module(self, self.request({'operation': 'dsl-open',
                             'source': source, 'trusted': True})['owner'])
 
     def evidence(self, source, constructor, *arguments, trusted=False, limits=None):
@@ -233,6 +243,30 @@ class Engine:
         return SourceSession(self, self.request(_with_limits({'operation': 'open-evidence',
                             'source': source, 'trusted': True,
                             'constructor': constructor, 'arguments': list(arguments)}, limits)))
+
+    def components(self, manifest, sources, entry, *, trusted=False):
+        """Load a native dependency closure of independently scoped definitions.
+
+        Sources map manifest paths to exact text. Scheme owns validation,
+        dependency selection and linking; this method only transports them.
+        """
+        if trusted is not True:
+            raise ValueError('trusted host Scheme execution must be explicitly authorized')
+        receipt = self.request({'operation': 'components-open', 'components': manifest,
+                                'sources': sources, 'entry': entry, 'trusted': True})
+        owner = Module(self, receipt['owner'])
+        owner.components = tuple(receipt['components'])
+        return owner
+
+    def evidence_components(self, manifest, sources, entry, constructor, *arguments,
+                            trusted=False, limits=None):
+        """Open an upstream session from a native component constructor."""
+        if trusted is not True:
+            raise ValueError('trusted host Scheme execution must be explicitly authorized')
+        return SourceSession(self, self.request(_with_limits({
+            'operation': 'open-components', 'components': manifest, 'sources': sources,
+            'entry': entry, 'constructor': constructor, 'arguments': list(arguments),
+            'trusted': True}, limits)))
 
     def shutdown(self):
         if os.getpid() != _runtime_pid:
@@ -284,7 +318,7 @@ class SourceSession(Session):
 
     def result(self, receipt):
         self._check()
-        return NativeResult(self, receipt['resultHandle'])
+        return Result(self, receipt['resultHandle'])
 
     def close(self):
         if self.handle is not None:
@@ -292,7 +326,7 @@ class SourceSession(Session):
             self.handle = None
 
 
-class NativeResult:
+class Result:
     """Owned native value; encoding and explanation do not rerun inference."""
     def __init__(self, session, handle):
         self.session, self.handle = session, handle
@@ -313,7 +347,7 @@ class NativeResult:
 
     def explanation(self, relation):
         """Own an explanation separately from the result that produced it."""
-        return NativeExplanation(self.session, self.explain(relation))
+        return Explanation(self.session, self.explain(relation))
 
     def close(self):
         if self.handle is not None:
@@ -325,7 +359,7 @@ class NativeResult:
     def __exit__(self, *exc): self.close()
 
 
-class NativeExplanation:
+class Explanation:
     def __init__(self, session, receipt):
         self.session, self.receipt = session, receipt
         self.handle = receipt['explanationHandle']
@@ -354,7 +388,7 @@ class NativeExplanation:
     def __exit__(self, *exc): self.close()
 
 
-class NativeModule:
+class Module:
     """ABI ownership only; exported Scheme procedures own all semantics."""
     def __init__(self, engine, handle):
         self.engine, self.handle = engine, handle
@@ -364,9 +398,23 @@ class NativeModule:
             raise ValueError('native module owner closed')
         return self.engine.request({'operation': operation, 'owner': self.handle, **fields})
 
-    def call(self, export, *arguments, module=None):
+    def call(self, export, *arguments, module=None, component=None):
         fields = {} if module is None else {'module': module}
-        return NativeValue(self, self._request('module-call', export=export, arguments=list(arguments), **fields))
+        if component is not None:
+            fields['component'] = component
+        return Value(self, self._request('module-call', export=export, arguments=list(arguments), **fields))
+
+    def evidence(self, constructor, *arguments, component=None, limits=None):
+        """Construct an independent session from already loaded definitions.
+
+        Native Scheme owns constructor execution and policy validation. The
+        session retains its Program and explanation independently of this owner.
+        """
+        fields = {} if component is None else {'component': component}
+        if limits is not None:
+            fields['factLimits'] = limits.wire()
+        return SourceSession(self.engine, self._request('owner-evidence',
+                              constructor=constructor, arguments=list(arguments), **fields))
 
     def close(self):
         if self.handle is not None:
@@ -378,7 +426,7 @@ class NativeModule:
     def __exit__(self, *exc): self.close()
 
 
-class NativeValue:
+class Value:
     """Actual native return value, independently of graph projection."""
     def __init__(self, module, receipt):
         self.module, self.receipt = module, receipt
@@ -402,7 +450,7 @@ class NativeValue:
     def apply(self, *arguments):
         if self.handle is None:
             raise ValueError('native value released')
-        return NativeValue(self.module, self.module._request('module-apply', value=self.handle,
+        return Value(self.module, self.module._request('module-apply', value=self.handle,
                                                             arguments=list(arguments)))
 
     def close(self):

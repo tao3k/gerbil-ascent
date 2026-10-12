@@ -8,7 +8,7 @@ from ascent_engine import Engine, EngineError
 MODULE = ':gerbil-ascent/t/qualification/evidence-api-module'
 
 
-class NativeModuleTests(unittest.TestCase):
+class ModuleTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.engine = Engine(os.environ.get('ASCENT_NATIVE_LIBRARY'))

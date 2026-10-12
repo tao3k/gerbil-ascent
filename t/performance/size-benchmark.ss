@@ -87,16 +87,19 @@
            (error "size optimization changed recursive fixed point" width left right))))
      1 (>= width 1024))))
 
-(let (receipts (map solver '(16 256 1024)))
-  (let (path (getenv "ASCENT_SIZE_RECEIPT"))
-    (call-with-output-file path
-      (lambda (port) (write receipts port) (newline port))))
-  (for-each
-   (lambda (receipt)
-     (unless (and (<= (cdr (assq 'new-p50-ns receipt))
-                      (cdr (assq 'old-p50-ns receipt)))
-                  (or (not (cdr (assq 'require-wins? receipt)))
-                      (>= (cdr (assq 'paired-wins receipt)) 900)))
-       (error "size optimization failed matched admission" (car receipt))))
-   receipts)
-  (displayln "OK"))
+(export main)
+(def (main receipt-path)
+  (let (receipts (map solver '(16 256 1024)))
+    (let (path receipt-path)
+      (call-with-output-file path
+        (lambda (port) (write receipts port) (newline port))))
+    (for-each
+     (lambda (receipt)
+       (unless (and (<= (cdr (assq 'new-p50-ns receipt))
+                        (cdr (assq 'old-p50-ns receipt)))
+                    (or (not (cdr (assq 'require-wins? receipt)))
+                        (>= (cdr (assq 'paired-wins receipt)) 900)))
+         (error "size optimization failed matched admission" (car receipt))))
+     receipts)
+    (displayln "OK"))
+)

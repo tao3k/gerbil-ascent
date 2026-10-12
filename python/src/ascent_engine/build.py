@@ -26,10 +26,10 @@ def verify_inputs(root, receipt):
             raise ValueError("native build source identity changed: " + relative)
 
 
-def build(root, output, native_dir=None):
+def build(root, output, build_dir=None):
     root, output = root.resolve(), output.resolve()
-    native_dir = Path(native_dir or os.environ.get("GERBIL_PATH", root / ".gerbil")).resolve()
-    library = native_dir / "bin/libascent"
+    build_dir = Path(build_dir or os.environ.get("GERBIL_PATH", root / ".gerbil")).resolve()
+    library = build_dir / "bin/libascent"
     sidecar = library.with_name(library.name + ".json")
     if not library.is_file() or not sidecar.is_file():
         raise ValueError("run gxi build.ss first; a successful native build receipt is required")
@@ -70,10 +70,10 @@ def build(root, output, native_dir=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--native-dir", type=Path)
+    parser.add_argument("--build-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    build(args.root, args.output, args.native_dir)
+    build(args.root, args.output, args.build_dir)
 
 
 if __name__ == "__main__":

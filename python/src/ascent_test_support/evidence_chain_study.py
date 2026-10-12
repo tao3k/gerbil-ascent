@@ -344,7 +344,7 @@ def shared_freeze(library, directory, *, search_tasks=None):
     names += ['python/engine_tests/test_computational_evidence.py','python/tests/test_shared_premise.py',
               'python/RESEARCH.md','python/uv.lock','packages/proofs/quint/package.json','packages/proofs/quint/package-lock.json',
               'packages/proofs/lean/lean-toolchain']
-    if search_tasks is not None:names += ['tools/research/reproduce-clean.sh','tools/research/output-check-fixture.json']
+    if search_tasks is not None:names += ['t/research/reproduce-clean.sh','t/research/output-check-fixture.json']
     for name in names: binding[name]=hashlib.sha256((root/name).read_bytes()).hexdigest()
     assert native_receipt['runtimeSourceSha256']==binding['bindings/c/runtime.c']
     assert native_receipt['headerSha256']==binding['bindings/c/ascent.h']
@@ -1092,14 +1092,14 @@ def branch_qualification_request(plan, fixture):
 
 def branch_import_output_qualification(directory, output):
     """Reuse actual transport receipts only for byte-identical qualification requests."""
-    plan=shared_check(directory);fixture=json.loads((directory/'inputs/tools/research/output-check-fixture.json').read_text())
+    plan=shared_check(directory);fixture=json.loads((directory/'inputs/t/research/output-check-fixture.json').read_text())
     expected=branch_qualification_request(plan,fixture)
     record=json.loads((output/'receipt.json').read_text());actual=json.loads((output/'request.json').read_text())
     terminal=json.loads((output/'response.json').read_text())['terminal']
     assert record['passed'] and expected==actual and record['usage']==terminal['usage']
     assert terminal['status']=='completed' and branch_payload(terminal)==record['selected']
     assert terminal['usage']['input_tokens']>=fixture['terminal']['usage']['input_tokens']+1024
-    assert record['fixtureSha256']==plan['inputs']['tools/research/output-check-fixture.json']
+    assert record['fixtureSha256']==plan['inputs']['t/research/output-check-fixture.json']
     linked={**record,'acceptedForPlanSha256':hashlib.sha256((directory/'plan.json').read_bytes()).hexdigest(),
             'qualificationRequestSha256':hashlib.sha256((output/'request.json').read_bytes()).hexdigest(),
             'reuseScope':'Byte-identical nonthinking transport request only; does not qualify thinking tool choice or native semantics'}
@@ -1110,12 +1110,12 @@ def branch_import_output_qualification(directory, output):
 def branch_output_qualify(directory, output):
     """Explicit paid transport gate; clean-rebuild never calls this function."""
     plan=shared_check(directory);output.mkdir(parents=True,exist_ok=False)
-    fixture=json.loads((directory/'inputs/tools/research/output-check-fixture.json').read_text())
+    fixture=json.loads((directory/'inputs/t/research/output-check-fixture.json').read_text())
     request=branch_qualification_request(plan,fixture)
     bound=branch_input_reservation(request,None,[],plan['inputPadding'])
     (output/'request.json').write_text(json.dumps(request,indent=2)+'\n')
     record={'passed':False,'planSha256':hashlib.sha256((directory/'plan.json').read_bytes()).hexdigest(),
-            'fixtureSha256':plan['inputs']['tools/research/output-check-fixture.json'],
+            'fixtureSha256':plan['inputs']['t/research/output-check-fixture.json'],
             'costBoundary':'Transport qualification separately charged, not a solver trajectory','inputReservation':bound,'usage':None,'failure':None}
     try:
         _,meta=provider(request,provider_key(),output/'response.json');terminal=meta.get('terminal') or {}

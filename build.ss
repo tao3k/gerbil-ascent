@@ -5,8 +5,8 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :std/source this-source-file)
         (only-in :gerbil/runtime/loader add-load-path!)
-        (only-in "bindings/native-artifact.ss"
-                 native-source-snapshot native-artifact-receipt!)
+        (only-in "bindings/artifact.ss"
+                 source-snapshot artifact-receipt! artifact-source-current?)
         (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype))
@@ -127,10 +127,10 @@
     "temporal/lens"
     "interface/request"
     "interface/rule-source"
-    "interface/native-loader"
+    "interface/generated-resources"
     "interface/dsl-source"
     "interface/evidence-module"
-    "interface/native-value"
+    "interface/value-graph"
     "evidence/interface"
     "evidence/execution"
     "evidence/module"
@@ -166,11 +166,11 @@
              (else "-shared"))
            " " (getenv "LDFLAGS" ""))))
     `((gxc: "interface/c-api" "-ld-options" ,module-link-options)
-      (gxc: "interface/native-runtime"
+      (gxc: "interface/runtime"
             (extra-inputs: (,(path-expand "runtime.c" c-dir)
                             ,(path-expand "ascent.h" c-dir)))
             "-cc-options" ,c-options "-ld-options" ,module-link-options)
-      (exe: "interface/native-entry" bin: "libascent"
+      (exe: "interface/entry" bin: "libascent"
             "-cc-options" ,c-options "-ld-options" ,library-link-options)))))
 (export gerbil-ascent-library-modules main)
 (def build-library
@@ -183,8 +183,10 @@
   (let* ((build? (or (null? args) (equal? (car args) "compile")))
          (root (path-directory (this-source-file)))
          (modules (append gerbil-ascent-library-modules
-                          '("interface/c-api" "interface/native-runtime" "interface/native-entry")))
-         (before (and build? (native-source-snapshot root modules))))
+                          '("interface/c-api" "interface/runtime" "interface/entry")))
+         (before (and build? (source-snapshot root modules))))
     (add-load-path! (path-expand "lib" (gerbil-path)))
+    (when (and build? (not (artifact-source-current? root modules)))
+      (build-library "clean"))
     (apply build-library args)
-    (when build? (native-artifact-receipt! root modules before))))
+    (when build? (artifact-receipt! root modules before))))

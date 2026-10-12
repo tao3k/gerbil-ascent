@@ -29,7 +29,7 @@ def decode(graph):
     return item(graph['root'])
 
 
-class NativeModuleCallTests(unittest.TestCase):
+class ModuleCallTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls): cls.engine = Engine()
 
@@ -88,7 +88,7 @@ class NativeModuleCallTests(unittest.TestCase):
             self.assertEqual(decode(rows.graph), [[1]])
             with query.apply(solution.reference()) as invoked:
                 self.assertEqual(decode(invoked.graph), [[1]])
-            with module.call('native-values', 3, 5, module=QUALIFICATION) as multiple:
+            with module.call('return-values', 3, 5, module=QUALIFICATION) as multiple:
                 self.assertEqual(multiple.receipt['valueCount'], 2)
                 self.assertEqual(decode(multiple.graph), [3, 5])
 

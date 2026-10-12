@@ -6,9 +6,9 @@ and incremental decisions. Its native entry links the C ABI shared library;
 there is no Python Scheme compiler or parallel phase build graph.
 
 ```sh
-GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" GERBIL_PATH="$PWD/.gerbil" gxi bindings/native-build-entry.ss
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" GERBIL_PATH="$PWD/.gerbil" gxi bindings/build-entry.ss
 PYTHONPATH="$PWD/python/src" python -m ascent_engine.build \
-  --native-dir "$PWD/.gerbil" --output "$PWD/.gerbil/lib/libascent.so"
+  --build-dir "$PWD/.gerbil" --output "$PWD/.gerbil/lib/libascent.so"
 PYTHONPATH="$PWD/python/src" python -m ascent_engine.api_build \
   --library "$PWD/.gerbil/lib/libascent.so" --header bindings/c/ascent.h \
   --out "$PWD/.cache/ascent/cffi-api" --cc gcc
@@ -17,7 +17,7 @@ PYTHONPATH="$PWD/python/src" python -m ascent_engine.api_build \
 On Darwin, use `libascent.dylib` for the packaged filename and an explicit GNU
 GCC executable for `--cc`. Normal native linker settings, including `LDFLAGS`,
 belong to the `gxi build.ss` invocation, not the packager.
-`bindings/native-build-entry.ss` is a Scheme loading boundary for generated
+`bindings/build-entry.ss` is a Scheme loading boundary for generated
 resources; it invokes the exported `build.ss` entry and declares no compilation
 tasks of its own. The source inventory binds both files. It replaces temporary
 diagnostic launchers, not Gerbil's compiler or build graph.

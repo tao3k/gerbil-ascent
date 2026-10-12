@@ -5,7 +5,7 @@
         (only-in :gerbil-ascent/core/relation-view
                  gerbil-ascent-view-with-export gerbil-ascent-explicit-view))
 (export make-values make-lattice make-operator make-aggregate make-graph-values
-        make-projection-transformer native-values make-export-view)
+        make-projection-transformer return-values make-export-view)
 
 (def (make-export-view rows exported)
   (gerbil-ascent-view-with-export
@@ -14,7 +14,7 @@
 
 (def (make-projection-transformer)
   (relational-op-function 2 (lambda (input) (relational-op-project input '(1)))))
-(def (native-values . items) (apply values items))
+(def (return-values . items) (apply values items))
 
 (defrules copy-rule ()
   ((_ from to)

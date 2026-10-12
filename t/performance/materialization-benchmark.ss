@@ -100,28 +100,31 @@
 (def small-cycle (source 16 2))
 (def sparse (.call UIntTrieSet .<-list '(515 1029)))
 (def left (.call UIntTrieSet .<-list '(1 258 515 772)))
-(let (receipts
-      (list
-       (probe 'cold-projection-256 dense 256 (lambda (e) (.ref e 'at-most-two-hop-pairs)) #t)
-       (probe 'complete-snapshot-16 small-cycle 16 slots #t)
-       (probe 'complete-fanout-32 (source 32 31) 32 slots #t)
-       (probe 'closure-chain-32 small-chain 32 (lambda (e) (.ref e 'closure-pairs)) #t)
-       (probe 'distance-chain-32 small-chain 32
-              (lambda (e)
-                (let* ((pairs (.ref e 'shortest-distance-pairs))
-                       (distance (.ref e 'shortest-distance-of)))
-                  (list pairs (map distance pairs)))) #t)
-       (probe 'sparse-projection-513 sparse 513 (lambda (e) (.ref e 'at-most-two-hop-pairs)) #f)
-       (probe 'external-compose-256 dense 256
-              (lambda (e) ((.ref e 'compose-left) left)) #f)
-       (probe 'cold-index-256 dense 256
-              (lambda (e) (procedure? (.ref e 'right-index))) #f)))
-  (call-with-output-file (getenv "ASCENT_MATERIALIZATION_RECEIPT")
-    (lambda (port) (write receipts port) (newline port)))
-  (for-each
-   (lambda (receipt)
-     (when (cdr (assq 'primary? receipt))
-       (unless (and (<= (cdr (assq 'new-p50-bytes receipt)) (cdr (assq 'old-p50-bytes receipt)))
-                    (>= (cdr (assq 'paired-wins receipt)) 900))
-         (error "materialization failed matched allocation gate" (car receipt))))) receipts)
-  (displayln "OK"))
+(export main)
+(def (main receipt-path)
+  (let (receipts
+        (list
+         (probe 'cold-projection-256 dense 256 (lambda (e) (.ref e 'at-most-two-hop-pairs)) #t)
+         (probe 'complete-snapshot-16 small-cycle 16 slots #t)
+         (probe 'complete-fanout-32 (source 32 31) 32 slots #t)
+         (probe 'closure-chain-32 small-chain 32 (lambda (e) (.ref e 'closure-pairs)) #t)
+         (probe 'distance-chain-32 small-chain 32
+                (lambda (e)
+                  (let* ((pairs (.ref e 'shortest-distance-pairs))
+                         (distance (.ref e 'shortest-distance-of)))
+                    (list pairs (map distance pairs)))) #t)
+         (probe 'sparse-projection-513 sparse 513 (lambda (e) (.ref e 'at-most-two-hop-pairs)) #f)
+         (probe 'external-compose-256 dense 256
+                (lambda (e) ((.ref e 'compose-left) left)) #f)
+         (probe 'cold-index-256 dense 256
+                (lambda (e) (procedure? (.ref e 'right-index))) #f)))
+    (call-with-output-file receipt-path
+      (lambda (port) (write receipts port) (newline port)))
+    (for-each
+     (lambda (receipt)
+       (when (cdr (assq 'primary? receipt))
+         (unless (and (<= (cdr (assq 'new-p50-bytes receipt)) (cdr (assq 'old-p50-bytes receipt)))
+                      (>= (cdr (assq 'paired-wins receipt)) 900))
+           (error "materialization failed matched allocation gate" (car receipt))))) receipts)
+    (displayln "OK"))
+)

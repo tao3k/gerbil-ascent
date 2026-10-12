@@ -352,8 +352,37 @@
 ;;       ```
 ;;     %
 (defsyntax (ascent-collect stx)
+  (def (ordinary clause)
+    (syntax-case clause (relation lattice fact facts <--)
+      ((relation name (column ...) option ...)
+       (cons 'declaration (syntax (list (ascent-relation (name (column ...) option ...))))))
+      ((lattice name (column ...) option ...)
+       (cons 'declaration (syntax (list (ascent-lattice (name (column ...) option ...))))))
+      ((head <-- body ...)
+       (cons 'rule (syntax (ascent-rule-family head () (body ...)))))
+      ((fact (name term ...))
+       (cons 'rule (syntax (list (ascent-rule ((name term ...)))))))
+      ((facts (name term ...) ...)
+       (cons 'rule (syntax (list (gerbil-ascent-rule (list (ascent-atom (name term ...)) ...) [])))))
+      (_ #f)))
   (syntax-case stx (program fragment relation lattice index storage
                             macro fact facts include bounds <--)
+    ((_ mode (declared ...) (lowered ...) first clause ...)
+     (ordinary (syntax first))
+     ;; Keep syntax objects intact and visit an ordinary prefix once. Macro
+     ;; and include boundaries still use the original scoped continuation.
+     (let loop ((remaining (syntax->list (syntax (first clause ...))))
+                (declarations (reverse (syntax->list (syntax (declared ...)))))
+                (rules (reverse (syntax->list (syntax (lowered ...))))))
+       (let (item (and (pair? remaining) (ordinary (car remaining))))
+         (if item
+           (if (eq? (car item) 'declaration)
+             (loop (cdr remaining) (cons (cdr item) declarations) rules)
+             (loop (cdr remaining) declarations (cons (cdr item) rules)))
+           (with-syntax (((declared ...) (reverse declarations))
+                         ((lowered ...) (reverse rules))
+                         ((clause ...) remaining))
+             (syntax (ascent-collect mode (declared ...) (lowered ...) clause ...)))))))
     ((_ mode (declared ...) (lowered ...)
         (macro name ((parameter kind) ...) template ...) clause ...)
      (syntax (begin
@@ -375,21 +404,6 @@
                (ascent-collect mode (declared ...) (lowered ...)
                                clause ...))))
     ((_ mode (declared ...) (lowered ...)
-        (lattice name (column ...) option ...) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-lattice
-                               (name (column ...) option ...))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (relation name (column ...) option ...) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-relation (name (column ...) option ...))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
         (include imported-fragment) clause ...)
      (syntax (let (fragment-value
                    (validate GerbilAscentFragmentContract
@@ -399,29 +413,6 @@
                 (declared ... (.ref fragment-value 'relations))
                 (lowered ... (.ref fragment-value 'rules))
                 clause ...))))
-    ((_ mode (declared ...) (lowered ...)
-        (head <-- body ...) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...)
-              (lowered ... (ascent-rule-family head () (body ...)))
-              clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (fact (name term ...)) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...)
-              (lowered ... (list (ascent-rule ((name term ...)))))
-              clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (facts (name term ...) ...) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...)
-              (lowered ...
-                       (list (gerbil-ascent-rule
-                              (list (ascent-atom (name term ...)) ...) [])))
-              clause ...)))
     ((_ mode (declared ...) (lowered ...)
         (name argument ...) clause ...)
      (and (identifier? (syntax name))
@@ -457,65 +448,25 @@
 ;;       ```
 ;;     %
 (defsyntax (ascent-with-default-storage stx)
-  (syntax-case stx (relation index storage macro)
-    ((_ mode provider (collected ...)
-        (macro name ((parameter kind) ...) template ...) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (macro name ((parameter kind) ...)
-                           (default-storage provider) template ...))
-              clause ...)))
-    ((_ mode provider (collected ...)
-        (macro name (parameter ...) template ...) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (macro name (parameter ...)
-                           (default-storage provider) template ...))
-              clause ...)))
-    ((_ mode provider (collected ...)
-        (relation name (column ...) source (index index-provider)
-                  (storage storage-provider)) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (relation name (column ...) source
-                                   (index index-provider)
-                                   (storage storage-provider)))
-              clause ...)))
-    ((_ mode provider (collected ...)
-        (relation name (column ...) source (index index-provider)) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (relation name (column ...) source
-                                   (index index-provider)
-                                   (storage provider)))
-              clause ...)))
-    ((_ mode provider (collected ...)
-        (relation name (column ...) source) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (relation name (column ...) source
-                                   (index gerbil-ascent-hash-index-provider)
-                                   (storage provider)))
-              clause ...)))
-    ((_ mode provider (collected ...)
-        (relation name (column ...)) clause ...)
-     (syntax (ascent-with-default-storage
-              mode provider
-              (collected ...
-                         (relation name (column ...) []
-                                   (index gerbil-ascent-hash-index-provider)
-                                   (storage provider)))
-              clause ...)))
-    ((_ mode provider (collected ...) clause rest ...)
-     (syntax (ascent-with-default-storage
-              mode provider (collected ... clause) rest ...)))
-    ((_ mode provider (collected ...))
-     (syntax (ascent-collect mode () () collected ...)))))
+  (syntax-case stx ()
+    ((_ mode provider (collected ...) clause ...)
+     (let (rewrite
+           (lambda (clause)
+             (syntax-case clause (relation index storage macro)
+               ((macro name ((parameter kind) ...) template ...)
+                (syntax (macro name ((parameter kind) ...) (default-storage provider) template ...)))
+               ((macro name (parameter ...) template ...)
+                (syntax (macro name (parameter ...) (default-storage provider) template ...)))
+               ((relation name (column ...) source (index index-provider) (storage storage-provider)) clause)
+               ((relation name (column ...) source (index index-provider))
+                (syntax (relation name (column ...) source (index index-provider) (storage provider))))
+               ((relation name (column ...) source)
+                (syntax (relation name (column ...) source (index gerbil-ascent-hash-index-provider) (storage provider))))
+               ((relation name (column ...))
+                (syntax (relation name (column ...) [] (index gerbil-ascent-hash-index-provider) (storage provider))))
+               (_ clause))))
+       (with-syntax (((rewritten ...) (map rewrite (syntax->list (syntax (clause ...))))))
+         (syntax (ascent-collect mode () () collected ... rewritten ...)))))))
 
 ;;; The public program form chooses a storage default and delegates all DSL
 ;;; normalization to the shared fragment-aware collector.

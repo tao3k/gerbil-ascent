@@ -44,7 +44,7 @@ class Consumer:
         run.mkdir(parents=True, exist_ok=True)
         self.err = (run/'native-stderr.log').open('a')
         command = (['/opt/homebrew/bin/gxi', '-e',
-                    '(import :gerbil-ascent/tools/research/candidate-interaction)', '-e', '(main)']
+                    '(import :gerbil-ascent/t/research/candidate-interaction)', '-e', '(main)']
                    if dynamic else [str(RUNTIME/'bin/candidate-interaction'),'-:max-heap=1G,debug=q'])
         if dynamic == 'module':
             command = [str(RUNTIME/'bin/candidate-interaction'),'-:max-heap=1G,debug=q','--dynamic-evidence']
@@ -202,9 +202,9 @@ def freeze(run):
         tasks=[task(i,native.call(op='feedback',case=i,rules=[])) for i in range(3)]
     finally: native.close()
     save(run/'qualification.json',qualification)
-    paths=[ROOT/'tools/research/candidate-model.py',ROOT/'tools/research/candidate-interaction.ss',
+    paths=[ROOT/'t/research/candidate-model.py',ROOT/'t/research/candidate-interaction.ss',
            ROOT/'python/src/ascent_test_support/model_study.py',ROOT/'python/src/ascent_test_support/movie_study.py',
-           ROOT/'tools/model-source-closure.ss']
+           ROOT/'t/model/source-closure.ss']
     modules=json.loads((RUNTIME/'closure.json').read_text())['modules']
     if any('poo-flow' in m for m in modules): raise ValueError('workflow dependency in Library fixture')
     # Resolve only the compiler-reported runtime closure, not unrelated prepared modules.
@@ -219,12 +219,12 @@ def freeze(run):
         if not found: raise ValueError('unbound runtime module '+module)
         src=ROOT/(rel.removeprefix('gerbil-ascent/')+'.ss')
         captured=RUNTIME/'current-source'/src.relative_to(ROOT)
-        if 'tools/research/' not in str(src) and captured.exists(): src=captured
+        if 't/research/' not in str(src) and captured.exists(): src=captured
         if src.exists():
             paths.append(src)
             relative=src.relative_to(RUNTIME/'current-source') if src.is_relative_to(RUNTIME/'current-source') else src.relative_to(ROOT)
             old=ROOT/'.cache/ascent/crosspath-search/snapshot'/relative
-            if 'tools/research/' not in str(src) and old.exists() and src.read_bytes()!=old.read_bytes():
+            if 't/research/' not in str(src) and old.exists() and src.read_bytes()!=old.read_bytes():
                 receipt_path=RUNTIME/'current-source-build.json'
                 receipts=json.loads(receipt_path.read_text()) if receipt_path.exists() else {}
                 rebuilt=receipts.get(str(relative),{})
@@ -262,7 +262,7 @@ def freeze(run):
         'limits':'Finite three-node synthesis/feedback integration gate, not corpus reproduction or proof of reduced thinking. If every development proposal passes, assistance comparison is unexercised. No new formal proof or current-head remote CI claim.'}
     save(run/'plan.json',plan);(run/'plan.sha256').write_text(digest(run/'plan.json')+'\n')
     for path in paths:
-        if path.suffix=='.py' or path==ROOT/'tools/research/candidate-interaction.ss':
+        if path.suffix=='.py' or path==ROOT/'t/research/candidate-interaction.ss':
             dest=run/'producers'/path.relative_to(ROOT);dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(path.read_bytes())
     save(run/'payload-review.json',{'destination':'https://api.deepseek.com/responses','payload':'Synthetic Datalog specifications, four visible graphs and candidate rules. No source files, private records or credentials.', 'requests':[request(t) for t in tasks]})
     print('FROZEN' if qualified else 'FROZEN_NOT_ADMITTED',qualification,digest(run/'plan.json'),flush=True)
@@ -331,7 +331,7 @@ def solve(run):
 # this host fixture owns the search objective and the independent judge.
 def study_annotations():
     import importlib.util
-    spec=importlib.util.spec_from_file_location('existing_annotation_io',ROOT/'tools/research/evidence-interaction.py')
+    spec=importlib.util.spec_from_file_location('existing_annotation_io',ROOT/'t/research/evidence-interaction.py')
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
 
 def reachable(edges,a,b):
@@ -426,9 +426,9 @@ def reuse_freeze(run):
     startup=json.loads((shutdown_dir/'receipt.json').read_text())
     assert len(startup)==9 and all(x['passed'] and x['shutdown']['clean'] for x in startup)
     clean={'allClean':True,'checks':startup,'scope':'Native, dynamic evidence module and full gxi, three starts each; current captured proof-frame.'}
-    sources=[ROOT/'tools/research/candidate-model.py',ROOT/'tools/research/candidate-interaction.ss',ROOT/'tools/research/evidence-interaction.py',ROOT/'python/src/ascent_test_support/model_study.py',ROOT/'python/src/ascent_test_support/movie_study.py']
+    sources=[ROOT/'t/research/candidate-model.py',ROOT/'t/research/candidate-interaction.ss',ROOT/'t/research/evidence-interaction.py',ROOT/'python/src/ascent_test_support/model_study.py',ROOT/'python/src/ascent_test_support/movie_study.py']
     sources += [store_test,ROOT/'candidate/evidence-store.ss',ROOT/'t/qualification/ascent-evidence-store-test.ss',shutdown_dir/'receipt.json']
-    sources += [ROOT/'tools/research/test_candidate_transport.py',shutdown_dir/'rules/receipt.json',shutdown_dir/'test-receipt.json']
+    sources += [ROOT/'t/research/test_candidate_transport.py',shutdown_dir/'rules/receipt.json',shutdown_dir/'test-receipt.json']
     dialogue=ROOT/'.cache/ascent/candidate-interaction/dialogue-qualification'
     dialogue_receipts=json.loads((dialogue/'receipt.json').read_text())
     assert len(dialogue_receipts)==2 and all(x['status']=='completed' and not x['failure'] for x in dialogue_receipts)

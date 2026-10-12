@@ -128,30 +128,33 @@
                  (string->symbol (string-append "solve-project-" (number->string width)))
                  'output expected 1 #f)))
 
-(let (receipts
-      (list (binding-case 2) (binding-case 16) (binding-case 32)
-            (solver-case (ascent-index-fixture-program)
-                         'solve-two-hop 'two-hop
-                         (map (lambda (node) (list node (+ node 2))) (iota 49)) 1 #f)
-            ;; Full evaluations are median nonregression controls, without
-            ;; a qualified solver speedup or tail-latency claim.
-            (projection-case 16) (projection-case 32)))
-  (call-with-output-file (getenv "ASCENT_BINDING_RECEIPT")
-    (lambda (port)
-      (write (list (cons 'baseline-commit '74f0046)
-                   (cons 'sample-count 1000)
-                   (cons 'measurement 'binding-and-warm-declaration-solve)
-                   (cons 'cases receipts)) port)
-      (newline port)))
-  (for-each
-   (lambda (receipt)
-     (unless (and (<= (cdr (assq 'new-p50-ns receipt))
-                     (cdr (assq 'old-p50-ns receipt)))
-                  (or (not (cdr (assq 'require-wins? receipt)))
-                      (>= (cdr (assq 'paired-wins receipt)) 900)))
-       (error "binding benchmark failed the matched nonregression gate"
-              (cdr (assq 'name receipt)))))
-   receipts))
-(displayln "OK")
-(force-output)
-(exit 0)
+(export main)
+(def (main receipt-path)
+  (let (receipts
+        (list (binding-case 2) (binding-case 16) (binding-case 32)
+              (solver-case (ascent-index-fixture-program)
+                           'solve-two-hop 'two-hop
+                           (map (lambda (node) (list node (+ node 2))) (iota 49)) 1 #f)
+              ;; Full evaluations are median nonregression controls, without
+              ;; a qualified solver speedup or tail-latency claim.
+              (projection-case 16) (projection-case 32)))
+    (call-with-output-file receipt-path
+      (lambda (port)
+        (write (list (cons 'baseline-commit '74f0046)
+                     (cons 'sample-count 1000)
+                     (cons 'measurement 'binding-and-warm-declaration-solve)
+                     (cons 'cases receipts)) port)
+        (newline port)))
+    (for-each
+     (lambda (receipt)
+       (unless (and (<= (cdr (assq 'new-p50-ns receipt))
+                       (cdr (assq 'old-p50-ns receipt)))
+                    (or (not (cdr (assq 'require-wins? receipt)))
+                        (>= (cdr (assq 'paired-wins receipt)) 900)))
+         (error "binding benchmark failed the matched nonregression gate"
+                (cdr (assq 'name receipt)))))
+     receipts))
+  (displayln "OK")
+  (force-output)
+  (exit 0)
+)

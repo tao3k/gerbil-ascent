@@ -5,7 +5,7 @@ import os
 import unittest
 
 from ascent_engine import Engine, EngineError, FactLimits
-from test_native_module_calls import decode
+from test_module_calls import decode
 
 FIXTURE = Path(__file__).resolve().parents[2] / 't/qualification/fixtures/native-evidence/conformance.json'
 SOURCE = '''
@@ -36,7 +36,7 @@ def mask_of(actual):
     return sum(1 << row[0] for row in actual)
 
 
-class NativeEvidenceConformance(unittest.TestCase):
+class EvidenceConformance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         library = os.environ.get('ASCENT_ENGINE_LIBRARY') if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else None
@@ -50,14 +50,22 @@ class NativeEvidenceConformance(unittest.TestCase):
         cases = json.loads(FIXTURE.read_text())
         self.assertEqual(len(cases), 50)
         self.assertEqual({case[0][0] for case in cases}, {0, 1})
-        for case in cases:
-            (limit, before, after), events, *expected = case
-            with self.subTest(limit=limit, before=before, after=after, events=events):
-                self.replay(limit, before, after, events, expected)
+        # Independent sessions share definitions, not mutable inference state.
+        # The one-shot route remains available for matched timing controls.
+        with self.engine.dsl(SOURCE, trusted=True) as definitions:
+            for case in cases:
+                (limit, before, after), events, *expected = case
+                with self.subTest(limit=limit, before=before, after=after, events=events):
+                    self.replay(limit, before, after, events, expected, definitions)
 
-    def replay(self, limit, before, after, events, expected):
-        session = self.engine.evidence(SOURCE, 'make-evidence', [r[0] for r in rows(before)],
-                                      trusted=True, limits=FactLimits(input=limit or None))
+    def replay(self, limit, before, after, events, expected, definitions):
+        arguments = [r[0] for r in rows(before)]
+        if os.environ.get('ASCENT_CONFORMANCE_ONE_SHOT') == '1':
+            session = self.engine.evidence(SOURCE, 'make-evidence', arguments,
+                                          trusted=True, limits=FactLimits(input=limit or None))
+        else:
+            session = definitions.evidence('make-evidence', arguments,
+                                           limits=FactLimits(input=limit or None))
         self.assertEqual(session.fact_limits['input'], limit or 'unlimited')
         result, proof = None, None
         generation, observed_source, proof_generation, proof_rows = 0, before, -1, 0
@@ -142,6 +150,32 @@ class NativeEvidenceConformance(unittest.TestCase):
             if result is not None: result.close()
             if proof is not None: proof.close()
             session.close()
+
+    def test_definition_reuse_keeps_sessions_and_limits_independent(self):
+        with self.engine.dsl(SOURCE, trusted=True) as definitions:
+            scope_count = self.engine.request({'operation': 'describe'})['sourceScopes']
+            a = definitions.evidence('make-evidence', [0], limits=FactLimits(input=1))
+            b = definitions.evidence('make-evidence', [1])
+            with self.assertRaises(EngineError):
+                definitions.evidence('make-evidence', [0, 1], limits=FactLimits(input=1))
+            self.assertEqual(scope_count, self.engine.request({'operation': 'describe'})['sourceScopes'])
+            with a.result(a.run(queries=['output'])) as result:
+                self.assertEqual(decode(result.rows('output')['value']), [[0]])
+            a.replace({'input': []})
+            with b.result(b.run(queries=['output'])) as result:
+                self.assertEqual(decode(result.rows('output')['value']), [[1]])
+            with self.assertRaises(EngineError):
+                definitions.evidence('make-evidence', [], component='foreign')
+        # A session owns its Program/explanation even after the factory closes.
+        try:
+            with a.result(a.run(queries=['output'])) as result:
+                with result.explanation('output') as proof:
+                    self.assertEqual(proof.receipt['sourceGeneration'], 1)
+            with self.assertRaises(ValueError):
+                definitions.evidence('make-evidence', [])
+        finally:
+            a.close()
+            b.close()
 
     def test_scope_isolation_foreign_reference_and_failed_load(self):
         with self.assertRaises(EngineError): self.engine.dsl('(unknown-dsl-form)', trusted=True)

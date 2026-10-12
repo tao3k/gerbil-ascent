@@ -2,7 +2,7 @@
 import unittest
 
 from ascent_engine import Engine, EngineError
-from test_native_module_calls import decode
+from test_module_calls import decode
 
 
 SOURCE = '''
@@ -12,7 +12,7 @@ SOURCE = '''
        (list (gerbil-ascent-atom to (list (gerbil-ascent-variable 'value))))
        (list (gerbil-ascent-atom from (list (gerbil-ascent-variable 'value)))))))
   (def (make-closure n) (lambda (x) (+ n x)))
-  (def (native-values . items) (apply values items))
+  (def (return-values . items) (apply values items))
   (def (make-cycle) (let (v (make-vector 1)) (vector-set! v 0 v) v))
   (define-evidence (make-evidence values)
     (gerbil-ascent-program
@@ -25,7 +25,7 @@ SOURCE = '''
 '''
 
 
-class NativeModuleSourceTests(unittest.TestCase):
+class ModuleSourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls): cls.engine = Engine()
 
@@ -86,7 +86,7 @@ class NativeModuleSourceTests(unittest.TestCase):
         for token in ['(import', '(module', '(export', 'gxc', 'gerbil.pkg']:
             self.assertNotIn(token, SOURCE)
         with self.engine.dsl(SOURCE, trusted=True) as owner:
-            with owner.call('native-values', 3, 5) as value:
+            with owner.call('return-values', 3, 5) as value:
                 self.assertEqual(value.receipt['valueCount'], 2)
                 self.assertEqual(decode(value.graph), [3, 5])
 

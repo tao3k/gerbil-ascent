@@ -78,7 +78,9 @@
                                           gerbil-ascent-trrel-uf-observation) raw)))))
     ((eq? scenario 'dense-cut)
       (let (view ((if old? old-uf-gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-freeze) (vector-ref state 0) #f))
-        (list (relation-view-count view) (relation-view-units view))))
+        ;; Physical units depend on representation; logical count is the
+        ;; semantic answer compared across old/new frozen layouts.
+        (list (relation-view-count view))))
     ((eq? scenario 'capture)
     (let (freeze (if old? (lambda (raw) (gerbil-ascent-trrel-uf-freeze raw #f))
                            (lambda (raw) (gerbil-ascent-trrel-uf-freeze raw #f))))
@@ -100,7 +102,7 @@
         ((eq? scenario 'dense) '(131841 (513 513 131328)))
         ((eq? scenario 'chain) '(33153 (257 257 32896)))
         ((eq? scenario 'cycle) '(16641 (129 1 0)))
-        ((eq? scenario 'dense-cut) '(33153 33410))
+        ((eq? scenario 'dense-cut) '(33153))
         ((eq? scenario 'capture) (make-list 64 '(1050625 1026)))
         (else
     (let (result (ui-consume state scenario #t))

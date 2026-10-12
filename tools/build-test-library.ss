@@ -73,6 +73,10 @@
                             '("t/performance/nonmembership-index/reference" "t/performance/nonmembership-index/input") [])
                           (if (member "t/qualification/ascent-temporal-projection-test.ss" tests)
                             '("t/performance/temporal-projection/reference") [])
+                          (if (member "t/qualification/ascent-uf-weighted-test.ss" tests)
+                            '("t/performance/uf-weighted/reference-relation-view"
+                              "t/performance/uf-weighted/reference-trrel-uf"
+                              "t/performance/uf-weighted/fixture") [])
                           (if (member "t/qualification/ascent-uf-capture-test.ss" tests)
                             '("t/performance/uf-capture/reference-relation-view"
                               "t/performance/uf-capture/reference-trrel-uf"

@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Frozen row representations. Consumers own invocation-local traversal;
 ;;; views retain no cursor or mutable storage owner. Nested fields stay stable.
+(import (only-in :std/list/list-builder with-list-builder))
 (export relation-view? make-relation-view relation-view-count relation-view-units
         relation-view-identity relation-view-generation relation-view-revision relation-view-lane
         gerbil-ascent-view-with-export gerbil-ascent-view-bind gerbil-ascent-view-select gerbil-ascent-view-rows
@@ -216,6 +217,32 @@
     (visit-right-members prefix (car lefts) rights consume)
     (visit-left-members prefix (cdr lefts) rights consume)))
 
+;; Expand directly into the invocation-owned native list builder. Tuple
+;; syntax and the builder macro are bound once; no callback runs per row.
+(defrule (collect-rectangle-product left right lefts rights emit tuple)
+  (let collect-left ((pending lefts))
+    (if (null? pending) (void)
+      (let ((left (car pending)))
+        (let collect-right ((remaining rights))
+          (if (null? remaining) (collect-left (cdr pending))
+            (let ((right (car remaining)))
+              (emit tuple)
+              (collect-right (cdr remaining)))))))))
+(def (materialize-rectangles blocks)
+  (with-list-builder (collect!)
+    (for-each (lambda (block)
+      (with (((rectangle prefix lefts rights) block))
+        (match prefix
+          ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
+          ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
+          (else (collect-rectangle-product left right lefts rights collect! (append prefix (list left right)))))))
+      blocks)))
+ ;; An admitted uniform width chooses the public tuple constructor once.
+(def (rectangle-row-writer width consume)
+  (case width
+    ((2) (lambda (_prefix left right) (consume (list left right))))
+    ((3) (lambda (prefix left right) (consume (list (car prefix) left right))))
+    (else (lambda (prefix left right) (consume (append prefix (list left right)))))))
 ;; gerbil-ascent-write-rectangles!
 ;; : (forall (r) (-> [(Rectangle r)] (-> [r] Void) Void))
 ;; : (-> [Rectangle] RowWriter Void)
@@ -368,9 +395,27 @@
     (for-each (lambda (hit)
       (using (hit :- rectangle-selection)
         (visit-left-members (rectangle-prefix hit.block) (rectangle-left hit.block) hit.members consume))) hits))
+  (def (visit-indexed-axis columns key consume)
+    (and routes uniform? (pair? columns) (null? (cdr columns))
+         (let* ((column (car columns)) (left-column (- (vector-length routes) 2)))
+           (and (or (= column left-column) (= column (+ left-column 1)))
+             (let (hits (or (hash-get (vector-ref routes column) (car key)) []))
+               (cond
+                 ((null? hits) #t)
+                 ((null? (cdr hits))
+                  (let ((members (caar hits)) (bucket (cdar hits)))
+                    (for-each (lambda (block)
+                      (visit-left-members (rectangle-prefix block)
+                        (if (= column left-column) members (rectangle-left block))
+                        (if (= column left-column) (rectangle-right block) members) consume))
+                      (rectangle-bucket-plain bucket)))
+                  #t)
+                 ((planned-right columns key) =>
+                  (lambda (plans) (visit-right-plan plans consume) #t))
+                 (else #f)))))))
   (def (visit-admitted columns key consume)
     (cond
-      ((planned-right columns key) => (lambda (hits) (visit-right-plan hits consume)))
+      ((visit-indexed-axis columns key consume) (void))
       (else
        (let (query (selection-for columns))
          ;; A sole group descriptor admits the leading group constraint.
@@ -389,14 +434,11 @@
       (validate-key! columns key)
       (if (null? columns)
         (gerbil-ascent-write-rectangles! blocks consume)
-        (if (planned-right columns key)
-          (visit-right-plan (planned-right columns key)
-            (lambda (prefix left right) (consume (append prefix (list left right)))))
-          (let (query (selection-for columns))
-            (for-each (lambda (block)
-              (visit-rectangle-parts block columns key
-                (lambda (prefix left right) (consume (append prefix (list left right)))) query))
-              (selected columns key))))))
+        (let (write (rectangle-row-writer (and routes uniform? (vector-length routes)) consume))
+          (unless (visit-indexed-axis columns key write)
+            (let (query (selection-for columns))
+              (for-each (lambda (block) (visit-rectangle-parts block columns key write query))
+                (selected columns key)))))))
     (lambda (row)
       (let (width (length row))
         (and (>= width 2)
@@ -409,12 +451,12 @@
     (lambda ()
       ;; Only this invocation owns the collector spine. Rectangles and member
       ;; lists stay borrowed; each writer emits a fresh detached tuple.
-      (materialize-rows (cut gerbil-ascent-write-rectangles! blocks <>)))
+      (materialize-rectangles blocks))
     (make-part-visitors
       (lambda (columns key consume)
         (validate-key! columns key)
-        (if (planned-right columns key)
-          (visit-right-plan (planned-right columns key) consume)
+        (if (visit-indexed-axis columns key consume)
+          (void)
           (let (query (selection-for columns))
             (for-each (lambda (block) (visit-rectangle-parts block columns key consume query))
                       (selected columns key)))))

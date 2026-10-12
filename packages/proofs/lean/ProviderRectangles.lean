@@ -594,3 +594,65 @@ theorem conservative_selection (xs : List α) (candidate accept : α → Bool)
     cases hp : accept x <;> cases hc : candidate x <;> simp [hp, hc, ih]
     exact Bool.noConfusion ((complete x hp).symm.trans hc)
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+-- Refinement of the two tail-recursive loops: fold rights into the owned
+-- builder, then advance the left axis without a callback per row.
+def collectRight (x : α) (ys : List α) (acc : List (α × α)) :=
+  ys.foldl (fun rows y => rows ++ [(x, y)]) acc
+
+def collectProduct (xs ys : List α) (acc : List (α × α)) :=
+  xs.foldl (fun rows x => collectRight x ys rows) acc
+
+theorem collect_right_order (x : α) (ys : List α) (acc : List (α × α)) :
+    collectRight x ys acc = acc ++ ys.map (fun y => (x, y)) := by
+  induction ys generalizing acc with
+  | nil => simp [collectRight]
+  | cons y ys ih =>
+    change collectRight x ys (acc ++ [(x, y)]) = acc ++ List.map (fun y => (x, y)) (y :: ys)
+    rw [ih]
+    simp [List.append_assoc]
+
+theorem collect_product_order (xs ys : List α) (acc : List (α × α)) :
+    collectProduct xs ys acc = acc ++ rows ⟨xs, ys⟩ := by
+  induction xs generalizing acc with
+  | nil => simp [collectProduct, rows]
+  | cons x xs ih =>
+    simp only [collectProduct, List.foldl_cons] at *
+    rw [ih, collect_right_order]
+    simp [rows, List.reverse_append, List.append_assoc]
+
+theorem direct_product_export (xs ys : List α) :
+    collectProduct xs ys [] = rows ⟨xs, ys⟩ := by
+  simp [collect_product_order]
+
+theorem collect_blocks_order (rs : List (Rectangle α)) (acc : List (α × α)) :
+    rs.foldl (fun result r => collectProduct r.left r.right result) acc = acc ++ expand rs := by
+  induction rs generalizing acc with
+  | nil => simp [expand]
+  | cons r rs ih =>
+    simp only [List.foldl_cons]
+    rw [ih, collect_product_order]
+    simp [expand, List.append_assoc]
+
+theorem direct_export_count (rs : List (Rectangle α)) :
+    (rs.foldl (fun result r => collectProduct r.left r.right result) []).length = count rs := by
+  rw [collect_blocks_order]
+  simpa using count_exact rs
+
+-- Once the index owner establishes the selected axis, binding it once has
+-- exactly the same ordered Cartesian output as binding it per descriptor.
+def bindLeft (rs : List (Rectangle α)) (members : List α) :=
+  rs.map fun r => Rectangle.mk members r.right
+
+def bindRight (rs : List (Rectangle α)) (members : List α) :=
+  rs.map fun r => Rectangle.mk r.left members
+
+theorem bind_left_order (rs : List (Rectangle α)) (members : List α) :
+    expand (bindLeft rs members) = rs.flatMap (fun r => rows ⟨members, r.right⟩) := by
+  simp [expand, bindLeft, List.flatMap_map]
+
+theorem bind_right_order (rs : List (Rectangle α)) (members : List α) :
+    expand (bindRight rs members) = rs.flatMap (fun r => rows ⟨r.left, members⟩) := by
+  simp [expand, bindRight, List.flatMap_map]
+end Ascent.ProviderRectangles

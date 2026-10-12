@@ -1641,3 +1641,39 @@ the checkout. This does not qualify concurrent Evidence interface changes or
 the current complete consumer graph. Intermediate query regressions, the
 indexed sorted-plan 15/20 miss and the interrupted incomplete-overlay build
 remain failures; no threshold was widened. Remote CI remains a separate gate.
+
+* Weighted UF complete export and single-axis query flow
+One invocation-owned materializer and one shared indexed-axis visitor now
+cover the weighted export/query flow in =core/relation-view.ss=. Gerbil's native
+=with-list-builder= and scoped =defrule= bind tuple syntax once and construct
+fresh public spines in forward descriptor order. Uniform-schema queries bind
+one stored axis owner once; checked, admitted and row protocols share the
+visitor. Multiple right owners retain the previous frozen plan; arbitrary
+prefixes, repeated constraints and mixed schemas retain checked fallback.
+
+Lean proves forward folds, complete descriptor order/count and axis binding;
+158 jobs pass. =WeightedExport.qnt= constructs weighted axes, frozen cuts,
+export, retirement, public mutation and independent readers: 478 generated /
+217 distinct states pass and five named mutants fail. Five native Suites /
+34 Cases and three actual API/ABI Cases per backend pass.
+
+Fixed seven-scenario A/B against =bdae4a2= passes in 24.91/90 seconds.
+Weighted/grouped complete export CPU decreases 18.2%/13.4%, left/right query
+CPU decreases 32.4%/33.8%. Export allocation is neutral; query allocation
+decreases 0.54%. Controls pass unchanged tolerances. Collector win misses and
+an intermediate generic query regression remain recorded. Both arms use the
+same fixed 32-operation sample; no admission threshold was widened.
+
+Actual =059-current-001= Library freezes =057-current-001= other interfaces
+plus the final view source. Build/package/API exit zero in 101.94/120,
+0.73/15 and 1.35/45 seconds. API/ABI independent tests pass in 6.043/15 and
+6.527/15 seconds. Receipt: 132 inputs, 127 linked sources, 1264 resources.
+Concurrent Evidence interfaces are outside this qualification.
+
+The old dense-cut oracle now compares semantic rows rather than heterogeneous
+layout units; the new exact unit contract is separately checked. Prior source
+CI POO run/run-timeout failures remain unresolved. Expanded local dense tests
+exposed mixed constructor entries, reproduced with the baseline; after closing
+the helper graph, the final attempt stopped at a gxtest =fixnum? value: #f=
+entry contract. No broader-suite PASS or full current graph is claimed.
+See [[file:../../t/performance/uf-weighted/README.org][weighted export/query qualification]] for measurements and limits.

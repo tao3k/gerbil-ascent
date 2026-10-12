@@ -101,7 +101,7 @@ test-performance-contracts: prepare-test-library
     trap 'rm -f "$output"' EXIT
     library="{{ package_library }}/gerbil-ascent/t/performance"
     modules=()
-    for name in ascent-withdrawal-support-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
+    for name in ascent-withdrawal-support-performance ascent-uf-plan-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
         modules+=("$library/$name-test.ssi")
     done
     {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q t/native/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
@@ -120,6 +120,9 @@ performance-uf-membership: prepare-test-library
 
 performance-uf-query: prepare-test-library
     {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-query "{{ package_library }}"
+
+performance-uf-plan: prepare-test-library
+    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-plan "{{ package_library }}"
 
 # Paired actor source transactions; evaluator work is outside this interval.
 performance-source-cut: prepare-test-library

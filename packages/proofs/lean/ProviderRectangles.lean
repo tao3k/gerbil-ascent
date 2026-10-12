@@ -785,3 +785,128 @@ theorem compiled_query_order (input : List β) (baseline compiled : β → Bool)
   funext row
   exact exact row
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Merge frozen descriptor ordinals. Construction supplies strict ascending
+    order and one entry per descriptor; traversal owns only the two cursors. -/
+def mergeOrdinals : List Nat → List Nat → List Nat
+  | [], _ => []
+  | _, [] => []
+  | a :: as, b :: bs =>
+      if a < b then mergeOrdinals as (b :: bs)
+      else if b < a then mergeOrdinals (a :: as) bs
+      else a :: mergeOrdinals as bs
+termination_by xs ys => xs.length + ys.length
+
+/-- Every emitted ordinal belongs to both captured endpoint plans, excluding
+    cross-owner admission without assuming globally unique endpoint values. -/
+theorem merge_ordinals_sound (xs ys : List Nat) (n : Nat)
+    (member : n ∈ mergeOrdinals xs ys) : n ∈ xs ∧ n ∈ ys := by
+  match xs, ys with
+  | [], _ => simp [mergeOrdinals] at member
+  | _ :: _, [] => simp [mergeOrdinals] at member
+  | a :: as, b :: bs =>
+    by_cases ab : a < b
+    · simp only [mergeOrdinals, ite_eq_left ab] at member
+      obtain ⟨left, right⟩ := merge_ordinals_sound as (b :: bs) n member
+      exact ⟨List.mem_cons_of_mem a left, right⟩
+    · by_cases ba : b < a
+      · simp only [mergeOrdinals, ite_eq_right ab, ite_eq_left ba] at member
+        obtain ⟨left, right⟩ := merge_ordinals_sound (a :: as) bs n member
+        exact ⟨left, List.mem_cons_of_mem b right⟩
+      · have same : a = b := by omega
+        simp only [mergeOrdinals, ite_eq_right ab, ite_eq_right ba, List.mem_cons] at member
+        rcases member with head | tail
+        · subst n; simp [same]
+        · obtain ⟨left, right⟩ := merge_ordinals_sound as bs n tail
+          exact ⟨List.mem_cons_of_mem a left, List.mem_cons_of_mem b right⟩
+termination_by xs.length + ys.length
+
+/-- Strictly increasing frozen plans cannot lose a common descriptor when
+    the smaller cursor advances. Admission must establish these premises. -/
+theorem merge_ordinals_complete (xs ys : List Nat)
+    (orderedX : xs.Pairwise (· < ·)) (orderedY : ys.Pairwise (· < ·))
+    (n : Nat) (left : n ∈ xs) (right : n ∈ ys) : n ∈ mergeOrdinals xs ys := by
+  match xs, ys with
+  | [], _ => simp at left
+  | _ :: _, [] => simp at right
+  | a :: as, b :: bs =>
+    have hx := List.pairwise_cons.mp orderedX
+    have hy := List.pairwise_cons.mp orderedY
+    by_cases ab : a < b
+    · have tail : n ∈ as := by
+        rcases List.mem_cons.mp left with head | tail
+        · rcases List.mem_cons.mp right with same | later
+          · omega
+          · have lower := hy.1 n later; omega
+        · exact tail
+      simp only [mergeOrdinals, ite_eq_left ab]
+      exact merge_ordinals_complete as (b :: bs) hx.2 orderedY n tail right
+    · by_cases ba : b < a
+      · have tail : n ∈ bs := by
+          rcases List.mem_cons.mp right with head | tail
+          · rcases List.mem_cons.mp left with same | later
+            · omega
+            · have lower := hx.1 n later; omega
+          · exact tail
+        simp only [mergeOrdinals, ite_eq_right ab, ite_eq_left ba]
+        exact merge_ordinals_complete (a :: as) bs orderedX hy.2 n left tail
+      · have same : a = b := by omega
+        simp only [mergeOrdinals, ite_eq_right ab, ite_eq_right ba, List.mem_cons]
+        by_cases head : n = a
+        · exact Or.inl head
+        · have lx : n ∈ as := (List.mem_cons.mp left).resolve_left head
+          have ly : n ∈ bs := (List.mem_cons.mp right).resolve_left (by simpa [same] using head)
+          exact Or.inr (merge_ordinals_complete as bs hx.2 hy.2 n lx ly)
+termination_by xs.length + ys.length
+
+/-- Each emitted plan remains strictly ordered and has no repeated ordinal. -/
+theorem merge_ordinals_ordered (xs ys : List Nat)
+    (orderedX : xs.Pairwise (· < ·)) (orderedY : ys.Pairwise (· < ·)) :
+    (mergeOrdinals xs ys).Pairwise (· < ·) := by
+  match xs, ys with
+  | [], _ => simp [mergeOrdinals]
+  | _ :: _, [] => simp [mergeOrdinals]
+  | a :: as, b :: bs =>
+    have hx := List.pairwise_cons.mp orderedX
+    have hy := List.pairwise_cons.mp orderedY
+    by_cases ab : a < b
+    · simp only [mergeOrdinals, ite_eq_left ab]
+      exact merge_ordinals_ordered as (b :: bs) hx.2 orderedY
+    · by_cases ba : b < a
+      · simp only [mergeOrdinals, ite_eq_right ab, ite_eq_left ba]
+        exact merge_ordinals_ordered (a :: as) bs orderedX hy.2
+      · simp only [mergeOrdinals, ite_eq_right ab, ite_eq_right ba, List.pairwise_cons]
+        exact ⟨fun n member => hx.1 n (merge_ordinals_sound as bs n member).1,
+          merge_ordinals_ordered as bs hx.2 hy.2⟩
+termination_by xs.length + ys.length
+
+/-- A merge iteration advances at least one cursor. This bounds traversal
+    work independently of endpoint cardinality or the number of key repeats. -/
+def mergeSteps : List Nat → List Nat → Nat
+  | [], _ => 0
+  | _, [] => 0
+  | a :: as, b :: bs =>
+      1 + if a < b then mergeSteps as (b :: bs)
+          else if b < a then mergeSteps (a :: as) bs else mergeSteps as bs
+termination_by xs ys => xs.length + ys.length
+
+theorem merge_steps_linear (xs ys : List Nat) :
+    mergeSteps xs ys ≤ xs.length + ys.length := by
+  match xs, ys with
+  | [], _ => simp [mergeSteps]
+  | _ :: _, [] => simp [mergeSteps]
+  | a :: as, b :: bs =>
+    by_cases ab : a < b
+    · have bound := merge_steps_linear as (b :: bs)
+      simp only [mergeSteps, ite_eq_left ab, List.length_cons] at *
+      omega
+    · by_cases ba : b < a
+      · have bound := merge_steps_linear (a :: as) bs
+        simp only [mergeSteps, ite_eq_right ab, ite_eq_left ba, List.length_cons] at *
+        omega
+      · have bound := merge_steps_linear as bs
+        simp only [mergeSteps, ite_eq_right ab, ite_eq_right ba, List.length_cons] at *
+        omega
+termination_by xs.length + ys.length
+end Ascent.ProviderRectangles

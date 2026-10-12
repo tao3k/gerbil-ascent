@@ -17,6 +17,27 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "frozen ordinal intersection skips unrelated owners and keeps stored values"
+      (let* ((token (list 'token))
+             (view (gerbil-ascent-rectangle-view
+                    (map (lambda (group)
+                           (let (axis (case group
+                                        ((0 3 6) (list token #f 2))
+                                        ((1 4) (list token 1))
+                                        (else '(#f 2 3))))
+                             (make-rectangle (list group) axis axis))) (iota 8))
+                    62 44 #t)))
+        (for-each (lambda (columns key) (check-consumers view columns key))
+          '((1 2) (2 1 2 1) (0 1 2) (1 2 1) (1 2))
+          (list (list (list 'token) 2) (list 2 (list 'token) 2 (list 'token))
+                (list 3 (list 'token) 2) (list token 2 'missing) '(#f 2)))
+        (check-exception (gerbil-ascent-view-rows view '(1 1 3) '(0 99 1)) exception?)
+        (let (rows (gerbil-ascent-view-rows view '(1 2) (list (list 'token) 2)))
+          (check-equal? (map car rows) '(0 3 6))
+          (check (eq? (cadar rows) token) => #t)
+          (gerbil-ascent-visit-view-parts! view '(1 2) (list token 2)
+            (lambda (_prefix _left _right)
+              (check-consumers view '(2 1) (list #f token)))))))
     (test-case "group scopes, condition order, repeats and false bindings share one contract"
       (for-each (lambda (indexed?)
         (let (view (gerbil-ascent-rectangle-view
@@ -33,7 +54,11 @@
                   (list (make-rectangle [] '(0 1) '(2 3))
                         (make-rectangle '(scope label) '(0 1) '(2 3))) 8 8 #t))
         (for-each (lambda (columns key) (check-consumers view columns key))
-          '((1 0 1) (0 0) ()) '((3 1 3) (missing missing) ()))))
+          '((1 0 1) (0 0) ()) '((3 1 3) (missing missing) ()))
+        ;; Mixed-width routing may select only the wider descriptors. A tiny
+        ;; scan cannot force checked admission on an unrelated shorter row.
+        (check-equal? (gerbil-ascent-view-rows view '(3) '(3))
+          '((scope label 0 3) (scope label 1 3)))))
     (test-case "range admission is not bypassed by absent or conflicting constraints"
       (let (view (gerbil-ascent-rectangle-view (list (make-rectangle '(7) '(1 2) '(3 4))) 4 4 #t))
         (for-each (lambda (columns key)

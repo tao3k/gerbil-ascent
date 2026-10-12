@@ -1808,3 +1808,34 @@ grouped allocation decreases 92.86%. Single-axis, nonindexed, small, conflict
 and capture controls pass without changing their budgets. Small setup adds
 8832 bytes for eight consumers and is qualified only under its fixed absolute
 allocation tolerance; there is no small-input allocation improvement claim.
+
+* Frozen UF plan initialization and repeated-query resource flow
+The coherent follow-up to =4fe5b12= separates captured read-only routing from
+invocation-owned query state. Uniform tiny cuts scan their bounded descriptor
+set without bucket costing, query objects or binding vectors, and borrow stored
+singleton values through a captured route carrier. Mixed-width cuts retain
+routing so a selected wider descriptor does not force admission on unrelated
+shorter rows. Wide two-endpoint queries merge existing frozen ordinal plans;
+prefix-constrained queries keep the narrow bucket path. Repeated constraints
+are bound and range-admitted once; the escape continuation is removed.
+
+Lean proves the actual ordinal merge's soundness, completeness, strict order
+and linear cursor bound. Quint checks frozen plan intersection and rejects
+13 mutants. Actual Python API/ABI and native Tests cover partial overlap,
+historical cuts after SCC retirement, stored representative identity, malformed
+selectors and independent nested queries. A shared optional allocation adapter
+retains all repeated queries in fixed 1024-query legs; each counter rejection
+still propagates. This follows Gerbil's constructor-owned metadata and scoped
+collector contracts rather than introducing a new public dispatcher or cache.
+
+The final fixed ten-scenario current-baseline study passes in 23.64 seconds.
+Wide/repeated-small CPU decreases 85.30%/24.76%, each 20/20 wins; measured
+allocation decreases 64.81%/57.28%. Small allocation falls 17152 ->7296 bytes
+with no absolute tolerance; the unchanged historical query control also passes
+8320 ->7296, removing the previous extra allocation. Large/tiny capture
+metadata grows 1024/1408 bytes per eight captures; both exposed controls pass.
+The original eight query and seven membership regression scenarios all pass.
+An unsplit negative VM counter delta and a fixed CPU gate miss remain failures;
+none of the thresholds, deadlines or query counts was weakened.
+See [[file:../../t/performance/uf-plan/README.org][full frozen-plan qualification]] for the retained iterations, model premises,
+actual producer identities, construction controls and evidence boundaries.

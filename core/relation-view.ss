@@ -22,7 +22,8 @@
 (defstruct rectangle-bucket (members blocks count plain) final: #t)
 ;; Query-local owner lookup. Each coordinate uses its first fixed constraint;
 ;; no cache or traversal state escapes into the immutable captured view.
-(defstruct rectangle-query (routes axes bindings scan?) final: #t)
+(defstruct rectangle-route (routes))
+(defstruct (rectangle-query rectangle-route) (axes bindings scan?) final: #t)
 (defstruct rectangle-selection (ordinal block members) final: #t)
 ;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
 (def (gerbil-ascent-view-bind view identity generation revision lane)
@@ -204,7 +205,10 @@
   (andmap (lambda (column selected) (or (not (= column coordinate)) (equal? value selected))) columns key))
 ;; : (-> Members Natural Columns Key Members)
 (def (captured-member query members coordinate value)
-  (using (query :- rectangle-query)
+  (if (not (rectangle-query? query))
+    (captured-owner-member
+      (or (hash-get (vector-ref (rectangle-route-routes query) coordinate) value) []) members)
+   (using (query :- rectangle-query)
     (def hits (or (hash-get (vector-ref query.routes coordinate) value) []))
     (cond
       ((null? hits) #f)
@@ -218,7 +222,7 @@
                          (for-each (lambda (hit)
                            (hash-put! table (rectangle-bucket-members (cdr hit)) (car hit))) hits)
                          (vector-set! query.axes coordinate table) table)))
-         (hash-get owners members))))))
+         (hash-get owners members)))))))
 ;; A narrow descriptor selection does not justify indexing every unrelated
 ;; owner with the same value. Borrow the stored singleton without a new table.
 (def (captured-owner-member hits members)
@@ -229,19 +233,22 @@
        (captured-owner-member rest members)))))
 ;; Bind each coordinate once. Key tails distinguish a fixed #f from an unbound
 ;; slot, retain the first requested value, and allocate no per-binding cells.
-;; Routing has already checked every coordinate, even after an absent key.
+;; Range admission checks every coordinate, even after an absent/conflicting key.
 (def (compile-rectangle-bindings width columns key)
-  (let/cc conflict
-    (let (bindings (make-vector width #f))
+  ;; Admission precedes short-circuiting: a conflict cannot hide an invalid
+  ;; later coordinate. Ordinary tail recursion needs no escape continuation.
+  (unless (andmap (lambda (column) (< column width)) columns)
+    (error "invalid ASCENT UF view column"))
+  (let (bindings (make-vector width #f))
       (let bind ((columns columns) (key key))
         (match columns
           ([] bindings)
           ([column . rest]
            (let (previous (vector-ref bindings column))
-             (if previous
-               (unless (equal? (car previous) (car key)) (conflict #f))
-               (vector-set! bindings column key))
-             (bind rest (cdr key)))))))))
+             (and (or (not previous) (equal? (car previous) (car key)))
+                  (begin
+                    (unless previous (vector-set! bindings column key))
+                    (bind rest (cdr key))))))))))
 (def (matches-bound-prefix? prefix bindings coordinate)
   (match prefix
     ([] #t)
@@ -250,7 +257,7 @@
        (and (or (not binding) (equal? value (car binding)))
             (matches-bound-prefix? rest bindings (+ coordinate 1)))))))
 (def (selected-members members coordinate columns key routes)
-  (if (and routes (rectangle-query-bindings routes))
+  (if (and (rectangle-query? routes) (rectangle-query-bindings routes))
     (let (binding (vector-ref (rectangle-query-bindings routes) coordinate))
       (if binding (or (captured-member routes members coordinate (car binding)) []) members))
     (let find ((remaining columns) (values key))
@@ -329,7 +336,7 @@
   (visit-admitted-rectangle-parts block columns key consume routes expand))
 (def (visit-admitted-rectangle-parts block columns key consume routes (expand visit-left-members))
   (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
-    (when (if (and routes (rectangle-query-bindings routes))
+    (when (if (and (rectangle-query? routes) (rectangle-query-bindings routes))
             (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
             (andmap (lambda (column value)
                       (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
@@ -373,10 +380,10 @@
     routes))
 ;; Choose the smallest descriptor bucket, then preserve captured traversal order.
 ;; Other coordinates (including repeated constraints) remain checked by visitor.
-(def (routed-rectangles routes blocks columns key (uniform? #f))
+(def (routed-rectangles routes blocks columns key (uniform? #f) (bindings #f))
   (if (null? columns) blocks
     (let ((selected #f) (cost +inf.0))
-      (for-each (lambda (column value)
+      (def (choose! column value)
         (when (>= column (vector-length routes)) (error "invalid ASCENT UF view column"))
         ;; A single descriptor is already minimal for traversal. Remaining
         ;; coordinates still receive range checks here and value checks in
@@ -384,7 +391,14 @@
         (when (> cost 1)
           (let* ((buckets (or (hash-get (vector-ref routes column) value) []))
                  (size (foldl (lambda (hit n) (+ n (rectangle-bucket-count (cdr hit)))) 0 buckets)))
-            (when (< size cost) (set! selected buckets) (set! cost size))))) columns key)
+            (when (< size cost) (set! selected buckets) (set! cost size)))))
+      (if bindings
+        (let scan ((coordinate 0))
+          (when (< coordinate (vector-length bindings))
+            (let (binding (vector-ref bindings coordinate))
+              (when binding (choose! coordinate (car binding))))
+            (scan (+ coordinate 1))))
+        (for-each choose! columns key))
       (cond ((null? selected) [])
             ((null? (cdr selected)) (rectangle-bucket-plain (cdar selected)))
             ;; Gather plus ordering costs k log k; a uniform captured scan
@@ -446,6 +460,10 @@
       plans)))
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
+         ;; The tiny read-only route carrier borrows stored singleton values.
+         ;; It has no query keys, owner index, cursor or mutable reader state.
+         (small? (or (null? blocks) (null? (cdr blocks)) (null? (cddr blocks))))
+         (scan-route (and routes small? (make-rectangle-route routes)))
          ;; One or two descriptors are cheaper to scan than route and gather.
          (membership-routes (and routes (pair? (cdr blocks)) (pair? (cddr blocks)) routes))
          (query-columns (and membership-routes (iota (vector-length membership-routes))))
@@ -459,7 +477,15 @@
                           (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)
                           right-plans)))
   (def (selected columns key)
-    (if routes (routed-rectangles routes blocks columns key uniform?) blocks))
+    (cond
+      ((and routes uniform? small?)
+       ;; A tiny cut is already a bounded ordered candidate set. Admission
+       ;; needs every range check, but no bucket costing or gather closure.
+       (unless (andmap (lambda (column) (< column (vector-length routes))) columns)
+         (error "invalid ASCENT UF view column"))
+       blocks)
+      (routes (routed-rectangles routes blocks columns key uniform?))
+      (else blocks)))
   (def (validate-key! columns key)
     (unless (and (list? columns) (list? key) (= (length columns) (length key))
                  (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
@@ -491,25 +517,61 @@
                  ((planned-axis column (car key)) =>
                   (lambda (plans) (visit-axis-plan plans consume (= column left-column) expand) #t))
                  (else #f)))))))
+  ;; Intersect immutable descriptor plans with invocation-local list cursors.
+  ;; Equal ordinals identify the same captured descriptor, not equal values
+  ;; from unrelated owners. No owner table or query record is constructed.
+  (def (visit-plan-intersection left right bindings consume expand)
+    (when (and (pair? left) (pair? right))
+      (let ((a (car left)) (b (car right)))
+       (using (a :- rectangle-selection)
+        (using (b :- rectangle-selection)
+          (cond
+            ((< a.ordinal b.ordinal)
+             (visit-plan-intersection (cdr left) right bindings consume expand))
+            ((> a.ordinal b.ordinal)
+             (visit-plan-intersection left (cdr right) bindings consume expand))
+            (else
+             (when (matches-bound-prefix? (rectangle-prefix a.block) bindings 0)
+               (expand (rectangle-prefix a.block) a.members b.members consume))
+             (visit-plan-intersection (cdr left) (cdr right) bindings consume expand))))))))
+  (def (visit-bound-plans bindings consume expand)
+    (and left-plans bindings
+      (let* ((offset (- (vector-length bindings) 2))
+             (left (vector-ref bindings offset))
+             (right (vector-ref bindings (+ offset 1))))
+        ;; A prefix constraint already narrows its descriptor bucket. Preserve
+        ;; that route instead of merging all unrelated endpoint owners.
+        (and left right
+          (let unbound ((coordinate 0))
+            (or (= coordinate offset)
+                (and (not (vector-ref bindings coordinate))
+                     (unbound (+ coordinate 1)))))
+          (let ((a (hash-get left-plans (car left)))
+                (b (hash-get right-plans (car right))))
+            (and a b
+              (begin (visit-plan-intersection a b bindings consume expand) #t)))))))
   ;; All built-in consumers share one invocation-owned selection flow. Uniform
   ;; indexed cuts admit coordinate bindings once; mixed/scan cuts retain their
-  ;; checked protocol. Only wide candidates build a temporary owner index.
+  ;; checked protocol. Frozen two-axis plans replace wide temporary owner
+  ;; indexes when available; tiny cuts need no query initialization.
   (def (visit-selected columns key consume admitted? (expand visit-left-members))
     (unless (visit-indexed-axis columns key consume expand)
-      (let* ((candidates (selected columns key))
-             (compiled? (and routes uniform? (pair? columns) (pair? (cdr columns))))
+      (let* ((compiled? (and routes uniform? (not small?) (pair? columns) (pair? (cdr columns))))
              (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
-        (when (and (pair? candidates) (or (not compiled?) bindings))
-          (let (query (and routes (pair? columns)
-                         (make-rectangle-query routes #f bindings
-                           (or (null? (cdr candidates)) (null? (cddr candidates))))))
+        (when (or (not compiled?) bindings)
+          (unless (visit-bound-plans bindings consume expand)
+            (let* ((candidates (if bindings (routed-rectangles routes blocks columns key uniform? bindings)
+                                (selected columns key)))
+                   (query (and routes (pair? columns)
+                            (or scan-route (make-rectangle-query routes #f bindings
+                              (or (null? candidates) (null? (cdr candidates)) (null? (cddr candidates))))))))
             ;; Keep the optional-argument visitor binding lexical. A dynamic
             ;; procedure alias requires generic argument packing on every block.
             (defrule (visit-blocks visit)
               (for-each (lambda (block) (visit block columns key consume query expand)) candidates))
             (if (or admitted? (and routes uniform?))
               (visit-blocks visit-admitted-rectangle-parts)
-              (visit-blocks visit-rectangle-parts)))))))
+              (visit-blocks visit-rectangle-parts))))))))
   (def (visit-admitted columns key consume)
     (visit-selected columns key consume #t))
   ;; Select member axes through the same index/checked traversal as visitors,

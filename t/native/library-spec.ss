@@ -11,6 +11,7 @@
   ;; Allocation contracts require compiled production code. Source semantic
   ;; Suites remain in t/qualification; this native-only Case retains its bound.
   '("t/performance/ascent-withdrawal-support-performance-test.ss"
+    "t/performance/ascent-uf-plan-performance-test.ss"
     "t/performance/ascent-change-plan-performance-test.ss"
     "t/performance/ascent-source-cut-allocation-test.ss"
      "t/performance/ascent-component-index-performance-test.ss"
@@ -26,6 +27,8 @@
                             "t/native/artifact-admission" "t/native/test" "t/model/response-projection"))
 (def test-library-dependencies
   '(
+    (("t/performance/ascent-uf-plan-performance-test.ss")
+      "t/performance/uf-plan/reference-relation-view" "t/performance/uf-plan/fixture")
     (("t/performance/ascent-withdrawal-support-performance-test.ss")
       "t/performance/withdrawal-support/replay-reference" "t/performance/withdrawal-support/runner")
     (("t/performance/ascent-change-plan-performance-test.ss")

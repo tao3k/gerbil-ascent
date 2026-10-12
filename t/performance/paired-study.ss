@@ -33,7 +33,7 @@
       (values (apply append (reverse results)) bytes)
       (let-values (((result allocated) (measure-allocation call)))
         (loop (- pending 1) (cons result results) (+ bytes allocated))))))
-(def (run-paired-scenario contract prepare consume expected-for scenario receipt-path)
+(def (run-paired-scenario contract prepare consume expected-for scenario receipt-path (allocate-consumer #f))
   (unless (benchmark-fixture-contract-pass? contract) (error "invalid PAIRED-STUDY execution fixture"))
   (def (get key) (benchmark-fixture-ref contract key))
   (def config (assq (string->symbol scenario) (get 'scenarios)))
@@ -49,8 +49,17 @@
       (def (check-results x y)
         (unless (and (equal? x y) (equal? y expected))
           (error "PAIRED-STUDY execution lifecycle differs" scenario)))
-      (def (allocation call)
+      (def (allocation call state old?)
         (cond
+          ((and allocate-consumer (memq input (get 'allocationAdapterScenarios)))
+           ;; An adapter may split one logical consumer into bounded legs.
+           ;; Every leg uses the same rejecting counter; only assembly lies
+           ;; outside its interval. CPU consumers and result gates are intact.
+           (let loop ((pending (get 'trajectoriesPerSample)) (results []) (bytes 0))
+             (if (zero? pending) (values (reverse results) bytes)
+               (let-values (((result allocated)
+                             (allocate-consumer state input old? measure-allocation)))
+                 (loop (- pending 1) (cons result results) (+ bytes allocated))))))
           ((assq 'allocationBatchSize contract) =>
            (lambda (batch)
              (let ((size (cdr batch)) (total (get 'trajectoriesPerSample)))
@@ -94,10 +103,10 @@
          (lambda (index)
            (let-values (((x u y p)
              (if (even? index)
-               (let-values (((x u) (allocation old-call))
-                            ((y p) (allocation new-call))) (values x u y p))
-               (let-values (((y p) (allocation new-call))
-                            ((x u) (allocation old-call))) (values x u y p)))))
+               (let-values (((x u) (allocation old-call old-state #t))
+                            ((y p) (allocation new-call new-state #f))) (values x u y p))
+               (let-values (((y p) (allocation new-call new-state #f))
+                            ((x u) (allocation old-call old-state #t))) (values x u y p)))))
              (check-results x y)
              (set! ab (cons u ab)) (set! bb (cons p bb)))
            (displayln "PAIRED-STUDY-ALLOCATION " scenario " " (+ index 1) "/"
@@ -122,12 +131,12 @@
                      " bytes " x " -> " y " wins=" wins) (force-output)
           (unless pass? (error "PAIRED-STUDY execution gate failed" scenario))))))
   (displayln "SCENARIO-OK " scenario) (force-output))
-(def (run-paired-study contract prepare consume expected-for scenario receipt-path)
+(def (run-paired-study contract prepare consume expected-for scenario receipt-path (allocate-consumer #f))
   (if (equal? scenario "all")
     (for-each (lambda (config)
       (let (name (symbol->string (car config)))
         (run-paired-scenario contract prepare consume expected-for name
-          (path-expand (string-append name "-final.ss") receipt-path))))
+          (path-expand (string-append name "-final.ss") receipt-path) allocate-consumer)))
       (benchmark-fixture-ref contract 'scenarios))
-    (run-paired-scenario contract prepare consume expected-for scenario receipt-path))
+    (run-paired-scenario contract prepare consume expected-for scenario receipt-path allocate-consumer))
   (displayln "OK") (force-output) (exit 0))

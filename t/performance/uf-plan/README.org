@@ -1,0 +1,153 @@
+#+title: Frozen UF query plan reuse and tiny selection initialization
+
+* One query execution contract
+The baseline is the exact =4fe5b12e6fc8248ebd79d18bd99611deb4cd926e=
+core; =reference-relation-view.ss= retains its bytes. Both arms compile with
+upstream Gerbil =std/make= into native executables through the existing study
+runner. There is no Python timing loop or retained mutable query cache.
+
+A composite uniform query checks all coordinate ranges before detecting a
+conflict, binds repeated coordinates once with ordinary tail recursion, and
+routes each bound coordinate once. Key-tail bindings distinguish a fixed =#f=
+from an unbound slot and retain the first equality obligation.
+
+Wide two-endpoint queries borrow the captured, strictly ordered endpoint plans.
+Two private list cursors advance by descriptor ordinal; equal ordinals admit
+one descriptor and its stored singleton values. This removes per-query owner
+hash tables. The shared left/right plan requires the existing identity check
+for self axes. Prefix-constrained queries keep the narrow bucket path; mixed
+schemas and nonindexed views retain checked selection. One or two uniform descriptors
+use a bounded ordered scan, borrowing singleton values through one captured
+read-only route carrier. No binding vector or query record is allocated per
+invocation; mixed-width cuts retain bucket routing.
+
+This follows Gerbil =1cfb032= =compiler/optimize-base.ss= constructor-owned
+analysis metadata, =std/cache.ss= private typed final carriers, and
+=std/list/list-builder.ss= scoped collectors. The useful contract is ownership
+of construction, immutable plans and invocation-local traversal. No new
+public generic dispatch or cache lifecycle is needed.
+
+* Models and implementation correspondence
+Lean =ProviderRectangles= defines the same ordinal merge and proves soundness,
+completeness under strict ordering, preserved strict ordering, and at most
+=left.length + right.length= cursor iterations. Existing first-binding and
+ordered acceptance proofs remain. These laws assume admitted frozen plans;
+they do not prove the Scheme compiler or hash-table implementation.
+
+Quint =WeightedExport= models bounded cursor merge over captured owner plans,
+checks exact ordered intersection, and adds =merge-skip= and =merge-order=
+faults to the existing conflict/owner/retirement/public-row mutants. Native
+Tests cover partial overlap, duplicate conditions, fixed =#f= values, stored
+object identity, invalid coordinates after conflicts, and nested readers.
+Actual Python API/ABI compare held cuts to an independent closure after SCC
+retirement and repeat reordered queries over nonidentical group axes.
+
+* Fixed performance contract
+Ten scenarios use 20 alternating CPU pairs and 20 ASP admissions, eight
+complete consumers per sample, and five allocation pairs. Wide selectors
+repeat both endpoint conditions eight times over 64 distinct 128-member
+owners. Tiny repeated selection executes 4096 complete queries per consumer.
+Wide and repeated-small CPU require ratio <=0.9 and at least 16/20 wins.
+Wide, small and repeated-small allocation require ratio <=0.8, with *zero*
+absolute allocation allowance. Grouped/reordered/conflict/single-axis/
+nonindexed/capture controls retain <=1.1 CPU +20us, allocation <=1.1.
+
+Every query is checked against independent ordered Cartesian rows outside
+measurement; counts are checked in every measured sample. Capture is measured
+separately to expose any construction cost. No captured index was added.
+CPU uses natural GC. Ordinary scenarios retain bounded one-consumer allocation
+intervals. The repeated-small adapter covers every one of the same 4096 keys
+in four fixed 1024-key legs, measures the same query consumer in each leg, and
+checks the aggregate result. Input-spine slicing and result assembly occur
+outside counters, equally in both arms; every raw leg is retained in the log.
+Collection occurs outside counters;
+negative deltas still reject the run. This is total measured allocation, not
+peak memory or proof that the SDK's counter is globally monotone.
+
+The parent native study retains its 90-second budget. Existing =uf-query= and
+=uf-membership= contracts remain separate, unchanged regression gates. Logs,
+raw pairs, source hashes and structured receipts belong only in ignored
+=.cache/ascent/uf-plan/=. Actual Library/package/API budgets remain 120/15/45
+seconds, using machine-native compiler concurrency and the installed SDK.
+
+* Retained iterations and fixed-gate failures
+=ab-001= passed nine scenarios before removing the final temporary singleton
+cells. =ab-002= rejected a -8812976-byte delta during the unsplit 4096-query
+allocation leg. The log remains a failure; no negative delta was clamped or
+discarded. =ab-003= used the bounded allocation adapter, but repeated-small
+CPU was 22549 ->21103 us, failing the unchanged 0.9 gate despite 18/20 wins.
+The implementation then removed tiny-cut bucket costing rather than changing
+the gate. =ab-004= passed all ten scenarios. A mixed-width native regression
+required restricting the tiny scan to uniform cuts; =ab-005= passed with that
+final core. Its recipe wall time 90.40 seconds includes a separate 67-second
+preparation; the native parent still exited zero under its original 90-second
+watchdog. =ab-006= seals the segment-admission test and completes
+the entire warm preparation/study recipe in 23.99 seconds.
+
+An initial Lean build error was fixed in the empty-right-list proof branch.
+A focused source Test loaded the preceding compiled core and reported an
+=ERROR CHECK= for the new mixed-width case, despite GxTest exit zero. That log
+is not a pass. Fresh preparation and explicit error/final-OK admission qualify
+the final core separately.
+
+* Final current-baseline paired results
+Run =c72de119-f751-4ae5-9719-c25b61d0faf3= passes all ten scenarios against
+=4fe5b12=. CPU medians and allocations are per eight complete consumers.
+
+| Scenario | Old CPU us | New CPU us | Wins | Old bytes | New bytes |
+|----------+------------+------------+------+-----------+-----------|
+| grouped | 1247 | 1165 | 18/20 | 3379072 | 1672832 |
+| reordered | 2282 | 1246 | 18/20 | 3379072 | 1672832 |
+| wide | 67508 | 9926 | 20/20 | 73763200 | 25953920 |
+| conflict | 3482 | 330 | 20/20 | 2789248 | 788096 |
+| single-axis | 9771 | 9912 | 8/20 | 50342016 | 50342016 |
+| unindexed | 873 | 871 | 9/20 | 1640064 | 1640064 |
+| small | 6 | 5 | 14/20 | 17152 | 7296 |
+| repeated-small | 22775 | 17136 | 20/20 | 54007808 | 23070720 |
+| capture | 23266 | 22992 | 12/20 | 34970240 | 34971264 |
+| tiny-capture | 41 | 40 | 12/20 | 158720 | 160128 |
+
+Wide CPU decreases 85.30%, repeated-small CPU 24.76%; both win 20/20.
+Measured allocation decreases 64.81%/57.28% for wide/repeated-small and
+57.46% for small. The repeated-small allocation claim is limited to complete
+fixed segments; it cannot be compared with the failed unsplit counter trace.
+Small CPU is below useful timing resolution, so there is no small CPU speed
+claim. Capture allocation increases 1024 bytes for eight large captures and
+1408 bytes for eight tiny captures (0.003%/0.887%); both construction controls
+pass. This extra captured route/closure metadata is exposed rather than hidden
+outside a consumer timing claim. These are frozen-view consumer costs, not
+whole-engine, insertion, transport or downstream qualification claims.
+
+* Actual producer and complete regression
+The physical current producer passes Library/package/API builds in
+75.85/120, 0.66/15 and 1.66/45 seconds using 12 upstream build cores. Its
+132 source inputs /127 linked Scheme modules /1268 syntax resources match
+current core, view-state and UF source hashes. Actual API/ABI each pass six
+independent Cases in 5.522/15 and 5.982/15 seconds. The first added Python
+oracle incorrectly sent grouped triples to the binary closure helper; that
+failure remains recorded and the corrected oracle derives each group
+independently before adding its scope.
+
+Complete native source testing passes 166 modules /1315 Cases, zero errors,
+in a 95/180-second source-test phase (126.16-second recipe including separate
+test preparation). Preparation reports production-rebuilt=0, and its fixtures
+compile with the same 12-core native owner. The source regression qualifies
+the corrected mixed-width core; the preceding focused ERROR CHECK remains
+failed. Lean passes seven jobs and Quint explores 955 generated /433 distinct
+states, rejecting all 13 faults. The actual API receipt SHA256 is
+=de915b269688bee9be02df5e9cb5683931e930a5b5f8ed418d02d449e0b18939=.
+
+This physical producer includes the consumer task's stable capacity edits in
+=candidate/program.ss= and =candidate/types.ss=. The UF commit excludes those
+files and =python/engine_tests/test_computational_evidence.py=; clean exact-head
+remote CI and combined downstream qualification therefore remain distinct.
+Consumer 043 retains its source-drift/sealed-timeout rejection. Neither local
+UF tests nor producer CI promote those older consumer results.
+
+The final registration is qualified by =ab-008= in 23.64 seconds: all ten
+scenarios pass with the same core and unchanged gates. The existing compiled
+performance entry now includes the allocation adapter's three Unit Test Cases;
+ten modules /15 Cases pass in 47.18 seconds. Clearing only the new fixtures'
+generated SSI files confirms native make builds their declared dependency
+closure, with production-rebuilt=0. No test wrapper or new scheduling system
+was added. =ab-007= and earlier successful runs remain separate receipts.

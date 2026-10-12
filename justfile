@@ -589,6 +589,12 @@ check-scoped-witness-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ScopedWitness.qnt::ScopedWitness conformance .exit > .cache/ascent/scoped-witness-conformance/quint.json
     cd packages/proofs/lean && lake build ScopedWitness && lake env lean --run ScopedWitness.lean ../../../.cache/ascent/scoped-witness-conformance/quint.json ../../../t/qualification/fixtures/scoped-witness/conformance.json
 
+# Library-maintainer gate; no Quint toolchain is required by Python consumers.
+check-native-evidence-conformance: prepare-quint
+    mkdir -p .cache/ascent/native-evidence-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/NativeEvidenceLifecycle.qnt::NativeEvidenceLifecycle conformance .exit > .cache/ascent/native-evidence-conformance/quint.json
+    cmp .cache/ascent/native-evidence-conformance/quint.json t/qualification/fixtures/native-evidence/conformance.json
+
 check-lean-proofs:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -682,7 +688,7 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery)
+    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -695,11 +701,18 @@ _check-quint group='all': prepare-quint
     export NO_PROXY="127.0.0.1,localhost${NO_PROXY:+,$NO_PROXY}"
     quint=.cache/ascent/tools/quint/node_modules/.bin/quint
     jar="$QUINT_HOME/apalache-dist-0.62.1/apalache/lib/apalache.jar"
-    temp=$(mktemp -d)
+    retain_run=0
+    if [[ -n "${ASCENT_FORMAL_RUN_DIR:-}" ]]; then
+      mkdir "$ASCENT_FORMAL_RUN_DIR"
+      temp=$(cd "$ASCENT_FORMAL_RUN_DIR" && pwd)
+      retain_run=1
+    else
+      temp=$(mktemp -d)
+    fi
     server_pid=
     cleanup() {
       if [[ -n "$server_pid" ]]; then kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; fi
-      rm -rf "$temp"
+      if [[ "$retain_run" = 0 ]]; then rm -rf "$temp"; fi
     }
     trap cleanup EXIT
     cutoff="${ASCENT_FORMAL_GENERATION_CUTOFF:-2}"
@@ -721,6 +734,9 @@ _check-quint group='all': prepare-quint
         ComponentIndex) main=ComponentIndexFixture; constants='Fault = "none"'; invariants='Consistent PrivateExtension HeldStable ViewConsistent' ;;
         LatticeProjection) constants='Mutation = "none"\nRemaining = 2'; invariants='MapExact SnapshotExact PrivateStable HeldStable KeyCoverage BudgetBound RefusalSound RefusalStable' ;;
         NativeSessionPublication) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK CommittedSnapshot CleanAligned PartialBounded'; properties=NoPrematurePublication; constraint=ExplorationBound ;;
+        NativeEvidenceLifecycle) constants="GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = \"none\""; invariants='TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners'; constraint=ExplorationBound ;;
+        NativeDslOwnership) constants='ScopeCapacity = 2\nMutation = "none"'; invariants='ChargedExpansion IsolatedDefinitions NoForeignReference LiveValues'; constraint=ExplorationBound ;;
+        EvidenceCacheAdmission) constants='Mutation = "none"'; invariants='ExactSource ExactBackend ExactPolicy FailureRevoked LiveAdmission' ;;
         PositiveNonmembershipSession) constants="GenerationCutoff = $cutoff"; invariants='TypeOK NoStalePublished NoStaleUse'; constraint=ExplorationBound ;;
         SessionTransaction) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK AtomicSnapshot'; properties='NoStaleCommit AbortPreservesSnapshot'; constraint=ExplorationBound ;;
         OracleTransport) constants='Mutation = "none"'; invariants='ReaderErrorSound CompleteReaders ReaderClean CompleteBytes ExitAndRequest' ;;
@@ -863,6 +879,9 @@ _check-quint group='all': prepare-quint
             ComponentIndex) for mutation in order early failed alias foreign reset columns rebuild-columns; do fault "$mutation" Consistent; done; fault held HeldStable; fault held-columns HeldStable; for mutation in extend-view failed-view rebuild-view; do fault "$mutation" ViewConsistent; done ;;
             LatticeProjection) for capacity in 0 1; do sed "s/Remaining = 2/Remaining = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "remaining-$capacity" "$temp/$model-capacity.cfg" 0; done; for mutation in overwrite prior false; do fault "$mutation" MapExact; done; for mutation in retain early stale; do fault "$mutation" SnapshotExact; done; fault borrow HeldStable; fault lost-key KeyCoverage; fault repeat-key KeyCoverage; fault budget-skip BudgetBound; fault budget-events RefusalSound; fault refusal-publish RefusalStable ;;
             NativeSessionPublication) for mutation in early bounded alias; do fault "$mutation" CommittedSnapshot; done ;;
+            NativeEvidenceLifecycle) sed 's/InputLimit = 0/InputLimit = 1/' "$base" > "$temp/$model-finite.cfg"; execute caller-finite "$temp/$model-finite.cfg" 0; fault stale CurrentResult; fault coupled IndependentExplanation; fault rewrite FrozenObservation; fault reject RejectionAtomic; fault close ClosedOwners ;;
+            NativeDslOwnership) fault scope IsolatedDefinitions; fault failed ChargedExpansion; fault reset ChargedExpansion; fault foreign NoForeignReference ;;
+            EvidenceCacheAdmission) fault source ExactSource; fault backend ExactBackend; fault policy ExactPolicy; fault retain FailureRevoked ;;
             SessionTransaction) fault early AtomicSnapshot; fault stale NoStaleCommit 13; fault global AtomicSnapshot; fault reuse AtomicSnapshot ;;
             ProviderFrontier) sed 's/Seeded = FALSE/Seeded = TRUE/' "$base" > "$temp/seeded.cfg"; execute seeded "$temp/seeded.cfg" 0; sed 's/Fault = "none"/Fault = "overlap"/' "$base" > "$temp/overlap.cfg"; execute overlap "$temp/overlap.cfg" 0; fault raw FrontierComplete; fault foreign FrontierComplete; fault omit DeliveredExact; for mutation in early old initial replace; do fault "$mutation" ConsumerSnapshot; done ;;
             ProviderReplay) fault scope PublishedExact; fault early JournalExact; fault drop JournalExact; fault kind OrderExact; fault cut HeldExact; fault reject RefusalAtomic ;;

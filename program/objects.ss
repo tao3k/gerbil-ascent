@@ -527,8 +527,8 @@
                                         source-handle-values))))
 
 (def (gerbil-ascent-program declared-relations declared-rules
-                                     input-fact-limit derived-fact-limit
-                                     output-fact-limit
+                                     (input-fact-limit +inf.0) (derived-fact-limit +inf.0)
+                                     (output-fact-limit +inf.0)
                                      (source-handle-values []))
   (declaration-check GerbilAscentProgramContract
             (.o (:: @ Program.)

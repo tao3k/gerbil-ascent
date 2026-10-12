@@ -4,6 +4,9 @@
 
 (import (only-in :std/build-script defbuild-script)
         (only-in :std/source this-source-file)
+        (only-in :gerbil/runtime/loader add-load-path!)
+        (only-in "bindings/native-artifact.ss"
+                 native-source-snapshot native-artifact-receipt!)
         (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype))
@@ -124,6 +127,14 @@
     "temporal/lens"
     "interface/request"
     "interface/rule-source"
+    "interface/native-loader"
+    "interface/dsl-source"
+    "interface/evidence-module"
+    "interface/native-value"
+    "evidence/interface"
+    "evidence/execution"
+    "evidence/module"
+    "t/qualification/evidence-api-module"
     "interface/engine-api"))
 
 (asp-gerbil-scheme-package-spec!
@@ -131,8 +142,49 @@
   @ asp-gerbil-scheme-library-package-prototype)
  (spec gerbil-ascent-build-spec)
  (modules gerbil-ascent-library-modules)
- (extra-spec (cond-expand
-   (darwin '((gxc: "interface/c-api" "-ld-options" "-Wl,-undefined,dynamic_lookup")))
-   (else '((gxc: "interface/c-api"))))))
-(export gerbil-ascent-library-modules)
-(defbuild-script (gerbil-ascent-build-spec))
+ (native-options-resolver
+  (lambda ()
+    (let ((compiler (getenv "CC" #f)) (flags (getenv "CFLAGS" #f)))
+      ;; This SDK strips cc/ld options from phi tasks but retains the native
+      ;; compiler command. Give that command its required shared-library mode.
+      (append (if compiler
+                ["-cc" (string-append compiler " " (or flags "")
+                  (cond-expand
+                    (darwin " -bundle -Wl,-undefined,dynamic_lookup")
+                    (else " -shared -fPIC")))]
+                [])
+              (if flags ["-cc-options" flags] [])))))
+ (extra-spec
+  (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
+         (c-options (string-append "-fPIC -I" c-dir))
+         (module-link-options (cond-expand
+           (darwin "-Wl,-undefined,dynamic_lookup")
+           (else "")))
+         (library-link-options (string-append
+           (cond-expand
+             (darwin "-dynamiclib -Wl,-install_name,@rpath/libascent.dylib -Wl,-undefined,dynamic_lookup -Wl,-no_compact_unwind")
+             (else "-shared"))
+           " " (getenv "LDFLAGS" ""))))
+    `((gxc: "interface/c-api" "-ld-options" ,module-link-options)
+      (gxc: "interface/native-runtime"
+            (extra-inputs: (,(path-expand "runtime.c" c-dir)
+                            ,(path-expand "ascent.h" c-dir)))
+            "-cc-options" ,c-options "-ld-options" ,module-link-options)
+      (exe: "interface/native-entry" bin: "libascent"
+            "-cc-options" ,c-options "-ld-options" ,library-link-options)))))
+(export gerbil-ascent-library-modules main)
+(def build-library
+  (let ()
+    (defbuild-script (gerbil-ascent-build-spec)
+      optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+    main))
+
+(def (main . args)
+  (let* ((build? (or (null? args) (equal? (car args) "compile")))
+         (root (path-directory (this-source-file)))
+         (modules (append gerbil-ascent-library-modules
+                          '("interface/c-api" "interface/native-runtime" "interface/native-entry")))
+         (before (and build? (native-source-snapshot root modules))))
+    (add-load-path! (path-expand "lib" (gerbil-path)))
+    (apply build-library args)
+    (when build? (native-artifact-receipt! root modules before))))

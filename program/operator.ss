@@ -10,6 +10,7 @@
         (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
         "operator-descriptor.ss" "operator-measurement.ss" "operator-reference.ss"
         (only-in "operator-lowering.ss" lower-operator-graph)
+        (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "objects.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-fragment gerbil-ascent-construct-inert-program
                  gerbil-ascent-construct-inert-fragment))
@@ -65,10 +66,10 @@
 ;; : (forall (i d o) (-> i d o Void))
 ;; : (-> InputLimitCandidate DerivedLimitCandidate OutputLimitCandidate Void)
 (def (check-compiler-budgets! input-limit derived-limit output-limit)
-  (unless (and (exact-integer? input-limit) (> input-limit 0)
-               (exact-integer? derived-limit) (> derived-limit 0)
-               (exact-integer? output-limit) (> output-limit 0))
-    (error "operator program budgets must be positive exact integers")))
+  (unless (and (gerbil-ascent-fact-limit? input-limit)
+               (gerbil-ascent-fact-limit? derived-limit)
+               (gerbil-ascent-fact-limit? output-limit))
+    (error "operator program budgets must be positive exact integers or +inf.0")))
 
 ;;; Generic publication uses the final compiler receiver. Inherited methods
 ;;; resolve construction stages once, before invocation-owned graph traversal.
@@ -148,7 +149,7 @@
 ;;     %
 ;;; The standalone compiler keeps explicit source names for named queries.
 ;;; The optional owner is a derived compiler or the original constructor API.
-(def (relational-op-compile root input-limit derived-limit output-limit
+(def (relational-op-compile root (input-limit +inf.0) (derived-limit +inf.0) (output-limit +inf.0)
                            (compiler relational-op-compiler))
   (check-compiler-budgets! input-limit derived-limit output-limit)
   (compile-operator (checked-compiler compiler) root input-limit derived-limit output-limit))

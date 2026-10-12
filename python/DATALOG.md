@@ -94,10 +94,10 @@ C ABI lifecycle checks. The research consumer's 35 focused tests passed in
 
 The first library link failed because the SDK referenced an absent OpenSSL
 Cellar version. Already-built objects were retained; explicit `LDFLAGS` selected
-the installed compatible library and `ascent_engine.build --relink` succeeded.
-This option refuses missing/stale generated C, link and object artifacts using
-dependency modification times, and records hashes of the linked inputs. It is
-not a compiler/source proof or a replacement for the normal Gerbil build.
+the installed compatible library and the then-existing Python `--relink` path
+succeeded. This is a historical result: that path has since been removed.
+Current compilation and linking belong to `build.ss` / `std/make`; Python only
+packages its recorded outputs and builds CFFI C glue. See [BUILDING.md](BUILDING.md).
 
 The qualified extension hash is
 `3534343ae0f915cb2ad007ad02513dfaea9941fa4501c78fac6e33e6de3dcb8d`;

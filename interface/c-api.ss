@@ -34,7 +34,9 @@ C
       (result-status-set! result -1)
       (result-copy! result
         (string->utf8 (json->string
-          (hash ("error" "scheme request rejected")))))
+          (let (detail (call-with-output-string (lambda (port) (display-exception exception port))))
+            (hash ("error" "scheme request rejected")
+                  ("detail" (substring detail 0 (min 4096 (string-length detail)))))))))
       (result-status result))
     (lambda ()
       (result-status-set! result 0)

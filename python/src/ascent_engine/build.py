@@ -1,123 +1,80 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Link the compiler-derived ASCENT library closure for C ABI consumers.
+"""Package the C ABI artifact already built by build.ss/std/make.
 
-Run the normal Gerbil package build first. This links one engine library;
-it neither builds a model scenario nor discovers or runs Scheme tests.
+This module has no Scheme compiler, dependency graph, phase discovery,
+currentness policy, or compilation scheduler.
 """
 import argparse
 import hashlib
 import json
 import os
 from pathlib import Path
-import platform
-import re
-import shlex
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
+import shutil
 
-def run(arguments, root, capture=False):
-    result = subprocess.run(list(map(str, arguments)), cwd=root,
-                            text=True, capture_output=capture)
-    if result.returncode:
-        if capture and result.stderr: print(result.stderr, flush=True)
-        result.check_returncode()
-    return result.stdout if capture else ''
 
-def define(path, key):
-    match = re.search(r'^#define '+re.escape(key)+r' ([A-Za-z0-9_]+)$', path.read_text(), re.M)
-    if not match: raise ValueError('generated linker omitted '+key)
-    return match[1]
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
-def build(root, output, relink=False):
-    root = root.resolve(); output = output.resolve(); output.parent.mkdir(parents=True, exist_ok=True)
-    if platform.system() == 'Darwin':
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = platform.mac_ver()[0].split('.')[0]+'.0'
-    home = Path(run(['gxi','-e','(displayln (gerbil-home))'],root,True).strip())
-    gsc = home/'bin/gsc'
-    # Compiler and runtime must come from this same release.
-    os.environ['GAMBOPT'] = f'~~={home},~~bin={home / "bin"},~~lib={home / "lib"}'
-    expression = '''(let* ((ctx (import-module (string->symbol ":gerbil-ascent/interface/c-api")))
-                          (deps (gxc#find-runtime-module-deps ctx)))
-     (for-each (lambda (dep) (displayln "CLOSURE\\t" (expander-context-id dep) "\\t" (gxc#find-static-module-file dep))) deps)
-     (displayln "ROOT\\t" (gxc#find-static-module-file ctx)))'''
-    raw = run(['gxi','-e','(import :gerbil/compiler/driver :gerbil/expander)','-e',expression],root,True)
-    sdk=[]; user=[]; entry=None
-    for line in raw.splitlines():
-        if line.startswith('ROOT\t'): entry=Path(line.split('\t',1)[1])
-        elif line.startswith('CLOSURE\t'):
-            _, module, path = line.split('\t'); path=Path(path)
-            if module.startswith(('gerbil/','std/')) and not module.startswith('gerbil/core'):
-                sdk.append(path)
-            elif not module.startswith('gerbil/') and path.is_file() and path.stat().st_size:
-                user.append(path)
-    if entry is None: raise ValueError('compiler did not report the scheme root')
-    sdk=list(dict.fromkeys(sdk)); user=list(dict.fromkeys(user))
-    directory=output.parent; link=directory/'ascent_.c'; link_object=link.with_suffix('.o')
-    runtime=directory/'runtime.o'
-    print(f'ASCENT-C-ABI-LINK modules={len(sdk)+len(user)+1}',flush=True)
-    def current(artifact, inputs):
-        if not artifact.is_file() or any(not p.is_file() or p.stat().st_mtime_ns > artifact.stat().st_mtime_ns for p in inputs):
-            raise ValueError('relink requires current compiled artifact: '+str(artifact))
-    if relink:
-        current(link,[*[p.with_suffix('.c') for p in sdk],*user,entry])
-        current(link_object,[link,home/'include/gambit.h'])
-        current(runtime,[link,root/'bindings/c/runtime.c',root/'bindings/c/ascent.h',home/'include/gambit.h'])
-    else:
-        run([gsc,'-target','C','-link','-o',link,*[p.with_suffix('.c') for p in sdk],*user,entry],root)
-        run([gsc,'-target','C','-cc-options','-D___LIBRARY','-obj','-o',link_object,link],root)
-        run([gsc,'-target','C','-cc-options',
-             f'-I{root / "bindings/c"} -D___VERSION={define(link,"___VERSION")} -DASCENT_LINKER={define(link,"___LINKER_ID")}',
-             '-obj','-o',runtime,root/'bindings/c/runtime.c'],root)
-    sources=list(dict.fromkeys([*user,entry,*sdk]))
-    def object_for(source):
-        obj=source.with_suffix('.o'); generated=source.with_suffix('.c')
-        if relink:
-            current(generated,[source]); current(obj,[generated,home/'include/gambit.h'])
-            return obj
-        if not obj.is_file() or generated.stat().st_mtime_ns > obj.stat().st_mtime_ns:
-            print('ASCENT-C-ABI-OBJECT '+source.name,flush=True)
-            run([gsc,'-target','C','-cc-options','-fPIC','-obj','-o',obj,generated],root)
-        return obj
-    cores=int(os.environ.get('GERBIL_BUILD_CORES',str(os.cpu_count() or 1)))
-    if cores < 1: raise ValueError('GERBIL_BUILD_CORES must be positive')
-    with ThreadPoolExecutor(max_workers=min(cores,len(sources),64)) as workers:
-        objects=list(workers.map(object_for,sources))
-    flags=shlex.split((home/'lib/libgerbil.ldd').read_text().strip().strip('()'))
-    shared=['-dynamiclib','-Wl,-install_name,@rpath/'+output.name,
-            '-Wl,-undefined,dynamic_lookup','-Wl,-no_compact_unwind',
-            '-mmacosx-version-min='+os.environ['MACOSX_DEPLOYMENT_TARGET']] if platform.system()=='Darwin' else ['-shared']
-    candidate=output.with_name(output.name+'.pending')
-    run([os.environ.get('CC','cc'),*shared,'-o',candidate,*objects,link_object,runtime,
-         '-L',home/'lib','-lgambit',*flags,*shlex.split(os.environ.get('LDFLAGS','')),
-         '-Wl,-rpath,'+str(home/'lib')],root)
-    scheme_sources={}
-    for source in sources:
-        stem=source.stem
-        if not stem.startswith('gerbil-ascent__'):continue
-        name=stem[len('gerbil-ascent__'):].split('~',1)[0].replace('__','/')+'.ss'
-        path=root/name
-        if path.is_file():
-            if path.stat().st_mtime_ns > source.stat().st_mtime_ns:
-                raise ValueError('Scheme source newer than compiled module: '+name)
-            scheme_sources[name]=hashlib.sha256(path.read_bytes()).hexdigest()
+
+def verify_inputs(root, receipt):
+    for relative, expected in receipt["sourceInputs"].items():
+        name = Path(relative)
+        if name.is_absolute() or ".." in name.parts:
+            raise ValueError("invalid native source input path")
+        if sha(root / name) != expected:
+            raise ValueError("native build source identity changed: " + relative)
+
+
+def build(root, output, native_dir=None):
+    root, output = root.resolve(), output.resolve()
+    native_dir = Path(native_dir or os.environ.get("GERBIL_PATH", root / ".gerbil")).resolve()
+    library = native_dir / "bin/libascent"
+    sidecar = library.with_name(library.name + ".json")
+    if not library.is_file() or not sidecar.is_file():
+        raise ValueError("run gxi build.ss first; a successful native build receipt is required")
+    receipt = json.loads(sidecar.read_text())
+    if (receipt.get("schema") != "ascent.c-abi-build.v1"
+            or receipt.get("buildOwner") != "build.ss/std/make"
+            or sha(library) != receipt.get("librarySha256")):
+        raise ValueError("native build receipt does not match its artifact")
+    verify_inputs(root, receipt)
+    before = sha(sidecar)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    resources = {}
+    for relative, asset in receipt["syntaxResources"].items():
+        name = Path(relative)
+        if name.is_absolute() or ".." in name.parts:
+            raise ValueError("invalid native resource path")
+        source = Path(asset["path"])
+        if sha(source) != asset["sha256"]:
+            raise ValueError("native resource identity changed: " + relative)
+        target = output.parent / "syntax" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+        if sha(source) != asset["sha256"] or sha(target) != asset["sha256"]:
+            raise ValueError("native resource changed during packaging")
+        resources[relative] = {"path": str(target), "sha256": asset["sha256"]}
+    candidate = output.with_name(output.name + ".pending")
+    shutil.copyfile(library, candidate)
+    verify_inputs(root, receipt)
+    if sha(sidecar) != before or sha(library) != receipt["librarySha256"] or sha(candidate) != receipt["librarySha256"]:
+        raise ValueError("native artifact changed during packaging")
     candidate.replace(output)
-    manifest={'schema':'ascent.c-abi-build.v1','abi':1,'sdk':str(home),'relink':relink,
-              'schemeSourceSha256':scheme_sources,
-              'linkFlags':shlex.split(os.environ.get('LDFLAGS','')),
-              'librarySha256':hashlib.sha256(output.read_bytes()).hexdigest(),
-              'runtimeSourceSha256':hashlib.sha256((root/'bindings/c/runtime.c').read_bytes()).hexdigest(),
-              'headerSha256':hashlib.sha256((root/'bindings/c/ascent.h').read_bytes()).hexdigest(),
-              'closureSources':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
-              'closureObjects':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in objects}}
-    output.with_suffix(output.suffix+'.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    print('ASCENT-C-ABI-BUILD-OK '+str(output),flush=True)
+    receipt = dict(receipt, syntaxResources=resources, packagingOwner="ascent_engine.build",
+                   nativeBuildReceiptSha256=before)
+    output.with_suffix(output.suffix + ".json").write_text(json.dumps(receipt, indent=2) + "\n")
+    print("ASCENT-C-ABI-PACKAGE-OK " + str(output), flush=True)
+
 
 def main():
-    parser=argparse.ArgumentParser(); parser.add_argument('--root',type=Path,default=Path.cwd())
-    parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--relink',action='store_true',help='require current existing C/link objects and only relink')
-    args=parser.parse_args()
-    build(args.root,args.output,args.relink)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--native-dir", type=Path)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    build(args.root, args.output, args.native_dir)
 
-if __name__=='__main__':main()
+
+if __name__ == "__main__":
+    main()

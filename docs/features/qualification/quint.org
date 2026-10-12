@@ -4,10 +4,16 @@
 
 * Authoring decision
 
-All eighteen ASCENT protocol specifications are authored in typed Quint.
+The initial eighteen-specification migration used typed Quint throughout.
 Handwritten TLA specifications, CFG fixtures, their license sidecars and the
 legacy checker bootstrap have been removed. The existing Justfile is the
 verification entry point; no second test runner is introduced.
+
+The native Evidence DSL, source/result/explanation lifecycle and retained-owner
+admission extension is documented in
+[[file:native-evidence-protocols.org][Native Evidence DSL protocol qualification]]. Its new models use the same
+checker entry point and add real Python/native API trajectory correspondence;
+model file counts do not establish current qualification of the full inventory.
 
 Lean proves semantic and algebraic statements over arbitrary admitted data.
 Quint covers transitions, ownership, publication, resource accounting and

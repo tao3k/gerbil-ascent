@@ -3,7 +3,7 @@
 """Compile CFFI API glue against a prebuilt AOT engine and its actual header.
 
 This is a local extension build, not a portable wheel repair tool. Scheme
-compilation remains owned by the normal Gerbil build and ascent_engine.build.
+compilation and native engine linking remain owned by build.ss/std/make.
 """
 import argparse
 import hashlib
@@ -40,6 +40,7 @@ def build(library, header, output, cc):
     # evidence of source/binary correspondence and is recorded below.
     sidecar = library.with_suffix(library.suffix + ".json")
     sidecar_hash = None
+    producer = None
     if sidecar.is_file():
         producer = json.loads(sidecar.read_text())
         if producer.get("librarySha256") != before["library"] or producer.get("headerSha256") != before["header"]:
@@ -49,6 +50,19 @@ def build(library, header, output, cc):
     name = "libascent.dylib" if system == "Darwin" else "libascent.so"
     bundled = output / name
     shutil.copyfile(library, bundled)
+    syntax_resources={}
+    for relative, asset in (producer or {}).get('syntaxResources', {}).items():
+        resource_name=Path(relative)
+        if resource_name.is_absolute() or '..' in resource_name.parts:
+            raise ValueError('invalid producer syntax resource path')
+        source=Path(asset['path'])
+        if sha(source)!=asset['sha256']: raise ValueError('producer syntax resource drift')
+        target=output/'syntax'/resource_name
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(source,target)
+        if sha(source)!=asset['sha256'] or sha(target)!=asset['sha256']:
+            raise ValueError('syntax resource changed during API build')
+        syntax_resources[str(resource_name)]=asset['sha256']
     if system == "Darwin":
         subprocess.run(["install_name_tool", "-id", "@rpath/" + name, str(bundled)], check=True)
         subprocess.run(["codesign", "--force", "--sign", "-", str(bundled)], check=True)
@@ -77,6 +91,8 @@ def build(library, header, output, cc):
         raise ValueError("producer inputs changed during API compilation")
     receipt = {"schema": "ascent.cffi-api-build.v1", "backend": "out-of-line-api",
                "producerInputs": before, "producerReceiptSha256": sidecar_hash,
+               "producerBuild": producer,
+               "syntaxResources": syntax_resources,
                "compiler": compiler_version.splitlines()[0],
                "localDeploymentTarget": platform.mac_ver()[0] if system == "Darwin" else None,
                "extension": extension.name, "extensionSha256": sha(extension),

@@ -10,7 +10,29 @@ import contextlib
 import fcntl
 import os
 import tempfile
+from dataclasses import dataclass
 from cffi import FFI
+
+
+@dataclass(frozen=True)
+class FactLimits:
+    """Optional caller ceilings. None means no ceiling, not a large integer.
+
+    Scheme validates/enforces occurrence counts. Explicit DSL bounds can only
+    be tightened; this transport object never counts or admits facts itself.
+    """
+    input: int | None = None
+    derived: int | None = None
+    output: int | None = None
+
+    def wire(self):
+        return {key: value for key, value in vars(self).items() if value is not None}
+
+
+def _with_limits(request, limits):
+    if limits is not None:
+        request['factLimits'] = limits.wire()
+    return request
 
 CDEF = '''
 typedef struct { int32_t status; uint8_t *payload; size_t length; } ascent_result;
@@ -93,8 +115,11 @@ class Engine:
     Close sessions individually; shutdown is explicit and terminal for the
     entire loaded runtime. Never dlclose a live Gambit runtime.
     """
-    def __init__(self, library=None):
+    def __init__(self, library=None, *, max_request_bytes=None):
         global _loaded, _runtime_pid
+        if max_request_bytes is not None and (type(max_request_bytes) is not int or max_request_bytes <= 0):
+            raise ValueError('max_request_bytes must be a positive integer or None')
+        self.max_request_bytes = max_request_bytes
         if _runtime_pid is not None and os.getpid() != _runtime_pid:
             raise EngineError(-2, 'inherited runtime after fork; start a fresh process')
         if threading.get_ident() != threading.main_thread().ident:
@@ -110,6 +135,12 @@ class Engine:
             ffi, lib = _ascent_cffi.ffi, _ascent_cffi.lib
         else:
             path = str(Path(library).resolve())
+            sidecar = Path(path + '.json')
+            if sidecar.is_file():
+                import hashlib
+                receipt = json.loads(sidecar.read_text())
+                if hashlib.sha256(Path(path).read_bytes()).hexdigest() != receipt.get('librarySha256'):
+                    raise EngineError(-2, 'native library identity drift')
             if _loaded is None:
                 ffi = FFI(); ffi.cdef(CDEF); lib = ffi.dlopen(path)
         if _loaded is None:
@@ -129,6 +160,22 @@ class Engine:
             signal.signal(signal.SIGCHLD, child_handler)
         if status: raise EngineError(status, 'runtime initialization')
         self.owner = threading.get_ident(); self.closed = False
+        self.build_receipt = None
+        if library is None or Path(path + '.json').is_file():
+            receipt_path = Path(path).parent / 'receipt.json' if library is None else Path(path + '.json')
+            if receipt_path.is_file():
+                receipt = json.loads(receipt_path.read_text())
+                self.build_receipt = receipt
+                resources = receipt.get('syntaxResources', {})
+                if resources:
+                    import hashlib
+                    syntax = receipt_path.parent / 'syntax'
+                    for relative, expected in resources.items():
+                        name = Path(relative)
+                        expected = expected['sha256'] if isinstance(expected, dict) else expected
+                        if name.is_absolute() or '..' in name.parts or hashlib.sha256((syntax / name).read_bytes()).hexdigest() != expected:
+                            raise EngineError(-2, 'native syntax resource identity drift')
+                    self.request({'operation': 'configure-syntax', 'path': str(syntax)})
 
     def request(self, request):
         if os.getpid() != _runtime_pid:
@@ -136,7 +183,8 @@ class Engine:
         if self.closed: raise EngineError(-2, 'runtime shut down')
         if threading.get_ident() != self.owner: raise EngineError(-3, 'wrong OS thread')
         data = json.dumps(request, ensure_ascii=False, allow_nan=False).encode()
-        if not 0 < len(data) <= 1048576: raise EngineError(-4, 'input byte bound')
+        if not data or (self.max_request_bytes is not None and len(data) > self.max_request_bytes):
+            raise EngineError(-4, 'caller input byte bound')
         result = self.ffi.new('ascent_result *')
         with _preserve_host_io():
             try:
@@ -147,12 +195,44 @@ class Engine:
             finally:
                 self.lib.ascent_result_release(result)
 
-    def open(self, program):
-        return Session(self, self.request({'operation': 'open', 'program': program})['handle'])
+    def open(self, program, *, limits=None):
+        return Session(self, self.request(_with_limits({'operation': 'open', 'program': program}, limits))['handle'])
 
     def read_rules(self, *sources):
         """Read inert native ASCENT text in the installed engine, never a compiler."""
         return self.request({'operation': 'read-rules', 'sources': list(sources)})
+
+    def open_sources(self, *sources, limits=None):
+        """Load pure DSL text through the existing upstream native lowering."""
+        return SourceSession(self, self.request(_with_limits({'operation': 'open-sources', 'sources': list(sources)}, limits)))
+
+    def open_module(self, module, constructor, *arguments, limits=None):
+        """Invoke a trusted compiled Scheme module's exported constructor."""
+        return SourceSession(self, self.request(_with_limits({'operation': 'open-module', 'module': module,
+                                                'constructor': constructor, 'arguments': list(arguments)}, limits)))
+
+    def module(self, module):
+        """Own arbitrary values from trusted, compiled native module exports."""
+        return NativeModule(self, self.request({'operation': 'module-open', 'module': module})['owner'])
+
+    def dsl(self, source, *, trusted=False):
+        """Own values from scenario DSL definitions in the native Library.
+
+        Consumers need Python, not gxc or gerbil.pkg. This is not a sandbox.
+        The Library owns imports and scope. Native execution can have host effects.
+        """
+        if trusted is not True:
+            raise ValueError('trusted host Scheme execution must be explicitly authorized')
+        return NativeModule(self, self.request({'operation': 'dsl-open',
+                            'source': source, 'trusted': True})['owner'])
+
+    def evidence(self, source, constructor, *arguments, trusted=False, limits=None):
+        """Open a native session from scenario DSL, without Scheme scaffolding."""
+        if trusted is not True:
+            raise ValueError('trusted host Scheme execution must be explicitly authorized')
+        return SourceSession(self, self.request(_with_limits({'operation': 'open-evidence',
+                            'source': source, 'trusted': True,
+                            'constructor': constructor, 'arguments': list(arguments)}, limits)))
 
     def shutdown(self):
         if os.getpid() != _runtime_pid:
@@ -174,5 +254,162 @@ class Session:
         return self.engine.request({'operation':'replace', 'handle':self.handle, 'sources':sources})
     def close(self):
         self.engine.request({'operation':'close', 'handle':self.handle})
+    def __enter__(self): return self
+    def __exit__(self, *exc): self.close()
+
+
+class SourceSession(Session):
+    def __init__(self, engine, receipt):
+        super().__init__(engine, receipt['handle'])
+        self.descriptors = receipt['descriptors']
+        self.projection = receipt['projection']
+        self.fact_limits = receipt['factLimits']
+        self.queries = tuple(receipt['queries'])
+
+    def _check(self):
+        if self.handle is None:
+            raise ValueError('native DSL session closed')
+
+    def replace(self, sources):
+        self._check()
+        if isinstance(sources, dict):
+            sources = [{'relation': name, 'rows': rows} for name, rows in sources.items()]
+        return self.engine.request({'operation': 'source-replace', 'handle': self.handle, 'sources': sources})
+
+    def run(self, timeout_nanoseconds=1000000000, *, queries=None):
+        self._check()
+        return self.engine.request({'operation': 'source-run', 'handle': self.handle,
+                                   'queries': list(self.queries if queries is None else queries),
+                                   'timeoutNanoseconds': timeout_nanoseconds})
+
+    def result(self, receipt):
+        self._check()
+        return NativeResult(self, receipt['resultHandle'])
+
+    def close(self):
+        if self.handle is not None:
+            super().close()
+            self.handle = None
+
+
+class NativeResult:
+    """Owned native value; encoding and explanation do not rerun inference."""
+    def __init__(self, session, handle):
+        self.session, self.handle = session, handle
+
+    def _request(self, action, **fields):
+        self.session._check()
+        if self.handle is None:
+            raise ValueError('native result released')
+        return self.session.engine.request({'operation': 'native-result',
+                                           'handle': self.session.handle, 'result': self.handle,
+                                           'action': action, **fields})
+
+    def rows(self, relation):
+        return self._request('rows', relation=relation)
+
+    def explain(self, relation):
+        return self._request('explain', relation=relation)
+
+    def explanation(self, relation):
+        """Own an explanation separately from the result that produced it."""
+        return NativeExplanation(self.session, self.explain(relation))
+
+    def close(self):
+        if self.handle is not None:
+            if self.session.handle is not None and not self.session.engine.closed:
+                self._request('release')
+            self.handle = None
+
+    def __enter__(self): return self
+    def __exit__(self, *exc): self.close()
+
+
+class NativeExplanation:
+    def __init__(self, session, receipt):
+        self.session, self.receipt = session, receipt
+        self.handle = receipt['explanationHandle']
+
+    @property
+    def graph(self):
+        self.session._check()
+        if self.handle is None:
+            raise ValueError('native explanation released')
+        return self.receipt['value']
+
+    def reference(self, node):
+        self.session._check()
+        if self.handle is None:
+            raise ValueError('native explanation released')
+        return {'type': 'reference', 'result': self.handle, 'node': node}
+
+    def close(self):
+        if self.handle is not None:
+            if self.session.handle is not None and not self.session.engine.closed:
+                self.session.engine.request({'operation': 'native-result', 'handle': self.session.handle,
+                                             'result': self.handle, 'action': 'release'})
+            self.handle = None
+
+    def __enter__(self): return self
+    def __exit__(self, *exc): self.close()
+
+
+class NativeModule:
+    """ABI ownership only; exported Scheme procedures own all semantics."""
+    def __init__(self, engine, handle):
+        self.engine, self.handle = engine, handle
+
+    def _request(self, operation, **fields):
+        if self.handle is None:
+            raise ValueError('native module owner closed')
+        return self.engine.request({'operation': operation, 'owner': self.handle, **fields})
+
+    def call(self, export, *arguments, module=None):
+        fields = {} if module is None else {'module': module}
+        return NativeValue(self, self._request('module-call', export=export, arguments=list(arguments), **fields))
+
+    def close(self):
+        if self.handle is not None:
+            if not self.engine.closed:
+                self._request('module-close')
+            self.handle = None
+
+    def __enter__(self): return self
+    def __exit__(self, *exc): self.close()
+
+
+class NativeValue:
+    """Actual native return value, independently of graph projection."""
+    def __init__(self, module, receipt):
+        self.module, self.receipt = module, receipt
+        self.handle = receipt['valueHandle']
+
+    @property
+    def graph(self):
+        if self.handle is None or self.module.handle is None:
+            raise ValueError('native value released')
+        return self.receipt.get('value')
+
+    def reference(self, node=None):
+        if self.handle is None:
+            raise ValueError('native value released')
+        if node is None:
+            return self.module._request('module-value', value=self.handle, action='reference')
+        if self.module.handle is None:
+            raise ValueError('native module owner closed')
+        return {'type': 'reference', 'result': self.handle, 'node': node}
+
+    def apply(self, *arguments):
+        if self.handle is None:
+            raise ValueError('native value released')
+        return NativeValue(self.module, self.module._request('module-apply', value=self.handle,
+                                                            arguments=list(arguments)))
+
+    def close(self):
+        if self.handle is not None:
+            if self.module.handle is not None and not self.module.engine.closed:
+                self.module._request('module-value', value=self.handle, action='release')
+            self.handle = None
+
     def __enter__(self): return self
     def __exit__(self, *exc): self.close()

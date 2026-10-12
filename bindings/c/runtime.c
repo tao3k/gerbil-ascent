@@ -52,7 +52,8 @@ int32_t ascent_request(const uint8_t *input, size_t length, ascent_result *r) {
   int32_t rc; char *copy;
   if (!r) return -4;
   ascent_result_release(r);
-  if (!input || !length || length>1048576 || memchr(input,0,length) || !valid_utf8(input,length)) return r->status=-4;
+  /* Caller capacity policy is separate from allocation overflow and validity. */
+  if (!input || !length || length==SIZE_MAX || memchr(input,0,length) || !valid_utf8(input,length)) return r->status=-4;
   pthread_mutex_lock(&gate);
   if (state!=1) rc=-2;
   else if (!pthread_equal(owner,pthread_self())) rc=-3;

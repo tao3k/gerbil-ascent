@@ -3,11 +3,22 @@
 
 # gerbil-ascent
 
-gerbil-ascent is a research implementation of relational reasoning in Gerbil.
+gerbil-ascent is a research Library for relational reasoning and Agentic AI.
+Downstream applications consume its Python interface and define their own
+scenario DSL; they are not required to install Gerbil, maintain `gerbil.pkg`,
+or invoke a Scheme compiler. The native implementation is in Gerbil.
 It studies how checked Scheme programs can derive finite relations, retain
 results across source changes, and return bounded evidence tied to exact
 snapshots. Rust Ascent is a comparison oracle; Gerbil POO and POO Flow Core
 provide the native foundation.
+
+Python applications submit scenario definitions through `Engine.dsl` or
+`Engine.evidence`. They write constructors, hygienic macros and upstream
+relational expressions, without Scheme imports, module wrappers or build
+configuration. The Library owns the native environment and expansion;
+Python transports calls, identities and owned values. This is explicitly
+trusted host Scheme execution, not a sandbox. Consumer migration and complete
+workload capacity qualification remain separate from interface availability.
 
 ## Research directions
 
@@ -37,7 +48,7 @@ convergence is checked separately from relational closure.
   paper correspondence, proofs and acceptance grouped by feature.
 - [Research and proof audit](docs/scheme-research-proof-audit.org) — papers,
   code, formal results, and remaining obligations.
-- [Agent inference research](docs/research/agent-inference/index.org) —
+- [Agentic AI inference research](docs/research/agent-inference/index.org) —
   candidate reasoning and model evaluation questions.
 - [Temporal design](docs/temporal-causality-module-design.org) — implemented
   finite lens and broader temporal questions.

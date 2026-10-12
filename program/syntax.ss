@@ -436,6 +436,9 @@
               input derived output)))
     ((_ fragment (declared ...) (lowered ...))
      (syntax (gerbil-ascent-fragment
+              (append declared ...) (append lowered ...))))
+    ((_ program (declared ...) (lowered ...))
+     (syntax (gerbil-ascent-program
               (append declared ...) (append lowered ...))))))
 
 ;;; The selected default storage is threaded through nested macro forms;

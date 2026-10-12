@@ -171,12 +171,13 @@ class EvidenceStore:
     Complete evidence means consequences of admitted rules over the current
     finite source. It does not certify the rules match natural-language intent.
     """
-    def __init__(self,engine,sources):
+    def __init__(self,engine,sources, *, limits=None):
         if any(not r.get('source') for r in sources):raise ValueError('trusted sources required')
         if len({r['name'] for r in sources})!=len(sources):raise ValueError('duplicate source names')
         self.engine=engine;self.sources=copy.deepcopy(sources);self.sessions={};self.dirty=set()
+        self.limits=limits
         self.materialized={};self.dependencies={}
-        with engine.open({'relations':self.sources,'rules':[],'queries':[r['name'] for r in self.sources]}):pass
+        with engine.open({'relations':self.sources,'rules':[],'queries':[r['name'] for r in self.sources]}, limits=limits):pass
 
     @property
     def source_identity(self):return identity(self.sources)
@@ -208,11 +209,12 @@ class EvidenceStore:
         if any(a['relation'] in trusted for rule in program['rules'] for a in rule['head']):
             raise ValueError('query defines source heads')
         key=identity({'sourceSchema':[{k:v for k,v in r.items() if k!='rows'} for r in self.sources],
+                      'factLimits':{} if self.limits is None else self.limits.wire(),
                       'evidenceSchema':[{k:v for k,v in self.materialized[name].items() if k!='rows'} for name in sorted(used)],
                       'derived':derived,'rules':program['rules'],'queries':program['queries']})
         reused=key in self.sessions
         if not reused:
-            self.sessions[key]=self.engine.open(program);self.dependencies[key]=used
+            self.sessions[key]=self.engine.open(program, limits=self.limits);self.dependencies[key]=used
         session=self.sessions[key]
         completed_hit=reused and key not in self.dirty
         try:
@@ -243,7 +245,7 @@ class EvidenceStore:
             if {k:v for k,v in relation.items() if k!='rows'}!={k:v for k,v in previous[name].items() if k!='rows'}:
                 raise ValueError('source schema changed; admit a new evidence store')
         # Admit the whole replacement before mutating retained sessions.
-        with self.engine.open({'relations':sources,'rules':[],'queries':list(current)}):pass
+        with self.engine.open({'relations':sources,'rules':[],'queries':list(current)}, limits=self.limits):pass
         try:
             # Materialized subgoals belong to the old source. Invalidate their
             # consumers, retaining only paths that directly use base sources.

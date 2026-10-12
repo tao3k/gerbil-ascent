@@ -48,7 +48,7 @@
          (rows (change-analysis owned)))
     (validate GerbilAscentChangePlanContract
       (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
-          (.change (lambda (before added (row-limit 4096))
+          (.change (lambda (before added (row-limit +inf.0))
                      (delta-change/admitted owned rows before added row-limit)))))))
 
 ;;; Constructor validation owns the method contract. Generic dispatch avoids
@@ -56,7 +56,7 @@
 ;; : (-> ChangePlan Rows Rows Nat (Values Rows Rows Rows))
 (.defgeneric (execute-change-plan plan before added row-limit) slot: .change)
 ;; : (-> ChangePlan Rows Rows Nat (Values Rows Rows Rows))
-(def (relational-op-change plan before added (row-limit 4096))
+(def (relational-op-change plan before added (row-limit +inf.0))
   (execute-change-plan plan before added row-limit))
 
 ;; relational-op-delta-change
@@ -76,7 +76,7 @@
 ;;       ```
 ;;     %
 (def (relational-op-delta-change transformer before added
-                                 (row-limit 4096))
+                                 (row-limit +inf.0))
   (unless (relational-transform? transformer)
     (error "expected a relation transformer" transformer))
   (delta-change/admitted transformer (change-analysis transformer) before added row-limit))
@@ -84,7 +84,7 @@
 ;;; This private entry consumes either this call's admission or a plan's owned
 ;;; admission. Every mutable environment/index is still invocation-owned.
 (def (delta-change/admitted transformer checked-rows before added row-limit)
-  (unless (and (exact-integer? row-limit) (> row-limit 0))
+  (unless (or (eqv? row-limit +inf.0) (and (exact-integer? row-limit) (> row-limit 0)))
     (error "delta row limit must be positive" row-limit))
   (let* ((arity (relational-transform-input-arity transformer))
          (old-input (relational-copy-rows before arity))

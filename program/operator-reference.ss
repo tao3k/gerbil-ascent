@@ -5,6 +5,7 @@
 ;;; Independent set interpretation of admitted finite descriptors. This public
 ;;; semantic path does not call the rule planner or semi-naive native evaluator.
 (import "operator-descriptor.ss" "operator-analysis.ss" "operator-measurement.ss"
+        (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in :std/list/list append-map delete-duplicates/hash take))
 (export relational-op-reference relational-op-reference-change)
 ;;; This deliberately simple set interpreter is the executable meaning of
@@ -12,9 +13,9 @@
 ;;; never calls the rule planner, index provider, or semi-naive evaluator.
 ;;; Exceeding a bound raises; it never returns a partial set as closure.
 ;; : (-> RelationalOp ?PositiveInteger (List (List Scalar)))
-(def (relational-op-reference root (row-limit 4096))
+(def (relational-op-reference root (row-limit +inf.0))
   (def checked-rows (operator-analysis-checked-rows (analyze-operator-graph root)))
-  (unless (and (exact-integer? row-limit) (> row-limit 0))
+  (unless (gerbil-ascent-fact-limit? row-limit)
     (error "reference row limit must be positive" row-limit))
   (def (normalize rows)
     (let (unique (delete-duplicates/hash rows))
@@ -109,7 +110,7 @@
 ;;; compared only after each fixed point has completed within its bound.
 ;; : (-> RelationalTransform ScalarRows ScalarRows ?PositiveInteger (values ScalarRows ScalarRows))
 (def (relational-op-reference-change transformer before added
-                                      (row-limit 4096))
+                                      (row-limit +inf.0))
   (unless (relational-transform? transformer)
     (error "expected a relation transformer" transformer))
   (let* ((arity (relational-transform-input-arity transformer))

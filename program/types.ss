@@ -14,7 +14,8 @@
         (only-in :gerbil-ascent/table/storage
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
-(export gerbil-ascent-owned-root-contract
+(export gerbil-ascent-fact-limit?
+        gerbil-ascent-owned-root-contract
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
         GerbilAscentTermContract
@@ -38,10 +39,11 @@
 (def +arity+ (slot-contract 'ascent/arity
                            (lambda (value)
                              (and (exact-integer? value) (<= 0 value)))))
+(def (gerbil-ascent-fact-limit? value)
+  (or (eqv? value +inf.0)
+      (and (exact-integer? value) (> value 0))))
 (def +fact-budget+
-  (slot-contract 'ascent/fact-budget
-                 (lambda (value)
-                   (and (exact-integer? value) (> value 0)))))
+  (slot-contract 'ascent/fact-budget gerbil-ascent-fact-limit?))
 (def +rows+ (slot-contract 'ascent/rows list?))
 (def +field-predicates+
   (slot-contract 'ascent/field-predicates

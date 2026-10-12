@@ -66,9 +66,10 @@ def canonical_rule(rule):
 
 class EvidenceChain:
     """One source generation, certified component DAG and result references."""
-    def __init__(self,engine,sources,retain=True):
+    def __init__(self,engine,sources,retain=True, *, limits=None):
         self.engine=engine;self.sources=copy.deepcopy(sources);self.retain=retain
-        self.store=EvidenceStore(engine,sources);self.certificates={};self.results={}
+        self.limits=limits
+        self.store=EvidenceStore(engine,sources,limits=limits);self.certificates={};self.results={}
         self.requests={}
 
     @property
@@ -138,7 +139,7 @@ class EvidenceChain:
                   'retainedCompleted':receipt['retainedCompleted'],
                   'availableClaims':[{'name':n,'fingerprint':keys[n],'rows':len(rows[mapping.get(n,n)])} for n in declarations] if self.retain else []}
         if not self.retain:
-            self.store.close();self.store=EvidenceStore(self.engine,self.sources)
+            self.store.close();self.store=EvidenceStore(self.engine,self.sources,limits=self.limits)
         return feedback
 
     def answer(self,reference,relation):

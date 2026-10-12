@@ -34,7 +34,7 @@
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
-        (only-in "types.ss" GerbilAscentSessionContract)
+        (only-in "types.ss" GerbilAscentSessionContract gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
@@ -121,9 +121,9 @@
          (derived-limit (.ref program 'max-derived-facts))
          (output-limit (.ref program 'max-output-facts)))
     (unless (and (list? relations) (list? rules)
-                 (exact-integer? input-limit) (> input-limit 0)
-                 (exact-integer? derived-limit) (> derived-limit 0)
-                 (exact-integer? output-limit) (> output-limit 0)
+                 (gerbil-ascent-fact-limit? input-limit)
+                 (gerbil-ascent-fact-limit? derived-limit)
+                 (gerbil-ascent-fact-limit? output-limit)
                  (boolean? measure-rule-times?))
       (error "invalid ASCENT program bounds"))
     (let* ((count (length relations))

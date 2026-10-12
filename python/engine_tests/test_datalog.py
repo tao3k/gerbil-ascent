@@ -115,11 +115,13 @@ class NativeDatalogTests(unittest.TestCase):
                              [1000000000, 0])
 
     def test_total_input_fact_limit_is_not_relaxed_by_repeat_fix(self):
+        from ascent_engine import FactLimits
         program, _ = compile_program({"a": [[str(n)] for n in range(2050)],
                                       "b": [[str(n)] for n in range(2050)]},
                                      "out(X) <= a(X) & b(X)", {"answer": "out(X)"})
         with self.assertRaises(EngineError):
-            with EvidenceChain(self.engine, [r for r in program["relations"] if r["source"]]):
+            with EvidenceChain(self.engine, [r for r in program["relations"] if r["source"]],
+                               limits=FactLimits(input=4096)):
                 pass
 
     def test_native_admission_rejects_negative_cycle(self):

@@ -3,11 +3,37 @@
 
 import argparse
 import os
+import select
 import selectors
 import signal
 import subprocess
 import sys
 import time
+
+
+def forward_output(destination, chunk: bytes, timeout: float) -> None:
+    """Forward every byte under one deadline, preserving the sink's fd mode."""
+    descriptor = destination.fileno()
+    blocking = os.get_blocking(descriptor)
+    pending = memoryview(chunk)
+    deadline = time.monotonic() + timeout
+    os.set_blocking(descriptor, False)
+    try:
+        while pending:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("qualification output sink remained blocked")
+            if not select.select([], [descriptor], [], min(0.25, remaining))[1]:
+                continue
+            try:
+                written = os.write(descriptor, pending)
+            except BlockingIOError:
+                continue
+            if not written:
+                raise BrokenPipeError("qualification output sink accepted no bytes")
+            pending = pending[written:]
+    finally:
+        os.set_blocking(descriptor, blocking)
 
 
 def group_cpu(group: int) -> dict[int, float]:
@@ -91,8 +117,9 @@ def main() -> int:
                 for key, _events in ready:
                     chunk = os.read(key.fd, 65536)
                     if chunk:
-                        key.data.write(chunk)
-                        key.data.flush()
+                        limit = args.idle_seconds if saw_output else args.startup_seconds
+                        remaining = limit - (time.monotonic() - last_output)
+                        forward_output(key.data, chunk, remaining)
                         last_output = time.monotonic()
                         saw_output = True
                     else:

@@ -54,3 +54,9 @@ Case audit. Acceptance requires exit 0, all module completion markers, native
 =HARNESS-OK= and final =OK=, with zero =ERROR CASE/CHECK/MODULE/HARNESS=.
 A timeout or missing marker remains a failure. No timeout or test is removed
 to accommodate slow imports or uneven batches.
+
+The Python qualification transport also retains real output under CI pipe
+backpressure. It waits for writable sinks, completes short writes, and restores
+the inherited descriptor mode. One absolute deadline uses the remaining
+startup/idle allowance; retries do not renew the watchdog. Real-pipe controls
+check complete bytes, stalled-sink failure and nonzero child exit propagation.

@@ -16,6 +16,10 @@
 (defstruct row-stream (view columns key))
 (defstruct rectangle (prefix left right))
 (defstruct rectangle-bucket (members blocks count plain) final: #t)
+;; Query-local owner lookup. Each coordinate uses its first fixed constraint;
+;; no cache or traversal state escapes into the immutable captured view.
+(defstruct rectangle-query (routes axes) final: #t)
+(defstruct rectangle-selection (ordinal block members) final: #t)
 ;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
 (def (gerbil-ascent-view-bind view identity generation revision lane)
   (make-relation-view identity generation revision lane (relation-view-count view)
@@ -179,18 +183,27 @@
 (def (matches-coordinate? value coordinate columns key)
   (andmap (lambda (column selected) (or (not (= column coordinate)) (equal? value selected))) columns key))
 ;; : (-> Members Natural Columns Key Members)
-(def (captured-member routes members coordinate value)
-  (let find ((hits (or (hash-get (vector-ref routes coordinate) value) [])))
-    (and (pair? hits)
-         (if (eq? (rectangle-bucket-members (cdar hits)) members) (car hits)
-             (find (cdr hits))))))
+(def (captured-member query members coordinate value)
+  (using (query :- rectangle-query)
+    (def hits (or (hash-get (vector-ref query.routes coordinate) value) []))
+    (cond
+      ((null? hits) #f)
+      ((null? (cdr hits))
+       (and (eq? (rectangle-bucket-members (cdar hits)) members) (caar hits)))
+      (else
+       (unless query.axes (set! query.axes (make-vector (vector-length query.routes) #f)))
+       (let (owners (or (vector-ref query.axes coordinate)
+                       (let (table (make-hash-table-eq))
+                         (for-each (lambda (hit)
+                           (hash-put! table (rectangle-bucket-members (cdr hit)) (car hit))) hits)
+                         (vector-set! query.axes coordinate table) table)))
+         (hash-get owners members))))))
 (def (selected-members members coordinate columns key routes)
   (let find ((remaining columns) (values key))
     (cond ((null? remaining) members)
           ((= (car remaining) coordinate)
-           (let (present (if routes (let (hit (captured-member routes members coordinate (car values)))
-                                     (and hit (car hit)))
-                              (member (car values) members)))
+           (let (present (if routes (captured-member routes members coordinate (car values))
+                                    (member (car values) members)))
              (if (and present (matches-coordinate? (car present) coordinate columns key))
                (if routes present (list (car present))) [])))
           (else (find (cdr remaining) (cdr values))))))
@@ -280,7 +293,7 @@
     routes))
 ;; Choose the smallest descriptor bucket, then preserve captured traversal order.
 ;; Other coordinates (including repeated constraints) remain checked by visitor.
-(def (routed-rectangles routes blocks columns key)
+(def (routed-rectangles routes blocks columns key (uniform? #f))
   (if (null? columns) blocks
     (let ((selected #f) (cost +inf.0))
       (for-each (lambda (column value)
@@ -294,6 +307,10 @@
             (when (< size cost) (set! selected buckets) (set! cost size))))) columns key)
       (cond ((null? selected) [])
             ((null? (cdr selected)) (rectangle-bucket-plain (cdar selected)))
+            ;; Gather plus ordering costs k log k; a uniform captured scan
+            ;; visits n descriptors directly in publication order. Every row
+            ;; constraint remains checked, including absent/repeated keys.
+            ((and uniform? (>= (* cost (integer-length cost)) (length blocks))) blocks)
             (else (map cdr (list-sort (lambda (a b) (< (car a) (car b)))
                             (apply append (map (lambda (hit) (rectangle-bucket-blocks (cdr hit))) selected)))))))))
 ;; Routing narrows descriptors; exact membership still belongs to each captured
@@ -305,40 +322,81 @@
          (member (list-ref row (+ offset 1)) (rectangle-right block)) #t)))
 ;; Rectangles must be disjoint; member spines belong to the captured cut.
 ;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
+;; Multiple right owners publish ordered descriptor selections once. Each plan
+;; spine is owned by construction and borrows immutable bucket references.
+(def (ordered-right-plans routes blocks uniform?)
+  (and routes uniform?
+    (let ((plans (make-hash-table)) (owners (make-hash-table-eq)))
+      (hash-for-each (lambda (value hits)
+        (when (pair? (cdr hits))
+          (hash-put! plans value [])
+          (for-each (lambda (hit)
+            (hash-put! owners (rectangle-bucket-members (cdr hit)) (cdr hit))) hits)))
+        (vector-ref routes (- (vector-length routes) 1)))
+      (for-each (lambda (block ordinal)
+        (let* ((members (rectangle-right block)) (bucket (hash-get owners members)))
+          (when bucket
+            (for-each (lambda (value)
+              (let (hits (hash-get plans value))
+                (when (and hits (or (null? hits) (not (= (rectangle-selection-ordinal (car hits)) ordinal))))
+                  (hash-put! plans value (cons (make-rectangle-selection ordinal block (list value)) hits))))) members)))) blocks (iota (length blocks)))
+      (hash-for-each (lambda (value hits) (hash-put! plans value (reverse! hits))) plans)
+      plans)))
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
          ;; One or two descriptors are cheaper to scan than route and gather.
          (membership-routes (and routes (pair? (cdr blocks)) (pair? (cddr blocks)) routes))
          (query-columns (and membership-routes (iota (vector-length membership-routes))))
+         (uniform? (or (null? blocks)
+                       (let (width (length (rectangle-prefix (car blocks))))
+                         (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
+         (right-plans (ordered-right-plans routes blocks uniform?))
          (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
   (def (selected columns key)
-    (if routes (routed-rectangles routes blocks columns key) blocks))
+    (if routes (routed-rectangles routes blocks columns key uniform?) blocks))
   (def (validate-key! columns key)
     (unless (and (list? columns) (list? key) (= (length columns) (length key))
                  (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
       (error "invalid ASCENT UF view key")))
+  (def (selection-for columns)
+    (and routes (pair? columns) (make-rectangle-query routes #f)))
+  (def (planned-right columns key)
+    (and right-plans (pair? columns) (null? (cdr columns))
+         (= (car columns) (- (vector-length routes) 1))
+         (hash-get right-plans (car key))))
+  (def (visit-right-plan hits consume)
+    (for-each (lambda (hit)
+      (using (hit :- rectangle-selection)
+        (visit-left-members (rectangle-prefix hit.block) (rectangle-left hit.block) hit.members consume))) hits))
   (def (visit-admitted columns key consume)
-    ;; One prefix bucket owning one descriptor proves the first group key.
-    ;; Drop just that checked constraint; repeated group keys still remain in
-    ;; the suffix. Multi-descriptor/multi-owner buckets retain general routing.
-    (if (and grouped? routes (pair? columns) (= (car columns) 0))
-      (let (hits (or (hash-get (vector-ref routes 0) (car key)) []))
-        (cond
-          ((null? hits) (void))
-          ((and (null? (cdr hits)) (= (rectangle-bucket-count (cdar hits)) 1)
-                 (= (length (rectangle-prefix (car (rectangle-bucket-plain (cdar hits))))) 1))
-           (visit-admitted-rectangle-parts (car (rectangle-bucket-plain (cdar hits)))
-             (cdr columns) (cdr key) consume routes))
-          (else (visit-admitted-blocks (selected columns key) columns key consume routes))))
-      (visit-admitted-blocks (selected columns key) columns key consume routes)))
+    (cond
+      ((planned-right columns key) => (lambda (hits) (visit-right-plan hits consume)))
+      (else
+       (let (query (selection-for columns))
+         ;; A sole group descriptor admits the leading group constraint.
+         (if (and grouped? routes (pair? columns) (= (car columns) 0))
+           (let (hits (or (hash-get (vector-ref routes 0) (car key)) []))
+             (cond
+               ((null? hits) (void))
+               ((and (null? (cdr hits)) (= (rectangle-bucket-count (cdar hits)) 1)
+                     (= (length (rectangle-prefix (car (rectangle-bucket-plain (cdar hits))))) 1))
+                (visit-admitted-rectangle-parts (car (rectangle-bucket-plain (cdar hits)))
+                  (cdr columns) (cdr key) consume query))
+               (else (visit-admitted-blocks (selected columns key) columns key consume query))))
+           (visit-admitted-blocks (selected columns key) columns key consume query))))))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (validate-key! columns key)
       (if (null? columns)
         (gerbil-ascent-write-rectangles! blocks consume)
-        (for-each (lambda (block)
-          (visit-rectangle-parts block columns key
-            (lambda (prefix left right) (consume (append prefix (list left right)))) routes)) (selected columns key))))
+        (if (planned-right columns key)
+          (visit-right-plan (planned-right columns key)
+            (lambda (prefix left right) (consume (append prefix (list left right)))))
+          (let (query (selection-for columns))
+            (for-each (lambda (block)
+              (visit-rectangle-parts block columns key
+                (lambda (prefix left right) (consume (append prefix (list left right)))) query))
+              (selected columns key))))))
     (lambda (row)
       (let (width (length row))
         (and (>= width 2)
@@ -346,7 +404,7 @@
              (ormap (cut rectangle-contains? <> row width)
                (if membership-routes
                  (routed-rectangles membership-routes blocks
-                   (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row)
+                   (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row uniform?)
                  blocks)))))
     (lambda ()
       ;; Only this invocation owns the collector spine. Rectangles and member
@@ -355,6 +413,9 @@
     (make-part-visitors
       (lambda (columns key consume)
         (validate-key! columns key)
-        (for-each (lambda (block) (visit-rectangle-parts block columns key consume routes))
-                  (selected columns key)))
+        (if (planned-right columns key)
+          (visit-right-plan (planned-right columns key) consume)
+          (let (query (selection-for columns))
+            (for-each (lambda (block) (visit-rectangle-parts block columns key consume query))
+                      (selected columns key)))))
       visit-admitted))))

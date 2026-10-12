@@ -1602,3 +1602,42 @@ failure remains a DENY, not a full-inventory PASS. The isolated corrected
 fixture follows same-owner module calls and uses the native lookup collector.
 The foreign-reference and row-stream protocol rejections are retained.
 Remote CI and downstream consumer qualification remain separate evidence.
+
+* UF singleton capture and complete indexed export
+The next complete batch removes dense singleton-source descriptor expansion
+and query-time repeated owner planning. Frozen scalar sources concatenate
+the diagonal and successor axes in the original order. Multi-member sources
+keep target descriptors, preserving their target-major order. Weighted target
+axes retain every member. Borrowed members and owned collector spines follow
+Gerbil's =group-same= pattern; private query frames follow =std/struct/dag.ss=
+invocation ownership. Ordered right-query plans use a private final structure
+and retain descriptor occurrences; other queries use one invocation-local
+owner map per coordinate. Neither published views nor readers retain mutable
+UF nodes or shared cursors. Uniform schema admission guards conservative scans.
+
+[[file:../../t/performance/uf-capture/README.org][Complete capture/export qualification]] freezes the previous =b77fdf1= kernels.
+The final seven-scenario run passes in 29.37/90 seconds with unchanged natural
+GC, paired-win and allocation gates. Dense/grouped/indexed full export CPU
+improves 51.9%/30.3%/21.4%, allocation 39.0%/33.7%/28.5%. Indexed right-query
+CPU improves 77.1%, allocation 60.5%. Sparse and small controls pass their
+predefined tolerance and have no improvement claim. Counts of heterogeneous
+physical units are not allocation measurements; logical rows remain quadratic.
+
+Lean establishes singleton concatenation, guarded compaction, weighted count,
+filter equivalence and complete-candidate selection. Full validation passes
+158 jobs. The executable =RectangleCompaction.qnt= model constructs scalar and
+heavy axes, frozen plans, retirement and two readers; 75 generated / 45 distinct
+states pass and all five fault variants fail their named invariant. Native
+validation passes six Suites / 36 Cases, including an independent DFS closure
+oracle, shared owners, repeated descriptors/members, all parts protocols,
+mixed arities, nested readers and held cuts after SCC retirement.
+
+Actual Library =057-current-001= freezes the previous =055-current-002= other
+interfaces plus this batch's final UF/view sources. Build/package/API exit zero
+in 116.36/120, 0.78/15 and 1.61/45 seconds; both changed modules have Scheme and
+C executable-object compile evidence. Independent Python API/ABI each pass
+five cases in 8.270/15 and 7.650/15 seconds with source hashes checked against
+the checkout. This does not qualify concurrent Evidence interface changes or
+the current complete consumer graph. Intermediate query regressions, the
+indexed sorted-plan 15/20 miss and the interrupted incomplete-overlay build
+remain failures; no threshold was widened. Remote CI remains a separate gate.

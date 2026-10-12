@@ -541,3 +541,56 @@ theorem grouped_tuple (group left right : α) :
     [group] ++ [left, right] = [group, left, right] := rfl
 
 end Ascent.ProviderRectangles
+
+/-! Frozen singleton sources can concatenate target member axes, including the
+source diagonal. Multi-member sources keep descriptor order. Filtering either
+representation must preserve the same ordered row trace. -/
+namespace Ascent.ProviderRectangles
+
+def targetBlocks (left : List α) (targets : List (List α)) : List (Rectangle α) :=
+  targets.map fun right => ⟨left, right⟩
+
+theorem singleton_capture_order (left : α) (targets : List (List α)) :
+    expand (targetBlocks [left] targets) = rows ⟨[left], targets.flatten⟩ := by
+  induction targets with
+  | nil => simp [expand, targetBlocks, rows]
+  | cons first rest ih => simp [expand, targetBlocks, rows] at *; exact ih
+
+def compactCapture (left : List α) (targets : List (List α)) : List (Rectangle α) :=
+  match left with
+  | [_] => [⟨left, targets.flatten⟩]
+  | _ => targetBlocks left targets
+
+theorem compact_capture_order (left : List α) (targets : List (List α)) :
+    expand (compactCapture left targets) = expand (targetBlocks left targets) := by
+  cases left with
+  | nil => rfl
+  | cons a tail =>
+    cases tail with
+    | nil => simpa [compactCapture, expand] using (singleton_capture_order a targets).symm
+    | cons b rest => rfl
+
+theorem compact_capture_count (left : List α) (targets : List (List α)) :
+    count (compactCapture left targets) = count (targetBlocks left targets) := by
+  rw [← count_exact, ← count_exact, compact_capture_order]
+
+theorem compact_capture_selection (left : List α) (targets : List (List α))
+    (accept : α × α → Bool) :
+    (expand (compactCapture left targets)).filter accept =
+      (expand (targetBlocks left targets)).filter accept := by
+  rw [compact_capture_order]
+
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+-- A conservative descriptor scan may visit extra candidates, but the exact
+-- row predicate restores the same ordered output. Arity admission is separate.
+theorem conservative_selection (xs : List α) (candidate accept : α → Bool)
+    (complete : ∀ x, accept x = true → candidate x = true) :
+    (xs.filter candidate).filter accept = xs.filter accept := by
+  induction xs with
+  | nil => simp
+  | cons x xs ih =>
+    cases hp : accept x <;> cases hc : candidate x <;> simp [hp, hc, ih]
+    exact Bool.noConfusion ((complete x hp).symm.trans hc)
+end Ascent.ProviderRectangles

@@ -733,6 +733,18 @@
 ;; Freeze root membership and reach into disjoint component rectangles. No
 ;; parent link or mutable reach table survives in the published representation.
 ;; : (-> UfState Boolean FrozenView)
+;; Snapshot target axes in the same order as the descriptor writer: source
+;; diagonal first, then compact birth order. Only the new right spine is owned;
+;; member spines remain persistent and frozen records retain no mutable nodes.
+(def (freeze-singleton-axis left reach slots)
+  (let ((rights []) (mass 0))
+    (def (capture record)
+      (using (right record :- frozen-members)
+        (set! mass (+ mass right.count))
+        (for-each (lambda (value) (set! rights (cons value rights))) right.rows)))
+    (capture left)
+    (compact-reach-for-each-id (lambda (id) (capture (vector-ref slots id))) reach)
+    (values (reverse! rights) mass)))
 (def (gerbil-ascent-trrel-uf-freeze groups (indexed? #t))
   (let ((blocks []) (count 0) (units 0))
     (hash-for-each (lambda (key group)
@@ -760,16 +772,24 @@
           ;; Capture each source owner once. Counts come from committed SCC
           ;; metadata; no arc rescans a copied member spine for cardinality.
           (using (left (hash-get members node) :- frozen-members)
+            (def reach (uf-node-reach node))
             (def (capture record)
               (using (right record :- frozen-members)
                 (set! count (+ count (* left.count right.count)))
                 (set! units (+ units 1))
                 (set! blocks (cons (make-rectangle prefix left.rows right.rows) blocks))))
-            (capture left)
-            (let (reach (uf-node-reach node))
-              (if (compact-reach? reach)
-                (compact-reach-for-each-id (lambda (id) (capture (vector-ref slots id))) reach)
-                (hash-for-each (lambda (target _) (capture (hash-get members target))) reach)))))
+            (if (and (= left.count 1) (compact-reach? reach) (> (compact-reach-size reach) 0))
+              (let-values (((rights mass) (freeze-singleton-axis left reach slots)))
+                (set! count (+ count mass))
+                ;; Include the copied member cells as well as the descriptor;
+                ;; physical units are heterogeneous, not an allocation counter.
+                (set! units (+ units mass 1))
+                (set! blocks (cons (make-rectangle prefix left.rows rights) blocks)))
+              (begin
+                (capture left)
+                (if (compact-reach? reach)
+                  (compact-reach-for-each-id (lambda (id) (capture (vector-ref slots id))) reach)
+                  (hash-for-each (lambda (target _) (capture (hash-get members target))) reach))))))
           (uf-group-roots group)))) groups)
     (gerbil-ascent-rectangle-view (reverse! blocks) count units indexed?)))
 

@@ -86,3 +86,28 @@ class UFMaterializationTests(unittest.TestCase):
 
     def test_sparse_cut_survives_full_scc_retirement(self):
         self.exercise([[i, i + 1] for i in range(48)], [[48, 0]])
+
+    def test_compact_singletons_with_weighted_target_and_retained_export(self):
+        edges = [[i, i + 1] for i in range(128)] + [[112, 32]]
+        self.exercise(edges, [[128, 0]])
+
+    def test_compacted_indexed_right_axis_and_repeated_query_constraints(self):
+        edges = [[i, i + 1] for i in range(192)]
+        with self.engine.module(UF) as owner:
+            with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                reference = state.reference()
+                for edge in edges:
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                        pass
+                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as frozen:
+                    held = frozen.reference()
+                    with owner.call('gerbil-ascent-view-rows', held, module=VIEW) as public:
+                        full = rows(public.graph)
+                    self.assertEqual(set(map(tuple, full)), closure(edges))
+                    for columns, key in (([1], [192]), ([1], [64]), ([1, 0], [192, 0]),
+                                         ([1, 1], [192, 192]), ([1, 1], [192, 64]),
+                                         ([1], [999])):
+                        with self.subTest(columns=columns, key=key):
+                            with owner.call('gerbil-ascent-trrel-uf-view-lookup', held, columns, key) as public:
+                                self.assertEqual(rows(public.graph), [row for row in full
+                                    if all(row[column] == value for column, value in zip(columns, key))])

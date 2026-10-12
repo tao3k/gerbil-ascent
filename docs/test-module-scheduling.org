@@ -36,6 +36,15 @@ reinitialize its runtime namespace. Previously loaded reference Sessions then
 retain a different prototype. The source-import regression loads late source
 fixtures and checks both held and newly constructed Sessions.
 
+* UF rejection observations
+
+Budget rejection preserves closure membership, row uniqueness and cardinality,
+physical resource observations, and exact traversal of a previously held cut.
+Two independently captured cuts can traverse identity-key hash tables in a
+different order after GC; that order is not an atomicity contract. The boundary
+Suite forces GC and retains missing-row, unexpected-row and duplicate-row
+negative controls alongside exact held-cut and retry assertions.
+
 * Completion and logs
 
 Each worker owns a log under ignored =.cache/ascent/test-modules/= storage.

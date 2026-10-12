@@ -15,6 +15,15 @@ module WeightedExport {
     bs.foldl(List(), (acc,b) => acc.concat(Product(
       if (axis == 0) (if (Has(b._1,key)) List(key) else List(), b._2)
       else (b._1, if (Has(b._2,key)) List(key) else List()))))
+  // The implementation shares admitted axis selection with row visitors,
+  // then collects entire products without a callback for each public tuple.
+  pure def SelectedBlocks(bs: List[Block], axis: int, key: int): List[Block] =
+    bs.foldl(List(), (acc,b) => acc.append(
+      if (axis == 0) (b._1.foldl(List(), (xs,x) => if (x == key) xs.append(x) else xs), b._2)
+      else (b._1, b._2.foldl(List(), (ys,y) => if (y == key) ys.append(y) else ys))))
+  pure def SelectedCollect(bs: List[Block], axis: int, key: int): List[Row] =
+    Collect(if (Mutation == "selected-order") Reverse(SelectedBlocks(bs,axis,key))
+      else SelectedBlocks(bs,axis,key))
   pure def Select(rows: List[Row], axis: int, key: int): List[Row] =
     rows.foldl(List(), (acc,p) => if ((if (axis == 0) p._1 else p._2) == key) acc.append(p) else acc)
   pure def SelfAxes(bs: List[Block]): bool = bs.foldl(true, (ok,b) => ok and b._1 == b._2)
@@ -43,7 +52,7 @@ module WeightedExport {
     nondet axis = Set(0,1).oneOf()
     val used = if (Mutation == "axis") 0 else axis
     all {q.phase != "new", not(q.ready.contains(axis)), q' = {...q,
-      ready: q.ready.union(Set(axis)), reads: q.reads.set(axis,Axis(q.blocks,used,0))}}
+      ready: q.ready.union(Set(axis)), reads: q.reads.set(axis,SelectedCollect(q.blocks,used,0))}}
   }
   action Mutate = all {q.phase == "exported", not(q.mutated), q' = {...q,
     mutated: true, public: List((99,99)), sibling: if (Mutation == "shared") List((99,99)) else q.sibling}}

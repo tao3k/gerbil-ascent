@@ -14,6 +14,9 @@
         gerbil-ascent-write-rectangles!)
 (defstruct relation-view (identity generation revision lane count units visit contains export parts))
 (defstruct part-visitors (checked admitted))
+;; Built-in products additionally own a direct selected-result collector.
+;; Custom visitors keep their existing callback and ordering protocol.
+(defstruct (rectangle-visitors part-visitors) (materialize) final: #t)
 (defstruct row-stream (view columns key))
 (defstruct rectangle (prefix left right))
 (defstruct rectangle-bucket (members blocks count plain) final: #t)
@@ -93,7 +96,10 @@
        ((relation-view-export view))
        (materialize-rows (cut (relation-view-visit view) [] [] <>))))
     ((view columns key)
-     (materialize-rows (cut (relation-view-visit view) columns key <>)))))
+     (let (parts (relation-view-parts view))
+       (if (rectangle-visitors? parts)
+         ((rectangle-visitors-materialize parts) columns key)
+         (materialize-rows (cut (relation-view-visit view) columns key <>)))))))
 ;; : (-> Row Columns Key Boolean)
 (def (matches-key? row columns key)
   (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key))
@@ -226,13 +232,15 @@
 ;; syntax and the builder macro are bound once; no callback runs per row.
 (defrule (collect-rectangle-product left right lefts rights emit tuple)
   (let collect-left ((pending lefts))
-    (if (null? pending) (void)
-      (let ((left (car pending)))
-        (let collect-right ((remaining rights))
-          (if (null? remaining) (collect-left (cdr pending))
-            (let ((right (car remaining)))
-              (emit tuple)
-              (collect-right (cdr remaining)))))))))
+    (match pending
+      ([] (void))
+      ([left . tail]
+       (let collect-right ((remaining rights))
+         (match remaining
+           ([] (collect-left tail))
+           ([right . rest]
+            (emit tuple)
+            (collect-right rest))))))))
 (def (materialize-rectangles blocks)
   (with-list-builder (collect!)
     (for-each (lambda (block)
@@ -272,18 +280,18 @@
                     (else (lambda (prefix a b) (consume (append prefix (list a b))))))))
       (visit-left-members prefix (rectangle-left block) (rectangle-right block) write))) blocks))
 ;; : (-> Rectangle Columns Key PartVisitor Void)
-(def (visit-rectangle-parts block columns key consume (routes #f))
+(def (visit-rectangle-parts block columns key consume (routes #f) (expand visit-left-members))
   (let (offset (length (rectangle-prefix block)))
     (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
       (error "invalid ASCENT UF view column")))
-  (visit-admitted-rectangle-parts block columns key consume routes))
-(def (visit-admitted-rectangle-parts block columns key consume routes)
+  (visit-admitted-rectangle-parts block columns key consume routes expand))
+(def (visit-admitted-rectangle-parts block columns key consume routes (expand visit-left-members))
   (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
     (when (andmap (lambda (column value)
                     (or (>= column offset) (equal? (list-ref prefix column) value))) columns key)
       (let ((lefts (selected-members (rectangle-left block) offset columns key routes))
             (rights (selected-members (rectangle-right block) (+ offset 1) columns key routes)))
-        (visit-left-members prefix lefts rights consume)))))
+        (expand prefix lefts rights consume)))))
 (def (visit-admitted-blocks blocks columns key consume routes)
   (unless (null? blocks)
     (visit-admitted-rectangle-parts (car blocks) columns key consume routes)
@@ -400,13 +408,13 @@
   (def (planned-axis column key)
     (let (plans (if (= column (- (vector-length routes) 2)) left-plans right-plans))
       (and plans (hash-get plans key))))
-  (def (visit-axis-plan hits consume left?)
+  (def (visit-axis-plan hits consume left? expand)
     (for-each (lambda (hit)
       (using (hit :- rectangle-selection)
-        (visit-left-members (rectangle-prefix hit.block)
+        (expand (rectangle-prefix hit.block)
           (if left? hit.members (rectangle-left hit.block))
           (if left? (rectangle-right hit.block) hit.members) consume))) hits))
-  (def (visit-indexed-axis columns key consume)
+  (def (visit-indexed-axis columns key consume (expand visit-left-members))
     (and routes uniform? (pair? columns) (null? (cdr columns))
          (let* ((column (car columns)) (left-column (- (vector-length routes) 2)))
            (and (or (= column left-column) (= column (+ left-column 1)))
@@ -416,13 +424,13 @@
                  ((null? (cdr hits))
                   (let ((members (caar hits)) (bucket (cdar hits)))
                     (for-each (lambda (block)
-                      (visit-left-members (rectangle-prefix block)
+                      (expand (rectangle-prefix block)
                         (if (= column left-column) members (rectangle-left block))
                         (if (= column left-column) (rectangle-right block) members) consume))
                       (rectangle-bucket-plain bucket)))
                   #t)
                  ((planned-axis column (car key)) =>
-                  (lambda (plans) (visit-axis-plan plans consume (= column left-column)) #t))
+                  (lambda (plans) (visit-axis-plan plans consume (= column left-column) expand) #t))
                  (else #f)))))))
   (def (visit-admitted columns key consume)
     (cond
@@ -440,6 +448,22 @@
                   (cdr columns) (cdr key) consume query))
                (else (visit-admitted-blocks (selected columns key) columns key consume query))))
            (visit-admitted-blocks (selected columns key) columns key consume query))))))
+  ;; Select member axes through the same index/checked traversal as visitors,
+  ;; then expand each admitted product directly into one owned list builder.
+  ;; No row callback or intermediate public tuple runs inside the product.
+  (def (materialize-selected columns key)
+    (validate-key! columns key)
+    (with-list-builder (collect!)
+      (def (collect-product prefix lefts rights _consume)
+        (match prefix
+          ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
+          ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
+          (else (collect-rectangle-product left right lefts rights collect! (append prefix (list left right))))))
+      (unless (visit-indexed-axis columns key #f collect-product)
+        (let (query (selection-for columns))
+          (for-each (lambda (block)
+            (visit-rectangle-parts block columns key #f query collect-product))
+            (selected columns key))))))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (validate-key! columns key)
@@ -463,7 +487,7 @@
       ;; Only this invocation owns the collector spine. Rectangles and member
       ;; lists stay borrowed; each writer emits a fresh detached tuple.
       (materialize-rectangles blocks))
-    (make-part-visitors
+    (make-rectangle-visitors
       (lambda (columns key consume)
         (validate-key! columns key)
         (if (visit-indexed-axis columns key consume)
@@ -471,4 +495,4 @@
           (let (query (selection-for columns))
             (for-each (lambda (block) (visit-rectangle-parts block columns key consume query))
                       (selected columns key)))))
-      visit-admitted))))
+      visit-admitted materialize-selected))))

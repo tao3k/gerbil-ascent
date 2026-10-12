@@ -1,0 +1,106 @@
+#+TITLE: Owned selected UF product collection
+#+LANGUAGE: en
+
+* Architecture
+The weighted rectangle view now carries a private final specialization of the
+checked/admitted visitor protocol. Selected materialization uses the same key
+admission and descriptor index, then expands each selected Cartesian product
+directly into an invocation-owned =with-list-builder=. The product loop uses
+Gerbil pattern matching and a scoped =defrule=; tuple construction stays standard
+=list=. This removes the per-row callback while preserving descriptor and member
+order. Generic and custom visitors retain their callback contract; one-argument
+complete export retains its custom exporter. The public view structure is unchanged.
+
+The design follows Gerbil's =std/list/list-builder.ss= owned head/tail collector
+and =std/cache.ss= private final specialization. Frozen axes are borrowed; public
+tuples and outer spines are fresh. There is no view cursor, tuple cache or retained
+materialization. Large complete answers still require allocation proportional to
+their public row count.
+
+* Algorithm and ownership qualification
+Lean =ProviderRectangles= proves that collecting bound left/right products equals
+ordered filtered product expansion. The final targeted build passes seven jobs.
+The existing rectangle disjointness, frozen-axis and routing premises still apply;
+these theorems do not prove all Scheme implementation details or GC behavior.
+
+=WeightedExport.qnt= models selected blocks separately from its reference axis
+filter. It explores 955 generated / 433 distinct states and rejects seven fault
+variants, including reversing selected descriptor order. Independent reads,
+component retirement, mass, shared-plan orientation and full order remain checked.
+
+Producer =070-selected-001= physically snapshots 3170 files. Candidate core SHA256:
+=3dd5ce486a4cf6294aed25645c9fe52944abdcc543b675428eaae94f7c65df94=.
+Actual native qualification passes two Suites / 11 Cases in 3.06/60 seconds.
+Python runs independent closure and exact held-order oracles against both actual
+API and ABI: lookup four, materialization five, weighted three Cases per backend.
+Each file has a 15-second deadline; all pass, with producer source hash checks.
+The full native source gate also passes 164 modules / 1306 Cases with zero
+ERRORs in 91.53/180 seconds, using 12 native batch workers.
+The new oracle merges formerly distinct components after capturing a view and
+checks selectors against the old cut, including conflicting repeated constraints.
+
+* Fixed native A/B and reproducibility
+Run =just performance-uf-selected= after installing the declared package dependencies.
+The recipe archives baseline =268e89b84c487696d5fbf032a10d6dd39479e10a= into a
+unique ignored cache directory, copies the candidate core and native harness,
+and redirects only the reference UF view import. It uses ASP's
+=make-benchmark-fixture= and =benchmark-run/result=; Scheme owns the measurements.
+The existing historical lookup study, its baseline and its gates remain separate.
+
+The complete workflow performs left, right and grouped lookups in that order on
+prepared cuts: two 1024-member endpoint SCCs and two 512-member grouped SCCs.
+Both arms perform 4096 identical workflows per sample. Answer and cardinality
+checks run outside timing. There are 20 alternating CPU pairs with natural GC,
+20 ASP admissions and five allocation pairs. Each allocation sample measures
+all 4096 operations in sixteen fixed 256-operation intervals, with GC outside
+each interval and results assembled outside the counters. CPU must be <=90% of
+baseline with
+at least 16/20 wins; allocation must be <=110%+8192 bytes. Union, absent and small
+controls retain <=110% CPU+20us and the same allocation tolerance. Heap is 3GB,
+native build deadline 120 seconds and whole measurement deadline 90 seconds.
+
+An earlier fixed complete-workflow run passed: CPU median 476364 -> 426066 us
+(10.56% reduction), 19/20 wins, allocation 2017001472 -> 2016411648 bytes.
+Union, absent and small controls passed. This is a prepared native query workflow,
+not an engine, transport or construction speedup. Separate endpoint/grouped
+experiments are retained; the standalone grouped 10% CPU target failed and is
+not qualified by this different combined-workflow study.
+
+The first checked-in recipe run passed the complete CPU gate but rejected a
+negative union allocation delta. A processor-pinning hypothesis failed and was
+withdrawn: the measurement VM has one processor. The rejected interval read
+82173536928 -> 81738968800 bytes on processor
+0 of one. The revised allocation leg uses fixed bounded intervals; it does not
+change CPU sampling, total operation count or any gate. The underlying runtime
+counter behavior for the original large interval remains unqualified. Negative
+deltas remain errors, without clamping
+or discarded samples.
+
+The final checked-in recipe passes all four scenarios. Complete workflow CPU is
+451509 -> 397094 us (12.05% lower), 20/20 wins. Its bounded allocation total is
+2017002240 -> 2016412416 bytes; union is exactly equal at 309330688 bytes per
+arm, and absent/small controls pass. Allocation intervals and CPU samples have
+different GC boundaries; allocation counter observations are not whole-process
+peak memory or a proof of runtime counter correctness. No material allocation
+reduction is claimed for the complete workflow.
+
+Failed runs and complete receipts remain under =.cache/ascent/uf-selected/=
+and =.cache/ascent/uf-selected-study/=.
+
+* Library timeout root cause
+The failed direct =gxi build.ss= invocation omitted =GERBIL_BUILD_CORES=.
+The installed Gerbil =std/make= defaults that variable to zero and disables
+parallel compilation. =just build= already supplies the native machine count.
+For a direct build, explicitly supply that upstream variable, for example:
+
+#+begin_src sh
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" gxi build.ss
+#+end_src
+
+On this Darwin host the native count is 12. The corrected cold production build
+passes in 103.64/120 seconds; package/API pass in 0.94/15 and 2.54/45 seconds.
+The active Homebrew OpenSSL search path is supplied with normal linker settings.
+Earlier missing-library and serial-timeout logs remain failed records. No timeout
+budget, source currentness check or test was weakened, and no Gerbil/Gambit source
+was rebuilt. These local receipts do not qualify downstream consumers or a
+portable wheel; remote exact-commit CI is a separate gate.

@@ -40,6 +40,32 @@ class UFLookupTests(unittest.TestCase):
                                 with owner.call(function, held, columns, key, module=module) as public:
                                     self.assertEqual(oracle.rows(public.graph), wanted)
 
+    def test_weighted_products_keep_checked_selectors_after_component_retirement(self):
+        base = [[i, i + 1] for i in range(48)] + [[16, 0], [40, 24]]
+        edges = [[group, *edge] for group in (0, 7) for edge in base]
+        truth = {(group, a, b) for group in (0, 7) for a, b in oracle.closure(base)}
+        with self.engine.module(oracle.UF) as owner:
+            with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                for edge in edges:
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', state.reference(), edge, 10000):
+                        pass
+                with owner.call('gerbil-ascent-trrel-uf-freeze', state.reference(), True) as frozen:
+                    held = frozen.reference()
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                        full = oracle.rows(public.graph)
+                    self.assertEqual(len(full), len(truth))
+                    self.assertEqual(set(map(tuple, full)), truth)
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', state.reference(), [0, 48, 0], 10000):
+                        pass
+                    for columns, key in (([1], [0]), ([2], [24]), ([1, 2], [0, 24]),
+                                         ([2, 0], [24, 7]), ([1, 1], [0, 1]), ([], [])):
+                        wanted = [row for row in full if all(row[c] == k for c, k in zip(columns, key))]
+                        for function, module in (('gerbil-ascent-trrel-uf-view-lookup', oracle.UF),
+                                                 ('gerbil-ascent-view-rows', oracle.VIEW)):
+                            with self.subTest(columns=columns, key=key, function=function):
+                                with owner.call(function, held, columns, key, module=module) as public:
+                                    self.assertEqual(oracle.rows(public.graph), wanted)
+
     def test_union_and_explicit_fallback_preserve_complete_order(self):
         with self.engine.module(oracle.VIEW) as owner:
             with owner.call('gerbil-ascent-explicit-view', [[0, 0], [0, 1]], 2) as left:

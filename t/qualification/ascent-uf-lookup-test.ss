@@ -50,6 +50,18 @@
         (check-equal? sibling '((0 0) (0 1) (1 0)))
         (check-equal? (gerbil-ascent-view-rows view) sibling)
         (check-equal? (gerbil-ascent-view-rows view '(1) '(0)) '((0 0) (1 0)))))
+    (test-case "rectangle selection stays independent of custom complete export"
+      (let* ((base (gerbil-ascent-rectangle-view
+                     (list (make-rectangle '(7) '(0 1) '(2 3))) 4 0 #t))
+             (view (gerbil-ascent-view-with-export base (lambda () '((custom export)))))
+             (first (gerbil-ascent-view-rows view '(1) '(0)))
+             (sibling (gerbil-ascent-view-rows view '(1) '(0))))
+        (check-equal? (gerbil-ascent-view-rows view) '((custom export)))
+        (check-equal? first '((7 0 2) (7 0 3)))
+        (set-car! (car first) 99) (set-cdr! first [])
+        (check-equal? sibling '((7 0 2) (7 0 3)))
+        (check-equal? (gerbil-ascent-view-rows view [] [])
+          '((7 0 2) (7 0 3) (7 1 2) (7 1 3)))))
     (test-case "custom visitors preserve callback order and rejection leaves the cut stable"
       (let* ((calls 0)
              (view (make-relation-view #f #f 0 'total 2 2

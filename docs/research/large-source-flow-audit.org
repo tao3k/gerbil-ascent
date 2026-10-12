@@ -1744,3 +1744,18 @@ API/ABI independently produce one exact order AssertionError in 3.669/15 and
 fixture hash. Original 063 and all failed logs remain unchanged. The final API
 receipt SHA is =4c40397e44584412d70a169307a07a3627c6cef3b604c4d15d669aa179163ad1=.
 Complete downstream graph qualification and new remote CI remain separate gates.
+
+* Selected weighted UF product collection
+The next complete batch specializes the existing checked/admitted rectangle
+protocol with an owned selected materializer, sharing routing and expanding
+products without a per-row callback. Lean, Quint, actual API/ABI closure oracles
+and a separate fixed native workflow study accompany the implementation.
+The native Library timeout was an omitted upstream concurrency setting in a
+direct invocation; the corrected 12-core cold build passes at 103.64/120 seconds.
+See [[file:../../t/performance/uf-lookup/SELECTED.org][selected product qualification]] for algorithms, fixed gates, failed controls and scope.
+
+The source-CI repair baseline =268e89b84c487696d5fbf032a10d6dd39479e10a=
+passes all six jobs in GitHub run =38250464583=. Source GxTest passes 164
+modules / 1305 Cases at 122/180 seconds with four native batch workers on that
+runner. Earlier Case errors and timeouts remain failed records. These results
+qualify that exact baseline, not subsequent local changes.

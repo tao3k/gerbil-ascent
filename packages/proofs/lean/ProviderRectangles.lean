@@ -695,3 +695,19 @@ theorem self_owner_selection (r : Rectangle α) (same : r.left = r.right)
     (accept : α → Bool) : r.left.filter accept = r.right.filter accept := by
   rw [same]
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Direct product collection also refines bound query axes, in descriptor order.
+    Index ownership and checked selector admission remain implementation premises. -/
+theorem collect_bound_left_order (rs : List (Rectangle α)) (members : List α) :
+    (bindLeft rs members).foldl (fun acc r => collectProduct r.left r.right acc) [] =
+      rs.flatMap (fun r => rows ⟨members, r.right⟩) := by
+  rw [collect_blocks_order]
+  simpa using bind_left_order rs members
+
+theorem collect_bound_right_order (rs : List (Rectangle α)) (members : List α) :
+    (bindRight rs members).foldl (fun acc r => collectProduct r.left r.right acc) [] =
+      rs.flatMap (fun r => rows ⟨r.left, members⟩) := by
+  rw [collect_blocks_order]
+  simpa using bind_right_order rs members
+end Ascent.ProviderRectangles

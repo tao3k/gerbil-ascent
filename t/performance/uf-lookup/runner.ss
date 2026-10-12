@@ -24,8 +24,20 @@
     (let (result (call))
       (##get-bytes-allocated! counter 1)
       (let (bytes (- (f64vector-ref counter 1) (f64vector-ref counter 0)))
-        (when (< bytes 0) (error "nonmonotone VM allocation" bytes))
+        (when (< bytes 0)
+          (error "nonmonotone VM allocation" bytes
+            before: (f64vector-ref counter 0) after: (f64vector-ref counter 1)
+            processor: (##current-processor-id)
+            processors: (##current-vm-processor-count)))
         (values result bytes)))))
+(def (measure-allocation-batches call count)
+  ;; Every declared operation is measured; GC and result assembly stay outside
+  ;; each bounded counter interval. A negative interval still rejects the run.
+  (let loop ((pending count) (results []) (bytes 0))
+    (if (zero? pending)
+      (values (apply append (reverse results)) bytes)
+      (let-values (((result allocated) (measure-allocation call)))
+        (loop (- pending 1) (cons result results) (+ bytes allocated))))))
 (def (run-scenario scenario receipt-path)
   (def contract (call-with-input-file "t/performance/uf-lookup/benchmark.ss" read))
   (unless (benchmark-fixture-contract-pass? contract) (error "invalid UF-LOOKUP execution fixture"))
@@ -37,12 +49,25 @@
            (old-state (ui-prepare #t input))
            (new-state (ui-prepare #f input))
            (expected (make-list (get 'trajectoriesPerSample) (ui-expected old-state input)))
-           (old-call (lambda () (map (lambda (_) (ui-consume old-state input #t)) (iota (get 'trajectoriesPerSample)))))
-           (new-call (lambda () (map (lambda (_) (ui-consume new-state input #f)) (iota (get 'trajectoriesPerSample)))))
+           (old-call (lambda ((count (get 'trajectoriesPerSample)))
+             (map (lambda (_) (ui-consume old-state input #t)) (iota count))))
+           (new-call (lambda ((count (get 'trajectoriesPerSample)))
+             (map (lambda (_) (ui-consume new-state input #f)) (iota count))))
            (admission-state (ui-prepare #f input)) (ab []) (bb []) (ac []) (bc []) (agc []) (bgc []) (agn []) (bgn []) (samples 0) (admissions 0) (wins 0))
       (def (check-results x y)
         (unless (and (equal? x y) (equal? y expected))
           (error "UF-LOOKUP execution lifecycle differs" scenario)))
+      (def (allocation call)
+        (cond
+          ((assq 'allocationBatchSize contract) =>
+           (lambda (entry)
+             (let (size (cdr entry))
+               (unless (and (integer? size) (> size 0)
+                            (zero? (modulo (get 'trajectoriesPerSample) size)))
+                 (error "invalid allocation partition" size))
+               (measure-allocation-batches (cut call size)
+                 (quotient (get 'trajectoriesPerSample) size)))))
+          (else (measure-allocation call))))
       (def (sample)
         (let-values (((x v gx nx y q gy ny)
           (if (even? samples)
@@ -61,7 +86,7 @@
                    " old-gc=" (car agn) " new-gc=" (car bgn))
         (force-output)
         samples)
-      ;; Both legs run the same declared 2048 complete operations per sample.
+      ;; Both legs run the same contract-declared complete operations per sample.
       ;; No adaptive repetition or threshold change hides natural GC; it remains
       ;; charged to CPU. Admission measures only the candidate's full sample.
       (##gc)
@@ -79,10 +104,10 @@
          (lambda (index)
            (let-values (((x u y p)
              (if (even? index)
-               (let-values (((x u) (measure-allocation old-call))
-                            ((y p) (measure-allocation new-call))) (values x u y p))
-               (let-values (((y p) (measure-allocation new-call))
-                            ((x u) (measure-allocation old-call))) (values x u y p)))))
+               (let-values (((x u) (allocation old-call))
+                            ((y p) (allocation new-call))) (values x u y p))
+               (let-values (((y p) (allocation new-call))
+                            ((x u) (allocation old-call))) (values x u y p)))))
              (check-results x y)
              (set! ab (cons u ab)) (set! bb (cons p bb)))
            (displayln "UF-LOOKUP-ALLOCATION " scenario " " (+ index 1) "/"

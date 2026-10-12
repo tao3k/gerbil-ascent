@@ -33,6 +33,30 @@ build:
 check-policy:
     ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
 
+# A new fixed study; the historical lookup baseline and its gates remain intact.
+performance-uf-selected:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    baseline=268e89b84c487696d5fbf032a10d6dd39479e10a
+    mkdir -p .cache/ascent/uf-selected-study
+    study="$(mktemp -d "$PWD/.cache/ascent/uf-selected-study/run.XXXXXX")"
+    mkdir -p "$study/source" "$study/build/lib" "$study/imports" "$study/receipts"
+    git archive "$baseline" | tar -x -C "$study/source"
+    cp core/relation-view.ss "$study/source/core/relation-view.ss"
+    cp t/performance/uf-lookup/{fixture,runner,selected-build}.ss "$study/source/t/performance/uf-lookup/"
+    git show "$baseline:core/relation-view.ss" > "$study/source/t/performance/uf-lookup/reference-relation-view.ss"
+    git show "$baseline:table/trrel-uf.ss" | sed 's@:gerbil-ascent/core/relation-view@:gerbil-ascent/t/performance/uf-lookup/reference-relation-view@' > "$study/source/t/performance/uf-lookup/reference-trrel-uf.ss"
+    shasum -a 256 "$study/source/core/relation-view.ss" "$study/source/t/performance/uf-lookup/"*.ss > "$study/receipts/sources.sha256"
+    ln -s "$study/source" "$study/imports/gerbil-ascent"
+    dependencies="{{ package_library }}"
+    export GERBIL_PATH="$study/build"
+    export GERBIL_LOADPATH="$study/build/lib:$study/imports:$dependencies${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    cd "$study/source"
+    timeout 120s {{ gerbil_environment }} gxi -:max-heap=3G,debug=q t/performance/uf-lookup/selected-build.ss "$study/build/lib" > "$study/receipts/build.log" 2>&1
+    timeout 90s {{ gerbil_environment }} gxi -:max-heap=3G,debug=q -e '(import :gerbil-ascent/t/performance/uf-lookup/runner)' -e "(main \"all\" \"$study/receipts\")" 2>&1 | tee "$study/receipts/run.log"
+    test "$(grep -c '^RESULT ' "$study/receipts/run.log")" -eq 4
+    grep -x OK "$study/receipts/run.log"
+
 # Runtime source loading is a separate gate from compiled native qualification.
 check-source-views:
     just _check-source-views
@@ -892,7 +916,7 @@ _check-quint group='all': prepare-quint
             ProviderAdmission) fault nocap MatchingExact; fault set MatchingExact; fault allwitness CountCaps; fault early NoEarlyCallbacks; fault borrow DetachedPacket; fault retain FailedCacheRevoked ;;
             ProviderRouting) for mutation in drop order representative prefix; do fault "$mutation" CompleteExact; done ;;
             OwnedLookup) fault export OrderedExact; fault order OrderedExact; fault empty OrderedExact; fault duplicate OrderedExact; fault shared OrderedExact; fault borrow FrozenExact; fault retire FrozenExact; fault reject RejectedStable ;;
-            WeightedExport) fault plan-axis SharedPlanExact; fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
+            WeightedExport) fault selected-order AxisExact; fault plan-axis SharedPlanExact; fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
             RectangleCompaction) fault heavy OrderedExact; fault order OrderedExact; fault alias OrderedExact; fault mass WeightedCount; fault shared IndependentReaders ;;
             RectangleExport) fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads ;;
             ProviderViews) fault alias FrozenRead; fault retire ReaderAlive; fault early AtomicPublication; fault stale CurrentReply; fault budget LogicalBudget ;;

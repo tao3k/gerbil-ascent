@@ -6,7 +6,7 @@ and incremental decisions. Its native entry links the C ABI shared library;
 there is no Python Scheme compiler or parallel phase build graph.
 
 ```sh
-GERBIL_BUILD_CORES=4 GERBIL_PATH="$PWD/.gerbil" gxi bindings/native-build-entry.ss
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" GERBIL_PATH="$PWD/.gerbil" gxi bindings/native-build-entry.ss
 PYTHONPATH="$PWD/python/src" python -m ascent_engine.build \
   --native-dir "$PWD/.gerbil" --output "$PWD/.gerbil/lib/libascent.so"
 PYTHONPATH="$PWD/python/src" python -m ascent_engine.api_build \

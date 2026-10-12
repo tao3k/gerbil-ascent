@@ -133,6 +133,76 @@
     (subu32vector-move! bits 0 (##u32vector-length bits) copy 0)
     (compact-reach-put! owned node)
     owned))
+;; One stable target mask serves both read-only admission and commit. Dense
+;; differences exclude the source diagonal, which is implicit in an SCC.
+;; The callback owns no mutable adjacency until the whole budget is admitted.
+(def (reach-difference-for-each-word consume targets source)
+  (let ((wanted (compact-reach-bits targets)) (old (compact-reach-bits (uf-node-reach source)))
+        (self (uf-node-order source)))
+    (let loop ((word 0))
+      (when (fx< word (##u32vector-length wanted))
+        (let* ((present (if (fx< word (##u32vector-length old)) (##u32vector-ref old word) 0))
+               (missing (fxand (##u32vector-ref wanted word) (fxnot present)))
+               (mask (if (fx= word (fxarithmetic-shift self -5))
+                       (fxand missing (fxnot (fxarithmetic-shift 1 (fxand self 31)))) missing)))
+          (unless (fxzero? mask) (consume word mask)))
+        (loop (fx+ word 1))))))
+(def (word-for-each-node consume word mask registry)
+  (let loop ((mask mask))
+    (unless (fxzero? mask)
+      (consume (ExtensibleVector-ref registry (fx+ (fxarithmetic-shift word 5) (first-set-bit mask))))
+      (loop (fxand mask (fx- mask 1))))))
+(def (reach-difference-weight targets source singleton?)
+  (let ((weight 0) (registry (compact-reach-registry targets)))
+    (reach-difference-for-each-word
+      (lambda (word mask)
+        (if singleton? (set! weight (+ weight (bit-count mask)))
+          (word-for-each-node (lambda (n) (set! weight (+ weight (uf-node-size n)))) word mask registry)))
+      targets source)
+    (* (uf-node-size source) weight)))
+;; The sparse fallback owns promotion/growth. A dense table with sufficient
+;; capacity installs each missing word once and updates only the reverse arcs.
+(def (reach-difference-commit! targets source group)
+  (let* ((table (uf-node-reach source)) (bits (compact-reach-bits table))
+         (registry (compact-reach-registry targets)))
+    (let (required (##u32vector-length (compact-reach-bits targets)))
+      (when (and (fx< (##u32vector-length bits) required)
+                 (<= (* required 4) (* 2 (+ (compact-reach-size table) (compact-reach-size targets)))))
+        (let (grown (make-u32vector required 0))
+          (subu32vector-move! bits 0 (##u32vector-length bits) grown 0)
+          (set! (compact-reach-bits table) grown)
+          (set! bits grown))))
+    (if (fx>= (##u32vector-length bits) (##u32vector-length (compact-reach-bits targets)))
+      (reach-difference-for-each-word
+        (lambda (word mask)
+          (##u32vector-set! bits word (fxior (##u32vector-ref bits word) mask))
+          (set! (compact-reach-size table) (+ (compact-reach-size table) (bit-count mask)))
+          (word-for-each-node (lambda (target)
+            (set! (uf-node-predecessors target)
+              (reach-put! (uf-node-predecessors target) source group))) word mask registry)) targets source)
+      (reach-difference-for-each-word
+        (lambda (word mask)
+          (word-for-each-node (lambda (target)
+            (set! (uf-node-reach source) (reach-put! (uf-node-reach source) target group))
+            (set! (uf-node-predecessors target)
+              (reach-put! (uf-node-predecessors target) source group))) word mask registry)) targets source))))
+;; Remove a certified retirement set wordwise. The mask owns its buffer;
+;; surviving adjacency owners retain their separate buffers and exact degree.
+(def (reach-remove-mask! table retired)
+  (let ((bits (compact-reach-bits table)) (mask (compact-reach-bits retired)))
+    (let loop ((word 0))
+      (when (fx< word (fxmin (##u32vector-length bits) (##u32vector-length mask)))
+        (let* ((old (##u32vector-ref bits word)) (removed (fxand old (##u32vector-ref mask word))))
+          (unless (fxzero? removed)
+            (##u32vector-set! bits word (fxand old (fxnot removed)))
+            (set! (compact-reach-size table) (- (compact-reach-size table) (bit-count removed)))))
+        (loop (fx+ word 1))))))
+(def (cycle-mask group cycle)
+  (and (uf-group-registry group) (>= (length cycle) 32)
+       (let* ((maximum (foldl (lambda (n id) (max id (uf-node-order n))) 0 cycle))
+              (mask (make-compact-reach (make-u32vector (+ 1 (quotient maximum 32)) 0)
+                      (uf-group-registry group) 0)))
+         (for-each (cut compact-reach-put! mask <>) cycle) mask)))
 ;; Geometric growth follows std/vector/extensible's owned-buffer contract.
 ;; Admission has succeeded before allocation, promotion or registry installation.
 ;; : (-> RootTable UfNode UfGroup RootTable)
@@ -221,13 +291,14 @@
                          (if (> (uf-node-size n) (uf-node-size best)) n best))
                        (car cycle) (cdr cycle)))
          (merged (uf-node-members winner))
-         (size (uf-node-size winner)))
+         (size (uf-node-size winner))
+         (retired (cycle-mask group cycle)))
     (when (uf-group-indexed? group)
       (if (= (length cycle) (uf-group-population group))
         ;; Every reverse key belongs to a retiring root. No external owner
         ;; survives to observe it; release the winner's whole backing table.
         (set! (uf-node-predecessors winner) (make-hash-table-eq))
-        (retire-cycle-predecessors! winner cycle)))
+        (unless retired (retire-cycle-predecessors! winner cycle))))
     (for-each (lambda (n)
       (unless (eq? n winner)
         (set! merged (append (uf-node-members n) merged))
@@ -243,6 +314,16 @@
     (set! (uf-group-roots group) roots)
     (set! (uf-group-population group) (length roots))
     (when (null? (cdr roots)) (set! (uf-group-registry group) #f))
+    ;; Dense SCCs retire one stable mask from each surviving reverse owner.
+    ;; This avoids revisiting every outgoing arc of every absorbed component.
+    (when (and retired (uf-group-indexed? group))
+      (reach-remove! retired winner)
+      (for-each (lambda (n)
+        (let (table (uf-node-predecessors n))
+          (if (compact-reach? table) (reach-remove-mask! table retired)
+            (for-each (lambda (loser) (unless (eq? loser winner) (reach-remove! table loser))) cycle))
+          (when (eq? n winner) (reach-remove! table winner)))) roots)
+      (compact-reach-put! retired winner))
     ;; Canonical pre-merge keys plus complete closure mean any external
     ;; predecessor of an absorbed root already reaches the winner. Other DAG
     ;; keys need no rewrite. Iterate a stable list, never the changed table.
@@ -253,9 +334,14 @@
         ;; No external target: release the old backing array as well as keys.
         (set! (uf-node-reach n) (make-hash-table-eq))
         (when (or (eq? n winner) (reach-get (uf-node-reach n) winner))
-          (for-each (lambda (target)
-            (when (or (not (eq? target winner)) (eq? n winner))
-              (reach-remove! (uf-node-reach n) target))) cycle)))) roots)
+          (if (and retired (compact-reach? (uf-node-reach n)))
+            (begin
+              (unless (eq? n winner) (reach-remove! retired winner))
+              (reach-remove-mask! (uf-node-reach n) retired)
+              (unless (eq? n winner) (compact-reach-put! retired winner)))
+            (for-each (lambda (target)
+              (when (or (not (eq? target winner)) (eq? n winner))
+                (reach-remove! (uf-node-reach n) target))) cycle))))) roots)
     (for-each (lambda (n)
       (set! (uf-node-reach n) (reach-retired (uf-node-reach n)))
       (when (uf-node-predecessors n)
@@ -344,16 +430,22 @@
                          (if (reachable? b p) (cons p selected) selected)) [] preds))))
          ;; A fresh source or sink has no external arc. Every pair on these
          ;; axes is missing; self-injections retain ordinary admission.
-         (changes []) (needed (length new)) (added []))
+         (changes []) (needed (length new)) (added [])
+         (target-mask (and (not rectangles?) (not fresh-product?)
+                           (uf-group-indexed? group) (reach-copyable? (uf-node-reach b) b)
+                           (reach-copy-with-node (uf-node-reach b) b)))
+         (singleton? (= population (hash-length nodes))))
     ;; Count each missing component rectangle before rows or graph mutation.
     (if (and fresh-product? (not rectangles?))
       (set! needed (+ needed
         (* (axis-weight preds) (axis-weight succs))))
       (for-each (lambda (p)
-        (for-each (lambda (s)
-          (when (or fresh-product? (not (reachable? p s)))
-            (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
-            (when rectangles? (set! changes (cons (cons p s) changes))))) succs)) preds))
+        (if (and target-mask (compact-reach? (uf-node-reach p)))
+          (set! needed (+ needed (reach-difference-weight target-mask p singleton?)))
+          (for-each (lambda (s)
+            (when (or fresh-product? (not (reachable? p s)))
+              (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
+              (when rectangles? (set! changes (cons (cons p s) changes))))) succs))) preds))
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
     (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
@@ -425,9 +517,11 @@
                  (commit-arc! p target))) sources))
             (else
              (axis-for-each (lambda (p)
-               (axis-for-each (lambda (s)
-                 (when (or fresh-product? (not (reachable? p s)))
-                   (commit-arc! p s))) targets)) sources))))))
+               (if (and target-mask (compact-reach? (uf-node-reach p)))
+                 (reach-difference-commit! target-mask p group)
+                 (axis-for-each (lambda (s)
+                   (when (or fresh-product? (not (reachable? p s)))
+                     (commit-arc! p s))) targets))) sources))))))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
     ;; Merge toward the largest component, bounding union parent depth.
     (when cycle

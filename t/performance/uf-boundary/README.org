@@ -1,0 +1,121 @@
+#+TITLE: Existing-endpoint UF closure and SCC boundary qualification
+
+* Architecture and source study
+
+Baseline: =0ec0f436951ee7f84bb1d535733145c255ece05b=. The reference kernel
+is byte-identical to that commit. This experiment compares complete UF input
+trajectories, including initial population, against separate frozen/current
+kernels. It does not compare entire historical/current engine artifacts.
+
+Gerbil =1cfb032= =std/vector/extensible.ss= separates logical extent from owned
+buffer capacity; =std/struct/dag.ss:31-51= separates read-only traversal,
+completed state and mutation lifetime. The implementation applies these
+contracts to one stable target bitmap, shared by admission and commit. Word
+callbacks enumerate only missing targets, with the implicit diagonal excluded.
+Singleton components count bits; merged components sum native member weights.
+Dense forward commit installs each word once, then updates reverse keys.
+Sparse or unsuitable-capacity tables retain scalar insertion and promotion.
+
+A large SCC builds one retirement mask. Surviving predecessor owners remove
+absorbed IDs wordwise; forward owners remove only retired keys and retain the
+winning representative when external. Full-group retirement still releases
+backing tables. Registry cleanup, parent selection and persistent member order
+stay shared with scalar publication. Small SCCs keep the scalar path. The
+stable admission mask is private; rejected budgets install no adjacency,
+parent, registry or retained output. Frozen cuts retain no mutable mask.
+
+* Lean / Quint / Python correspondence
+
+=TransitiveComponents.lean= proves scalar/difference predicate equivalence,
+equality of arbitrary weighted sums over equal admitted lists, and retirement
+mask membership. Existing closure/representative laws supply the complete
+post-insertion closure premise. These abstract laws do not prove raw u32vector
+memory safety, actual native cardinality caches or arbitrary host effects.
+
+The existing =TransitiveComponents.qnt= now checks root-mask/scalar difference
+identity and exact weighted concrete-row charging. All existing transition
+invariants remain. The new wrong-weight mutant must violate
+=WeightedDeltaExact=; the original ten defect controls remain required.
+Historical publication is checked by the separate existing provider-view
+model and actual retained-cut tests; this addition does not replace it.
+
+=python/engine_tests/test_uf_boundary.py= calls actual exported Library UF
+procedures through the public module API. An independent DFS oracle checks
+full rows, unique counts, budget rejection/retry, surviving SCC boundaries and
+retained historical cuts. Both API and ABI bindings run in fresh processes.
+Native tests also compare scalar grouped frontiers with the frozen kernel and
+check physical rejection atomicity. Structural validators use compressed
+fixtures because their complete transitivity audit is cubic; A/B retains the
+full 512-edge target inputs, unchanged.
+
+* Fixed A/B contract
+
+ASP's =make-benchmark-fixture= authors =benchmark.ss=. Twenty alternating
+CPU pairs include natural GC; five alternating allocation pairs collect
+outside the counter interval. Twenty separate ASP admissions measure the
+candidate. =bridge/partial/complete= require CPU <=90% baseline and >=16/20
+wins. All scenarios require allocation <=110% baseline +8192 bytes; controls
+require CPU <=110% baseline +20us. ASP p95 <=999ms. The whole eight-scenario
+invocation has a 90s watchdog. No failed gate or timeout is widened.
+
+Inputs: two 256-edge chains joined at existing endpoints; a 512-edge chain
+merging nodes 64..448; the same chain merging all 513 nodes; overlapping SCCs;
+weighted repeated merges; sparse star; four-node cycle; pure 512-edge chain.
+Expected masses and root/arc counts are independent arithmetic, not outputs
+copied from the frozen implementation. Native tests separately check exact
+rows/order and Python checks independent graph truth.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" gxi t/performance/uf-boundary/build.ss \
+  "$PWD/.cache/ascent/uf-boundary/lib"
+GERBIL_PATH="$PWD/.gerbil" timeout 90s gxi -:max-heap=3G,debug=q \
+  -e '(add-load-path! (path-expand ".cache/ascent/uf-boundary/lib"))' \
+  :gerbil-ascent/t/performance/uf-boundary/runner all .cache/ascent/uf-boundary
+just check-transitive-components-formal
+just check-lean-proofs
+#+end_src
+
+Raw builds, rejected attempts and performance receipts stay ignored under
+=.cache/ascent/uf-boundary/=. Concurrent loading/naming changes are qualified
+separately. Library API verification uses a physical =0ec0f43= source snapshot
+with this batch's UF source, excluding those unrelated uncommitted changes.
+
+* Accepted final measurements
+
+| Complete UF trajectory | Baseline CPU us | Candidate CPU us | CPU reduction | Allocation change | Wins |
+|------------------------+-----------------+------------------+---------------+-------------------+------|
+| Existing endpoint bridge | 26783 | 21467 | 19.8% | +2.5% | 18/20 |
+| Partial SCC | 46058 | 26751 | 41.9% | +4.4% | 20/20 |
+| Complete SCC | 29296 | 22938 | 21.7% | +0.2% | 17/20 |
+| Overlapping SCCs | 22054 | 14562 | 34.0% | +3.8% | 18/20 |
+| Weighted SCCs | 9191 | 6450 | 29.8% | +1.6% | 18/20 |
+| Sparse star control | 1109 | 1140 | -2.8% | unchanged | 2/20 |
+| Small control | 11 | 11 | unchanged | +16 bytes | 10/20 |
+| Pure chain control | 18270 | 18194 | 0.4% | unchanged | 11/20 |
+
+All eight fixed contracts pass, final =OK= and exit zero. Six production/
+reference/fixture/build/runner source fingerprints match before and after the
+final invocation. Raw alternating samples are retained separately from the
+initial accepted diagnostic, which used the same gates. CPU means per-process
+user+system time with natural GC. Other machine activity was present; these
+are matched process measurements, not isolated-machine wall-time or SMP gains.
+
+Lean's full existing =AscentProof/AscentProofTests= gate passes 158 jobs. The
+three-node UF Quint model explores 170455 generated/41149 distinct states with
+zero remaining queue and all eleven expected counterexamples. Existing
+ProviderViews/ReaderLifetime positive/defect checks also pass. Native gxtest
+passes five Suites/17 Cases, including existing exhaustive small histories,
+with =HARNESS-OK=, =OK= and no =ERROR/FAIL=. Structural tests compress integer
+coordinates fourfold; fixed A/B targets retain full populations and complete
+trajectories. Python's independent oracle passes three actual UF controls in
+each binding mode. This is not a claim that the whole current consumer graph
+or the other task's loading changes have been qualified.
+
+The Python Library is built from the independent physical snapshot and binds
+132 source inputs, 127 linked Scheme sources and 1264 loading resources. Its
+UF input hash equals the final live UF source. Initial missing package-prefix,
+incorrect snapshot environment, GCC math-link and test-decoder failures are
+retained. The successful retry uses standard build scheduling, the existing
+120s cap and explicit =-lm=, without rebuilding upstream Gerbil/Gambit. API
+packaging is a separate successful GCC16 build. Neither is a cold-build speed
+claim or a portable-wheel/remote-CI qualification.

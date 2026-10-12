@@ -12,7 +12,7 @@ module TransitiveComponents {
   pure def Walk(links: int -> int, n: int, k: int): int = range(0,k).foldl(n,(node,_) => links.get(node))
   type Snapshot = {inputs: Edges, parent: int -> int, arcs: Edges, active: Set[int], link: int -> int, members: int -> Set[int], size: int -> int}
   type State = {inputs: Edges, parent: int -> int, arcs: Edges, active: Set[int], link: int -> int, members: int -> Set[int], size: int -> int,
-    refused: bool, saved: Snapshot, frontier: Edges, before: Edges}
+    refused: bool, saved: Snapshot, frontier: Edges, before: Edges, charged: int}
   var q: State
   def snapshot: Snapshot = {inputs:q.inputs,parent:q.parent,arcs:q.arcs,active:q.active,link:q.link,members:q.members,size:q.size}
   def Reach(r: int, s: int): bool = r == s or q.arcs.contains((r,s))
@@ -40,13 +40,18 @@ module TransitiveComponents {
     {par:par,links:between,pre:links,winner:winner,mem:mem,sz:sz,chain:chain,delta:missing.union(newSelf),raw:tuples(pred,succ),missing:missing}
   }
   pure val Initial: Snapshot = {inputs:Set(),parent:Nodes.mapBy(n => n),arcs:Set(),active:Set(),link:Nodes.mapBy(n => n),members:Nodes.mapBy(n => Set(n)),size:Nodes.mapBy(_ => 1)}
-  action init = q' = {inputs:Initial.inputs,parent:Initial.parent,arcs:Initial.arcs,active:Initial.active,link:Initial.link,members:Initial.members,size:Initial.size,refused:false,saved:Initial,frontier:Set(),before:Set()}
+  action init = q' = {inputs:Initial.inputs,parent:Initial.parent,arcs:Initial.arcs,active:Initial.active,link:Initial.link,members:Initial.members,size:Initial.size,refused:false,saved:Initial,frontier:Set(),before:Set(),charged:0}
   action Accept(edge: (int,int)): bool = {
     val plan = Plan(edge)
     all {not(q.inputs.contains(edge)), q' = {...q, inputs:q.inputs.union(Set(edge)), before:Visible(q.parent,q.arcs,q.active),active:q.active.union(Set(edge._1,edge._2)),
       frontier: if (Mutation == "raw") Set(edge) else if (Mutation == "diagonal") plan.missing
         else if (Mutation == "old") Pairs.filter(p => plan.raw.contains((q.parent.get(p._1),q.parent.get(p._2)))).union(plan.delta) else plan.delta,
+      charged: if (Mutation == "weight") plan.delta.size()+1 else
+        plan.raw.filter(p => p._1 != p._2 and not(Reach(p._1,p._2)))
+          .fold(0,(acc,p) => acc+q.size.get(p._1)*q.size.get(p._2))
+          +Set(edge._1,edge._2).exclude(q.active).size(),
       parent: if (Mutation == "split") q.parent else plan.par,
+
       arcs: if (Mutation == "stale") q.arcs.union(Set((q.parent.get(edge._1),q.parent.get(edge._2))))
         else if (Mutation == "adjacency") plan.pre.filter(p => Nodes.map(n => plan.par.get(n)).contains(p._1)) else plan.links,
       link: if (Mutation == "chain" and plan.winner != 0) plan.chain.set(plan.winner,Nodes.filter(r => r != plan.winner).chooseSome()) else plan.chain,
@@ -64,6 +69,18 @@ module TransitiveComponents {
   val DeltaExact = q.frontier == Expected(q.inputs).intersect(tuples(q.active,q.active)).exclude(q.before)
   val ParentChains = Nodes.forall(n => q.link.get(q.parent.get(n)) == q.parent.get(n) and Walk(q.link,n,Nodes.size()) == q.parent.get(n))
   val MemberPartition = Nodes.forall(r => q.members.get(r) == Nodes.filter(n => q.parent.get(n) == r))
-  val SizeExact = Nodes.forall(r => q.size.get(r) == q.members.get(r).size())
+  // Root rectangles are disjoint; exact component weights charge concrete rows.
+  val WeightedDeltaExact = q.charged == q.frontier.size()
+  val DifferenceExact = Pairs.forall(edge => {
+    val a = q.parent.get(edge._1)
+    val b = q.parent.get(edge._2)
+    val targets = Roots.filter(s => Reach(b,s))
+    val scalar = tuples(Roots.filter(p => Reach(p,a)),targets).filter(p => not(Reach(p._1,p._2)))
+    val masked = Roots.filter(p => Reach(p,a)).fold(Set(),(acc,p) =>
+      acc.union(targets.exclude(Roots.filter(s => Reach(p,s))).map(s => (p,s))))
+    scalar == masked
+  })
+  val SizeExact
+ = Nodes.forall(r => q.size.get(r) == q.members.get(r).size())
 
 }

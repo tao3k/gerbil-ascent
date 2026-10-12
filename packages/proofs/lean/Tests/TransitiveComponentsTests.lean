@@ -27,3 +27,17 @@ example : ¬ (2 * 4 ≤ 4 + 1 + 0) := by simp [incomplete]
 #print axioms absorbed_key_cleanup
 #print axioms winner_inherits_successors
 #print axioms largest_merge_doubles
+
+example (targets present : Nat → Prop) (a n : Nat) :
+    missing targets present a n ↔ targets n ∧ ¬ (present n ∨ n = a) :=
+  difference_exact targets present a n
+
+example (nodes : List Nat) (targets present : Nat → Prop) (a : Nat)
+    (weights : Nat → Nat) [DecidablePred targets] [DecidablePred present] :
+    ((nodes.filter fun n => decide (missing targets present a n)).map weights).sum =
+    ((nodes.filter fun n => decide (targets n ∧ ¬ (present n ∨ n = a))).map weights).sum :=
+  difference_weighted nodes targets present a weights
+
+#print axioms difference_exact
+#print axioms difference_weighted
+#print axioms retirement_mask_exact

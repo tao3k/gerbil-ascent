@@ -92,4 +92,41 @@ theorem largest_merge_doubles (loser winner rest : Nat)
     (largest : loser ≤ winner) : 2 * loser ≤ loser + winner + rest := by
   omega
 
+-- A word difference encodes the same predicate as scalar missing-pair tests.
+abbrev missing (targets present : N → Prop) (source : N) (target : N) : Prop :=
+  targets target ∧ ¬ present target ∧ target ≠ source
+
+theorem difference_exact (targets present : N → Prop) (source target : N) :
+    missing targets present source target ↔
+      targets target ∧ ¬ (present target ∨ target = source) := by
+  simp [missing, not_or]
+
+-- Any weight function has the same sum once the admitted component list is
+-- equal. Native sizes and bitmap encoding are separate refinement premises.
+theorem difference_weighted (nodes : List N) (targets present : N → Prop)
+    (source : N) (weight : N → Nat) [DecidablePred targets] [DecidablePred present]
+    [DecidableEq N] :
+    ((nodes.filter fun n => decide (missing targets present source n)).map weight).sum =
+    ((nodes.filter fun n => decide (targets n ∧ ¬ (present n ∨ n = source))).map weight).sum := by
+  have predicates : (fun n => decide (missing targets present source n)) =
+      (fun n => decide (targets n ∧ ¬ (present n ∨ n = source))) := by
+    funext n
+    simp only [missing, not_or]
+  rw [predicates]
+
+-- Masking absorbed keys preserves every surviving key, including the winner.
+theorem retirement_mask_exact (present retired : N → Prop) (winner n : N) :
+    (present n ∧ ¬ (retired n ∧ n ≠ winner)) ↔
+      (present n ∧ (¬ retired n ∨ n = winner)) := by
+  classical
+  constructor
+  · rintro ⟨hp, hn⟩
+    by_cases hr : retired n
+    · by_cases he : n = winner
+      · exact ⟨hp, Or.inr he⟩
+      · exact False.elim (hn ⟨hr, he⟩)
+    · exact ⟨hp, Or.inl hr⟩
+  · rintro ⟨hp, hkeep⟩
+    exact ⟨hp, fun ⟨hr, hne⟩ => hkeep.elim (fun h => h hr) (fun h => hne h)⟩
+
 end Ascent.TransitiveComponents

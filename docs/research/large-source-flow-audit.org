@@ -1482,3 +1482,28 @@ establish a total retained-heap, RSS or historical whole-engine improvement.
 The fixed complete-engine scenarios still share live storage helpers. Dense
 existing-endpoint products and large SCC/publication traversal remain distinct
 future flows; the closure's worst-case logical fact count is still quadratic.
+
+* Existing-endpoint UF differences and SCC boundary retirement
+
+The dense UF owner still checked every predecessor/successor pair twice and
+retired each losing component's outgoing reverse keys separately. One stable
+target mask now serves complete weighted preflight and admitted word commit;
+large SCCs remove a shared retirement mask from surviving owners. Sparse,
+small, scalar publication and weighted fallback retain their contracts.
+Gerbil's owned-vector extent and DAG traversal lifetime patterns guide the
+change; Lean proves the admitted predicate/weighted-list equivalence and
+representative-mask law before operational qualification.
+
+[[file:../../t/performance/uf-boundary/README.org][The complete UF boundary batch]] freezes =0ec0f43= and records eight fixed
+matched scenarios. Existing-endpoint bridge, partial SCC and complete SCC CPU
+fall 19.8% /41.9% /21.7%; allocation adds 2.5% /4.4% /0.2%. Sparse CPU adds
+2.8%, small is unchanged, and pure-chain allocation is unchanged. These are
+complete native UF input trajectories, not whole historical engine or RSS gains.
+All source fingerprints match across final A/B. Lean full-package checks,
+Quint positive/eleven defect controls plus existing view/lifetime checks,
+seventeen native Cases, and three independent Python-oracle Cases on both API
+and ABI bindings pass. Native state audits use reduced populations; full-size
+A/B retains exact independent logical/component counts. Actual C ABI artifacts
+bind a physical base-plus-UF snapshot, excluding concurrent loading/naming edits.
+Future scalar-frontier bitmap planning and weighted set-bit accounting remain
+separate opportunities; the logical closure's quadratic worst case remains.

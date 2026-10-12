@@ -74,12 +74,16 @@
 (def (gerbil-ascent-view-contains? view row)
   ((relation-view-contains view) row))
 ;; : (-> FrozenView Rows)
+(def (materialize-rows visit)
+  ;; The invocation owns only this outer spine. Visitors control tuple
+  ;; construction; frozen member and journal spines are never reversed.
+  (let (rows [])
+    (visit (lambda (row) (set! rows (cons row rows))))
+    (reverse! rows)))
 (def (gerbil-ascent-view-rows view)
   (if (relation-view-export view)
     ((relation-view-export view))
-    (let (rows [])
-      (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows))) view)
-      (reverse rows))))
+    (materialize-rows (cut gerbil-ascent-for-each-row <> view))))
 ;; : (-> Row Columns Key Boolean)
 (def (matches-key? row columns key)
   (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key))
@@ -330,9 +334,11 @@
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (validate-key! columns key)
-      (for-each (lambda (block)
-        (visit-rectangle-parts block columns key
-          (lambda (prefix left right) (consume (append prefix (list left right)))) routes)) (selected columns key)))
+      (if (null? columns)
+        (gerbil-ascent-write-rectangles! blocks consume)
+        (for-each (lambda (block)
+          (visit-rectangle-parts block columns key
+            (lambda (prefix left right) (consume (append prefix (list left right)))) routes)) (selected columns key))))
     (lambda (row)
       (let (width (length row))
         (and (>= width 2)
@@ -341,7 +347,11 @@
                (if membership-routes
                  (routed-rectangles membership-routes blocks
                    (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row)
-                 blocks))))) #f
+                 blocks)))))
+    (lambda ()
+      ;; Only this invocation owns the collector spine. Rectangles and member
+      ;; lists stay borrowed; each writer emits a fresh detached tuple.
+      (materialize-rows (cut gerbil-ascent-write-rectangles! blocks <>)))
     (make-part-visitors
       (lambda (columns key consume)
         (validate-key! columns key)

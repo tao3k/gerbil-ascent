@@ -1,0 +1,101 @@
+#+TITLE: UF complete view materialization qualification
+#+LANGUAGE: en
+
+* Scope and ownership
+The production change is a complete frozen-row consumption flow in
+=core/relation-view.ss= and =program/view-state.ss=. Full rectangle visits use
+the existing arity-specific detached tuple writer. A private materializer owns
+one outer collector spine, then reverses that spine destructively. Delta replay
+also owns its returned outer spine, so publication reverses it without copying.
+Frozen descriptor/member/journal spines are never modified. Indexed selections
+retain their checked routing and ordering. Each full export creates fresh tuples.
+
+Gerbil's =std/list/list.ss:365= =group-same= demonstrates scoped owned collectors
+and =reverse!=. =gerbil/runtime/util.ss:366= =append-reverse-until= separates a
+borrowed traversal from an owned accumulator. We apply that ownership contract
+at the representation's complete consumer boundary, sharing a private builder
+rather than introducing another scheduler, cache or configuration knob.
+
+* Fixed baseline and admission
+Frozen =81d7f83225de35821d262de1d43cc912dd96f03a= source copies preserve the old
+rectangle view, journal replay and delta publication. Baseline references are
+private benchmark modules, with distinct rectangle/view types where needed.
+The fixture builds logical UF component products: 256-member SCCs, grouped
+SCCs, singleton components, complete cyclic journal exports and an actual
+storage-owner delta publication. Immutable capture happens outside timing.
+Each timed invocation materializes and consumes the entire exported row spine;
+ASP retains only bounded size/first/last metadata, not the full public result.
+Before timing, full ordered old/new rows and independent Cartesian closure
+answers are checked. Native tests additionally cover arbitrary prefix widths,
+repeated members, empty axes, indexed selection and caller tuple/spine mutation.
+
+The generated =benchmark.ss= uses the ASP Scheme API. Final samples contain 32
+complete exports, 20 alternating natural-GC CPU pairs, 20 ASP admissions and 5
+allocation pairs. Allocation-leg GC happens before the counter begins. Every
+CPU collection remains charged; raw GC counts/times are retained. Dense/grouped
+targets require CPU <=90% baseline, >=16/20 paired wins and allocation <=80% +
+8192 bytes. Controls require CPU <=110% +20us and allocation <=110% +8192 bytes.
+ASP p95 must remain within 999ms. The complete original six-scenario run has a
+90-second parent cap; the added actual delta flow has the same 90-second cap.
+The interpreter heap cap is 3GB throughout.
+
+* Retained failed experiments
+The first replay tuple-writer/left-coordinate hoisting experiment improved CPU
+in one measurement, but did not reduce complete replay allocation. It failed
+the declared allocation target and was withdrawn from production. Journal
+replay is unchanged and appears only as a regression control in the accepted
+experiment. Its failed contract and measurements remain in ignored cache.
+A four-export sample missed the dense paired-win gate (15/20), despite median
+improvement. Fixed sample calibration increased both legs to 32 exports; the
+CPU, allocation, win and timeout gates were not relaxed. ASP initially retained
+all full row results, exceeding the unchanged 3GB harness cap. Bounded returned
+metadata fixed that benchmark ownership issue; complete row construction stays
+inside every timed call. This failure is retained, not reported as a pass.
+
+* Evidence layers
+Lean's =ProviderRectangles.collect_order/materialize_order/materialize_count=
+prove ordered accumulator reversal and cardinality for arbitrary descriptor
+lists, including repeated values. Scalar/grouped tuple lemmas prove value
+correspondence of constructor specializations. These are transformation laws,
+not a compiler or pointer-alias proof.
+
+Quint's =RectangleExport= enumerates finite empty/scalar/grouped/multi-descriptor
+cuts and independent readers. Order, frozen-source alias and sibling alias
+mutants must each violate the designated invariant. Existing ProviderViews,
+ReaderLifetime and replay models retain their separate lifecycle boundaries.
+
+=test_uf_materialization.py= calls the real native UF/view APIs through both API
+and ABI, compares complete rows against independent DFS closure, checks unique
+counts and filtered row order, and holds historical cuts across SCC retirement
+and extension. Receipt source hashes bind the actual provider to these sources;
+actual module compile logs and implementation-distinguishing native observations
+are needed alongside those declarations. Prepared mtime cache reuse alone is
+not evidence of compiled byte correspondence.
+
+* Results
+Final measurements and native/formal/actual-library receipts are summarized in
+=docs/research/large-source-flow-audit.org=. Raw logs, binaries and sample data
+are stored only under ignored =.cache/ascent/uf-materialization/=.
+These are complete export measurements. They do not claim faster UF insertion,
+constant-cost full closure export, portable wheels or completed remote CI.
+
+* Reproduction
+#+begin_src sh
+GERBIL_PATH=$PWD/.gerbil GERBIL_LOADPATH=$PWD/.gerbil/lib \
+  timeout 60s gxi t/performance/uf-materialization/build.ss \
+  "$PWD/.cache/ascent/uf-materialization/lib"
+GERBIL_PATH=$PWD/.gerbil \
+GERBIL_LOADPATH=$PWD/.cache/ascent/uf-materialization/lib:$PWD/.gerbil/lib \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  t/performance/uf-materialization/runner.ss all \
+  "$PWD/.cache/ascent/uf-materialization"
+just _check-quint RectangleExport
+just check-lean-proofs
+#+end_src
+
+Actual API/ABI Oracle validation uses the existing unittest driver against the
+qualified provider artifact, with =test_uf_materialization.py= as the pattern.
+The initial foreign-owner and row-stream misuse failures are retained. The
+corrected fixture uses same-owner module calls and the native lookup collector;
+three Cases pass in each real backend within the original 15-second cap. The
+broader provider matrix's partial DENY remains distinct from this UF result.

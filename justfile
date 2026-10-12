@@ -688,11 +688,11 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-    models+=(ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
+    models+=(RectangleExport ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
-      ProviderViews) models=(ProviderViews ReaderLifetime) ;;
+      ProviderViews) models=(ProviderViews ReaderLifetime RectangleExport) ;;
       *) found=0; for model in "${models[@]}"; do if [[ "$model" = "$group" ]]; then found=1; fi; done; [[ "$found" = 1 ]] || { echo "Unknown Quint feature: $group" >&2; exit 2; }; models=("$group") ;;
     esac
     export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
@@ -765,6 +765,7 @@ _check-quint group='all': prepare-quint
         NegativeProbe) constants='Mutation = "none"'; invariants='AbsenceSound WitnessSound FailureTerminal Bounds' ;;
         NumericProbe) constants='Mutation = "none"'; invariants='TypedPrefix PrefixValue PublicationExact Unpublished Bounds' ;;
         CountProbe) constants='Mutation = "none"'; invariants='PrefixCount CompleteExact PublishedOnlyComplete FailureTerminal Bounds' ;;
+        RectangleExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads CountExact' ;;
         ProviderViews) constants="Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff"; invariants='AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget'; constraint=Explore ;;
         ReaderLifetime) constants='Rows = {0,1,2}\nReaders = {1,2}\nBudget = 2\nMutation = "none"'; invariants='ReaderAlive AcceptedCurrent CreditBalance'; properties=ReaderCompletion; specification=spec ;;
         ReadyComponents) constants='Tasks = {1,2,3}\nCapacity = 2\nMutation = "none"'; invariants='Partition Prerequisites CapacityBound CompleteReturn DependencySnapshot CompletedDelivery' ;;
@@ -887,6 +888,7 @@ _check-quint group='all': prepare-quint
             ProviderReplay) fault scope PublishedExact; fault early JournalExact; fault drop JournalExact; fault kind OrderExact; fault cut HeldExact; fault reject RefusalAtomic ;;
             ProviderAdmission) fault nocap MatchingExact; fault set MatchingExact; fault allwitness CountCaps; fault early NoEarlyCallbacks; fault borrow DetachedPacket; fault retain FailedCacheRevoked ;;
             ProviderRouting) for mutation in drop order representative prefix; do fault "$mutation" CompleteExact; done ;;
+            RectangleExport) fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads ;;
             ProviderViews) fault alias FrozenRead; fault retire ReaderAlive; fault early AtomicPublication; fault stale CurrentReply; fault budget LogicalBudget ;;
             ReaderLifetime) for mutation in stuck unfair global; do fault "$mutation" ReaderCompletion 13; done; fault retire ReaderAlive; fault credit CreditBalance; fault aba AcceptedCurrent;
               sed -e 's/Readers = {1,2}/Readers = {1}/' -e 's/Mutation = "none"/Mutation = "global"/' "$base" > "$temp/single.cfg"; execute single-reader-global-fairness "$temp/single.cfg" 0;

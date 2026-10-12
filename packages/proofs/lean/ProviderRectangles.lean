@@ -510,3 +510,34 @@ theorem component_squares_partition_equal (left right : Components α C)
   · exact ⟨c, hc, (same c hc).symm ▸ hx, (same c hc).symm ▸ hy⟩
 
 end Ascent.ProviderRectangles
+
+/-! The materializer prepends into its private output spine, then reverses that
+spine once. This law preserves ordered rows, including repeated values; it does
+not require the disjointness assumption used for closure cardinality. -/
+namespace Ascent.ProviderRectangles
+
+def collect (xs acc : List α) : List α :=
+  match xs with
+  | [] => acc
+  | x :: tail => collect tail (x :: acc)
+
+theorem collect_order (xs acc : List α) : collect xs acc = xs.reverse ++ acc := by
+  induction xs generalizing acc with
+  | nil => simp [collect]
+  | cons x xs ih => simp [collect, ih, List.reverse_cons, List.append_assoc]
+
+theorem materialize_order (rs : List (Rectangle α)) :
+    (collect (expand rs) []).reverse = expand rs := by
+  simp [collect_order]
+
+theorem materialize_count (rs : List (Rectangle α)) :
+    ((collect (expand rs) []).reverse).length = count rs := by
+  rw [materialize_order, count_exact]
+
+-- Grouped construction copies the prefix once into each logical tuple.
+-- The two-column and one-prefix specializations have the same ordered values.
+theorem scalar_tuple (left right : α) : [] ++ [left, right] = [left, right] := rfl
+theorem grouped_tuple (group left right : α) :
+    [group] ++ [left, right] = [group, left, right] := rfl
+
+end Ascent.ProviderRectangles

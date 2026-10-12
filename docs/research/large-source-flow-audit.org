@@ -1539,3 +1539,66 @@ snapshot independently builds through current native std/make, with strict
 source/resource identity; concurrent loader/naming work keeps separate ownership
 and qualification. Dense closures still have quadratic logical cardinality;
 public full row materialization remains proportional to that output.
+
+* UF complete view materialization and detached result ownership
+
+The next batch follows the complete frozen-view consumer path, rather than
+changing the UF closure algorithm. =core/relation-view.ss= now separates a
+private invocation-owned outer collector from the borrowed representation.
+Unfiltered rectangle visitors and full exports share the existing specialized
+rectangle writer; checked indexed selection keeps its existing routing.
+=program/view-state.ss= reverses the freshly replayed delta collector directly.
+Each rectangle tuple remains detached, and no member/journal/frozen descriptor
+spine is passed to destructive reversal.
+
+Gerbil's =std/list/list.ss= =group-same= and runtime =append-reverse-until=
+supply the ownership pattern: borrowed input traversal, owned accumulation,
+then a single completed result. The implementation shares this private flow
+without adding public APIs, row caches, worker policy or environment controls.
+
+[[file:../../t/performance/uf-materialization/README.org][Complete export qualification]] freezes =81d7f83225de35821d262de1d43cc912dd96f03a=.
+Final CPU measurements retain all natural GC. Each sample consumes 32 complete
+exports; 20 alternating pairs, 20 ASP admissions and 5 allocation pairs check
+the declared gates. Baseline capture and independent ordered closure checks
+are outside timing. The timed operation constructs every public row and walks
+the completed spine; returned metadata is bounded so ASP does not retain every
+large materialized result.
+
+| Complete consumption | CPU old/new us | Allocation old/new bytes | CPU wins |
+|----------------------+----------------+--------------------------+----------|
+| Dense 256-member SCC | 94082 / 65511  | 402670880 / 302004000    |    19/20 |
+| Grouped 256 SCC      | 105573 / 77676 | 503334176 / 402667808    |    20/20 |
+| Actual 128 SCC delta | 123321 / 123816| 65661536 / 53176928      |    10/20 |
+| Cyclic journal       | 281216 / 287174| 260133440 / 260133440    |    12/20 |
+| Sparse components    | 188 / 84      | 733472 / 405792          |    20/20 |
+| Single component     | 7 / 5         | 23840 / 18720            |    20/20 |
+| Selective row        | 14 / 14       | 28960 / 28960            |     9/20 |
+
+Dense and grouped targets reduce CPU by 30.4%/26.4% and allocation by 25%/20%.
+The actual delta publication reduces allocation by 19%; its CPU is unchanged
+within the regression gate. Cyclic journal replay is an unchanged control and
+has no accepted performance claim. Full export still requires work and public
+row storage proportional to the logical closure size.
+
+Failed replay writer/coordinate experiments did not meet the allocation
+objective and were withdrawn. The four-export paired-win miss and the ASP full
+result retention heap overflow remain recorded. Calibration and bounded
+observations changed harness sampling/ownership; CPU, allocation, win, heap and
+timeout gates were not loosened. The original six-scenario final run completed
+within 90 seconds; the added actual delta check uses a separate 90-second cap.
+
+Lean proves accumulator order, rectangle materialization count and scalar/
+grouped constructor equivalence. Quint's finite export model checks ordered
+reads, frozen source ownership and independent sibling results; all three
+fault variants produce counterexamples. Full Lean validation passes 158 jobs.
+Native validation passes 5 Suites / 34 Cases, including arbitrary prefixes,
+repeated members, empty axes, selective routing, mutation of exported rows and
+historical UF cuts surviving SCC retirement. Independent Python actual API/ABI
+checks pass three Cases per backend on the source-byte-matched actual Library.
+Its actual build completes in 103.216s under the unchanged 120s cap; both
+production modules have recorded Scheme and executable-object compile jobs.
+The broader Library matrix stopped on an initially invalid new fixture; that
+failure remains a DENY, not a full-inventory PASS. The isolated corrected
+fixture follows same-owner module calls and uses the native lookup collector.
+The foreign-reference and row-stream protocol rejections are retained.
+Remote CI and downstream consumer qualification remain separate evidence.

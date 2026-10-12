@@ -109,7 +109,7 @@
                       (gerbil-ascent-view-bind carrier name generation revision 'total) events eqrel?))
              (change (gerbil-ascent-view-with-export
                       (gerbil-ascent-view-bind change-carrier name generation revision 'delta)
-                      (lambda () (reverse (export-events events (relation-view-count total)
+                      (lambda () (reverse! (export-events events (relation-view-count total)
                         (- (relation-view-count total) (relation-view-count change-carrier)) #t eqrel?))))))
         (vector-set! all index total)
         (vector-set! delta index change)

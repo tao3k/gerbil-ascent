@@ -23,7 +23,7 @@
 (def test-library-base
   '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/native/artifact-admission" "t/model/response-projection"))
+                            "t/native/artifact-admission" "t/native/test" "t/model/response-projection"))
 (def test-library-dependencies
   '(
     (("t/performance/ascent-withdrawal-support-performance-test.ss")

@@ -1,0 +1,50 @@
+#+title: Test and experiment entries
+
+* Native tests
+=just test= prepares the native support Library (120-second build gate), then
+runs semantic =t/qualification/*-test.ss= Suites through native Gerbil GxTest
+(the existing 180-second Case gate). =just test-file t/qualification/<name>-test.ss= selects one module.
+=just test-performance-contracts= compiles the declared native support closure
+and runs the unchanged compiled timing/allocation Cases.
+
+=t/native/build.ss= builds; =t/native/test.ss= observes and admits completed
+native verdicts. Neither defines product behavior. Dependency selection is data
+in =t/native/library-spec.ss=. Existing compiled fixtures also remain native
+make inputs, so producer changes refresh their private call references. The
+source Cases are not replaced with compiled Case execution. ASP profiles choose worker capacity and isolation;
+Gerbil owns assertion execution. Every selected module must contain Cases, and
+worker/process failures must propagate to the command exit.
+
+* Performance studies
+=just performance-<name>= selects a declaration in =t/performance/studies.ss=.
+Its common runner compiles with =std/make= and, where required, native
+=compile-exe= with the completion barrier. Fixtures own algorithms, semantic
+oracles, fixed inputs, paired measurements and acceptance thresholds.
+
+Legacy =*-benchmark= recipes select =reference-studies.ss= and use
+=reference-run.ss=. Their existing sample counts, deadlines and numerical gates
+remain inside the original fixtures. Library and receipt locations are explicit
+arguments. Unknown selections fail before compilation.
+
+=just performance-uf-selected= prepares an isolated six-file study and exact
+Git references, then runs the fixed four-scenario contract. Its provenance is
+limited to that experiment; source identity checks are never a performance pass.
+
+* Models and research
+=t/model/= connects executable Scheme behavior to model experiments.
+=t/research/= contains independent consumers, model interactions and their
+transport tests. Lean, Quint, Python correspondence checks and native A/B have
+different evidence scopes; none substitutes for another.
+The historical evidence-search consumer additionally requires the POO Flow
+Temporal Library; it is not part of the default production/test dependency
+closure. Relocating that consumer does not qualify its external dependencies.
+
+Quint tool preparation and exhaustive checks live beside their models in
+=packages/proofs/quint/prepare.sh= and =check.sh=. The backend checksum is pinned
+in =backend.sha256=. =just= selects the group; the checker retains the original
+finite bounds, mutations and verdict requirements.
+
+Each benchmark run owns a unique ignored output directory and its source
+receipt. A rejected or interrupted run cannot inherit a previous PASS receipt.
+Logs, generated code, Libraries and measurements belong in ignored =.cache/=.
+=tools/ci/= contains SDK installation, not a parallel test hierarchy.

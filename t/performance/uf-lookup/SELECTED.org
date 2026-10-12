@@ -41,9 +41,12 @@ checks selectors against the old cut, including conflicting repeated constraints
 
 * Fixed native A/B and reproducibility
 Run =just performance-uf-selected= after installing the declared package dependencies.
-The recipe archives baseline =268e89b84c487696d5fbf032a10d6dd39479e10a= into a
-unique ignored cache directory, copies the candidate core and native harness,
-and redirects only the reference UF view import. It uses ASP's
+The native preparer reads and hashes the two baseline files at
+=268e89b84c487696d5fbf032a10d6dd39479e10a=, snapshots six candidate study
+inputs into a unique ignored cache directory, and redirects only the reference
+UF view import. It compiles those modules with =std/make= and writes the fixed
+contract once; it does not archive the repository or overwrite another study
+contract. The input receipt binds this study, not the entire provider Library. It uses ASP's
 =make-benchmark-fixture= and =benchmark-run/result=; Scheme owns the measurements.
 The existing historical lookup study, its baseline and its gates remain separate.
 

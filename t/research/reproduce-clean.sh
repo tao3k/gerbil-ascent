@@ -7,7 +7,7 @@ git clone --quiet --branch research/library-evidence-consumer "$artifact/source.
 trap 'printf "REPRODUCTION-RECEIPTS %s\n" "$work"' EXIT
 cd "$work/source"
 export GERBIL_PATH="$work/gerbil"
-export GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-4}"
+export GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}"
 export UV_CACHE_DIR="$work/uv-cache"
 openssl_prefix="${ASCENT_OPENSSL_PREFIX:-/opt/homebrew/opt/openssl@3}"
 test -f "$openssl_prefix/lib/libcrypto.dylib"

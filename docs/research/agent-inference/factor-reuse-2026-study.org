@@ -100,7 +100,7 @@ baseline repetition signal that the proposed mechanism can reduce.
 | Retained execution | =program/session.ss= retains accepted source snapshots and exposes update/run operations | Fresh/retained answer parity after successful updates and failure recovery; engine work separately from model cost |
 | Evidence binding | =candidate/evidence-store.ss= scopes entries by source identity, generation, digest and candidate digest | Source, rule and query changes refuse an old handle; bounded/unknown is never false |
 | Fragment composition | =reasoning-evidence-fragment= returns ancestor-closed support for an admitted ground atom | Two distinct downstream obligations consume the same supported atom under the admitted candidate's proof scope |
-| Model reuse | Existing =tools/research/candidate-interaction.ss= and =candidate-model.py= are consumers | Independently valid answers plus literal evidence of reuse/rederivation in visible thinking; no assumed hidden reasoning |
+| Model reuse | Existing =t/research/candidate-interaction.ss= and =candidate-model.py= are consumers | Independently valid answers plus literal evidence of reuse/rederivation in visible thinking; no assumed hidden reasoning |
 | Formal correspondence | Existing Lean Provider models and Quint =VerifiedCandidate.qnt= | State exact modeled assumptions and native correspondence; independent-grader validity is assumed in that Quint model |
 
 An identical atom spelling is insufficient: source and candidate scope must

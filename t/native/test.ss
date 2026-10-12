@@ -85,13 +85,13 @@
                   stdout-redirection: #t stderr-redirection: #t
                   coprocess:
                   (lambda (input)
-                    (let read-lines ()
+                    (let read-lines ((error-detail? #f))
                       (let (line (read-line input))
                         (unless (eof-object? line)
                           (display line out) (newline out) (force-output out)
                           ;; Forward actual completed work, not heartbeat ticks.
                           ;; Framework lines remain in the separate Case log.
-                          (when (or (string-prefix? "CASE" line) (string-prefix? "MODULE" line)
+                          (when (or error-detail? (string-prefix? "CASE" line) (string-prefix? "MODULE" line)
                                     (string-prefix? "ERROR" line)
                                     ;; GxTest emits the exception immediately after
                                     ;; its ERROR context. Preserve the typed cause
@@ -105,7 +105,7 @@
                                     (string-contains line "-COMPLETED ")
                                     (string-contains line " pair="))
                             (displayln "TEST-WORK batch=" file " " line) (force-output))
-                          (read-lines))))))))
+                          (read-lines (string-prefix? "ERROR " line)))))))))
             (displayln "TEST-BATCH-COMPLETE " file) (force-output))))))) batches logs (iota (length batches)))
     (try (wg-wait! group)
       ;; Keep native framework logs contiguous, so the existing Case audit

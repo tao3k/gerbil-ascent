@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/make make)
         (only-in :std/misc/process run-process)
+        (only-in :std/string/uuid random-uuid uuid->string)
         (only-in :std/string/misc string-contains)
         :std/encoding/json
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
@@ -42,9 +43,11 @@
     (unless (and (not error?) complete? (= results (reference-study-results study)))
       (error "reference benchmark did not complete its Cases" (reference-study-name study) results))))
 
-(def (main name dependencies (mode "run"))
+(def (main name dependencies (mode "run") (run-directory #f))
   (let* ((study (find-reference-study (string->symbol name)))
-         (directory (path-expand (string-append ".cache/ascent/reference/" name)))
+         (directory (path-expand (or run-directory
+                      (string-append ".cache/ascent/reference/" name "/"
+                        (uuid->string (random-uuid))))))
          (library (path-expand "lib" directory))
          (receipt (path-expand "receipt.sexp" directory)))
     (unless (member mode '("build" "run")) (error "invalid reference mode" mode))
@@ -54,12 +57,14 @@
     (if (string=? mode "build")
       (build-reference! study library)
       (let (sources (artifact-sources))
+        (displayln "REFERENCE-RUN " name " receipts=" directory) (force-output)
         (run-process
           ["timeout" (string-append (number->string (reference-study-build-seconds study)) "s")
-           "gxi" "-:max-heap=1G,debug=q" "t/performance/reference-run.ss" name dependencies "build"]
+           "gxi" "-:max-heap=1G,debug=q" "t/performance/reference-run.ss" name dependencies "build" directory]
           stdout-redirection: #f)
         (call-with-output-file [path: (string-append receipt ".sources") truncate: #t]
           (lambda (out) (display (json->string sources) out) (newline out)))
         (run-reference! study library receipt)
         (unless (artifact-matching-sources? sources (artifact-sources))
-          (error "reference sources changed during measurement" name))))))
+          (error "reference sources changed during measurement" name))
+        (displayln "REFERENCE-OK " name " receipts=" directory)))))

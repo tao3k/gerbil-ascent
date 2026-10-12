@@ -37,7 +37,7 @@ This repository must not acquire their end-to-end Search or Fact lifecycle.
 not a generic Fact framework. A graph path is a logical relation; it does
 not establish a causal mechanism or authenticate an external source.
 
-=tools/research/evidence-search.ss= is a synthetic consumer test fixture,
+=t/research/evidence-search.ss= is a synthetic consumer test fixture,
 outside the Library build. It imports POO Flow's existing revision journal,
 as-of projection and reverse-dependency planner. It passes selected rows
 to the existing ASCENT retained Session, then compares published relations
@@ -47,7 +47,7 @@ an unchanged result tuple alone cannot authorize an old handle.
 
 The fixture's branch controller and scoring belong solely to the model test.
 They are not Library API, production orchestration, a POO Flow replacement,
-or MRR integration. =tools/research/evidence-interaction.py= is the single
+or MRR integration. =t/research/evidence-interaction.py= is the single
 byte-IO/budget/measurement entry point. No round-version module is added.
 
 The test history has an initial bridge edge, a late correction to that edge,

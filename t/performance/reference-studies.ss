@@ -22,16 +22,16 @@
       "t/performance/set-size-benchmark.ss" 90 150 3)
     (make-reference-study 'set-batch
       '("table/storage" "t/qualification/ascent-set-batch-reference")
-      "t/performance/set-batch-benchmark.ss" 90 150 6)
+      "t/performance/set-batch-benchmark.ss" 90 150 4)
     (make-reference-study 'set-emit
       '("program/evaluate" "t/qualification/ascent-set-emit-reference-evaluate")
-      "t/performance/set-emit-benchmark.ss" 90 400 6)
+      "t/performance/set-emit-benchmark.ss" 90 400 5)
     (make-reference-study 'set-emit-allocation
       '("program/evaluate" "t/qualification/ascent-set-emit-reference-evaluate")
-      "t/performance/set-emit-allocation.ss" 90 150 6)
+      "t/performance/set-emit-allocation.ss" 90 150 5)
     (make-reference-study 'set-source-allocation
       '("program/admission" "program/evaluate" "t/qualification/ascent-set-source-reference-evaluate")
-      "t/performance/set-source-allocation.ss" 90 150 6)
+      "t/performance/set-source-allocation.ss" 90 150 8)
     (make-reference-study 'positive-plan
       '("core/positive-plan" "program/index" "program/actor-round" "program/evaluate" "t/qualification/ascent-positive-plan-reference-analysis" "t/qualification/ascent-positive-plan-reference-evaluate")
       "t/performance/positive-plan-benchmark.ss" 150 180 7)

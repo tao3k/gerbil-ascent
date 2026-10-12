@@ -7,6 +7,7 @@
 ;; This is the linker name emitted for the BuildSpec's libascent target.
 (C-declare #<<C
 #define ASCENT_LINKER ___LNK_libascent____exe__
-#include "runtime.c"
+/* Use the BuildSpec include path, not Gambit's generated sibling runtime.c. */
+#include <runtime.c>
 C
 )

@@ -5,6 +5,9 @@
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
         (only-in :std/make make)
+        :std/iter
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
@@ -23,6 +26,24 @@
   (let (path (path-expand (string-append "gerbil-ascent/" module ".ssi") package-library))
     (and (file-exists? path)
          (time->seconds (file-info-last-modification-time (file-info path))))))
+
+;; Previously compiled fixtures remain build inputs. A producer or SDK update
+;; must let native make refresh their imports, rather than leave stale private
+;; call entry points in a warm package prefix. Cases still load through GxTest.
+(def (cached-support-modules)
+  (with-list-builder (collect)
+    (def (visit module)
+      (def output (path-expand (string-append "gerbil-ascent/" module) package-library))
+      (when (file-exists? output)
+        (cond
+          ((eq? (file-type output) 'directory)
+           (for (name (list-sort string<? (directory-files output)))
+             (visit (string-append module "/" name))))
+          ((and (string-suffix? ".ssi" module)
+                (not (string-suffix? "-test.ssi" module))
+                (file-exists? (string-append (path-strip-extension module) ".ss")))
+           (collect (path-strip-extension module))))))
+    (for (tree '("t/qualification" "t/performance")) (visit tree))))
 
 (def (prepare-test-library! (tests []))
   (let* ((library package-library)
@@ -43,7 +64,8 @@
                            (and (string-suffix? ".ss" name)
                                 (not (string-suffix? "-test.ss" name))))
                          (directory-files "t/qualification")))))
-      (set! modules (append modules (filter (lambda (module) (not (member module modules))) support))))
+      (set! modules (delete-duplicates/hash
+                      (append modules support (cached-support-modules)) from-end?: #t)))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Upstream make checks production, reference and consumer currentness.

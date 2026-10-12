@@ -5,6 +5,8 @@
         (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         (only-in :std/make make)
         (only-in :std/misc/process run-process)
+        (only-in :std/string/uuid random-uuid uuid->string)
+        :std/encoding/json
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!)
         (only-in :gerbil-ascent/t/native/artifact-admission
@@ -39,11 +41,13 @@
 (def (main name library (baseline "admission") (lane "qualification"))
   (let* ((study (find-study (string->symbol name)))
          (actor? (equal? name "actor-admission"))
-         (directory (path-expand (string-append ".cache/ascent/" name)))
+         (run-id (uuid->string (random-uuid)))
+         (directory (path-expand (string-append ".cache/ascent/" name "/" run-id)))
          (receipts (if actor?
-                     (path-expand (string-append ".cache/ascent/actor-" baseline))
+                     (path-expand (string-append ".cache/ascent/actor-" baseline "/" run-id))
                      directory))
          (binary (path-expand "native-entry" directory))
+         (sources (artifact-sources))
          (scenarios (if (and actor? (equal? lane "stream")) '("stream")
                       (study-scenarios study))))
     (when actor?
@@ -52,7 +56,10 @@
         (error "invalid actor study selection" baseline lane)))
     (artifact-directory! directory)
     (artifact-directory! receipts)
+    (displayln "STUDY-RUN " name " receipts=" receipts) (force-output)
     (build-study! study library binary)
+    (call-with-output-file (path-expand "sources.json" receipts)
+      (lambda (out) (display (json->string sources) out) (newline out)))
     (let (failures [])
       (for-each (lambda (scenario)
         (let* ((receipt (path-expand (string-append scenario (study-receipt-suffix study)) receipts))
@@ -70,4 +77,7 @@
                 (raise failure)))
             (lambda ()
               (run-process (append '("timeout" "90s") command) stdout-redirection: #f))))) scenarios)
-      (unless (null? failures) (raise (car failures))))))
+      (unless (null? failures) (raise (car failures))))
+    (unless (artifact-matching-sources? sources (artifact-sources))
+      (error "performance sources changed during measurement" name))
+    (displayln "STUDY-OK " name " receipts=" receipts)))

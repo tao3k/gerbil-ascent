@@ -544,7 +544,7 @@ command deadline while still completing BYODS assertions. The scoped group
 corpus completed in approximately one second; no stopped Case or semantic
 mismatch preceded the deadline. This is a failed aggregate qualification receipt.
 
-The existing compiled-performance runner is now =tools/test-modules.ss=.
+The existing compiled-performance runner is now =t/native/test.ss=.
 It supports source directories and explicit compiled modules. Directory file
 selection preserves native GxTest's flat =*-test.ss= boundary; each native
 GxTest child still owns import validation, exported Suite/Case discovery,

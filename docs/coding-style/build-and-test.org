@@ -18,28 +18,55 @@ production module list is shared data, with no test imports or dispatch.
 =std/source this-source-file= is imported explicitly because the native build
 macro requires it; it previously arrived through the removed process imports.
 
+* Current entry contracts
+
 | Source | Responsibility |
 |--------+----------------|
-| =build.ss= | Production modules and native build specification |
-| =t/native/qualification.ss= | Native test compilation, inventories, capacity and lane |
-| =t/qualification/*-test.ss= | Semantic Unit Test Suites and Cases |
-| =t/performance/*-test.ss= | Timing qualification Suites and Cases |
+| =build.ss= | Production declarations and upstream build specification |
+| =t/native/build.ss= | Compile the native test dependency closure with =std/make= |
+| =t/native/library-spec.ss= | Shared fixtures and test-to-fixture dependency data |
+| =t/native/test.ss= | ASP capacity/profile projection and observed native GxTest batches |
+| =t/qualification/*-test.ss= | Semantic Suites and Cases owned by =std/test= |
+| =t/performance/*-test.ss= | Compiled allocation and timing qualification Cases |
+| =t/performance/studies.ss= and =run.ss= | Declared experiments and one native build/run implementation |
+| =t/performance/reference-studies.ss= and =reference-run.ss= | Legacy reference experiments with their original budgets and gates |
+| =t/model/= and =t/research/= | Model correspondence and independent research consumers |
+| =packages/proofs/quint/{prepare,check}.sh= | Pinned tool preparation and existing exhaustive protocol checks |
+| =tools/ci/= | CI SDK installation only |
 
-Public build and policy recipes invoke =gerbil build= directly. Ordinary
-=just test= and =just test-file= use =gerbil test=; no alternate test dispatcher
-or executable preparation runs on that path. Explicit =test-native= and
-=test-native-suite= retain the compiled artifact gate and its lane lock.
-Parallel/exclusive classification applies to that native gate only.
-=GERBIL_BUILD_CORES= controls compilation capacity; =ASP_GERBIL_SCHEME_POLICY=1=
-enables policy checking. Test artifacts remain ignored cache files.
+=Justfile= recipes select an entry and its arguments. Compilation, scenario
+selection and receipt validation belong to their Scheme modules; benchmark
+receipt paths are arguments rather than study-specific environment variables.
+The public recipe names remain the invocation contract. Each experiment run
+owns a unique receipt directory; a rejected or interrupted run cannot inherit
+a previous PASS. Source admission includes the extracted Quint drivers and
+backend pin as well as Scheme files and the build entry.
 
-Final local validation uses the pinned cache SDK with =GERBIL_BUILD_CORES=12=.
-Build passes; policy checks 42 production modules with zero findings/errors;
-all 50 semantic modules and 404 Cases pass; and all 17 original SS scenarios
-pass their unchanged 1000-sample contracts. All commands exit 0 and retain
-native completion markers. The pool remains 47 parallel plus 3 exclusive
-modules. Logs are ignored cache artifacts. This is local qualification,
-separate from CI for the resulting commit.
+Production build recipes invoke =gerbil build=. Compilation capacity uses
+=GERBIL_BUILD_CORES= and the ASP native capacity initializer; Gerbil =std/make=
+owns dependency order, workers, currentness and completion. The installed SDK
+is used without rebuilding Gerbil or Gambit.
+
+Ordinary tests keep Gerbil's =gxtest= discovery and =std/test= assertions. The
+batch adapter projects ASP testing capacity and memory/isolation profiles,
+retains separate worker logs, drains every worker before reporting failure,
+and rejects ERRORs or missing Cases. Process exit and completed native verdicts
+are both required. The source Case deadline remains 180 seconds. =just test= first prepares its
+native support Library under the 120-second build gate, including previously
+compiled fixtures. Native make owns import currentness; this prevents a warm
+fixture from retaining private calls into an older producer.
+The adapter is explicitly a qualification boundary, not a second assertion
+framework. Build and test capacity are separate native contracts.
+
+The selected UF experiment snapshots its six study inputs and two exact Git
+reference files, compiles that closure, then writes its contract once. It does
+not copy the whole checkout or overwrite the historical lookup contract.
+The unchanged build/measurement deadlines are 120/90 seconds. Study provenance
+does not qualify the complete provider or downstream consumers.
+
+All generated Libraries, receipts, logs and source snapshots stay under ignored
+=.cache/= or the existing package prefix. Historical results below retain their
+original source revision and do not qualify the current checkout.
 
 * Test startup and the POO Flow Core Case dependency
 

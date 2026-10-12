@@ -35,6 +35,9 @@
       (unless (file-exists? path)
         (artifact-directory! (path-directory path))
         (create-directory path)))))
+(def artifact-flow-files
+  '("packages/proofs/quint/prepare.sh" "packages/proofs/quint/check.sh"
+    "packages/proofs/quint/backend.sha256"))
 (def (artifact-sources)
   (let (result (make-hash-table))
     (def (visit directory)
@@ -44,7 +47,8 @@
            ((eq? (file-type path) 'directory)
             (unless (member name artifact-output-directories) (visit path)))
            ;; Gerbil generates the root version manifest during package builds.
-           ((and (string-suffix? ".ss" name) (not (string=? path "manifest.ss")))
+           ((or (and (string-suffix? ".ss" name) (not (string=? path "manifest.ss")))
+                (member path artifact-flow-files))
             (hash-put! result path (artifact-digest path))))))
         (directory-files [path: (if (string=? directory "") "." directory) ignore-hidden: 'dot-and-dot-dot])))
     (visit "")

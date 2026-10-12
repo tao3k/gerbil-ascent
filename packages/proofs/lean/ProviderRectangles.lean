@@ -730,3 +730,58 @@ theorem indexed_difference_order [DecidableEq α] (newer older : List (Rectangle
   by_cases h : p ∈ expand older <;> simp [h]
 
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Invocation-owned keys: repeated coordinates retain all equality obligations. -/
+def CoordinateKeys (query : List (Nat × α)) (coordinate : Nat) : List α :=
+  (query.filter fun binding => binding.1 == coordinate).map Prod.snd
+
+theorem coordinate_keys_member [BEq α] (query : List (Nat × α))
+    (coordinate : Nat) (value : α) :
+    value ∈ CoordinateKeys query coordinate ↔ (coordinate, value) ∈ query := by
+  simp [CoordinateKeys, List.mem_map, List.mem_filter, Prod.ext_iff]
+
+def MatchesConditions (row : Nat → α) (query : List (Nat × α)) : Prop :=
+  ∀ binding ∈ query, row binding.1 = binding.2
+
+def MatchesBindings (row : Nat → α) (query : List (Nat × α)) : Prop :=
+  ∀ coordinate value, value ∈ CoordinateKeys query coordinate → row coordinate = value
+
+theorem coordinate_binding_refinement [BEq α] (row : Nat → α) (query : List (Nat × α)) :
+    MatchesBindings row query ↔ MatchesConditions row query := by
+  constructor
+  · intro h binding member
+    exact h binding.1 binding.2 ((coordinate_keys_member query binding.1 binding.2).mpr member)
+  · intro h coordinate value member
+    exact h (coordinate, value) ((coordinate_keys_member query coordinate value).mp member)
+
+/-- Conflicting repeats cannot admit a row, irrespective of routing choice. -/
+theorem conflicting_conditions_empty (row : Nat → α) (query : List (Nat × α))
+    (coordinate : Nat) (a b : α) (ha : (coordinate, a) ∈ query)
+    (hb : (coordinate, b) ∈ query) (different : a ≠ b) :
+    ¬ MatchesConditions row query := by
+  intro accepts
+  exact different ((accepts (coordinate, a) ha).symm.trans (accepts (coordinate, b) hb))
+
+/-- A first-binding vector refines all constraints if compilation checked
+    every repeat. Owner lookup and coordinate range admission are separate
+    implementation premises; this law does not prove hash-table correctness. -/
+theorem first_binding_refinement (row : Nat → α) (query : List (Nat × α))
+    (bindings : Nat → Option α)
+    (covered : ∀ c v, (c, v) ∈ query → bindings c = some v)
+    (grounded : ∀ c v, bindings c = some v → (c, v) ∈ query) :
+    (∀ c v, bindings c = some v → row c = v) ↔ MatchesConditions row query := by
+  constructor
+  · intro h binding member
+    exact h binding.1 binding.2 (covered binding.1 binding.2 member)
+  · intro h c v bound
+    exact h (c, v) (grounded c v bound)
+
+/-- Exact per-row acceptance preserves descriptor/member order and duplicates. -/
+theorem compiled_query_order (input : List β) (baseline compiled : β → Bool)
+    (exact : ∀ row, compiled row = baseline row) :
+    input.filter compiled = input.filter baseline := by
+  congr 1
+  funext row
+  exact exact row
+end Ascent.ProviderRectangles

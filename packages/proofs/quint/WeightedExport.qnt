@@ -40,6 +40,38 @@ module WeightedExport {
     else if (Mutation == "member-miss") false
     else left.intersect(right).size() > 0
   }
+  // Composite bindings are private to one invocation. Empty binding lists
+  // represent unconstrained slots; #f-like endpoint values are ordinary keys.
+  type Condition = (int,int)
+  type GroupRow = (int,int,int)
+  pure def GroupRows(bs: List[Block]): List[GroupRow] =
+    bs.foldl((0,List()), (acc,b) => (acc._1 + 1, acc._2.concat(
+      Product(b).foldl(List(), (rows,p) => rows.append((acc._1,p._1,p._2))))))._2
+  pure def Bindings(cs: List[Condition], column: int): List[int] =
+    cs.foldl(List(), (acc,c) => if (c._1 == column) acc.append(c._2) else acc)
+  pure def Bound(values: List[int], value: int): bool =
+    if (Mutation == "repeat-conflict" and values.length() > 0) values.nth(0) == value
+    else values.foldl(true, (ok,key) => ok and key == value)
+  pure def GroupQuery(bs: List[Block], cs: List[Condition]): List[GroupRow] = {
+    val group = Bindings(cs,0)
+    val left = Bindings(cs,1)
+    val right = Bindings(cs,2)
+    bs.foldl((0,List()), (acc,b) => {
+      val axisLeft = if (Mutation == "group-owner") bs.foldl(List(), (xs,owner) => xs.concat(owner._1)) else b._1
+      val axisRight = if (Mutation == "group-owner") bs.foldl(List(), (xs,owner) => xs.concat(owner._2)) else b._2
+      val selectedLeft = axisLeft.foldl(List(), (xs,x) => if (Bound(left,x)) xs.append(x) else xs)
+      val selectedRight = axisRight.foldl(List(), (ys,y) => if (Bound(right,y)) ys.append(y) else ys)
+      (acc._1 + 1, if (Bound(group,acc._1)) acc._2.concat(
+        Product((selectedLeft,selectedRight)).foldl(List(), (rows,p) => rows.append((acc._1,p._1,p._2)))) else acc._2)
+    })._2
+  }
+  pure def GroupSelect(rows: List[GroupRow], cs: List[Condition]): List[GroupRow] =
+    rows.foldl(List(), (acc,p) => if (cs.foldl(true, (ok,c) => ok and
+      (if (c._1 == 0) p._1 else if (c._1 == 1) p._2 else p._3) == c._2)) acc.append(p) else acc)
+  val GroupedQueryExact = q.phase != "new" implies
+    Set(List(),List((0,0),(1,0),(2,1)),List((2,1),(0,0),(1,0),(0,0)),
+      List((1,0),(2,1)),List((1,0),(1,0)),List((1,0),(1,1)),
+      List((0,99),(2,0))).forall(cs => GroupQuery(q.blocks,cs) == GroupSelect(GroupRows(q.blocks),cs))
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State

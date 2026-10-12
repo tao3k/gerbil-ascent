@@ -1781,3 +1781,30 @@ Native and actual Python API/ABI tests check custom protocol fallback, owner
 separation, historical cuts and complete ordered delta answers. The first two
 allocation misses and the historical grouped paired-win rejection remain
 recorded. See [[file:../../t/performance/uf-membership/README.org][complete weighted membership qualification]] for fixed contracts and scope.
+
+
+* Grouped and composite weighted UF query flow
+The next batch unifies checked, admitted and complete selected materialization
+under one invocation-owned selection flow. Uniform indexed cuts bind repeated
+coordinate conditions once; contradictory repeats reject the query. Narrow
+candidate sets borrow exact frozen owner hits instead of allocating indexes
+for all unrelated groups. Wider selections retain private owner tables; mixed
+schemas and nonindexed cuts preserve their checked protocol. Optional-argument
+visitors are bound lexically with a scoped rule to avoid generic call packing.
+No retained query cache or additional captured index is introduced.
+
+Lean models coordinate obligations, checked first-binding refinement, conflict
+rejection and ordered acceptance. Quint extends WeightedExport with grouped
+composite queries and rejects owner-crossing/repeat-conflict faults. Actual
+Python API/ABI tests compare independent grouped closure and held cuts after
+mutable SCC retirement. The new fixed native study uses pre-batch =f024af5=,
+three query targets and five controls, sharing the existing study builder and
+ASP paired runner. See [[file:../../t/performance/uf-query/README.org][grouped and composite query qualification]] for exact contracts,
+failed allocation/source-drift records, final receipts and evidence limits.
+
+The fixed current-before-batch eight-scenario run passes in 38.66/90 seconds.
+Grouped/reordered/wide CPU decreases 93.11%/88.51%/45.71% with 20/20 wins;
+grouped allocation decreases 92.86%. Single-axis, nonindexed, small, conflict
+and capture controls pass without changing their budgets. Small setup adds
+8832 bytes for eight consumers and is qualified only under its fixed absolute
+allocation tolerance; there is no small-input allocation improvement claim.

@@ -78,3 +78,32 @@ class UFWeightedTests(unittest.TestCase):
                             with owner.call('gerbil-ascent-trrel-uf-view-lookup', held, columns, key) as public:
                                 self.assertEqual(oracle.rows(public.graph), [row for row in full
                                     if all(row[column] == value for column, value in zip(columns, key))])
+
+    def test_grouped_composite_queries_keep_owner_and_repeat_constraints(self):
+        edges = [[g, i, (i + 1) % 12] for g in (0, 7, 9) for i in range(12)]
+        truth = {(g, a, b) for g in (0, 7, 9) for a, b in oracle.closure([e[1:] for e in edges if e[0] == g])}
+        with self.engine.module(oracle.UF) as owner:
+            with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                reference = state.reference()
+                for edge in edges:
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                        pass
+                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as frozen:
+                    held = frozen.reference()
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                        full = oracle.rows(public.graph)
+                    self.assertEqual(set(map(tuple, full)), truth)
+                    # Retire/replace mutable owners before every composite read.
+                    for edge in ([7, 11, 12], [7, 12, 0]):
+                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                            pass
+                    for columns, key in (([0, 1, 2], [7, 3, 2]), ([2, 0, 1, 0, 2], [2, 7, 3, 7, 2]),
+                                         ([1, 2], [3, 2]), ([1, 2, 1], [3, 2, 3]),
+                                         ([1, 2, 1], [3, 2, 4]), ([0, 0], [7, 9]), ([0, 1], [99, 3])):
+                        expected = [row for row in full if all(row[c] == v for c, v in zip(columns, key))]
+                        for function, module in (('gerbil-ascent-trrel-uf-view-lookup', oracle.UF),
+                                                 ('gerbil-ascent-view-rows', oracle.VIEW)):
+                            with owner.call(function, held, columns, key, module=module) as public:
+                                self.assertEqual(oracle.rows(public.graph), expected)
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                        self.assertEqual(oracle.rows(public.graph), full)

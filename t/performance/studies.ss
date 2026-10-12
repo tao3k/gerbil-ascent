@@ -6,6 +6,11 @@
 (defstruct study (name modules entry scenarios native? arguments keep-going? receipt-suffix) final: #t)
 (def performance-studies
   (list
+    (make-study 'uf-query
+      '("core/relation-view" "t/performance/uf-query/reference-relation-view" "t/performance/uf-query/fixture" "t/performance/paired-study" "t/performance/uf-query/runner")
+      "t/performance/uf-query/runner.ss"
+      '("grouped" "reordered" "wide" "conflict" "single-axis" "unindexed" "small" "capture")
+      #t '(scenario receipt) #f ".ss")
     (make-study 'uf-weighted
       '("core/relation-view" "table/trrel-uf" "t/performance/uf-weighted/reference-relation-view" "t/performance/uf-weighted/reference-trrel-uf" "t/performance/uf-weighted/fixture" "t/performance/paired-study" "t/performance/uf-weighted/runner")
       "t/performance/uf-weighted/runner.ss"

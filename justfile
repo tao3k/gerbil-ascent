@@ -118,6 +118,9 @@ performance-uf-weighted: prepare-test-library
 performance-uf-membership: prepare-test-library
     {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-membership "{{ package_library }}"
 
+performance-uf-query: prepare-test-library
+    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-query "{{ package_library }}"
+
 # Paired actor source transactions; evaluator work is outside this interval.
 performance-source-cut: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss source-cut "{{ package_library }}"

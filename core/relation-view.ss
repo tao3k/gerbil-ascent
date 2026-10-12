@@ -22,7 +22,7 @@
 (defstruct rectangle-bucket (members blocks count plain) final: #t)
 ;; Query-local owner lookup. Each coordinate uses its first fixed constraint;
 ;; no cache or traversal state escapes into the immutable captured view.
-(defstruct rectangle-query (routes axes) final: #t)
+(defstruct rectangle-query (routes axes bindings scan?) final: #t)
 (defstruct rectangle-selection (ordinal block members) final: #t)
 ;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
 (def (gerbil-ascent-view-bind view identity generation revision lane)
@@ -210,6 +210,7 @@
       ((null? hits) #f)
       ((null? (cdr hits))
        (and (eq? (rectangle-bucket-members (cdar hits)) members) (caar hits)))
+      (query.scan? (captured-owner-member hits members))
       (else
        (unless query.axes (set! query.axes (make-vector (vector-length query.routes) #f)))
        (let (owners (or (vector-ref query.axes coordinate)
@@ -218,15 +219,48 @@
                            (hash-put! table (rectangle-bucket-members (cdr hit)) (car hit))) hits)
                          (vector-set! query.axes coordinate table) table)))
          (hash-get owners members))))))
+;; A narrow descriptor selection does not justify indexing every unrelated
+;; owner with the same value. Borrow the stored singleton without a new table.
+(def (captured-owner-member hits members)
+  (match hits
+    ([] #f)
+    ([[singleton . bucket] . rest]
+     (if (eq? members (rectangle-bucket-members bucket)) singleton
+       (captured-owner-member rest members)))))
+;; Bind each coordinate once. Key tails distinguish a fixed #f from an unbound
+;; slot, retain the first requested value, and allocate no per-binding cells.
+;; Routing has already checked every coordinate, even after an absent key.
+(def (compile-rectangle-bindings width columns key)
+  (let/cc conflict
+    (let (bindings (make-vector width #f))
+      (let bind ((columns columns) (key key))
+        (match columns
+          ([] bindings)
+          ([column . rest]
+           (let (previous (vector-ref bindings column))
+             (if previous
+               (unless (equal? (car previous) (car key)) (conflict #f))
+               (vector-set! bindings column key))
+             (bind rest (cdr key)))))))))
+(def (matches-bound-prefix? prefix bindings coordinate)
+  (match prefix
+    ([] #t)
+    ([value . rest]
+     (let (binding (vector-ref bindings coordinate))
+       (and (or (not binding) (equal? value (car binding)))
+            (matches-bound-prefix? rest bindings (+ coordinate 1)))))))
 (def (selected-members members coordinate columns key routes)
-  (let find ((remaining columns) (values key))
+  (if (and routes (rectangle-query-bindings routes))
+    (let (binding (vector-ref (rectangle-query-bindings routes) coordinate))
+      (if binding (or (captured-member routes members coordinate (car binding)) []) members))
+    (let find ((remaining columns) (values key))
     (cond ((null? remaining) members)
           ((= (car remaining) coordinate)
            (let (present (if routes (captured-member routes members coordinate (car values))
                                     (member (car values) members)))
              (if (and present (matches-coordinate? (car present) coordinate columns key))
                (if routes present (list (car present))) [])))
-          (else (find (cdr remaining) (cdr values))))))
+          (else (find (cdr remaining) (cdr values)))))))
 (def (visit-right-members prefix left rights consume)
   (unless (null? rights)
     (consume prefix left (car rights))
@@ -295,15 +329,13 @@
   (visit-admitted-rectangle-parts block columns key consume routes expand))
 (def (visit-admitted-rectangle-parts block columns key consume routes (expand visit-left-members))
   (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
-    (when (andmap (lambda (column value)
-                    (or (>= column offset) (equal? (list-ref prefix column) value))) columns key)
+    (when (if (and routes (rectangle-query-bindings routes))
+            (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
+            (andmap (lambda (column value)
+                      (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
       (let ((lefts (selected-members (rectangle-left block) offset columns key routes))
             (rights (selected-members (rectangle-right block) (+ offset 1) columns key routes)))
         (expand prefix lefts rights consume)))))
-(def (visit-admitted-blocks blocks columns key consume routes)
-  (unless (null? blocks)
-    (visit-admitted-rectangle-parts (car blocks) columns key consume routes)
-    (visit-admitted-blocks (cdr blocks) columns key consume routes)))
 ;; Build once from owned spines. Each component contributes its members once
 ;; per coordinate; the buckets retain descriptor references, never pair tuples.
 ;; Readers only inspect these private tables after construction.
@@ -425,16 +457,13 @@
          ;; Its frozen descriptor plan can serve either endpoint unchanged.
          (left-plans (and right-plans
                           (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)
-                          right-plans))
-         (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
+                          right-plans)))
   (def (selected columns key)
     (if routes (routed-rectangles routes blocks columns key uniform?) blocks))
   (def (validate-key! columns key)
     (unless (and (list? columns) (list? key) (= (length columns) (length key))
                  (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
       (error "invalid ASCENT UF view key")))
-  (def (selection-for columns)
-    (and routes (pair? columns) (make-rectangle-query routes #f)))
   (def (planned-axis column key)
     (let (plans (if (= column (- (vector-length routes) 2)) left-plans right-plans))
       (and plans (hash-get plans key))))
@@ -462,22 +491,27 @@
                  ((planned-axis column (car key)) =>
                   (lambda (plans) (visit-axis-plan plans consume (= column left-column) expand) #t))
                  (else #f)))))))
+  ;; All built-in consumers share one invocation-owned selection flow. Uniform
+  ;; indexed cuts admit coordinate bindings once; mixed/scan cuts retain their
+  ;; checked protocol. Only wide candidates build a temporary owner index.
+  (def (visit-selected columns key consume admitted? (expand visit-left-members))
+    (unless (visit-indexed-axis columns key consume expand)
+      (let* ((candidates (selected columns key))
+             (compiled? (and routes uniform? (pair? columns) (pair? (cdr columns))))
+             (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
+        (when (and (pair? candidates) (or (not compiled?) bindings))
+          (let (query (and routes (pair? columns)
+                         (make-rectangle-query routes #f bindings
+                           (or (null? (cdr candidates)) (null? (cddr candidates))))))
+            ;; Keep the optional-argument visitor binding lexical. A dynamic
+            ;; procedure alias requires generic argument packing on every block.
+            (defrule (visit-blocks visit)
+              (for-each (lambda (block) (visit block columns key consume query expand)) candidates))
+            (if (or admitted? (and routes uniform?))
+              (visit-blocks visit-admitted-rectangle-parts)
+              (visit-blocks visit-rectangle-parts)))))))
   (def (visit-admitted columns key consume)
-    (cond
-      ((visit-indexed-axis columns key consume) (void))
-      (else
-       (let (query (selection-for columns))
-         ;; A sole group descriptor admits the leading group constraint.
-         (if (and grouped? routes (pair? columns) (= (car columns) 0))
-           (let (hits (or (hash-get (vector-ref routes 0) (car key)) []))
-             (cond
-               ((null? hits) (void))
-               ((and (null? (cdr hits)) (= (rectangle-bucket-count (cdar hits)) 1)
-                     (= (length (rectangle-prefix (car (rectangle-bucket-plain (cdar hits))))) 1))
-                (visit-admitted-rectangle-parts (car (rectangle-bucket-plain (cdar hits)))
-                  (cdr columns) (cdr key) consume query))
-               (else (visit-admitted-blocks (selected columns key) columns key consume query))))
-           (visit-admitted-blocks (selected columns key) columns key consume query))))))
+    (visit-selected columns key consume #t))
   ;; Select member axes through the same index/checked traversal as visitors,
   ;; then expand each admitted product directly into one owned list builder.
   ;; No row callback or intermediate public tuple runs inside the product.
@@ -489,21 +523,14 @@
           ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
           ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
           (else (collect-rectangle-product left right lefts rights collect! (append prefix (list left right))))))
-      (unless (visit-indexed-axis columns key #f collect-product)
-        (let (query (selection-for columns))
-          (for-each (lambda (block)
-            (visit-rectangle-parts block columns key #f query collect-product))
-            (selected columns key))))))
+      (visit-selected columns key #f #f collect-product)))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (validate-key! columns key)
       (if (null? columns)
         (gerbil-ascent-write-rectangles! blocks consume)
         (let (write (rectangle-row-writer (and routes uniform? (vector-length routes)) consume))
-          (unless (visit-indexed-axis columns key write)
-            (let (query (selection-for columns))
-              (for-each (lambda (block) (visit-rectangle-parts block columns key write query))
-                (selected columns key)))))))
+          (visit-selected columns key write #f))))
     (lambda (row)
       (let (width (length row))
         (and (>= width 2)
@@ -520,9 +547,5 @@
     (make-rectangle-visitors
       (lambda (columns key consume)
         (validate-key! columns key)
-        (if (visit-indexed-axis columns key consume)
-          (void)
-          (let (query (selection-for columns))
-            (for-each (lambda (block) (visit-rectangle-parts block columns key consume query))
-                      (selected columns key)))))
+        (visit-selected columns key consume #f))
       visit-admitted materialize-selected))))

@@ -23,6 +23,27 @@
 ;; Sparse maps retain eq hashing below 32 arcs or above two bytes per arc.
 ;; No bitmap is indexed by a user value. Historical ID gaps stay sparse.
 (defstruct compact-reach (bits registry size) final: #t)
+;; Read-only dense fresh axes borrow a stable adjacency during this admission.
+;; No journal, published cut or group retains this short-lived traversal owner.
+(defstruct closure-axis (node table) final: #t)
+;; : (-> (-> UfNode Void) (Union ClosureAxis [UfNode]) Void)
+(def (axis-for-each consume axis)
+  (if (closure-axis? axis)
+    (with (((closure-axis node table) axis))
+      (let ((self-order (uf-node-order node)) (pending? #t)
+            (registry (compact-reach-registry table)))
+        (compact-reach-for-each-id
+          (lambda (id)
+            (when (and pending? (< self-order id))
+              (consume node) (set! pending? #f))
+            (consume (ExtensibleVector-ref registry id))) table)
+        (when pending? (consume node))))
+    (for-each consume axis)))
+;; : (-> (Union ClosureAxis [UfNode]) Natural)
+(def (axis-weight axis)
+  (let (weight 0)
+    (axis-for-each (lambda (n) (set! weight (+ weight (uf-node-size n)))) axis)
+    weight))
 ;; : (-> RootTable Natural)
 (def (reach-length table)
   (if (compact-reach? table) (compact-reach-size table) (hash-length table)))
@@ -91,6 +112,27 @@
     (let (sparse (make-hash-table-eq))
       (reach-for-each (lambda (n _) (hash-put! sparse n #t)) table) sparse)
     table))
+;; A fresh endpoint owns no arcs. Its complete new adjacency is the existing
+;; opposite endpoint's closure plus that endpoint, already admitted as missing.
+;; Borrow no mutable buffer: copy the native words once instead of rebuilding
+;; a dense index through repeated sparse insertion, promotion and growth.
+;; : (-> RootTable UfNode Boolean)
+(def (reach-copyable? table node)
+  (and (compact-reach? table)
+       (let (required (+ 1 (quotient (uf-node-order node) 32)))
+         (or (<= required (##u32vector-length (compact-reach-bits table)))
+             (<= (* 4 required) (* 2 (+ 1 (compact-reach-size table))))))))
+;; : (-> CompactReach UfNode CompactReach)
+(def (reach-copy-with-node table node)
+  (let* ((bits (compact-reach-bits table))
+         (required (+ 1 (quotient (uf-node-order node) 32)))
+         (span (max required (##u32vector-length bits)))
+         (copy (make-u32vector span 0))
+         (owned (make-compact-reach copy (compact-reach-registry table)
+                                    (compact-reach-size table))))
+    (subu32vector-move! bits 0 (##u32vector-length bits) copy 0)
+    (compact-reach-put! owned node)
+    owned))
 ;; Geometric growth follows std/vector/extensible's owned-buffer contract.
 ;; Admission has succeeded before allocation, promotion or registry installation.
 ;; : (-> RootTable UfNode UfGroup RootTable)
@@ -140,14 +182,21 @@
 ;; Match the legacy prepended root scan without touching unrelated components.
 ;; Sparse adjacency sorts only its keys; dense adjacency filters roots already
 ;; in writer order. Selection compares a sorting bound with the population.
-;; : (-> UfNode RootTable [UfNode] Natural [UfNode])
-(def (ordered-neighbors node table roots population)
+;; : (-> (-> UfNode Boolean) [UfNode] Boolean [UfNode])
+(def (select-neighbors accept roots ascending?)
+  ;; Gerbil's filter may share an unchanged suffix. Count writers build their
+  ;; private ascending axis directly; never reverse a potentially borrowed spine.
+  (if ascending?
+    (foldl (lambda (n selected) (if (accept n) (cons n selected) selected)) [] roots)
+    (filter accept roots)))
+;; : (-> UfNode RootTable [UfNode] Natural ?Boolean [UfNode])
+(def (ordered-neighbors node table roots population (ascending? #f))
   (let (degree (reach-length table))
     (cond
       ((zero? degree) (list node))
       ((>= (* degree (integer-length degree)) population)
-       (filter (lambda (n) (or (eq? n node) (reach-get table n))) roots))
-      (else (list-sort (lambda (a b) (> (uf-node-order a) (uf-node-order b)))
+       (select-neighbors (lambda (n) (or (eq? n node) (reach-get table n))) roots ascending?))
+      (else (list-sort (lambda (a b) ((if ascending? < >) (uf-node-order a) (uf-node-order b)))
                       (cons node (reach-keys table)))))))
 ;; : (-> [UfNode] Void)
 (def (rebuild-predecessors! group roots)
@@ -272,27 +321,34 @@
                       (if (or right-node (eq? a b)) [] (list b))))
          (roots (append new (uf-group-roots group)))
          (population (+ (uf-group-population group) (length new)))
+         (fresh-product? (and (not (eq? a b)) (or (not left-node) (not right-node))))
          (preds (cond ((not left-node) (list a))
+                      ((and fresh-product? (not rectangles?) (uf-group-indexed? group)
+                            (compact-reach? (uf-node-predecessors a)))
+                       (make-closure-axis a (uf-node-predecessors a)))
                       ((uf-group-indexed? group)
-                       (ordered-neighbors a (uf-node-predecessors a) roots population))
-                      (else (filter (lambda (p) (reachable? p a)) roots))))
+                       (ordered-neighbors a (uf-node-predecessors a) roots population (not rectangles?)))
+                      (else (select-neighbors (lambda (p) (reachable? p a)) roots (not rectangles?)))))
          (succs (cond ((not right-node) (list b))
+                      ((and fresh-product? (not rectangles?) (compact-reach? (uf-node-reach b)))
+                       (make-closure-axis b (uf-node-reach b)))
                       ((uf-group-indexed? group)
-                       (ordered-neighbors b (uf-node-reach b) roots population))
-                      (else (filter (lambda (s) (reachable? b s)) roots))))
+                       (ordered-neighbors b (uf-node-reach b) roots population (not rectangles?)))
+                      (else (select-neighbors (lambda (s) (reachable? b s)) roots (not rectangles?)))))
          ;; Capture the intersection in root order before adjacency mutation.
          ;; Succ(b) membership is already represented by b's reach table.
          (cycle (and (not (eq? a b)) (reachable? b a)
-                     (filter (lambda (p) (reachable? b p)) preds)))
+                     (if rectangles?
+                       (filter (lambda (p) (reachable? b p)) preds)
+                       (foldl (lambda (p selected)
+                         (if (reachable? b p) (cons p selected) selected)) [] preds))))
          ;; A fresh source or sink has no external arc. Every pair on these
          ;; axes is missing; self-injections retain ordinary admission.
-         (fresh-product? (and (not (eq? a b)) (or (not left-node) (not right-node))))
          (changes []) (needed (length new)) (added []))
     ;; Count each missing component rectangle before rows or graph mutation.
     (if (and fresh-product? (not rectangles?))
       (set! needed (+ needed
-        (* (foldl (lambda (n sum) (+ sum (uf-node-size n))) 0 preds)
-           (foldl (lambda (n sum) (+ sum (uf-node-size n))) 0 succs))))
+        (* (axis-weight preds) (axis-weight succs))))
       (for-each (lambda (p)
         (for-each (lambda (s)
           (when (or fresh-product? (not (reachable? p s)))
@@ -331,28 +387,45 @@
       (when (> population 64)
         (set! (uf-group-indexed? group) #t)
         (rebuild-predecessors! group roots)))
+    ;; Only a dense admitted fresh axis qualifies for whole-buffer transfer.
+    ;; Existing endpoints still require ordinary missing-pair checks. Sparse
+    ;; axes preserve their cheaper scalar path and original insertion order.
+    (def copied-sources?
+      (and fresh-product? (not right-node) (uf-group-indexed? group)
+           (reach-copyable? (uf-node-predecessors a) a)))
+    (def copied-targets?
+      (and fresh-product? (not left-node)
+           (reach-copyable? (uf-node-reach b) b)))
+    (when copied-sources?
+      (set! (uf-node-predecessors b)
+        (reach-copy-with-node (uf-node-predecessors a) a)))
+    (when copied-targets?
+      (set! (uf-node-reach a) (reach-copy-with-node (uf-node-reach b) b)))
     ;; If every root collapses, all changed arcs would immediately disappear.
     ;; Concrete rectangles were emitted above; no external reach key survives.
     (def (commit-arc! p s)
-        (set! (uf-node-reach p) (reach-put! (uf-node-reach p) s group))
-        (when (uf-group-indexed? group)
+        (unless copied-targets?
+          (set! (uf-node-reach p) (reach-put! (uf-node-reach p) s group)))
+        (when (and (uf-group-indexed? group) (not copied-sources?))
           (set! (uf-node-predecessors s) (reach-put! (uf-node-predecessors s) p group))))
     (unless (and cycle (= (length cycle) population))
       (if rectangles?
         (for-each (lambda (change) (commit-arc! (car change) (cdr change))) changes)
         ;; Each root pair is unique. Installing its own arc changes no other
         ;; pair's admission test; no changes spine is needed for count consumers.
-        (let ((sources (reverse preds)) (targets (reverse succs)))
+        ;; Count axes were selected directly in the original writer order.
+        ;; SCC selection separately restored its original root order.
+        (let ((sources preds) (targets succs))
           ;; A singleton sink needs one writer for the whole source axis,
           ;; rather than a newly captured inner writer for every source root.
           (match targets
             ([target]
-             (for-each (lambda (p)
+             (axis-for-each (lambda (p)
                (when (or fresh-product? (not (reachable? p target)))
                  (commit-arc! p target))) sources))
             (else
-             (for-each (lambda (p)
-               (for-each (lambda (s)
+             (axis-for-each (lambda (p)
+               (axis-for-each (lambda (s)
                  (when (or fresh-product? (not (reachable? p s)))
                    (commit-arc! p s))) targets)) sources))))))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.

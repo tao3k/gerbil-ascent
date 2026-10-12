@@ -942,3 +942,33 @@ for control flow. Likewise, a singleton product can select one writer for the
 entire source axis, eliminating per-source captured closures while preserving
 commit order. Native sparse and grouped controls must compare historical
 storage directly to expose these costs.
+
+* Study: admitted dense-axis transfer and borrowed traversal
+
+Gerbil's =std/vector/extensible.ss= copies owned native spans when transferring
+buffer ownership. Its =runtime/util.ss= =append-reverse-until= constructs the
+consumer's required order directly. Together these suggest an admission flow,
+rather than another per-element helper: identify the read-only source axis,
+count its weighted product, admit the resource budget, copy one complete new
+index, and write only the opposite index incrementally.
+
+=table/trrel-uf.ss= uses a private final =closure-axis= record and one
+=axis-for-each= contract for dense preflight and count commit. Only fresh
+endpoints may borrow such a traversal; their source adjacency stays unchanged
+through commit. The axis is temporary and never escapes into groups or frozen
+cuts. Sparse scalar paths retain their existing protocol. Native word copies
+always allocate a separate mutable owner and preserve the density growth bound.
+
+Do not infer destructive-list ownership from a filtering operation. The native
+=filter= can preserve an unchanged input spine; reversing that result in place
+can silently corrupt the group root list. A rejected implementation exposed
+this through native root-population tests. Count selections now construct
+writer order directly, while SCC selection explicitly restores legacy order.
+Only destructively operate on a spine whose constructor and exclusive lifetime
+are established, as in Gerbil's =group-same= private buckets.
+
+The paired baseline must be the last accepted representation, not an older
+slower implementation. See [[file:../../t/performance/uf-dense-bulk/README.org][the dense-axis transfer report]] for fixed
+populations, failed attempts, allocation limits and separate physical payload
+receipts. A temporary-allocation reduction does not establish a retained-heap,
+RSS, whole-engine or subquadratic-closure improvement.

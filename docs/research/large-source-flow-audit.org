@@ -1447,3 +1447,38 @@ it remains within the predeclared regression envelope. Five rejected attempts
 are preserved separately and supply no samples to these accepted medians.
 The shared native registry exposed an additional source lesson: its fill-pointer
 API captures a continuation, so enter it only when the reserved span must grow.
+
+* Admitted dense UF axes and symmetric fresh-endpoint commit
+
+The prior word-bitmap owner still reconstructs a fresh endpoint's complete
+index one arc at a time and materializes count-only axes as root lists. This
+batch handles the entire preflight/commit flow: a private final =closure-axis=
+borrows an unchanged dense adjacency for weighted budget counting and ordered
+commit. Once admitted, copy its complete native word span plus the axis root
+into the fresh endpoint's separate owner, then update only the opposite index.
+Sparse selections are constructed in consumer order. Scalar frontier and SCC
+root/member order, budget rejection and immutable publication remain checked.
+
+The source study combines Gerbil's =std/vector/extensible.ss= owned-span copy
+with =runtime/util.ss= reverse-axis construction. A destructive reversal of
+borrowed filter spines failed semantic tests and was withdrawn. A native probe
+confirms filter can preserve its input list. Two otherwise correct list-axis
+variants failed the fixed allocation gate; rejected results remain separate.
+
+[[file:../../t/performance/uf-dense-bulk/README.org][Dense-axis transfer qualification]] freezes the last accepted UF owner at
+=c3b4da2=. Relative to that word-bitmap owner, 512 forward/reverse unique chains
+reduce CPU 14.4% /16.5% and allocation 51.8% /52.4%; 256-chain CPU/allocation
+fall 16.5% /41.3%. All twenty fixed scenarios and fourteen native Suites /92
+Cases pass. Final production/reference/fixture fingerprints (1758 entries)
+remain unchanged across the measurement after native package compilation.
+Native sparse star/grouped allocation adds 2.7% /3.1%; these regressions stay
+within the predeclared envelope and remain in the report. Full source policy
+retains 42 warnings and zero errors, rather than claiming zero findings.
+
+Forward/reverse 512-edge bitmap backing payload falls 7.8% /7.3%, with unchanged
+registry capacity and logical closure counts. The much larger VM allocation
+savings mostly remove transient axes and index reconstruction; they do not
+establish a total retained-heap, RSS or historical whole-engine improvement.
+The fixed complete-engine scenarios still share live storage helpers. Dense
+existing-endpoint products and large SCC/publication traversal remain distinct
+future flows; the closure's worst-case logical fact count is still quadratic.

@@ -29,6 +29,17 @@ module WeightedExport {
   pure def SelfAxes(bs: List[Block]): bool = bs.foldl(true, (ok,b) => ok and b._1 == b._2)
   pure def SharedLeft(bs: List[Block], key: int): List[Row] = bs.foldl(List(), (acc,b) =>
     if (Has(b._2,key)) acc.concat(Product(if (Mutation == "plan-axis") (b._1,List(key)) else (List(key),b._2))) else acc)
+  // Frozen owner IDs model bucket identity, never global value equality.
+  pure def Owners(bs: List[Block], axis: int, key: int): Set[int] =
+    bs.foldl((0,Set()), (acc,b) => (acc._1 + 1,
+      if (Has(if (axis == 0) b._1 else b._2,key)) acc._2.union(Set(acc._1)) else acc._2))._2
+  pure def IndexedMember(bs: List[Block], p: Row): bool = {
+    val left = Owners(bs,0,p._1)
+    val right = Owners(bs,1,p._2)
+    if (Mutation == "owner-cross") left.size() > 0 and right.size() > 0
+    else if (Mutation == "member-miss") false
+    else left.intersect(right).size() > 0
+  }
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State
@@ -57,6 +68,13 @@ module WeightedExport {
   action Mutate = all {q.phase == "exported", not(q.mutated), q' = {...q,
     mutated: true, public: List((99,99)), sibling: if (Mutation == "shared") List((99,99)) else q.sibling}}
   action step = any {Capture, Export, Retire, Read, Mutate}
+  val MembershipExact = q.phase != "new" implies Set(0,1,2,99).forall(x =>
+    Set(0,1,2,99).forall(y => IndexedMember(q.blocks,(x,y)) == q.held.foldl(false, (found,p) => found or p == (x,y))))
+  val DifferenceExact = q.phase != "new" implies {
+    val older = SelectedBlocks(q.blocks,0,0)
+    q.held.foldl(List(), (rows,p) => if (IndexedMember(older,p)) rows else rows.append(p)) ==
+      q.held.foldl(List(), (rows,p) => if (ProductRows(older).foldl(false, (found,row) => found or row == p)) rows else rows.append(p))
+  }
   val SharedPlanExact = SelfAxes(q.blocks) implies SharedLeft(q.blocks,0) == Select(q.held,0,0)
   val FrozenExact = q.phase != "new" implies ProductRows(q.blocks) == q.held
   val OrderedExact = q.phase == "exported" and not(q.mutated) implies q.public == q.held

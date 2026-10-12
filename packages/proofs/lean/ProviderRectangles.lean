@@ -710,4 +710,23 @@ theorem collect_bound_right_order (rs : List (Rectangle α)) (members : List α)
       rs.flatMap (fun r => rows ⟨r.left, members⟩) := by
   rw [collect_blocks_order]
   simpa using bind_right_order rs members
+
+/-- A frozen owner index is exact for each axis; globally present endpoints
+from different owners cannot form a Cartesian row. -/
+theorem indexed_rectangle_member (r : Rectangle α) (leftIndex rightIndex : α → Prop)
+    (leftExact : ∀ x, leftIndex x ↔ x ∈ r.left)
+    (rightExact : ∀ y, rightIndex y ↔ y ∈ r.right) (x y : α) :
+    (x, y) ∈ rows r ↔ leftIndex x ∧ rightIndex y := by
+  rw [rectangle_member, ← leftExact x, ← rightExact y]
+
+/-- An exact carrier-local membership test preserves ordered difference export. -/
+theorem indexed_difference_order [DecidableEq α] (newer older : List (Rectangle α))
+    (probe : α × α → Bool) (exact : ∀ p, probe p = decide (p ∈ expand older)) :
+    (expand newer).filter (fun p => !probe p) =
+      (expand newer).filter (fun p => decide (p ∉ expand older)) := by
+  congr 1
+  funext p
+  rw [exact]
+  by_cases h : p ∈ expand older <;> simp [h]
+
 end Ascent.ProviderRectangles

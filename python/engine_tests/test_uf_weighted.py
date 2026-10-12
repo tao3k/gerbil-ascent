@@ -2,6 +2,7 @@
 import unittest
 
 import test_uf_materialization as oracle
+from test_uf_boundary import decode
 
 
 class UFWeightedTests(unittest.TestCase):
@@ -14,6 +15,40 @@ class UFWeightedTests(unittest.TestCase):
         oracle.UFMaterializationTests.tearDownClass.__func__(cls)
 
     exercise = oracle.UFMaterializationTests.exercise
+
+    def test_indexed_membership_and_complete_delta_keep_frozen_owner_truth(self):
+        edges = [[i, (i + 1) % 24] for i in range(24)]
+        tail = [[23, 24], [24, 0]]
+        before_truth, after_truth = oracle.closure(edges), oracle.closure(edges + tail)
+        with self.engine.module(oracle.UF) as owner:
+            with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                reference = state.reference()
+                for edge in edges:
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                        pass
+                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as before:
+                    held = before.reference()
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as result:
+                        before_order = oracle.rows(result.graph)
+                    for edge in tail:
+                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                            pass
+                    with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as after:
+                        current = after.reference()
+                        for view, truth in ((held, before_truth), (current, after_truth)):
+                            for row in ([23, 23], [24, 23], [23, 24], [999, 0], [0, 999]):
+                                with owner.call('gerbil-ascent-view-contains?', view, row, module=oracle.VIEW) as result:
+                                    self.assertEqual(decode(result.graph), tuple(row) in truth)
+                        with owner.call('gerbil-ascent-view-rows', current, module=oracle.VIEW) as result:
+                            after_order = oracle.rows(result.graph)
+                        with owner.call('gerbil-ascent-view-difference', current, held,
+                                        len(after_truth - before_truth), module=oracle.VIEW) as delta:
+                            with owner.call('gerbil-ascent-view-rows', delta.reference(), module=oracle.VIEW) as result:
+                                actual = oracle.rows(result.graph)
+                            self.assertEqual(actual, [row for row in after_order if tuple(row) not in before_truth])
+                            self.assertEqual(set(map(tuple, actual)), after_truth - before_truth)
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as result:
+                        self.assertEqual(oracle.rows(result.graph), before_order)
 
     def test_weighted_cut_survives_extension_and_retirement(self):
         edges = [[i, (i + 1) % 128] for i in range(128)]

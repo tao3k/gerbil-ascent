@@ -173,15 +173,23 @@
                (= count (- (relation-view-count newer) (relation-view-count older))))
     (error "ASCENT view difference requires coherent part cuts"))
   (let ((admitted? (and (gerbil-ascent-admitted-row-parts? newer)
-                         (gerbil-ascent-admitted-row-parts? older))))
+                         (gerbil-ascent-admitted-row-parts? older)))
+        (indexed? (rectangle-visitors? (relation-view-parts older))))
+      ;; Only the private product carrier guarantees contains/parts agreement.
+      ;; Custom part visitors retain their full checked/admitted probe contract.
+      (def (present? row admitted?)
+        (if indexed? (gerbil-ascent-view-contains? older row)
+          (let (found? #f)
+            ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+              older (case (length row) ((2) '(0 1)) ((3) '(0 1 2)) (else (iota (length row))))
+              row (lambda (_prefix _left _right) (set! found? #t)))
+            found?)))
       (def (parts columns key consume admitted?)
         ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
           newer columns key
           (lambda (prefix left right)
-            (let ((found? #f) (row (append prefix (list left right))))
-              ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
-                older (case (length row) ((2) '(0 1)) ((3) '(0 1 2)) (else (iota (length row)))) row (lambda (_prefix _left _right) (set! found? #t)))
-              (unless found? (consume prefix left right))))))
+            (unless (present? (append prefix (list left right)) admitted?)
+              (consume prefix left right)))))
       (make-relation-view #f #f 0 'delta count
         (+ (relation-view-units newer) (relation-view-units older))
         (lambda (columns key consume)
@@ -355,11 +363,33 @@
                             (apply append (map (lambda (hit) (rectangle-bucket-blocks (cdr hit))) selected)))))))))
 ;; Routing narrows descriptors; exact membership still belongs to each captured
 ;; rectangle, including equal endpoint values shared by unrelated groups.
-(def (rectangle-contains? block row width)
+(def (bucket-owner? members hits)
+  (match hits
+    ([] #f)
+    ([[_ . bucket] . rest]
+     (or (eq? members (rectangle-bucket-members bucket))
+         (bucket-owner? members rest)))))
+(def (indexed-axis-member? routes members coordinate value)
+  ;; Route equality alone is insufficient: equal values in different owners
+  ;; must not combine into a nonexistent Cartesian product. Borrow buckets.
+  (match members
+    ([_ _ _ _ _ . _]
+     (bucket-owner? members (or (hash-get (vector-ref routes coordinate) value) [])))
+    (else (and (member value members) #t))))
+(def (rectangle-contains? block row width routes)
   (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
     (and (= width (+ offset 2)) (matches-prefix? row prefix)
-         (member (list-ref row offset) (rectangle-left block))
-         (member (list-ref row (+ offset 1)) (rectangle-right block)) #t)))
+         (if routes
+           (and (indexed-axis-member? routes (rectangle-left block) offset (list-ref row offset))
+                (indexed-axis-member? routes (rectangle-right block) (+ offset 1) (list-ref row (+ offset 1))))
+           (and (member (list-ref row offset) (rectangle-left block))
+                (member (list-ref row (+ offset 1)) (rectangle-right block)))) #t)))
+(def (rectangles-contain? blocks row width routes)
+  (match blocks
+    ([] #f)
+    ([block . rest]
+     (or (rectangle-contains? block row width routes)
+         (rectangles-contain? rest row width routes)))))
 ;; Rectangles must be disjoint; member spines belong to the captured cut.
 ;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 ;; Multiple right owners publish ordered descriptor selections once. Each plan
@@ -478,11 +508,11 @@
       (let (width (length row))
         (and (>= width 2)
              (or (not membership-routes) (<= width (vector-length membership-routes)))
-             (ormap (cut rectangle-contains? <> row width)
+             (rectangles-contain?
                (if membership-routes
                  (routed-rectangles membership-routes blocks
                    (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row uniform?)
-                 blocks)))))
+                 blocks) row width (and uniform? routes)))))
     (lambda ()
       ;; Only this invocation owns the collector spine. Rectangles and member
       ;; lists stay borrowed; each writer emits a fresh detached tuple.

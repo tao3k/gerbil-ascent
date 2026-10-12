@@ -1759,3 +1759,25 @@ passes all six jobs in GitHub run =38250464583=. Source GxTest passes 164
 modules / 1305 Cases at 122/180 seconds with four native batch workers on that
 runner. Earlier Case errors and timeouts remain failed records. These results
 qualify that exact baseline, not subsequent local changes.
+
+
+* Frozen weighted membership and complete delta export
+The weighted view now reuses frozen routing buckets for exact per-owner member
+checks. Point probes use pure descriptor/owner scans without a capturing row
+callback. Complete difference materialization replaces full row-part probes
+only for the private built-in rectangle carrier; custom visitors retain their
+checked/admitted semantics. No public structure or ownership contract changes.
+
+The new fixed native study compares against current pre-batch =0073179=, with
+both arms compiled. Seven scenarios pass, including complete export and scan
+controls. Membership CPU is 73823 ->1388 us; complete/grouped delta CPU is
+44902 ->21917 and 35379 ->13261 us, each 20/20 wins. Delta allocation decreases
+60.46%/57.14%; complete public export allocation is unchanged. These are
+prepared view consumers, not engine, insertion or transport measurements.
+
+Lean adds per-owner membership and ordered difference equivalence proofs.
+Quint keeps 955 generated /433 distinct states and rejects nine mutants.
+Native and actual Python API/ABI tests check custom protocol fallback, owner
+separation, historical cuts and complete ordered delta answers. The first two
+allocation misses and the historical grouped paired-win rejection remain
+recorded. See [[file:../../t/performance/uf-membership/README.org][complete weighted membership qualification]] for fixed contracts and scope.

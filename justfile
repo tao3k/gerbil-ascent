@@ -111,6 +111,13 @@ test-performance-contracts: prepare-test-library
     grep -F 'HARNESS-OK' "$output" >/dev/null
     grep -x 'OK' "$output" >/dev/null
 
+# Compiled paired weighted view controls and complete delta export.
+performance-uf-weighted: prepare-test-library
+    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-weighted "{{ package_library }}"
+
+performance-uf-membership: prepare-test-library
+    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-membership "{{ package_library }}"
+
 # Paired actor source transactions; evaluator work is outside this interval.
 performance-source-cut: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss source-cut "{{ package_library }}"

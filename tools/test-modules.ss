@@ -80,6 +80,12 @@
                           ;; Framework lines remain in the separate Case log.
                           (when (or (string-prefix? "CASE" line) (string-prefix? "MODULE" line)
                                     (string-prefix? "ERROR" line)
+                                    ;; GxTest emits the exception immediately after
+                                    ;; its ERROR context. Preserve the typed cause
+                                    ;; even if another batch exhausts the deadline.
+                                    (string-prefix? "*** ERROR" line)
+                                    (string-prefix? "--- " line)
+                                    (string-prefix? "... " line)
                                     (string-prefix? "PROGRESS" line)
                                     (string-contains line "SCOPED-")
                                     (string-contains line "-PAIRS ")

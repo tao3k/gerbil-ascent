@@ -1839,3 +1839,18 @@ An unsplit negative VM counter delta and a fixed CPU gate miss remain failures;
 none of the thresholds, deadlines or query counts was weakened.
 See [[file:../../t/performance/uf-plan/README.org][full frozen-plan qualification]] for the retained iterations, model premises,
 actual producer identities, construction controls and evidence boundaries.
+
+** Linux completion of the complete-key contract
+The first =ff27865= remote Scheme performance gate rejected repeated-small:
+29185 ->26340 us, 20/20 wins but only 9.75% CPU improvement against the fixed
+10% requirement. That CI failure remains recorded. Complete ordered keys were
+still passing through coordinate scans in the tiny selector. The same shared
+selection flow now admits the immutable complete schema at capture, checks
+prefix/owner membership directly and emits stored singleton values. All four
+consumers use this point path; reordered/repeated/mixed selectors retain their
+checked paths. Lean adds complete-key refinement; Quint adds point prefix/owner
+faults, bringing the rejected fault inventory to 15. Native and actual API/ABI
+Cases cover the new path. Fixed local CPU improves 22552 ->12182 us for repeated
+small queries, 20/20 wins; small allocation falls further to 5376 bytes. Capture
+metadata remains measured. Original thresholds and budgets are unchanged;
+new exact-head remote CI is required for completion.

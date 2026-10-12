@@ -93,6 +93,16 @@ module WeightedExport {
       MergePlans(left,right) == left.foldl(List(), (acc,id) =>
         if (Has(right,id)) acc.append(id) else acc)
     }))
+  pure def PointQuery(bs: List[Block], group: int, left: int, right: int): List[GroupRow] =
+    bs.foldl((0,List()), (acc,b) => (acc._1 + 1,
+      if ((Mutation == "point-prefix" or acc._1 == group) and
+          (if (Mutation == "point-owner")
+            Owners(bs,0,left).size() > 0 and Owners(bs,1,right).size() > 0
+           else Has(b._1,left) and Has(b._2,right)))
+      acc._2.append((acc._1,left,right)) else acc._2))._2
+  val CompleteKeyExact = q.phase != "new" implies Set(0,1,99).forall(g =>
+    Set(0,1,2,99).forall(x => Set(0,1,2,99).forall(y =>
+      PointQuery(q.blocks,g,x,y) == GroupSelect(GroupRows(q.blocks),List((0,g),(1,x),(2,y))))))
   val GroupedQueryExact = q.phase != "new" implies
     Set(List(),List((0,0),(1,0),(2,1)),List((2,1),(0,0),(1,0),(0,0)),
       List((1,0),(2,1)),List((1,0),(1,0)),List((1,0),(1,1)),

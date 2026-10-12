@@ -72,7 +72,8 @@ class UFWeightedTests(unittest.TestCase):
                         full = oracle.rows(public.graph)
                     self.assertEqual(set(map(tuple, full)), oracle.closure(edges))
                     self.assertEqual(len(full), len(set(map(tuple, full))))
-                    for columns, key in (([0], [0]), ([1], [0]), ([0], [999]),
+                    for columns, key in (([0, 1], [3, 2]), ([0, 1], [999, 2]),
+                                         ([0], [0]), ([1], [0]), ([0], [999]),
                                          ([1, 0], [2, 1]), ([0, 0], [1, 2])):
                         with self.subTest(columns=columns, key=key):
                             with owner.call('gerbil-ascent-trrel-uf-view-lookup', held, columns, key) as public:

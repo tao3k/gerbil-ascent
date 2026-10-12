@@ -909,4 +909,18 @@ theorem merge_steps_linear (xs ys : List Nat) :
         simp only [mergeSteps, ite_eq_right ab, ite_eq_right ba, List.length_cons] at *
         omega
 termination_by xs.length + ys.length
+
+/-- A complete ordered key needs no coordinate table: coverage and grounding
+    reduce the selector to a point obligation within the admitted row width. -/
+theorem complete_key_refinement (width : Nat) (row key : Nat → α)
+    (query : List (Nat × α))
+    (covered : ∀ c, c < width → (c, key c) ∈ query)
+    (grounded : ∀ binding ∈ query, binding.1 < width ∧ binding.2 = key binding.1) :
+    MatchesConditions row query ↔ ∀ c, c < width → row c = key c := by
+  constructor
+  · intro accepts c bound
+    exact accepts (c, key c) (covered c bound)
+  · intro point binding member
+    obtain ⟨bound, value⟩ := grounded binding member
+    exact (point binding.1 bound).trans value.symm
 end Ascent.ProviderRectangles

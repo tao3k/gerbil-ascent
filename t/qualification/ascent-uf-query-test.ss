@@ -17,6 +17,17 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "complete tiny keys borrow canonical values and retain checked fallbacks"
+      (let* ((token (list 'token)) (axis (list #f token 2))
+             (view (gerbil-ascent-rectangle-view (list (make-rectangle '(7) axis axis)) 9 6 #t)))
+        (for-each (lambda (columns key) (check-consumers view columns key))
+          '((0 1 2) (0 1 2) (0 1 2) (2 0 1) (0 1 2 1))
+          (list '(7 #f 2) (list 7 (list 'token) 2) '(99 #f 2)
+                '(2 7 #f) '(7 #f 2 2)))
+        (let (rows (gerbil-ascent-view-rows view '(0 1 2) (list 7 (list 'token) 2)))
+          (check (eq? (cadar rows) token) => #t))
+        (gerbil-ascent-visit-view-parts! view '(0 1 2) '(7 #f 2)
+          (lambda (_prefix _left _right) (check-consumers view '(0 1 2) '(7 2 #f))))))
     (test-case "frozen ordinal intersection skips unrelated owners and keeps stored values"
       (let* ((token (list 'token))
              (view (gerbil-ascent-rectangle-view

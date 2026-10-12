@@ -82,7 +82,7 @@ configure() {
     NumericProbe) constants='Mutation = "none"'; invariants='TypedPrefix PrefixValue PublicationExact Unpublished Bounds' ;;
     CountProbe) constants='Mutation = "none"'; invariants='PrefixCount CompleteExact PublishedOnlyComplete FailureTerminal Bounds' ;;
     OwnedLookup) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact RejectedStable' ;;
-    WeightedExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads AxisExact CountExact SharedPlanExact MembershipExact DifferenceExact GroupedQueryExact FrozenPlanExact' ;;
+    WeightedExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads AxisExact CountExact SharedPlanExact MembershipExact DifferenceExact GroupedQueryExact FrozenPlanExact CompleteKeyExact' ;;
     RectangleCompaction) constants='Mutation = "none"'; invariants='OrderedExact WeightedCount IndependentReaders' ;;
     RectangleExport) constants='Mutation = "none"'; invariants='FrozenExact OrderedExact IndependentReads CountExact' ;;
     ProviderViews) constants="Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff"; invariants='AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget'; constraint=Explore ;;
@@ -208,7 +208,7 @@ JS
         ProviderAdmission) fault nocap MatchingExact; fault set MatchingExact; fault allwitness CountCaps; fault early NoEarlyCallbacks; fault borrow DetachedPacket; fault retain FailedCacheRevoked ;;
         ProviderRouting) for mutation in drop order representative prefix; do fault "$mutation" CompleteExact; done ;;
         OwnedLookup) fault export OrderedExact; fault order OrderedExact; fault empty OrderedExact; fault duplicate OrderedExact; fault shared OrderedExact; fault borrow FrozenExact; fault retire FrozenExact; fault reject RejectedStable ;;
-        WeightedExport) fault merge-skip FrozenPlanExact; fault merge-order FrozenPlanExact; fault repeat-conflict GroupedQueryExact; fault group-owner GroupedQueryExact; fault owner-cross MembershipExact; fault member-miss MembershipExact; fault selected-order AxisExact; fault plan-axis SharedPlanExact; fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
+        WeightedExport) fault point-prefix CompleteKeyExact; fault point-owner CompleteKeyExact; fault merge-skip FrozenPlanExact; fault merge-order FrozenPlanExact; fault repeat-conflict GroupedQueryExact; fault group-owner GroupedQueryExact; fault owner-cross MembershipExact; fault member-miss MembershipExact; fault selected-order AxisExact; fault plan-axis SharedPlanExact; fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads; fault axis AxisExact; fault mass CountExact ;;
         RectangleCompaction) fault heavy OrderedExact; fault order OrderedExact; fault alias OrderedExact; fault mass WeightedCount; fault shared IndependentReaders ;;
         RectangleExport) fault order OrderedExact; fault alias FrozenExact; fault shared IndependentReads ;;
         ProviderViews) fault alias FrozenRead; fault retire ReaderAlive; fault early AtomicPublication; fault stale CurrentReply; fault budget LogicalBudget ;;

@@ -90,7 +90,7 @@ A focused source Test loaded the preceding compiled core and reported an
 is not a pass. Fresh preparation and explicit error/final-OK admission qualify
 the final core separately.
 
-* Final current-baseline paired results
+* Initial current-baseline local results
 Run =c72de119-f751-4ae5-9719-c25b61d0faf3= passes all ten scenarios against
 =4fe5b12=. CPU medians and allocations are per eight complete consumers.
 
@@ -151,3 +151,40 @@ ten modules /15 Cases pass in 47.18 seconds. Clearing only the new fixtures'
 generated SSI files confirms native make builds their declared dependency
 closure, with production-rebuilt=0. No test wrapper or new scheduling system
 was added. =ab-007= and earlier successful runs remain separate receipts.
+
+* Linux CI rejection and complete-key flow
+Exact-head =ff27865= CI run =38320973447= rejects repeated-small CPU:
+29185 ->26340 us, 20/20 wins, but ratio 0.9025 fails the fixed 0.9 gate.
+All measured allocation gates pass. This result remains a failure; local
+success does not close the Linux gate. The root is repeated coordinate scans
+inside the tiny selector, even when columns are the complete ordered schema.
+
+The follow-up admits that immutable complete schema once at tiny-view capture.
+A shared point visitor checks the prefix and both exact captured owner axes,
+then emits borrowed singleton values. All four consumers use it; permutations,
+repeats, incomplete keys and mixed widths retain the existing checked flow.
+There is no query-dependent cache or relaxed key admission. Lean proves
+complete-key refinement from coordinate coverage/grounding, Quint checks
+complete point selection and adds prefix/owner faults, and native/API tests
+cover false values, stored identity, nested queries and empty point answers.
+
+The unchanged ten-scenario native study passes locally after the repair:
+wide 67228 ->9676 us, repeated-small 22552 ->12182 us, both 20/20 wins.
+Small allocation is 17152 ->5376 bytes; repeated-small fixed-segment allocation
+54007808 ->15206400 bytes. Capture/tiny-capture allocation is
+34970240 ->34971776 and 158720 ->161792 bytes, both within the original controls.
+The extra immutable schema/closure metadata is exposed in capture controls.
+The original budgets and every performance gate remain intact; fresh actual
+producer and exact-head CI qualification bind this new source separately.
+
+The repaired physical producer passes Library/package/API in 69.41/120,
+0.80/15 and 1.74/45 seconds. API/ABI each pass six Cases in 5.434/15 and
+12.062/15 seconds. All 132 production source digests match; 127 linked modules
+and 1268 resources are retained. Complete source testing passes 166 modules
+/1316 Cases, zero errors, in 93/180 seconds (120.88-second recipe with separate
+preparation). Compiled contracts pass ten modules /15 Cases in 40.85 seconds.
+Lean passes seven jobs; Quint still explores 955/433 states and now rejects
+15 faults. The new API receipt SHA256 is
+=ba1c66af12fe61d28c964eebb873f051c0c5cb21184948ec4f4c97c286a1432f=.
+These source identities supersede the old local snapshot for the repair; the
+old producer/API archive and failed CI logs remain separately retained.

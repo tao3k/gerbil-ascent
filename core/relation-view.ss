@@ -470,6 +470,9 @@
          (uniform? (or (null? blocks)
                        (let (width (length (rectangle-prefix (car blocks))))
                          (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
+         ;; Complete keys already bind every coordinate exactly once. Tiny
+         ;; cuts admit this immutable schema once and need no condition plan.
+         (complete-columns (and scan-route uniform? (iota (vector-length routes))))
          (right-plans (ordered-right-plans routes blocks uniform?))
          ;; A self-component cut has the same owner axis on both sides.
          ;; Its frozen descriptor plan can serve either endpoint unchanged.
@@ -517,6 +520,17 @@
                  ((planned-axis column (car key)) =>
                   (lambda (plans) (visit-axis-plan plans consume (= column left-column) expand) #t))
                  (else #f)))))))
+  (def (visit-complete-key columns key consume expand)
+    (and complete-columns (equal? columns complete-columns)
+      (let* ((offset (- (vector-length routes) 2))
+             (endpoints (list-tail key offset)))
+        (for-each (lambda (block)
+          (with (((rectangle prefix left right) block))
+            (when (matches-prefix? key prefix)
+              (let ((a (captured-member scan-route left offset (car endpoints)))
+                    (b (captured-member scan-route right (+ offset 1) (cadr endpoints))))
+                (when (and a b) (expand prefix a b consume)))))) blocks)
+        #t)))
   ;; Intersect immutable descriptor plans with invocation-local list cursors.
   ;; Equal ordinals identify the same captured descriptor, not equal values
   ;; from unrelated owners. No owner table or query record is constructed.
@@ -555,7 +569,8 @@
   ;; checked protocol. Frozen two-axis plans replace wide temporary owner
   ;; indexes when available; tiny cuts need no query initialization.
   (def (visit-selected columns key consume admitted? (expand visit-left-members))
-    (unless (visit-indexed-axis columns key consume expand)
+    (unless (or (visit-complete-key columns key consume expand)
+                (visit-indexed-axis columns key consume expand))
       (let* ((compiled? (and routes uniform? (not small?) (pair? columns) (pair? (cdr columns))))
              (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
         (when (or (not compiled?) bindings)

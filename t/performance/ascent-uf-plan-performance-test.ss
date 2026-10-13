@@ -9,6 +9,9 @@
     (test-case "fixed paired fixture admits the unchanged resource gates"
       (check (benchmark-fixture-contract-pass?
                (call-with-input-file "t/performance/uf-plan/benchmark.ss" read)) => #t))
+    (test-case "current-baseline initialization gates remain independently fixed"
+      (check (benchmark-fixture-contract-pass?
+               (call-with-input-file "t/performance/uf-initialization/benchmark.ss" read)) => #t))
     (test-case "bounded allocation covers every key and propagates rejected legs"
       (for-each (lambda (old?)
         (let ((prepared (ui-prepare old? 'small)) (calls 0))

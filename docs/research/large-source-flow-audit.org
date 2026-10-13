@@ -1854,3 +1854,20 @@ Cases cover the new path. Fixed local CPU improves 22552 ->12182 us for repeated
 small queries, 20/20 wins; small allocation falls further to 5376 bytes. Capture
 metadata remains measured. Original thresholds and budgets are unchanged;
 new exact-head remote CI is required for completion.
+
+* Complete UF point publication and constructor planning
+
+The follow-up uses current =a430eb2= as its independent native baseline.
+Complete uniform keys now share scalar point publication across descriptor
+routing, row materialization and checked/admitted visitors. Constructor-local
+tiny owner associations replace hash allocation, while scoped constructor
+profiles preserve the large native table path. Ordinal plans are created only
+when multiple owners exist, with stable table bindings after preflight.
+
+A full long-axis scan was rejected by an explicit tail control. Bounded head
+probes fall back to exact frozen owner routing. Duplicate schema checks and
+mutable lazy-plan bindings were also rejected by conflict/capture controls;
+all failures remain under ignored cache. Lean, Quint and actual Python/native
+Cases model and test this complete flow; the fixed twelve-scenario study keeps
+zero allocation tolerance and all previous budgets.
+See [[file:../../t/performance/uf-initialization/README.org][complete initialization qualification]] for source learning, final receipts and limits.

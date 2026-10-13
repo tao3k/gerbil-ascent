@@ -17,6 +17,36 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "complete large points retain owner identity, empty axes and nested reads"
+      (let* ((tokens (map (lambda (_) (list 'token)) (iota 8)))
+             (view (gerbil-ascent-rectangle-view
+                    (map (lambda (group token)
+                           (make-rectangle (list group 'scope)
+                             (if (= group 4) [] (list #f token 2))
+                             (if (= group 6) [] (list token 9)))) (iota 8) tokens)
+                    36 35 #t)))
+        (for-each (lambda (group)
+          (let (key (list group 'scope (list 'token) 9))
+            (check-consumers view '(0 1 2 3) key)
+            (check-consumers view '(3 2 1 0) (reverse key))
+            (unless (memq group '(4 6))
+              (check (eq? (list-ref (car (gerbil-ascent-view-rows view '(0 1 2 3) key)) 2)
+                          (list-ref tokens group)) => #t)))) (iota 8))
+        (check-consumers view '(0 1 2 3) '(99 scope #f 9))
+        (gerbil-ascent-visit-view-parts! view '(0 1 2 3) '(3 scope #f 9)
+          (lambda (_prefix _left _right) (check-consumers view '(0 1 2 3) '(7 scope #f 9))))))
+    (test-case "tiny owner associations preserve shared and equal distinct axes"
+      (for-each (lambda (shared?)
+        (let* ((a (list (list 'token) #f 2))
+               (b (if shared? a (list (list 'token) #f 2)))
+               (view (gerbil-ascent-rectangle-view
+                      (list (make-rectangle '(0) a a) (make-rectangle '(1) b b)) 18 12 #t)))
+          (for-each (lambda (columns key) (check-consumers view columns key))
+            '((0 1 2) (1) (2) (1 2) (2 1 2) ())
+            (list (list 1 (list 'token) #f) (list (list 'token)) '(#f)
+                  (list (list 'token) #f) (list #f (list 'token) #f) []))
+          (check (eq? (cadar (gerbil-ascent-view-rows view '(0 1 2) (list 1 (list 'token) #f)))
+                      (car b)) => #t))) '(#t #f)))
     (test-case "complete tiny keys borrow canonical values and retain checked fallbacks"
       (let* ((token (list 'token)) (axis (list #f token 2))
              (view (gerbil-ascent-rectangle-view (list (make-rectangle '(7) axis axis)) 9 6 #t)))

@@ -1,0 +1,147 @@
+#+title: UF Query Initialization and Scalar Publication
+
+* Scope and current baseline
+
+This batch compares against the exact pre-batch =a430eb2ee99d64427cee1f343c8ef70e628b228a=
+core. =reference-relation-view.ss= preserves those source bytes. Both arms are
+compiled and linked through native Gerbil =std/make= and use the shared ASP
+paired benchmark API. Historical =uf-plan=, =uf-query= and =uf-membership=
+studies retain their own references and gates.
+
+The implementation covers the complete-key path and constructor resource
+planning as one flow. It does not introduce a retained query cache, change the
+public visitor protocol, or qualify whole engine/transport performance.
+
+* Representation and execution
+
+- Complete uniform keys reuse the captured membership schema. Candidate routing
+  retains descriptor order and a scalar point visitor publishes exact stored
+  representatives without binding vectors, query records or singleton lists.
+- Long axes probe the four values exposed by the existing five-cell shape test,
+  then fall back to exact frozen owner routing. Short axes use membership scans.
+  Tail and absent controls prohibit replacing owner routing with full long scans.
+- Selected materialization constructs only its scalar or product collector.
+  Nonpoint queries enter the product flow once, avoiding repeated schema checks.
+- At most two descriptors use constructor-local identity associations. A scoped
+  =defrule= binds that profile once; the large path keeps native identity tables.
+- Tiny cuts do not build multi-owner ordinal plans. Other cuts first use
+  =hash-find= to establish that a multi-owner plan is needed, then bind private
+  tables immutably. Published tables remain read-only.
+
+These choices follow actual installed Gerbil sources: compiler
+=optimize-base.ss= (constructor-owned fields and =!class-method-table=), runtime
+=hash.ss= (=hash-find=), and =std/list/list-builder.ss= (scoped collectors).
+Conditional initialization must not turn hot table bindings into mutable
+closure boxes; that rejected implementation is retained below.
+
+* Correspondence
+
+Lean =ProviderRectangles= adds ordered candidate refinement, owner identity
+lookup laws, the two-probe tiny bound, and bounded-head/exact-route membership
+refinement. Existing complete-key and ordinal-plan proofs remain required.
+The route premises are explicit; these are not proofs of native hash-table or
+compiler internals.
+
+Quint =WeightedExport= checks tiny owner selection, routed scalar points and
+head-miss fallback, plus existing snapshot, order, membership and ordinal laws.
+The fixed exploration retains 955 generated /433 distinct states and adds
+three fault variants, for 18 rejected variants. Native Cases additionally check
+stored compound-value identity, empty axes, shared versus equal distinct owners,
+multiple prefix fields, malformed selectors and reentrant reads.
+
+Actual Python API/ABI tests compare an independent closure and exact public
+order for grouped and tiny complete points, repeated and reordered selectors,
+missing endpoints/groups and held views. Source receipts must match current
+provider bytes before either backend is admitted.
+
+* Fixed study
+
+Twelve scenarios, 20 alternating natural-GC CPU pairs, 20 ASP admissions,
+five allocation pairs and eight consumers per sample are fixed before final
+qualification. The grouped target requires CPU <=0.9 and at least 16 paired
+wins; grouped and tiny-capture allocation require <=0.8 with zero absolute
+allowance. All other CPU controls retain <=1.1 plus 20us and allocation <=1.1.
+Repeated-small retains all 4096 queries in the existing four 1024-query
+allocation legs; negative counters and failed legs are errors. CPU is unsplit.
+
+Tail/absent points are explicit controls. Capture is measured separately from
+prepared query consumption. Exact ordered Cartesian answers and counts are
+checked outside sampling for both arms. Input and source bytes are frozen for
+each run; all generated artifacts remain under ignored =.cache/=.
+
+* Retained rejected records
+
+All logs live in =.cache/ascent/uf-initialization/=; failures are never relabeled.
+
+- =ab-001=: grouped CPU improves only 4.7%, below the fixed 10% gate.
+- =ab-002=: scalar publication improves CPU, but two collectors miss the fixed
+  allocation gate (1672832 ->1345152 bytes, ratio about 0.804).
+- =ab-003= and =prepare-004=: original 120-second preparation timeouts under
+  concurrent host Scheme/Gambit compilation; native 12-core scheduling remains.
+- =ab-005=: direct invocation omitted the existing OpenSSL environment boundary;
+  native link fails with =library crypto not found=.
+- =ab-006=: full long-axis scans fail the tail control, 1177 ->3837us.
+- =ab-007=: exact owner routing passes tail/absent controls but grouped CPU misses.
+- =ab-008= and =ab-009=: duplicate nonpoint schema checks fail conflict control.
+- =ab-010= and =ab-011=: mutable lazy-plan table bindings fail capture CPU control.
+- =lean-001=: the final bound used an unavailable projected transitivity name;
+  =Nat.le_trans= repairs the source proof without weakening its statement.
+- =quint-001=: incorrect recipe name; =quint-002=: sandbox denies the checker's
+  local server bind. Neither is a successful model check.
+
+* Final qualification
+
+Final exact source identities, native A/B rows, actual producer timings, both
+binding results, complete native Cases and remote exact-head CI are recorded
+below after their respective gates complete. Local checks and producer CI do
+not qualify an independent downstream consumer, portable wheel or SDK rebuild.
+
+** Final local receipt
+
+Native study =89e725f7-2129-44a4-aa1c-6396486776df= binds final core SHA256
+=5748a3a410554c2cf828d38b33f9260376be3b8232cca10523462861fee1c136=.
+All twelve current-baseline scenarios and 25 historical regression scenarios
+pass. Four fixed studies plus one warm preparation take 85.62 seconds total;
+each retains its own original 90-second parent limit.
+
+| Scenario | Old CPU us | New CPU us | Wins | Old bytes | New bytes |
+|----------+------------+------------+------+-----------+-----------|
+| point-tail | 1180 | 1122 | 19/20 | 1672832 | 1148544 |
+| point-absent | 987 | 718 | 19/20 | 1279616 | 755328 |
+| grouped | 1178 | 649 | 19/20 | 1672832 | 1148544 |
+| reordered | 1235 | 1269 | 7/20 | 1672832 | 1672832 |
+| wide | 9687 | 9800 | 9/20 | 25953920 | 25953920 |
+| conflict | 336 | 370 | 0/20 | 788096 | 788096 |
+| single-axis | 9730 | 9844 | 9/20 | 50342016 | 50342016 |
+| unindexed | 853 | 860 | 9/20 | 1640064 | 1640064 |
+| small | 4 | 4 | 12/20 | 5376 | 5376 |
+| repeated-small | 12497 | 11685 | 19/20 | 15206400 | 15206400 |
+| capture | 22571 | 22423 | 10/20 | 34971776 | 34980736 |
+| tiny-capture | 38 | 17 | 20/20 | 161792 | 62848 |
+
+Grouped CPU improves 44.91% and allocation 31.34%. Tiny-capture allocation
+falls 61.15% (161792 ->62848 bytes); prepared small-query allocation stays
+5376 bytes. Repeated-small CPU improves 6.50%, allocation stays 15206400 bytes.
+Wide/reordered/conflict controls have small overhead within their unchanged
+ratio plus absolute CPU gates. Large capture adds 8960 bytes per eight captures
+(0.026%); no whole-engine or peak-retained-memory claim follows from these data.
+
+The actual 12-core Library build passes 88.51/120 seconds; package/API builds
+pass 0.72/15 and 1.67/45. All 132 build inputs match live bytes; 127 linked
+Scheme modules and 1269 syntax resources are bound. The physical local producer
+also contains the other task's uncommitted capacity files; clean-head GitHub CI
+is a separate source identity, and independent consumer qualification remains
+required. Those files are excluded from this batch's commit.
+
+Actual API/ABI each pass seven independent tests in 6.482/15 and 6.674/15
+seconds. Their earlier concurrent-build runs time out and remain failures.
+Native source GxTest passes 166 modules /1318 Cases /zero errors in 110/180
+seconds; compiled performance GxTest passes ten modules /16 Cases /zero errors.
+Final test preparation passes in 104.06/120 seconds, production-rebuilt=0.
+Lean's seven build jobs pass. Quint's 955/433 exploration and all 18 mutants
+pass. The first head-fallback mutant fails in the initial state with exit151;
+phase-scoping its invariant retains the same fault and produces the harness's
+required post-capture exit12. That initial checker-contract failure is retained.
+
+Remote CI must qualify the exact pushed commit independently. Its result is
+stored in the ignored qualification receipt, without rewriting old failures.

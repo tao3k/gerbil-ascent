@@ -121,6 +121,9 @@ performance-uf-membership: prepare-test-library
 performance-uf-query: prepare-test-library
     {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-query "{{ package_library }}"
 
+performance-uf-initialization: prepare-test-library
+    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-initialization "{{ package_library }}"
+
 performance-uf-plan: prepare-test-library
     {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-plan "{{ package_library }}"
 

@@ -924,3 +924,65 @@ theorem complete_key_refinement (width : Nat) (row key : Nat → α)
     obtain ⟨bound, value⟩ := grounded binding member
     exact (point binding.1 bound).trans value.symm
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+
+/-- Candidate narrowing is exact when every point answer retains its owner.
+    Filtering never changes the captured descriptor order. -/
+theorem point_candidate_refinement (rows : List α) (candidate point : α → Bool)
+    (covered : ∀ row, point row = true → candidate row = true) :
+    (rows.filter candidate).filter point = rows.filter point := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    by_cases accepts : point row = true
+    · simp [List.filter, accepts, covered row accepts, ih]
+    · by_cases retained : candidate row = true
+      · simp [List.filter, accepts, retained, ih]
+      · simp [List.filter, accepts, retained, ih]
+
+/-- Tiny constructor associations use owner identity, never member equality. -/
+def ownerLookup (owner : Nat) : List (Nat × α) → Option α
+  | [] => none
+  | (id, value) :: rest => if id = owner then some value else ownerLookup owner rest
+
+theorem owner_lookup_stored (owner : Nat) (stored : α) (rest : List (Nat × α)) :
+    ownerLookup owner ((owner, stored) :: rest) = some stored := by
+  simp [ownerLookup]
+
+theorem owner_lookup_other (owner id : Nat) (stored : α) (rest : List (Nat × α))
+    (distinct : id ≠ owner) :
+    ownerLookup owner ((id, stored) :: rest) = ownerLookup owner rest := by
+  simp [ownerLookup, distinct]
+
+/-- A two-descriptor construction has a fixed upper bound on identity probes. -/
+def ownerProbes (owner : Nat) : List (Nat × α) → Nat
+  | [] => 0
+  | (id, _) :: rest => 1 + if id = owner then 0 else ownerProbes owner rest
+
+theorem owner_probes_bounded (owner : Nat) (entries : List (Nat × α)) :
+    ownerProbes owner entries ≤ entries.length := by
+  induction entries with
+  | nil => simp [ownerProbes]
+  | cons entry rest ih =>
+    rcases entry with ⟨id, value⟩
+    by_cases same : id = owner <;> simp [ownerProbes, same] <;> omega
+
+theorem tiny_owner_probes (owner : Nat) (entries : List (Nat × α))
+    (tiny : entries.length ≤ 2) : ownerProbes owner entries ≤ 2 :=
+  Nat.le_trans (owner_probes_bounded owner entries) tiny
+
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Bounded head admission plus an exact owner route is full membership.
+    The head shortcut must be sound; a miss always falls back to the route. -/
+theorem bounded_head_route_refinement (members : List α) (value : α) :
+    (value ∈ members.take 4 ∨ value ∈ members) ↔ value ∈ members := by
+  constructor
+  · intro hit
+    rcases hit with head | routed
+    · exact List.mem_of_mem_take head
+    · exact routed
+  · exact Or.inr
+end Ascent.ProviderRectangles

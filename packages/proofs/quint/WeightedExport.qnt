@@ -100,6 +100,25 @@ module WeightedExport {
             Owners(bs,0,left).size() > 0 and Owners(bs,1,right).size() > 0
            else Has(b._1,left) and Has(b._2,right)))
       acc._2.append((acc._1,left,right)) else acc._2))._2
+  // Constructor-local identity associations for a bounded tiny cut.
+  pure def TinyOwner(bs: List[Block], owner: int): List[Block] =
+    bs.foldl((0,List()), (acc,b) => (acc._1 + 1,
+      if (acc._1 == (if (Mutation == "tiny-owner") 0 else owner)) acc._2.append(b) else acc._2))._2
+  val TinyOwnerExact = q.phase != "new" and q.blocks.length() <= 2 implies
+    Set(0,1,99).forall(owner => TinyOwner(q.blocks,owner) ==
+      (if (owner < q.blocks.length()) List(q.blocks.nth(owner)) else List()))
+  // Prefix narrowing precedes scalar endpoint publication, retaining order.
+  pure def RoutedPoint(bs: List[Block], group: int, left: int, right: int): List[GroupRow] =
+    PointQuery(bs,group,left,right).foldl(List(), (rows,p) =>
+      if (Mutation == "point-drop" and p._1 == 1) rows else rows.append(p))
+  val RoutedPointExact = q.phase != "new" implies Set(0,1,99).forall(g =>
+    Set(0,1,2,99).forall(x => Set(0,1,2,99).forall(y =>
+      RoutedPoint(q.blocks,g,x,y) == GroupSelect(GroupRows(q.blocks),List((0,g),(1,x),(2,y))))))
+  pure def PointMember(axis: List[int], key: int): bool =
+    Has(axis.slice(0, if (axis.length() < 4) axis.length() else 4),key) or
+      (Mutation != "point-head-drop" and Has(axis,key))
+  val PointMemberExact = q.phase != "new" implies Set(List(),List(0,1,2,3,4,5),List(5,4,3,2,1,0)).forall(axis =>
+    Set(0,1,2,3,4,5,99).forall(key => PointMember(axis,key) == Has(axis,key)))
   val CompleteKeyExact = q.phase != "new" implies Set(0,1,99).forall(g =>
     Set(0,1,2,99).forall(x => Set(0,1,2,99).forall(y =>
       PointQuery(q.blocks,g,x,y) == GroupSelect(GroupRows(q.blocks),List((0,g),(1,x),(2,y))))))

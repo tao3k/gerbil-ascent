@@ -50,6 +50,39 @@ class UFWeightedTests(unittest.TestCase):
                     with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as result:
                         self.assertEqual(oracle.rows(result.graph), before_order)
 
+    def test_complete_points_keep_grouped_owners_and_repeated_tiny_reads(self):
+        for grouped, groups, size in ((True, range(8), 4), (False, (None,), 3)):
+            edges = [[g, i, (i + 1) % size] if grouped else [i, (i + 1) % size]
+                     for g in groups for i in range(size)]
+            truth = {(g, a, b) if grouped else (a, b) for g in groups
+                     for a, b in oracle.closure([e[1:] for e in edges if e[0] == g] if grouped else edges)}
+            with self.engine.module(oracle.UF) as owner:
+                with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                    ref = state.reference()
+                    for edge in edges:
+                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', ref, edge, 200000):
+                            pass
+                    with owner.call('gerbil-ascent-trrel-uf-freeze', ref, True) as cut:
+                        held = cut.reference()
+                        with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                            full = oracle.rows(public.graph)
+                        self.assertEqual(set(map(tuple, full)), truth)
+                        columns = [0, 1, 2] if grouped else [0, 1]
+                        keys = ([g, a, b] if grouped else [a, b] for g in groups
+                                for a, b in ((0, 2), (2, 0), (99, 1), (1, 99)))
+                        queries = [(columns, key) for key in keys]
+                        queries += [(list(reversed(cols)), list(reversed(key))) for cols, key in queries.copy()]
+                        if grouped:
+                            queries.append((columns, [99, 0, 1]))
+                        for _ in range(4):
+                            for cols, key in queries:
+                                expected = [row for row in full if all(row[c] == v for c, v in zip(cols, key))]
+                                with owner.call('gerbil-ascent-view-rows', held, cols, key,
+                                                module=oracle.VIEW) as public:
+                                    self.assertEqual(oracle.rows(public.graph), expected)
+                        with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                            self.assertEqual(oracle.rows(public.graph), full)
+
     def test_weighted_cut_survives_extension_and_retirement(self):
         edges = [[i, (i + 1) % 128] for i in range(128)]
         self.exercise(edges, [[127, 128], [128, 0]])

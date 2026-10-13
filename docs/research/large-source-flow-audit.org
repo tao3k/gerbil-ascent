@@ -1871,3 +1871,43 @@ all failures remain under ignored cache. Lean, Quint and actual Python/native
 Cases model and test this complete flow; the fixed twelve-scenario study keeps
 zero allocation tolerance and all previous budgets.
 See [[file:../../t/performance/uf-initialization/README.org][complete initialization qualification]] for source learning, final receipts and limits.
+
+* Compact nonpoint UF query admission and consumer construction
+
+The next batch extends the frozen-view flow, rather than adding independent
+query caches or a second test launcher. Audit findings: uniform binary/group
+queries built a binding vector even when only three scalar values were needed;
+reordered complete bindings used generic products; conflicting repeats created
+result collectors before rejection; unscoped two-axis plans rechecked unbound
+prefixes. Partial group queries could also repeat normalization before fallback.
+
+Gerbil's =core/sugar.ss= admission bindings and =std/list/list-builder.ss=
+consumer-owned construction define the boundary: admit conditions first,
+construct only the selected consumer afterward. =with-compact-bindings= exposes
+that private lexical protocol. Key tails retain the first stored fixed value,
+including =#f=, while unbound slots remain distinct. All ranges are checked
+before a conflict can reject. =visit-compact-bindings= shares exact frozen owner
+routing and ordinal publication among checked/admitted parts, row streaming and
+materialization. Layout-selected scalar publishers serve binary/group complete
+bindings; partial group bindings borrow the unconstrained axis. Multiple equal
+prefix owners retain original descriptor order, including interleaved owners.
+Tiny, mixed, scan and arbitrary-prefix layouts keep checked generic traversal.
+
+Lean proves scalar-slot acceptance under explicit repeat coverage/grounding;
+Quint models first-slot retention, conflict rejection and range precedence,
+with four new fault variants, including cost-selected coverage. A missing multi-owner cached plan is separate
+from an absent endpoint; exact frozen buckets cover single-owner holes. Cost selection chooses the smallest covered group/endpoint route and retains
+ordered exact filtering. Single-descriptor groups publish before traversal
+construction; frozen axis plans and uncached routing cover larger groups. Native
+regressions exercise larger owner graphs,
+all consumers, false/canonical values and invalid ranges. Python corresponds
+through the actual compiled API/ABI and independent UF closure. Models do not
+prove native hashes or the compiler; native receipts do not qualify consumers.
+
+The fixed current baseline is =aac1f3d=. Wide parts traversal and detached
+wide-row materialization are measured separately, so output-spine allocation
+is not mislabeled as plan initialization. Four initial full-materialization
+allocation targets failed and remain retained; they are not accepted benefit
+receipts. All earlier study contracts remain intact. See
+[[file:../../t/performance/uf-compact-query/README.org][compact-query qualification]]
+for complete paired scenarios, control outcomes and final evidence boundaries.

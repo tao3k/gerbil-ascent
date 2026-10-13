@@ -986,3 +986,92 @@ theorem bounded_head_route_refinement (members : List α) (value : α) :
     · exact routed
   · exact Or.inr
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Compact layouts retain the first value of each slot, including false-like
+values. Absence is represented separately; query order is not a layout. -/
+def compactSlots (group left right : Option α) : Nat → Option α
+  | 0 => group
+  | 1 => left
+  | 2 => right
+  | _ => none
+
+theorem compact_slots_acceptance (row : Nat → α) (group left right : Option α) :
+    (∀ c v, compactSlots group left right c = some v → row c = v) ↔
+    (∀ v, group = some v → row 0 = v) ∧
+    (∀ v, left = some v → row 1 = v) ∧
+    (∀ v, right = some v → row 2 = v) := by
+  constructor
+  · intro h
+    exact ⟨h 0, h 1, h 2⟩
+  · rintro ⟨hg, hl, hr⟩ c v h
+    cases c with
+    | zero => exact hg v h
+    | succ c =>
+      cases c with
+      | zero => exact hl v h
+      | succ c =>
+        cases c with
+        | zero => exact hr v h
+        | succ c => simp [compactSlots] at h
+
+/-- Scalar slots refine the complete condition list when compilation checked
+all repeats. This supplies the same acceptance premise as the vector plan,
+without requiring a retained vector or changing row order. -/
+theorem compact_query_refinement (row : Nat → α) (query : List (Nat × α))
+    (group left right : Option α)
+    (covered : ∀ c v, (c, v) ∈ query → compactSlots group left right c = some v)
+    (grounded : ∀ c v, compactSlots group left right c = some v → (c, v) ∈ query) :
+    ((∀ v, group = some v → row 0 = v) ∧
+     (∀ v, left = some v → row 1 = v) ∧
+     (∀ v, right = some v → row 2 = v)) ↔ MatchesConditions row query :=
+  (compact_slots_acceptance row group left right).symm.trans
+    (first_binding_refinement row query (compactSlots group left right) covered grounded)
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Frozen plans are deliberately partial indexes. Only present plans promise
+an exact answer; a missing cache entry preserves the independent fallback. -/
+theorem partial_plan_refinement (answer : List α) (cached : Option (List α))
+    (present_exact : ∀ rows, cached = some rows → rows = answer) :
+    cached.getD answer = answer := by
+  cases cached with
+  | none => rfl
+  | some rows => exact present_exact rows rfl
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Descriptor costs select a covered route; they never replace its query
+predicate. The native implementation borrows a bucket or ordered axis plan. -/
+structure RoutingCandidate (α : Type) where
+  predicate : α → Bool
+  cost : Nat
+
+def narrowRouting (current next : RoutingCandidate α) : RoutingCandidate α :=
+  if next.cost < current.cost then next else current
+
+theorem narrow_routing_cost (current next : RoutingCandidate α) :
+    (narrowRouting current next).cost ≤ current.cost := by
+  unfold narrowRouting
+  split
+  · exact Nat.le_of_lt ‹next.cost < current.cost›
+  · exact Nat.le_refl _
+
+theorem narrow_routing_coverage (accept : α → Bool) (current next : RoutingCandidate α)
+    (current_covers : ∀ row, accept row = true → current.predicate row = true)
+    (next_covers : ∀ row, accept row = true → next.predicate row = true) :
+    ∀ row, accept row = true → (narrowRouting current next).predicate row = true := by
+  intro row accepted
+  unfold narrowRouting
+  split
+  · exact next_covers row accepted
+  · exact current_covers row accepted
+
+theorem narrow_routing_query_refinement (rows : List α) (accept : α → Bool)
+    (current next : RoutingCandidate α)
+    (current_covers : ∀ row, accept row = true → current.predicate row = true)
+    (next_covers : ∀ row, accept row = true → next.predicate row = true) :
+    (rows.filter (narrowRouting current next).predicate).filter accept = rows.filter accept :=
+  point_candidate_refinement rows (narrowRouting current next).predicate accept
+    (narrow_routing_coverage accept current next current_covers next_covers)
+end Ascent.ProviderRectangles

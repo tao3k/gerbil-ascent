@@ -1388,3 +1388,31 @@ for both success and failure. It is not a public validation cache or an extensio
 of the caller-supplied operator compiler protocol. See
 [[file:../../t/performance/typed-sharing/README.org][typed ownership qualification]] for whole compilation measurements and the
 rejected reuse-only experiment.
+
+* Admit compact bindings before constructing the selected consumer
+
+Gerbil =1cfb032= =core/sugar.ss:933-973= and
+=std/list/list-builder.ss:5-24= provide complementary extents: bind admitted
+values once, then construct an owned result only inside its consumer. In
+=core/relation-view.ss=, private =with-compact-bindings= syntax admits finite
+binary/group layouts using first key tails, with no retained vector or query
+record. Repeated coordinates remain equality obligations; range errors still
+precede early conflict rejection. Scalar false values remain distinct from
+unbound slots. This protocol is based on a captured schema, not selector order.
+
+The consumer rule keeps collector construction after successful admission.
+Layout-selected scalar publication, borrowed partial axes and frozen ordinal
+intersection share the same owner contract. Matching every emitted row against
+an already admitted schema is unnecessary; choose its publisher once instead.
+Keep a generic checked flow for layouts outside the finite contract. Evaluate
+this tradeoff through both plan traversal and detached row materialization:
+mandatory output allocation is a different cost from binding initialization.
+See [[file:../../t/performance/uf-compact-query/README.org][native paired evidence]];
+failed draft targets are retained alongside the selected measurements.
+
+Cost is a routing choice, never an acceptance predicate. Every candidate must
+cover the complete admitted query; publication still checks the other bindings
+and preserves captured order. Select a frozen bucket or axis plan by descriptor
+count, then filter. A single-descriptor group is already minimal: publish it
+before allocating a traversal closure. Keep cache absence distinct from
+endpoint absence, since partial frozen indexes intentionally omit some owners.

@@ -12,6 +12,9 @@
     (test-case "current-baseline initialization gates remain independently fixed"
       (check (benchmark-fixture-contract-pass?
                (call-with-input-file "t/performance/uf-initialization/benchmark.ss" read)) => #t))
+    (test-case "compact query targets and full-row controls are independently admitted"
+      (check (benchmark-fixture-contract-pass?
+               (call-with-input-file "t/performance/uf-compact-query/benchmark.ss" read)) => #t))
     (test-case "bounded allocation covers every key and propagates rejected legs"
       (for-each (lambda (old?)
         (let ((prepared (ui-prepare old? 'small)) (calls 0))

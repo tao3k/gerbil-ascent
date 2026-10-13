@@ -249,6 +249,26 @@
 ;; Bind each coordinate once. Key tails distinguish a fixed #f from an unbound
 ;; slot, retain the first requested value, and allocate no per-binding cells.
 ;; Range admission checks every coordinate, even after an absent/conflicting key.
+;; Admit finite binary/group layouts before constructing a consumer. Scoped
+;; syntax makes the binding and publication extents explicit without a plan
+;; object or a dynamically allocated continuation for each condition.
+(defrule (with-compact-bindings offset columns key group left right admitted rejected)
+  (let* ((base offset) (limit (+ base 2)))
+    ;; Check the whole range even if a conflicting repeat occurs first.
+    (let ranges ((pending columns))
+      (unless (null? pending)
+        (unless (< (car pending) limit) (error "invalid ASCENT UF view column"))
+        (ranges (cdr pending))))
+    (let bind ((pending columns) (values key) (group #f) (left #f) (right #f))
+      (if (null? pending) admitted
+        (let ((column (car pending)) (rest (cdr pending)))
+          (defrule (slot previous next-group next-left next-right)
+            (if (and previous (not (equal? (car previous) (car values)))) rejected
+              (bind rest (cdr values) next-group next-left next-right)))
+          (cond
+            ((= column base) (slot left group (or left values) right))
+            ((= column (+ base 1)) (slot right group left (or right values)))
+            (else (slot group (or group values) left right))))))))
 (def (compile-rectangle-bindings width columns key)
   ;; Admission precedes short-circuiting: a conflict cannot hide an invalid
   ;; later coordinate. Ordinary tail recursion needs no escape continuation.
@@ -566,20 +586,21 @@
   ;; Intersect immutable descriptor plans with invocation-local list cursors.
   ;; Equal ordinals identify the same captured descriptor, not equal values
   ;; from unrelated owners. No owner table or query record is constructed.
-  (def (visit-plan-intersection left right bindings consume expand)
+  (def (visit-plan-intersection left right bindings consume expand point)
     (when (and (pair? left) (pair? right))
       (let ((a (car left)) (b (car right)))
        (using (a :- rectangle-selection)
         (using (b :- rectangle-selection)
           (cond
             ((< a.ordinal b.ordinal)
-             (visit-plan-intersection (cdr left) right bindings consume expand))
+             (visit-plan-intersection (cdr left) right bindings consume expand point))
             ((> a.ordinal b.ordinal)
-             (visit-plan-intersection left (cdr right) bindings consume expand))
+             (visit-plan-intersection left (cdr right) bindings consume expand point))
             (else
-             (when (matches-bound-prefix? (rectangle-prefix a.block) bindings 0)
-               (expand (rectangle-prefix a.block) a.members b.members consume))
-             (visit-plan-intersection (cdr left) (cdr right) bindings consume expand))))))))
+             (when (or (not bindings) (matches-bound-prefix? (rectangle-prefix a.block) bindings 0))
+               (if point (point (rectangle-prefix a.block) (car a.members) (car b.members))
+                 (expand (rectangle-prefix a.block) a.members b.members consume)))
+             (visit-plan-intersection (cdr left) (cdr right) bindings consume expand point))))))))
   (def (visit-bound-plans bindings consume expand)
     (and left-plans bindings
       (let* ((offset (- (vector-length bindings) 2))
@@ -595,13 +616,123 @@
           (let ((a (hash-get left-plans (car left)))
                 (b (hash-get right-plans (car right))))
             (and a b
-              (begin (visit-plan-intersection a b bindings consume expand) #t)))))))
+              (begin (visit-plan-intersection a b bindings consume expand #f) #t)))))))
+  ;; A compact layout is a captured schema, not a query-order classification.
+  (def (compact-query? columns)
+    (and complete-columns (not small?) (<= (vector-length routes) 3)
+      (pair? columns) (pair? (cdr columns))))
+  ;; Multi-owner plans intentionally omit single-owner keys. A missing plan
+  ;; is not an absent endpoint: borrow its exact frozen bucket instead.
+  (def (visit-compact-owners left right consume expand point)
+    (let* ((offset (- (vector-length routes) 2))
+           (a (or (hash-get (vector-ref routes offset) (car left)) []))
+           (b (or (hash-get (vector-ref routes (+ offset 1)) (car right)) [])))
+      (cond
+        ((or (null? a) (null? b)) #t)
+        ((or (null? (cdr a)) (null? (cdr b)))
+         (for-each (lambda (block)
+           (let ((x (captured-owner-member a (rectangle-left block)))
+                 (y (captured-owner-member b (rectangle-right block))))
+             (when (and x y)
+               (if point (point (rectangle-prefix block) (car x) (car y))
+                 (expand (rectangle-prefix block) x y consume)))))
+           (rectangle-bucket-plain
+             (if (and (null? (cdr a))
+                      (or (pair? (cdr b))
+                          (<= (rectangle-bucket-count (cdar a)) (rectangle-bucket-count (cdar b)))))
+               (cdar a) (cdar b))))
+         #t)
+        (else #f))))
+  (def (visit-compact-group-block block group left right consume expand point)
+    (using (block :- rectangle)
+      (when (equal? (car block.prefix) (car group))
+        (let (scalar? (and point left right))
+          (defrule (axis binding members coordinate)
+            (if binding
+              (if scalar? (captured-point-member routes members coordinate (car binding))
+                (captured-owner-member (or (hash-get (vector-ref routes coordinate) (car binding)) []) members))
+              members))
+          (let ((a (axis left block.left 1)) (b (axis right block.right 2)))
+            (when (and a b)
+              (if scalar? (point block.prefix (car a) (car b))
+                (expand block.prefix a b consume))))))))
+  ;; Normalize first, then choose the narrowest covered descriptor source.
+  ;; Selection only mutates local registers: no closure captures this state.
+  ;; A frozen bucket/plan stays borrowed, including during nested callbacks.
+  (def (visit-compact-group-plan group left right consume expand point)
+    (defrule (owner-cost hits)
+      (cond ((null? hits) 0)
+            ((null? (cdr hits)) (rectangle-bucket-count (cdar hits)))
+            (else (foldl (lambda (hit count) (+ count (rectangle-bucket-count (cdr hit)))) 0 hits))))
+    (let* ((hits (or (hash-get (vector-ref routes 0) (car group)) []))
+           (cost (owner-cost hits))
+           (column 0) (binding group)
+           (bucket (and (pair? hits) (null? (cdr hits)) (cdar hits)))
+           (plan #f))
+      (defrule (narrow next coordinate plans)
+        (when (and next (> cost 1))
+          (let* ((hits (or (hash-get (vector-ref routes coordinate) (car next)) []))
+                 (size (owner-cost hits)))
+            (when (< size cost)
+              (set! cost size) (set! column coordinate) (set! binding next)
+              (set! bucket (and (pair? hits) (null? (cdr hits)) (cdar hits)))
+              (set! plan (and (not bucket) plans (hash-get plans (car next))))))))
+      (narrow left 1 left-plans)
+      (narrow right 2 right-plans)
+      ;; The static projection keeps both borrowed source representations in
+      ;; one publisher without generic per-descriptor argument packing.
+      (defrule (publish source project)
+        (for-each (lambda (entry)
+          (visit-compact-group-block (project entry) group left right consume expand point)) source))
+      (defrule (captured-block entry) entry)
+      (defrule (planned-block entry)
+        (rectangle-selection-block entry))
+      (cond
+        ((zero? cost) (void))
+        (plan (publish plan planned-block))
+        (bucket (publish (rectangle-bucket-plain bucket) captured-block))
+        (else
+         ;; A sparse/non-self axis can have no cached plan. Native routing
+         ;; retains ordinal order and covers that single admitted coordinate.
+         (publish (routed-rectangles routes blocks
+                    (case column ((0) '(0)) ((1) '(1)) (else '(2)))
+                    (list (car binding)) #t) captured-block)))
+      #t))
+  ;; A single captured descriptor is already the smallest possible route.
+  ;; Publish it directly, before allocating a traversal closure or costing
+  ;; the other axes. The same admission checks still apply to its members.
+  (def (visit-compact-group group left right consume expand point)
+    (let (hits (hash-get (vector-ref routes 0) (car group)))
+      (cond
+        ((not hits) #t)
+        ((and (null? (cdr hits)) (= (rectangle-bucket-count (cdar hits)) 1))
+         (visit-compact-group-block (car (rectangle-bucket-plain (cdar hits)))
+           group left right consume expand point)
+         #t)
+        (else (visit-compact-group-plan group left right consume expand point)))))
+  (def (visit-compact-bindings group left right consume expand point)
+    (cond
+      ((and (= (vector-length routes) 3) group)
+       (visit-compact-group group left right consume expand point))
+      ((and left right left-plans)
+       (let ((a (hash-get left-plans (car left)))
+             (b (hash-get right-plans (car right))))
+         (if (and a b)
+           (begin (visit-plan-intersection a b #f consume expand point) #t)
+           (visit-compact-owners left right consume expand point))))
+      ((and left right) (visit-compact-owners left right consume expand point))
+      (else #f)))
+  (def (visit-compact-query columns key consume expand)
+    (and (compact-query? columns)
+      (with-compact-bindings (- (vector-length routes) 2) columns key group left right
+        (visit-compact-bindings group left right consume expand #f) #t)))
   ;; All built-in consumers share one invocation-owned selection flow. Uniform
   ;; indexed cuts admit coordinate bindings once; mixed/scan cuts retain their
   ;; checked protocol. Frozen two-axis plans replace wide temporary owner
   ;; indexes when available; tiny cuts need no query initialization.
   (def (visit-products columns key consume admitted? expand)
-    (unless (visit-indexed-axis columns key consume expand)
+    (unless (or (visit-indexed-axis columns key consume expand)
+                (visit-compact-query columns key consume expand))
       (let* ((compiled? (and routes uniform? (not small?) (pair? columns) (pair? (cdr columns))))
              (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
         (when (or (not compiled?) bindings)
@@ -628,23 +759,37 @@
   ;; No row callback or intermediate public tuple runs inside the product.
   (def (materialize-selected columns key)
     (validate-key! columns key)
-    (with-list-builder (collect!)
-      ;; Construct only the collector used by this invocation. A point never
-      ;; needs the product collector or its captured continuation.
-      (if (and complete-columns (equal? columns complete-columns))
-        (visit-complete-key columns key
-          (lambda (prefix left right)
-            (match prefix
-              ([] (collect! (list left right)))
-              ([group] (collect! (list group left right)))
-              (else (collect! (append prefix (list left right)))))))
-        (let ()
-          (def (collect-product prefix lefts rights _consume)
-            (match prefix
-              ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
-              ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
-              (else (collect-rectangle-product left right lefts rights collect! (append prefix (list left right))))))
-          (visit-products columns key #f #f collect-product)))))
+    (defrule (materialize compact? group left right)
+      (with-list-builder (collect!)
+        ;; Select the publisher once from the captured schema; no match
+        ;; continuation is constructed for each emitted scalar pair.
+        (def collect-point
+          (and compact?
+            (if (= (vector-length routes) 2)
+              (lambda (_prefix a b) (collect! (list a b)))
+              (lambda (prefix a b) (collect! (list (car prefix) a b))))))
+        (def (collect-product prefix lefts rights _consume)
+          (match prefix
+            ([] (collect-rectangle-product a b lefts rights collect! (list a b)))
+            ([g] (collect-rectangle-product a b lefts rights collect! (list g a b)))
+            (else (collect-rectangle-product a b lefts rights collect! (append prefix (list a b))))))
+        (unless (and compact? (visit-compact-bindings group left right #f collect-product collect-point))
+          (visit-products columns key #f #f collect-product))))
+    (cond
+      ((and complete-columns (equal? columns complete-columns))
+       (with-list-builder (collect!)
+         (visit-complete-key columns key
+           (lambda (prefix left right)
+             (match prefix
+               ([] (collect! (list left right)))
+               ([group] (collect! (list group left right)))
+               (else (collect! (append prefix (list left right)))))))))
+      ((compact-query? columns)
+       (with-compact-bindings (- (vector-length routes) 2) columns key group left right
+         (if (and group (= (vector-length routes) 3)
+                  (not (hash-get (vector-ref routes 0) (car group)))) []
+           (materialize #t group left right)) []))
+      (else (materialize #f #f #f #f))))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (validate-key! columns key)

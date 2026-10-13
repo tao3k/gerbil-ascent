@@ -1,5 +1,6 @@
 """Independent weighted UF export/query refinement through actual API and ABI."""
 import unittest
+from ascent_engine import EngineError
 
 import test_uf_materialization as oracle
 from test_uf_boundary import decode
@@ -145,7 +146,7 @@ class UFWeightedTests(unittest.TestCase):
     def test_repeated_queries_keep_partial_owner_intersections_and_tiny_cuts(self):
         # Different group axes share values but not owners. The held plan must
         # survive later SCC retirement and repeated, reordered conditions.
-        edges = [[g, i, (i + 1) % size] for g, size in enumerate((4, 2, 3, 4, 2, 3, 4, 3))
+        edges = [[g, i, (i + 1) % size] for g, size in enumerate((4, 2, 3, 4, 2, 3, 4, 5))
                  for i in range(size)]
         truth = {(g, a, b) for g in range(8)
                  for a, b in oracle.closure([edge[1:] for edge in edges if edge[0] == g])}
@@ -157,6 +158,10 @@ class UFWeightedTests(unittest.TestCase):
                         pass
                 with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as cut:
                     held = cut.reference()
+                    with self.assertRaisesRegex(EngineError, 'invalid ASCENT UF view column'):
+                        with owner.call('gerbil-ascent-view-rows', held, [1, 1, 3], [3, 4, 2],
+                                        module=oracle.VIEW):
+                            pass
                     with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
                         full = oracle.rows(public.graph)
                     self.assertEqual(set(map(tuple, full)), truth)
@@ -165,7 +170,11 @@ class UFWeightedTests(unittest.TestCase):
                             pass
                     queries = (([1, 2], [3, 2]), ([2, 1, 2, 1], [2, 3, 2, 3]),
                                ([0, 1, 2], [3, 3, 2]), ([1, 2, 1], [3, 2, 1]),
-                               ([1, 2], [99, 2]), ([1, 2], [0, 1]))
+                               ([1, 2], [99, 2]), ([1, 2], [0, 1]),
+                               ([1, 2] * 8, [3, 2] * 8),
+                               ([1, 2] * 8 + [1], [3, 2] * 8 + [4]),
+                               ([0, 1, 0], [3, 2, 3]),
+                               ([1, 2], [4, 2]), ([1, 2] * 8, [4, 2] * 8))
                     for _ in range(8):
                         for columns, key in queries:
                             expected = [row for row in full if all(row[c] == v for c, v in zip(columns, key))]
@@ -174,5 +183,30 @@ class UFWeightedTests(unittest.TestCase):
                                 self.assertEqual(oracle.rows(public.graph), expected)
                     with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
                         self.assertEqual(oracle.rows(public.graph), full)
+        # Separate SCCs share a group but have distinct endpoint owners. Route
+        # selection must preserve the independently computed closure and order.
+        edges = [[g, c * 2 + i, c * 2 + (1 - i)]
+                 for g in range(3) for c in range(4) for i in range(2)]
+        with self.engine.module(oracle.UF) as owner:
+            with owner.call('gerbil-ascent-trrel-uf-state') as state:
+                reference = state.reference()
+                for edge in edges:
+                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
+                        pass
+                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as cut:
+                    held = cut.reference()
+                    with owner.call('gerbil-ascent-view-rows', held, module=oracle.VIEW) as public:
+                        full = oracle.rows(public.graph)
+                    truth = {(g, a, b) for g in range(3)
+                             for a, b in oracle.closure([edge[1:] for edge in edges if edge[0] == g])}
+                    self.assertEqual(set(map(tuple, full)), truth)
+                    for columns, key in (([2, 0, 1, 0, 2], [7, 1, 6, 1, 7]),
+                                         ([0, 1, 0], [1, 6, 1]),
+                                         ([0, 2, 0], [1, 7, 1]),
+                                         ([0, 1, 2], [1, 6, 3])):
+                        expected = [row for row in full if all(row[c] == v for c, v in zip(columns, key))]
+                        with owner.call('gerbil-ascent-view-rows', held, columns, key,
+                                        module=oracle.VIEW) as public:
+                            self.assertEqual(oracle.rows(public.graph), expected)
         # A single tiny owner uses the checked selection path, including repeats.
         self.exercise([[0, 1], [1, 0]], [])

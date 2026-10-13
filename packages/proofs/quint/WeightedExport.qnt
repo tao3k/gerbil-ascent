@@ -126,6 +126,64 @@ module WeightedExport {
     Set(List(),List((0,0),(1,0),(2,1)),List((2,1),(0,0),(1,0),(0,0)),
       List((1,0),(2,1)),List((1,0),(1,0)),List((1,0),(1,1)),
       List((0,99),(2,0))).forall(cs => GroupQuery(q.blocks,cs) == GroupSelect(GroupRows(q.blocks),cs))
+  // Only the first stored value is retained. Every repeat still constrains
+  // admission, and range validation precedes conflict rejection.
+  pure def FirstSlot(slot: List[int], value: int): List[int] =
+    if (slot.length() == 0) List(value) else slot
+  type CompactSlots = {group: List[int], left: List[int], right: List[int], conflict: bool}
+  pure def Compact(cs: List[Condition]): CompactSlots = cs.foldl(
+    {group: List(), left: List(), right: List(), conflict: false}, (acc,c) => {
+      val slot = if (c._1 == 0) acc.group else if (c._1 == 1) acc.left else acc.right
+      val conflict = acc.conflict or (slot.length() > 0 and slot.nth(0) != c._2)
+      {...acc,
+        group: if (c._1 == 0) FirstSlot(acc.group,c._2) else acc.group,
+        left: if (c._1 == 1) FirstSlot(acc.left,c._2) else acc.left,
+        right: if (c._1 == 2) FirstSlot(acc.right,c._2) else acc.right,
+        conflict: Mutation != "compact-conflict" and conflict}
+    })
+  pure def CompactValid(cs: List[Condition]): bool =
+    (Mutation == "compact-range" and Compact(cs).conflict) or
+      cs.foldl(true, (valid,c) => valid and c._1 >= 0 and c._1 < 3)
+  pure def CompactQuery(bs: List[Block], cs: List[Condition]): List[GroupRow] = {
+    val slots = Compact(cs)
+    if (not(CompactValid(cs)) or slots.conflict) List()
+    else GroupRows(bs).foldl(List(), (rows,p) => if (Bound(slots.group,p._1) and
+      Bound(slots.left,p._2) and Bound(slots.right,p._3)) rows.append(p) else rows)
+  }
+  val CompactQueryExact = q.phase != "new" implies
+    Set(List((2,1),(0,0),(1,0),(0,0),(2,1)),
+      List((1,0),(2,1),(1,0),(2,1)),List((1,0),(2,1),(1,1)),
+      List((0,0),(1,0)),List((0,99),(1,0),(2,1))).forall(cs =>
+        CompactQuery(q.blocks,cs) == GroupSelect(GroupRows(q.blocks),cs))
+  // Index absence is separate from endpoint absence: publication must still
+  // use the exact frozen owner fallback when a multi-owner plan is omitted.
+  pure def CompactWithPlan(bs: List[Block], cs: List[Condition], ready: bool): List[GroupRow] =
+    if (ready) CompactQuery(bs,cs)
+    else if (Mutation == "compact-plan-miss") List() else GroupSelect(GroupRows(bs),cs)
+  val CompactFallbackExact = q.phase != "new" implies
+    Set(true,false).forall(ready => Set(List((1,0),(2,1)),List((1,2),(2,0)),
+      List((2,1),(1,0),(2,1))).forall(cs =>
+        CompactWithPlan(q.blocks,cs,ready) == GroupSelect(GroupRows(q.blocks),cs)))
+  // Costs can select any covered coordinate route. Exact filtering and order
+  // remain independent of which frozen bucket/plan was cheapest.
+  pure def AtCoordinate(cs: List[Condition], column: int): List[Condition] =
+    cs.foldl(List(), (selected,c) => if (c._1 == column) selected.append(c) else selected)
+  pure def Narrow(a: (List[GroupRow],int), b: (List[GroupRow],int)): (List[GroupRow],int) =
+    if (b._2 < a._2) b else a
+  pure def NarrowQuery(bs: List[Block], cs: List[Condition], costs: (int,int,int)): List[GroupRow] = {
+    val rows = GroupRows(bs)
+    val group = (GroupSelect(rows,AtCoordinate(cs,0)),costs._1)
+    val left = (GroupSelect(rows,AtCoordinate(cs,1)),costs._2)
+    val right = (GroupSelect(rows,AtCoordinate(cs,2)),costs._3)
+    val candidate = Narrow(Narrow(group,left),right)
+    GroupSelect(if (Mutation == "compact-candidate") List() else candidate._1,cs)
+  }
+  val CompactNarrowExact = q.phase != "new" implies
+    Set((32,1,2),(1,32,2),(32,2,1),(2,2,2)).forall(costs =>
+      Set(List((0,0),(1,0),(2,0)),List((0,1),(1,2)),List((0,0),(2,0))).forall(cs =>
+        NarrowQuery(q.blocks,cs,costs) == GroupSelect(GroupRows(q.blocks),cs)))
+  val CompactRangeExact = q.phase != "new" implies
+    not(CompactValid(List((1,0),(1,1),(3,0))))
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State

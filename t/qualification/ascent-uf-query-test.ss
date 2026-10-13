@@ -17,6 +17,54 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "compact layouts retain interleaved prefix owners and all range obligations"
+      (let* ((p '(same)) (q (list 'same)) (token (list 'stored))
+             (a (list #f token 2)) (b '(2 3))
+             (view (gerbil-ascent-rectangle-view
+                     (list (make-rectangle p a a) (make-rectangle q b b)
+                           (make-rectangle p a a) (make-rectangle '(#f) b b)) 26 20 #t)))
+        (for-each (lambda (columns key) (check-consumers view columns key))
+          '((2 0 1 2 0) (1 2 1 2 1 2 1 2) (0 1 0) (0 0) (1 2 1) (0 1 0) (2 0 1 0))
+          (list '(2 same 2 2 same) '(2 2 2 2 2 2 2 2)
+                (list 'same #f 'same) '(same other) '(2 2 3) '(missing 2 missing) '(2 #f 2 #f)))
+        (for-each (lambda (visit)
+          (check-exception (visit view '(1 1 3) '(2 3 2) void) exception?))
+          (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))
+        (check-exception (gerbil-ascent-view-rows view '(1 1 3) '(2 3 2)) exception?)
+        (let (binary (gerbil-ascent-rectangle-view
+                       (list (make-rectangle [] a a) (make-rectangle [] b b)
+                             (make-rectangle [] a a)) 22 16 #t))
+          (for-each (lambda (columns key) (check-consumers binary columns key))
+            '((1 0 1 0) (0 1 0) (0 1)) '((2 2 2 2) (#f 2 #f) (99 2)))
+          (check-exception (gerbil-ascent-view-rows binary '(0 0 2) '(2 3 2)) exception?))))
+    (test-case "an omitted single-owner plan preserves legal grouped query results"
+      (let (view (gerbil-ascent-rectangle-view
+                   (map (lambda (group)
+                     (let (axis (if (= group 7) '(#f 2 3) '(2 3)))
+                       (make-rectangle (list group) axis axis))) (iota 8)) 37 34 #t))
+        (for-each (lambda (columns key) (check-consumers view columns key))
+          '((1 2) (2 1 2 1) (1 2 1 2 1 2) (1 2) (0 1 0))
+          '((#f 2) (2 #f 2 #f) (#f 2 #f 2 #f 2) (absent 2) (7 #f 7)))))
+    (test-case "group routing borrows the narrowest covered bucket or ordered axis plan"
+      (for-each (lambda (self?)
+        (let* ((blocks (apply append (map (lambda (group)
+                         (map (lambda (component)
+                           (let (axis (list (* component 2) (+ (* component 2) 1)))
+                             (make-rectangle (list group) axis
+                               (if self? axis (map values axis))))) (iota 8))) (iota 3))))
+               (view (gerbil-ascent-rectangle-view blocks 96 96 #t)))
+          ;; Each prefix owns eight descriptors, each endpoint only three.
+          ;; Self axes borrow a plan; distinct axes exercise uncached routing.
+          (for-each (lambda (columns key) (check-consumers view columns key))
+            '((2 0 1 0 2) (0 1 0) (0 2 0) (0 1 2) (0 1 1))
+            '((7 1 6 1 7) (1 6 1) (1 7 1) (1 6 9) (1 6 7))))) '(#t #f))
+      (let* ((blocks (map (lambda (component)
+                           (let (axis (list (* component 2) (+ (* component 2) 1)))
+                             (make-rectangle '(same) axis axis))) (iota 8)))
+             (view (gerbil-ascent-rectangle-view blocks 32 32 #t)))
+        ;; A unique endpoint narrows a shared prefix to one borrowed bucket.
+        (check-consumers view '(2 0 1 0 2) '(7 same 6 same 7))
+        (check-consumers view '(0 1 0) '(same 6 same))))
     (test-case "complete large points retain owner identity, empty axes and nested reads"
       (let* ((tokens (map (lambda (_) (list 'token)) (iota 8)))
              (view (gerbil-ascent-rectangle-view

@@ -71,7 +71,7 @@ jobs:
       - name: Qualify compiled performance contracts and benchmarks
         run: |
           set -o pipefail
-          just test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization 2>&1 | tee /tmp/ascent-native-qualification.out
+          just test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization performance-uf-compact-query 2>&1 | tee /tmp/ascent-native-qualification.out
           grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-native-qualification.out
           if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-native-qualification.out; then
             echo 'Production modules were compiled again after the package build.' >&2

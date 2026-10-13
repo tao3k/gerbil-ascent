@@ -2,6 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :std/encoding/json "../native/artifact-admission"
+        (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
+        (only-in :gerbil-ascent/bindings/artifact record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (def (put path text)
@@ -37,6 +39,93 @@
   (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
 (def scheme-artifact-test
   (test-suite "Scheme native artifact publication"
+    (test-case "unadmitted roots do not eagerly read missing source inputs"
+      (with-artifact-fixture (lambda ()
+        (check (artifact-invalidated-modules (current-directory) '("absent")) => #f))))
+    (test-case "inventory directory reuse expires with each inventory"
+      (let* ((calls 0) (entries [])
+             (read-directory (lambda (_) (set! calls (+ calls 1)) entries))
+             (first (artifact-directory-reader read-directory)))
+        (check (first "same") => [])
+        (set! entries '("new.o1"))
+        (check (first "same") => [])
+        (check calls => 1)
+        (check (first "other") => '("new.o1"))
+        (check calls => 2)
+        (check ((artifact-directory-reader read-directory) "same") => '("new.o1"))
+        (check calls => 3)))
+    (test-case "content changes invalidate only direct module inputs"
+      (let ((inputs (hash ("a.ss" "old-a") ("b.ss" "same-b") ("build.ss" "recipe")))
+            (modules '("a" "b")))
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "new-a") ("b.ss" . "same-b") ("build.ss" . "recipe")) modules) => '("a"))
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("build.ss" . "recipe")) modules) => [])
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("build.ss" . "changed")) modules) => #f)
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("c.ss" . "new")) modules) => #f)))
+    (test-case "source invalidation removes only owned generations and generated phases"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! (path-expand "package/sub"))
+        (for-each (lambda (name) (put (string-append "package/sub/" name) name))
+          '("owned.o1" "owned.o143" "owned~0.o2" "owned~1.o3"
+            "owned.scm" "owned~1.scm" "owned.ssxi.ss" "owned-other.ssxi.ss"
+            "owned.ssi" "owned-other.o1" "owned~other.o1" "owned.oops" "owned.o0"))
+        (clean-compiled-resources! (path-expand "package") '("sub/owned"))
+        (for-each (lambda (name) (check (file-exists? (string-append "package/sub/" name)) => #f))
+          '("owned.o1" "owned.o143" "owned~0.o2" "owned~1.o3" "owned.scm" "owned~1.scm" "owned.ssxi.ss"))
+        (for-each (lambda (name) (check (file-exists? (string-append "package/sub/" name)) => #t))
+          '("owned.ssi" "owned-other.o1" "owned~other.o1" "owned.oops" "owned.o0" "owned-other.ssxi.ss")))))
+    (test-case "compiled inventory preserves the upstream contiguous generation and filename"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (for-each (lambda (name) (put name name)) '("phase.scm" "phase.o1" "phase.o2" "phase.o4"))
+           (record-compiled-resources! resources origins "phase" (artifact-digest "phase.scm"))
+           (check (hash-length resources) => 2)
+           (check (hash-keys origins) => '("phase.o2"))
+           (for-each (lambda (name)
+             (let (asset (hash-ref resources name))
+               (check (hash-ref asset "path") => (path-expand name))
+               (check (hash-ref asset "sha256") => (artifact-digest name)))) '("phase.o1" "phase.o2"))
+           (check (hash-ref (hash-ref origins "phase.o2") "fallbackSha256") => (artifact-digest "phase.scm"))
+           (finally (set-load-path! previous)))))))
+    (test-case "an orphan higher generation is not substituted for missing o1"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (put "phase.scm" "source") (put "phase.o2" "orphan")
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "phase" (artifact-digest "phase.scm")) #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (hash-length origins) => 0)
+           (check (__find-library-module "phase") => (path-expand "phase.scm"))
+           (finally (set-load-path! previous)))))))
+    (test-case "a missing required compiled module is rejected before publication"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "absent" "source-sha") #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (hash-length origins) => 0)
+           (finally (set-load-path! previous)))))))
+    (test-case "source in an earlier load root precedes compiled code in a later root"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (artifact-directory! (path-expand "first")) (artifact-directory! (path-expand "second"))
+           (put "first/phase.scm" "earlier source") (put "second/phase.o1" "later compiled")
+           (set-load-path! (map path-expand '("first" "second")))
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "phase" (artifact-digest "first/phase.scm")) #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (__find-library-module "phase") => (path-expand "first/phase.scm"))
+           (finally (set-load-path! previous)))))))
     (test-case "streamed hashes preserve empty binary and buffer-boundary bytes"
       (with-artifact-fixture (lambda ()
         (for-each (lambda (size)
@@ -44,7 +133,8 @@
             (for-each (lambda (i) (u8vector-set! bytes i (modulo i 256))) (iota size))
             (call-with-output-file [path: "bytes" truncate: #t]
               (lambda (port) (write-subu8vector bytes 0 size port)))
-            (check (artifact-digest "bytes") => (hex-encode (sha256 bytes)))))
+            (check (artifact-digest "bytes") => (hex-encode (sha256 bytes)))
+            (check (artifact-file-sha256 "bytes") => (hex-encode (sha256 bytes)))))
           '(0 8191 8192 8193 16385 32767 32768 32769 65537)))))
     (test-case "completed build beyond 180 seconds is accepted"
       (with-artifact-fixture (lambda ()

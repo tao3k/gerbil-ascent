@@ -1,0 +1,111 @@
+#+title: Empty Build Driver and Manifest Processing
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Question and cause
+
+Zero compiler jobs means that compilation is current. It does not eliminate
+interpreter startup, build specification loading, upstream dependency checking,
+metadata resolution, directory enumeration, content hashing or JSON publication.
+The earlier 14.248-second observation was not instrumented; an exact retrospective
+breakdown of that individual run is unavailable.
+
+Fresh local diagnostic runs identified measurable work outside compilation:
+loading the build module took 0.720 seconds, =std/make= took 2.449 seconds and
+receipt processing took 3.937 seconds. These are one diagnostic invocation,
+not a decomposition of the historical 14.248-second run. The package CLI also
+starts a second interpreter and regenerates =manifest.ss=. ASCENT does not
+import that generated version manifest. The installed SDK's =pkg-build= for
+=.= otherwise invokes the same =build.ss compile= script; it does not build
+package dependencies in this mode.
+
+* Implemented changes
+
+- =just build= invokes the standard =build.ss= through =gxi= with the existing
+  package prefix and toolchain boundary. Parallelism and the upstream release,
+  optimized and debug environment flags are preserved, including flags whose
+  environment values are empty strings. Package installation/update remains
+  the package CLI's responsibility.
+- =artifact-file-sha256= uses Gerbil's compiled file Reader and digest reader
+  API. It streams bytes rather than using the source-loaded whole-file read
+  path and allocating complete executable/resource buffers.
+- A directory reader exists only for one receipt inventory. Modules sharing
+  a directory reuse its enumeration. A new inventory sees new directory
+  entries. No hashes or filesystem observations are persisted across builds.
+- The build passes its already captured source snapshot to content admission;
+  module source names are prepared once for linked-source claims. The optional
+  snapshot fallback stays inside admission's exception boundary.
+
+Every build still invokes =std/make=. It retains dependency currentness,
+compilation ordering and scheduling. Resource contents are still fully hashed,
+compiled generation selection still belongs to the Gerbil loader, and source
+stability checks and atomic receipt publication remain in place. No receipt
+reuse substitutes for dependency checking.
+
+* Local comparisons
+
+The English [[file:build-driver-qualification.json][qualification receipt]] retains raw samples, qualified source
+hashes, producer identity, log hashes, checks and concurrent workspace drift.
+All measurements used local macOS, Gerbil =1cfb032= / Gambit =ea114fc=, eight
+build cores and execution outside the sandbox. Processes were fresh; OS caches
+were not purged. Results are observations on this host, without CI claims.
+
+| Measurement | Before median | After median | Observed reduction |
+|-------------+---------------+--------------+--------------------|
+| Actual =just build=, three successful empty builds each | 11.502 s | 8.984 s | 21.89% |
+| Identical 214,599,161-byte manifest file set, three each | 1.194 s | 0.679 s | 43.15% |
+
+All twelve whole-build observations exited successfully and performed zero
+compiler jobs. Each baseline/candidate block interleaved package CLI and direct
+script invocations in AB/BA/AB order. The implementation blocks were measured
+before and after the change; this is not a randomized old/new implementation
+experiment. Host activity and warm filesystem caches can affect these small
+samples. The candidate package CLI median was 10.157 seconds, versus 8.984
+seconds through the new =just build= route.
+
+The hashing comparison uses AB/BA/AB order in one Scheme process, hashing
+2,211 identical files, including the engine library, against the same expected
+SHA-256 values on every pass. It establishes equivalent content checking and
+an isolated hashing improvement; it is not an engine startup or inference claim.
+Run it against a stable canonical build with:
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" gxi t/performance/build-manifest-benchmark.ss \
+  "$PWD/.gerbil/bin/libascent.json"
+#+end_src
+
+The 14.248-second historical value is retained, rather than selected as the
+baseline for a larger savings claim. Remaining elapsed time includes interpreter
+and expander work, native make checks, resource metadata/IO and receipt JSON
+processing. Individual later phase timings are retained as diagnostics; they
+are not independently matched speedup estimates.
+
+* Regression qualification and source boundary
+
+- Sixteen Scheme cases passed with =MODULE-OK=, =HARNESS-OK= and final =OK=.
+  Coverage includes unadmitted roots with missing source files, directory
+  enumeration reuse and expiry, empty/binary/buffer-boundary digest equality,
+  direct source invalidation, compiled generation admission and publication
+  rejection paths.
+- Twenty Python packaging/artifact-validation tests passed.
+- One driver-routing test passed with two actual child-invocation subcases:
+  default flags and all upstream build flags, including empty values. It checks
+  the package prefix and eight-core setting without launching a compiler.
+- The standard production rebuild completed successfully before empty-build
+  sampling. The streaming comparison checked every expected file hash in all
+  six samples. =git diff --check= passed.
+
+The producer snapshot used for whole-build sampling is preserved locally as
+=.cache/ascent/build-driver/qualified-build-receipt.json= and
+=qualified-build.ss=. During the work, another feature added
+=program/evidence-plan= and changed =build.ss= and =interface/engine-api.ss=.
+Those changes are preserved. A subsequent diagnostic encountered the new
+unbuilt import and is recorded as a failed diagnostic, not a successful sample.
+The final optional-snapshot fallback correction is covered by the final Scheme
+suite; the measured streaming function and driver route were unchanged.
+The receipt distinguishes these final source checks from the earlier producer
+snapshot. These results do not qualify the concurrently extended whole project.
+
+This closes the driver/manifest optimization and its local regression and
+performance evidence. [[file:module-loading.org][Module loading and initialization reuse]] remain separately
+measured; their startup savings are not added to empty-build savings.

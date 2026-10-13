@@ -27,6 +27,7 @@
                             "t/native/artifact-admission" "t/native/test" "t/model/response-projection"))
 (def test-library-dependencies
   '(
+    (("t/qualification/scheme-artifact-test.ss") "bindings/artifact")
     (("t/performance/ascent-uf-plan-performance-test.ss")
       "t/performance/uf-plan/reference-relation-view" "t/performance/uf-plan/fixture")
     (("t/performance/ascent-withdrawal-support-performance-test.ss")

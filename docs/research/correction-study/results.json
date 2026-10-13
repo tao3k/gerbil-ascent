@@ -1,0 +1,50 @@
+{
+  "schema": "ascent.correction-results.v1",
+  "conditions": {
+    "reflection": {
+      "plannedTasks": 4,
+      "startedTasks": 4,
+      "correctTasks": 1,
+      "censoredTasks": 3,
+      "firstCorrectThinking": 120563,
+      "firstCorrectUsageComplete": true,
+      "totalObservedThinking": 1157801,
+      "totalUsageComplete": true,
+      "trajectoryCalls": 15,
+      "failedChecks": 10,
+      "repairCalls": 7,
+      "repairThinking": 556032,
+      "semanticFailures": 10,
+      "formatFailures": 0,
+      "transportFailures": 0
+    },
+    "checked-intermediates": {
+      "plannedTasks": 4,
+      "startedTasks": 4,
+      "correctTasks": 3,
+      "censoredTasks": 1,
+      "firstCorrectThinking": 290465,
+      "firstCorrectUsageComplete": true,
+      "totalObservedThinking": 681172,
+      "totalUsageComplete": true,
+      "trajectoryCalls": 12,
+      "failedChecks": 5,
+      "repairCalls": 4,
+      "repairThinking": 247966,
+      "semanticFailures": 5,
+      "formatFailures": 0,
+      "transportFailures": 0
+    }
+  },
+  "matchedCompletePairs": 1,
+  "matchedCompleteBaselineThinking": 120563,
+  "matchedCompleteNativeThinking": 75828,
+  "matchedCompleteReductionPercent": 37.11,
+  "actualProviderRequests": 23,
+  "actualThinking": 1556346,
+  "actualUsageComplete": true,
+  "unstartedConditionTasks": 0,
+  "sharedInitialRequests": 4,
+  "providerErrors": 0,
+  "nonCompletedResponses": 0
+}

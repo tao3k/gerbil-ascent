@@ -16,6 +16,7 @@ import subprocess
 
 from cffi import FFI
 from . import CDEF
+from .build import transfer_resource
 
 
 def sha(path):
@@ -51,6 +52,7 @@ def build(library, header, output, cc):
     bundled = output / name
     shutil.copyfile(library, bundled)
     syntax_resources={}
+    resource_transfers={}
     for relative, asset in (producer or {}).get('syntaxResources', {}).items():
         resource_name=Path(relative)
         if resource_name.is_absolute() or '..' in resource_name.parts:
@@ -59,7 +61,8 @@ def build(library, header, output, cc):
         if sha(source)!=asset['sha256']: raise ValueError('producer syntax resource drift')
         target=output/'syntax'/resource_name
         target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copyfile(source,target)
+        mode=transfer_resource(source,target)
+        resource_transfers[mode]=resource_transfers.get(mode,0)+1
         if sha(source)!=asset['sha256'] or sha(target)!=asset['sha256']:
             raise ValueError('syntax resource changed during API build')
         syntax_resources[str(resource_name)]=asset['sha256']
@@ -89,10 +92,14 @@ def build(library, header, output, cc):
         sidecar_hash is not None and sha(sidecar) != sidecar_hash
     ):
         raise ValueError("producer inputs changed during API compilation")
+    for relative, asset in (producer or {}).get('syntaxResources', {}).items():
+        if sha(Path(asset['path'])) != asset['sha256'] or sha(output/'syntax'/relative) != asset['sha256']:
+            raise ValueError('syntax resource changed before API publication')
     receipt = {"schema": "ascent.cffi-api-build.v1", "backend": "out-of-line-api",
                "producerInputs": before, "producerReceiptSha256": sidecar_hash,
                "producerBuild": producer,
                "syntaxResources": syntax_resources,
+               "syntaxResourceTransfers": resource_transfers,
                "compiler": compiler_version.splitlines()[0],
                "localDeploymentTarget": platform.mac_ver()[0] if system == "Darwin" else None,
                "extension": extension.name, "extensionSha256": sha(extension),

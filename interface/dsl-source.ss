@@ -3,11 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Text entry into the existing upstream DSL lowering pipeline. This does
 ;;; not expose a general top-level Scheme evaluator or downstream imports.
-(import :gerbil/expander
-        (only-in :gerbil/runtime/init gerbil-load-expander! __scheme-source)
+(import (only-in "closed-source.ss" ascent-closed-dsl-parts)
+        :gerbil/expander
+        (only-in :gerbil/runtime/init gerbil-load-expander!)
         :gerbil-ascent/program/syntax
         :gerbil-ascent/program/interface
-        "generated-resources.ss"
         (only-in :clan/poo/object .ref)
         (only-in :gerbil/runtime/gambit current-readtable
                  readtable-eval-allowed?-set readtable-sharing-allowed?-set))
@@ -44,23 +44,30 @@
         ((eq? predicate string?) "string")
         (else "scalar")))
 
+;; Keep syntax imports in a parent context. Each invocation gets a fresh child
+;; so generated bindings and definition state never leak across Programs.
+(def dsl-syntax-context #f)
+(def (make-dsl-context)
+  (gerbil-load-expander!)
+  (unless dsl-syntax-context
+    (let (context (make-top-context))
+      (parameterize ((current-expander-context context))
+        (core-expand '(import :gerbil/core :gerbil-ascent/program/syntax
+                              :gerbil-ascent/program/interface)))
+      (set! dsl-syntax-context context)))
+  (make-top-context dsl-syntax-context))
+
 (def (ascent-load-dsl-sources texts)
   (unless (and (list? texts) (<= 1 (length texts) 16)
                (andmap string? texts)
                (<= (apply + (map (lambda (s) (u8vector-length (string->utf8 s))) texts)) 262144))
     (error "DSL source count/total byte bound"))
-  ;; std/make's generated phase files are Gambit code, not Gerbil input.
-  ;; Preserve the standard raw-Scheme loading context while the explicit
-  ;; upstream expander below processes the DSL and its interface metadata.
-  (gerbil-load-expander!)
-  (ascent-with-generated-resources (lambda ()
-    (parameterize ((current-expander-context (make-top-context)))
-    ;; Only syntax bindings are imported here. Runtime contracts/evaluators
-    ;; are already linked into the native engine; no compiler is launched.
-    (core-expand '(import :gerbil/core :gerbil-ascent/program/syntax
-                          :gerbil-ascent/program/interface))
-    (let* ((forms (map read-dsl texts))
-           (parts (map (lambda (form) (eval-syntax form #t)) forms))
+  ;; Select the complete closed shape before constructing any declarations.
+  ;; Other syntax retains the upstream expander and a fresh lexical context.
+  (let* ((forms (map read-dsl texts))
+           (parts (or (ascent-closed-dsl-parts forms)
+                      (parameterize ((current-expander-context (make-dsl-context)))
+                        (map (lambda (form) (eval-syntax form #t)) forms))))
            (relations (make-hash-table-eq)) (order [])
            (rules (apply append (map (lambda (p) (.ref p 'rules)) parts)))
            (heads (make-hash-table-eq)))
@@ -101,4 +108,4 @@
         (unless (and (<= 1 (length ordered) 128) (<= (length rules) 256))
           (error "DSL program declaration bound"))
         (values (gerbil-ascent-program ordered rules (car limits) (cadr limits) (caddr limits) sources)
-                descriptors (map symbol->string (reverse order)))))))))
+                descriptors (map symbol->string (reverse order))))))

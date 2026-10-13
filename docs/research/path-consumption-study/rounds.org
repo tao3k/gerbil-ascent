@@ -1,0 +1,101 @@
+#+title: Every Provider Round and Independent Outcome
+
+| Run | Round | Stage | Thinking | Input / cached input | Output | Provider seconds | Outcome |
+|-----+-------+-------+----------+----------------------+--------+------------------+---------|
+| baseline-balanced | stage-0-call-0 | 0 | 4535 | 6824 / 640 | 6961 | 29.475 | tool checkpoint |
+| baseline-balanced | stage-0-call-1 | 0 | 20584 | 40904 / 13696 | 20975 | 101.411 | tool checkpoint |
+| baseline-balanced | stage-0-call-2 | 0 | 3631 | 65875 / 61824 | 4020 | 20.710 | tool checkpoint |
+| baseline-balanced | stage-0-call-3 | 0 | 6025 | 73825 / 69888 | 6586 | 32.968 | tool checkpoint |
+| baseline-balanced | stage-0-call-4 | 0 | 2808 | 86266 / 80384 | 3369 | 16.645 | tool checkpoint |
+| baseline-balanced | stage-0-call-5 | 0 | 3119 | 95443 / 89600 | 3600 | 17.776 | tool checkpoint |
+| baseline-balanced | stage-0-call-6 | 0 | 4584 | 103909 / 98944 | 4838 | 21.323 | correct |
+| baseline-balanced | stage-1-call-0 | 1 | 53 | 108798 / 108544 | 250 | 1.748 | correct |
+| baseline-balanced | stage-2-call-0 | 2 | 1791 | 116618 / 108928 | 4245 | 14.158 | tool checkpoint |
+| baseline-balanced | stage-2-call-1 | 2 | 1553 | 147601 / 120832 | 1694 | 7.694 | correct |
+| baseline-mutual | stage-0-call-0 | 0 | 3384 | 18039 / 512 | 8149 | 29.144 | tool checkpoint |
+| baseline-mutual | stage-0-call-1 | 0 | 19829 | 44655 / 26112 | 20224 | 85.582 | correct |
+| baseline-mutual | stage-1-call-0 | 1 | 101 | 64932 / 64768 | 424 | 2.437 | correct |
+| baseline-mutual | stage-2-call-0 | 2 | 452 | 79075 / 65280 | 5217 | 15.583 | tool checkpoint |
+| baseline-mutual | stage-2-call-1 | 2 | 7677 | 102917 / 84224 | 7727 | 34.480 | correct |
+| new-balanced-fresh | stage-0-call-0 | 0 | 4535 | 6824 / 640 | 6961 | 29.475 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-1 | 0 | 16134 | 19161 / 0 | 16534 | 79.325 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-2 | 0 | 1140 | 36918 / 35584 | 1531 | 8.139 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-3 | 0 | 889 | 39633 / 38400 | 1282 | 6.935 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-4 | 0 | 1679 | 42103 / 40832 | 2074 | 11.314 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-5 | 0 | 1808 | 45359 / 44160 | 2213 | 11.914 | tool checkpoint |
+| new-balanced-fresh | stage-0-call-6 | 0 | 6968 | 48783 / 47488 | 7212 | 35.751 | correct |
+| new-balanced-fresh | stage-1-call-0 | 1 | 421 | 56046 / 55808 | 618 | 4.728 | correct |
+| new-balanced-fresh | stage-2-call-0 | 2 | 1462 | 64234 / 56576 | 3944 | 12.737 | tool checkpoint |
+| new-balanced-fresh | stage-2-call-1 | 2 | 986 | 73569 / 68096 | 1118 | 5.043 | correct |
+| new-balanced-retained | stage-0-call-0 | 0 | 4535 | 6824 / 640 | 6961 | 29.475 | tool checkpoint |
+| new-balanced-retained | stage-0-call-1 | 0 | 12773 | 19161 / 18944 | 13084 | 63.741 | tool checkpoint |
+| new-balanced-retained | stage-0-call-2 | 0 | 2234 | 33269 / 32128 | 2725 | 13.701 | tool checkpoint |
+| new-balanced-retained | stage-0-call-3 | 0 | 1574 | 37322 / 35968 | 1883 | 10.426 | tool checkpoint |
+| new-balanced-retained | stage-0-call-4 | 0 | 3934 | 40228 / 39168 | 4224 | 19.249 | correct |
+| new-balanced-retained | stage-1-call-0 | 1 | 120 | 44503 / 44288 | 317 | 2.224 | correct |
+| new-balanced-retained | stage-2-call-0 | 2 | 2322 | 52390 / 44800 | 4748 | 16.625 | tool checkpoint |
+| new-balanced-retained | stage-2-call-1 | 2 | 3572 | 62428 / 57088 | 3731 | 15.916 | correct |
+| new-mutual-fresh | stage-0-call-0 | 0 | 3384 | 18039 / 512 | 8149 | 29.144 | tool checkpoint |
+| new-mutual-fresh | stage-0-call-1 | 0 | 2563 | 31997 / 128 | 7596 | 27.259 | tool checkpoint |
+| new-mutual-fresh | stage-0-call-2 | 0 | 366 | 48824 / 39552 | 5495 | 15.023 | tool checkpoint |
+| new-mutual-fresh | stage-0-call-3 | 0 | 240 | 63751 / 54272 | 1529 | 5.289 | tool checkpoint |
+| new-mutual-fresh | stage-0-call-4 | 0 | 8080 | 67838 / 65280 | 8443 | 34.285 | correct |
+| new-mutual-fresh | stage-1-call-0 | 1 | 200 | 76334 / 76160 | 523 | 2.809 | correct |
+| new-mutual-fresh | stage-2-call-0 | 2 | 3487 | 90576 / 76800 | 8252 | 25.271 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-1 | 2 | 701 | 104128 / 98816 | 859 | 6.093 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-2 | 2 | 5390 | 105641 / 104960 | 6021 | 28.757 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-3 | 2 | 1719 | 112708 / 111616 | 6752 | 20.058 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-4 | 2 | 144 | 128716 / 119424 | 5273 | 15.256 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-5 | 2 | 65 | 143440 / 133888 | 1354 | 5.230 | tool checkpoint |
+| new-mutual-fresh | stage-2-call-6 | 2 | 282 | 147192 / 144768 | 415 | 2.803 | correct |
+| new-mutual-retained | stage-0-call-0 | 0 | 3384 | 18039 / 512 | 8149 | 29.144 | tool checkpoint |
+| new-mutual-retained | stage-0-call-1 | 0 | 3394 | 31997 / 31744 | 8427 | 30.383 | tool checkpoint |
+| new-mutual-retained | stage-0-call-2 | 0 | 507 | 49642 / 40320 | 5636 | 16.365 | tool checkpoint |
+| new-mutual-retained | stage-0-call-3 | 0 | 245 | 64706 / 55168 | 1534 | 5.096 | tool checkpoint |
+| new-mutual-retained | stage-0-call-4 | 0 | 7734 | 68807 / 66176 | 8129 | 32.841 | correct |
+| new-mutual-retained | stage-1-call-0 | 1 | 157 | 76989 / 76800 | 480 | 2.723 | correct |
+| new-mutual-retained | stage-2-call-0 | 2 | 3932 | 91188 / 77440 | 8697 | 26.937 | tool checkpoint |
+| new-mutual-retained | stage-2-call-1 | 2 | 4562 | 105188 / 99840 | 4837 | 25.312 | tool checkpoint |
+| new-mutual-retained | stage-2-call-2 | 2 | 3065 | 110867 / 109952 | 3250 | 14.105 | correct |
+| readable-balanced-fresh | stage-0-call-0 | 0 | 4535 | 6824 / 640 | 6961 | 29.475 | tool checkpoint |
+| readable-balanced-fresh | stage-0-call-1 | 0 | 27306 | 19696 / 128 | 27800 | 151.860 | tool checkpoint |
+| readable-balanced-fresh | stage-0-call-2 | 0 | 2053 | 48967 / 47488 | 2534 | 14.861 | tool checkpoint |
+| readable-balanced-fresh | stage-0-call-3 | 0 | 2521 | 52918 / 51456 | 4262 | 19.616 | tool checkpoint |
+| readable-balanced-fresh | stage-0-call-4 | 0 | 6471 | 61294 / 57088 | 6796 | 35.253 | tool checkpoint |
+| readable-balanced-fresh | stage-0-call-5 | 0 | 6685 | 69174 / 67968 | 6910 | 32.367 | correct |
+| readable-balanced-fresh | stage-1-call-0 | 1 | 400 | 76135 / 75904 | 569 | 3.516 | tool checkpoint |
+| readable-balanced-fresh | stage-1-call-1 | 1 | 43 | 79993 / 76672 | 240 | 2.307 | correct |
+| readable-balanced-fresh | stage-2-call-0 | 2 | 1452 | 87803 / 80128 | 3878 | 13.806 | tool checkpoint |
+| readable-balanced-fresh | stage-2-call-1 | 2 | 1035 | 97501 / 91648 | 1191 | 5.639 | correct |
+| readable-balanced-retained | stage-0-call-0 | 0 | 4535 | 6824 / 640 | 6961 | 29.475 | tool checkpoint |
+| readable-balanced-retained | stage-0-call-1 | 0 | 6226 | 19696 / 19456 | 6726 | 37.366 | tool checkpoint |
+| readable-balanced-retained | stage-0-call-2 | 0 | 6232 | 27916 / 26368 | 6739 | 37.972 | tool checkpoint |
+| readable-balanced-retained | stage-0-call-3 | 0 | 2106 | 36169 / 34560 | 2275 | 9.270 | tool checkpoint |
+| readable-balanced-retained | stage-0-call-4 | 0 | 4976 | 41726 / 38400 | 5221 | 24.133 | correct |
+| readable-balanced-retained | stage-1-call-0 | 1 | 316 | 46998 / 46848 | 532 | 3.684 | correct |
+| readable-balanced-retained | stage-2-call-0 | 2 | 2322 | 55100 / 47488 | 4776 | 18.102 | tool checkpoint |
+| readable-balanced-retained | stage-2-call-1 | 2 | 4315 | 65748 / 59776 | 4473 | 21.610 | correct |
+| readable-mutual-fresh | stage-0-call-0 | 0 | 3384 | 18039 / 512 | 8149 | 29.144 | tool checkpoint |
+| readable-mutual-fresh | stage-0-call-1 | 0 | 7423 | 32362 / 128 | 7572 | 42.821 | tool checkpoint |
+| readable-mutual-fresh | stage-0-call-2 | 0 | 650 | 43712 / 39808 | 1002 | 4.692 | correct |
+| readable-mutual-fresh | stage-1-call-0 | 1 | 412 | 44767 / 44544 | 735 | 3.915 | correct |
+| readable-mutual-fresh | stage-2-call-0 | 2 | 252 | 59221 / 45440 | 5017 | 16.332 | tool checkpoint |
+| readable-mutual-fresh | stage-2-call-1 | 2 | 8002 | 70147 / 64128 | 8071 | 35.179 | correct |
+| readable-mutual-retained | stage-0-call-0 | 0 | 3384 | 18039 / 512 | 8149 | 29.144 | tool checkpoint |
+| readable-mutual-retained | stage-0-call-1 | 0 | 6172 | 32375 / 32000 | 6321 | 29.137 | tool checkpoint |
+| readable-mutual-retained | stage-0-call-2 | 0 | 1601 | 42476 / 38656 | 1965 | 10.161 | correct |
+| readable-mutual-retained | stage-1-call-0 | 1 | 250 | 44494 / 44288 | 573 | 2.971 | correct |
+| readable-mutual-retained | stage-2-call-0 | 2 | 309 | 58786 / 45056 | 5074 | 15.920 | tool checkpoint |
+| readable-mutual-retained | stage-2-call-1 | 2 | 1320 | 69772 / 63744 | 1384 | 9.788 | correct |
+| repair-column-balanced | stage-0-call-0 | 0 | 2922 | 6794 / 6656 | 5330 | 20.836 | tool checkpoint |
+| repair-column-balanced | stage-0-call-1 | 0 | 26453 | 37293 / 12160 | 26753 | 117.927 | correct |
+| repair-column-balanced | stage-1-call-0 | 1 | 176 | 64097 / 63872 | 435 | 2.897 | correct |
+| repair-column-balanced | stage-2-call-0 | 2 | 1452 | 72156 / 64128 | 3972 | 13.843 | tool checkpoint |
+| repair-column-balanced | stage-2-call-1 | 2 | 84849 | 101117 / 76032 | 84907 | 361.160 | incorrect |
+| repair-column-balanced | stage-2-call-2 | 2 | 964 | 192671 / 896 | 1047 | 8.452 | correct |
+| repair-readable-balanced | stage-0-call-0 | 0 | 2922 | 6794 / 6656 | 5330 | 20.836 | tool checkpoint |
+| repair-readable-balanced | stage-0-call-1 | 0 | 26453 | 37293 / 12160 | 26753 | 117.927 | correct |
+| repair-readable-balanced | stage-1-call-0 | 1 | 176 | 64097 / 63872 | 435 | 2.897 | correct |
+| repair-readable-balanced | stage-2-call-0 | 2 | 1452 | 72156 / 64128 | 3972 | 13.843 | tool checkpoint |
+| repair-readable-balanced | stage-2-call-1 | 2 | 84849 | 101117 / 76032 | 84907 | 361.160 | incorrect |
+| repair-readable-balanced | stage-2-call-2 | 2 | 1418 | 193536 / 896 | 1550 | 9.785 | correct |

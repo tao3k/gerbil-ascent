@@ -4,7 +4,7 @@
 set -euo pipefail
 group="${1:-all}"
 models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
-models+=(OwnedLookup WeightedExport RectangleCompaction RectangleExport ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission)
+models+=(OwnedLookup WeightedExport RectangleCompaction RectangleExport ScopedWitness BranchScopedWitness ScopedComposition ScopedReachabilityMask ScopedQuery MovieCastQuery NativeEvidenceLifecycle NativeDslOwnership EvidenceCacheAdmission Trajectory ClosedDslLowering ClosedEvidenceScope EvidenceConsumption EvidenceInteraction)
 case "$group" in
   all) ;;
   Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -52,6 +52,11 @@ configure() {
     NativeSessionPublication) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK CommittedSnapshot CleanAligned PartialBounded'; properties=NoPrematurePublication; constraint=ExplorationBound ;;
     NativeEvidenceLifecycle) constants="GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = \"none\""; invariants='TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners'; constraint=ExplorationBound ;;
     NativeDslOwnership) constants='ScopeCapacity = 2\nMutation = "none"'; invariants='ChargedExpansion IsolatedDefinitions NoForeignReference LiveValues'; constraint=ExplorationBound ;;
+    ClosedDslLowering) constants='Mutation = "none"'; invariants='WholeChoice NoRetry FailurePrivate' ;;
+    ClosedEvidenceScope) constants='Mutation = "none"'; invariants='WholeScope FreshInvocation ChargedOnce' ;;
+    EvidenceInteraction) constants='Mutation = "none"'; invariants='Safety' ;;
+    EvidenceConsumption) constants='Mutation = "none"'; invariants='Safety' ;;
+    Trajectory) constants='Mutation = "none"'; invariants='Safety' ;;
     EvidenceCacheAdmission) constants='Mutation = "none"'; invariants='ExactSource ExactBackend ExactPolicy FailureRevoked LiveAdmission' ;;
     PositiveNonmembershipSession) constants="GenerationCutoff = $cutoff"; invariants='TypeOK NoStalePublished NoStaleUse'; constraint=ExplorationBound ;;
     SessionTransaction) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK AtomicSnapshot'; properties='NoStaleCommit AbortPreservesSnapshot'; constraint=ExplorationBound ;;
@@ -201,6 +206,11 @@ JS
         NativeSessionPublication) for mutation in early bounded alias; do fault "$mutation" CommittedSnapshot; done ;;
         NativeEvidenceLifecycle) sed 's/InputLimit = 0/InputLimit = 1/' "$base" > "$temp/$model-finite.cfg"; execute caller-finite "$temp/$model-finite.cfg" 0; fault stale CurrentResult; fault coupled IndependentExplanation; fault rewrite FrozenObservation; fault reject RejectionAtomic; fault close ClosedOwners ;;
         NativeDslOwnership) fault scope IsolatedDefinitions; fault failed ChargedExpansion; fault reset ChargedExpansion; fault foreign NoForeignReference ;;
+        ClosedDslLowering) fault partial WholeChoice; fault retry NoRetry; fault rejectOwner FailurePrivate ;;
+        ClosedEvidenceScope) fault partial WholeScope; fault cached FreshInvocation; fault rejectPublish FreshInvocation ;;
+        EvidenceInteraction) for mutation in unknown observation stale missing-condition reuse-stale drop-parent; do fault "$mutation" Safety; done ;;
+        EvidenceConsumption) for mutation in intent unconsumed stale; do fault "$mutation" Safety; done ;;
+        Trajectory) for mutation in drift stale reject unknown premature; do fault "$mutation" Safety; done ;;
         EvidenceCacheAdmission) fault source ExactSource; fault backend ExactBackend; fault policy ExactPolicy; fault retain FailureRevoked ;;
         SessionTransaction) fault early AtomicSnapshot; fault stale NoStaleCommit 13; fault global AtomicSnapshot; fault reuse AtomicSnapshot ;;
         ProviderFrontier) sed 's/Seeded = FALSE/Seeded = TRUE/' "$base" > "$temp/seeded.cfg"; execute seeded "$temp/seeded.cfg" 0; sed 's/Fault = "none"/Fault = "overlap"/' "$base" > "$temp/overlap.cfg"; execute overlap "$temp/overlap.cfg" 0; fault raw FrontierComplete; fault foreign FrontierComplete; fault omit DeliveredExact; for mutation in early old initial replace; do fault "$mutation" ConsumerSnapshot; done ;;

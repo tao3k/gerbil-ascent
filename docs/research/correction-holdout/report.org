@@ -1,0 +1,225 @@
+#+title: Complete Local Taint Optimization and Whole-Task Correction Report
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+
+
+* Goals and implemented changes
+
+Assess the entire task until BOTH query obligations first pass independent grading, including all failed attempts and repairs. Distinguish anticipation of failure from actual repair after a failure. Report censored controls and negative results without assigning an invented first-correct cost.
+
+The previous taint increase of 746 thinking tokens came from +1,038 on an identical initial prompt before native exposure, offset by -292 after exposure. Shared initial responses now control that sampling difference: both alternative policies charge the initial usage fully, while physical expenditure counts the request once. Shared-prefix control is not a runtime optimization.
+
+Runtime changes are a source-bound intermediate projection API and explicit task/subgoal verification scope. EvidenceChain.intermediates refuses final answers, unknown components, duplicate names and stale references, and retrieves actual native rows. Native Trajectory cannot freeze task cost at subgoal success. Lean proves that boundary, Quint includes a premature-admission counterexample, and both compiled bindings exercise it.
+
+* Corpus and scientific scope
+
+Eight independent task instances have two query obligations each, with unchanged sources and different final-query rules. Four diagnostic cases retain ordinal job labels and are exploratory. Four subsequent independent held-out cases use opaque randomly assigned identifiers that do not encode construction order or class. All sixteen query obligations agreed between independent Python fixed-point oracles and actual Scheme before paid calls. Satisfiable/unsatisfied candidates are mixed to avoid all-negative cases. The holdout cohort was frozen before its first model request.
+
+Tagged taint tasks use four tag-local domains, conversions and mutually recursive flow/permit state. Balanced-path tasks require matching labels, concatenation, epsilon and context-local denied edges. State spaces reach four contexts over 32 nodes, with 160 requested classifications and over 1,800 completed intermediate rows. Complexity comes from recursive joins and tuple scopes, not node count alone.
+
+Task design is informed by [[https://doi.org/10.1145/199448.199462][precise interprocedural dataflow via graph reachability]] and [[https://arxiv.org/abs/2609.37233][DatalogBench]] execution/mutation methodology; feedback across attempts follows the motivation of [[https://arxiv.org/abs/2303.11366][Reflexion]]. These are generated tasks, not official benchmark scores, full IFDS implementations, or proof of training exclusion. Underlying algorithms may be familiar to the model.
+
+Because these inputs provide complete executable relational programs, an engine-only evaluator is sufficient to compute the answers. This study measures avoided redundant model evaluation and evidence-assisted composition; it does not establish that an LLM is necessary for these tasks or demonstrate generalized natural-language problem solving. No engine-only performance comparison or total-dollar saving is claimed. Provider latency is retained per request; total end-to-end engine latency and dollar billing are not a qualified outcome of this study.
+
+* Protocol and whole-task metrics
+
+One actual initial model response is shared per paired task. Both conditions preserve completed reasoning/message output opaquely, alternate continuation order, use high reasoning and the same 131072 output cap, and allow at most three attempts per query. The treatment receives only completed flow/permit or balanced facts. No final job-answer relation is supplied. The primary endpoint charges every preceding call, including the shared initial call. Subgoal successes cannot end it.
+
+Incomplete output-budget responses in the holdout protocol count as failed attempts with known usage where available, not semantic mistakes. Their raw output is archived but not replayed as a completed response; retries retain prior completed history and the same scalar feedback policy. HTTP/transport failures are separately censored. No server-side output schema is imposed. Answers are graded as complete symbol sets, allowing explanations and Markdown.
+
+| Cohort / condition | Correct / planned whole tasks | Censored | All observed thinking | Failed checks | Semantic / budget / format failures | Repair thinking |
+|--------------------+-------------------------------+----------+-----------------------+---------------+------------------------------------+-----------------|
+| diagnostic / reflection | 1/4 | 3 | 1157801 | 10 | 10 / 0 / 0 | 556032 |
+| diagnostic / checked-intermediates | 3/4 | 1 | 681172 | 5 | 5 / 0 / 0 | 247966 |
+| opaque-holdout / reflection | 1/4 | 3 | 1303132 | 10 | 10 / 0 / 0 | 680442 |
+| opaque-holdout / checked-intermediates | 1/4 | 3 | 1024631 | 9 | 9 / 0 / 0 | 524091 |
+
+For a censored task, recorded thinking is expenditure so far and a lower bound on any eventual completion cost. It is not a completed first-correct result. Repair thinking counts calls linked after a failed verification; the triggering failed call remains in the whole-task prefix and the per-attempt table. Repair and failed-attempt categories can overlap and must not be added as disjoint totals. Ratios below use only matched complete trajectories with known usage and preserve the complete-case denominator explicitly.
+
+| Cohort | Complete pairs / planned | Baseline first-complete thinking | Native first-complete thinking | Observed reduction |
+|--------+--------------------------+----------------------------------+--------------------------------+--------------------|
+| diagnostic | 1/4 | 120563 | 75828 | 37.11% |
+| opaque-holdout | 1/4 | 190004 | 65901 | 65.32% |
+
+* Every task trajectory
+
+| Task / condition | Stage:attempt:thinking:verdict | Whole-task first-correct thinking | Censored expenditure |
+|------------------+-------------------------------+----------------------------------+----------------------|
+| diagnostic / tag-scoped-taint-2026103301 / reflection | 1:1:52486:correct ; 2:1:68077:correct | 120563 | n/a |
+| diagnostic / tag-scoped-taint-2026103301 / checked-intermediates | 1:1:52486:correct ; 2:1:23342:correct | 75828 | n/a |
+| diagnostic / mutual-permission-taint-2026103302 / checked-intermediates | 1:1:62547:correct ; 2:1:45057:correct | 107604 | n/a |
+| diagnostic / mutual-permission-taint-2026103302 / reflection | 1:1:62547:correct ; 2:1:74195:semantic ; 2:2:63043:semantic ; 2:3:68320:semantic | not observed | 268105 |
+| diagnostic / context-balanced-paths-2026103303 / reflection | 1:1:64811:correct ; 2:1:77022:semantic ; 2:2:82018:semantic ; 2:3:73364:semantic | not observed | 297215 |
+| diagnostic / context-balanced-paths-2026103303 / checked-intermediates | 1:1:64811:correct ; 2:1:42222:correct | 107033 | n/a |
+| diagnostic / context-balanced-paths-2026103304 / checked-intermediates | 1:1:102783:semantic ; 1:2:76503:semantic ; 1:3:46878:correct ; 2:1:39958:semantic ; 2:2:67456:semantic ; 2:3:57129:semantic | not observed | 390707 |
+| diagnostic / context-balanced-paths-2026103304 / reflection | 1:1:102783:semantic ; 1:2:88744:correct ; 2:1:99848:semantic ; 2:2:82561:semantic ; 2:3:97982:semantic | not observed | 471918 |
+| opaque-holdout / mutual-permission-taint-2026104301 / checked-intermediates | 1:1:43393:correct ; 2:1:22508:correct | 65901 | n/a |
+| opaque-holdout / mutual-permission-taint-2026104301 / reflection | 1:1:43393:correct ; 2:1:53362:semantic ; 2:2:93249:correct | 190004 | n/a |
+| opaque-holdout / context-balanced-paths-2026104302 / reflection | 1:1:101989:correct ; 2:1:107521:semantic ; 2:2:109734:semantic ; 2:3:95388:semantic | not observed | 414632 |
+| opaque-holdout / context-balanced-paths-2026104302 / checked-intermediates | 1:1:101989:correct ; 2:1:49388:semantic ; 2:2:90169:semantic ; 2:3:76524:semantic | not observed | 318070 |
+| opaque-holdout / context-balanced-paths-2026104303 / checked-intermediates | 1:1:104169:correct ; 2:1:52335:semantic ; 2:2:96508:semantic ; 2:3:76021:semantic | not observed | 329033 |
+| opaque-holdout / context-balanced-paths-2026104303 / reflection | 1:1:104169:correct ; 2:1:85498:semantic ; 2:2:95009:semantic ; 2:3:106536:semantic | not observed | 391212 |
+| opaque-holdout / context-balanced-paths-2026104304 / reflection | 1:1:126758:semantic ; 1:2:88096:semantic ; 1:3:92430:semantic | not observed | 307284 |
+| opaque-holdout / context-balanced-paths-2026104304 / checked-intermediates | 1:1:126758:semantic ; 1:2:99933:semantic ; 1:3:84936:semantic | not observed | 311627 |
+
+* Evidence reuse and validity receipts
+
+| Task | Last-query reused native components | Model calls with prior evidence | Retained packets / rows |
+|------+-------------------------------------+--------------------+--------------------------------|
+| tag-scoped-taint-2026103301 | [{"relations": ["flow"], "recursive": true, "dependencies": ["blocked", "convert", "edge", "start"], "fingerprint": "02ba274de9f8bdffe5ee9466e5319d50b8ab5f3180b8ce291dda513eff15a6e2"}] | 1 | 2 / [182, 182] |
+| mutual-permission-taint-2026103302 | [{"fingerprint": "0edda28ed0abc8029aca921ef35797be7d5a7375799a6bd8bdc1f9707367886f", "dependencies": ["blocked", "convert", "edge", "grant", "permission", "start"], "relations": ["flow", "permit"], "recursive": true}] | 1 | 2 / [254, 254] |
+| context-balanced-paths-2026103303 | [{"recursive": true, "relations": ["balanced"], "dependencies": ["closing", "context", "denied", "epsilon", "opening"], "fingerprint": "141b4f51c0b5d975fafdb0d13b4825ff1c976e4db6bf89349874721bb69bdd9e"}] | 1 | 2 / [537, 537] |
+| context-balanced-paths-2026103304 | [{"dependencies": ["closing", "context", "denied", "epsilon", "opening"], "recursive": true, "relations": ["balanced"], "fingerprint": "b9a8329d6a5de6062bdeadca1f31180b727dc018ad3f356ef504d0b4fade91ea"}, {"dependencies": ["balanced", "bridge", "excluded", "needs"], "relations": ["answer"], "recursive": false, "fingerprint": "bc110a17eb4138a96e2ab0dcc08ff9e9775d962a7bc6bf185c28887b09a30167"}] | 5 | 6 / [1262, 1262, 1262, 1262, 1262, 1262] |
+| mutual-permission-taint-2026104301 | [{"fingerprint": "5961101ae876bb98a89271a7b8dd2ad1bb4e6f2f01e38331a5420f7d9e834a49", "dependencies": ["blocked", "convert", "edge", "grant", "permission", "start"], "relations": ["flow", "permit"], "recursive": true}] | 1 | 2 / [115, 115] |
+| context-balanced-paths-2026104302 | [{"dependencies": ["closing", "context", "denied", "epsilon", "opening"], "recursive": true, "relations": ["balanced"], "fingerprint": "898ad1e6f90dc61f046a8e668f2adce49eb87a6b3523d141080a8f3369200742"}, {"fingerprint": "e33b08af3d535a591346a3d9a859e82aed86b23bd2c9070dbe3e9cd8ea169279", "dependencies": ["balanced", "bridge", "excluded", "needs"], "relations": ["answer"], "recursive": false}] | 3 | 4 / [1281, 1281, 1281, 1281] |
+| context-balanced-paths-2026104303 | [{"fingerprint": "5ddaf1e146ed8782190e179ee2bcc98c47583aa808a931cf7b00b77d40a819d1", "relations": ["balanced"], "recursive": true, "dependencies": ["closing", "context", "denied", "epsilon", "opening"]}, {"fingerprint": "035e9d8b2430d9238f8a3480b59227202a4bf164f260cd40ddf6d894ed8707ae", "dependencies": ["balanced", "bridge", "excluded", "needs"], "relations": ["answer"], "recursive": false}] | 3 | 4 / [936, 936, 936, 936] |
+| context-balanced-paths-2026104304 | [{"dependencies": ["closing", "context", "denied", "epsilon", "opening"], "recursive": true, "relations": ["balanced"], "fingerprint": "13b6c42c487d4d90f44999fc21d5e8315fadf978eddb1e8544d97d5dc01e1165"}, {"dependencies": ["balanced", "excluded", "needs"], "recursive": false, "relations": ["answer"], "fingerprint": "919599fa5eb62a83d83f12b28c0b128394d220dab91b5a274c8c9cad007f004b"}] | 2 | 3 / [1829, 1829, 1829] |
+
+Packet retention is not exposure: packets produced after the final graded response are archived but cannot affect that response. The model-call column counts only continuations with prior evidence. Engine-internal reused components may include a cached final relation on repeated queries; the intermediate packet never includes that relation. Reuse receipts identify completed native derivation components under current source and path identity. They establish applicability and avoid recomputing those components in the engine; they do not guarantee that the model uses the supplied facts correctly. Source replacement/stale-reference rejection is covered by actual binding tests; this fresh-source cohort does not measure a new invalidation treatment effect.
+
+* Per-attempt answer errors
+
+| Task / condition / stage:attempt | Expected | Predicted | Missing | Extra | Evidence exposed | Error kind |
+|--------------------------------+----------+-----------+---------+-------+------------------+------------|
+| tag-scoped-taint-2026103301 / reflection / 1:1 | 48 | 48 | 0 | 0 | False | none |
+| tag-scoped-taint-2026103301 / reflection / 2:1 | 33 | 33 | 0 | 0 | False | none |
+| tag-scoped-taint-2026103301 / checked-intermediates / 1:1 | 48 | 48 | 0 | 0 | False | none |
+| tag-scoped-taint-2026103301 / checked-intermediates / 2:1 | 33 | 33 | 0 | 0 | True | none |
+| mutual-permission-taint-2026103302 / checked-intermediates / 1:1 | 42 | 42 | 0 | 0 | False | none |
+| mutual-permission-taint-2026103302 / checked-intermediates / 2:1 | 30 | 30 | 0 | 0 | True | none |
+| mutual-permission-taint-2026103302 / reflection / 1:1 | 42 | 42 | 0 | 0 | False | none |
+| mutual-permission-taint-2026103302 / reflection / 2:1 | 30 | 28 | 2 | 0 | False | semantic |
+| mutual-permission-taint-2026103302 / reflection / 2:2 | 30 | 2 | 28 | 0 | False | semantic |
+| mutual-permission-taint-2026103302 / reflection / 2:3 | 30 | 24 | 6 | 0 | False | semantic |
+| context-balanced-paths-2026103303 / reflection / 1:1 | 47 | 47 | 0 | 0 | False | none |
+| context-balanced-paths-2026103303 / reflection / 2:1 | 40 | 42 | 1 | 3 | False | semantic |
+| context-balanced-paths-2026103303 / reflection / 2:2 | 40 | 35 | 5 | 0 | False | semantic |
+| context-balanced-paths-2026103303 / reflection / 2:3 | 40 | 31 | 11 | 2 | False | semantic |
+| context-balanced-paths-2026103303 / checked-intermediates / 1:1 | 47 | 47 | 0 | 0 | False | none |
+| context-balanced-paths-2026103303 / checked-intermediates / 2:1 | 40 | 40 | 0 | 0 | True | none |
+| context-balanced-paths-2026103304 / checked-intermediates / 1:1 | 53 | 52 | 1 | 0 | False | semantic |
+| context-balanced-paths-2026103304 / checked-intermediates / 1:2 | 53 | 59 | 3 | 9 | True | semantic |
+| context-balanced-paths-2026103304 / checked-intermediates / 1:3 | 53 | 53 | 0 | 0 | True | none |
+| context-balanced-paths-2026103304 / checked-intermediates / 2:1 | 41 | 41 | 41 | 41 | True | semantic |
+| context-balanced-paths-2026103304 / checked-intermediates / 2:2 | 41 | 48 | 3 | 10 | True | semantic |
+| context-balanced-paths-2026103304 / checked-intermediates / 2:3 | 41 | 57 | 0 | 16 | True | semantic |
+| context-balanced-paths-2026103304 / reflection / 1:1 | 53 | 52 | 1 | 0 | False | semantic |
+| context-balanced-paths-2026103304 / reflection / 1:2 | 53 | 53 | 0 | 0 | False | none |
+| context-balanced-paths-2026103304 / reflection / 2:1 | 41 | 84 | 41 | 84 | False | semantic |
+| context-balanced-paths-2026103304 / reflection / 2:2 | 41 | 40 | 41 | 40 | False | semantic |
+| context-balanced-paths-2026103304 / reflection / 2:3 | 41 | 84 | 0 | 43 | False | semantic |
+| mutual-permission-taint-2026104301 / checked-intermediates / 1:1 | 44 | 44 | 0 | 0 | False | none |
+| mutual-permission-taint-2026104301 / checked-intermediates / 2:1 | 29 | 29 | 0 | 0 | True | none |
+| mutual-permission-taint-2026104301 / reflection / 1:1 | 44 | 44 | 0 | 0 | False | none |
+| mutual-permission-taint-2026104301 / reflection / 2:1 | 29 | 30 | 0 | 1 | False | semantic |
+| mutual-permission-taint-2026104301 / reflection / 2:2 | 29 | 29 | 0 | 0 | False | none |
+| context-balanced-paths-2026104302 / reflection / 1:1 | 72 | 72 | 0 | 0 | False | none |
+| context-balanced-paths-2026104302 / reflection / 2:1 | 68 | 64 | 5 | 1 | False | semantic |
+| context-balanced-paths-2026104302 / reflection / 2:2 | 68 | 61 | 7 | 0 | False | semantic |
+| context-balanced-paths-2026104302 / reflection / 2:3 | 68 | 56 | 12 | 0 | False | semantic |
+| context-balanced-paths-2026104302 / checked-intermediates / 1:1 | 72 | 72 | 0 | 0 | False | none |
+| context-balanced-paths-2026104302 / checked-intermediates / 2:1 | 68 | 4 | 64 | 0 | True | semantic |
+| context-balanced-paths-2026104302 / checked-intermediates / 2:2 | 68 | 64 | 7 | 3 | True | semantic |
+| context-balanced-paths-2026104302 / checked-intermediates / 2:3 | 68 | 18 | 50 | 0 | True | semantic |
+| context-balanced-paths-2026104303 / checked-intermediates / 1:1 | 67 | 67 | 0 | 0 | False | none |
+| context-balanced-paths-2026104303 / checked-intermediates / 2:1 | 49 | 39 | 10 | 0 | True | semantic |
+| context-balanced-paths-2026104303 / checked-intermediates / 2:2 | 49 | 47 | 2 | 0 | True | semantic |
+| context-balanced-paths-2026104303 / checked-intermediates / 2:3 | 49 | 50 | 0 | 1 | True | semantic |
+| context-balanced-paths-2026104303 / reflection / 1:1 | 67 | 67 | 0 | 0 | False | none |
+| context-balanced-paths-2026104303 / reflection / 2:1 | 49 | 2 | 47 | 0 | False | semantic |
+| context-balanced-paths-2026104303 / reflection / 2:2 | 49 | 51 | 0 | 2 | False | semantic |
+| context-balanced-paths-2026104303 / reflection / 2:3 | 49 | 34 | 15 | 0 | False | semantic |
+| context-balanced-paths-2026104304 / reflection / 1:1 | 87 | 52 | 35 | 0 | False | semantic |
+| context-balanced-paths-2026104304 / reflection / 1:2 | 87 | 82 | 24 | 19 | False | semantic |
+| context-balanced-paths-2026104304 / reflection / 1:3 | 87 | 68 | 21 | 2 | False | semantic |
+| context-balanced-paths-2026104304 / checked-intermediates / 1:1 | 87 | 52 | 35 | 0 | False | semantic |
+| context-balanced-paths-2026104304 / checked-intermediates / 1:2 | 87 | 78 | 17 | 8 | True | semantic |
+| context-balanced-paths-2026104304 / checked-intermediates / 1:3 | 87 | 119 | 3 | 35 | True | semantic |
+
+* Per-request usage and latency
+
+Physical requests are counted once. Output tokens include thinking according to provider usage; they are not added to thinking as a second cost.
+
+| Request | Thinking | Input | Output including thinking | Cached input | Seconds | Status |
+|---------+----------+-------+---------------------------+--------------+---------+--------|
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103303-checked-intermediates/2-1-provider.json | 42222 | 22837 | 42636 | 9088 | 147.86 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103303-reflection/2-1-provider.json | 77022 | 9942 | 77458 | 8832 | 335.27 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103303-reflection/2-2-provider.json | 82018 | 10422 | 82382 | 9856 | 336.90 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103303-reflection/2-3-provider.json | 73364 | 10830 | 73691 | 10368 | 323.69 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103303-shared/initial-provider.json | 64811 | 8839 | 65299 | 0 | 269.25 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-checked-intermediates/1-2-provider.json | 76503 | 39833 | 77116 | 9216 | 273.18 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-checked-intermediates/1-3-provider.json | 46878 | 70526 | 47428 | 39808 | 170.72 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-checked-intermediates/2-1-provider.json | 39958 | 101745 | 40143 | 70400 | 179.27 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-checked-intermediates/2-2-provider.json | 67456 | 131996 | 67956 | 101632 | 245.12 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-checked-intermediates/2-3-provider.json | 57129 | 162562 | 57724 | 131968 | 192.58 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-reflection/1-2-provider.json | 88744 | 9797 | 89242 | 9600 | 389.78 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-reflection/2-1-provider.json | 99848 | 10910 | 100133 | 9728 | 445.16 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-reflection/2-2-provider.json | 82561 | 11239 | 82704 | 10880 | 364.18 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-reflection/2-3-provider.json | 97982 | 11426 | 98770 | 11136 | 413.24 | completed |
+| .cache/ascent/correction/model-live/context-balanced-paths-2026103304-shared/initial-provider.json | 102783 | 9268 | 103268 | 0 | 461.86 | completed |
+| .cache/ascent/correction/model-live/mutual-permission-taint-2026103302-checked-intermediates/2-1-provider.json | 45057 | 26285 | 45373 | 21120 | 154.88 | completed |
+| .cache/ascent/correction/model-live/mutual-permission-taint-2026103302-reflection/2-1-provider.json | 74195 | 22385 | 74492 | 21376 | 278.05 | completed |
+| .cache/ascent/correction/model-live/mutual-permission-taint-2026103302-reflection/2-2-provider.json | 63043 | 22726 | 63075 | 22272 | 235.66 | completed |
+| .cache/ascent/correction/model-live/mutual-permission-taint-2026103302-reflection/2-3-provider.json | 68320 | 22802 | 68577 | 22656 | 256.42 | completed |
+| .cache/ascent/correction/model-live/mutual-permission-taint-2026103302-shared/initial-provider.json | 62547 | 21179 | 62984 | 0 | 251.90 | completed |
+| .cache/ascent/correction/model-live/tag-scoped-taint-2026103301-checked-intermediates/2-1-provider.json | 23342 | 16052 | 23652 | 12416 | 80.20 | completed |
+| .cache/ascent/correction/model-live/tag-scoped-taint-2026103301-reflection/2-1-provider.json | 68077 | 13223 | 68419 | 12160 | 262.08 | completed |
+| .cache/ascent/correction/model-live/tag-scoped-taint-2026103301-shared/initial-provider.json | 52486 | 12213 | 52931 | 0 | 212.77 | completed |
+| .cache/ascent/correction/holdout-0/mutual-permission-taint-2026104301-checked-intermediates/2-1-provider.json | 22508 | 26084 | 22806 | 22784 | 82.28 | completed |
+| .cache/ascent/correction/holdout-0/mutual-permission-taint-2026104301-reflection/2-1-provider.json | 53362 | 24024 | 53665 | 23040 | 203.42 | completed |
+| .cache/ascent/correction/holdout-0/mutual-permission-taint-2026104301-reflection/2-2-provider.json | 93249 | 24371 | 93542 | 23936 | 372.11 | completed |
+| .cache/ascent/correction/holdout-0/mutual-permission-taint-2026104301-shared/initial-provider.json | 43393 | 22815 | 43833 | 0 | 193.99 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-checked-intermediates/2-1-provider.json | 49388 | 46552 | 49439 | 12544 | 195.80 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-checked-intermediates/2-2-provider.json | 90169 | 79893 | 90864 | 46464 | 327.89 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-checked-intermediates/2-3-provider.json | 76524 | 113878 | 76729 | 79872 | 282.84 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-reflection/2-1-provider.json | 107521 | 13282 | 108217 | 11776 | 413.23 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-reflection/2-2-provider.json | 109734 | 14022 | 110397 | 13184 | 489.36 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-reflection/2-3-provider.json | 95388 | 14729 | 95995 | 13952 | 441.34 | completed |
+| .cache/ascent/correction/holdout-1/context-balanced-paths-2026104302-shared/initial-provider.json | 101989 | 11880 | 102776 | 0 | 463.24 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-checked-intermediates/2-1-provider.json | 52335 | 38374 | 52775 | 12416 | 190.10 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-checked-intermediates/2-2-provider.json | 96508 | 63396 | 97039 | 38272 | 323.33 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-checked-intermediates/2-3-provider.json | 76021 | 88509 | 76588 | 63360 | 271.86 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-reflection/2-1-provider.json | 85498 | 13811 | 85530 | 13056 | 331.17 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-reflection/2-2-provider.json | 95009 | 13887 | 95588 | 13696 | 399.53 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-reflection/2-3-provider.json | 106536 | 14510 | 106927 | 13824 | 437.80 | completed |
+| .cache/ascent/correction/holdout-2/context-balanced-paths-2026104303-shared/initial-provider.json | 104169 | 12442 | 104923 | 0 | 446.38 | completed |
+| .cache/ascent/correction/holdout-3/context-balanced-paths-2026104304-checked-intermediates/1-2-provider.json | 99933 | 67335 | 100792 | 15872 | 333.13 | completed |
+| .cache/ascent/correction/holdout-3/context-balanced-paths-2026104304-checked-intermediates/1-3-provider.json | 84936 | 119684 | 86251 | 67328 | 311.95 | completed |
+| .cache/ascent/correction/holdout-3/context-balanced-paths-2026104304-reflection/1-2-provider.json | 88096 | 15889 | 89009 | 15232 | 382.52 | completed |
+| .cache/ascent/correction/holdout-3/context-balanced-paths-2026104304-reflection/1-3-provider.json | 92430 | 16846 | 93182 | 15872 | 378.15 | completed |
+| .cache/ascent/correction/holdout-3/context-balanced-paths-2026104304-shared/initial-provider.json | 126758 | 15271 | 127332 | 0 | 556.40 | completed |
+| .cache/ascent/correction/repair-0/1-provider.json | 28372 | 26406 | 28665 | 24320 | 103.12 | completed |
+| .cache/ascent/correction/repair-1/1-provider.json | 81668 | 47268 | 82468 | 13952 | 299.22 | completed |
+| .cache/ascent/correction/repair-1/2-provider.json | 79517 | 81358 | 80247 | 47232 | 263.30 | completed |
+| .cache/ascent/correction/repair-2/1-provider.json | 83035 | 38425 | 83591 | 13824 | 289.71 | completed |
+
+* Real failed-prefix repair comparison
+
+This is a separate failure-conditioned cohort. For every held-out task whose reflection condition has an actual semantic failure in the second query, the first failed response and all preceding request/history/usage are reused. A new repair request preserves the control next-repair history, model, budget and scalar feedback exactly, and adds only checked intermediate facts. Machine admission verifies those equalities and absence of the final answer. Remaining repair allowance matches the original three-attempt budget. Three tasks meet this eligibility rule; the fourth holdout never passed its first obligation in the reflection condition, so it has no second-query failed-prefix fork. Its first-query failures remain in the main cohort. No wrong answer is injected or fabricated. Prefix usage is fully charged to this alternative policy but not counted twice in physical expenditure.
+
+| Task | Baseline full-task first-correct / censor | Native repaired full-task first-correct / censor | Native new repair thinking | Native repair calls | Whole-task reduction when both complete |
+|------+----------------------------------------+------------------------------------------------+----------------------------+---------------------+-----------------------------------------|
+| mutual-permission-taint-2026104301 | 190004 | 125127 | 28372 | 1 | 34.15% |
+| context-balanced-paths-2026104302 | censored: 414632 | censored: 370695 | 161185 | 2 | undefined |
+| context-balanced-paths-2026104303 | censored: 391212 | 272702 | 83035 | 1 | undefined |
+
+Repair successes: 2/3 eligible executed tasks. Matched complete repair pairs: 1; whole-task first-correct thinking 190004 baseline versus 125127 native, observed reduction 34.15%. This is failure-conditioned and cannot be presented as the average saving across all new tasks.
+
+* Reflection analysis and boundaries
+
+[[file:reflection-analysis.json][Native/source-backed diagnostic omission and answer-delta checks]] retain the observable set relationships without inspecting private reasoning.
+
+The diagnostic mutual-permission control failed three times. Its second output equals the difference between second and first query answers, rather than the complete second answer. The first omission involved two jobs whose needed flow states and policy conditions are all present in checked facts. These set relationships are observed evidence of output/goal drift; they do not reconstruct private model reasoning. The opaque balanced holdout with 68 expected rows returned 4, 64 and 18 rows across its three evidence-assisted attempts; none equals the first answer or the answer-set delta. Raw intermediate availability therefore did not ensure complete correct composition. Actual negative/censored results remain in the report. Subsequent native failures and repairs are also retained, so evidence availability is not treated as automatic model correctness.
+
+* Expenditure and qualification
+
+Actual distinct provider requests across diagnosis, holdout and new repairs: 50. Actual reported thinking: 3780392; usage complete: True; provider errors: 0; non-completed responses: 0. Shared/reused prefixes occur in alternative policy ledgers but only once in this expenditure count. Thinking comes from provider reasoning_tokens, not answer length, and is not added twice to output_tokens. Provider prompt-cache usage is retained in audit records and is distinct from native semantic reuse.
+
+One holdout completed all seven actual calls and both persisted trajectories, then hit Darwin EAGAIN enumerating /dev/fd during session close. Final aggregation was recovered only from those unchanged ledgers, with no new provider call or changed grading. The binding now retries only transient EAGAIN/EINTR reads up to three times; two host-I/O regression tests and one actual native initialization/query/close case passed. Recovery provenance is retained in the plan artifacts.
+
+Local qualification: five Trajectory/projection and nine Evidence DAG tests in EACH actual ABI and compiled API (28 integration cases), six direct Scheme cases, seven experiment-intent cases, pinned Lean compilation, and Quint 10,000 sampled traces at up to 30 steps with five weakened variants producing counterexamples. Formal statements are conditional and simulation is bounded; no universal compiler refinement or population saving is asserted. Concurrent unrelated interface changes do not alter the frozen study artifact. No remote CI or push was used.
+
+* Complete artifacts
+
+[[file:questions.org][All full complex prompts and second query rules]], [[file:visible-answers.org][actual visible answers]], [[file:cohorts.json][every native trajectory and evidence packet]], [[file:repair-records.json][failed-prefix repair trajectories]], [[file:repair-pair-admission.json][matched history/feedback/budget admission]], [[file:provider-audit.json][provider usage and request/response/answer hashes]], [[file:results.json][aggregate metrics]], [[file:../correction-study/report.org][diagnostic report]], [[file:../../features/correction-qualification.json][native/formal receipt]]. Larger repeated paired studies with stronger feedback controls and realistic program-generation workloads are still needed to establish stable general savings.

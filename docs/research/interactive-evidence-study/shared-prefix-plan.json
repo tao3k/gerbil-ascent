@@ -1,0 +1,9 @@
+{
+  "selectionRule": "Reuse the original fresh arm first response for both policies, uniformly across the two families; no new initial provider call.",
+  "source": {
+    "balanced": ".cache/ascent/interactive/live-balanced-fresh",
+    "mutual": ".cache/ascent/interactive/live-mutual-fresh"
+  },
+  "interpretation": "Adaptive confirmation after observing pre-feedback sampling differences; not a preregistered population estimate.",
+  "finalControllerSha256": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa"
+}

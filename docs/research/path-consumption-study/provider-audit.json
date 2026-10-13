@@ -1,0 +1,1590 @@
+[
+  {
+    "responseId": "a06dfd16-12ad-430d-b0ea-d7292d6a10e7",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 116618,
+      "input_tokens_details": {
+        "cached_tokens": 108928
+      },
+      "output_tokens": 4245,
+      "output_tokens_details": {
+        "reasoning_tokens": 1791
+      },
+      "total_tokens": 120863
+    },
+    "error": null,
+    "seconds": 14.158052791999808,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "49a4c25b-5df2-4e4d-bd39-7eea25dc2701",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 65875,
+      "input_tokens_details": {
+        "cached_tokens": 61824
+      },
+      "output_tokens": 4020,
+      "output_tokens_details": {
+        "reasoning_tokens": 3631
+      },
+      "total_tokens": 69895
+    },
+    "error": null,
+    "seconds": 20.710489499999994,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "2cd16919-7e9a-42fd-ba7c-053bcf3e64db",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 103909,
+      "input_tokens_details": {
+        "cached_tokens": 98944
+      },
+      "output_tokens": 4838,
+      "output_tokens_details": {
+        "reasoning_tokens": 4584
+      },
+      "total_tokens": 108747
+    },
+    "error": null,
+    "seconds": 21.32299183400005,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-6-provider.json"
+    ]
+  },
+  {
+    "responseId": "ab5a4e50-1dbd-4249-84d3-b326d0c97b93",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 40904,
+      "input_tokens_details": {
+        "cached_tokens": 13696
+      },
+      "output_tokens": 20975,
+      "output_tokens_details": {
+        "reasoning_tokens": 20584
+      },
+      "total_tokens": 61879
+    },
+    "error": null,
+    "seconds": 101.41114408299995,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "6628787c-54fd-4885-b1a2-6e9479c2bc41",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 95443,
+      "input_tokens_details": {
+        "cached_tokens": 89600
+      },
+      "output_tokens": 3600,
+      "output_tokens_details": {
+        "reasoning_tokens": 3119
+      },
+      "total_tokens": 99043
+    },
+    "error": null,
+    "seconds": 17.775817707999977,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-5-provider.json"
+    ]
+  },
+  {
+    "responseId": "34ec2f02-e9b3-4c5d-a240-39d5dba7421b",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 86266,
+      "input_tokens_details": {
+        "cached_tokens": 80384
+      },
+      "output_tokens": 3369,
+      "output_tokens_details": {
+        "reasoning_tokens": 2808
+      },
+      "total_tokens": 89635
+    },
+    "error": null,
+    "seconds": 16.64545433300009,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "207b0327-7c50-47f3-95f6-9f699603766d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 6824,
+      "input_tokens_details": {
+        "cached_tokens": 640
+      },
+      "output_tokens": 6961,
+      "output_tokens_details": {
+        "reasoning_tokens": 4535
+      },
+      "total_tokens": 13785
+    },
+    "error": null,
+    "seconds": 29.475067249999938,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-0-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "152f63e7-58b1-4a6a-b6ad-acc9a83e5404",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 73825,
+      "input_tokens_details": {
+        "cached_tokens": 69888
+      },
+      "output_tokens": 6586,
+      "output_tokens_details": {
+        "reasoning_tokens": 6025
+      },
+      "total_tokens": 80411
+    },
+    "error": null,
+    "seconds": 32.968333667000024,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "d243e473-b0ca-473e-b227-bb6c578fe712",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 108798,
+      "input_tokens_details": {
+        "cached_tokens": 108544
+      },
+      "output_tokens": 250,
+      "output_tokens_details": {
+        "reasoning_tokens": 53
+      },
+      "total_tokens": 109048
+    },
+    "error": null,
+    "seconds": 1.7481710829999884,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "10f6ce4d-f908-4a5f-8d1f-f1d3941b92f0",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 147601,
+      "input_tokens_details": {
+        "cached_tokens": 120832
+      },
+      "output_tokens": 1694,
+      "output_tokens_details": {
+        "reasoning_tokens": 1553
+      },
+      "total_tokens": 149295
+    },
+    "error": null,
+    "seconds": 7.694204082999931,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-balanced/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "bbd1e3df-4d7d-41f6-aabc-b002a706de67",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 79075,
+      "input_tokens_details": {
+        "cached_tokens": 65280
+      },
+      "output_tokens": 5217,
+      "output_tokens_details": {
+        "reasoning_tokens": 452
+      },
+      "total_tokens": 84292
+    },
+    "error": null,
+    "seconds": 15.583383083999934,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-mutual/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "5ed791cb-f130-4257-9229-cf7135d1798f",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 44655,
+      "input_tokens_details": {
+        "cached_tokens": 26112
+      },
+      "output_tokens": 20224,
+      "output_tokens_details": {
+        "reasoning_tokens": 19829
+      },
+      "total_tokens": 64879
+    },
+    "error": null,
+    "seconds": 85.58203604100004,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-mutual/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "a1778314-004e-4bbe-893d-217dd7f66536",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 18039,
+      "input_tokens_details": {
+        "cached_tokens": 512
+      },
+      "output_tokens": 8149,
+      "output_tokens_details": {
+        "reasoning_tokens": 3384
+      },
+      "total_tokens": 26188
+    },
+    "error": null,
+    "seconds": 29.14449962499998,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-mutual/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-0-call-0-provider.json",
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-0-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "e35bce16-617b-4466-8fbc-53fd3a5783a1",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 64932,
+      "input_tokens_details": {
+        "cached_tokens": 64768
+      },
+      "output_tokens": 424,
+      "output_tokens_details": {
+        "reasoning_tokens": 101
+      },
+      "total_tokens": 65356
+    },
+    "error": null,
+    "seconds": 2.436689582999861,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-mutual/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "9bb916e4-3145-456f-a8b4-220f62a4f7f2",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 102917,
+      "input_tokens_details": {
+        "cached_tokens": 84224
+      },
+      "output_tokens": 7727,
+      "output_tokens_details": {
+        "reasoning_tokens": 7677
+      },
+      "total_tokens": 110644
+    },
+    "error": null,
+    "seconds": 34.48009412500005,
+    "files": [
+      ".cache/ascent/path-consumption/baseline-mutual/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "e3533403-8e71-44c7-a060-b63172740273",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 64234,
+      "input_tokens_details": {
+        "cached_tokens": 56576
+      },
+      "output_tokens": 3944,
+      "output_tokens_details": {
+        "reasoning_tokens": 1462
+      },
+      "total_tokens": 68178
+    },
+    "error": null,
+    "seconds": 12.736871416999975,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "6e997a19-c18b-4c20-81d8-1a7f4ea95c13",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 36918,
+      "input_tokens_details": {
+        "cached_tokens": 35584
+      },
+      "output_tokens": 1531,
+      "output_tokens_details": {
+        "reasoning_tokens": 1140
+      },
+      "total_tokens": 38449
+    },
+    "error": null,
+    "seconds": 8.139048208000077,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "f2dba32e-74c6-429c-8796-a0a033a6205f",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 48783,
+      "input_tokens_details": {
+        "cached_tokens": 47488
+      },
+      "output_tokens": 7212,
+      "output_tokens_details": {
+        "reasoning_tokens": 6968
+      },
+      "total_tokens": 55995
+    },
+    "error": null,
+    "seconds": 35.75136025000006,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-6-provider.json"
+    ]
+  },
+  {
+    "responseId": "fca9223f-0d5d-4972-8163-399774dc17d2",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 19161,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 16534,
+      "output_tokens_details": {
+        "reasoning_tokens": 16134
+      },
+      "total_tokens": 35695
+    },
+    "error": null,
+    "seconds": 79.325496209,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "7738ec9c-97b8-437d-ba93-11c4d6888f42",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 45359,
+      "input_tokens_details": {
+        "cached_tokens": 44160
+      },
+      "output_tokens": 2213,
+      "output_tokens_details": {
+        "reasoning_tokens": 1808
+      },
+      "total_tokens": 47572
+    },
+    "error": null,
+    "seconds": 11.913853374999917,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-5-provider.json"
+    ]
+  },
+  {
+    "responseId": "2aaf65ab-e22e-4e2a-9b7b-87d09af570e3",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 42103,
+      "input_tokens_details": {
+        "cached_tokens": 40832
+      },
+      "output_tokens": 2074,
+      "output_tokens_details": {
+        "reasoning_tokens": 1679
+      },
+      "total_tokens": 44177
+    },
+    "error": null,
+    "seconds": 11.313849333999997,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "b510a3ce-0811-4217-bc9a-f148b200373e",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 39633,
+      "input_tokens_details": {
+        "cached_tokens": 38400
+      },
+      "output_tokens": 1282,
+      "output_tokens_details": {
+        "reasoning_tokens": 889
+      },
+      "total_tokens": 40915
+    },
+    "error": null,
+    "seconds": 6.934807584000055,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "66c10006-8f13-4334-860c-979ce21c087d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 56046,
+      "input_tokens_details": {
+        "cached_tokens": 55808
+      },
+      "output_tokens": 618,
+      "output_tokens_details": {
+        "reasoning_tokens": 421
+      },
+      "total_tokens": 56664
+    },
+    "error": null,
+    "seconds": 4.72797604099992,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "37bd28e2-473b-455a-a1d7-4b9cede920b2",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 73569,
+      "input_tokens_details": {
+        "cached_tokens": 68096
+      },
+      "output_tokens": 1118,
+      "output_tokens_details": {
+        "reasoning_tokens": 986
+      },
+      "total_tokens": 74687
+    },
+    "error": null,
+    "seconds": 5.043486875000099,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-fresh/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "ec7e86f5-9a30-4211-82fb-3ffdbb859adf",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 52390,
+      "input_tokens_details": {
+        "cached_tokens": 44800
+      },
+      "output_tokens": 4748,
+      "output_tokens_details": {
+        "reasoning_tokens": 2322
+      },
+      "total_tokens": 57138
+    },
+    "error": null,
+    "seconds": 16.624691874999826,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "94c47553-73cb-40b2-8702-5809939bae99",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 33269,
+      "input_tokens_details": {
+        "cached_tokens": 32128
+      },
+      "output_tokens": 2725,
+      "output_tokens_details": {
+        "reasoning_tokens": 2234
+      },
+      "total_tokens": 35994
+    },
+    "error": null,
+    "seconds": 13.700687000000016,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "28ce8bda-999a-4472-b3e3-a897a1f37532",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 19161,
+      "input_tokens_details": {
+        "cached_tokens": 18944
+      },
+      "output_tokens": 13084,
+      "output_tokens_details": {
+        "reasoning_tokens": 12773
+      },
+      "total_tokens": 32245
+    },
+    "error": null,
+    "seconds": 63.74091962500006,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "4cab197d-e1a8-4f00-b92e-9cee1d32d1ad",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 40228,
+      "input_tokens_details": {
+        "cached_tokens": 39168
+      },
+      "output_tokens": 4224,
+      "output_tokens_details": {
+        "reasoning_tokens": 3934
+      },
+      "total_tokens": 44452
+    },
+    "error": null,
+    "seconds": 19.248719374999837,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "80c06a20-a85c-44c5-8a7a-cf69380c895d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 37322,
+      "input_tokens_details": {
+        "cached_tokens": 35968
+      },
+      "output_tokens": 1883,
+      "output_tokens_details": {
+        "reasoning_tokens": 1574
+      },
+      "total_tokens": 39205
+    },
+    "error": null,
+    "seconds": 10.426336375000119,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "215fdf35-f874-4999-b6c4-39eab45168c5",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 44503,
+      "input_tokens_details": {
+        "cached_tokens": 44288
+      },
+      "output_tokens": 317,
+      "output_tokens_details": {
+        "reasoning_tokens": 120
+      },
+      "total_tokens": 44820
+    },
+    "error": null,
+    "seconds": 2.2242619169999216,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "ee1383df-3c4c-4a0a-8b48-1dd196997d31",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 62428,
+      "input_tokens_details": {
+        "cached_tokens": 57088
+      },
+      "output_tokens": 3731,
+      "output_tokens_details": {
+        "reasoning_tokens": 3572
+      },
+      "total_tokens": 66159
+    },
+    "error": null,
+    "seconds": 15.91621699999996,
+    "files": [
+      ".cache/ascent/path-consumption/new-balanced-retained/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "7d2785c3-8d00-4d9f-b108-640eb57202c6",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 112708,
+      "input_tokens_details": {
+        "cached_tokens": 111616
+      },
+      "output_tokens": 6752,
+      "output_tokens_details": {
+        "reasoning_tokens": 1719
+      },
+      "total_tokens": 119460
+    },
+    "error": null,
+    "seconds": 20.057791541999904,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "ae95431a-29b7-41ea-ab86-bbceec71a886",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 90576,
+      "input_tokens_details": {
+        "cached_tokens": 76800
+      },
+      "output_tokens": 8252,
+      "output_tokens_details": {
+        "reasoning_tokens": 3487
+      },
+      "total_tokens": 98828
+    },
+    "error": null,
+    "seconds": 25.270679499999915,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "ea159b51-ed96-45d6-abe0-9ce56d7e8ca1",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 128716,
+      "input_tokens_details": {
+        "cached_tokens": 119424
+      },
+      "output_tokens": 5273,
+      "output_tokens_details": {
+        "reasoning_tokens": 144
+      },
+      "total_tokens": 133989
+    },
+    "error": null,
+    "seconds": 15.255940375000137,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "d0e2b48b-41e5-471d-835f-15aa5d7d3930",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 48824,
+      "input_tokens_details": {
+        "cached_tokens": 39552
+      },
+      "output_tokens": 5495,
+      "output_tokens_details": {
+        "reasoning_tokens": 366
+      },
+      "total_tokens": 54319
+    },
+    "error": null,
+    "seconds": 15.022899083000084,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "34e843e0-5ae8-4081-be28-9c390f5a6c1f",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 31997,
+      "input_tokens_details": {
+        "cached_tokens": 128
+      },
+      "output_tokens": 7596,
+      "output_tokens_details": {
+        "reasoning_tokens": 2563
+      },
+      "total_tokens": 39593
+    },
+    "error": null,
+    "seconds": 27.259485541999993,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "6009c7f9-8d30-4bc1-bc4d-75da92295d27",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 67838,
+      "input_tokens_details": {
+        "cached_tokens": 65280
+      },
+      "output_tokens": 8443,
+      "output_tokens_details": {
+        "reasoning_tokens": 8080
+      },
+      "total_tokens": 76281
+    },
+    "error": null,
+    "seconds": 34.284935874999974,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "9a92887e-8276-4c52-9723-8567ef2e6a01",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 63751,
+      "input_tokens_details": {
+        "cached_tokens": 54272
+      },
+      "output_tokens": 1529,
+      "output_tokens_details": {
+        "reasoning_tokens": 240
+      },
+      "total_tokens": 65280
+    },
+    "error": null,
+    "seconds": 5.289098458000126,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "841bc44f-7b43-45d1-b653-f98a60ca25ae",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 76334,
+      "input_tokens_details": {
+        "cached_tokens": 76160
+      },
+      "output_tokens": 523,
+      "output_tokens_details": {
+        "reasoning_tokens": 200
+      },
+      "total_tokens": 76857
+    },
+    "error": null,
+    "seconds": 2.809433750000153,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "61c07f26-a503-4941-b39a-1cdbf0bd8c62",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 143440,
+      "input_tokens_details": {
+        "cached_tokens": 133888
+      },
+      "output_tokens": 1354,
+      "output_tokens_details": {
+        "reasoning_tokens": 65
+      },
+      "total_tokens": 144794
+    },
+    "error": null,
+    "seconds": 5.22987312500004,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-5-provider.json"
+    ]
+  },
+  {
+    "responseId": "d06c64fc-2662-4567-8f8f-aa75d3eee4a9",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 104128,
+      "input_tokens_details": {
+        "cached_tokens": 98816
+      },
+      "output_tokens": 859,
+      "output_tokens_details": {
+        "reasoning_tokens": 701
+      },
+      "total_tokens": 104987
+    },
+    "error": null,
+    "seconds": 6.092915790999996,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "e021003b-0fca-4f8c-bf69-194f89e36759",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 147192,
+      "input_tokens_details": {
+        "cached_tokens": 144768
+      },
+      "output_tokens": 415,
+      "output_tokens_details": {
+        "reasoning_tokens": 282
+      },
+      "total_tokens": 147607
+    },
+    "error": null,
+    "seconds": 2.802909500000169,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-6-provider.json"
+    ]
+  },
+  {
+    "responseId": "8f60543f-8e63-4d50-8ba9-2cc38c395388",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 105641,
+      "input_tokens_details": {
+        "cached_tokens": 104960
+      },
+      "output_tokens": 6021,
+      "output_tokens_details": {
+        "reasoning_tokens": 5390
+      },
+      "total_tokens": 111662
+    },
+    "error": null,
+    "seconds": 28.75721624999983,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-fresh/stage-2-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "72eb9abe-f371-41f1-a375-953b1ba45f6f",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 91188,
+      "input_tokens_details": {
+        "cached_tokens": 77440
+      },
+      "output_tokens": 8697,
+      "output_tokens_details": {
+        "reasoning_tokens": 3932
+      },
+      "total_tokens": 99885
+    },
+    "error": null,
+    "seconds": 26.93662766600005,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "1a9e9919-5a83-4ab6-9f23-e54a0ba60c0f",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 49642,
+      "input_tokens_details": {
+        "cached_tokens": 40320
+      },
+      "output_tokens": 5636,
+      "output_tokens_details": {
+        "reasoning_tokens": 507
+      },
+      "total_tokens": 55278
+    },
+    "error": null,
+    "seconds": 16.36534045799999,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "a6572c14-cf60-459f-a11f-150f09c65394",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 31997,
+      "input_tokens_details": {
+        "cached_tokens": 31744
+      },
+      "output_tokens": 8427,
+      "output_tokens_details": {
+        "reasoning_tokens": 3394
+      },
+      "total_tokens": 40424
+    },
+    "error": null,
+    "seconds": 30.383454625000013,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "41874cd9-b28f-4d13-b5b3-7b35b41222df",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 68807,
+      "input_tokens_details": {
+        "cached_tokens": 66176
+      },
+      "output_tokens": 8129,
+      "output_tokens_details": {
+        "reasoning_tokens": 7734
+      },
+      "total_tokens": 76936
+    },
+    "error": null,
+    "seconds": 32.840859624999894,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "2d1e216e-b07e-4eed-987a-2d28bae1758a",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 64706,
+      "input_tokens_details": {
+        "cached_tokens": 55168
+      },
+      "output_tokens": 1534,
+      "output_tokens_details": {
+        "reasoning_tokens": 245
+      },
+      "total_tokens": 66240
+    },
+    "error": null,
+    "seconds": 5.0959247080002115,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "62465b40-363d-475d-b18d-43e7b27e998e",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 76989,
+      "input_tokens_details": {
+        "cached_tokens": 76800
+      },
+      "output_tokens": 480,
+      "output_tokens_details": {
+        "reasoning_tokens": 157
+      },
+      "total_tokens": 77469
+    },
+    "error": null,
+    "seconds": 2.722662249999985,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "a62a2c3c-5230-4c97-abbc-969647d1c093",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 105188,
+      "input_tokens_details": {
+        "cached_tokens": 99840
+      },
+      "output_tokens": 4837,
+      "output_tokens_details": {
+        "reasoning_tokens": 4562
+      },
+      "total_tokens": 110025
+    },
+    "error": null,
+    "seconds": 25.31161700000007,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "f7784e9c-13d3-4c86-aba0-c4c1acf70ddd",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 110867,
+      "input_tokens_details": {
+        "cached_tokens": 109952
+      },
+      "output_tokens": 3250,
+      "output_tokens_details": {
+        "reasoning_tokens": 3065
+      },
+      "total_tokens": 114117
+    },
+    "error": null,
+    "seconds": 14.104740416999903,
+    "files": [
+      ".cache/ascent/path-consumption/new-mutual-retained/stage-2-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "2d29f63b-de5e-47f2-8c0d-53b0bf0b9635",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 79993,
+      "input_tokens_details": {
+        "cached_tokens": 76672
+      },
+      "output_tokens": 240,
+      "output_tokens_details": {
+        "reasoning_tokens": 43
+      },
+      "total_tokens": 80233
+    },
+    "error": null,
+    "seconds": 2.306507834000058,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-1-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "3e898731-f56a-4365-ba3f-40783e4390e5",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 87803,
+      "input_tokens_details": {
+        "cached_tokens": 80128
+      },
+      "output_tokens": 3878,
+      "output_tokens_details": {
+        "reasoning_tokens": 1452
+      },
+      "total_tokens": 91681
+    },
+    "error": null,
+    "seconds": 13.806169750000208,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "d22e0a2f-ddd9-484e-be11-8c62f995cd0a",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 48967,
+      "input_tokens_details": {
+        "cached_tokens": 47488
+      },
+      "output_tokens": 2534,
+      "output_tokens_details": {
+        "reasoning_tokens": 2053
+      },
+      "total_tokens": 51501
+    },
+    "error": null,
+    "seconds": 14.860897958000123,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "7eb10d77-e210-4cb4-b569-015768acc26e",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 19696,
+      "input_tokens_details": {
+        "cached_tokens": 128
+      },
+      "output_tokens": 27800,
+      "output_tokens_details": {
+        "reasoning_tokens": 27306
+      },
+      "total_tokens": 47496
+    },
+    "error": null,
+    "seconds": 151.86032908300012,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "b03e8a75-be67-402c-a14d-386035c02801",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 69174,
+      "input_tokens_details": {
+        "cached_tokens": 67968
+      },
+      "output_tokens": 6910,
+      "output_tokens_details": {
+        "reasoning_tokens": 6685
+      },
+      "total_tokens": 76084
+    },
+    "error": null,
+    "seconds": 32.36727450000035,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-5-provider.json"
+    ]
+  },
+  {
+    "responseId": "143c4273-690c-48ae-9d0e-5f3823fefde4",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 61294,
+      "input_tokens_details": {
+        "cached_tokens": 57088
+      },
+      "output_tokens": 6796,
+      "output_tokens_details": {
+        "reasoning_tokens": 6471
+      },
+      "total_tokens": 68090
+    },
+    "error": null,
+    "seconds": 35.253038583000034,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "cf4a6aa3-9f5e-435f-a7cb-9a8f13fb3b2d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 52918,
+      "input_tokens_details": {
+        "cached_tokens": 51456
+      },
+      "output_tokens": 4262,
+      "output_tokens_details": {
+        "reasoning_tokens": 2521
+      },
+      "total_tokens": 57180
+    },
+    "error": null,
+    "seconds": 19.616460749999987,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "686506f5-14f0-466a-8bb1-d095311024bf",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 76135,
+      "input_tokens_details": {
+        "cached_tokens": 75904
+      },
+      "output_tokens": 569,
+      "output_tokens_details": {
+        "reasoning_tokens": 400
+      },
+      "total_tokens": 76704
+    },
+    "error": null,
+    "seconds": 3.5155111670001133,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "6e9e9c76-88f3-4d75-bda2-bb88249a3fd7",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 97501,
+      "input_tokens_details": {
+        "cached_tokens": 91648
+      },
+      "output_tokens": 1191,
+      "output_tokens_details": {
+        "reasoning_tokens": 1035
+      },
+      "total_tokens": 98692
+    },
+    "error": null,
+    "seconds": 5.639345250000133,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-fresh/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "a486c45f-0197-4dff-b3ef-09c4b5b5aebe",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 55100,
+      "input_tokens_details": {
+        "cached_tokens": 47488
+      },
+      "output_tokens": 4776,
+      "output_tokens_details": {
+        "reasoning_tokens": 2322
+      },
+      "total_tokens": 59876
+    },
+    "error": null,
+    "seconds": 18.101625125000055,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "103be786-caef-4bb0-8eaa-36dd1a05708a",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 27916,
+      "input_tokens_details": {
+        "cached_tokens": 26368
+      },
+      "output_tokens": 6739,
+      "output_tokens_details": {
+        "reasoning_tokens": 6232
+      },
+      "total_tokens": 34655
+    },
+    "error": null,
+    "seconds": 37.97237774999985,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "70615736-4f5f-489a-82e4-0863513bfc6b",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 19696,
+      "input_tokens_details": {
+        "cached_tokens": 19456
+      },
+      "output_tokens": 6726,
+      "output_tokens_details": {
+        "reasoning_tokens": 6226
+      },
+      "total_tokens": 26422
+    },
+    "error": null,
+    "seconds": 37.365941625000005,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "e4a199c1-b29e-47c8-a514-37f471f63fcb",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 41726,
+      "input_tokens_details": {
+        "cached_tokens": 38400
+      },
+      "output_tokens": 5221,
+      "output_tokens_details": {
+        "reasoning_tokens": 4976
+      },
+      "total_tokens": 46947
+    },
+    "error": null,
+    "seconds": 24.133107457999813,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-0-call-4-provider.json"
+    ]
+  },
+  {
+    "responseId": "b1de0df1-2664-4ade-a6d0-c8d3bd3faa10",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 36169,
+      "input_tokens_details": {
+        "cached_tokens": 34560
+      },
+      "output_tokens": 2275,
+      "output_tokens_details": {
+        "reasoning_tokens": 2106
+      },
+      "total_tokens": 38444
+    },
+    "error": null,
+    "seconds": 9.270384333000038,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-0-call-3-provider.json"
+    ]
+  },
+  {
+    "responseId": "98b93fc9-d2ac-414a-92dd-8a5cd948308c",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 46998,
+      "input_tokens_details": {
+        "cached_tokens": 46848
+      },
+      "output_tokens": 532,
+      "output_tokens_details": {
+        "reasoning_tokens": 316
+      },
+      "total_tokens": 47530
+    },
+    "error": null,
+    "seconds": 3.684184625000171,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "6ec8f3b8-3503-434e-8ce9-304cdc70fa60",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 65748,
+      "input_tokens_details": {
+        "cached_tokens": 59776
+      },
+      "output_tokens": 4473,
+      "output_tokens_details": {
+        "reasoning_tokens": 4315
+      },
+      "total_tokens": 70221
+    },
+    "error": null,
+    "seconds": 21.609795875000145,
+    "files": [
+      ".cache/ascent/path-consumption/readable-balanced-retained/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "dcff5c82-7248-4fea-9c6d-a01ca86fb59e",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 59221,
+      "input_tokens_details": {
+        "cached_tokens": 45440
+      },
+      "output_tokens": 5017,
+      "output_tokens_details": {
+        "reasoning_tokens": 252
+      },
+      "total_tokens": 64238
+    },
+    "error": null,
+    "seconds": 16.332189166000035,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "2191715b-df3b-4d8d-9033-1f40a4f9617d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 43712,
+      "input_tokens_details": {
+        "cached_tokens": 39808
+      },
+      "output_tokens": 1002,
+      "output_tokens_details": {
+        "reasoning_tokens": 650
+      },
+      "total_tokens": 44714
+    },
+    "error": null,
+    "seconds": 4.692235708999988,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "aa6408c5-d21f-4572-90e5-394622008428",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 32362,
+      "input_tokens_details": {
+        "cached_tokens": 128
+      },
+      "output_tokens": 7572,
+      "output_tokens_details": {
+        "reasoning_tokens": 7423
+      },
+      "total_tokens": 39934
+    },
+    "error": null,
+    "seconds": 42.820715832999895,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "808502ec-46ac-4cda-86a6-1624193b12ef",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 44767,
+      "input_tokens_details": {
+        "cached_tokens": 44544
+      },
+      "output_tokens": 735,
+      "output_tokens_details": {
+        "reasoning_tokens": 412
+      },
+      "total_tokens": 45502
+    },
+    "error": null,
+    "seconds": 3.9145065420000265,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "1db8a320-5cd3-4c1b-beee-96eefa5af37d",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 70147,
+      "input_tokens_details": {
+        "cached_tokens": 64128
+      },
+      "output_tokens": 8071,
+      "output_tokens_details": {
+        "reasoning_tokens": 8002
+      },
+      "total_tokens": 78218
+    },
+    "error": null,
+    "seconds": 35.179347833000065,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-fresh/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "1932c1b9-eea9-463e-b5fa-3ef3368eec5e",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 58786,
+      "input_tokens_details": {
+        "cached_tokens": 45056
+      },
+      "output_tokens": 5074,
+      "output_tokens_details": {
+        "reasoning_tokens": 309
+      },
+      "total_tokens": 63860
+    },
+    "error": null,
+    "seconds": 15.920196583000006,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-2-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "d9d3c0e4-9895-4fd3-bf6c-503c1d600b19",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 42476,
+      "input_tokens_details": {
+        "cached_tokens": 38656
+      },
+      "output_tokens": 1965,
+      "output_tokens_details": {
+        "reasoning_tokens": 1601
+      },
+      "total_tokens": 44441
+    },
+    "error": null,
+    "seconds": 10.160888791999923,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-0-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "006ae25a-b0e5-4a83-9a0f-53b8d5d14759",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 32375,
+      "input_tokens_details": {
+        "cached_tokens": 32000
+      },
+      "output_tokens": 6321,
+      "output_tokens_details": {
+        "reasoning_tokens": 6172
+      },
+      "total_tokens": 38696
+    },
+    "error": null,
+    "seconds": 29.137026375000005,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-0-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "a6d41721-ff73-47b9-9c19-a04e4f66217c",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 44494,
+      "input_tokens_details": {
+        "cached_tokens": 44288
+      },
+      "output_tokens": 573,
+      "output_tokens_details": {
+        "reasoning_tokens": 250
+      },
+      "total_tokens": 45067
+    },
+    "error": null,
+    "seconds": 2.9708632089998446,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-1-call-0-provider.json"
+    ]
+  },
+  {
+    "responseId": "b3e2f317-ecbc-4d29-b717-8ce413ee5656",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 69772,
+      "input_tokens_details": {
+        "cached_tokens": 63744
+      },
+      "output_tokens": 1384,
+      "output_tokens_details": {
+        "reasoning_tokens": 1320
+      },
+      "total_tokens": 71156
+    },
+    "error": null,
+    "seconds": 9.788077333000047,
+    "files": [
+      ".cache/ascent/path-consumption/readable-mutual-retained/stage-2-call-1-provider.json"
+    ]
+  },
+  {
+    "responseId": "139ba2c7-35f2-4232-ac69-60961d9974aa",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 192671,
+      "input_tokens_details": {
+        "cached_tokens": 896
+      },
+      "output_tokens": 1047,
+      "output_tokens_details": {
+        "reasoning_tokens": 964
+      },
+      "total_tokens": 193718
+    },
+    "error": null,
+    "seconds": 8.451664291000043,
+    "files": [
+      ".cache/ascent/path-consumption/repair-column-balanced/stage-2-call-2-provider.json"
+    ]
+  },
+  {
+    "responseId": "518a0329-32e4-4fd8-900e-4eaca1242bbc",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 193536,
+      "input_tokens_details": {
+        "cached_tokens": 896
+      },
+      "output_tokens": 1550,
+      "output_tokens_details": {
+        "reasoning_tokens": 1418
+      },
+      "total_tokens": 195086
+    },
+    "error": null,
+    "seconds": 9.785103291999803,
+    "files": [
+      ".cache/ascent/path-consumption/repair-readable-balanced/stage-2-call-2-provider.json"
+    ]
+  }
+]

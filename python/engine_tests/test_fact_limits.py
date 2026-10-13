@@ -116,6 +116,11 @@ class FactLimitTests(unittest.TestCase):
         limited = Engine(library=os.environ['ASCENT_ENGINE_LIBRARY'], max_request_bytes=128) if self.engine.backend == 'abi' else Engine(max_request_bytes=128)
         with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
             limited.request({'operation': 'compare', 'actual': [['long-value' * 20]], 'expected': []})
+        # Initialization does not exempt a caller-supplied internal operation.
+        # Do not shorten the installed path to hide this policy boundary.
+        with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
+            limited.request({'operation': 'configure-syntax', 'path': 'x' * 256})
+        self.assertEqual(limited.max_request_bytes, 128)
         self.assertEqual(self.engine.request({'operation': 'describe'})['maxInputBytes'], 'unlimited')
 
 

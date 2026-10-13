@@ -26,8 +26,15 @@ test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_
 default:
     @just --list
 
+# The package CLI rewrites an unused version manifest and starts a second
+# interpreter. Invoke the standard build script with the same package prefix
+# and upstream build flags; std/make retains all scheduling/currentness.
 build:
-    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
+    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gxi_command }} build.ss compile ${GERBIL_BUILD_RELEASE+--release} ${GERBIL_BUILD_OPTIMIZED+--optimized} ${GERBIL_BUILD_DEBUG+--debug}
+
+# Linked production closure; upstream REPL utilities handle source reloads.
+develop:
+    {{ gerbil_environment }} GERBIL_PATH="{{ gerbil_package_prefix }}" "{{ gerbil_package_prefix }}/bin/ascent-develop"
 
 check-policy:
     ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build

@@ -89,7 +89,8 @@
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
         (make all srcdir: (current-directory) libdir: library
-              build-deps: (path-expand "build-deps" test-cache))
+              build-deps: (path-expand "build-deps" test-cache)
+              optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
         (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
       (let (phase (current-jiffy))
         (unless (artifact-matching-sources? sources (artifact-sources))

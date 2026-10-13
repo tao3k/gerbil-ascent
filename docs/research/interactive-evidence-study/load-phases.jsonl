@@ -1,0 +1,4 @@
+{"phase": "python-import", "seconds": 0.07322270800068509}
+{"phase": "load-validate-init", "seconds": 0.5212455419969046}
+{"phase": "first-native-request", "seconds": 0.0008891659963410348}
+{"phase": "total-with-shutdown", "seconds": 0.5959790000051726}

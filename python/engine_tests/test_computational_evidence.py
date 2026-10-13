@@ -8,6 +8,47 @@ import unittest
 
 
 class ComputationalEvidenceIntegration(unittest.TestCase):
+    def test_caller_owned_counts_preserve_complete_source_and_finite_rejection(self):
+        code = '''
+import copy, os
+from ascent_engine import Engine
+from ascent_engine.evidence import ComputationalEvidence
+library = os.environ.get('ASCENT_ENGINE_LIBRARY') if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else None
+source = {'identity':'caller-count-policy','generation':0,
+          'relations':[['seed',1,[[i] for i in range(1100)]]]}
+candidate = ['candidate',['relation','answer',1],
+             ['rule',['answer',0],['seed',0]],['query','answer',0],
+             ['limits','unlimited','unlimited','unlimited']]
+with Engine(library) as engine, ComputationalEvidence(engine) as store:
+    original = copy.deepcopy(source)
+    resolved = store.resolve(source, candidate)
+    assert resolved['status'] == 'verified', resolved
+    packet = store.observe(source,candidate,resolved['handle'],[['answer',0]],support=True)
+    assert packet['observations'][0]['conclusion']['status'] == 'verified'
+    assert packet['supportNodes'] and source == original and len(source['relations'][0][2]) == 1100
+    finite = copy.deepcopy(candidate); finite[-1] = ['limits',1024,4096,4096]
+    assert store.resolve(source, finite)['status'] != 'verified'
+    assert store.resolve(source, candidate)['reused'] is True
+    changed = copy.deepcopy(source); changed['generation'] = 1
+    changed['relations'][0][2].remove([0])
+    assert store.fact(changed,candidate,resolved['handle'],['answer',0])['status'] == 'unknown'
+    withdrawn = store.resolve(changed,candidate)
+    assert withdrawn['status'] == 'verified' and [0] not in withdrawn['rows']
+    absent = store.fact(changed,candidate,withdrawn['handle'],['answer',0])
+    assert absent['status'] == 'finite-absent' and absent['present'] is False
+    assert absent['support-nodes'] == [] and ['generation',1] in absent['scope']
+    restored = copy.deepcopy(source); restored['generation'] = 2
+    current = store.resolve(restored,candidate)
+    assert current['status'] == 'verified' and current['reused'] is False
+    assert store.observe(restored,candidate,current['handle'],[['answer',0]],support=True)['supportNodes']
+    for value in (0,-1,True,'infinite'):
+        invalid = copy.deepcopy(candidate); invalid[-1][1] = value
+        assert store.resolve(source,invalid)['status'] != 'verified'
+print('CALLER-PROOF-COUNTS-OK',flush=True)
+'''
+        subprocess.run([sys.executable, '-u', '-'], input=code, text=True,
+                       env=os.environ.copy(), check=True, timeout=45)
+
     def test_native_store_through_selected_public_binding(self):
         code = '''
 import copy, os

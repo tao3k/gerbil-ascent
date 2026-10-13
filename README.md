@@ -29,6 +29,9 @@ workload capacity qualification remain separate from interface availability.
   retained Sessions, source replacement, and measured update costs.
 - **Reasoning evidence:** inert candidate rules, admission diagnostics,
   finite closure, founded support, and bounded ground nonmembership.
+  [Interactive evidence reasoning](docs/features/interactive-evidence-reasoning.org)
+  connects local candidate-path checks and current evidence reuse to model tool
+  calls during exploration; its model efficacy remains an experimental question.
 - **Time and context:** valid time, knowledge time, named causal cuts, and
   snapshot-bound temporal answers.
 

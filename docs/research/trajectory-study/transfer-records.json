@@ -1,0 +1,1890 @@
+[
+  {
+    "case": "recursive-scoped-reachability-2026102300",
+    "arm": "reflection-history",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3067,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 8248,
+          "output_tokens_details": {
+            "reasoning_tokens": 8075
+          },
+          "total_tokens": 11315
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de1c_0",
+          "v78c3de1c_1",
+          "v78c3de1c_10",
+          "v78c3de1c_12",
+          "v78c3de1c_16",
+          "v78c3de1c_18",
+          "v78c3de1c_1b",
+          "v78c3de1c_1f",
+          "v78c3de1c_22",
+          "v78c3de1c_4",
+          "v78c3de1c_9",
+          "v78c3de1c_d",
+          "v78c3de1c_f"
+        ],
+        "providerSeconds": 37.90358312500757
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 6464,
+          "input_tokens_details": {
+            "cached_tokens": 2944
+          },
+          "output_tokens": 12653,
+          "output_tokens_details": {
+            "reasoning_tokens": 12567
+          },
+          "total_tokens": 19117
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de1c_0",
+          "v78c3de1c_10",
+          "v78c3de1c_12",
+          "v78c3de1c_1b",
+          "v78c3de1c_4",
+          "v78c3de1c_d",
+          "v78c3de1c_f"
+        ],
+        "providerSeconds": 46.09899866700289
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": null,
+    "nativeReusedComponents": [],
+    "trajectory": {
+      "postSuccess": {
+        "thinkingComplete": true,
+        "thinkingTokens": 0,
+        "modelCalls": 0
+      },
+      "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+      "schema": "ascent.trajectory.v1",
+      "generation": 0,
+      "events": [
+        {
+          "id": "call:recursive-scoped-reachability-2026102300:reflection-history:1",
+          "kind": "model-call",
+          "usage": {
+            "thinkingTokens": 8075,
+            "inputTokens": 3067,
+            "outputTokens": 8248
+          },
+          "generation": 0,
+          "sequence": 1,
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "round": 1
+        },
+        {
+          "round": 2,
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "sequence": 2,
+          "usage": {
+            "inputTokens": 6464,
+            "thinkingTokens": 12567,
+            "outputTokens": 12653
+          },
+          "generation": 0,
+          "kind": "model-call",
+          "id": "call:recursive-scoped-reachability-2026102300:reflection-history:2"
+        },
+        {
+          "candidate": [
+            "v78c3de1c_0",
+            "v78c3de1c_10",
+            "v78c3de1c_12",
+            "v78c3de1c_1b",
+            "v78c3de1c_4",
+            "v78c3de1c_d",
+            "v78c3de1c_f"
+          ],
+          "round": 2,
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "sequence": 3,
+          "generation": 0,
+          "verifier": "independent-two-query-oracle.v1",
+          "kind": "verification",
+          "correct": true,
+          "id": "event:3"
+        }
+      ],
+      "task": "two-query-bundle:recursive-scoped-reachability-2026102300",
+      "throughFirstCorrect": {
+        "inputTokens": 9531,
+        "outputTokens": 20901,
+        "directAnswers": 0,
+        "modelCalls": 2,
+        "repairThinkingTokens": 0,
+        "thinkingTokens": 20642,
+        "round": 2,
+        "evidenceEvents": 0,
+        "event": "event:3",
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "usageComplete": true
+      },
+      "censored": false,
+      "totals": {
+        "evidenceEvents": 0,
+        "thinkingTokens": 20642,
+        "modelCalls": 2,
+        "repairThinkingTokens": 0,
+        "outputTokens": 20901,
+        "directAnswers": 0,
+        "inputTokens": 9531,
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "failedVerifications": 0,
+        "repairModelCalls": 0
+      },
+      "finishReason": "both-correct",
+      "closed": true,
+      "verified": true,
+      "eventCount": 3,
+      "completedEpochs": []
+    }
+  },
+  {
+    "case": "recursive-scoped-reachability-2026102300",
+    "arm": "verified-intermediates",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3067,
+          "input_tokens_details": {
+            "cached_tokens": 2816
+          },
+          "output_tokens": 7336,
+          "output_tokens_details": {
+            "reasoning_tokens": 7183
+          },
+          "total_tokens": 10403
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de1c_0",
+          "v78c3de1c_1",
+          "v78c3de1c_10",
+          "v78c3de1c_12",
+          "v78c3de1c_16",
+          "v78c3de1c_18",
+          "v78c3de1c_1b",
+          "v78c3de1c_1f",
+          "v78c3de1c_22",
+          "v78c3de1c_4",
+          "v78c3de1c_9",
+          "v78c3de1c_d",
+          "v78c3de1c_f"
+        ],
+        "providerSeconds": 35.42153158399742
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 6881,
+          "input_tokens_details": {
+            "cached_tokens": 2944
+          },
+          "output_tokens": 7525,
+          "output_tokens_details": {
+            "reasoning_tokens": 7439
+          },
+          "total_tokens": 14406
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de1c_0",
+          "v78c3de1c_10",
+          "v78c3de1c_12",
+          "v78c3de1c_1b",
+          "v78c3de1c_4",
+          "v78c3de1c_d",
+          "v78c3de1c_f"
+        ],
+        "providerSeconds": 31.380695416999515
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": {
+      "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+      "pathIdentity": "b7607e57e62c88bfd5f500c341c9eb5e4c1b35b8150c3918627504900a301d9c",
+      "resultReference": "7654863015f72d1cba0ef7bda356cb7c4424b2e33c102239ceb6980c4cef38fd",
+      "componentFingerprints": {
+        "reach": "37a3e8317479b1edc1a1579d4154f576e17a214f0fa5deb646449e5425737a74"
+      },
+      "facts": {
+        "reach": [
+          [
+            "v78c3de1c_0"
+          ],
+          [
+            "v78c3de1c_3"
+          ],
+          [
+            "v78c3de1c_12"
+          ],
+          [
+            "v78c3de1c_f"
+          ],
+          [
+            "v78c3de1c_18"
+          ],
+          [
+            "v78c3de1c_1b"
+          ],
+          [
+            "v78c3de1c_6"
+          ],
+          [
+            "v78c3de1c_1e"
+          ],
+          [
+            "v78c3de1c_21"
+          ],
+          [
+            "v78c3de1c_c"
+          ],
+          [
+            "v78c3de1c_9"
+          ],
+          [
+            "v78c3de1c_13"
+          ],
+          [
+            "v78c3de1c_1"
+          ],
+          [
+            "v78c3de1c_10"
+          ],
+          [
+            "v78c3de1c_4"
+          ],
+          [
+            "v78c3de1c_a"
+          ],
+          [
+            "v78c3de1c_16"
+          ],
+          [
+            "v78c3de1c_19"
+          ],
+          [
+            "v78c3de1c_1f"
+          ],
+          [
+            "v78c3de1c_7"
+          ],
+          [
+            "v78c3de1c_22"
+          ],
+          [
+            "v78c3de1c_d"
+          ]
+        ]
+      }
+    },
+    "nativeReusedComponents": [
+      {
+        "relations": [
+          "reach"
+        ],
+        "recursive": true,
+        "dependencies": [
+          "blocked",
+          "edge",
+          "start"
+        ],
+        "fingerprint": "37a3e8317479b1edc1a1579d4154f576e17a214f0fa5deb646449e5425737a74"
+      }
+    ],
+    "trajectory": {
+      "events": [
+        {
+          "id": "call:recursive-scoped-reachability-2026102300:verified-intermediates:1",
+          "kind": "model-call",
+          "sequence": 1,
+          "generation": 0,
+          "usage": {
+            "outputTokens": 7336,
+            "inputTokens": 3067,
+            "thinkingTokens": 7183
+          },
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "round": 1
+        },
+        {
+          "sequence": 2,
+          "id": "event:2",
+          "kind": "evidence",
+          "retainedCompleted": false,
+          "reusedComponents": [],
+          "resultReference": "7654863015f72d1cba0ef7bda356cb7c4424b2e33c102239ceb6980c4cef38fd",
+          "round": 1,
+          "freshComponents": [
+            {
+              "fingerprint": "37a3e8317479b1edc1a1579d4154f576e17a214f0fa5deb646449e5425737a74",
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            },
+            {
+              "relations": [
+                "answer"
+              ],
+              "recursive": false,
+              "fingerprint": "ca808a2220a744f12a28538565f4707bc50f1d8787e53c9a75f1ec79a4d09014",
+              "dependencies": [
+                "reach",
+                "target"
+              ]
+            }
+          ],
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "pathIdentity": "b7607e57e62c88bfd5f500c341c9eb5e4c1b35b8150c3918627504900a301d9c",
+          "generation": 0
+        },
+        {
+          "usage": {
+            "thinkingTokens": 7439,
+            "inputTokens": 6881,
+            "outputTokens": 7525
+          },
+          "sequence": 3,
+          "round": 2,
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "id": "call:recursive-scoped-reachability-2026102300:verified-intermediates:2",
+          "kind": "model-call",
+          "generation": 0
+        },
+        {
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "candidate": [
+            "v78c3de1c_0",
+            "v78c3de1c_10",
+            "v78c3de1c_12",
+            "v78c3de1c_1b",
+            "v78c3de1c_4",
+            "v78c3de1c_d",
+            "v78c3de1c_f"
+          ],
+          "round": 2,
+          "sequence": 4,
+          "generation": 0,
+          "verifier": "independent-two-query-oracle.v1",
+          "kind": "verification",
+          "id": "event:4",
+          "correct": true
+        },
+        {
+          "sequence": 5,
+          "id": "event:5",
+          "kind": "evidence",
+          "reusedComponents": [
+            {
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "fingerprint": "37a3e8317479b1edc1a1579d4154f576e17a214f0fa5deb646449e5425737a74",
+              "relations": [
+                "reach"
+              ],
+              "recursive": true
+            }
+          ],
+          "resultReference": "5b19b08f1d0765f8e096d09113ee160906bac1c5c5aa7a3b1218d0341492b4d4",
+          "retainedCompleted": false,
+          "freshComponents": [
+            {
+              "recursive": false,
+              "relations": [
+                "answer"
+              ],
+              "dependencies": [
+                "blocked",
+                "edge",
+                "reach",
+                "target"
+              ],
+              "fingerprint": "8673fb2aca16af019f12282f6b4e40ceea73f6ed107e4752dff1f1ee90044920"
+            }
+          ],
+          "round": 2,
+          "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e",
+          "pathIdentity": "5059344828d58fc250c56a35165b440f8857e047de84a5fb2b6459ef42dd4d93",
+          "generation": 0
+        }
+      ],
+      "completedEpochs": [],
+      "finishReason": "both-correct",
+      "eventCount": 5,
+      "censored": false,
+      "closed": true,
+      "verified": true,
+      "totals": {
+        "repairThinkingTokens": 0,
+        "modelCalls": 2,
+        "inputTokens": 9948,
+        "evidenceEvents": 2,
+        "thinkingTokens": 14622,
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "directAnswers": 0,
+        "outputTokens": 14861
+      },
+      "throughFirstCorrect": {
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "usageComplete": true,
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "round": 2,
+        "thinkingTokens": 14622,
+        "event": "event:4",
+        "evidenceEvents": 1,
+        "inputTokens": 9948,
+        "directAnswers": 0,
+        "repairThinkingTokens": 0,
+        "outputTokens": 14861,
+        "modelCalls": 2
+      },
+      "task": "two-query-bundle:recursive-scoped-reachability-2026102300",
+      "schema": "ascent.trajectory.v1",
+      "generation": 0,
+      "postSuccess": {
+        "modelCalls": 0,
+        "thinkingTokens": 0,
+        "thinkingComplete": true
+      },
+      "sourceIdentity": "1fc849179fd91771b3e2489c79ff96020cc9a23309c922c64bd3837db9a1e95e"
+    }
+  },
+  {
+    "case": "taint-propagation-with-sanitizers-2026102319",
+    "arm": "verified-intermediates",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3439,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 5898,
+          "output_tokens_details": {
+            "reasoning_tokens": 5821
+          },
+          "total_tokens": 9337
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de2f_11",
+          "v78c3de2f_19",
+          "v78c3de2f_1c",
+          "v78c3de2f_20",
+          "v78c3de2f_24",
+          "v78c3de2f_25"
+        ],
+        "providerSeconds": 28.285253124995506
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 7485,
+          "input_tokens_details": {
+            "cached_tokens": 3328
+          },
+          "output_tokens": 2582,
+          "output_tokens_details": {
+            "reasoning_tokens": 2550
+          },
+          "total_tokens": 10067
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de2f_11",
+          "v78c3de2f_19"
+        ],
+        "providerSeconds": 12.654962625005282
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": {
+      "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+      "pathIdentity": "54e91b9417cc08cdf66b9ae3de314f18c5f2a951f565258d425c4aec36c24031",
+      "resultReference": "3bdaa0cbe792818d47d8789902254522a9badbfd0134169d5dbfc42cbb893245",
+      "componentFingerprints": {
+        "reach": "d096768a992ba836708e0dfce8bf0380e47b310a3417030c18e030ead41fecfa"
+      },
+      "facts": {
+        "reach": [
+          [
+            "v78c3de2f_0"
+          ],
+          [
+            "v78c3de2f_4"
+          ],
+          [
+            "v78c3de2f_18"
+          ],
+          [
+            "v78c3de2f_20"
+          ],
+          [
+            "v78c3de2f_14"
+          ],
+          [
+            "v78c3de2f_8"
+          ],
+          [
+            "v78c3de2f_5"
+          ],
+          [
+            "v78c3de2f_24"
+          ],
+          [
+            "v78c3de2f_c"
+          ],
+          [
+            "v78c3de2f_1c"
+          ],
+          [
+            "v78c3de2f_1d"
+          ],
+          [
+            "v78c3de2f_25"
+          ],
+          [
+            "v78c3de2f_d"
+          ],
+          [
+            "v78c3de2f_19"
+          ],
+          [
+            "v78c3de2f_11"
+          ],
+          [
+            "v78c3de2f_1"
+          ],
+          [
+            "v78c3de2f_9"
+          ]
+        ]
+      }
+    },
+    "nativeReusedComponents": [
+      {
+        "fingerprint": "d096768a992ba836708e0dfce8bf0380e47b310a3417030c18e030ead41fecfa",
+        "relations": [
+          "reach"
+        ],
+        "recursive": true,
+        "dependencies": [
+          "blocked",
+          "edge",
+          "start"
+        ]
+      }
+    ],
+    "trajectory": {
+      "postSuccess": {
+        "thinkingTokens": 0,
+        "thinkingComplete": true,
+        "modelCalls": 0
+      },
+      "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+      "generation": 0,
+      "schema": "ascent.trajectory.v1",
+      "censored": false,
+      "totals": {
+        "repairThinkingTokens": 0,
+        "directAnswers": 0,
+        "inputTokens": 10924,
+        "evidenceEvents": 2,
+        "thinkingTokens": 8371,
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "modelCalls": 2,
+        "outputTokens": 8480
+      },
+      "task": "two-query-bundle:taint-propagation-with-sanitizers-2026102319",
+      "throughFirstCorrect": {
+        "directAnswers": 0,
+        "repairThinkingTokens": 0,
+        "inputTokens": 10924,
+        "event": "event:4",
+        "evidenceEvents": 1,
+        "round": 2,
+        "thinkingTokens": 8371,
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "usageComplete": true,
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "outputTokens": 8480,
+        "modelCalls": 2
+      },
+      "completedEpochs": [],
+      "closed": true,
+      "verified": true,
+      "events": [
+        {
+          "generation": 0,
+          "kind": "model-call",
+          "id": "call:taint-propagation-with-sanitizers-2026102319:verified-intermediates:1",
+          "sequence": 1,
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "round": 1,
+          "usage": {
+            "thinkingTokens": 5821,
+            "inputTokens": 3439,
+            "outputTokens": 5898
+          }
+        },
+        {
+          "retainedCompleted": false,
+          "pathIdentity": "54e91b9417cc08cdf66b9ae3de314f18c5f2a951f565258d425c4aec36c24031",
+          "generation": 0,
+          "reusedComponents": [],
+          "resultReference": "3bdaa0cbe792818d47d8789902254522a9badbfd0134169d5dbfc42cbb893245",
+          "freshComponents": [
+            {
+              "recursive": true,
+              "relations": [
+                "reach"
+              ],
+              "fingerprint": "d096768a992ba836708e0dfce8bf0380e47b310a3417030c18e030ead41fecfa",
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ]
+            },
+            {
+              "relations": [
+                "answer"
+              ],
+              "recursive": false,
+              "dependencies": [
+                "approved",
+                "reach",
+                "sink"
+              ],
+              "fingerprint": "2d756a6285557f80e61b5ddf77bf1f850009974e2efdd9818f50999b7b651cb2"
+            }
+          ],
+          "round": 1,
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "id": "event:2",
+          "kind": "evidence",
+          "sequence": 2
+        },
+        {
+          "generation": 0,
+          "id": "call:taint-propagation-with-sanitizers-2026102319:verified-intermediates:2",
+          "kind": "model-call",
+          "sequence": 3,
+          "usage": {
+            "outputTokens": 2582,
+            "inputTokens": 7485,
+            "thinkingTokens": 2550
+          },
+          "round": 2,
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0"
+        },
+        {
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "round": 2,
+          "sequence": 4,
+          "verifier": "independent-two-query-oracle.v1",
+          "kind": "verification",
+          "id": "event:4",
+          "correct": true,
+          "generation": 0,
+          "candidate": [
+            "v78c3de2f_11",
+            "v78c3de2f_19"
+          ]
+        },
+        {
+          "id": "event:5",
+          "kind": "evidence",
+          "sequence": 5,
+          "pathIdentity": "f5b26912989d147c80782f8bce5c99337c4edd43db80ab0a7b4886ac6cefbd4a",
+          "generation": 0,
+          "freshComponents": [
+            {
+              "dependencies": [
+                "approved",
+                "edge",
+                "reach",
+                "sink"
+              ],
+              "fingerprint": "ed9ff77ce47e540eb4dc8856e52a94f7fbc41a7b6d6c47c8de6bc52cb7046eb9",
+              "relations": [
+                "answer"
+              ],
+              "recursive": false
+            }
+          ],
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "reusedComponents": [
+            {
+              "fingerprint": "d096768a992ba836708e0dfce8bf0380e47b310a3417030c18e030ead41fecfa",
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            }
+          ],
+          "resultReference": "d951db0d42a82c1c260bbe0350670a1052fe2cd1149a4a340e5ff93906644776",
+          "retainedCompleted": false,
+          "round": 2
+        }
+      ],
+      "finishReason": "both-correct",
+      "eventCount": 5
+    }
+  },
+  {
+    "case": "taint-propagation-with-sanitizers-2026102319",
+    "arm": "reflection-history",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3439,
+          "input_tokens_details": {
+            "cached_tokens": 3200
+          },
+          "output_tokens": 4874,
+          "output_tokens_details": {
+            "reasoning_tokens": 4783
+          },
+          "total_tokens": 8313
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de2f_11",
+          "v78c3de2f_19",
+          "v78c3de2f_1c",
+          "v78c3de2f_20",
+          "v78c3de2f_24",
+          "v78c3de2f_25"
+        ],
+        "providerSeconds": 23.693119457995635
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 7127,
+          "input_tokens_details": {
+            "cached_tokens": 3328
+          },
+          "output_tokens": 2874,
+          "output_tokens_details": {
+            "reasoning_tokens": 2842
+          },
+          "total_tokens": 10001
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de2f_11",
+          "v78c3de2f_19"
+        ],
+        "providerSeconds": 14.474103458007448
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": null,
+    "nativeReusedComponents": [],
+    "trajectory": {
+      "completedEpochs": [],
+      "closed": true,
+      "verified": true,
+      "events": [
+        {
+          "sequence": 1,
+          "usage": {
+            "outputTokens": 4874,
+            "thinkingTokens": 4783,
+            "inputTokens": 3439
+          },
+          "round": 1,
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "id": "call:taint-propagation-with-sanitizers-2026102319:reflection-history:1",
+          "kind": "model-call",
+          "generation": 0
+        },
+        {
+          "id": "call:taint-propagation-with-sanitizers-2026102319:reflection-history:2",
+          "kind": "model-call",
+          "sequence": 2,
+          "generation": 0,
+          "usage": {
+            "outputTokens": 2874,
+            "inputTokens": 7127,
+            "thinkingTokens": 2842
+          },
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "round": 2
+        },
+        {
+          "generation": 0,
+          "kind": "verification",
+          "verifier": "independent-two-query-oracle.v1",
+          "id": "event:3",
+          "correct": true,
+          "candidate": [
+            "v78c3de2f_11",
+            "v78c3de2f_19"
+          ],
+          "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0",
+          "round": 2,
+          "sequence": 3
+        }
+      ],
+      "finishReason": "both-correct",
+      "eventCount": 3,
+      "censored": false,
+      "totals": {
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "usageComplete": true,
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "thinkingTokens": 7625,
+        "evidenceEvents": 0,
+        "inputTokens": 10566,
+        "repairThinkingTokens": 0,
+        "modelCalls": 2,
+        "directAnswers": 0,
+        "outputTokens": 7748
+      },
+      "task": "two-query-bundle:taint-propagation-with-sanitizers-2026102319",
+      "throughFirstCorrect": {
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "usageComplete": true,
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "round": 2,
+        "thinkingTokens": 7625,
+        "event": "event:3",
+        "evidenceEvents": 0,
+        "inputTokens": 10566,
+        "outputTokens": 7748,
+        "directAnswers": 0,
+        "modelCalls": 2,
+        "repairThinkingTokens": 0
+      },
+      "generation": 0,
+      "schema": "ascent.trajectory.v1",
+      "postSuccess": {
+        "modelCalls": 0,
+        "thinkingComplete": true,
+        "thinkingTokens": 0
+      },
+      "sourceIdentity": "c2ec1d724ed439cd1364121b702947934f0504ed818f6dc5219137c73efee2a0"
+    }
+  },
+  {
+    "case": "conjunctive-prerequisite-closure-2026102338",
+    "arm": "reflection-history",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3889,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 6396,
+          "output_tokens_details": {
+            "reasoning_tokens": 6385
+          },
+          "total_tokens": 10285
+        },
+        "error": null,
+        "prediction": [],
+        "providerSeconds": 31.794070917007048
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 7975,
+          "input_tokens_details": {
+            "cached_tokens": 3840
+          },
+          "output_tokens": 5209,
+          "output_tokens_details": {
+            "reasoning_tokens": 5179
+          },
+          "total_tokens": 13184
+        },
+        "error": null,
+        "prediction": [
+          "job78c3de42_2",
+          "job78c3de42_4"
+        ],
+        "providerSeconds": 21.75094783298846
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": null,
+    "nativeReusedComponents": [],
+    "trajectory": {
+      "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+      "schema": "ascent.trajectory.v1",
+      "generation": 0,
+      "censored": false,
+      "totals": {
+        "inputTokens": 11864,
+        "modelCalls": 2,
+        "outputTokens": 11605,
+        "repairThinkingTokens": 0,
+        "directAnswers": 0,
+        "thinkingTokens": 11564,
+        "evidenceEvents": 0,
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "usageComplete": true
+      },
+      "throughFirstCorrect": {
+        "repairModelCalls": 0,
+        "failedVerifications": 0,
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "usageComplete": true,
+        "inputTokens": 11864,
+        "repairThinkingTokens": 0,
+        "directAnswers": 0,
+        "modelCalls": 2,
+        "outputTokens": 11605,
+        "thinkingTokens": 11564,
+        "round": 2,
+        "evidenceEvents": 0,
+        "event": "event:3"
+      },
+      "task": "two-query-bundle:conjunctive-prerequisite-closure-2026102338",
+      "closed": true,
+      "completedEpochs": [],
+      "finishReason": "both-correct",
+      "eventCount": 3,
+      "events": [
+        {
+          "round": 1,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+          "sequence": 1,
+          "usage": {
+            "thinkingTokens": 6385,
+            "inputTokens": 3889,
+            "outputTokens": 6396
+          },
+          "kind": "model-call",
+          "id": "call:conjunctive-prerequisite-closure-2026102338:reflection-history:1",
+          "generation": 0
+        },
+        {
+          "generation": 0,
+          "id": "call:conjunctive-prerequisite-closure-2026102338:reflection-history:2",
+          "kind": "model-call",
+          "usage": {
+            "thinkingTokens": 5179,
+            "inputTokens": 7975,
+            "outputTokens": 5209
+          },
+          "sequence": 2,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+          "round": 2
+        },
+        {
+          "generation": 0,
+          "verifier": "independent-two-query-oracle.v1",
+          "kind": "verification",
+          "id": "event:3",
+          "correct": true,
+          "candidate": [
+            "job78c3de42_2",
+            "job78c3de42_4"
+          ],
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+          "round": 2,
+          "sequence": 3
+        }
+      ],
+      "verified": true,
+      "postSuccess": {
+        "modelCalls": 0,
+        "thinkingComplete": true,
+        "thinkingTokens": 0
+      }
+    }
+  },
+  {
+    "case": "conjunctive-prerequisite-closure-2026102338",
+    "arm": "verified-intermediates",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3889,
+          "input_tokens_details": {
+            "cached_tokens": 3712
+          },
+          "output_tokens": 8131,
+          "output_tokens_details": {
+            "reasoning_tokens": 8120
+          },
+          "total_tokens": 12020
+        },
+        "error": null,
+        "prediction": [],
+        "providerSeconds": 40.34422487500706
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 8285,
+          "input_tokens_details": {
+            "cached_tokens": 7936
+          },
+          "output_tokens": 2488,
+          "output_tokens_details": {
+            "reasoning_tokens": 2458
+          },
+          "total_tokens": 10773
+        },
+        "error": null,
+        "prediction": [
+          "job78c3de42_2",
+          "job78c3de42_4"
+        ],
+        "providerSeconds": 11.855992458004039
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": {
+      "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+      "pathIdentity": "084176d7ae6476b7efae7408150eceb9104d14d01022e808c97c21b251368d8f",
+      "resultReference": "67d4fc3053e95a981c8fb05694927ca0a15312812e06df96ed1b64ea505283a0",
+      "componentFingerprints": {
+        "reach": "8ddac7c444dce2c3dc9d993f434e17e75aa83cec49625c1ed59287ffa0bccb40"
+      },
+      "facts": {
+        "reach": [
+          [
+            "v78c3de42_0"
+          ],
+          [
+            "v78c3de42_3"
+          ],
+          [
+            "v78c3de42_1b"
+          ],
+          [
+            "v78c3de42_1e"
+          ],
+          [
+            "v78c3de42_c"
+          ],
+          [
+            "v78c3de42_18"
+          ],
+          [
+            "v78c3de42_24"
+          ],
+          [
+            "v78c3de42_6"
+          ],
+          [
+            "v78c3de42_9"
+          ],
+          [
+            "v78c3de42_2a"
+          ],
+          [
+            "v78c3de42_21"
+          ],
+          [
+            "v78c3de42_f"
+          ]
+        ]
+      }
+    },
+    "nativeReusedComponents": [
+      {
+        "relations": [
+          "reach"
+        ],
+        "recursive": true,
+        "dependencies": [
+          "blocked",
+          "edge",
+          "start"
+        ],
+        "fingerprint": "8ddac7c444dce2c3dc9d993f434e17e75aa83cec49625c1ed59287ffa0bccb40"
+      }
+    ],
+    "trajectory": {
+      "postSuccess": {
+        "thinkingComplete": true,
+        "thinkingTokens": 0,
+        "modelCalls": 0
+      },
+      "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+      "generation": 0,
+      "schema": "ascent.trajectory.v1",
+      "throughFirstCorrect": {
+        "round": 2,
+        "event": "event:4",
+        "evidenceEvents": 1,
+        "outputTokens": 10619,
+        "inputTokens": 12174,
+        "directAnswers": 0,
+        "modelCalls": 2,
+        "repairThinkingTokens": 0,
+        "repairThinkingComplete": true,
+        "thinkingComplete": true,
+        "usageComplete": true,
+        "repairModelCalls": 0,
+        "thinkingTokens": 10578,
+        "failedVerifications": 0
+      },
+      "task": "two-query-bundle:conjunctive-prerequisite-closure-2026102338",
+      "censored": false,
+      "totals": {
+        "thinkingTokens": 10578,
+        "evidenceEvents": 2,
+        "inputTokens": 12174,
+        "modelCalls": 2,
+        "repairThinkingTokens": 0,
+        "outputTokens": 10619,
+        "directAnswers": 0,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "usageComplete": true,
+        "repairModelCalls": 0,
+        "failedVerifications": 0
+      },
+      "closed": true,
+      "finishReason": "both-correct",
+      "eventCount": 5,
+      "verified": true,
+      "events": [
+        {
+          "kind": "model-call",
+          "id": "call:conjunctive-prerequisite-closure-2026102338:verified-intermediates:1",
+          "generation": 0,
+          "round": 1,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+          "usage": {
+            "thinkingTokens": 8120,
+            "inputTokens": 3889,
+            "outputTokens": 8131
+          },
+          "sequence": 1
+        },
+        {
+          "sequence": 2,
+          "kind": "evidence",
+          "id": "event:2",
+          "round": 1,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84",
+          "retainedCompleted": false,
+          "freshComponents": [
+            {
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "fingerprint": "8ddac7c444dce2c3dc9d993f434e17e75aa83cec49625c1ed59287ffa0bccb40",
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            },
+            {
+              "recursive": false,
+              "relations": [
+                "answer"
+              ],
+              "dependencies": [
+                "deferred",
+                "needs",
+                "reach"
+              ],
+              "fingerprint": "ca2d4ab7fa4a9d4d07a14700a11434662fe07e40a1aa520033047adb4c0c7128"
+            }
+          ],
+          "reusedComponents": [],
+          "resultReference": "67d4fc3053e95a981c8fb05694927ca0a15312812e06df96ed1b64ea505283a0",
+          "generation": 0,
+          "pathIdentity": "084176d7ae6476b7efae7408150eceb9104d14d01022e808c97c21b251368d8f"
+        },
+        {
+          "id": "call:conjunctive-prerequisite-closure-2026102338:verified-intermediates:2",
+          "kind": "model-call",
+          "generation": 0,
+          "usage": {
+            "inputTokens": 8285,
+            "thinkingTokens": 2458,
+            "outputTokens": 2488
+          },
+          "sequence": 3,
+          "round": 2,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84"
+        },
+        {
+          "round": 2,
+          "candidate": [
+            "job78c3de42_2",
+            "job78c3de42_4"
+          ],
+          "sequence": 4,
+          "verifier": "independent-two-query-oracle.v1",
+          "kind": "verification",
+          "correct": true,
+          "id": "event:4",
+          "generation": 0,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84"
+        },
+        {
+          "id": "event:5",
+          "kind": "evidence",
+          "sequence": 5,
+          "pathIdentity": "61cb28304e72f89234d4eaa6f85571ce0c633a128af53e33f9f68d7a5f393018",
+          "retainedCompleted": false,
+          "generation": 0,
+          "resultReference": "263b1718e473cdbf8a240ba87f4fab6579d75d206b22e322e0e924568fc8edde",
+          "reusedComponents": [
+            {
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "fingerprint": "8ddac7c444dce2c3dc9d993f434e17e75aa83cec49625c1ed59287ffa0bccb40",
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            }
+          ],
+          "freshComponents": [
+            {
+              "recursive": false,
+              "relations": [
+                "answer"
+              ],
+              "fingerprint": "077a4770d289c2b6c743e4d4ea667028f8d2158ea21b6cab62f6f112878cbcce",
+              "dependencies": [
+                "blocked",
+                "deferred",
+                "needs",
+                "reach"
+              ]
+            }
+          ],
+          "round": 2,
+          "sourceIdentity": "a2f10cd66e9925b121fa84be17f795c7560c84310900e44cdd824c6174671e84"
+        }
+      ],
+      "completedEpochs": []
+    }
+  },
+  {
+    "case": "bidirectional-recursive-impact-2026102357",
+    "arm": "verified-intermediates",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3747,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 11476,
+          "output_tokens_details": {
+            "reasoning_tokens": 11434
+          },
+          "total_tokens": 15223
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de55_10",
+          "v78c3de55_14",
+          "v78c3de55_18",
+          "v78c3de55_8"
+        ],
+        "providerSeconds": 54.098030292007024
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 8370,
+          "input_tokens_details": {
+            "cached_tokens": 3712
+          },
+          "output_tokens": 3846,
+          "output_tokens_details": {
+            "reasoning_tokens": 3831
+          },
+          "total_tokens": 12216
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de55_14"
+        ],
+        "providerSeconds": 16.65535854200425
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": {
+      "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+      "pathIdentity": "ef6904054e8f08d94f2e4c1f234295c8f66168b37c19ca32955dc38d3b51e0d9",
+      "resultReference": "00a80c7c15932d1cbfa1efcbae5ab880521b09652f76c7855998d3f5abbe2820",
+      "componentFingerprints": {
+        "back": "2ba338f441adb44882d00adf16a6bcdd63ba5ab9d8c88596a66e1b9a3d0ff130",
+        "reach": "9917292e771d523c1c10bf85e2b71ac0a3cc568593166fe5e9e96f8d9e1654f1"
+      },
+      "facts": {
+        "back": [
+          [
+            "v78c3de55_2f"
+          ],
+          [
+            "v78c3de55_17"
+          ],
+          [
+            "v78c3de55_20"
+          ],
+          [
+            "v78c3de55_10"
+          ],
+          [
+            "v78c3de55_14"
+          ],
+          [
+            "v78c3de55_18"
+          ],
+          [
+            "v78c3de55_2c"
+          ],
+          [
+            "v78c3de55_4"
+          ],
+          [
+            "v78c3de55_23"
+          ],
+          [
+            "v78c3de55_2b"
+          ],
+          [
+            "v78c3de55_1b"
+          ],
+          [
+            "v78c3de55_7"
+          ],
+          [
+            "v78c3de55_13"
+          ],
+          [
+            "v78c3de55_1f"
+          ],
+          [
+            "v78c3de55_27"
+          ],
+          [
+            "v78c3de55_3"
+          ],
+          [
+            "v78c3de55_24"
+          ],
+          [
+            "v78c3de55_8"
+          ],
+          [
+            "v78c3de55_0"
+          ],
+          [
+            "v78c3de55_28"
+          ],
+          [
+            "v78c3de55_c"
+          ]
+        ],
+        "reach": [
+          [
+            "v78c3de55_0"
+          ],
+          [
+            "v78c3de55_4"
+          ],
+          [
+            "v78c3de55_20"
+          ],
+          [
+            "v78c3de55_28"
+          ],
+          [
+            "v78c3de55_18"
+          ],
+          [
+            "v78c3de55_24"
+          ],
+          [
+            "v78c3de55_2c"
+          ],
+          [
+            "v78c3de55_c"
+          ],
+          [
+            "v78c3de55_10"
+          ],
+          [
+            "v78c3de55_25"
+          ],
+          [
+            "v78c3de55_8"
+          ],
+          [
+            "v78c3de55_14"
+          ],
+          [
+            "v78c3de55_2d"
+          ],
+          [
+            "v78c3de55_9"
+          ],
+          [
+            "v78c3de55_5"
+          ]
+        ]
+      }
+    },
+    "nativeReusedComponents": [
+      {
+        "fingerprint": "2ba338f441adb44882d00adf16a6bcdd63ba5ab9d8c88596a66e1b9a3d0ff130",
+        "dependencies": [
+          "blocked",
+          "edge",
+          "finish"
+        ],
+        "recursive": true,
+        "relations": [
+          "back"
+        ]
+      },
+      {
+        "dependencies": [
+          "blocked",
+          "edge",
+          "start"
+        ],
+        "recursive": true,
+        "relations": [
+          "reach"
+        ],
+        "fingerprint": "9917292e771d523c1c10bf85e2b71ac0a3cc568593166fe5e9e96f8d9e1654f1"
+      }
+    ],
+    "trajectory": {
+      "eventCount": 5,
+      "events": [
+        {
+          "sequence": 1,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "round": 1,
+          "usage": {
+            "outputTokens": 11476,
+            "thinkingTokens": 11434,
+            "inputTokens": 3747
+          },
+          "generation": 0,
+          "kind": "model-call",
+          "id": "call:bidirectional-recursive-impact-2026102357:verified-intermediates:1"
+        },
+        {
+          "reusedComponents": [],
+          "generation": 0,
+          "round": 1,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "pathIdentity": "ef6904054e8f08d94f2e4c1f234295c8f66168b37c19ca32955dc38d3b51e0d9",
+          "freshComponents": [
+            {
+              "recursive": true,
+              "relations": [
+                "back"
+              ],
+              "dependencies": [
+                "blocked",
+                "edge",
+                "finish"
+              ],
+              "fingerprint": "2ba338f441adb44882d00adf16a6bcdd63ba5ab9d8c88596a66e1b9a3d0ff130"
+            },
+            {
+              "fingerprint": "9917292e771d523c1c10bf85e2b71ac0a3cc568593166fe5e9e96f8d9e1654f1",
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            },
+            {
+              "fingerprint": "fe62e7ce79580e408b65c99ca0aea5553068e6ecc0f46b97023365c81374d489",
+              "dependencies": [
+                "back",
+                "reach",
+                "target"
+              ],
+              "recursive": false,
+              "relations": [
+                "answer"
+              ]
+            }
+          ],
+          "retainedCompleted": false,
+          "resultReference": "00a80c7c15932d1cbfa1efcbae5ab880521b09652f76c7855998d3f5abbe2820",
+          "kind": "evidence",
+          "id": "event:2",
+          "sequence": 2
+        },
+        {
+          "round": 2,
+          "usage": {
+            "thinkingTokens": 3831,
+            "inputTokens": 8370,
+            "outputTokens": 3846
+          },
+          "sequence": 3,
+          "kind": "model-call",
+          "id": "call:bidirectional-recursive-impact-2026102357:verified-intermediates:2",
+          "generation": 0,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7"
+        },
+        {
+          "id": "event:4",
+          "correct": true,
+          "kind": "verification",
+          "verifier": "independent-two-query-oracle.v1",
+          "generation": 0,
+          "sequence": 4,
+          "candidate": [
+            "v78c3de55_14"
+          ],
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "round": 2
+        },
+        {
+          "kind": "evidence",
+          "id": "event:5",
+          "sequence": 5,
+          "retainedCompleted": false,
+          "generation": 0,
+          "freshComponents": [
+            {
+              "relations": [
+                "answer"
+              ],
+              "recursive": false,
+              "fingerprint": "567fd04b25f85ed0d6e3a90f99598d796fedf6b06a588d497aa2b9a454369ecd",
+              "dependencies": [
+                "back",
+                "blocked",
+                "edge",
+                "reach",
+                "target"
+              ]
+            }
+          ],
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "pathIdentity": "e4b90dc5ec1c958d0a18460c47e5b6fa4d12eebc92deee6233a91c58d633d47f",
+          "round": 2,
+          "reusedComponents": [
+            {
+              "relations": [
+                "back"
+              ],
+              "recursive": true,
+              "fingerprint": "2ba338f441adb44882d00adf16a6bcdd63ba5ab9d8c88596a66e1b9a3d0ff130",
+              "dependencies": [
+                "blocked",
+                "edge",
+                "finish"
+              ]
+            },
+            {
+              "dependencies": [
+                "blocked",
+                "edge",
+                "start"
+              ],
+              "fingerprint": "9917292e771d523c1c10bf85e2b71ac0a3cc568593166fe5e9e96f8d9e1654f1",
+              "recursive": true,
+              "relations": [
+                "reach"
+              ]
+            }
+          ],
+          "resultReference": "0e76d3a47f34e8f72dc6fe4ef01ffa6952d8204483cfce716aa9be9bd39c15df"
+        }
+      ],
+      "closed": true,
+      "verified": true,
+      "completedEpochs": [],
+      "throughFirstCorrect": {
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "evidenceEvents": 1,
+        "event": "event:4",
+        "round": 2,
+        "thinkingTokens": 15265,
+        "directAnswers": 0,
+        "repairThinkingTokens": 0,
+        "outputTokens": 15322,
+        "modelCalls": 2,
+        "inputTokens": 12117
+      },
+      "task": "two-query-bundle:bidirectional-recursive-impact-2026102357",
+      "censored": false,
+      "totals": {
+        "evidenceEvents": 2,
+        "thinkingTokens": 15265,
+        "modelCalls": 2,
+        "outputTokens": 15322,
+        "repairThinkingTokens": 0,
+        "directAnswers": 0,
+        "inputTokens": 12117,
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "failedVerifications": 0,
+        "repairModelCalls": 0
+      },
+      "schema": "ascent.trajectory.v1",
+      "generation": 0,
+      "postSuccess": {
+        "modelCalls": 0,
+        "thinkingComplete": true,
+        "thinkingTokens": 0
+      },
+      "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+      "finishReason": "both-correct"
+    }
+  },
+  {
+    "case": "bidirectional-recursive-impact-2026102357",
+    "arm": "reflection-history",
+    "calls": [
+      {
+        "round": 1,
+        "stage": 1,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3747,
+          "input_tokens_details": {
+            "cached_tokens": 3584
+          },
+          "output_tokens": 12839,
+          "output_tokens_details": {
+            "reasoning_tokens": 12772
+          },
+          "total_tokens": 16586
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de55_10",
+          "v78c3de55_14",
+          "v78c3de55_18",
+          "v78c3de55_8"
+        ],
+        "providerSeconds": 60.96804375000647
+      },
+      {
+        "round": 2,
+        "stage": 2,
+        "correct": true,
+        "usage": {
+          "input_tokens": 7785,
+          "input_tokens_details": {
+            "cached_tokens": 3712
+          },
+          "output_tokens": 7866,
+          "output_tokens_details": {
+            "reasoning_tokens": 7846
+          },
+          "total_tokens": 15651
+        },
+        "error": null,
+        "prediction": [
+          "v78c3de55_14"
+        ],
+        "providerSeconds": 36.71492645899707
+      }
+    ],
+    "verifiedBoth": true,
+    "intermediatePacket": null,
+    "nativeReusedComponents": [],
+    "trajectory": {
+      "closed": true,
+      "verified": true,
+      "eventCount": 3,
+      "completedEpochs": [],
+      "task": "two-query-bundle:bidirectional-recursive-impact-2026102357",
+      "throughFirstCorrect": {
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "usageComplete": true,
+        "thinkingComplete": true,
+        "repairThinkingComplete": true,
+        "directAnswers": 0,
+        "repairThinkingTokens": 0,
+        "outputTokens": 20705,
+        "modelCalls": 2,
+        "inputTokens": 11532,
+        "event": "event:3",
+        "evidenceEvents": 0,
+        "thinkingTokens": 20618,
+        "round": 2
+      },
+      "censored": false,
+      "totals": {
+        "repairThinkingTokens": 0,
+        "modelCalls": 2,
+        "directAnswers": 0,
+        "outputTokens": 20705,
+        "inputTokens": 11532,
+        "evidenceEvents": 0,
+        "thinkingTokens": 20618,
+        "failedVerifications": 0,
+        "repairModelCalls": 0,
+        "usageComplete": true,
+        "repairThinkingComplete": true,
+        "thinkingComplete": true
+      },
+      "schema": "ascent.trajectory.v1",
+      "generation": 0,
+      "events": [
+        {
+          "generation": 0,
+          "id": "call:bidirectional-recursive-impact-2026102357:reflection-history:1",
+          "kind": "model-call",
+          "usage": {
+            "thinkingTokens": 12772,
+            "inputTokens": 3747,
+            "outputTokens": 12839
+          },
+          "sequence": 1,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "round": 1
+        },
+        {
+          "id": "call:bidirectional-recursive-impact-2026102357:reflection-history:2",
+          "kind": "model-call",
+          "usage": {
+            "outputTokens": 7866,
+            "thinkingTokens": 7846,
+            "inputTokens": 7785
+          },
+          "generation": 0,
+          "sequence": 2,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "round": 2
+        },
+        {
+          "correct": true,
+          "id": "event:3",
+          "kind": "verification",
+          "generation": 0,
+          "candidate": [
+            "v78c3de55_14"
+          ],
+          "sequence": 3,
+          "round": 2,
+          "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+          "verifier": "independent-two-query-oracle.v1"
+        }
+      ],
+      "postSuccess": {
+        "thinkingComplete": true,
+        "thinkingTokens": 0,
+        "modelCalls": 0
+      },
+      "sourceIdentity": "22240427834d08c4de89d5ce80b154611ffd878906f682516a383651ece71ac7",
+      "finishReason": "both-correct"
+    }
+  }
+]

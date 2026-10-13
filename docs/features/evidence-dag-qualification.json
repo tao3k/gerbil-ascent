@@ -1,0 +1,52 @@
+{
+  "schema": "ascent.evidence-dag-qualification.v1",
+  "date": "2026-10-13",
+  "sourceSha256Before": {
+    "program/evidence-dag.ss": "816130c39e1a767a6f044d3f5c062d1dc6ceddd81e2c1da0b09a8b65961edf0c",
+    "t/qualification/evidence-dag-test.ss": "ab04ceb43d933cd4a729177de8c41c75daff5914dbab2eea9a232c15551a6ceb",
+    "python/engine_tests/test_evidence_dag.py": "1ca9c01109caeee8b398cdab68433f0082f3d662982d30139e6afcc50563a97a",
+    "python/src/ascent_engine/derivations.py": "a29743c3ec4f9f5c05f655c09f2a35996b69a193b187d7028005f3da1c3a197f",
+    "interface/engine-api.ss": "628ae136a96a33cce0a9607b2d59a1fa0edf1d28d4d0400e8622927048dfa90a",
+    "build.ss": "b1621998834273bf3b831d32cecefcfd08fdb90fe06182446260ee6fc7ab9c28",
+    "python/tests/test_derivations.py": "bd6786866e43767f09693f4cec4b17375907124125256b66fa945c160b59c0b9"
+  },
+  "sourceSha256After": {
+    "program/evidence-dag.ss": "816130c39e1a767a6f044d3f5c062d1dc6ceddd81e2c1da0b09a8b65961edf0c",
+    "t/qualification/evidence-dag-test.ss": "ab04ceb43d933cd4a729177de8c41c75daff5914dbab2eea9a232c15551a6ceb",
+    "python/engine_tests/test_evidence_dag.py": "1ca9c01109caeee8b398cdab68433f0082f3d662982d30139e6afcc50563a97a",
+    "python/src/ascent_engine/derivations.py": "a29743c3ec4f9f5c05f655c09f2a35996b69a193b187d7028005f3da1c3a197f",
+    "interface/engine-api.ss": "628ae136a96a33cce0a9607b2d59a1fa0edf1d28d4d0400e8622927048dfa90a",
+    "build.ss": "b1621998834273bf3b831d32cecefcfd08fdb90fe06182446260ee6fc7ab9c28",
+    "python/tests/test_derivations.py": "bd6786866e43767f09693f4cec4b17375907124125256b66fa945c160b59c0b9"
+  },
+  "sourcesStableDuringChecks": true,
+  "checks": [
+    {
+      "name": "scheme",
+      "command": [
+        "gerbil",
+        "test",
+        "t/qualification/evidence-dag-test.ss"
+      ],
+      "exitCode": 0,
+      "seconds": 2.5704513340024278,
+      "log": ".cache/ascent/evidence-dag/scheme-final.log",
+      "logSha256": "428f015307f8c0b78ed55452b2023d37fc920e2f51b421f27699b384bdc1aa5e"
+    },
+    {
+      "name": "python",
+      "command": [
+        "rtk",
+        "pytest",
+        "-q",
+        "python/tests/test_derivations.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.5544381250074366,
+      "log": ".cache/ascent/evidence-dag/python-final.log",
+      "logSha256": "7cad115d69be1bf0652d65cc59c9df0b2a1c154e8da430cb7947d0adc1a2e958"
+    }
+  ],
+  "schemeCases": 8,
+  "scope": "Direct Scheme and Python transport unit tests. Updated compiled engine ABI/API integration test not executed against a newly published engine artifact. Trajectory is a documented design contract."
+}

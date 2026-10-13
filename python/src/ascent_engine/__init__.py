@@ -9,9 +9,11 @@ import signal
 import contextlib
 import fcntl
 import os
+import errno
 import tempfile
 from dataclasses import dataclass
 from cffi import FFI
+from .artifact import ArtifactValidation
 
 
 @dataclass(frozen=True)
@@ -44,12 +46,25 @@ void ascent_result_release(ascent_result *);
 '''
 _loaded = None
 _runtime_pid = None
+_runtime_initialized = False
+_runtime_closed = False
+_configured_syntax = None
+_artifact_validation = ArtifactValidation()
+
+def _host_descriptor_names():
+    """Retry transient Darwin descriptor-directory reads before native entry."""
+    for attempt in range(3):
+        try:
+            return os.listdir('/dev/fd')
+        except OSError as error:
+            if error.errno not in (errno.EINTR, errno.EAGAIN) or attempt == 2:
+                raise
 
 @contextlib.contextmanager
 def _preserve_host_io():
     """Keep Gambit flag changes off inherited host open-file descriptions."""
     descriptors = {}
-    for name in os.listdir('/dev/fd'):
+    for name in _host_descriptor_names():
         fd = int(name)
         try:
             stat = os.fstat(fd)
@@ -116,7 +131,7 @@ class Engine:
     entire loaded runtime. Never dlclose a live Gambit runtime.
     """
     def __init__(self, library=None, *, max_request_bytes=None, max_source_scopes=None):
-        global _loaded, _runtime_pid
+        global _loaded, _runtime_pid, _runtime_initialized, _configured_syntax
         if max_request_bytes is not None and (type(max_request_bytes) is not int or max_request_bytes <= 0):
             raise ValueError('max_request_bytes must be a positive integer or None')
         self.max_request_bytes = max_request_bytes
@@ -125,6 +140,8 @@ class Engine:
         self.max_source_scopes = max_source_scopes
         if _runtime_pid is not None and os.getpid() != _runtime_pid:
             raise EngineError(-2, 'inherited runtime after fork; start a fresh process')
+        if _runtime_closed:
+            raise EngineError(-2, 'runtime shut down')
         if threading.get_ident() != threading.main_thread().ident:
             raise EngineError(-3, 'Python binding initialization requires the main OS thread')
         self.backend = 'api' if library is None else 'abi'
@@ -138,14 +155,15 @@ class Engine:
             ffi, lib = _ascent_cffi.ffi, _ascent_cffi.lib
         else:
             path = str(Path(library).resolve())
-            sidecar = Path(path + '.json')
-            if sidecar.is_file():
-                import hashlib
-                receipt = json.loads(sidecar.read_text())
-                if hashlib.sha256(Path(path).read_bytes()).hexdigest() != receipt.get('librarySha256'):
-                    raise EngineError(-2, 'native library identity drift')
-            if _loaded is None:
-                ffi = FFI(); ffi.cdef(CDEF); lib = ffi.dlopen(path)
+        receipt_path = Path(path).parent / 'receipt.json' if library is None else Path(path + '.json')
+        receipt = None
+        if receipt_path.is_file() or _artifact_validation.has_receipt(receipt_path):
+            try:
+                receipt = _artifact_validation.read(path, receipt_path)
+            except (ValueError, OSError) as error:
+                raise EngineError(-2, str(error)) from error
+        if library is not None and _loaded is None:
+            ffi = FFI(); ffi.cdef(CDEF); lib = ffi.dlopen(path)
         if _loaded is None:
             _loaded = (path, ffi, lib, self.backend)  # Keep mapped for the runtime lifetime.
             _runtime_pid = os.getpid()
@@ -153,34 +171,29 @@ class Engine:
             raise EngineError(-2, 'one engine library per Python process')
         _, self.ffi, self.lib, _ = _loaded
         if self.lib.ascent_abi_version() != 1: raise EngineError(-2, 'ABI mismatch')
-        child_handler = signal.getsignal(signal.SIGCHLD)
-        with _preserve_host_io():
-            status = self.lib.ascent_runtime_init()
-        # The embedding Python host owns subprocess reaping. Gambit's installed
-        # SIGCHLD handler otherwise consumes statuses before Popen can collect
-        # them, turning failed test commands into apparent zero exits.
-        if child_handler is not None:
-            signal.signal(signal.SIGCHLD, child_handler)
-        if status: raise EngineError(status, 'runtime initialization')
+        if not _runtime_initialized:
+            child_handler = signal.getsignal(signal.SIGCHLD)
+            with _preserve_host_io():
+                status = self.lib.ascent_runtime_init()
+            # The embedding host owns subprocess reaping.
+            if child_handler is not None:
+                signal.signal(signal.SIGCHLD, child_handler)
+            if status: raise EngineError(status, 'runtime initialization')
+            _runtime_initialized = True
         self.owner = threading.get_ident(); self.closed = False
-        self.build_receipt = None
-        if library is None or Path(path + '.json').is_file():
-            receipt_path = Path(path).parent / 'receipt.json' if library is None else Path(path + '.json')
-            if receipt_path.is_file():
-                receipt = json.loads(receipt_path.read_text())
-                self.build_receipt = receipt
-                resources = receipt.get('syntaxResources', {})
-                if resources:
-                    import hashlib
-                    syntax = receipt_path.parent / 'syntax'
-                    for relative, expected in resources.items():
-                        name = Path(relative)
-                        expected = expected['sha256'] if isinstance(expected, dict) else expected
-                        if name.is_absolute() or '..' in name.parts or hashlib.sha256((syntax / name).read_bytes()).hexdigest() != expected:
-                            raise EngineError(-2, 'native syntax resource identity drift')
-                    self.request({'operation': 'configure-syntax', 'path': str(syntax)})
+        self.build_receipt = receipt
+        if receipt and receipt.get('syntaxResources'):
+            syntax = str(receipt_path.parent / 'syntax')
+            if _configured_syntax is not None and _configured_syntax != syntax:
+                raise EngineError(-2, 'native syntax resources cannot change in a loaded runtime')
+            if _configured_syntax is None:
+                self._dispatch({'operation': 'configure-syntax', 'path': syntax}, None)
+                _configured_syntax = syntax
 
     def request(self, request):
+        return self._dispatch(request, self.max_request_bytes)
+
+    def _dispatch(self, request, max_request_bytes):
         if os.getpid() != _runtime_pid:
             raise EngineError(-2, 'inherited runtime after fork')
         if self.closed: raise EngineError(-2, 'runtime shut down')
@@ -193,7 +206,7 @@ class Engine:
                 raise ValueError('maxSourceScopes must be a positive integer')
             request['maxSourceScopes'] = min(ceiling, self.max_source_scopes)
         data = json.dumps(request, ensure_ascii=False, allow_nan=False).encode()
-        if not data or (self.max_request_bytes is not None and len(data) > self.max_request_bytes):
+        if not data or (max_request_bytes is not None and len(data) > max_request_bytes):
             raise EngineError(-4, 'caller input byte bound')
         result = self.ffi.new('ascent_result *')
         with _preserve_host_io():
@@ -215,6 +228,11 @@ class Engine:
     def open_sources(self, *sources, limits=None):
         """Load pure DSL text through the existing upstream native lowering."""
         return SourceSession(self, self.request(_with_limits({'operation': 'open-sources', 'sources': list(sources)}, limits)))
+
+    def open_rule_sources(self, *sources, limits=None):
+        """Open inert typed ASCENT rules; executable Scheme forms are rejected."""
+        return SourceSession(self, self.request(_with_limits(
+            {'operation': 'open-rule-sources', 'sources': list(sources)}, limits)))
 
     def open_module(self, module, constructor, *arguments, limits=None):
         """Invoke a trusted compiled Scheme module's exported constructor."""
@@ -269,12 +287,14 @@ class Engine:
             'trusted': True}, limits)))
 
     def shutdown(self):
+        global _runtime_closed
         if os.getpid() != _runtime_pid:
             raise EngineError(-2, 'inherited runtime after fork')
         if self.closed: return
         with _preserve_host_io():
             status = self.lib.ascent_runtime_shutdown()
         if status: raise EngineError(status, 'runtime shutdown')
+        _runtime_closed = True
         self.closed = True
     def __enter__(self): return self
     def __exit__(self, *exc): self.shutdown()

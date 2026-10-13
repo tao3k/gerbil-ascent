@@ -116,14 +116,13 @@
            (when limits (reject 'duplicate-limits path clause))
            (unless (and (= (length clause) 4)
                         (andmap (lambda (value)
-                                  (and (exact-integer? value) (> value 0)))
-                                (cdr clause))
-                        (<= (cadr clause) +max-input-facts+)
-                        (<= (caddr clause) +max-derived-facts+)
-                        (<= (cadddr clause) +max-output-facts+))
+                                  (or (eq? value 'unlimited)
+                                      (and (exact-integer? value) (> value 0))))
+                                (cdr clause)))
              (reject 'invalid-limits path clause))
            (loop (cdr clauses) (+ index 1) relations facts rules query
-                 (cdr clause)))
+                 (map (lambda (value) (if (eq? value 'unlimited) +inf.0 value))
+                      (cdr clause))))
           (else
            (reject 'unsupported-construct path (car clause))))))))
 

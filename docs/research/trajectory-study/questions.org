@@ -1,0 +1,3485 @@
+#+title: Frozen Complex Questions and Full Input Programs
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+The answer sets are stored in the frozen plan for independent grading, and are never included in initial model prompts. Transfer stage two receives reach/back facts only; its answer is withheld.
+
+* single / recursive-scoped-reachability-2026101300
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da34_0","v78c3da34_18"],["v78c3da34_0","v78c3da34_1b"],["v78c3da34_0","v78c3da34_1f"],["v78c3da34_0","v78c3da34_9"],["v78c3da34_1","v78c3da34_10"],["v78c3da34_1","v78c3da34_13"],["v78c3da34_1","v78c3da34_a"],["v78c3da34_10","v78c3da34_1"],["v78c3da34_10","v78c3da34_19"],["v78c3da34_10","v78c3da34_22"],["v78c3da34_11","v78c3da34_17"],["v78c3da34_11","v78c3da34_1d"],["v78c3da34_11","v78c3da34_b"],["v78c3da34_12","v78c3da34_21"],["v78c3da34_12","v78c3da34_c"],["v78c3da34_12","v78c3da34_f"],["v78c3da34_13","v78c3da34_1"],["v78c3da34_13","v78c3da34_10"],["v78c3da34_13","v78c3da34_22"],["v78c3da34_14","v78c3da34_2"],["v78c3da34_14","v78c3da34_23"],["v78c3da34_14","v78c3da34_5"],["v78c3da34_15","v78c3da34_0"],["v78c3da34_15","v78c3da34_c"],["v78c3da34_15","v78c3da34_f"],["v78c3da34_16","v78c3da34_1f"],["v78c3da34_16","v78c3da34_7"],["v78c3da34_16","v78c3da34_d"],["v78c3da34_17","v78c3da34_1d"],["v78c3da34_17","v78c3da34_2"],["v78c3da34_17","v78c3da34_e"],["v78c3da34_18","v78c3da34_3"],["v78c3da34_18","v78c3da34_9"],["v78c3da34_18","v78c3da34_c"],["v78c3da34_19","v78c3da34_13"],["v78c3da34_19","v78c3da34_16"],["v78c3da34_19","v78c3da34_7"],["v78c3da34_1a","v78c3da34_14"],["v78c3da34_1a","v78c3da34_23"],["v78c3da34_1a","v78c3da34_8"],["v78c3da34_1b","v78c3da34_15"],["v78c3da34_1b","v78c3da34_1e"],["v78c3da34_1b","v78c3da34_3"],["v78c3da34_1c","v78c3da34_13"],["v78c3da34_1c","v78c3da34_16"],["v78c3da34_1c","v78c3da34_7"],["v78c3da34_1d","v78c3da34_2"],["v78c3da34_1d","v78c3da34_5"],["v78c3da34_1d","v78c3da34_b"],["v78c3da34_1e","v78c3da34_1b"],["v78c3da34_1e","v78c3da34_21"],["v78c3da34_1e","v78c3da34_c"],["v78c3da34_1f","v78c3da34_16"],["v78c3da34_1f","v78c3da34_1c"],["v78c3da34_1f","v78c3da34_22"],["v78c3da34_2","v78c3da34_23"],["v78c3da34_2","v78c3da34_8"],["v78c3da34_2","v78c3da34_b"],["v78c3da34_20","v78c3da34_1d"],["v78c3da34_20","v78c3da34_23"],["v78c3da34_20","v78c3da34_8"],["v78c3da34_21","v78c3da34_15"],["v78c3da34_21","v78c3da34_6"],["v78c3da34_21","v78c3da34_c"],["v78c3da34_22","v78c3da34_13"],["v78c3da34_22","v78c3da34_1c"],["v78c3da34_22","v78c3da34_d"],["v78c3da34_23","v78c3da34_14"],["v78c3da34_23","v78c3da34_20"],["v78c3da34_23","v78c3da34_b"],["v78c3da34_3","v78c3da34_15"],["v78c3da34_3","v78c3da34_1b"],["v78c3da34_3","v78c3da34_21"],["v78c3da34_4","v78c3da34_1"],["v78c3da34_4","v78c3da34_13"],["v78c3da34_4","v78c3da34_19"],["v78c3da34_5","v78c3da34_20"],["v78c3da34_5","v78c3da34_23"],["v78c3da34_5","v78c3da34_8"],["v78c3da34_6","v78c3da34_15"],["v78c3da34_6","v78c3da34_1b"],["v78c3da34_6","v78c3da34_21"],["v78c3da34_7","v78c3da34_16"],["v78c3da34_7","v78c3da34_1c"],["v78c3da34_7","v78c3da34_d"],["v78c3da34_8","v78c3da34_11"],["v78c3da34_8","v78c3da34_14"],["v78c3da34_8","v78c3da34_5"],["v78c3da34_9","v78c3da34_12"],["v78c3da34_9","v78c3da34_18"],["v78c3da34_9","v78c3da34_3"],["v78c3da34_a","v78c3da34_10"],["v78c3da34_a","v78c3da34_22"],["v78c3da34_a","v78c3da34_4"],["v78c3da34_b","v78c3da34_1d"],["v78c3da34_b","v78c3da34_23"],["v78c3da34_b","v78c3da34_8"],["v78c3da34_c","v78c3da34_0"],["v78c3da34_c","v78c3da34_1b"],["v78c3da34_c","v78c3da34_6"],["v78c3da34_d","v78c3da34_1f"],["v78c3da34_d","v78c3da34_22"],["v78c3da34_d","v78c3da34_7"],["v78c3da34_e","v78c3da34_14"],["v78c3da34_e","v78c3da34_1a"],["v78c3da34_e","v78c3da34_8"],["v78c3da34_f","v78c3da34_12"],["v78c3da34_f","v78c3da34_3"],["v78c3da34_f","v78c3da34_6"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da34_0"],["v78c3da34_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da34_1a"],["v78c3da34_1b"],["v78c3da34_1d"],["v78c3da34_22"],["v78c3da34_a"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da34_c"],["v78c3da34_12"],["v78c3da34_20"],["v78c3da34_2"],["v78c3da34_0"],["v78c3da34_1c"],["v78c3da34_1a"],["v78c3da34_14"],["v78c3da34_b"],["v78c3da34_1"],["v78c3da34_5"],["v78c3da34_8"],["v78c3da34_9"],["v78c3da34_7"],["v78c3da34_3"],["v78c3da34_17"],["v78c3da34_21"],["v78c3da34_1e"],["v78c3da34_a"],["v78c3da34_18"],["v78c3da34_11"],["v78c3da34_d"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+* single / taint-propagation-with-sanitizers-2026101317
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da45_0","v78c3da45_18"],["v78c3da45_0","v78c3da45_4"],["v78c3da45_0","v78c3da45_c"],["v78c3da45_1","v78c3da45_15"],["v78c3da45_1","v78c3da45_21"],["v78c3da45_1","v78c3da45_25"],["v78c3da45_10","v78c3da45_1"],["v78c3da45_10","v78c3da45_4"],["v78c3da45_10","v78c3da45_8"],["v78c3da45_10","v78c3da45_c"],["v78c3da45_11","v78c3da45_1d"],["v78c3da45_11","v78c3da45_25"],["v78c3da45_11","v78c3da45_9"],["v78c3da45_12","v78c3da45_1e"],["v78c3da45_12","v78c3da45_22"],["v78c3da45_12","v78c3da45_26"],["v78c3da45_13","v78c3da45_17"],["v78c3da45_13","v78c3da45_7"],["v78c3da45_13","v78c3da45_b"],["v78c3da45_14","v78c3da45_18"],["v78c3da45_14","v78c3da45_1c"],["v78c3da45_14","v78c3da45_24"],["v78c3da45_15","v78c3da45_19"],["v78c3da45_15","v78c3da45_21"],["v78c3da45_15","v78c3da45_9"],["v78c3da45_16","v78c3da45_26"],["v78c3da45_16","v78c3da45_a"],["v78c3da45_16","v78c3da45_e"],["v78c3da45_17","v78c3da45_1f"],["v78c3da45_17","v78c3da45_3"],["v78c3da45_17","v78c3da45_7"],["v78c3da45_18","v78c3da45_10"],["v78c3da45_18","v78c3da45_24"],["v78c3da45_18","v78c3da45_8"],["v78c3da45_19","v78c3da45_15"],["v78c3da45_19","v78c3da45_1d"],["v78c3da45_19","v78c3da45_5"],["v78c3da45_1a","v78c3da45_1e"],["v78c3da45_1a","v78c3da45_a"],["v78c3da45_1a","v78c3da45_e"],["v78c3da45_1b","v78c3da45_23"],["v78c3da45_1b","v78c3da45_27"],["v78c3da45_1b","v78c3da45_3"],["v78c3da45_1c","v78c3da45_14"],["v78c3da45_1c","v78c3da45_20"],["v78c3da45_1c","v78c3da45_4"],["v78c3da45_1d","v78c3da45_11"],["v78c3da45_1d","v78c3da45_19"],["v78c3da45_1d","v78c3da45_25"],["v78c3da45_1e","v78c3da45_22"],["v78c3da45_1e","v78c3da45_a"],["v78c3da45_1e","v78c3da45_e"],["v78c3da45_1f","v78c3da45_1b"],["v78c3da45_1f","v78c3da45_3"],["v78c3da45_1f","v78c3da45_b"],["v78c3da45_2","v78c3da45_12"],["v78c3da45_2","v78c3da45_26"],["v78c3da45_2","v78c3da45_a"],["v78c3da45_20","v78c3da45_10"],["v78c3da45_20","v78c3da45_18"],["v78c3da45_20","v78c3da45_24"],["v78c3da45_21","v78c3da45_15"],["v78c3da45_21","v78c3da45_19"],["v78c3da45_21","v78c3da45_25"],["v78c3da45_22","v78c3da45_12"],["v78c3da45_22","v78c3da45_16"],["v78c3da45_22","v78c3da45_1e"],["v78c3da45_23","v78c3da45_17"],["v78c3da45_23","v78c3da45_1b"],["v78c3da45_23","v78c3da45_f"],["v78c3da45_24","v78c3da45_10"],["v78c3da45_24","v78c3da45_20"],["v78c3da45_24","v78c3da45_8"],["v78c3da45_25","v78c3da45_1"],["v78c3da45_25","v78c3da45_1d"],["v78c3da45_25","v78c3da45_d"],["v78c3da45_26","v78c3da45_12"],["v78c3da45_26","v78c3da45_2"],["v78c3da45_26","v78c3da45_6"],["v78c3da45_27","v78c3da45_17"],["v78c3da45_27","v78c3da45_1b"],["v78c3da45_27","v78c3da45_1f"],["v78c3da45_3","v78c3da45_17"],["v78c3da45_3","v78c3da45_b"],["v78c3da45_3","v78c3da45_f"],["v78c3da45_4","v78c3da45_10"],["v78c3da45_4","v78c3da45_24"],["v78c3da45_4","v78c3da45_8"],["v78c3da45_5","v78c3da45_1"],["v78c3da45_5","v78c3da45_21"],["v78c3da45_5","v78c3da45_9"],["v78c3da45_6","v78c3da45_1a"],["v78c3da45_6","v78c3da45_1e"],["v78c3da45_6","v78c3da45_26"],["v78c3da45_7","v78c3da45_17"],["v78c3da45_7","v78c3da45_3"],["v78c3da45_7","v78c3da45_f"],["v78c3da45_8","v78c3da45_0"],["v78c3da45_8","v78c3da45_14"],["v78c3da45_8","v78c3da45_4"],["v78c3da45_9","v78c3da45_1"],["v78c3da45_9","v78c3da45_11"],["v78c3da45_9","v78c3da45_15"],["v78c3da45_a","v78c3da45_1a"],["v78c3da45_a","v78c3da45_26"],["v78c3da45_a","v78c3da45_e"],["v78c3da45_b","v78c3da45_17"],["v78c3da45_b","v78c3da45_23"],["v78c3da45_b","v78c3da45_27"],["v78c3da45_c","v78c3da45_0"],["v78c3da45_c","v78c3da45_18"],["v78c3da45_c","v78c3da45_8"],["v78c3da45_d","v78c3da45_1"],["v78c3da45_d","v78c3da45_15"],["v78c3da45_d","v78c3da45_19"],["v78c3da45_e","v78c3da45_26"],["v78c3da45_e","v78c3da45_6"],["v78c3da45_e","v78c3da45_a"],["v78c3da45_f","v78c3da45_17"],["v78c3da45_f","v78c3da45_1f"],["v78c3da45_f","v78c3da45_23"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da45_0"],["v78c3da45_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da45_10"],["v78c3da45_1b"],["v78c3da45_26"],["v78c3da45_27"],["v78c3da45_7"]]},{"name":"sink","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da45_27"],["v78c3da45_1f"],["v78c3da45_2"],["v78c3da45_1e"],["v78c3da45_6"],["v78c3da45_11"],["v78c3da45_23"],["v78c3da45_d"],["v78c3da45_24"],["v78c3da45_1b"],["v78c3da45_18"],["v78c3da45_4"],["v78c3da45_25"],["v78c3da45_22"],["v78c3da45_21"],["v78c3da45_13"],["v78c3da45_f"],["v78c3da45_5"],["v78c3da45_b"],["v78c3da45_c"],["v78c3da45_20"],["v78c3da45_a"]]},{"name":"approved","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da45_1e"],["v78c3da45_23"],["v78c3da45_6"],["v78c3da45_b"],["v78c3da45_c"],["v78c3da45_f"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"sink","terms":[{"var":"x"}]},{"relation":"approved","terms":[{"var":"x"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+* single / conjunctive-prerequisite-closure-2026101334
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da56_0","v78c3da56_12"],["v78c3da56_0","v78c3da56_1b"],["v78c3da56_0","v78c3da56_21"],["v78c3da56_1","v78c3da56_16"],["v78c3da56_1","v78c3da56_25"],["v78c3da56_1","v78c3da56_28"],["v78c3da56_10","v78c3da56_13"],["v78c3da56_10","v78c3da56_1f"],["v78c3da56_10","v78c3da56_22"],["v78c3da56_11","v78c3da56_14"],["v78c3da56_11","v78c3da56_1d"],["v78c3da56_11","v78c3da56_5"],["v78c3da56_12","v78c3da56_15"],["v78c3da56_12","v78c3da56_18"],["v78c3da56_12","v78c3da56_3"],["v78c3da56_13","v78c3da56_1"],["v78c3da56_13","v78c3da56_10"],["v78c3da56_13","v78c3da56_16"],["v78c3da56_14","v78c3da56_17"],["v78c3da56_14","v78c3da56_1a"],["v78c3da56_14","v78c3da56_23"],["v78c3da56_15","v78c3da56_3"],["v78c3da56_15","v78c3da56_6"],["v78c3da56_15","v78c3da56_9"],["v78c3da56_16","v78c3da56_1"],["v78c3da56_16","v78c3da56_2b"],["v78c3da56_16","v78c3da56_d"],["v78c3da56_17","v78c3da56_1d"],["v78c3da56_17","v78c3da56_2"],["v78c3da56_17","v78c3da56_20"],["v78c3da56_18","v78c3da56_21"],["v78c3da56_18","v78c3da56_6"],["v78c3da56_18","v78c3da56_c"],["v78c3da56_19","v78c3da56_16"],["v78c3da56_19","v78c3da56_1f"],["v78c3da56_19","v78c3da56_28"],["v78c3da56_1a","v78c3da56_11"],["v78c3da56_1a","v78c3da56_26"],["v78c3da56_1a","v78c3da56_5"],["v78c3da56_1b","v78c3da56_24"],["v78c3da56_1b","v78c3da56_27"],["v78c3da56_1b","v78c3da56_c"],["v78c3da56_1c","v78c3da56_16"],["v78c3da56_1c","v78c3da56_25"],["v78c3da56_1c","v78c3da56_4"],["v78c3da56_1d","v78c3da56_14"],["v78c3da56_1d","v78c3da56_23"],["v78c3da56_1d","v78c3da56_29"],["v78c3da56_1e","v78c3da56_15"],["v78c3da56_1e","v78c3da56_1b"],["v78c3da56_1e","v78c3da56_27"],["v78c3da56_1f","v78c3da56_16"],["v78c3da56_1f","v78c3da56_28"],["v78c3da56_1f","v78c3da56_7"],["v78c3da56_2","v78c3da56_11"],["v78c3da56_2","v78c3da56_17"],["v78c3da56_2","v78c3da56_23"],["v78c3da56_20","v78c3da56_23"],["v78c3da56_20","v78c3da56_5"],["v78c3da56_20","v78c3da56_b"],["v78c3da56_21","v78c3da56_1e"],["v78c3da56_21","v78c3da56_2a"],["v78c3da56_21","v78c3da56_f"],["v78c3da56_22","v78c3da56_16"],["v78c3da56_22","v78c3da56_25"],["v78c3da56_22","v78c3da56_2b"],["v78c3da56_23","v78c3da56_17"],["v78c3da56_23","v78c3da56_1d"],["v78c3da56_23","v78c3da56_20"],["v78c3da56_24","v78c3da56_1e"],["v78c3da56_24","v78c3da56_25"],["v78c3da56_24","v78c3da56_27"],["v78c3da56_24","v78c3da56_2a"],["v78c3da56_25","v78c3da56_22"],["v78c3da56_25","v78c3da56_4"],["v78c3da56_25","v78c3da56_a"],["v78c3da56_26","v78c3da56_23"],["v78c3da56_26","v78c3da56_29"],["v78c3da56_26","v78c3da56_b"],["v78c3da56_27","v78c3da56_12"],["v78c3da56_27","v78c3da56_24"],["v78c3da56_27","v78c3da56_2a"],["v78c3da56_28","v78c3da56_16"],["v78c3da56_28","v78c3da56_1f"],["v78c3da56_28","v78c3da56_4"],["v78c3da56_29","v78c3da56_14"],["v78c3da56_29","v78c3da56_23"],["v78c3da56_29","v78c3da56_26"],["v78c3da56_2a","v78c3da56_21"],["v78c3da56_2a","v78c3da56_3"],["v78c3da56_2a","v78c3da56_c"],["v78c3da56_2b","v78c3da56_25"],["v78c3da56_2b","v78c3da56_28"],["v78c3da56_2b","v78c3da56_a"],["v78c3da56_3","v78c3da56_15"],["v78c3da56_3","v78c3da56_21"],["v78c3da56_3","v78c3da56_27"],["v78c3da56_4","v78c3da56_10"],["v78c3da56_4","v78c3da56_22"],["v78c3da56_4","v78c3da56_a"],["v78c3da56_5","v78c3da56_1a"],["v78c3da56_5","v78c3da56_26"],["v78c3da56_5","v78c3da56_8"],["v78c3da56_6","v78c3da56_1b"],["v78c3da56_6","v78c3da56_24"],["v78c3da56_6","v78c3da56_27"],["v78c3da56_7","v78c3da56_19"],["v78c3da56_7","v78c3da56_22"],["v78c3da56_7","v78c3da56_d"],["v78c3da56_8","v78c3da56_11"],["v78c3da56_8","v78c3da56_b"],["v78c3da56_8","v78c3da56_e"],["v78c3da56_9","v78c3da56_1b"],["v78c3da56_9","v78c3da56_21"],["v78c3da56_9","v78c3da56_f"],["v78c3da56_a","v78c3da56_1"],["v78c3da56_a","v78c3da56_7"],["v78c3da56_a","v78c3da56_d"],["v78c3da56_b","v78c3da56_11"],["v78c3da56_b","v78c3da56_26"],["v78c3da56_b","v78c3da56_29"],["v78c3da56_c","v78c3da56_1b"],["v78c3da56_c","v78c3da56_27"],["v78c3da56_c","v78c3da56_3"],["v78c3da56_d","v78c3da56_16"],["v78c3da56_d","v78c3da56_1c"],["v78c3da56_d","v78c3da56_a"],["v78c3da56_e","v78c3da56_1a"],["v78c3da56_e","v78c3da56_1d"],["v78c3da56_e","v78c3da56_5"],["v78c3da56_f","v78c3da56_0"],["v78c3da56_f","v78c3da56_21"],["v78c3da56_f","v78c3da56_24"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da56_0"],["v78c3da56_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da56_1"],["v78c3da56_1f"],["v78c3da56_28"],["v78c3da56_5"],["v78c3da56_8"],["v78c3da56_9"]]},{"name":"needs","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"},{"kind":"symbol"}],"rows":[["job78c3da56_0","v78c3da56_e","v78c3da56_6"],["job78c3da56_1","v78c3da56_9","v78c3da56_e"],["job78c3da56_2","v78c3da56_27","v78c3da56_17"],["job78c3da56_3","v78c3da56_16","v78c3da56_0"],["job78c3da56_4","v78c3da56_13","v78c3da56_2"],["job78c3da56_5","v78c3da56_1f","v78c3da56_21"],["job78c3da56_6","v78c3da56_c","v78c3da56_22"],["job78c3da56_7","v78c3da56_3","v78c3da56_22"],["job78c3da56_8","v78c3da56_28","v78c3da56_26"],["job78c3da56_9","v78c3da56_29","v78c3da56_7"],["job78c3da56_10","v78c3da56_10","v78c3da56_22"],["job78c3da56_11","v78c3da56_5","v78c3da56_1d"],["job78c3da56_12","v78c3da56_17","v78c3da56_1c"],["job78c3da56_13","v78c3da56_19","v78c3da56_1b"],["job78c3da56_14","v78c3da56_23","v78c3da56_0"],["job78c3da56_15","v78c3da56_15","v78c3da56_c"],["job78c3da56_16","v78c3da56_1d","v78c3da56_24"],["job78c3da56_17","v78c3da56_14","v78c3da56_f"],["job78c3da56_18","v78c3da56_29","v78c3da56_21"],["job78c3da56_19","v78c3da56_16","v78c3da56_25"],["job78c3da56_20","v78c3da56_2","v78c3da56_1"],["job78c3da56_21","v78c3da56_c","v78c3da56_23"],["job78c3da56_22","v78c3da56_1e","v78c3da56_21"],["job78c3da56_23","v78c3da56_12","v78c3da56_24"]]},{"name":"deferred","source":true,"columns":[{"kind":"symbol"}],"rows":[["job78c3da56_12"],["job78c3da56_16"],["job78c3da56_17"],["job78c3da56_22"],["job78c3da56_5"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"job"}]}],"body":[{"relation":"needs","terms":[{"var":"job"},{"var":"a"},{"var":"b"}]},{"relation":"reach","terms":[{"var":"a"}]},{"relation":"reach","terms":[{"var":"b"}]},{"relation":"deferred","terms":[{"var":"job"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+* single / bidirectional-recursive-impact-2026101351
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da67_0","v78c3da67_10"],["v78c3da67_0","v78c3da67_8"],["v78c3da67_0","v78c3da67_c"],["v78c3da67_1","v78c3da67_15"],["v78c3da67_1","v78c3da67_1d"],["v78c3da67_1","v78c3da67_2d"],["v78c3da67_10","v78c3da67_15"],["v78c3da67_10","v78c3da67_20"],["v78c3da67_10","v78c3da67_24"],["v78c3da67_10","v78c3da67_28"],["v78c3da67_11","v78c3da67_15"],["v78c3da67_11","v78c3da67_21"],["v78c3da67_11","v78c3da67_9"],["v78c3da67_12","v78c3da67_1e"],["v78c3da67_12","v78c3da67_26"],["v78c3da67_12","v78c3da67_2a"],["v78c3da67_13","v78c3da67_17"],["v78c3da67_13","v78c3da67_23"],["v78c3da67_13","v78c3da67_2f"],["v78c3da67_14","v78c3da67_1c"],["v78c3da67_14","v78c3da67_2c"],["v78c3da67_14","v78c3da67_4"],["v78c3da67_15","v78c3da67_1d"],["v78c3da67_15","v78c3da67_25"],["v78c3da67_15","v78c3da67_5"],["v78c3da67_16","v78c3da67_26"],["v78c3da67_16","v78c3da67_2a"],["v78c3da67_16","v78c3da67_e"],["v78c3da67_17","v78c3da67_27"],["v78c3da67_17","v78c3da67_2b"],["v78c3da67_17","v78c3da67_b"],["v78c3da67_18","v78c3da67_0"],["v78c3da67_18","v78c3da67_14"],["v78c3da67_18","v78c3da67_8"],["v78c3da67_19","v78c3da67_1"],["v78c3da67_19","v78c3da67_29"],["v78c3da67_19","v78c3da67_d"],["v78c3da67_1a","v78c3da67_12"],["v78c3da67_1a","v78c3da67_2"],["v78c3da67_1a","v78c3da67_a"],["v78c3da67_1b","v78c3da67_13"],["v78c3da67_1b","v78c3da67_2f"],["v78c3da67_1b","v78c3da67_3"],["v78c3da67_1c","v78c3da67_18"],["v78c3da67_1c","v78c3da67_24"],["v78c3da67_1c","v78c3da67_4"],["v78c3da67_1d","v78c3da67_11"],["v78c3da67_1d","v78c3da67_15"],["v78c3da67_1d","v78c3da67_5"],["v78c3da67_1e","v78c3da67_12"],["v78c3da67_1e","v78c3da67_1a"],["v78c3da67_1e","v78c3da67_22"],["v78c3da67_1f","v78c3da67_17"],["v78c3da67_1f","v78c3da67_1b"],["v78c3da67_1f","v78c3da67_3"],["v78c3da67_2","v78c3da67_12"],["v78c3da67_2","v78c3da67_1e"],["v78c3da67_2","v78c3da67_26"],["v78c3da67_20","v78c3da67_28"],["v78c3da67_20","v78c3da67_2c"],["v78c3da67_20","v78c3da67_4"],["v78c3da67_21","v78c3da67_19"],["v78c3da67_21","v78c3da67_29"],["v78c3da67_21","v78c3da67_9"],["v78c3da67_22","v78c3da67_12"],["v78c3da67_22","v78c3da67_1a"],["v78c3da67_22","v78c3da67_2a"],["v78c3da67_23","v78c3da67_2f"],["v78c3da67_23","v78c3da67_3"],["v78c3da67_23","v78c3da67_f"],["v78c3da67_24","v78c3da67_0"],["v78c3da67_24","v78c3da67_14"],["v78c3da67_24","v78c3da67_8"],["v78c3da67_25","v78c3da67_15"],["v78c3da67_25","v78c3da67_21"],["v78c3da67_25","v78c3da67_9"],["v78c3da67_26","v78c3da67_1e"],["v78c3da67_26","v78c3da67_6"],["v78c3da67_26","v78c3da67_e"],["v78c3da67_27","v78c3da67_1b"],["v78c3da67_27","v78c3da67_23"],["v78c3da67_27","v78c3da67_f"],["v78c3da67_28","v78c3da67_20"],["v78c3da67_28","v78c3da67_4"],["v78c3da67_28","v78c3da67_8"],["v78c3da67_29","v78c3da67_15"],["v78c3da67_29","v78c3da67_19"],["v78c3da67_29","v78c3da67_2d"],["v78c3da67_2a","v78c3da67_12"],["v78c3da67_2a","v78c3da67_1e"],["v78c3da67_2a","v78c3da67_22"],["v78c3da67_2b","v78c3da67_13"],["v78c3da67_2b","v78c3da67_7"],["v78c3da67_2b","v78c3da67_f"],["v78c3da67_2c","v78c3da67_1c"],["v78c3da67_2c","v78c3da67_20"],["v78c3da67_2c","v78c3da67_c"],["v78c3da67_2d","v78c3da67_1d"],["v78c3da67_2d","v78c3da67_29"],["v78c3da67_2d","v78c3da67_d"],["v78c3da67_2e","v78c3da67_16"],["v78c3da67_2e","v78c3da67_6"],["v78c3da67_2e","v78c3da67_e"],["v78c3da67_2f","v78c3da67_2b"],["v78c3da67_2f","v78c3da67_7"],["v78c3da67_2f","v78c3da67_b"],["v78c3da67_3","v78c3da67_1f"],["v78c3da67_3","v78c3da67_23"],["v78c3da67_3","v78c3da67_2b"],["v78c3da67_4","v78c3da67_0"],["v78c3da67_4","v78c3da67_10"],["v78c3da67_4","v78c3da67_c"],["v78c3da67_5","v78c3da67_11"],["v78c3da67_5","v78c3da67_1d"],["v78c3da67_5","v78c3da67_9"],["v78c3da67_6","v78c3da67_12"],["v78c3da67_6","v78c3da67_1e"],["v78c3da67_6","v78c3da67_2"],["v78c3da67_7","v78c3da67_13"],["v78c3da67_7","v78c3da67_23"],["v78c3da67_7","v78c3da67_2b"],["v78c3da67_8","v78c3da67_0"],["v78c3da67_8","v78c3da67_10"],["v78c3da67_8","v78c3da67_20"],["v78c3da67_9","v78c3da67_1"],["v78c3da67_9","v78c3da67_2d"],["v78c3da67_9","v78c3da67_d"],["v78c3da67_a","v78c3da67_12"],["v78c3da67_a","v78c3da67_1a"],["v78c3da67_a","v78c3da67_2a"],["v78c3da67_b","v78c3da67_13"],["v78c3da67_b","v78c3da67_1f"],["v78c3da67_b","v78c3da67_27"],["v78c3da67_c","v78c3da67_0"],["v78c3da67_c","v78c3da67_20"],["v78c3da67_c","v78c3da67_28"],["v78c3da67_d","v78c3da67_21"],["v78c3da67_d","v78c3da67_25"],["v78c3da67_d","v78c3da67_5"],["v78c3da67_e","v78c3da67_1e"],["v78c3da67_e","v78c3da67_2e"],["v78c3da67_e","v78c3da67_a"],["v78c3da67_f","v78c3da67_13"],["v78c3da67_f","v78c3da67_27"],["v78c3da67_f","v78c3da67_3"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da67_0"],["v78c3da67_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da67_11"],["v78c3da67_18"],["v78c3da67_1b"],["v78c3da67_1c"],["v78c3da67_1e"],["v78c3da67_2"],["v78c3da67_26"],["v78c3da67_c"]]},{"name":"finish","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da67_e"],["v78c3da67_1e"],["v78c3da67_19"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da67_b"],["v78c3da67_f"],["v78c3da67_1"],["v78c3da67_1a"],["v78c3da67_2b"],["v78c3da67_2e"],["v78c3da67_2f"],["v78c3da67_1c"],["v78c3da67_2"],["v78c3da67_13"],["v78c3da67_4"],["v78c3da67_2c"],["v78c3da67_11"],["v78c3da67_c"],["v78c3da67_0"],["v78c3da67_20"],["v78c3da67_1f"],["v78c3da67_5"],["v78c3da67_3"],["v78c3da67_9"],["v78c3da67_23"],["v78c3da67_2a"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"back","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"finish","terms":[{"var":"x"}]}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"back","terms":[{"var":"y"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"x"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"back","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+* single / recursive-scoped-reachability-2026101301
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da35_0","v78c3da35_15"],["v78c3da35_0","v78c3da35_3"],["v78c3da35_0","v78c3da35_9"],["v78c3da35_1","v78c3da35_16"],["v78c3da35_1","v78c3da35_1f"],["v78c3da35_1","v78c3da35_d"],["v78c3da35_10","v78c3da35_22"],["v78c3da35_10","v78c3da35_7"],["v78c3da35_10","v78c3da35_d"],["v78c3da35_11","v78c3da35_14"],["v78c3da35_11","v78c3da35_20"],["v78c3da35_11","v78c3da35_e"],["v78c3da35_12","v78c3da35_1b"],["v78c3da35_12","v78c3da35_3"],["v78c3da35_12","v78c3da35_c"],["v78c3da35_13","v78c3da35_19"],["v78c3da35_13","v78c3da35_1c"],["v78c3da35_13","v78c3da35_22"],["v78c3da35_14","v78c3da35_1d"],["v78c3da35_14","v78c3da35_8"],["v78c3da35_14","v78c3da35_e"],["v78c3da35_15","v78c3da35_0"],["v78c3da35_15","v78c3da35_18"],["v78c3da35_15","v78c3da35_21"],["v78c3da35_16","v78c3da35_19"],["v78c3da35_16","v78c3da35_22"],["v78c3da35_16","v78c3da35_a"],["v78c3da35_17","v78c3da35_11"],["v78c3da35_17","v78c3da35_1d"],["v78c3da35_17","v78c3da35_b"],["v78c3da35_18","v78c3da35_1b"],["v78c3da35_18","v78c3da35_3"],["v78c3da35_18","v78c3da35_9"],["v78c3da35_18","v78c3da35_d"],["v78c3da35_19","v78c3da35_13"],["v78c3da35_19","v78c3da35_16"],["v78c3da35_19","v78c3da35_22"],["v78c3da35_1a","v78c3da35_1d"],["v78c3da35_1a","v78c3da35_23"],["v78c3da35_1a","v78c3da35_b"],["v78c3da35_1b","v78c3da35_0"],["v78c3da35_1b","v78c3da35_12"],["v78c3da35_1b","v78c3da35_15"],["v78c3da35_1c","v78c3da35_13"],["v78c3da35_1c","v78c3da35_1f"],["v78c3da35_1c","v78c3da35_22"],["v78c3da35_1d","v78c3da35_11"],["v78c3da35_1d","v78c3da35_20"],["v78c3da35_1d","v78c3da35_5"],["v78c3da35_1e","v78c3da35_0"],["v78c3da35_1e","v78c3da35_21"],["v78c3da35_1e","v78c3da35_3"],["v78c3da35_1f","v78c3da35_10"],["v78c3da35_1f","v78c3da35_7"],["v78c3da35_1f","v78c3da35_d"],["v78c3da35_2","v78c3da35_11"],["v78c3da35_2","v78c3da35_23"],["v78c3da35_2","v78c3da35_e"],["v78c3da35_20","v78c3da35_1a"],["v78c3da35_20","v78c3da35_1d"],["v78c3da35_20","v78c3da35_2"],["v78c3da35_21","v78c3da35_1b"],["v78c3da35_21","v78c3da35_c"],["v78c3da35_21","v78c3da35_f"],["v78c3da35_22","v78c3da35_16"],["v78c3da35_22","v78c3da35_1c"],["v78c3da35_22","v78c3da35_4"],["v78c3da35_23","v78c3da35_11"],["v78c3da35_23","v78c3da35_17"],["v78c3da35_23","v78c3da35_5"],["v78c3da35_3","v78c3da35_12"],["v78c3da35_3","v78c3da35_18"],["v78c3da35_3","v78c3da35_6"],["v78c3da35_4","v78c3da35_1f"],["v78c3da35_4","v78c3da35_22"],["v78c3da35_4","v78c3da35_a"],["v78c3da35_5","v78c3da35_20"],["v78c3da35_5","v78c3da35_8"],["v78c3da35_5","v78c3da35_e"],["v78c3da35_6","v78c3da35_0"],["v78c3da35_6","v78c3da35_15"],["v78c3da35_6","v78c3da35_9"],["v78c3da35_7","v78c3da35_19"],["v78c3da35_7","v78c3da35_4"],["v78c3da35_7","v78c3da35_d"],["v78c3da35_8","v78c3da35_17"],["v78c3da35_8","v78c3da35_b"],["v78c3da35_8","v78c3da35_e"],["v78c3da35_9","v78c3da35_1b"],["v78c3da35_9","v78c3da35_c"],["v78c3da35_9","v78c3da35_f"],["v78c3da35_a","v78c3da35_13"],["v78c3da35_a","v78c3da35_1c"],["v78c3da35_a","v78c3da35_7"],["v78c3da35_b","v78c3da35_1d"],["v78c3da35_b","v78c3da35_20"],["v78c3da35_b","v78c3da35_23"],["v78c3da35_c","v78c3da35_15"],["v78c3da35_c","v78c3da35_1b"],["v78c3da35_c","v78c3da35_3"],["v78c3da35_d","v78c3da35_10"],["v78c3da35_d","v78c3da35_16"],["v78c3da35_d","v78c3da35_22"],["v78c3da35_e","v78c3da35_11"],["v78c3da35_e","v78c3da35_23"],["v78c3da35_e","v78c3da35_b"],["v78c3da35_f","v78c3da35_15"],["v78c3da35_f","v78c3da35_1b"],["v78c3da35_f","v78c3da35_6"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da35_0"],["v78c3da35_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da35_1"],["v78c3da35_10"],["v78c3da35_1c"],["v78c3da35_20"],["v78c3da35_5"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da35_2"],["v78c3da35_14"],["v78c3da35_16"],["v78c3da35_6"],["v78c3da35_1e"],["v78c3da35_17"],["v78c3da35_b"],["v78c3da35_e"],["v78c3da35_11"],["v78c3da35_19"],["v78c3da35_c"],["v78c3da35_12"],["v78c3da35_1c"],["v78c3da35_1"],["v78c3da35_10"],["v78c3da35_a"],["v78c3da35_20"],["v78c3da35_0"],["v78c3da35_5"],["v78c3da35_7"],["v78c3da35_1d"],["v78c3da35_1f"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+* single / taint-propagation-with-sanitizers-2026101318
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da46_0","v78c3da46_18"],["v78c3da46_0","v78c3da46_24"],["v78c3da46_0","v78c3da46_8"],["v78c3da46_1","v78c3da46_15"],["v78c3da46_1","v78c3da46_1d"],["v78c3da46_1","v78c3da46_5"],["v78c3da46_10","v78c3da46_14"],["v78c3da46_10","v78c3da46_24"],["v78c3da46_10","v78c3da46_c"],["v78c3da46_11","v78c3da46_1"],["v78c3da46_11","v78c3da46_21"],["v78c3da46_11","v78c3da46_9"],["v78c3da46_12","v78c3da46_2"],["v78c3da46_12","v78c3da46_22"],["v78c3da46_12","v78c3da46_26"],["v78c3da46_13","v78c3da46_17"],["v78c3da46_13","v78c3da46_1f"],["v78c3da46_13","v78c3da46_23"],["v78c3da46_14","v78c3da46_10"],["v78c3da46_14","v78c3da46_18"],["v78c3da46_14","v78c3da46_1c"],["v78c3da46_15","v78c3da46_11"],["v78c3da46_15","v78c3da46_21"],["v78c3da46_15","v78c3da46_5"],["v78c3da46_16","v78c3da46_12"],["v78c3da46_16","v78c3da46_2"],["v78c3da46_16","v78c3da46_6"],["v78c3da46_17","v78c3da46_23"],["v78c3da46_17","v78c3da46_27"],["v78c3da46_17","v78c3da46_7"],["v78c3da46_18","v78c3da46_1c"],["v78c3da46_18","v78c3da46_24"],["v78c3da46_18","v78c3da46_c"],["v78c3da46_19","v78c3da46_11"],["v78c3da46_19","v78c3da46_1d"],["v78c3da46_19","v78c3da46_9"],["v78c3da46_1a","v78c3da46_12"],["v78c3da46_1a","v78c3da46_22"],["v78c3da46_1a","v78c3da46_6"],["v78c3da46_1b","v78c3da46_23"],["v78c3da46_1b","v78c3da46_27"],["v78c3da46_1b","v78c3da46_7"],["v78c3da46_1c","v78c3da46_14"],["v78c3da46_1c","v78c3da46_18"],["v78c3da46_1c","v78c3da46_c"],["v78c3da46_1d","v78c3da46_1"],["v78c3da46_1d","v78c3da46_19"],["v78c3da46_1d","v78c3da46_5"],["v78c3da46_1e","v78c3da46_12"],["v78c3da46_1e","v78c3da46_26"],["v78c3da46_1e","v78c3da46_6"],["v78c3da46_1f","v78c3da46_13"],["v78c3da46_1f","v78c3da46_17"],["v78c3da46_1f","v78c3da46_27"],["v78c3da46_2","v78c3da46_6"],["v78c3da46_2","v78c3da46_a"],["v78c3da46_2","v78c3da46_e"],["v78c3da46_20","v78c3da46_0"],["v78c3da46_20","v78c3da46_1c"],["v78c3da46_20","v78c3da46_8"],["v78c3da46_21","v78c3da46_19"],["v78c3da46_21","v78c3da46_5"],["v78c3da46_21","v78c3da46_d"],["v78c3da46_22","v78c3da46_1a"],["v78c3da46_22","v78c3da46_6"],["v78c3da46_22","v78c3da46_e"],["v78c3da46_23","v78c3da46_1f"],["v78c3da46_23","v78c3da46_7"],["v78c3da46_23","v78c3da46_b"],["v78c3da46_24","v78c3da46_10"],["v78c3da46_24","v78c3da46_1c"],["v78c3da46_24","v78c3da46_c"],["v78c3da46_25","v78c3da46_19"],["v78c3da46_25","v78c3da46_1d"],["v78c3da46_25","v78c3da46_d"],["v78c3da46_26","v78c3da46_2"],["v78c3da46_26","v78c3da46_6"],["v78c3da46_26","v78c3da46_a"],["v78c3da46_27","v78c3da46_17"],["v78c3da46_27","v78c3da46_1f"],["v78c3da46_27","v78c3da46_f"],["v78c3da46_3","v78c3da46_13"],["v78c3da46_3","v78c3da46_27"],["v78c3da46_3","v78c3da46_7"],["v78c3da46_4","v78c3da46_0"],["v78c3da46_4","v78c3da46_15"],["v78c3da46_4","v78c3da46_18"],["v78c3da46_4","v78c3da46_c"],["v78c3da46_5","v78c3da46_15"],["v78c3da46_5","v78c3da46_21"],["v78c3da46_5","v78c3da46_25"],["v78c3da46_6","v78c3da46_12"],["v78c3da46_6","v78c3da46_2"],["v78c3da46_6","v78c3da46_a"],["v78c3da46_7","v78c3da46_1f"],["v78c3da46_7","v78c3da46_3"],["v78c3da46_7","v78c3da46_b"],["v78c3da46_8","v78c3da46_10"],["v78c3da46_8","v78c3da46_14"],["v78c3da46_8","v78c3da46_18"],["v78c3da46_9","v78c3da46_1"],["v78c3da46_9","v78c3da46_11"],["v78c3da46_9","v78c3da46_25"],["v78c3da46_a","v78c3da46_1a"],["v78c3da46_a","v78c3da46_2"],["v78c3da46_a","v78c3da46_e"],["v78c3da46_b","v78c3da46_1f"],["v78c3da46_b","v78c3da46_3"],["v78c3da46_b","v78c3da46_7"],["v78c3da46_c","v78c3da46_18"],["v78c3da46_c","v78c3da46_4"],["v78c3da46_c","v78c3da46_8"],["v78c3da46_d","v78c3da46_11"],["v78c3da46_d","v78c3da46_25"],["v78c3da46_d","v78c3da46_9"],["v78c3da46_e","v78c3da46_12"],["v78c3da46_e","v78c3da46_16"],["v78c3da46_e","v78c3da46_1a"],["v78c3da46_f","v78c3da46_13"],["v78c3da46_f","v78c3da46_27"],["v78c3da46_f","v78c3da46_b"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da46_0"],["v78c3da46_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da46_15"],["v78c3da46_18"],["v78c3da46_27"],["v78c3da46_5"],["v78c3da46_6"],["v78c3da46_e"]]},{"name":"sink","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da46_a"],["v78c3da46_3"],["v78c3da46_8"],["v78c3da46_1f"],["v78c3da46_f"],["v78c3da46_21"],["v78c3da46_15"],["v78c3da46_5"],["v78c3da46_19"],["v78c3da46_b"],["v78c3da46_0"],["v78c3da46_9"],["v78c3da46_1b"],["v78c3da46_c"],["v78c3da46_1"],["v78c3da46_26"],["v78c3da46_23"],["v78c3da46_27"],["v78c3da46_13"],["v78c3da46_22"],["v78c3da46_25"],["v78c3da46_7"]]},{"name":"approved","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da46_0"],["v78c3da46_15"],["v78c3da46_23"],["v78c3da46_3"],["v78c3da46_8"],["v78c3da46_9"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"sink","terms":[{"var":"x"}]},{"relation":"approved","terms":[{"var":"x"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+* single / conjunctive-prerequisite-closure-2026101335
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da57_0","v78c3da57_24"],["v78c3da57_0","v78c3da57_2a"],["v78c3da57_0","v78c3da57_f"],["v78c3da57_1","v78c3da57_10"],["v78c3da57_1","v78c3da57_a"],["v78c3da57_1","v78c3da57_d"],["v78c3da57_10","v78c3da57_28"],["v78c3da57_10","v78c3da57_4"],["v78c3da57_10","v78c3da57_7"],["v78c3da57_11","v78c3da57_2"],["v78c3da57_11","v78c3da57_23"],["v78c3da57_11","v78c3da57_b"],["v78c3da57_12","v78c3da57_18"],["v78c3da57_12","v78c3da57_3"],["v78c3da57_12","v78c3da57_6"],["v78c3da57_13","v78c3da57_16"],["v78c3da57_13","v78c3da57_25"],["v78c3da57_13","v78c3da57_7"],["v78c3da57_14","v78c3da57_17"],["v78c3da57_14","v78c3da57_20"],["v78c3da57_14","v78c3da57_23"],["v78c3da57_15","v78c3da57_1"],["v78c3da57_15","v78c3da57_1b"],["v78c3da57_15","v78c3da57_c"],["v78c3da57_15","v78c3da57_f"],["v78c3da57_16","v78c3da57_13"],["v78c3da57_16","v78c3da57_4"],["v78c3da57_16","v78c3da57_7"],["v78c3da57_17","v78c3da57_2"],["v78c3da57_17","v78c3da57_5"],["v78c3da57_17","v78c3da57_b"],["v78c3da57_18","v78c3da57_21"],["v78c3da57_18","v78c3da57_2a"],["v78c3da57_18","v78c3da57_c"],["v78c3da57_19","v78c3da57_13"],["v78c3da57_19","v78c3da57_1c"],["v78c3da57_19","v78c3da57_a"],["v78c3da57_1a","v78c3da57_26"],["v78c3da57_1a","v78c3da57_29"],["v78c3da57_1a","v78c3da57_b"],["v78c3da57_1b","v78c3da57_12"],["v78c3da57_1b","v78c3da57_1e"],["v78c3da57_1b","v78c3da57_24"],["v78c3da57_1c","v78c3da57_1"],["v78c3da57_1c","v78c3da57_16"],["v78c3da57_1c","v78c3da57_a"],["v78c3da57_1d","v78c3da57_11"],["v78c3da57_1d","v78c3da57_26"],["v78c3da57_1d","v78c3da57_b"],["v78c3da57_1e","v78c3da57_12"],["v78c3da57_1e","v78c3da57_18"],["v78c3da57_1e","v78c3da57_3"],["v78c3da57_1f","v78c3da57_25"],["v78c3da57_1f","v78c3da57_2b"],["v78c3da57_1f","v78c3da57_a"],["v78c3da57_2","v78c3da57_11"],["v78c3da57_2","v78c3da57_23"],["v78c3da57_2","v78c3da57_26"],["v78c3da57_20","v78c3da57_17"],["v78c3da57_20","v78c3da57_1d"],["v78c3da57_20","v78c3da57_b"],["v78c3da57_21","v78c3da57_1b"],["v78c3da57_21","v78c3da57_24"],["v78c3da57_21","v78c3da57_9"],["v78c3da57_22","v78c3da57_2b"],["v78c3da57_22","v78c3da57_4"],["v78c3da57_22","v78c3da57_d"],["v78c3da57_23","v78c3da57_26"],["v78c3da57_23","v78c3da57_29"],["v78c3da57_23","v78c3da57_5"],["v78c3da57_24","v78c3da57_12"],["v78c3da57_24","v78c3da57_21"],["v78c3da57_24","v78c3da57_2a"],["v78c3da57_25","v78c3da57_13"],["v78c3da57_25","v78c3da57_2b"],["v78c3da57_25","v78c3da57_d"],["v78c3da57_26","v78c3da57_11"],["v78c3da57_26","v78c3da57_2"],["v78c3da57_26","v78c3da57_8"],["v78c3da57_27","v78c3da57_1e"],["v78c3da57_27","v78c3da57_24"],["v78c3da57_27","v78c3da57_c"],["v78c3da57_28","v78c3da57_16"],["v78c3da57_28","v78c3da57_1c"],["v78c3da57_28","v78c3da57_2b"],["v78c3da57_29","v78c3da57_11"],["v78c3da57_29","v78c3da57_14"],["v78c3da57_29","v78c3da57_23"],["v78c3da57_2a","v78c3da57_1b"],["v78c3da57_2a","v78c3da57_1e"],["v78c3da57_2a","v78c3da57_24"],["v78c3da57_2b","v78c3da57_1f"],["v78c3da57_2b","v78c3da57_22"],["v78c3da57_2b","v78c3da57_d"],["v78c3da57_3","v78c3da57_0"],["v78c3da57_3","v78c3da57_12"],["v78c3da57_3","v78c3da57_27"],["v78c3da57_4","v78c3da57_10"],["v78c3da57_4","v78c3da57_25"],["v78c3da57_4","v78c3da57_d"],["v78c3da57_5","v78c3da57_1d"],["v78c3da57_5","v78c3da57_23"],["v78c3da57_5","v78c3da57_26"],["v78c3da57_6","v78c3da57_0"],["v78c3da57_6","v78c3da57_2a"],["v78c3da57_6","v78c3da57_f"],["v78c3da57_7","v78c3da57_10"],["v78c3da57_7","v78c3da57_4"],["v78c3da57_7","v78c3da57_a"],["v78c3da57_8","v78c3da57_23"],["v78c3da57_8","v78c3da57_26"],["v78c3da57_8","v78c3da57_29"],["v78c3da57_9","v78c3da57_12"],["v78c3da57_9","v78c3da57_1b"],["v78c3da57_9","v78c3da57_21"],["v78c3da57_a","v78c3da57_13"],["v78c3da57_a","v78c3da57_1f"],["v78c3da57_a","v78c3da57_25"],["v78c3da57_b","v78c3da57_14"],["v78c3da57_b","v78c3da57_1a"],["v78c3da57_b","v78c3da57_20"],["v78c3da57_c","v78c3da57_21"],["v78c3da57_c","v78c3da57_2a"],["v78c3da57_c","v78c3da57_3"],["v78c3da57_d","v78c3da57_19"],["v78c3da57_d","v78c3da57_2b"],["v78c3da57_d","v78c3da57_4"],["v78c3da57_e","v78c3da57_29"],["v78c3da57_e","v78c3da57_8"],["v78c3da57_e","v78c3da57_b"],["v78c3da57_f","v78c3da57_0"],["v78c3da57_f","v78c3da57_9"],["v78c3da57_f","v78c3da57_c"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da57_0"],["v78c3da57_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da57_10"],["v78c3da57_15"],["v78c3da57_19"],["v78c3da57_1d"],["v78c3da57_27"],["v78c3da57_6"],["v78c3da57_f"]]},{"name":"needs","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"},{"kind":"symbol"}],"rows":[["job78c3da57_0","v78c3da57_18","v78c3da57_f"],["job78c3da57_1","v78c3da57_1c","v78c3da57_7"],["job78c3da57_2","v78c3da57_10","v78c3da57_16"],["job78c3da57_3","v78c3da57_7","v78c3da57_28"],["job78c3da57_4","v78c3da57_22","v78c3da57_1e"],["job78c3da57_5","v78c3da57_26","v78c3da57_18"],["job78c3da57_6","v78c3da57_18","v78c3da57_e"],["job78c3da57_7","v78c3da57_7","v78c3da57_20"],["job78c3da57_8","v78c3da57_0","v78c3da57_22"],["job78c3da57_9","v78c3da57_1d","v78c3da57_1c"],["job78c3da57_10","v78c3da57_24","v78c3da57_28"],["job78c3da57_11","v78c3da57_17","v78c3da57_3"],["job78c3da57_12","v78c3da57_13","v78c3da57_6"],["job78c3da57_13","v78c3da57_1c","v78c3da57_20"],["job78c3da57_14","v78c3da57_d","v78c3da57_8"],["job78c3da57_15","v78c3da57_4","v78c3da57_5"],["job78c3da57_16","v78c3da57_e","v78c3da57_24"],["job78c3da57_17","v78c3da57_17","v78c3da57_28"],["job78c3da57_18","v78c3da57_d","v78c3da57_1c"],["job78c3da57_19","v78c3da57_16","v78c3da57_c"],["job78c3da57_20","v78c3da57_12","v78c3da57_28"],["job78c3da57_21","v78c3da57_18","v78c3da57_2a"],["job78c3da57_22","v78c3da57_28","v78c3da57_23"],["job78c3da57_23","v78c3da57_d","v78c3da57_14"]]},{"name":"deferred","source":true,"columns":[{"kind":"symbol"}],"rows":[["job78c3da57_0"],["job78c3da57_10"],["job78c3da57_13"],["job78c3da57_14"],["job78c3da57_22"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"job"}]}],"body":[{"relation":"needs","terms":[{"var":"job"},{"var":"a"},{"var":"b"}]},{"relation":"reach","terms":[{"var":"a"}]},{"relation":"reach","terms":[{"var":"b"}]},{"relation":"deferred","terms":[{"var":"job"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+* single / bidirectional-recursive-impact-2026101352
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3da68_0","v78c3da68_20"],["v78c3da68_0","v78c3da68_28"],["v78c3da68_0","v78c3da68_4"],["v78c3da68_1","v78c3da68_25"],["v78c3da68_1","v78c3da68_2d"],["v78c3da68_1","v78c3da68_9"],["v78c3da68_10","v78c3da68_1c"],["v78c3da68_10","v78c3da68_28"],["v78c3da68_10","v78c3da68_4"],["v78c3da68_11","v78c3da68_15"],["v78c3da68_11","v78c3da68_19"],["v78c3da68_11","v78c3da68_21"],["v78c3da68_12","v78c3da68_1a"],["v78c3da68_12","v78c3da68_6"],["v78c3da68_12","v78c3da68_e"],["v78c3da68_13","v78c3da68_1b"],["v78c3da68_13","v78c3da68_2b"],["v78c3da68_13","v78c3da68_3"],["v78c3da68_14","v78c3da68_10"],["v78c3da68_14","v78c3da68_20"],["v78c3da68_14","v78c3da68_8"],["v78c3da68_15","v78c3da68_19"],["v78c3da68_15","v78c3da68_1d"],["v78c3da68_15","v78c3da68_5"],["v78c3da68_16","v78c3da68_2a"],["v78c3da68_16","v78c3da68_2e"],["v78c3da68_16","v78c3da68_a"],["v78c3da68_17","v78c3da68_27"],["v78c3da68_17","v78c3da68_2f"],["v78c3da68_17","v78c3da68_3"],["v78c3da68_18","v78c3da68_14"],["v78c3da68_18","v78c3da68_28"],["v78c3da68_18","v78c3da68_8"],["v78c3da68_19","v78c3da68_11"],["v78c3da68_19","v78c3da68_15"],["v78c3da68_19","v78c3da68_21"],["v78c3da68_1a","v78c3da68_12"],["v78c3da68_1a","v78c3da68_2a"],["v78c3da68_1a","v78c3da68_a"],["v78c3da68_1b","v78c3da68_17"],["v78c3da68_1b","v78c3da68_1f"],["v78c3da68_1b","v78c3da68_2b"],["v78c3da68_1c","v78c3da68_24"],["v78c3da68_1c","v78c3da68_4"],["v78c3da68_1c","v78c3da68_8"],["v78c3da68_1d","v78c3da68_1"],["v78c3da68_1d","v78c3da68_19"],["v78c3da68_1d","v78c3da68_29"],["v78c3da68_1e","v78c3da68_1a"],["v78c3da68_1e","v78c3da68_22"],["v78c3da68_1e","v78c3da68_e"],["v78c3da68_1f","v78c3da68_1b"],["v78c3da68_1f","v78c3da68_3"],["v78c3da68_1f","v78c3da68_7"],["v78c3da68_2","v78c3da68_12"],["v78c3da68_2","v78c3da68_22"],["v78c3da68_2","v78c3da68_a"],["v78c3da68_20","v78c3da68_28"],["v78c3da68_20","v78c3da68_2c"],["v78c3da68_20","v78c3da68_4"],["v78c3da68_21","v78c3da68_29"],["v78c3da68_21","v78c3da68_2d"],["v78c3da68_21","v78c3da68_d"],["v78c3da68_22","v78c3da68_2"],["v78c3da68_22","v78c3da68_6"],["v78c3da68_22","v78c3da68_e"],["v78c3da68_23","v78c3da68_17"],["v78c3da68_23","v78c3da68_1f"],["v78c3da68_23","v78c3da68_2b"],["v78c3da68_24","v78c3da68_14"],["v78c3da68_24","v78c3da68_28"],["v78c3da68_24","v78c3da68_2c"],["v78c3da68_25","v78c3da68_21"],["v78c3da68_25","v78c3da68_5"],["v78c3da68_25","v78c3da68_9"],["v78c3da68_26","v78c3da68_22"],["v78c3da68_26","v78c3da68_6"],["v78c3da68_26","v78c3da68_e"],["v78c3da68_27","v78c3da68_2b"],["v78c3da68_27","v78c3da68_2f"],["v78c3da68_27","v78c3da68_f"],["v78c3da68_28","v78c3da68_1c"],["v78c3da68_28","v78c3da68_24"],["v78c3da68_28","v78c3da68_8"],["v78c3da68_29","v78c3da68_19"],["v78c3da68_29","v78c3da68_2d"],["v78c3da68_29","v78c3da68_5"],["v78c3da68_2a","v78c3da68_1a"],["v78c3da68_2a","v78c3da68_1e"],["v78c3da68_2a","v78c3da68_26"],["v78c3da68_2b","v78c3da68_2f"],["v78c3da68_2b","v78c3da68_7"],["v78c3da68_2b","v78c3da68_b"],["v78c3da68_2c","v78c3da68_0"],["v78c3da68_2c","v78c3da68_18"],["v78c3da68_2c","v78c3da68_20"],["v78c3da68_2c","v78c3da68_9"],["v78c3da68_2d","v78c3da68_1"],["v78c3da68_2d","v78c3da68_11"],["v78c3da68_2d","v78c3da68_21"],["v78c3da68_2e","v78c3da68_12"],["v78c3da68_2e","v78c3da68_2a"],["v78c3da68_2e","v78c3da68_e"],["v78c3da68_2f","v78c3da68_7"],["v78c3da68_2f","v78c3da68_b"],["v78c3da68_2f","v78c3da68_f"],["v78c3da68_3","v78c3da68_1b"],["v78c3da68_3","v78c3da68_1f"],["v78c3da68_3","v78c3da68_b"],["v78c3da68_4","v78c3da68_10"],["v78c3da68_4","v78c3da68_14"],["v78c3da68_4","v78c3da68_2c"],["v78c3da68_5","v78c3da68_15"],["v78c3da68_5","v78c3da68_29"],["v78c3da68_5","v78c3da68_2d"],["v78c3da68_6","v78c3da68_1e"],["v78c3da68_6","v78c3da68_26"],["v78c3da68_6","v78c3da68_2e"],["v78c3da68_7","v78c3da68_1b"],["v78c3da68_7","v78c3da68_2b"],["v78c3da68_7","v78c3da68_3"],["v78c3da68_8","v78c3da68_20"],["v78c3da68_8","v78c3da68_28"],["v78c3da68_8","v78c3da68_4"],["v78c3da68_9","v78c3da68_11"],["v78c3da68_9","v78c3da68_19"],["v78c3da68_9","v78c3da68_25"],["v78c3da68_a","v78c3da68_1e"],["v78c3da68_a","v78c3da68_2"],["v78c3da68_a","v78c3da68_2a"],["v78c3da68_b","v78c3da68_2b"],["v78c3da68_b","v78c3da68_2f"],["v78c3da68_b","v78c3da68_7"],["v78c3da68_c","v78c3da68_14"],["v78c3da68_c","v78c3da68_28"],["v78c3da68_c","v78c3da68_2c"],["v78c3da68_d","v78c3da68_1"],["v78c3da68_d","v78c3da68_19"],["v78c3da68_d","v78c3da68_5"],["v78c3da68_e","v78c3da68_12"],["v78c3da68_e","v78c3da68_2"],["v78c3da68_e","v78c3da68_22"],["v78c3da68_f","v78c3da68_1b"],["v78c3da68_f","v78c3da68_23"],["v78c3da68_f","v78c3da68_2f"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da68_0"],["v78c3da68_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da68_1"],["v78c3da68_2"],["v78c3da68_2a"],["v78c3da68_2f"],["v78c3da68_3"],["v78c3da68_7"],["v78c3da68_c"]]},{"name":"finish","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da68_2c"],["v78c3da68_28"],["v78c3da68_1b"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3da68_2b"],["v78c3da68_5"],["v78c3da68_15"],["v78c3da68_4"],["v78c3da68_10"],["v78c3da68_29"],["v78c3da68_1"],["v78c3da68_8"],["v78c3da68_17"],["v78c3da68_f"],["v78c3da68_26"],["v78c3da68_23"],["v78c3da68_27"],["v78c3da68_7"],["v78c3da68_13"],["v78c3da68_0"],["v78c3da68_d"],["v78c3da68_1a"],["v78c3da68_14"],["v78c3da68_1c"],["v78c3da68_a"],["v78c3da68_24"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"back","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"finish","terms":[{"var":"x"}]}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"back","terms":[{"var":"y"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"x"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"back","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+* transfer / recursive-scoped-reachability-2026102300
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3de1c_0","v78c3de1c_18"],["v78c3de1c_0","v78c3de1c_1b"],["v78c3de1c_0","v78c3de1c_6"],["v78c3de1c_1","v78c3de1c_10"],["v78c3de1c_1","v78c3de1c_1f"],["v78c3de1c_1","v78c3de1c_7"],["v78c3de1c_10","v78c3de1c_13"],["v78c3de1c_10","v78c3de1c_16"],["v78c3de1c_10","v78c3de1c_19"],["v78c3de1c_11","v78c3de1c_1a"],["v78c3de1c_11","v78c3de1c_2"],["v78c3de1c_11","v78c3de1c_5"],["v78c3de1c_12","v78c3de1c_0"],["v78c3de1c_12","v78c3de1c_6"],["v78c3de1c_12","v78c3de1c_c"],["v78c3de1c_13","v78c3de1c_1"],["v78c3de1c_13","v78c3de1c_10"],["v78c3de1c_13","v78c3de1c_4"],["v78c3de1c_14","v78c3de1c_17"],["v78c3de1c_14","v78c3de1c_1d"],["v78c3de1c_14","v78c3de1c_b"],["v78c3de1c_15","v78c3de1c_0"],["v78c3de1c_15","v78c3de1c_18"],["v78c3de1c_15","v78c3de1c_1e"],["v78c3de1c_16","v78c3de1c_13"],["v78c3de1c_16","v78c3de1c_1f"],["v78c3de1c_16","v78c3de1c_d"],["v78c3de1c_17","v78c3de1c_11"],["v78c3de1c_17","v78c3de1c_14"],["v78c3de1c_17","v78c3de1c_8"],["v78c3de1c_18","v78c3de1c_15"],["v78c3de1c_18","v78c3de1c_1e"],["v78c3de1c_18","v78c3de1c_21"],["v78c3de1c_19","v78c3de1c_1"],["v78c3de1c_19","v78c3de1c_1c"],["v78c3de1c_19","v78c3de1c_7"],["v78c3de1c_1a","v78c3de1c_11"],["v78c3de1c_1a","v78c3de1c_5"],["v78c3de1c_1a","v78c3de1c_8"],["v78c3de1c_1b","v78c3de1c_18"],["v78c3de1c_1b","v78c3de1c_21"],["v78c3de1c_1b","v78c3de1c_c"],["v78c3de1c_1c","v78c3de1c_1"],["v78c3de1c_1c","v78c3de1c_16"],["v78c3de1c_1c","v78c3de1c_4"],["v78c3de1c_1d","v78c3de1c_20"],["v78c3de1c_1d","v78c3de1c_5"],["v78c3de1c_1d","v78c3de1c_b"],["v78c3de1c_1e","v78c3de1c_1b"],["v78c3de1c_1e","v78c3de1c_6"],["v78c3de1c_1e","v78c3de1c_c"],["v78c3de1c_1f","v78c3de1c_1"],["v78c3de1c_1f","v78c3de1c_10"],["v78c3de1c_1f","v78c3de1c_7"],["v78c3de1c_2","v78c3de1c_11"],["v78c3de1c_2","v78c3de1c_17"],["v78c3de1c_2","v78c3de1c_20"],["v78c3de1c_20","v78c3de1c_11"],["v78c3de1c_20","v78c3de1c_14"],["v78c3de1c_20","v78c3de1c_e"],["v78c3de1c_21","v78c3de1c_0"],["v78c3de1c_21","v78c3de1c_12"],["v78c3de1c_21","v78c3de1c_13"],["v78c3de1c_21","v78c3de1c_18"],["v78c3de1c_22","v78c3de1c_1"],["v78c3de1c_22","v78c3de1c_10"],["v78c3de1c_22","v78c3de1c_d"],["v78c3de1c_23","v78c3de1c_14"],["v78c3de1c_23","v78c3de1c_8"],["v78c3de1c_23","v78c3de1c_b"],["v78c3de1c_3","v78c3de1c_12"],["v78c3de1c_3","v78c3de1c_1b"],["v78c3de1c_3","v78c3de1c_f"],["v78c3de1c_4","v78c3de1c_10"],["v78c3de1c_4","v78c3de1c_1c"],["v78c3de1c_4","v78c3de1c_a"],["v78c3de1c_5","v78c3de1c_14"],["v78c3de1c_5","v78c3de1c_1a"],["v78c3de1c_5","v78c3de1c_e"],["v78c3de1c_6","v78c3de1c_12"],["v78c3de1c_6","v78c3de1c_1b"],["v78c3de1c_6","v78c3de1c_21"],["v78c3de1c_7","v78c3de1c_13"],["v78c3de1c_7","v78c3de1c_22"],["v78c3de1c_7","v78c3de1c_a"],["v78c3de1c_8","v78c3de1c_17"],["v78c3de1c_8","v78c3de1c_20"],["v78c3de1c_8","v78c3de1c_23"],["v78c3de1c_9","v78c3de1c_12"],["v78c3de1c_9","v78c3de1c_15"],["v78c3de1c_9","v78c3de1c_6"],["v78c3de1c_a","v78c3de1c_13"],["v78c3de1c_a","v78c3de1c_1c"],["v78c3de1c_a","v78c3de1c_d"],["v78c3de1c_b","v78c3de1c_11"],["v78c3de1c_b","v78c3de1c_1a"],["v78c3de1c_b","v78c3de1c_1d"],["v78c3de1c_c","v78c3de1c_15"],["v78c3de1c_c","v78c3de1c_9"],["v78c3de1c_c","v78c3de1c_f"],["v78c3de1c_d","v78c3de1c_10"],["v78c3de1c_d","v78c3de1c_16"],["v78c3de1c_d","v78c3de1c_a"],["v78c3de1c_e","v78c3de1c_14"],["v78c3de1c_e","v78c3de1c_1a"],["v78c3de1c_e","v78c3de1c_20"],["v78c3de1c_f","v78c3de1c_18"],["v78c3de1c_f","v78c3de1c_1b"],["v78c3de1c_f","v78c3de1c_c"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de1c_0"],["v78c3de1c_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de1c_15"],["v78c3de1c_1c"],["v78c3de1c_2"],["v78c3de1c_b"],["v78c3de1c_e"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de1c_1b"],["v78c3de1c_1a"],["v78c3de1c_12"],["v78c3de1c_b"],["v78c3de1c_8"],["v78c3de1c_5"],["v78c3de1c_0"],["v78c3de1c_f"],["v78c3de1c_1"],["v78c3de1c_9"],["v78c3de1c_16"],["v78c3de1c_1c"],["v78c3de1c_18"],["v78c3de1c_23"],["v78c3de1c_10"],["v78c3de1c_20"],["v78c3de1c_d"],["v78c3de1c_1f"],["v78c3de1c_4"],["v78c3de1c_2"],["v78c3de1c_22"],["v78c3de1c_15"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+** Second query over the same sources
+#+begin_src json
+{
+  "relations": [
+    {
+      "name": "edge",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de1c_0",
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_0",
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_0",
+          "v78c3de1c_6"
+        ],
+        [
+          "v78c3de1c_1",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_1",
+          "v78c3de1c_1f"
+        ],
+        [
+          "v78c3de1c_1",
+          "v78c3de1c_7"
+        ],
+        [
+          "v78c3de1c_10",
+          "v78c3de1c_13"
+        ],
+        [
+          "v78c3de1c_10",
+          "v78c3de1c_16"
+        ],
+        [
+          "v78c3de1c_10",
+          "v78c3de1c_19"
+        ],
+        [
+          "v78c3de1c_11",
+          "v78c3de1c_1a"
+        ],
+        [
+          "v78c3de1c_11",
+          "v78c3de1c_2"
+        ],
+        [
+          "v78c3de1c_11",
+          "v78c3de1c_5"
+        ],
+        [
+          "v78c3de1c_12",
+          "v78c3de1c_0"
+        ],
+        [
+          "v78c3de1c_12",
+          "v78c3de1c_6"
+        ],
+        [
+          "v78c3de1c_12",
+          "v78c3de1c_c"
+        ],
+        [
+          "v78c3de1c_13",
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_13",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_13",
+          "v78c3de1c_4"
+        ],
+        [
+          "v78c3de1c_14",
+          "v78c3de1c_17"
+        ],
+        [
+          "v78c3de1c_14",
+          "v78c3de1c_1d"
+        ],
+        [
+          "v78c3de1c_14",
+          "v78c3de1c_b"
+        ],
+        [
+          "v78c3de1c_15",
+          "v78c3de1c_0"
+        ],
+        [
+          "v78c3de1c_15",
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_15",
+          "v78c3de1c_1e"
+        ],
+        [
+          "v78c3de1c_16",
+          "v78c3de1c_13"
+        ],
+        [
+          "v78c3de1c_16",
+          "v78c3de1c_1f"
+        ],
+        [
+          "v78c3de1c_16",
+          "v78c3de1c_d"
+        ],
+        [
+          "v78c3de1c_17",
+          "v78c3de1c_11"
+        ],
+        [
+          "v78c3de1c_17",
+          "v78c3de1c_14"
+        ],
+        [
+          "v78c3de1c_17",
+          "v78c3de1c_8"
+        ],
+        [
+          "v78c3de1c_18",
+          "v78c3de1c_15"
+        ],
+        [
+          "v78c3de1c_18",
+          "v78c3de1c_1e"
+        ],
+        [
+          "v78c3de1c_18",
+          "v78c3de1c_21"
+        ],
+        [
+          "v78c3de1c_19",
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_19",
+          "v78c3de1c_1c"
+        ],
+        [
+          "v78c3de1c_19",
+          "v78c3de1c_7"
+        ],
+        [
+          "v78c3de1c_1a",
+          "v78c3de1c_11"
+        ],
+        [
+          "v78c3de1c_1a",
+          "v78c3de1c_5"
+        ],
+        [
+          "v78c3de1c_1a",
+          "v78c3de1c_8"
+        ],
+        [
+          "v78c3de1c_1b",
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_1b",
+          "v78c3de1c_21"
+        ],
+        [
+          "v78c3de1c_1b",
+          "v78c3de1c_c"
+        ],
+        [
+          "v78c3de1c_1c",
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_1c",
+          "v78c3de1c_16"
+        ],
+        [
+          "v78c3de1c_1c",
+          "v78c3de1c_4"
+        ],
+        [
+          "v78c3de1c_1d",
+          "v78c3de1c_20"
+        ],
+        [
+          "v78c3de1c_1d",
+          "v78c3de1c_5"
+        ],
+        [
+          "v78c3de1c_1d",
+          "v78c3de1c_b"
+        ],
+        [
+          "v78c3de1c_1e",
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_1e",
+          "v78c3de1c_6"
+        ],
+        [
+          "v78c3de1c_1e",
+          "v78c3de1c_c"
+        ],
+        [
+          "v78c3de1c_1f",
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_1f",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_1f",
+          "v78c3de1c_7"
+        ],
+        [
+          "v78c3de1c_2",
+          "v78c3de1c_11"
+        ],
+        [
+          "v78c3de1c_2",
+          "v78c3de1c_17"
+        ],
+        [
+          "v78c3de1c_2",
+          "v78c3de1c_20"
+        ],
+        [
+          "v78c3de1c_20",
+          "v78c3de1c_11"
+        ],
+        [
+          "v78c3de1c_20",
+          "v78c3de1c_14"
+        ],
+        [
+          "v78c3de1c_20",
+          "v78c3de1c_e"
+        ],
+        [
+          "v78c3de1c_21",
+          "v78c3de1c_0"
+        ],
+        [
+          "v78c3de1c_21",
+          "v78c3de1c_12"
+        ],
+        [
+          "v78c3de1c_21",
+          "v78c3de1c_13"
+        ],
+        [
+          "v78c3de1c_21",
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_22",
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_22",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_22",
+          "v78c3de1c_d"
+        ],
+        [
+          "v78c3de1c_23",
+          "v78c3de1c_14"
+        ],
+        [
+          "v78c3de1c_23",
+          "v78c3de1c_8"
+        ],
+        [
+          "v78c3de1c_23",
+          "v78c3de1c_b"
+        ],
+        [
+          "v78c3de1c_3",
+          "v78c3de1c_12"
+        ],
+        [
+          "v78c3de1c_3",
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_3",
+          "v78c3de1c_f"
+        ],
+        [
+          "v78c3de1c_4",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_4",
+          "v78c3de1c_1c"
+        ],
+        [
+          "v78c3de1c_4",
+          "v78c3de1c_a"
+        ],
+        [
+          "v78c3de1c_5",
+          "v78c3de1c_14"
+        ],
+        [
+          "v78c3de1c_5",
+          "v78c3de1c_1a"
+        ],
+        [
+          "v78c3de1c_5",
+          "v78c3de1c_e"
+        ],
+        [
+          "v78c3de1c_6",
+          "v78c3de1c_12"
+        ],
+        [
+          "v78c3de1c_6",
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_6",
+          "v78c3de1c_21"
+        ],
+        [
+          "v78c3de1c_7",
+          "v78c3de1c_13"
+        ],
+        [
+          "v78c3de1c_7",
+          "v78c3de1c_22"
+        ],
+        [
+          "v78c3de1c_7",
+          "v78c3de1c_a"
+        ],
+        [
+          "v78c3de1c_8",
+          "v78c3de1c_17"
+        ],
+        [
+          "v78c3de1c_8",
+          "v78c3de1c_20"
+        ],
+        [
+          "v78c3de1c_8",
+          "v78c3de1c_23"
+        ],
+        [
+          "v78c3de1c_9",
+          "v78c3de1c_12"
+        ],
+        [
+          "v78c3de1c_9",
+          "v78c3de1c_15"
+        ],
+        [
+          "v78c3de1c_9",
+          "v78c3de1c_6"
+        ],
+        [
+          "v78c3de1c_a",
+          "v78c3de1c_13"
+        ],
+        [
+          "v78c3de1c_a",
+          "v78c3de1c_1c"
+        ],
+        [
+          "v78c3de1c_a",
+          "v78c3de1c_d"
+        ],
+        [
+          "v78c3de1c_b",
+          "v78c3de1c_11"
+        ],
+        [
+          "v78c3de1c_b",
+          "v78c3de1c_1a"
+        ],
+        [
+          "v78c3de1c_b",
+          "v78c3de1c_1d"
+        ],
+        [
+          "v78c3de1c_c",
+          "v78c3de1c_15"
+        ],
+        [
+          "v78c3de1c_c",
+          "v78c3de1c_9"
+        ],
+        [
+          "v78c3de1c_c",
+          "v78c3de1c_f"
+        ],
+        [
+          "v78c3de1c_d",
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_d",
+          "v78c3de1c_16"
+        ],
+        [
+          "v78c3de1c_d",
+          "v78c3de1c_a"
+        ],
+        [
+          "v78c3de1c_e",
+          "v78c3de1c_14"
+        ],
+        [
+          "v78c3de1c_e",
+          "v78c3de1c_1a"
+        ],
+        [
+          "v78c3de1c_e",
+          "v78c3de1c_20"
+        ],
+        [
+          "v78c3de1c_f",
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_f",
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_f",
+          "v78c3de1c_c"
+        ]
+      ]
+    },
+    {
+      "name": "start",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de1c_0"
+        ],
+        [
+          "v78c3de1c_3"
+        ]
+      ]
+    },
+    {
+      "name": "blocked",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de1c_15"
+        ],
+        [
+          "v78c3de1c_1c"
+        ],
+        [
+          "v78c3de1c_2"
+        ],
+        [
+          "v78c3de1c_b"
+        ],
+        [
+          "v78c3de1c_e"
+        ]
+      ]
+    },
+    {
+      "name": "target",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de1c_1b"
+        ],
+        [
+          "v78c3de1c_1a"
+        ],
+        [
+          "v78c3de1c_12"
+        ],
+        [
+          "v78c3de1c_b"
+        ],
+        [
+          "v78c3de1c_8"
+        ],
+        [
+          "v78c3de1c_5"
+        ],
+        [
+          "v78c3de1c_0"
+        ],
+        [
+          "v78c3de1c_f"
+        ],
+        [
+          "v78c3de1c_1"
+        ],
+        [
+          "v78c3de1c_9"
+        ],
+        [
+          "v78c3de1c_16"
+        ],
+        [
+          "v78c3de1c_1c"
+        ],
+        [
+          "v78c3de1c_18"
+        ],
+        [
+          "v78c3de1c_23"
+        ],
+        [
+          "v78c3de1c_10"
+        ],
+        [
+          "v78c3de1c_20"
+        ],
+        [
+          "v78c3de1c_d"
+        ],
+        [
+          "v78c3de1c_1f"
+        ],
+        [
+          "v78c3de1c_4"
+        ],
+        [
+          "v78c3de1c_2"
+        ],
+        [
+          "v78c3de1c_22"
+        ],
+        [
+          "v78c3de1c_15"
+        ]
+      ]
+    },
+    {
+      "name": "reach",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "name": "answer",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    }
+  ],
+  "rules": [
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "start",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ],
+          "not": true
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "answer",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "target",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "y"
+            },
+            {
+              "var": "z"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queries": [
+    "answer"
+  ]
+}
+#+end_src
+
+* transfer / taint-propagation-with-sanitizers-2026102319
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3de2f_0","v78c3de2f_10"],["v78c3de2f_0","v78c3de2f_14"],["v78c3de2f_0","v78c3de2f_8"],["v78c3de2f_1","v78c3de2f_1d"],["v78c3de2f_1","v78c3de2f_9"],["v78c3de2f_1","v78c3de2f_d"],["v78c3de2f_10","v78c3de2f_18"],["v78c3de2f_10","v78c3de2f_1c"],["v78c3de2f_10","v78c3de2f_20"],["v78c3de2f_11","v78c3de2f_1"],["v78c3de2f_11","v78c3de2f_19"],["v78c3de2f_11","v78c3de2f_5"],["v78c3de2f_12","v78c3de2f_1e"],["v78c3de2f_12","v78c3de2f_22"],["v78c3de2f_12","v78c3de2f_e"],["v78c3de2f_13","v78c3de2f_17"],["v78c3de2f_13","v78c3de2f_23"],["v78c3de2f_13","v78c3de2f_27"],["v78c3de2f_14","v78c3de2f_0"],["v78c3de2f_14","v78c3de2f_18"],["v78c3de2f_14","v78c3de2f_24"],["v78c3de2f_14","v78c3de2f_5"],["v78c3de2f_15","v78c3de2f_21"],["v78c3de2f_15","v78c3de2f_5"],["v78c3de2f_15","v78c3de2f_9"],["v78c3de2f_16","v78c3de2f_12"],["v78c3de2f_16","v78c3de2f_1a"],["v78c3de2f_16","v78c3de2f_1e"],["v78c3de2f_17","v78c3de2f_1b"],["v78c3de2f_17","v78c3de2f_27"],["v78c3de2f_17","v78c3de2f_7"],["v78c3de2f_18","v78c3de2f_10"],["v78c3de2f_18","v78c3de2f_1c"],["v78c3de2f_18","v78c3de2f_20"],["v78c3de2f_19","v78c3de2f_11"],["v78c3de2f_19","v78c3de2f_5"],["v78c3de2f_19","v78c3de2f_9"],["v78c3de2f_1a","v78c3de2f_12"],["v78c3de2f_1a","v78c3de2f_2"],["v78c3de2f_1a","v78c3de2f_22"],["v78c3de2f_1b","v78c3de2f_27"],["v78c3de2f_1b","v78c3de2f_3"],["v78c3de2f_1b","v78c3de2f_7"],["v78c3de2f_1c","v78c3de2f_14"],["v78c3de2f_1c","v78c3de2f_24"],["v78c3de2f_1c","v78c3de2f_4"],["v78c3de2f_1d","v78c3de2f_1"],["v78c3de2f_1d","v78c3de2f_15"],["v78c3de2f_1d","v78c3de2f_d"],["v78c3de2f_1e","v78c3de2f_16"],["v78c3de2f_1e","v78c3de2f_26"],["v78c3de2f_1e","v78c3de2f_6"],["v78c3de2f_1f","v78c3de2f_17"],["v78c3de2f_1f","v78c3de2f_3"],["v78c3de2f_1f","v78c3de2f_f"],["v78c3de2f_2","v78c3de2f_12"],["v78c3de2f_2","v78c3de2f_16"],["v78c3de2f_2","v78c3de2f_1a"],["v78c3de2f_20","v78c3de2f_24"],["v78c3de2f_20","v78c3de2f_4"],["v78c3de2f_20","v78c3de2f_c"],["v78c3de2f_21","v78c3de2f_11"],["v78c3de2f_21","v78c3de2f_19"],["v78c3de2f_21","v78c3de2f_d"],["v78c3de2f_22","v78c3de2f_1e"],["v78c3de2f_22","v78c3de2f_2"],["v78c3de2f_22","v78c3de2f_e"],["v78c3de2f_23","v78c3de2f_27"],["v78c3de2f_23","v78c3de2f_3"],["v78c3de2f_23","v78c3de2f_f"],["v78c3de2f_24","v78c3de2f_0"],["v78c3de2f_24","v78c3de2f_14"],["v78c3de2f_24","v78c3de2f_c"],["v78c3de2f_25","v78c3de2f_1"],["v78c3de2f_25","v78c3de2f_11"],["v78c3de2f_25","v78c3de2f_d"],["v78c3de2f_26","v78c3de2f_16"],["v78c3de2f_26","v78c3de2f_1e"],["v78c3de2f_26","v78c3de2f_a"],["v78c3de2f_27","v78c3de2f_1f"],["v78c3de2f_27","v78c3de2f_b"],["v78c3de2f_27","v78c3de2f_f"],["v78c3de2f_3","v78c3de2f_1f"],["v78c3de2f_3","v78c3de2f_23"],["v78c3de2f_3","v78c3de2f_f"],["v78c3de2f_4","v78c3de2f_14"],["v78c3de2f_4","v78c3de2f_18"],["v78c3de2f_4","v78c3de2f_20"],["v78c3de2f_5","v78c3de2f_1d"],["v78c3de2f_5","v78c3de2f_25"],["v78c3de2f_5","v78c3de2f_d"],["v78c3de2f_6","v78c3de2f_16"],["v78c3de2f_6","v78c3de2f_1a"],["v78c3de2f_6","v78c3de2f_2"],["v78c3de2f_7","v78c3de2f_17"],["v78c3de2f_7","v78c3de2f_27"],["v78c3de2f_7","v78c3de2f_3"],["v78c3de2f_8","v78c3de2f_0"],["v78c3de2f_8","v78c3de2f_18"],["v78c3de2f_8","v78c3de2f_1c"],["v78c3de2f_9","v78c3de2f_1d"],["v78c3de2f_9","v78c3de2f_5"],["v78c3de2f_9","v78c3de2f_d"],["v78c3de2f_a","v78c3de2f_16"],["v78c3de2f_a","v78c3de2f_1e"],["v78c3de2f_a","v78c3de2f_26"],["v78c3de2f_b","v78c3de2f_13"],["v78c3de2f_b","v78c3de2f_3"],["v78c3de2f_b","v78c3de2f_7"],["v78c3de2f_c","v78c3de2f_14"],["v78c3de2f_c","v78c3de2f_24"],["v78c3de2f_c","v78c3de2f_4"],["v78c3de2f_d","v78c3de2f_15"],["v78c3de2f_d","v78c3de2f_19"],["v78c3de2f_d","v78c3de2f_1d"],["v78c3de2f_e","v78c3de2f_16"],["v78c3de2f_e","v78c3de2f_26"],["v78c3de2f_e","v78c3de2f_6"],["v78c3de2f_f","v78c3de2f_13"],["v78c3de2f_f","v78c3de2f_27"],["v78c3de2f_f","v78c3de2f_3"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de2f_0"],["v78c3de2f_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de2f_10"],["v78c3de2f_13"],["v78c3de2f_15"],["v78c3de2f_1f"],["v78c3de2f_2"],["v78c3de2f_22"]]},{"name":"sink","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de2f_19"],["v78c3de2f_1c"],["v78c3de2f_5"],["v78c3de2f_15"],["v78c3de2f_20"],["v78c3de2f_1e"],["v78c3de2f_26"],["v78c3de2f_23"],["v78c3de2f_11"],["v78c3de2f_22"],["v78c3de2f_12"],["v78c3de2f_b"],["v78c3de2f_1b"],["v78c3de2f_1a"],["v78c3de2f_1d"],["v78c3de2f_25"],["v78c3de2f_6"],["v78c3de2f_9"],["v78c3de2f_3"],["v78c3de2f_24"],["v78c3de2f_16"],["v78c3de2f_f"]]},{"name":"approved","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de2f_16"],["v78c3de2f_1d"],["v78c3de2f_26"],["v78c3de2f_5"],["v78c3de2f_9"],["v78c3de2f_f"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"sink","terms":[{"var":"x"}]},{"relation":"approved","terms":[{"var":"x"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+** Second query over the same sources
+#+begin_src json
+{
+  "relations": [
+    {
+      "name": "edge",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de2f_0",
+          "v78c3de2f_10"
+        ],
+        [
+          "v78c3de2f_0",
+          "v78c3de2f_14"
+        ],
+        [
+          "v78c3de2f_0",
+          "v78c3de2f_8"
+        ],
+        [
+          "v78c3de2f_1",
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_1",
+          "v78c3de2f_9"
+        ],
+        [
+          "v78c3de2f_1",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_10",
+          "v78c3de2f_18"
+        ],
+        [
+          "v78c3de2f_10",
+          "v78c3de2f_1c"
+        ],
+        [
+          "v78c3de2f_10",
+          "v78c3de2f_20"
+        ],
+        [
+          "v78c3de2f_11",
+          "v78c3de2f_1"
+        ],
+        [
+          "v78c3de2f_11",
+          "v78c3de2f_19"
+        ],
+        [
+          "v78c3de2f_11",
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_12",
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_12",
+          "v78c3de2f_22"
+        ],
+        [
+          "v78c3de2f_12",
+          "v78c3de2f_e"
+        ],
+        [
+          "v78c3de2f_13",
+          "v78c3de2f_17"
+        ],
+        [
+          "v78c3de2f_13",
+          "v78c3de2f_23"
+        ],
+        [
+          "v78c3de2f_13",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_14",
+          "v78c3de2f_0"
+        ],
+        [
+          "v78c3de2f_14",
+          "v78c3de2f_18"
+        ],
+        [
+          "v78c3de2f_14",
+          "v78c3de2f_24"
+        ],
+        [
+          "v78c3de2f_14",
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_15",
+          "v78c3de2f_21"
+        ],
+        [
+          "v78c3de2f_15",
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_15",
+          "v78c3de2f_9"
+        ],
+        [
+          "v78c3de2f_16",
+          "v78c3de2f_12"
+        ],
+        [
+          "v78c3de2f_16",
+          "v78c3de2f_1a"
+        ],
+        [
+          "v78c3de2f_16",
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_17",
+          "v78c3de2f_1b"
+        ],
+        [
+          "v78c3de2f_17",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_17",
+          "v78c3de2f_7"
+        ],
+        [
+          "v78c3de2f_18",
+          "v78c3de2f_10"
+        ],
+        [
+          "v78c3de2f_18",
+          "v78c3de2f_1c"
+        ],
+        [
+          "v78c3de2f_18",
+          "v78c3de2f_20"
+        ],
+        [
+          "v78c3de2f_19",
+          "v78c3de2f_11"
+        ],
+        [
+          "v78c3de2f_19",
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_19",
+          "v78c3de2f_9"
+        ],
+        [
+          "v78c3de2f_1a",
+          "v78c3de2f_12"
+        ],
+        [
+          "v78c3de2f_1a",
+          "v78c3de2f_2"
+        ],
+        [
+          "v78c3de2f_1a",
+          "v78c3de2f_22"
+        ],
+        [
+          "v78c3de2f_1b",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_1b",
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_1b",
+          "v78c3de2f_7"
+        ],
+        [
+          "v78c3de2f_1c",
+          "v78c3de2f_14"
+        ],
+        [
+          "v78c3de2f_1c",
+          "v78c3de2f_24"
+        ],
+        [
+          "v78c3de2f_1c",
+          "v78c3de2f_4"
+        ],
+        [
+          "v78c3de2f_1d",
+          "v78c3de2f_1"
+        ],
+        [
+          "v78c3de2f_1d",
+          "v78c3de2f_15"
+        ],
+        [
+          "v78c3de2f_1d",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_1e",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_1e",
+          "v78c3de2f_26"
+        ],
+        [
+          "v78c3de2f_1e",
+          "v78c3de2f_6"
+        ],
+        [
+          "v78c3de2f_1f",
+          "v78c3de2f_17"
+        ],
+        [
+          "v78c3de2f_1f",
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_1f",
+          "v78c3de2f_f"
+        ],
+        [
+          "v78c3de2f_2",
+          "v78c3de2f_12"
+        ],
+        [
+          "v78c3de2f_2",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_2",
+          "v78c3de2f_1a"
+        ],
+        [
+          "v78c3de2f_20",
+          "v78c3de2f_24"
+        ],
+        [
+          "v78c3de2f_20",
+          "v78c3de2f_4"
+        ],
+        [
+          "v78c3de2f_20",
+          "v78c3de2f_c"
+        ],
+        [
+          "v78c3de2f_21",
+          "v78c3de2f_11"
+        ],
+        [
+          "v78c3de2f_21",
+          "v78c3de2f_19"
+        ],
+        [
+          "v78c3de2f_21",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_22",
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_22",
+          "v78c3de2f_2"
+        ],
+        [
+          "v78c3de2f_22",
+          "v78c3de2f_e"
+        ],
+        [
+          "v78c3de2f_23",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_23",
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_23",
+          "v78c3de2f_f"
+        ],
+        [
+          "v78c3de2f_24",
+          "v78c3de2f_0"
+        ],
+        [
+          "v78c3de2f_24",
+          "v78c3de2f_14"
+        ],
+        [
+          "v78c3de2f_24",
+          "v78c3de2f_c"
+        ],
+        [
+          "v78c3de2f_25",
+          "v78c3de2f_1"
+        ],
+        [
+          "v78c3de2f_25",
+          "v78c3de2f_11"
+        ],
+        [
+          "v78c3de2f_25",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_26",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_26",
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_26",
+          "v78c3de2f_a"
+        ],
+        [
+          "v78c3de2f_27",
+          "v78c3de2f_1f"
+        ],
+        [
+          "v78c3de2f_27",
+          "v78c3de2f_b"
+        ],
+        [
+          "v78c3de2f_27",
+          "v78c3de2f_f"
+        ],
+        [
+          "v78c3de2f_3",
+          "v78c3de2f_1f"
+        ],
+        [
+          "v78c3de2f_3",
+          "v78c3de2f_23"
+        ],
+        [
+          "v78c3de2f_3",
+          "v78c3de2f_f"
+        ],
+        [
+          "v78c3de2f_4",
+          "v78c3de2f_14"
+        ],
+        [
+          "v78c3de2f_4",
+          "v78c3de2f_18"
+        ],
+        [
+          "v78c3de2f_4",
+          "v78c3de2f_20"
+        ],
+        [
+          "v78c3de2f_5",
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_5",
+          "v78c3de2f_25"
+        ],
+        [
+          "v78c3de2f_5",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_6",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_6",
+          "v78c3de2f_1a"
+        ],
+        [
+          "v78c3de2f_6",
+          "v78c3de2f_2"
+        ],
+        [
+          "v78c3de2f_7",
+          "v78c3de2f_17"
+        ],
+        [
+          "v78c3de2f_7",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_7",
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_8",
+          "v78c3de2f_0"
+        ],
+        [
+          "v78c3de2f_8",
+          "v78c3de2f_18"
+        ],
+        [
+          "v78c3de2f_8",
+          "v78c3de2f_1c"
+        ],
+        [
+          "v78c3de2f_9",
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_9",
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_9",
+          "v78c3de2f_d"
+        ],
+        [
+          "v78c3de2f_a",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_a",
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_a",
+          "v78c3de2f_26"
+        ],
+        [
+          "v78c3de2f_b",
+          "v78c3de2f_13"
+        ],
+        [
+          "v78c3de2f_b",
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_b",
+          "v78c3de2f_7"
+        ],
+        [
+          "v78c3de2f_c",
+          "v78c3de2f_14"
+        ],
+        [
+          "v78c3de2f_c",
+          "v78c3de2f_24"
+        ],
+        [
+          "v78c3de2f_c",
+          "v78c3de2f_4"
+        ],
+        [
+          "v78c3de2f_d",
+          "v78c3de2f_15"
+        ],
+        [
+          "v78c3de2f_d",
+          "v78c3de2f_19"
+        ],
+        [
+          "v78c3de2f_d",
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_e",
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_e",
+          "v78c3de2f_26"
+        ],
+        [
+          "v78c3de2f_e",
+          "v78c3de2f_6"
+        ],
+        [
+          "v78c3de2f_f",
+          "v78c3de2f_13"
+        ],
+        [
+          "v78c3de2f_f",
+          "v78c3de2f_27"
+        ],
+        [
+          "v78c3de2f_f",
+          "v78c3de2f_3"
+        ]
+      ]
+    },
+    {
+      "name": "start",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de2f_0"
+        ],
+        [
+          "v78c3de2f_4"
+        ]
+      ]
+    },
+    {
+      "name": "blocked",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de2f_10"
+        ],
+        [
+          "v78c3de2f_13"
+        ],
+        [
+          "v78c3de2f_15"
+        ],
+        [
+          "v78c3de2f_1f"
+        ],
+        [
+          "v78c3de2f_2"
+        ],
+        [
+          "v78c3de2f_22"
+        ]
+      ]
+    },
+    {
+      "name": "sink",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de2f_19"
+        ],
+        [
+          "v78c3de2f_1c"
+        ],
+        [
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_15"
+        ],
+        [
+          "v78c3de2f_20"
+        ],
+        [
+          "v78c3de2f_1e"
+        ],
+        [
+          "v78c3de2f_26"
+        ],
+        [
+          "v78c3de2f_23"
+        ],
+        [
+          "v78c3de2f_11"
+        ],
+        [
+          "v78c3de2f_22"
+        ],
+        [
+          "v78c3de2f_12"
+        ],
+        [
+          "v78c3de2f_b"
+        ],
+        [
+          "v78c3de2f_1b"
+        ],
+        [
+          "v78c3de2f_1a"
+        ],
+        [
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_25"
+        ],
+        [
+          "v78c3de2f_6"
+        ],
+        [
+          "v78c3de2f_9"
+        ],
+        [
+          "v78c3de2f_3"
+        ],
+        [
+          "v78c3de2f_24"
+        ],
+        [
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_f"
+        ]
+      ]
+    },
+    {
+      "name": "approved",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de2f_16"
+        ],
+        [
+          "v78c3de2f_1d"
+        ],
+        [
+          "v78c3de2f_26"
+        ],
+        [
+          "v78c3de2f_5"
+        ],
+        [
+          "v78c3de2f_9"
+        ],
+        [
+          "v78c3de2f_f"
+        ]
+      ]
+    },
+    {
+      "name": "reach",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "name": "answer",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    }
+  ],
+  "rules": [
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "start",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ],
+          "not": true
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "answer",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "sink",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "approved",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ],
+          "not": true
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "approved",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queries": [
+    "answer"
+  ]
+}
+#+end_src
+
+* transfer / conjunctive-prerequisite-closure-2026102338
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3de42_0","v78c3de42_18"],["v78c3de42_0","v78c3de42_1c"],["v78c3de42_0","v78c3de42_24"],["v78c3de42_0","v78c3de42_6"],["v78c3de42_1","v78c3de42_19"],["v78c3de42_1","v78c3de42_2b"],["v78c3de42_1","v78c3de42_d"],["v78c3de42_10","v78c3de42_22"],["v78c3de42_10","v78c3de42_2b"],["v78c3de42_10","v78c3de42_d"],["v78c3de42_11","v78c3de42_1d"],["v78c3de42_11","v78c3de42_2"],["v78c3de42_11","v78c3de42_8"],["v78c3de42_12","v78c3de42_1e"],["v78c3de42_12","v78c3de42_3"],["v78c3de42_12","v78c3de42_c"],["v78c3de42_13","v78c3de42_10"],["v78c3de42_13","v78c3de42_25"],["v78c3de42_13","v78c3de42_2b"],["v78c3de42_14","v78c3de42_2"],["v78c3de42_14","v78c3de42_20"],["v78c3de42_14","v78c3de42_8"],["v78c3de42_15","v78c3de42_6"],["v78c3de42_15","v78c3de42_9"],["v78c3de42_15","v78c3de42_f"],["v78c3de42_16","v78c3de42_1c"],["v78c3de42_16","v78c3de42_25"],["v78c3de42_16","v78c3de42_2b"],["v78c3de42_17","v78c3de42_14"],["v78c3de42_17","v78c3de42_b"],["v78c3de42_17","v78c3de42_e"],["v78c3de42_18","v78c3de42_1e"],["v78c3de42_18","v78c3de42_27"],["v78c3de42_18","v78c3de42_6"],["v78c3de42_19","v78c3de42_1c"],["v78c3de42_19","v78c3de42_22"],["v78c3de42_19","v78c3de42_a"],["v78c3de42_1a","v78c3de42_2"],["v78c3de42_1a","v78c3de42_23"],["v78c3de42_1a","v78c3de42_b"],["v78c3de42_1b","v78c3de42_12"],["v78c3de42_1b","v78c3de42_24"],["v78c3de42_1b","v78c3de42_f"],["v78c3de42_1c","v78c3de42_16"],["v78c3de42_1c","v78c3de42_25"],["v78c3de42_1c","v78c3de42_28"],["v78c3de42_1d","v78c3de42_11"],["v78c3de42_1d","v78c3de42_1a"],["v78c3de42_1d","v78c3de42_20"],["v78c3de42_1e","v78c3de42_21"],["v78c3de42_1e","v78c3de42_3"],["v78c3de42_1e","v78c3de42_f"],["v78c3de42_1f","v78c3de42_13"],["v78c3de42_1f","v78c3de42_22"],["v78c3de42_1f","v78c3de42_28"],["v78c3de42_2","v78c3de42_1d"],["v78c3de42_2","v78c3de42_23"],["v78c3de42_2","v78c3de42_26"],["v78c3de42_20","v78c3de42_1a"],["v78c3de42_20","v78c3de42_8"],["v78c3de42_20","v78c3de42_e"],["v78c3de42_21","v78c3de42_27"],["v78c3de42_21","v78c3de42_2a"],["v78c3de42_21","v78c3de42_3"],["v78c3de42_22","v78c3de42_4"],["v78c3de42_22","v78c3de42_7"],["v78c3de42_22","v78c3de42_d"],["v78c3de42_23","v78c3de42_1a"],["v78c3de42_23","v78c3de42_2"],["v78c3de42_23","v78c3de42_20"],["v78c3de42_24","v78c3de42_18"],["v78c3de42_24","v78c3de42_2a"],["v78c3de42_24","v78c3de42_9"],["v78c3de42_25","v78c3de42_16"],["v78c3de42_25","v78c3de42_19"],["v78c3de42_25","v78c3de42_22"],["v78c3de42_26","v78c3de42_14"],["v78c3de42_26","v78c3de42_23"],["v78c3de42_26","v78c3de42_5"],["v78c3de42_27","v78c3de42_15"],["v78c3de42_27","v78c3de42_2a"],["v78c3de42_27","v78c3de42_9"],["v78c3de42_28","v78c3de42_10"],["v78c3de42_28","v78c3de42_19"],["v78c3de42_28","v78c3de42_d"],["v78c3de42_29","v78c3de42_1d"],["v78c3de42_29","v78c3de42_23"],["v78c3de42_29","v78c3de42_26"],["v78c3de42_2a","v78c3de42_1b"],["v78c3de42_2a","v78c3de42_21"],["v78c3de42_2a","v78c3de42_24"],["v78c3de42_2b","v78c3de42_16"],["v78c3de42_2b","v78c3de42_1c"],["v78c3de42_2b","v78c3de42_d"],["v78c3de42_3","v78c3de42_1b"],["v78c3de42_3","v78c3de42_1e"],["v78c3de42_3","v78c3de42_c"],["v78c3de42_4","v78c3de42_16"],["v78c3de42_4","v78c3de42_25"],["v78c3de42_4","v78c3de42_7"],["v78c3de42_5","v78c3de42_1d"],["v78c3de42_5","v78c3de42_23"],["v78c3de42_5","v78c3de42_29"],["v78c3de42_6","v78c3de42_12"],["v78c3de42_6","v78c3de42_24"],["v78c3de42_6","v78c3de42_9"],["v78c3de42_7","v78c3de42_10"],["v78c3de42_7","v78c3de42_19"],["v78c3de42_7","v78c3de42_2b"],["v78c3de42_8","v78c3de42_11"],["v78c3de42_8","v78c3de42_2"],["v78c3de42_8","v78c3de42_20"],["v78c3de42_9","v78c3de42_27"],["v78c3de42_9","v78c3de42_2a"],["v78c3de42_9","v78c3de42_6"],["v78c3de42_a","v78c3de42_1f"],["v78c3de42_a","v78c3de42_7"],["v78c3de42_a","v78c3de42_d"],["v78c3de42_b","v78c3de42_14"],["v78c3de42_b","v78c3de42_17"],["v78c3de42_b","v78c3de42_26"],["v78c3de42_c","v78c3de42_0"],["v78c3de42_c","v78c3de42_18"],["v78c3de42_c","v78c3de42_2a"],["v78c3de42_d","v78c3de42_19"],["v78c3de42_d","v78c3de42_1c"],["v78c3de42_d","v78c3de42_2b"],["v78c3de42_e","v78c3de42_1d"],["v78c3de42_e","v78c3de42_26"],["v78c3de42_e","v78c3de42_5"],["v78c3de42_f","v78c3de42_2a"],["v78c3de42_f","v78c3de42_3"],["v78c3de42_f","v78c3de42_9"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de42_0"],["v78c3de42_3"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de42_12"],["v78c3de42_15"],["v78c3de42_1a"],["v78c3de42_1c"],["v78c3de42_1d"],["v78c3de42_26"],["v78c3de42_27"]]},{"name":"needs","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"},{"kind":"symbol"}],"rows":[["job78c3de42_0","v78c3de42_1d","v78c3de42_13"],["job78c3de42_1","v78c3de42_19","v78c3de42_d"],["job78c3de42_2","v78c3de42_0","v78c3de42_27"],["job78c3de42_3","v78c3de42_22","v78c3de42_d"],["job78c3de42_4","v78c3de42_21","v78c3de42_27"],["job78c3de42_5","v78c3de42_8","v78c3de42_1d"],["job78c3de42_6","v78c3de42_1a","v78c3de42_d"],["job78c3de42_7","v78c3de42_23","v78c3de42_f"],["job78c3de42_8","v78c3de42_18","v78c3de42_a"],["job78c3de42_9","v78c3de42_12","v78c3de42_8"],["job78c3de42_10","v78c3de42_9","v78c3de42_20"],["job78c3de42_11","v78c3de42_a","v78c3de42_1"],["job78c3de42_12","v78c3de42_24","v78c3de42_d"],["job78c3de42_13","v78c3de42_13","v78c3de42_d"],["job78c3de42_14","v78c3de42_5","v78c3de42_12"],["job78c3de42_15","v78c3de42_2","v78c3de42_19"],["job78c3de42_16","v78c3de42_1a","v78c3de42_5"],["job78c3de42_17","v78c3de42_26","v78c3de42_2a"],["job78c3de42_18","v78c3de42_a","v78c3de42_16"],["job78c3de42_19","v78c3de42_21","v78c3de42_15"],["job78c3de42_20","v78c3de42_f","v78c3de42_4"],["job78c3de42_21","v78c3de42_6","v78c3de42_16"],["job78c3de42_22","v78c3de42_6","v78c3de42_24"],["job78c3de42_23","v78c3de42_b","v78c3de42_1e"]]},{"name":"deferred","source":true,"columns":[{"kind":"symbol"}],"rows":[["job78c3de42_13"],["job78c3de42_16"],["job78c3de42_19"],["job78c3de42_22"],["job78c3de42_7"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"job"}]}],"body":[{"relation":"needs","terms":[{"var":"job"},{"var":"a"},{"var":"b"}]},{"relation":"reach","terms":[{"var":"a"}]},{"relation":"reach","terms":[{"var":"b"}]},{"relation":"deferred","terms":[{"var":"job"}],"not":true}]}],"queries":["answer"]}
+#+end_example
+
+** Second query over the same sources
+#+begin_src json
+{
+  "relations": [
+    {
+      "name": "edge",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de42_0",
+          "v78c3de42_18"
+        ],
+        [
+          "v78c3de42_0",
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_0",
+          "v78c3de42_24"
+        ],
+        [
+          "v78c3de42_0",
+          "v78c3de42_6"
+        ],
+        [
+          "v78c3de42_1",
+          "v78c3de42_19"
+        ],
+        [
+          "v78c3de42_1",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_1",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_10",
+          "v78c3de42_22"
+        ],
+        [
+          "v78c3de42_10",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_10",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_11",
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_11",
+          "v78c3de42_2"
+        ],
+        [
+          "v78c3de42_11",
+          "v78c3de42_8"
+        ],
+        [
+          "v78c3de42_12",
+          "v78c3de42_1e"
+        ],
+        [
+          "v78c3de42_12",
+          "v78c3de42_3"
+        ],
+        [
+          "v78c3de42_12",
+          "v78c3de42_c"
+        ],
+        [
+          "v78c3de42_13",
+          "v78c3de42_10"
+        ],
+        [
+          "v78c3de42_13",
+          "v78c3de42_25"
+        ],
+        [
+          "v78c3de42_13",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_14",
+          "v78c3de42_2"
+        ],
+        [
+          "v78c3de42_14",
+          "v78c3de42_20"
+        ],
+        [
+          "v78c3de42_14",
+          "v78c3de42_8"
+        ],
+        [
+          "v78c3de42_15",
+          "v78c3de42_6"
+        ],
+        [
+          "v78c3de42_15",
+          "v78c3de42_9"
+        ],
+        [
+          "v78c3de42_15",
+          "v78c3de42_f"
+        ],
+        [
+          "v78c3de42_16",
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_16",
+          "v78c3de42_25"
+        ],
+        [
+          "v78c3de42_16",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_17",
+          "v78c3de42_14"
+        ],
+        [
+          "v78c3de42_17",
+          "v78c3de42_b"
+        ],
+        [
+          "v78c3de42_17",
+          "v78c3de42_e"
+        ],
+        [
+          "v78c3de42_18",
+          "v78c3de42_1e"
+        ],
+        [
+          "v78c3de42_18",
+          "v78c3de42_27"
+        ],
+        [
+          "v78c3de42_18",
+          "v78c3de42_6"
+        ],
+        [
+          "v78c3de42_19",
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_19",
+          "v78c3de42_22"
+        ],
+        [
+          "v78c3de42_19",
+          "v78c3de42_a"
+        ],
+        [
+          "v78c3de42_1a",
+          "v78c3de42_2"
+        ],
+        [
+          "v78c3de42_1a",
+          "v78c3de42_23"
+        ],
+        [
+          "v78c3de42_1a",
+          "v78c3de42_b"
+        ],
+        [
+          "v78c3de42_1b",
+          "v78c3de42_12"
+        ],
+        [
+          "v78c3de42_1b",
+          "v78c3de42_24"
+        ],
+        [
+          "v78c3de42_1b",
+          "v78c3de42_f"
+        ],
+        [
+          "v78c3de42_1c",
+          "v78c3de42_16"
+        ],
+        [
+          "v78c3de42_1c",
+          "v78c3de42_25"
+        ],
+        [
+          "v78c3de42_1c",
+          "v78c3de42_28"
+        ],
+        [
+          "v78c3de42_1d",
+          "v78c3de42_11"
+        ],
+        [
+          "v78c3de42_1d",
+          "v78c3de42_1a"
+        ],
+        [
+          "v78c3de42_1d",
+          "v78c3de42_20"
+        ],
+        [
+          "v78c3de42_1e",
+          "v78c3de42_21"
+        ],
+        [
+          "v78c3de42_1e",
+          "v78c3de42_3"
+        ],
+        [
+          "v78c3de42_1e",
+          "v78c3de42_f"
+        ],
+        [
+          "v78c3de42_1f",
+          "v78c3de42_13"
+        ],
+        [
+          "v78c3de42_1f",
+          "v78c3de42_22"
+        ],
+        [
+          "v78c3de42_1f",
+          "v78c3de42_28"
+        ],
+        [
+          "v78c3de42_2",
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_2",
+          "v78c3de42_23"
+        ],
+        [
+          "v78c3de42_2",
+          "v78c3de42_26"
+        ],
+        [
+          "v78c3de42_20",
+          "v78c3de42_1a"
+        ],
+        [
+          "v78c3de42_20",
+          "v78c3de42_8"
+        ],
+        [
+          "v78c3de42_20",
+          "v78c3de42_e"
+        ],
+        [
+          "v78c3de42_21",
+          "v78c3de42_27"
+        ],
+        [
+          "v78c3de42_21",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_21",
+          "v78c3de42_3"
+        ],
+        [
+          "v78c3de42_22",
+          "v78c3de42_4"
+        ],
+        [
+          "v78c3de42_22",
+          "v78c3de42_7"
+        ],
+        [
+          "v78c3de42_22",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_23",
+          "v78c3de42_1a"
+        ],
+        [
+          "v78c3de42_23",
+          "v78c3de42_2"
+        ],
+        [
+          "v78c3de42_23",
+          "v78c3de42_20"
+        ],
+        [
+          "v78c3de42_24",
+          "v78c3de42_18"
+        ],
+        [
+          "v78c3de42_24",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_24",
+          "v78c3de42_9"
+        ],
+        [
+          "v78c3de42_25",
+          "v78c3de42_16"
+        ],
+        [
+          "v78c3de42_25",
+          "v78c3de42_19"
+        ],
+        [
+          "v78c3de42_25",
+          "v78c3de42_22"
+        ],
+        [
+          "v78c3de42_26",
+          "v78c3de42_14"
+        ],
+        [
+          "v78c3de42_26",
+          "v78c3de42_23"
+        ],
+        [
+          "v78c3de42_26",
+          "v78c3de42_5"
+        ],
+        [
+          "v78c3de42_27",
+          "v78c3de42_15"
+        ],
+        [
+          "v78c3de42_27",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_27",
+          "v78c3de42_9"
+        ],
+        [
+          "v78c3de42_28",
+          "v78c3de42_10"
+        ],
+        [
+          "v78c3de42_28",
+          "v78c3de42_19"
+        ],
+        [
+          "v78c3de42_28",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_29",
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_29",
+          "v78c3de42_23"
+        ],
+        [
+          "v78c3de42_29",
+          "v78c3de42_26"
+        ],
+        [
+          "v78c3de42_2a",
+          "v78c3de42_1b"
+        ],
+        [
+          "v78c3de42_2a",
+          "v78c3de42_21"
+        ],
+        [
+          "v78c3de42_2a",
+          "v78c3de42_24"
+        ],
+        [
+          "v78c3de42_2b",
+          "v78c3de42_16"
+        ],
+        [
+          "v78c3de42_2b",
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_2b",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_3",
+          "v78c3de42_1b"
+        ],
+        [
+          "v78c3de42_3",
+          "v78c3de42_1e"
+        ],
+        [
+          "v78c3de42_3",
+          "v78c3de42_c"
+        ],
+        [
+          "v78c3de42_4",
+          "v78c3de42_16"
+        ],
+        [
+          "v78c3de42_4",
+          "v78c3de42_25"
+        ],
+        [
+          "v78c3de42_4",
+          "v78c3de42_7"
+        ],
+        [
+          "v78c3de42_5",
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_5",
+          "v78c3de42_23"
+        ],
+        [
+          "v78c3de42_5",
+          "v78c3de42_29"
+        ],
+        [
+          "v78c3de42_6",
+          "v78c3de42_12"
+        ],
+        [
+          "v78c3de42_6",
+          "v78c3de42_24"
+        ],
+        [
+          "v78c3de42_6",
+          "v78c3de42_9"
+        ],
+        [
+          "v78c3de42_7",
+          "v78c3de42_10"
+        ],
+        [
+          "v78c3de42_7",
+          "v78c3de42_19"
+        ],
+        [
+          "v78c3de42_7",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_8",
+          "v78c3de42_11"
+        ],
+        [
+          "v78c3de42_8",
+          "v78c3de42_2"
+        ],
+        [
+          "v78c3de42_8",
+          "v78c3de42_20"
+        ],
+        [
+          "v78c3de42_9",
+          "v78c3de42_27"
+        ],
+        [
+          "v78c3de42_9",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_9",
+          "v78c3de42_6"
+        ],
+        [
+          "v78c3de42_a",
+          "v78c3de42_1f"
+        ],
+        [
+          "v78c3de42_a",
+          "v78c3de42_7"
+        ],
+        [
+          "v78c3de42_a",
+          "v78c3de42_d"
+        ],
+        [
+          "v78c3de42_b",
+          "v78c3de42_14"
+        ],
+        [
+          "v78c3de42_b",
+          "v78c3de42_17"
+        ],
+        [
+          "v78c3de42_b",
+          "v78c3de42_26"
+        ],
+        [
+          "v78c3de42_c",
+          "v78c3de42_0"
+        ],
+        [
+          "v78c3de42_c",
+          "v78c3de42_18"
+        ],
+        [
+          "v78c3de42_c",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_d",
+          "v78c3de42_19"
+        ],
+        [
+          "v78c3de42_d",
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_d",
+          "v78c3de42_2b"
+        ],
+        [
+          "v78c3de42_e",
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_e",
+          "v78c3de42_26"
+        ],
+        [
+          "v78c3de42_e",
+          "v78c3de42_5"
+        ],
+        [
+          "v78c3de42_f",
+          "v78c3de42_2a"
+        ],
+        [
+          "v78c3de42_f",
+          "v78c3de42_3"
+        ],
+        [
+          "v78c3de42_f",
+          "v78c3de42_9"
+        ]
+      ]
+    },
+    {
+      "name": "start",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de42_0"
+        ],
+        [
+          "v78c3de42_3"
+        ]
+      ]
+    },
+    {
+      "name": "blocked",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de42_12"
+        ],
+        [
+          "v78c3de42_15"
+        ],
+        [
+          "v78c3de42_1a"
+        ],
+        [
+          "v78c3de42_1c"
+        ],
+        [
+          "v78c3de42_1d"
+        ],
+        [
+          "v78c3de42_26"
+        ],
+        [
+          "v78c3de42_27"
+        ]
+      ]
+    },
+    {
+      "name": "needs",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "job78c3de42_0",
+          "v78c3de42_1d",
+          "v78c3de42_13"
+        ],
+        [
+          "job78c3de42_1",
+          "v78c3de42_19",
+          "v78c3de42_d"
+        ],
+        [
+          "job78c3de42_2",
+          "v78c3de42_0",
+          "v78c3de42_27"
+        ],
+        [
+          "job78c3de42_3",
+          "v78c3de42_22",
+          "v78c3de42_d"
+        ],
+        [
+          "job78c3de42_4",
+          "v78c3de42_21",
+          "v78c3de42_27"
+        ],
+        [
+          "job78c3de42_5",
+          "v78c3de42_8",
+          "v78c3de42_1d"
+        ],
+        [
+          "job78c3de42_6",
+          "v78c3de42_1a",
+          "v78c3de42_d"
+        ],
+        [
+          "job78c3de42_7",
+          "v78c3de42_23",
+          "v78c3de42_f"
+        ],
+        [
+          "job78c3de42_8",
+          "v78c3de42_18",
+          "v78c3de42_a"
+        ],
+        [
+          "job78c3de42_9",
+          "v78c3de42_12",
+          "v78c3de42_8"
+        ],
+        [
+          "job78c3de42_10",
+          "v78c3de42_9",
+          "v78c3de42_20"
+        ],
+        [
+          "job78c3de42_11",
+          "v78c3de42_a",
+          "v78c3de42_1"
+        ],
+        [
+          "job78c3de42_12",
+          "v78c3de42_24",
+          "v78c3de42_d"
+        ],
+        [
+          "job78c3de42_13",
+          "v78c3de42_13",
+          "v78c3de42_d"
+        ],
+        [
+          "job78c3de42_14",
+          "v78c3de42_5",
+          "v78c3de42_12"
+        ],
+        [
+          "job78c3de42_15",
+          "v78c3de42_2",
+          "v78c3de42_19"
+        ],
+        [
+          "job78c3de42_16",
+          "v78c3de42_1a",
+          "v78c3de42_5"
+        ],
+        [
+          "job78c3de42_17",
+          "v78c3de42_26",
+          "v78c3de42_2a"
+        ],
+        [
+          "job78c3de42_18",
+          "v78c3de42_a",
+          "v78c3de42_16"
+        ],
+        [
+          "job78c3de42_19",
+          "v78c3de42_21",
+          "v78c3de42_15"
+        ],
+        [
+          "job78c3de42_20",
+          "v78c3de42_f",
+          "v78c3de42_4"
+        ],
+        [
+          "job78c3de42_21",
+          "v78c3de42_6",
+          "v78c3de42_16"
+        ],
+        [
+          "job78c3de42_22",
+          "v78c3de42_6",
+          "v78c3de42_24"
+        ],
+        [
+          "job78c3de42_23",
+          "v78c3de42_b",
+          "v78c3de42_1e"
+        ]
+      ]
+    },
+    {
+      "name": "deferred",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "job78c3de42_13"
+        ],
+        [
+          "job78c3de42_16"
+        ],
+        [
+          "job78c3de42_19"
+        ],
+        [
+          "job78c3de42_22"
+        ],
+        [
+          "job78c3de42_7"
+        ]
+      ]
+    },
+    {
+      "name": "reach",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "name": "answer",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    }
+  ],
+  "rules": [
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "start",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ],
+          "not": true
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "answer",
+          "terms": [
+            {
+              "var": "job"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "needs",
+          "terms": [
+            {
+              "var": "job"
+            },
+            {
+              "var": "a"
+            },
+            {
+              "var": "b"
+            }
+          ]
+        },
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "a"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "b"
+            }
+          ]
+        },
+        {
+          "relation": "deferred",
+          "terms": [
+            {
+              "var": "job"
+            }
+          ],
+          "not": true
+        }
+      ]
+    }
+  ],
+  "queries": [
+    "answer"
+  ]
+}
+#+end_src
+
+* transfer / bidirectional-recursive-impact-2026102357
+#+begin_example
+Compute the COMPLETE answer relation of this finite least-fixed-point program. Rules are conjunctive; shared variables join; not means scoped absence from the declared source relation. Blocked nodes cannot be entered by recursive propagation, but explicitly supplied start/finish seeds are initial facts. Cycles do not bound the number of fixed-point rounds. No external tools are available. Reason carefully and finish with FINAL_JSON: {"answer": ["symbol", ...]}. Explanations are welcome; the API does not enforce a JSON schema.
+{"relations":[{"name":"edge","source":true,"columns":[{"kind":"symbol"},{"kind":"symbol"}],"rows":[["v78c3de55_0","v78c3de55_18"],["v78c3de55_0","v78c3de55_24"],["v78c3de55_0","v78c3de55_2c"],["v78c3de55_1","v78c3de55_11"],["v78c3de55_1","v78c3de55_1d"],["v78c3de55_1","v78c3de55_d"],["v78c3de55_10","v78c3de55_18"],["v78c3de55_10","v78c3de55_20"],["v78c3de55_10","v78c3de55_24"],["v78c3de55_11","v78c3de55_15"],["v78c3de55_11","v78c3de55_1d"],["v78c3de55_11","v78c3de55_25"],["v78c3de55_12","v78c3de55_1a"],["v78c3de55_12","v78c3de55_22"],["v78c3de55_12","v78c3de55_e"],["v78c3de55_13","v78c3de55_23"],["v78c3de55_13","v78c3de55_b"],["v78c3de55_13","v78c3de55_f"],["v78c3de55_14","v78c3de55_1c"],["v78c3de55_14","v78c3de55_20"],["v78c3de55_14","v78c3de55_28"],["v78c3de55_15","v78c3de55_1d"],["v78c3de55_15","v78c3de55_2d"],["v78c3de55_15","v78c3de55_d"],["v78c3de55_16","v78c3de55_1e"],["v78c3de55_16","v78c3de55_a"],["v78c3de55_16","v78c3de55_e"],["v78c3de55_17","v78c3de55_27"],["v78c3de55_17","v78c3de55_3"],["v78c3de55_17","v78c3de55_b"],["v78c3de55_18","v78c3de55_0"],["v78c3de55_18","v78c3de55_20"],["v78c3de55_18","v78c3de55_8"],["v78c3de55_19","v78c3de55_1"],["v78c3de55_19","v78c3de55_25"],["v78c3de55_19","v78c3de55_29"],["v78c3de55_1a","v78c3de55_16"],["v78c3de55_1a","v78c3de55_2a"],["v78c3de55_1a","v78c3de55_e"],["v78c3de55_1b","v78c3de55_13"],["v78c3de55_1b","v78c3de55_2b"],["v78c3de55_1b","v78c3de55_2f"],["v78c3de55_1c","v78c3de55_0"],["v78c3de55_1c","v78c3de55_18"],["v78c3de55_1c","v78c3de55_8"],["v78c3de55_1d","v78c3de55_21"],["v78c3de55_1d","v78c3de55_29"],["v78c3de55_1d","v78c3de55_2d"],["v78c3de55_1e","v78c3de55_2"],["v78c3de55_1e","v78c3de55_22"],["v78c3de55_1e","v78c3de55_e"],["v78c3de55_1f","v78c3de55_1b"],["v78c3de55_1f","v78c3de55_23"],["v78c3de55_1f","v78c3de55_f"],["v78c3de55_2","v78c3de55_1a"],["v78c3de55_2","v78c3de55_2a"],["v78c3de55_2","v78c3de55_2e"],["v78c3de55_20","v78c3de55_0"],["v78c3de55_20","v78c3de55_14"],["v78c3de55_20","v78c3de55_24"],["v78c3de55_21","v78c3de55_1"],["v78c3de55_21","v78c3de55_25"],["v78c3de55_21","v78c3de55_9"],["v78c3de55_22","v78c3de55_12"],["v78c3de55_22","v78c3de55_2a"],["v78c3de55_22","v78c3de55_2e"],["v78c3de55_23","v78c3de55_17"],["v78c3de55_23","v78c3de55_1f"],["v78c3de55_23","v78c3de55_b"],["v78c3de55_24","v78c3de55_4"],["v78c3de55_24","v78c3de55_8"],["v78c3de55_24","v78c3de55_c"],["v78c3de55_25","v78c3de55_29"],["v78c3de55_25","v78c3de55_2d"],["v78c3de55_25","v78c3de55_9"],["v78c3de55_26","v78c3de55_12"],["v78c3de55_26","v78c3de55_1e"],["v78c3de55_26","v78c3de55_2e"],["v78c3de55_27","v78c3de55_1f"],["v78c3de55_27","v78c3de55_23"],["v78c3de55_27","v78c3de55_7"],["v78c3de55_28","v78c3de55_10"],["v78c3de55_28","v78c3de55_24"],["v78c3de55_28","v78c3de55_25"],["v78c3de55_28","v78c3de55_8"],["v78c3de55_29","v78c3de55_11"],["v78c3de55_29","v78c3de55_21"],["v78c3de55_29","v78c3de55_25"],["v78c3de55_2a","v78c3de55_2"],["v78c3de55_2a","v78c3de55_26"],["v78c3de55_2a","v78c3de55_2e"],["v78c3de55_2b","v78c3de55_13"],["v78c3de55_2b","v78c3de55_17"],["v78c3de55_2b","v78c3de55_3"],["v78c3de55_2c","v78c3de55_10"],["v78c3de55_2c","v78c3de55_20"],["v78c3de55_2c","v78c3de55_8"],["v78c3de55_2d","v78c3de55_29"],["v78c3de55_2d","v78c3de55_9"],["v78c3de55_2d","v78c3de55_d"],["v78c3de55_2e","v78c3de55_1e"],["v78c3de55_2e","v78c3de55_22"],["v78c3de55_2e","v78c3de55_e"],["v78c3de55_2f","v78c3de55_27"],["v78c3de55_2f","v78c3de55_7"],["v78c3de55_2f","v78c3de55_f"],["v78c3de55_3","v78c3de55_23"],["v78c3de55_3","v78c3de55_27"],["v78c3de55_3","v78c3de55_7"],["v78c3de55_4","v78c3de55_20"],["v78c3de55_4","v78c3de55_24"],["v78c3de55_4","v78c3de55_28"],["v78c3de55_5","v78c3de55_19"],["v78c3de55_5","v78c3de55_2d"],["v78c3de55_5","v78c3de55_9"],["v78c3de55_6","v78c3de55_16"],["v78c3de55_6","v78c3de55_1a"],["v78c3de55_6","v78c3de55_2"],["v78c3de55_7","v78c3de55_13"],["v78c3de55_7","v78c3de55_1b"],["v78c3de55_7","v78c3de55_1f"],["v78c3de55_8","v78c3de55_0"],["v78c3de55_8","v78c3de55_2c"],["v78c3de55_8","v78c3de55_c"],["v78c3de55_9","v78c3de55_19"],["v78c3de55_9","v78c3de55_25"],["v78c3de55_9","v78c3de55_5"],["v78c3de55_a","v78c3de55_22"],["v78c3de55_a","v78c3de55_26"],["v78c3de55_a","v78c3de55_2e"],["v78c3de55_b","v78c3de55_13"],["v78c3de55_b","v78c3de55_17"],["v78c3de55_b","v78c3de55_7"],["v78c3de55_c","v78c3de55_0"],["v78c3de55_c","v78c3de55_10"],["v78c3de55_c","v78c3de55_14"],["v78c3de55_d","v78c3de55_19"],["v78c3de55_d","v78c3de55_21"],["v78c3de55_d","v78c3de55_25"],["v78c3de55_e","v78c3de55_1a"],["v78c3de55_e","v78c3de55_26"],["v78c3de55_e","v78c3de55_2a"],["v78c3de55_f","v78c3de55_13"],["v78c3de55_f","v78c3de55_23"],["v78c3de55_f","v78c3de55_7"]]},{"name":"start","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de55_0"],["v78c3de55_4"]]},{"name":"blocked","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de55_19"],["v78c3de55_1c"],["v78c3de55_21"],["v78c3de55_29"],["v78c3de55_b"],["v78c3de55_d"],["v78c3de55_f"]]},{"name":"finish","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de55_2f"],["v78c3de55_17"],["v78c3de55_20"]]},{"name":"target","source":true,"columns":[{"kind":"symbol"}],"rows":[["v78c3de55_1f"],["v78c3de55_10"],["v78c3de55_11"],["v78c3de55_2"],["v78c3de55_14"],["v78c3de55_1c"],["v78c3de55_21"],["v78c3de55_12"],["v78c3de55_13"],["v78c3de55_1e"],["v78c3de55_16"],["v78c3de55_8"],["v78c3de55_18"],["v78c3de55_2a"],["v78c3de55_1d"],["v78c3de55_e"],["v78c3de55_a"],["v78c3de55_15"],["v78c3de55_9"],["v78c3de55_25"],["v78c3de55_2e"],["v78c3de55_b"]]},{"name":"reach","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"answer","source":false,"columns":[{"kind":"symbol"}],"rows":[]},{"name":"back","source":false,"columns":[{"kind":"symbol"}],"rows":[]}],"rules":[{"head":[{"relation":"reach","terms":[{"var":"x"}]}],"body":[{"relation":"start","terms":[{"var":"x"}]}]},{"head":[{"relation":"reach","terms":[{"var":"y"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"y"}],"not":true}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"finish","terms":[{"var":"x"}]}]},{"head":[{"relation":"back","terms":[{"var":"x"}]}],"body":[{"relation":"back","terms":[{"var":"y"}]},{"relation":"edge","terms":[{"var":"x"},{"var":"y"}]},{"relation":"blocked","terms":[{"var":"x"}],"not":true}]},{"head":[{"relation":"answer","terms":[{"var":"x"}]}],"body":[{"relation":"reach","terms":[{"var":"x"}]},{"relation":"back","terms":[{"var":"x"}]},{"relation":"target","terms":[{"var":"x"}]}]}],"queries":["answer"]}
+#+end_example
+
+** Second query over the same sources
+#+begin_src json
+{
+  "relations": [
+    {
+      "name": "edge",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        },
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de55_0",
+          "v78c3de55_18"
+        ],
+        [
+          "v78c3de55_0",
+          "v78c3de55_24"
+        ],
+        [
+          "v78c3de55_0",
+          "v78c3de55_2c"
+        ],
+        [
+          "v78c3de55_1",
+          "v78c3de55_11"
+        ],
+        [
+          "v78c3de55_1",
+          "v78c3de55_1d"
+        ],
+        [
+          "v78c3de55_1",
+          "v78c3de55_d"
+        ],
+        [
+          "v78c3de55_10",
+          "v78c3de55_18"
+        ],
+        [
+          "v78c3de55_10",
+          "v78c3de55_20"
+        ],
+        [
+          "v78c3de55_10",
+          "v78c3de55_24"
+        ],
+        [
+          "v78c3de55_11",
+          "v78c3de55_15"
+        ],
+        [
+          "v78c3de55_11",
+          "v78c3de55_1d"
+        ],
+        [
+          "v78c3de55_11",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_12",
+          "v78c3de55_1a"
+        ],
+        [
+          "v78c3de55_12",
+          "v78c3de55_22"
+        ],
+        [
+          "v78c3de55_12",
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_13",
+          "v78c3de55_23"
+        ],
+        [
+          "v78c3de55_13",
+          "v78c3de55_b"
+        ],
+        [
+          "v78c3de55_13",
+          "v78c3de55_f"
+        ],
+        [
+          "v78c3de55_14",
+          "v78c3de55_1c"
+        ],
+        [
+          "v78c3de55_14",
+          "v78c3de55_20"
+        ],
+        [
+          "v78c3de55_14",
+          "v78c3de55_28"
+        ],
+        [
+          "v78c3de55_15",
+          "v78c3de55_1d"
+        ],
+        [
+          "v78c3de55_15",
+          "v78c3de55_2d"
+        ],
+        [
+          "v78c3de55_15",
+          "v78c3de55_d"
+        ],
+        [
+          "v78c3de55_16",
+          "v78c3de55_1e"
+        ],
+        [
+          "v78c3de55_16",
+          "v78c3de55_a"
+        ],
+        [
+          "v78c3de55_16",
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_17",
+          "v78c3de55_27"
+        ],
+        [
+          "v78c3de55_17",
+          "v78c3de55_3"
+        ],
+        [
+          "v78c3de55_17",
+          "v78c3de55_b"
+        ],
+        [
+          "v78c3de55_18",
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_18",
+          "v78c3de55_20"
+        ],
+        [
+          "v78c3de55_18",
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_19",
+          "v78c3de55_1"
+        ],
+        [
+          "v78c3de55_19",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_19",
+          "v78c3de55_29"
+        ],
+        [
+          "v78c3de55_1a",
+          "v78c3de55_16"
+        ],
+        [
+          "v78c3de55_1a",
+          "v78c3de55_2a"
+        ],
+        [
+          "v78c3de55_1a",
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_1b",
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_1b",
+          "v78c3de55_2b"
+        ],
+        [
+          "v78c3de55_1b",
+          "v78c3de55_2f"
+        ],
+        [
+          "v78c3de55_1c",
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_1c",
+          "v78c3de55_18"
+        ],
+        [
+          "v78c3de55_1c",
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_1d",
+          "v78c3de55_21"
+        ],
+        [
+          "v78c3de55_1d",
+          "v78c3de55_29"
+        ],
+        [
+          "v78c3de55_1d",
+          "v78c3de55_2d"
+        ],
+        [
+          "v78c3de55_1e",
+          "v78c3de55_2"
+        ],
+        [
+          "v78c3de55_1e",
+          "v78c3de55_22"
+        ],
+        [
+          "v78c3de55_1e",
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_1f",
+          "v78c3de55_1b"
+        ],
+        [
+          "v78c3de55_1f",
+          "v78c3de55_23"
+        ],
+        [
+          "v78c3de55_1f",
+          "v78c3de55_f"
+        ],
+        [
+          "v78c3de55_2",
+          "v78c3de55_1a"
+        ],
+        [
+          "v78c3de55_2",
+          "v78c3de55_2a"
+        ],
+        [
+          "v78c3de55_2",
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_20",
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_20",
+          "v78c3de55_14"
+        ],
+        [
+          "v78c3de55_20",
+          "v78c3de55_24"
+        ],
+        [
+          "v78c3de55_21",
+          "v78c3de55_1"
+        ],
+        [
+          "v78c3de55_21",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_21",
+          "v78c3de55_9"
+        ],
+        [
+          "v78c3de55_22",
+          "v78c3de55_12"
+        ],
+        [
+          "v78c3de55_22",
+          "v78c3de55_2a"
+        ],
+        [
+          "v78c3de55_22",
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_23",
+          "v78c3de55_17"
+        ],
+        [
+          "v78c3de55_23",
+          "v78c3de55_1f"
+        ],
+        [
+          "v78c3de55_23",
+          "v78c3de55_b"
+        ],
+        [
+          "v78c3de55_24",
+          "v78c3de55_4"
+        ],
+        [
+          "v78c3de55_24",
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_24",
+          "v78c3de55_c"
+        ],
+        [
+          "v78c3de55_25",
+          "v78c3de55_29"
+        ],
+        [
+          "v78c3de55_25",
+          "v78c3de55_2d"
+        ],
+        [
+          "v78c3de55_25",
+          "v78c3de55_9"
+        ],
+        [
+          "v78c3de55_26",
+          "v78c3de55_12"
+        ],
+        [
+          "v78c3de55_26",
+          "v78c3de55_1e"
+        ],
+        [
+          "v78c3de55_26",
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_27",
+          "v78c3de55_1f"
+        ],
+        [
+          "v78c3de55_27",
+          "v78c3de55_23"
+        ],
+        [
+          "v78c3de55_27",
+          "v78c3de55_7"
+        ],
+        [
+          "v78c3de55_28",
+          "v78c3de55_10"
+        ],
+        [
+          "v78c3de55_28",
+          "v78c3de55_24"
+        ],
+        [
+          "v78c3de55_28",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_28",
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_29",
+          "v78c3de55_11"
+        ],
+        [
+          "v78c3de55_29",
+          "v78c3de55_21"
+        ],
+        [
+          "v78c3de55_29",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_2a",
+          "v78c3de55_2"
+        ],
+        [
+          "v78c3de55_2a",
+          "v78c3de55_26"
+        ],
+        [
+          "v78c3de55_2a",
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_2b",
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_2b",
+          "v78c3de55_17"
+        ],
+        [
+          "v78c3de55_2b",
+          "v78c3de55_3"
+        ],
+        [
+          "v78c3de55_2c",
+          "v78c3de55_10"
+        ],
+        [
+          "v78c3de55_2c",
+          "v78c3de55_20"
+        ],
+        [
+          "v78c3de55_2c",
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_2d",
+          "v78c3de55_29"
+        ],
+        [
+          "v78c3de55_2d",
+          "v78c3de55_9"
+        ],
+        [
+          "v78c3de55_2d",
+          "v78c3de55_d"
+        ],
+        [
+          "v78c3de55_2e",
+          "v78c3de55_1e"
+        ],
+        [
+          "v78c3de55_2e",
+          "v78c3de55_22"
+        ],
+        [
+          "v78c3de55_2e",
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_2f",
+          "v78c3de55_27"
+        ],
+        [
+          "v78c3de55_2f",
+          "v78c3de55_7"
+        ],
+        [
+          "v78c3de55_2f",
+          "v78c3de55_f"
+        ],
+        [
+          "v78c3de55_3",
+          "v78c3de55_23"
+        ],
+        [
+          "v78c3de55_3",
+          "v78c3de55_27"
+        ],
+        [
+          "v78c3de55_3",
+          "v78c3de55_7"
+        ],
+        [
+          "v78c3de55_4",
+          "v78c3de55_20"
+        ],
+        [
+          "v78c3de55_4",
+          "v78c3de55_24"
+        ],
+        [
+          "v78c3de55_4",
+          "v78c3de55_28"
+        ],
+        [
+          "v78c3de55_5",
+          "v78c3de55_19"
+        ],
+        [
+          "v78c3de55_5",
+          "v78c3de55_2d"
+        ],
+        [
+          "v78c3de55_5",
+          "v78c3de55_9"
+        ],
+        [
+          "v78c3de55_6",
+          "v78c3de55_16"
+        ],
+        [
+          "v78c3de55_6",
+          "v78c3de55_1a"
+        ],
+        [
+          "v78c3de55_6",
+          "v78c3de55_2"
+        ],
+        [
+          "v78c3de55_7",
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_7",
+          "v78c3de55_1b"
+        ],
+        [
+          "v78c3de55_7",
+          "v78c3de55_1f"
+        ],
+        [
+          "v78c3de55_8",
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_8",
+          "v78c3de55_2c"
+        ],
+        [
+          "v78c3de55_8",
+          "v78c3de55_c"
+        ],
+        [
+          "v78c3de55_9",
+          "v78c3de55_19"
+        ],
+        [
+          "v78c3de55_9",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_9",
+          "v78c3de55_5"
+        ],
+        [
+          "v78c3de55_a",
+          "v78c3de55_22"
+        ],
+        [
+          "v78c3de55_a",
+          "v78c3de55_26"
+        ],
+        [
+          "v78c3de55_a",
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_b",
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_b",
+          "v78c3de55_17"
+        ],
+        [
+          "v78c3de55_b",
+          "v78c3de55_7"
+        ],
+        [
+          "v78c3de55_c",
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_c",
+          "v78c3de55_10"
+        ],
+        [
+          "v78c3de55_c",
+          "v78c3de55_14"
+        ],
+        [
+          "v78c3de55_d",
+          "v78c3de55_19"
+        ],
+        [
+          "v78c3de55_d",
+          "v78c3de55_21"
+        ],
+        [
+          "v78c3de55_d",
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_e",
+          "v78c3de55_1a"
+        ],
+        [
+          "v78c3de55_e",
+          "v78c3de55_26"
+        ],
+        [
+          "v78c3de55_e",
+          "v78c3de55_2a"
+        ],
+        [
+          "v78c3de55_f",
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_f",
+          "v78c3de55_23"
+        ],
+        [
+          "v78c3de55_f",
+          "v78c3de55_7"
+        ]
+      ]
+    },
+    {
+      "name": "start",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de55_0"
+        ],
+        [
+          "v78c3de55_4"
+        ]
+      ]
+    },
+    {
+      "name": "blocked",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de55_19"
+        ],
+        [
+          "v78c3de55_1c"
+        ],
+        [
+          "v78c3de55_21"
+        ],
+        [
+          "v78c3de55_29"
+        ],
+        [
+          "v78c3de55_b"
+        ],
+        [
+          "v78c3de55_d"
+        ],
+        [
+          "v78c3de55_f"
+        ]
+      ]
+    },
+    {
+      "name": "finish",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de55_2f"
+        ],
+        [
+          "v78c3de55_17"
+        ],
+        [
+          "v78c3de55_20"
+        ]
+      ]
+    },
+    {
+      "name": "target",
+      "source": true,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": [
+        [
+          "v78c3de55_1f"
+        ],
+        [
+          "v78c3de55_10"
+        ],
+        [
+          "v78c3de55_11"
+        ],
+        [
+          "v78c3de55_2"
+        ],
+        [
+          "v78c3de55_14"
+        ],
+        [
+          "v78c3de55_1c"
+        ],
+        [
+          "v78c3de55_21"
+        ],
+        [
+          "v78c3de55_12"
+        ],
+        [
+          "v78c3de55_13"
+        ],
+        [
+          "v78c3de55_1e"
+        ],
+        [
+          "v78c3de55_16"
+        ],
+        [
+          "v78c3de55_8"
+        ],
+        [
+          "v78c3de55_18"
+        ],
+        [
+          "v78c3de55_2a"
+        ],
+        [
+          "v78c3de55_1d"
+        ],
+        [
+          "v78c3de55_e"
+        ],
+        [
+          "v78c3de55_a"
+        ],
+        [
+          "v78c3de55_15"
+        ],
+        [
+          "v78c3de55_9"
+        ],
+        [
+          "v78c3de55_25"
+        ],
+        [
+          "v78c3de55_2e"
+        ],
+        [
+          "v78c3de55_b"
+        ]
+      ]
+    },
+    {
+      "name": "reach",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "name": "answer",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    },
+    {
+      "name": "back",
+      "source": false,
+      "columns": [
+        {
+          "kind": "symbol"
+        }
+      ],
+      "rows": []
+    }
+  ],
+  "rules": [
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "start",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ],
+          "not": true
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "back",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "finish",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "back",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "back",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ],
+          "not": true
+        }
+      ]
+    },
+    {
+      "head": [
+        {
+          "relation": "answer",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        }
+      ],
+      "body": [
+        {
+          "relation": "reach",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "back",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "target",
+          "terms": [
+            {
+              "var": "x"
+            }
+          ]
+        },
+        {
+          "relation": "edge",
+          "terms": [
+            {
+              "var": "x"
+            },
+            {
+              "var": "y"
+            }
+          ]
+        },
+        {
+          "relation": "blocked",
+          "terms": [
+            {
+              "var": "y"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queries": [
+    "answer"
+  ]
+}
+#+end_src

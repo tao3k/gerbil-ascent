@@ -146,7 +146,7 @@ def compile_program(facts, rule_text, queries, *, schema=None):
         relations.append({"name": name, "source": name not in definitions,
                           "columns": [{"kind": kind} for kind in columns],
                           "rows": ([list(row) for row in rows] if schema is not None else
-                                   sorted({tuple(symbol(v) for v in row) for row in rows}))})
+                                   [list(row) for row in sorted({tuple(symbol(v) for v in row) for row in rows})])})
     return {"relations": relations, "rules": rules,
             "queries": list(dict.fromkeys(a["relation"] for a in wanted.values()))}, wanted
 

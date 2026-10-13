@@ -1,0 +1,23 @@
+{
+  "loadSeconds": 1.1379885829956038,
+  "checks": [
+    {
+      "round": 0,
+      "seconds": 1.4280924159975257,
+      "supported": 64,
+      "contradicted": 64,
+      "distinctResultReferences": 2,
+      "retainedNativeSessions": 2,
+      "reusedBranches": 4
+    },
+    {
+      "round": 1,
+      "seconds": 0.6074757080059499,
+      "supported": 64,
+      "contradicted": 64,
+      "distinctResultReferences": 2,
+      "retainedNativeSessions": 2,
+      "reusedBranches": 128
+    }
+  ]
+}

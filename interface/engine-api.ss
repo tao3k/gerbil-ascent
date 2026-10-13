@@ -6,6 +6,8 @@
         (only-in "dsl-source.ss" ascent-load-dsl-sources)
         "evidence-module.ss" "value-graph.ss"
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
+        (only-in :gerbil-ascent/program/evidence-dag ascent-evidence-dag)
+        (only-in :gerbil-ascent/program/trajectory ascent-trajectory)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-where relational-compute relational-reducer
@@ -240,7 +242,7 @@
                            (map term (hash-ref clause "terms"))))
       (else (error "unsupported operator mode")))
     (atom clause #t)))
-(def (validate-rule-catalog catalog)
+(def (rule-catalog-program catalog)
   (let* ((declarations (hash-ref catalog "relations"))
          (relations
           (map (lambda (relation)
@@ -254,8 +256,11 @@
                        (gerbil-ascent-rule (map atom (hash-ref rule "head"))
                          (map body-clause (hash-ref rule "body")))) (hash-ref catalog "rules")))
          (program (gerbil-ascent-program relations rules +inf.0 +inf.0 +inf.0 sources)))
-    (gerbil-ascent-prepare-program relations rules
-      (gerbil-ascent-program-schema program relations) #f)
+    program))
+(def (validate-rule-catalog catalog)
+  (let (program (rule-catalog-program catalog))
+    (gerbil-ascent-prepare-program (.ref program 'relations) (.ref program 'rules)
+      (gerbil-ascent-program-schema program (.ref program 'relations)) #f)
     catalog))
 (def (open-program declaration (policy #f))
   (shape declaration '("relations" "rules" "queries"))
@@ -298,6 +303,14 @@
   (when (>= (hash-length sessions) 64) (error "scheme session limit"))
   (let-values (((program descriptors exports) (ascent-load-dsl-sources texts)))
     (open-native-program (limit-program program policy) descriptors exports #f)))
+
+(def (open-rule-sources texts (policy #f))
+  (when (>= (hash-length sessions) 64) (error "scheme session limit"))
+  (let* ((catalog (ascent-read-rule-sources texts))
+         (descriptors (hash-ref catalog "relations"))
+         (program (limit-program (rule-catalog-program catalog) policy)))
+    (open-native-program program descriptors
+      (map (cut hash-ref <> "name") descriptors) #f)))
 
 (def (open-native-program program descriptors exports explain (bindings []))
   (when (>= (hash-length sessions) 64) (error "scheme session limit"))
@@ -555,7 +568,7 @@
        (set-load-path! [path])
        (hash ("configured" #t))))
     ((describe) (shape request '("operation"))
-     (hash ("abi" 1) ("operations" '("open" "open-sources" "open-module" "open-evidence" "open-components" "components-open" "owner-evidence" "native-result" "module-open" "dsl-open" "module-call" "module-value" "module-apply" "module-close" "source-replace" "source-run" "replace" "run" "close" "compare" "domain-check" "computational-evidence" "read-rules"))
+     (hash ("abi" 1) ("operations" '("open" "open-sources" "open-rule-sources" "open-module" "open-evidence" "open-components" "components-open" "owner-evidence" "native-result" "module-open" "dsl-open" "module-call" "module-value" "module-apply" "module-close" "source-replace" "source-run" "replace" "run" "close" "compare" "domain-check" "computational-evidence" "read-rules" "evidence-dag" "trajectory"))
            ("evidenceDSLContract" "trusted-host-scheme.v1")
            ("componentContract" "ascent.evidence-components.v1")
            ("moduleContract" "trusted-native-evidence-module.v1")
@@ -572,6 +585,8 @@
      (open-program (hash-ref request "program") (hash-get request "factLimits")))
     ((open-sources) (shape request '("operation" "sources") '("factLimits"))
      (open-sources (hash-ref request "sources") (hash-get request "factLimits")))
+    ((open-rule-sources) (shape request '("operation" "sources") '("factLimits"))
+     (open-rule-sources (hash-ref request "sources") (hash-get request "factLimits")))
     ((open-module)
      (shape request '("operation" "module" "constructor" "arguments") '("factLimits")) (open-module request))
     ((open-evidence)
@@ -612,6 +627,12 @@
     ((read-rules)
      (shape request '("operation" "sources"))
      (validate-rule-catalog (ascent-read-rule-sources (hash-ref request "sources"))))
+    ((trajectory)
+     (shape request '("operation" "action") '("task" "sourceIdentity" "trajectory" "event" "includeEvents" "reason"))
+     (ascent-trajectory request))
+    ((evidence-dag)
+     (shape request '("operation" "action") '("program" "contract" "rule" "trusted" "sources" "certificates" "requests" "sourceIdentity" "retain" "facts" "queries"))
+     (ascent-evidence-dag request))
     ((computational-evidence) (evidence-dispatch request))
     ((domain-check)
      (shape request '("operation" "kind" "observations"))

@@ -3,13 +3,16 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/build-script defbuild-script)
+        (only-in :std/make make-clean)
         (only-in :std/source this-source-file)
         (only-in :gerbil/runtime/loader add-load-path!)
         (only-in "bindings/artifact.ss"
-                 source-snapshot artifact-receipt! artifact-source-current?)
+                 source-snapshot artifact-receipt! artifact-invalidated-modules clean-compiled-resources!)
         (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype))
+
+
 
 (def gerbil-ascent-library-modules
   '("core/ordered-pair-set"
@@ -56,6 +59,8 @@
     "core/rule-bindings"
     "core/rule-semantics"
     "program/analysis"
+    "program/evidence-dag"
+    "program/trajectory"
     "program/summary"
     "program/admission"
     "program/view-replay"
@@ -127,7 +132,9 @@
     "temporal/lens"
     "interface/request"
     "interface/rule-source"
-    "interface/generated-resources"
+    "evidence/declaration"
+    "interface/closed-source"
+    "interface/closed-evidence"
     "interface/dsl-source"
     "interface/evidence-module"
     "interface/value-graph"
@@ -171,7 +178,8 @@
                             ,(path-expand "ascent.h" c-dir)))
             "-cc-options" ,c-options "-ld-options" ,module-link-options)
       (exe: "interface/entry" bin: "libascent"
-            "-cc-options" ,c-options "-ld-options" ,library-link-options)))))
+            "-cc-options" ,c-options "-ld-options" ,library-link-options)
+      (exe: "interface/develop" bin: "ascent-develop")))))
 (export gerbil-ascent-library-modules main)
 (def build-library
   (let ()
@@ -183,10 +191,20 @@
   (let* ((build? (or (null? args) (equal? (car args) "compile")))
          (root (path-directory (this-source-file)))
          (modules (append gerbil-ascent-library-modules
-                          '("interface/c-api" "interface/runtime" "interface/entry")))
+                          '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
          (before (and build? (source-snapshot root modules))))
     (add-load-path! (path-expand "lib" (gerbil-path)))
-    (when (and build? (not (artifact-source-current? root modules)))
-      (build-library "clean"))
+    (when build?
+      (let (invalidated (artifact-invalidated-modules root modules before))
+        (if invalidated
+          (unless (null? invalidated)
+            (clean-compiled-resources! (path-expand "lib/gerbil-ascent" (gerbil-path)) invalidated)
+            (make-clean
+              (filter (lambda (spec)
+                        (member (if (string? spec) spec (cadr spec)) invalidated))
+                      (gerbil-ascent-build-spec)) srcdir: root))
+          (begin
+            (clean-compiled-resources! (path-expand "lib/gerbil-ascent" (gerbil-path)) modules)
+            (build-library "clean")))))
     (apply build-library args)
     (when build? (artifact-receipt! root modules before))))

@@ -1,0 +1,29 @@
+[
+  {
+    "case": "mutual-permission-taint-2026104301",
+    "identicalPriorHistory": true,
+    "identicalScalarFeedback": true,
+    "sameModelAndBudget": true,
+    "noFinalAnswerPacket": true,
+    "controlRequestSha256": "f8417b2acf818858045f7c99c5cb011632818b8285b7f9fce9760924d872b3e9",
+    "nativeRequestSha256": "c89bf14855685db6427b0616c41bfda14a557142b543568e5749cfe8d7c6734d"
+  },
+  {
+    "case": "context-balanced-paths-2026104302",
+    "identicalPriorHistory": true,
+    "identicalScalarFeedback": true,
+    "sameModelAndBudget": true,
+    "noFinalAnswerPacket": true,
+    "controlRequestSha256": "037c4f38377faf0df81f89aa501d8597fa6f556fcac8b16df7ae039df21ce411",
+    "nativeRequestSha256": "ecee0d2581a7318519d62b512cec2e9867798f0c894c75280d8bfc85a60ea2e2"
+  },
+  {
+    "case": "context-balanced-paths-2026104303",
+    "identicalPriorHistory": true,
+    "identicalScalarFeedback": true,
+    "sameModelAndBudget": true,
+    "noFinalAnswerPacket": true,
+    "controlRequestSha256": "73ea9055f8db9d9713ada9193f5f9068cc92074005b40e3f245139769a973c6f",
+    "nativeRequestSha256": "5586542014293cf5e25379579beca5f20bf4a92bfc6379562c4c176dbcbe573f"
+  }
+]

@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import "c-api.ss" "runtime.ss")
+(import "c-api.ss" "runtime.ss"
+        :gerbil-ascent/evidence/interface :gerbil-ascent/evidence/module)
 (export main)
 
 ;; The Gerbil executable driver owns the linked runtime initialization.

@@ -1,0 +1,891 @@
+[
+  {
+    "run": "composition-repair-balanced",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 122996,
+    "firstWholeCorrectThinking": 122996,
+    "repairCalls": 1,
+    "repairThinking": 7144,
+    "failedFinalAnswers": 1,
+    "toolCalls": 1,
+    "branches": 56,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "8a6076b0c3093df6995843ad5de71d4023f8cd3a6950a26ed3cd1668e615dfcd",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 56,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 1,
+    "supportedOmissions": [
+      {
+        "call": "stage-2-call-1",
+        "job": "job_5a52a163f49b8578"
+      },
+      {
+        "call": "stage-2-call-1",
+        "job": "job_53465b5885a7b37a"
+      }
+    ]
+  },
+  {
+    "run": "conjunction-balanced-fresh",
+    "case": "context-balanced-paths-2026106401",
+    "arm": "fresh",
+    "stagesCorrect": 0,
+    "wholeTaskCorrect": false,
+    "usageComplete": true,
+    "calls": 4,
+    "thinkingObserved": 33880,
+    "firstWholeCorrectThinking": null,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 4,
+    "branches": 106,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": false,
+    "runState": "host-aborted",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "c3efe78c7a28ce07ee084947e4f97d13abae6c0211992e9b9ac8c3d9fef78e58",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 106,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "conjunction-balanced-fresh-resumed",
+    "case": "context-balanced-paths-2026106401",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 8,
+    "thinkingObserved": 41543,
+    "firstWholeCorrectThinking": 41543,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 5,
+    "branches": 162,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "3deacac1c92e76fef9ff6d57156395f62e291235858e99dfc366278132cff4a1",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 162,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 4,
+    "supportedOmissions": []
+  },
+  {
+    "run": "conjunction-balanced-retained",
+    "case": "context-balanced-paths-2026106401",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 74862,
+    "firstWholeCorrectThinking": 74862,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 119,
+    "reusedBranches": 7,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "203259e43caea72f38e91cf293d211637dfb24a45581c7ffc7d52c45ba48e680",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 119,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "conjunction-mutual-fresh",
+    "case": "mutual-permission-taint-2026106402",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 32910,
+    "firstWholeCorrectThinking": 32910,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 221,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "c3efe78c7a28ce07ee084947e4f97d13abae6c0211992e9b9ac8c3d9fef78e58",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 221,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "conjunction-mutual-retained",
+    "case": "mutual-permission-taint-2026106402",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 7,
+    "thinkingObserved": 45430,
+    "firstWholeCorrectThinking": 45430,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 4,
+    "branches": 226,
+    "reusedBranches": 113,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "203259e43caea72f38e91cf293d211637dfb24a45581c7ffc7d52c45ba48e680",
+      "python/src/ascent_engine/interaction.py": "8c8a84fc3cd34704419ad0fafb21e4efcf3014655dae52ca3d50ee7842d3d089",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 226,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-balanced-fresh",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 9,
+    "thinkingObserved": 29776,
+    "firstWholeCorrectThinking": 29776,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 6,
+    "branches": 157,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 157,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-balanced-retained",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 5,
+    "thinkingObserved": 13066,
+    "firstWholeCorrectThinking": 13066,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 2,
+    "branches": 112,
+    "reusedBranches": 110,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 112,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-balanced-source",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "source-only",
+    "stagesCorrect": 1,
+    "wholeTaskCorrect": false,
+    "usageComplete": true,
+    "calls": 9,
+    "thinkingObserved": 226950,
+    "firstWholeCorrectThinking": null,
+    "repairCalls": 7,
+    "repairThinking": 149863,
+    "failedFinalAnswers": 7,
+    "toolCalls": 1,
+    "branches": 17,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 17,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-mutual-fresh",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "fresh",
+    "stagesCorrect": 1,
+    "wholeTaskCorrect": false,
+    "usageComplete": true,
+    "calls": 12,
+    "thinkingObserved": 208046,
+    "firstWholeCorrectThinking": null,
+    "repairCalls": 9,
+    "repairThinking": 165835,
+    "failedFinalAnswers": 6,
+    "toolCalls": 5,
+    "branches": 165,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 165,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": [
+      {
+        "call": "stage-0-call-2",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_acc8bd3e1afddf05"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_c30a124402343f8e"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_ff09ce82111309ec"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_bfa45ee1ac26ab88"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_4538b3764c4a37a9"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_b578dc8cd6bb78fc"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_0dfdccb7cd5be0fe"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_19abbf231dc2d009"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_1a763fa44e77f393"
+      },
+      {
+        "call": "stage-0-call-3",
+        "job": "job_2b8468b32907b233"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_f0975c05036028bb"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_6da6ee9c87ea20f3"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_5f56ac90a25a5ae9"
+      }
+    ]
+  },
+  {
+    "run": "live-mutual-fresh-batched",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 5,
+    "thinkingObserved": 62862,
+    "firstWholeCorrectThinking": 62862,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 2,
+    "branches": 112,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "78b04ce01c51bbed048084db2cd25afbc664ae07bc2dc2a46715eb1022b867ba",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 112,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-mutual-retained",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "retained",
+    "stagesCorrect": 0,
+    "wholeTaskCorrect": false,
+    "usageComplete": true,
+    "calls": 1,
+    "thinkingObserved": 6126,
+    "firstWholeCorrectThinking": null,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 0,
+    "branches": 0,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": false,
+    "runState": "host-aborted",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 0,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-mutual-retained-batched",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 33123,
+    "firstWholeCorrectThinking": 33123,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 221,
+    "reusedBranches": 3,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "78b04ce01c51bbed048084db2cd25afbc664ae07bc2dc2a46715eb1022b867ba",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 221,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "live-mutual-source",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "source-only",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 3,
+    "thinkingObserved": 79948,
+    "firstWholeCorrectThinking": 79948,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 0,
+    "branches": 0,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "def3ac8c2b686fe7f9ea6020628d3ca432d471c80718670f9a31e01127bbd357",
+      "python/src/ascent_engine/interaction.py": "98abc4f80d1b9fa2ec2ba667eb8897c0fe72940e270add23d5cea5dd40aafedf",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 0,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "repair-mutual-fresh",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 9,
+    "thinkingObserved": 206169,
+    "firstWholeCorrectThinking": 206169,
+    "repairCalls": 5,
+    "repairThinking": 147613,
+    "failedFinalAnswers": 5,
+    "toolCalls": 2,
+    "branches": 111,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "71fafc0d33dca93908f3959bf9258b4f9fa66e9da0c114423d4849a0b0edf9bd",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": true,
+    "independentLocalChecks": 111,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 2,
+    "supportedOmissions": [
+      {
+        "call": "stage-0-call-2",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_acc8bd3e1afddf05"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_c30a124402343f8e"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_ff09ce82111309ec"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_bfa45ee1ac26ab88"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_4538b3764c4a37a9"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_b578dc8cd6bb78fc"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_0dfdccb7cd5be0fe"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_19abbf231dc2d009"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_1a763fa44e77f393"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_2b8468b32907b233"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_f0975c05036028bb"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_6da6ee9c87ea20f3"
+      }
+    ]
+  },
+  {
+    "run": "repair-mutual-retained",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 10,
+    "thinkingObserved": 202566,
+    "firstWholeCorrectThinking": 202566,
+    "repairCalls": 6,
+    "repairThinking": 137954,
+    "failedFinalAnswers": 5,
+    "toolCalls": 3,
+    "branches": 137,
+    "reusedBranches": 29,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "71fafc0d33dca93908f3959bf9258b4f9fa66e9da0c114423d4849a0b0edf9bd",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": true,
+    "independentLocalChecks": 137,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 2,
+    "supportedOmissions": [
+      {
+        "call": "stage-0-call-2",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-4",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_f0975c05036028bb"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_6da6ee9c87ea20f3"
+      },
+      {
+        "call": "stage-0-call-5",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_acc8bd3e1afddf05"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_c30a124402343f8e"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_ff09ce82111309ec"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_bfa45ee1ac26ab88"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_4538b3764c4a37a9"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_b578dc8cd6bb78fc"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_54919d760eebd413"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_0dfdccb7cd5be0fe"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_5f56ac90a25a5ae9"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_19abbf231dc2d009"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_1a763fa44e77f393"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_2b8468b32907b233"
+      },
+      {
+        "call": "stage-0-call-6",
+        "job": "job_3b22352032726246"
+      }
+    ]
+  },
+  {
+    "run": "shared-balanced-fresh",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 43285,
+    "firstWholeCorrectThinking": 43285,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 127,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 127,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "shared-balanced-retained",
+    "case": "context-balanced-paths-2026106301",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 8,
+    "thinkingObserved": 130977,
+    "firstWholeCorrectThinking": 130977,
+    "repairCalls": 3,
+    "repairThinking": 15125,
+    "failedFinalAnswers": 1,
+    "toolCalls": 4,
+    "branches": 132,
+    "reusedBranches": 48,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 132,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": [
+      {
+        "call": "stage-2-call-1",
+        "job": "job_5a52a163f49b8578"
+      },
+      {
+        "call": "stage-2-call-1",
+        "job": "job_53465b5885a7b37a"
+      }
+    ]
+  },
+  {
+    "run": "shared-mutual-fresh",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "fresh",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 61991,
+    "firstWholeCorrectThinking": 61991,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 227,
+    "reusedBranches": 0,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 227,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  },
+  {
+    "run": "shared-mutual-retained",
+    "case": "mutual-permission-taint-2026106302",
+    "arm": "retained",
+    "stagesCorrect": 3,
+    "wholeTaskCorrect": true,
+    "usageComplete": true,
+    "calls": 6,
+    "thinkingObserved": 58754,
+    "firstWholeCorrectThinking": 58754,
+    "repairCalls": 0,
+    "repairThinking": 0,
+    "failedFinalAnswers": 0,
+    "toolCalls": 3,
+    "branches": 225,
+    "reusedBranches": 5,
+    "providerErrors": 0,
+    "completedRun": true,
+    "runState": "complete",
+    "sourceHashes": {
+      "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/python/src/ascent_test_support/interactive_study.py": "05972af0aa2c2baf1c24750c669d69c0d38144235196a09ef8f909ec35fde090",
+      "python/src/ascent_engine/interaction.py": "e9185d0d28939cf0b87eb46bb84f85cda4f35ef30d2bdb1412a86d9b8189cafa",
+      "python/src/ascent_engine/trajectory.py": "6ca453d40a2b9d64dd116e61fbd5bb9c3dd2d0a41db7cc1653b9a8a679b53c8a",
+      "python/src/ascent_engine/derivations.py": "79a195aa39000b554d8a8e8ce909658ec7e7f9db9cd4d3776a2d8c2dac3df2fc",
+      "program/trajectory.ss": "dafe33508f95a344d88e064545ff209c4d5ac4ad07f49e1a9e850fc6c6686f79",
+      "program/evidence-dag.ss": "c4f1a0c3130c1898df9739b4b9996875cc37eaf8a7d6b1a3878b288fa68bf612"
+    },
+    "endpointCorrected": false,
+    "independentLocalChecks": 225,
+    "incorrectLocalChecks": 0,
+    "multiPremiseBranches": 0,
+    "hostRevalidationToolCalls": 0,
+    "supportedOmissions": []
+  }
+]

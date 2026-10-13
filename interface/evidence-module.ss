@@ -2,8 +2,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander
-        (only-in :gerbil/runtime/init gerbil-load-expander! __scheme-source)
-        "generated-resources.ss"
+        "../evidence/declaration.ss"
+        (only-in "closed-evidence.ss" ascent-closed-evidence-scope)
+        (only-in :gerbil/runtime/init gerbil-load-expander!)
         (only-in :std/hash/misc hash-key?)
         (only-in :gerbil/runtime/gambit current-readtable
                  readtable-eval-allowed?-set readtable-sharing-allowed?-set)
@@ -11,14 +12,6 @@
 (export ascent-load-evidence-module ascent-load-evidence-source ascent-load-evidence-components ascent-evidence-module
         evidence-module? evidence-module-program evidence-module-explain evidence-module-bindings
         ascent-evidence-module-descriptors ascent-source-scope-count)
-
-(defstruct evidence-module (program explain bindings) final: #t)
-(def (ascent-evidence-module program (explain #f) (bindings []))
-  (unless (or (not explain) (procedure? explain))
-    (error "Evidence explanation must be a native procedure"))
-  (unless (and (list? bindings) (andmap (lambda (b) (and (pair? b) (symbol? (car b)) (symbol? (cdr b)))) bindings))
-    (error "Evidence bindings must pair public labels with native relation handles"))
-  (make-evidence-module program explain bindings))
 
 (def (ascent-evidence-module-descriptors program (bindings []))
   (def (kind predicate)
@@ -49,14 +42,22 @@
                (string? constructor) (< 0 (string-length constructor) 129)
                (list? arguments))
     (error "invalid native Evidence module entry"))
+  ;; Match Gerbil's gxtest/gxprof: load/evaluate the module using its official
+  ;; importer, resolve only a public phase-zero export, then read its
+  ;; current runtime binding. No synthetic imports or cached exported values.
   (gerbil-load-expander!)
-  (ascent-with-generated-resources (lambda ()
-    (parameterize ((current-expander-context (make-top-context)))
-      (eval-syntax '(import :gerbil/core))
-      (eval-syntax `(import (only-in ,(string->symbol module) ,(string->symbol constructor))))
-      (let (builder (eval-syntax (string->symbol constructor) #t))
+  (let* ((context (import-module (string->symbol module) #f #t))
+         (name (string->symbol constructor))
+         (export (find (lambda (out)
+                         (and (= (module-export-phi out) 0)
+                              (eq? (module-export-name out) name)))
+                       (module-context-export context))))
+    (unless export (error "module does not export symbol" module name))
+    (let (binding (core-resolve-module-export export))
+      (let (builder (eval (binding-id binding)))
         (unless (procedure? builder) (error "Evidence constructor is not callable"))
-        (apply builder arguments))))))
+        (apply builder arguments)))))
+
 
 (def source-module-loads 0)
 (def source-core-context #f)
@@ -64,9 +65,8 @@
   (gerbil-load-expander!)
   (unless source-core-context
     (let (context (make-top-context))
-      (ascent-with-generated-resources (lambda ()
-        (parameterize ((current-expander-context context))
-          (eval-syntax '(import :gerbil/core)))))
+      (parameterize ((current-expander-context context))
+        (eval-syntax '(import :gerbil/core)))
       (set! source-core-context context)))
   ;; Each declaration has a fresh module namespace and private gensym aliases.
   ;; Reuse the import context; it does not own the user's lexical definitions.
@@ -111,20 +111,20 @@
          (aliases (make-hash-table-eq)))
     (unless (pair? forms) (error "Evidence DSL definitions required"))
     (set! source-module-loads (+ source-module-loads 1))
+    (or (and (null? imports) (ascent-closed-evidence-scope forms exports))
+        (let ()
     (gerbil-load-expander!)
-    (ascent-with-generated-resources (lambda ()
-      (unless context (set! context (make-source-context)))
+    (unless context (set! context (make-source-context)))
       (parameterize ((current-expander-context context))
         (eval-syntax `(module ,namespace
                        (import :gerbil-ascent/evidence/interface
                                :gerbil-ascent/evidence/module
                                (only-in :clan/poo/object .ref) ,@imports)
-                       (export ,@(if (eq? exports #t) '(#t) exports)) ,@forms)))))
+                       (export ,@(if (eq? exports #t) '(#t) exports)) ,@forms)))
     (lambda (export arguments)
       (unless (and (string? export) (< 0 (string-length export) 129) (list? arguments))
         (error "invalid module export call"))
-      (ascent-with-generated-resources (lambda ()
-        (parameterize ((current-expander-context context))
+      (parameterize ((current-expander-context context))
           (let* ((identifier (string->symbol export))
                  (read-binding (or (hash-get aliases identifier)
                    (let (alias (gensym 'ascent-call))

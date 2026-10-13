@@ -1,0 +1,168 @@
+{
+  "schema": "ascent.module-loading-qualification.v1",
+  "date": "2026-10-13",
+  "checkout": "176378d89820f3817df3a55f7b5ecf66794f5453",
+  "scope": "Owned dirty sources and the recorded local library; unrelated checkout edits are not qualified.",
+  "sdk": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current",
+  "engineLibrarySha256": "721600c90752e43d83f46b96ea10c66824dadb9bd890a44354eb3b5cbeb268b7",
+  "startup": {
+    "protocol": "Three fresh processes per condition; AB/BA/AB order; identical engine describe; same non-sandbox execution; OS caches not cleared; 40s deadline.",
+    "runs": [
+      {
+        "repetition": 1,
+        "kind": "gxi",
+        "seconds": 5.7192502499965485,
+        "exitCode": 0,
+        "sameDescription": true
+      },
+      {
+        "repetition": 1,
+        "kind": "linked",
+        "seconds": 1.820005499990657,
+        "exitCode": 0,
+        "sameDescription": true
+      },
+      {
+        "repetition": 2,
+        "kind": "linked",
+        "seconds": 1.9965611670049839,
+        "exitCode": 0,
+        "sameDescription": true
+      },
+      {
+        "repetition": 2,
+        "kind": "gxi",
+        "seconds": 3.866731999994954,
+        "exitCode": 0,
+        "sameDescription": true
+      },
+      {
+        "repetition": 3,
+        "kind": "gxi",
+        "seconds": 4.097328500007279,
+        "exitCode": 0,
+        "sameDescription": true
+      },
+      {
+        "repetition": 3,
+        "kind": "linked",
+        "seconds": 1.6736658750014612,
+        "exitCode": 0,
+        "sameDescription": true
+      }
+    ],
+    "hostLoad": [
+      17.7529296875,
+      16.1025390625,
+      16.697265625
+    ],
+    "medians": {
+      "gxi": 4.097328500007279,
+      "linked": 1.820005499990657
+    },
+    "reduction": 0.5558067897198324
+  },
+  "initialization": {
+    "firstEngineSeconds": 0.24288654199335724,
+    "repeatEngineSeconds": [
+      0.05986204200598877,
+      0.03314608299115207,
+      0.029787457999191247
+    ],
+    "cachedValidationSeconds": [
+      0.10833879100391641,
+      0.029283167008543387,
+      0.02880245899723377
+    ],
+    "fullValidationSeconds": [
+      0.297649125001044,
+      0.2054095000057714,
+      0.2292040000029374
+    ],
+    "repeatEngineMedian": 0.03314608299115207,
+    "cachedValidationMedian": 0.029283167008543387,
+    "fullValidationMedian": 0.2292040000029374,
+    "validationReduction": 0.8722397209116416,
+    "resourceCount": 2212
+  },
+  "incrementalFixture": {
+    "runs": [
+      {
+        "phase": "initial",
+        "seconds": 2.6584557089954615,
+        "compiled": [
+          "... compile producer",
+          "... compile independent",
+          "... compile consumer"
+        ]
+      },
+      {
+        "phase": "restored-timestamp-edit",
+        "seconds": 4.103870833001565,
+        "compiled": [
+          "... compile producer",
+          "... compile consumer"
+        ]
+      },
+      {
+        "phase": "warm",
+        "seconds": 0.4605564170051366,
+        "compiled": []
+      },
+      {
+        "phase": "semantic",
+        "seconds": 1.2518413749930914,
+        "compiled": []
+      }
+    ],
+    "unrelatedMetadataUnchanged": true,
+    "sourceMtimeRestored": true
+  },
+  "projectNoop": {
+    "seconds": 14.24751266700332,
+    "exitCode": 0,
+    "compiled": [],
+    "compileJobs": 0
+  },
+  "projectDevelopmentOnlyCompileLines": [
+    "... compile interface/develop",
+    "... compile exe interface/develop -> /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/bin/ascent-develop"
+  ],
+  "sources": {
+    "build.ss": "c45d77f8056d56cf4ed0d23e14af76f5e5bca54b0f10d06ffeb796a3e0a60215",
+    "bindings/artifact.ss": "d13d5a15862da5ccba1fe5e83e9a661590ff683d0c00dc90e85840ea849c8189",
+    "interface/develop.ss": "4b03e7d4635cc6191c75d31ae45794e2da00afa8548a718c9128971863825114",
+    "interface/dsl-source.ss": "b9fa5279195a312b6f0443c4d47e30a921ff37eb1134fb56f4d96b6c57486739",
+    "python/src/ascent_engine/__init__.py": "c1a897932f9cc6868747d57627a56b9f74270fb7060b4ae6165e81c11ee18117",
+    "python/src/ascent_engine/artifact.py": "07d1ad00fa6cdd28dd15f7feff22c47d2d1b49cfc88b708ccbf2a740f584b9ba",
+    "python/tests/test_artifact_validation.py": "843768cbb1c4d26aecf873801f4de17e09772dcaed627d536166cbc7f0bc0fe7",
+    "python/engine_tests/test_module_loading.py": "fe6e357cdaa397e30529407b74735972ed39864edca0fbe12c7398fb4a37996e",
+    "python/engine_tests/test_development_shell.py": "8cda1e5ac0ec7b9c7bdd445b87ec760647b18874b2b1c9bfceaa7a53fb5a6dc8",
+    "t/qualification/scheme-artifact-test.ss": "7c2fbaff46c650c04adb6414575999605c5ed7ea33d57c9deb8496f7efcea2dd",
+    "justfile": "7f93a3d14809bc5804d6fb56ea2dea69d9e6dbde9c8af468cf08615fb5fb9dd9"
+  },
+  "tests": {
+    "artifactValidationAndPackaging": 20,
+    "actualCffiModuleLoading": 2,
+    "developmentShell": 3,
+    "schemeArtifactSuiteFinalOK": true,
+    "schemeArtifactDeclaredCases": 14
+  },
+  "logs": {
+    "build-published.log": "59d090a1aa19fcf543f01efedf597563ccef748906100d0d96f68c2d3b45b53a",
+    "develop-incremental.log": "fccfd09d055986d6137ba48983d6bcd265ebc3225fbb4ff3547f044a1e9ac70b",
+    "scheme-artifact.log": "08f4fe2e09217bdfb5b9ad239c029f407cc4d69e41f01361093f732f5c4480ab",
+    "cffi-final.log": "7cad115d69be1bf0652d65cc59c9df0b2a1c154e8da430cb7947d0adc1a2e958",
+    "development-shell-tests.log": "d42f66382d693569bddb1eac4686cc7bda98bde0d75e9819a6eb6e41b6ffca12",
+    "api-qualification.json": "eb56460b6f04ea353f5eecca8250cac5366c380927d1164fb9ca7edeeb3c4290",
+    "build-noop-final.log": "fb31d96d041b4564dddbd861e5831e9e92bd556b61959c6f50e95f2a8b263866"
+  },
+  "compiledApiQualification": {
+    "backend": "out-of-line-api",
+    "describeABI": 1,
+    "reuseWithoutInitialization": true,
+    "callerLimitsIndependent": true,
+    "shutdownTerminal": true
+  },
+  "developmentOnlyEditEngineUnchanged": true
+}

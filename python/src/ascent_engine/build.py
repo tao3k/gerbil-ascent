@@ -6,15 +6,39 @@ This module has no Scheme compiler, dependency graph, phase discovery,
 currentness policy, or compilation scheduler.
 """
 import argparse
+import errno
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
+import tempfile
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def transfer_resource(source, target):
+    """Retain native append-only generations; copy mutable metadata.
+
+    A hard link is a regular, self-contained file, not a loader path alias.
+    Native compilation creates a new .oN or unlinks an invalidated generation;
+    it must never overwrite a published generation in place. Identity checks
+    remain mandatory, including when linking is unavailable across volumes.
+    """
+    if re.fullmatch(r"\.o[1-9][0-9]*", source.suffix):
+        if source.name != target.name:
+            raise ValueError("compiled generation filename changed")
+        try:
+            os.link(source.resolve(strict=True), target)
+            return "linked-generation"
+        except OSError as error:
+            if error.errno not in (errno.EXDEV, errno.ENOTSUP, errno.EPERM, errno.EMLINK, errno.ENOSYS):
+                raise
+    shutil.copyfile(source, target)
+    return "copied"
 
 
 def verify_inputs(root, receipt):
@@ -42,27 +66,49 @@ def build(root, output, build_dir=None):
     before = sha(sidecar)
     output.parent.mkdir(parents=True, exist_ok=True)
     resources = {}
-    for relative, asset in receipt["syntaxResources"].items():
-        name = Path(relative)
-        if name.is_absolute() or ".." in name.parts:
-            raise ValueError("invalid native resource path")
-        source = Path(asset["path"])
-        if sha(source) != asset["sha256"]:
-            raise ValueError("native resource identity changed: " + relative)
-        target = output.parent / "syntax" / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
-        if sha(source) != asset["sha256"] or sha(target) != asset["sha256"]:
-            raise ValueError("native resource changed during packaging")
-        resources[relative] = {"path": str(target), "sha256": asset["sha256"]}
-    candidate = output.with_name(output.name + ".pending")
-    shutil.copyfile(library, candidate)
-    verify_inputs(root, receipt)
-    if sha(sidecar) != before or sha(library) != receipt["librarySha256"] or sha(candidate) != receipt["librarySha256"]:
-        raise ValueError("native artifact changed during packaging")
-    candidate.replace(output)
+    transfers = {}
+    syntax = output.parent / "syntax"
+    # Reusing a package directory must not retain unrecorded .oN generations:
+    # the upstream loader could otherwise select old code beyond our prefix.
+    with tempfile.TemporaryDirectory(prefix=".ascent-package-", dir=output.parent) as temporary:
+        staged = Path(temporary) / "syntax"
+        staged.mkdir()
+        for relative, asset in receipt["syntaxResources"].items():
+            name = Path(relative)
+            if name.is_absolute() or ".." in name.parts:
+                raise ValueError("invalid native resource path")
+            source = Path(asset["path"])
+            if sha(source) != asset["sha256"]:
+                raise ValueError("native resource identity changed: " + relative)
+            target = staged / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            mode = transfer_resource(source, target)
+            transfers[mode] = transfers.get(mode, 0) + 1
+            if sha(source) != asset["sha256"] or sha(target) != asset["sha256"]:
+                raise ValueError("native resource changed during packaging")
+            resources[relative] = {"path": str(syntax / name), "sha256": asset["sha256"]}
+        candidate = Path(temporary) / output.name
+        shutil.copyfile(library, candidate)
+        verify_inputs(root, receipt)
+        for relative, asset in receipt["syntaxResources"].items():
+            if sha(Path(asset["path"])) != asset["sha256"] or sha(staged / relative) != asset["sha256"]:
+                raise ValueError("native resource changed before publication")
+        if sha(sidecar) != before or sha(library) != receipt["librarySha256"] or sha(candidate) != receipt["librarySha256"]:
+            raise ValueError("native artifact changed during packaging")
+        previous = Path(temporary) / "previous-syntax"
+        if syntax.exists():
+            syntax.replace(previous)
+        try:
+            staged.replace(syntax)
+            candidate.replace(output)
+        except BaseException:
+            if syntax.exists():
+                shutil.rmtree(syntax)
+            if previous.exists():
+                previous.replace(syntax)
+            raise
     receipt = dict(receipt, syntaxResources=resources, packagingOwner="ascent_engine.build",
-                   nativeBuildReceiptSha256=before)
+                   nativeBuildReceiptSha256=before, syntaxResourceTransfers=transfers)
     output.with_suffix(output.suffix + ".json").write_text(json.dumps(receipt, indent=2) + "\n")
     print("ASCENT-C-ABI-PACKAGE-OK " + str(output), flush=True)
 

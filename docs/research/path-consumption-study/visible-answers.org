@@ -1,0 +1,1334 @@
+#+title: Visible Provider Outputs and Final Answer Sets
+
+* baseline-balanced
+
+** stage-0-call-0
+Thinking: 4535; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 20584; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 3631; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 6025; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 2808; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-5
+Thinking: 3119; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-6
+Thinking: 4584; outcome: correct.
+
+#+begin_example
+I evaluated each non-excluded `needs` row as requiring both requested balanced paths:
+
+- `Balanced(c, x, y)`
+- `Balanced(d, u, v)`
+
+The excluded jobs were removed first. The jobs that pass both balanced-path checks are:
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 53; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 1791; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 1553; outcome: correct.
+
+#+begin_example
+After the source update, the first requested path is now a **bridged** path (`balanced` prefix followed by one `bridge` edge), while the second remains a **balanced** path. Rechecking all non-excluded jobs under the updated `denied` table gives:
+
+```json
+{
+  "answer": [
+    "job_ed025f453c70564e",
+    "job_ee9f11804c48526c",
+    "job_6aa92f46d85d50e8",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+* baseline-mutual
+
+** stage-0-call-0
+Thinking: 3384; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 19829; outcome: correct.
+
+#+begin_example
+I computed the least fixed point of `flow`/`permit`, checked all four requested `flow` facts for each job, and removed jobs listed in `excluded`. Excluded jobs that otherwise had all flow facts were `job_bd69046633a9e4ff` and `job_5c22206ddd792f59`.
+
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 101; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 452; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 7677; outcome: correct.
+
+#+begin_example
+After rechecking the updated sources, none of the `needs` jobs has all four requested `flow` facts reachable. Therefore the eligible non-excluded job set is empty.
+
+```json
+{
+  "answer": []
+}
+```
+#+end_example
+
+* new-balanced-fresh
+
+** stage-0-call-0
+Thinking: 4535; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 16134; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 1140; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 889; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 1679; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-5
+Thinking: 1808; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-6
+Thinking: 6968; outcome: correct.
+
+#+begin_example
+I checked both requested balanced paths for every non-excluded job, using the recursive `balanced(context, from, to)` relation and respecting context-scoped denials. The jobs where both requested paths are supported are the following 13.
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 421; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 1462; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 986; outcome: correct.
+
+#+begin_example
+After the source update, the first request now requires a `bridged` path, and the second still requires a `balanced` path. Rechecking all non-excluded jobs under the new denied-edge set, the eligible jobs are:
+
+```json
+{
+  "answer": [
+    "job_ed025f453c70564e",
+    "job_ee9f11804c48526c",
+    "job_6aa92f46d85d50e8",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+* new-balanced-retained
+
+** stage-0-call-0
+Thinking: 4535; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 12773; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 2234; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 1574; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 3934; outcome: correct.
+
+#+begin_example
+I evaluated each non-excluded `needs(job, c, x, y, d, u, v)` row as two separate requirements:
+
+- `Balanced(c, x, y)`
+- `Balanced(d, u, v)`
+
+Bridge edges were not used, since the requested paths are balanced paths and `bridge` is explicitly an ordinary directed edge, not a balanced segment.
+
+The jobs for which both requested balanced paths are supported are:
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 120; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 2322; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 3572; outcome: correct.
+
+#+begin_example
+After the source update, the first requested path must be a **bridged** path: a balanced segment `x → z` in context `c`, followed by a bridge edge `z → y`. The second requested path remains an ordinary **balanced** path in context `d`.
+
+Rechecking all non-excluded jobs under the updated source, the qualifying jobs are:
+
+```json
+{
+  "answer": [
+    "job_ed025f453c70564e",
+    "job_ee9f11804c48526c",
+    "job_6aa92f46d85d50e8",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+* new-mutual-fresh
+
+** stage-0-call-0
+Thinking: 3384; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 2563; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 366; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 240; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 8080; outcome: correct.
+
+#+begin_example
+We computed the least fixed point of `flow`/`permit`, checked all four requested `flow` facts for each `needs` row, and removed jobs listed in `excluded`.
+
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 200; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 3487; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 701; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-2
+Thinking: 5390; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-3
+Thinking: 1719; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-4
+Thinking: 144; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-5
+Thinking: 65; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-6
+Thinking: 282; outcome: correct.
+
+#+begin_example
+After rechecking against the updated sources, the `flow` least fixed point contains only these facts:
+
+- `n78c3ee86_0 @ t2`
+- `n78c3ee86_1 @ t2`
+- `n78c3ee86_2 @ t1`
+- `n78c3ee86_11 @ t1`
+- `n78c3ee86_30 @ t1`
+
+No `needs` row has all four of its requested `flow` facts among this set, so there are no eligible non-excluded jobs.
+
+```json
+{
+  "answer": []
+}
+```
+#+end_example
+
+* new-mutual-retained
+
+** stage-0-call-0
+Thinking: 3384; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 3394; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 507; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 245; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 7734; outcome: correct.
+
+#+begin_example
+I evaluated the least fixed point of `flow`/`permit`, checked each `needs` row’s four `flow` facts, and filtered out jobs present in `excluded`.
+
+The `policy` relation is not referenced by the stated rules or by the “non-excluded” criterion, so I did not apply it as a filter.
+
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 157; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 3932; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 4562; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-2
+Thinking: 3065; outcome: correct.
+
+#+begin_example
+After the source update, the `start` seeds were reduced to only:
+
+- `flow(n78c3ee86_0, t2)`
+- `flow(n78c3ee86_11, t1)`
+
+Recomputing the least fixed point gives only the following `flow` facts:
+
+- `flow(n78c3ee86_0, t2)`
+- `flow(n78c3ee86_1, t2)`
+- `flow(n78c3ee86_11, t1)`
+- `flow(n78c3ee86_30, t1)`
+- `flow(n78c3ee86_2, t1)`
+
+No `needs` job has all four of its requested `flow` facts among these. Therefore the eligible non-excluded job set is empty.
+
+```json
+{
+  "answer": []
+}
+```
+#+end_example
+
+* readable-balanced-fresh
+
+** stage-0-call-0
+Thinking: 4535; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 27306; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 2053; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 2521; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 6471; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-5
+Thinking: 6685; outcome: correct.
+
+#+begin_example
+I checked both requested `balanced` paths for every non-excluded job. The jobs below are exactly those where both path checks returned supported.
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 400; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-1-call-1
+Thinking: 43; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 1452; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 1035; outcome: correct.
+
+#+begin_example
+After the source update, I rechecked each non-excluded job as:
+
+- first requested path: `bridged(c, x, y)` = some balanced segment `balanced(c, x, z)` followed by `bridge(z, y)`
+- second requested path: `balanced(d, u, v)`
+
+Only these jobs have both checks supported:
+
+```json
+{
+  "answer": [
+    "job_ed025f453c70564e",
+    "job_ee9f11804c48526c",
+    "job_6aa92f46d85d50e8",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+* readable-balanced-retained
+
+** stage-0-call-0
+Thinking: 4535; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 6226; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 6232; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-3
+Thinking: 2106; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-4
+Thinking: 4976; outcome: correct.
+
+#+begin_example
+Evaluated both requested `balanced(c,x,y)` and `balanced(d,u,v)` paths for every job not listed in the `excluded` table. The jobs below are the non-excluded jobs where both requested balanced paths are supported.
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 316; outcome: correct.
+
+#+begin_example
+Both requested balanced paths exist, in their respective contexts, for the following non-excluded jobs:
+
+```json
+{
+  "answer": [
+    "job_5eff0715efce0c02",
+    "job_bac381b68d21d727",
+    "job_232a7387dede7e86",
+    "job_f9bb40e36c23d2f8",
+    "job_d7810beb9aaed915",
+    "job_ed025f453c70564e",
+    "job_1aa05b09815b602e",
+    "job_ee9f11804c48526c",
+    "job_06d763a7a30c5954",
+    "job_6aa92f46d85d50e8",
+    "job_d1de07c0771f62ae",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 2322; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 4315; outcome: correct.
+
+#+begin_example
+After the source update, rechecking under the new denied edges:
+
+- First request uses `bridged(c,x,y)` = some balanced segment `x → z` in context `c` followed by `bridge(z,y)`.
+- Second request still requires `balanced(d,u,v)`.
+- Excluded jobs are omitted.
+
+The qualifying non-excluded jobs are:
+
+```json
+{
+  "answer": [
+    "job_ed025f453c70564e",
+    "job_ee9f11804c48526c",
+    "job_6aa92f46d85d50e8",
+    "job_9315c3c851541124",
+    "job_f286e4651e3f46ec"
+  ]
+}
+```
+#+end_example
+
+* readable-mutual-fresh
+
+** stage-0-call-0
+Thinking: 3384; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 7423; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 650; outcome: correct.
+
+#+begin_example
+Using the least fixed point of `flow`/`permit`, and filtering out jobs listed in `excluded`, the qualifying jobs are:
+
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 412; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 252; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 8002; outcome: correct.
+
+#+begin_example
+After rechecking under the updated sources (`sourceIdentity: 3116ed1b...`), no job satisfies all four requested flow facts. The reduced `start` seeds drastically shrink the flow closure, and every candidate job is contradicted on at least one requested flow fact.
+
+```json
+{
+  "answer": []
+}
+```
+#+end_example
+
+* readable-mutual-retained
+
+** stage-0-call-0
+Thinking: 3384; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-1
+Thinking: 6172; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-0-call-2
+Thinking: 1601; outcome: correct.
+
+#+begin_example
+The four requested flow facts were evaluated for every `needs` job under the least fixed point of `flow`/`permit`. I then removed jobs listed in the `excluded` relation.
+
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-1-call-0
+Thinking: 250; outcome: correct.
+
+#+begin_example
+```json
+{
+  "answer": [
+    "job_d8e3f937725c1f29",
+    "job_59400a0f31ebebcc",
+    "job_a68e0a0b6413f0f8",
+    "job_e524348cd2316e58",
+    "job_87041dd7334dac46",
+    "job_488a1ca5721eed16",
+    "job_653b0469d09d1491",
+    "job_a7b3cd98cd226230",
+    "job_5b8c22c2e208e6e0",
+    "job_a79cd3cd08384423",
+    "job_2a449e3ddbf29ab7",
+    "job_32403ed40395730a",
+    "job_e2e89bb06a04d205",
+    "job_9a0644684e19e7a6",
+    "job_6c6df47d644444ce",
+    "job_fccfc3be0659feb2",
+    "job_9d8622c5b6265e29",
+    "job_cd90a322d4e35e48",
+    "job_337bdb9968575bb0",
+    "job_b60fb059cd37762a",
+    "job_d2a7cd513345b785",
+    "job_6481546ad53e36b3"
+  ]
+}
+```
+#+end_example
+
+** stage-2-call-0
+Thinking: 309; outcome: tool checkpoint.
+
+#+begin_example
+
+#+end_example
+
+** stage-2-call-1
+Thinking: 1320; outcome: correct.
+
+#+begin_example
+After the source update, rechecking all `needs` jobs against the updated `flow`/`permit` least fixed point gives no job whose four requested flow facts all hold. Filtering by `excluded` therefore leaves the empty set.
+
+```json
+{
+  "answer": []
+}
+```
+#+end_example
+
+* repair-column-balanced
+
+** stage-0-call-0
+Thinking: 2922; outcome: tool checkpoint.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-0-call-1
+Thinking: 26453; outcome: correct.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-1-call-0
+Thinking: 176; outcome: correct.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-0
+Thinking: 1452; outcome: tool checkpoint.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-1
+Thinking: 84849; outcome: incorrect.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-2
+Thinking: 964; outcome: correct.
+
+#+begin_example
+The revalidated local checks show three non-excluded jobs where both the bridged first condition and the balanced second condition hold.
+
+```json
+{
+  "answer": [
+    "job_5a52a163f49b8578",
+    "job_53465b5885a7b37a",
+    "job_a7e5160f11abd490"
+  ]
+}
+```
+#+end_example
+
+* repair-readable-balanced
+
+** stage-0-call-0
+Thinking: 2922; outcome: tool checkpoint.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-0-call-1
+Thinking: 26453; outcome: correct.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-1-call-0
+Thinking: 176; outcome: correct.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-0
+Thinking: 1452; outcome: tool checkpoint.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-1
+Thinking: 84849; outcome: incorrect.
+
+#+begin_example
+Historical prefix: original response directory retained in plan.
+#+end_example
+
+** stage-2-call-2
+Thinking: 1418; outcome: correct.
+
+#+begin_example
+The verifier’s revalidated local checks show that the branches for **job_5a52a163f49b8578**, **job_53465b5885a7b37a**, and **job_a7e5160f11abd490** are all supported for both required conditions. I’m updating the answer to match that evaluation.
+
+```json
+{
+  "answer": [
+    "job_5a52a163f49b8578",
+    "job_53465b5885a7b37a",
+    "job_a7e5160f11abd490"
+  ]
+}
+```
+#+end_example

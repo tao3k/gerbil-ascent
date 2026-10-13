@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import json
 import os
 from pathlib import Path
 import unittest
@@ -26,7 +27,9 @@ class TranslationTests(unittest.TestCase):
     def test_scalar_types_remain_distinct(self):
         program, _ = compile_program({"input": [[1], ["1"]]},
                                      "result(X) <= input(X)", {"answer": "result(X)"})
-        self.assertEqual(program["relations"][0]["rows"], [('"1"',), ('1',)])
+        self.assertEqual(program["relations"][0]["rows"], [['"1"'], ['1']])
+        # Public wire values must retain their shape across the native planner.
+        self.assertEqual(json.loads(json.dumps(program)), program)
 
     def test_dependency_slice_includes_every_alternative_and_negative_premise(self):
         program, _ = compile_program({"a": [], "b": [], "deny": [], "noise": []},

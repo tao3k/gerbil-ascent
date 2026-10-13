@@ -99,7 +99,7 @@ jobs:
               /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "${test_file##*/}" -v
             done
             export ASCENT_ENGINE_BACKEND=api
-            for test_file in test_binding_modes.py test_computational_evidence.py test_datalog.py test_review.py test_rule_source.py test_uf_weighted.py; do
+            for test_file in test_binding_modes.py test_computational_evidence.py test_datalog.py test_review.py test_rule_source.py test_rule_sources.py test_uf_weighted.py; do
               /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "$test_file" -v
             done
           '

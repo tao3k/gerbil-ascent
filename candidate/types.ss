@@ -33,9 +33,9 @@
 
 (def +max-relations+ 64)
 (def +max-rules+ 64)
-(def +max-input-facts+ 1024)
-(def +max-derived-facts+ 4096)
-(def +max-output-facts+ 4096)
+(def +max-input-facts+ +inf.0)
+(def +max-derived-facts+ +inf.0)
+(def +max-output-facts+ +inf.0)
 
 ;; : (forall (row) (-> SourceId Nat (Relations row) Digest))
 ;; : (-> SourceId Nat Relations Digest)

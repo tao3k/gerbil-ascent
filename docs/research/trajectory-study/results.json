@@ -1,0 +1,72 @@
+{
+  "schema": "ascent.trajectory-study-results.v1",
+  "single": {
+    "reflection-only": {
+      "tasks": 8,
+      "correct": 8,
+      "firstThinking": 67596,
+      "firstModelCalls": 8,
+      "repairThinking": 0,
+      "failures": 0,
+      "repeatCorrect": 8,
+      "repeatCalls": 8,
+      "repeatThinking": 63824,
+      "censored": 0
+    },
+    "native-evidence": {
+      "tasks": 8,
+      "correct": 8,
+      "firstThinking": 72015,
+      "firstModelCalls": 8,
+      "repairThinking": 0,
+      "failures": 0,
+      "repeatCorrect": 8,
+      "repeatCalls": 0,
+      "repeatThinking": 0,
+      "censored": 0
+    }
+  },
+  "transfer": {
+    "reflection-history": {
+      "tasks": 4,
+      "correct": 4,
+      "firstThinking": 60449,
+      "stage1Thinking": 32015,
+      "stage2Thinking": 28434,
+      "calls": 8,
+      "repairThinking": 0,
+      "failures": 0,
+      "censored": 0
+    },
+    "verified-intermediates": {
+      "tasks": 4,
+      "correct": 4,
+      "firstThinking": 48836,
+      "stage1Thinking": 32558,
+      "stage2Thinking": 16278,
+      "calls": 8,
+      "repairThinking": 0,
+      "failures": 0,
+      "censored": 0
+    }
+  },
+  "actualProviderRequests": 40,
+  "actualProviderModels": [
+    "deepseek-flash"
+  ],
+  "providerErrors": 0,
+  "incompleteResponses": 0,
+  "usageComplete": true,
+  "allProviderThinking": 312720,
+  "allProviderInput": 169602,
+  "allProviderOutputIncludingThinking": 317330,
+  "singleFirstPlusRepeatReductionPercent": 45.2,
+  "transferCompleteBundleReductionPercent": 19.21,
+  "transferSecondQueryReductionPercent": 42.75,
+  "allTasksFirstCorrectBaselineThinking": 128045,
+  "allTasksFirstCorrectNativeThinking": 120851,
+  "allTasksFirstCorrectObservedReductionPercent": 5.62,
+  "allTasksWithSpecifiedRepeatsBaselineThinking": 191869,
+  "allTasksWithSpecifiedRepeatsNativeThinking": 120851,
+  "allTasksWithSpecifiedRepeatsObservedReductionPercent": 37.01
+}

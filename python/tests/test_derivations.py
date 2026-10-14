@@ -1,22 +1,19 @@
-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+"""Pure graph operations execute directly in Rust without an engine dispatcher."""
 import unittest
-from unittest.mock import Mock
-from ascent_engine.derivations import normalize_contract, evidence_dag, components, canonical_rule
-
+from ascent.derivations import normalize_contract,evidence_graph,components,canonical_rule
 
 class DerivationStructure(unittest.TestCase):
     def test_dag_helpers_use_the_same_native_operation(self):
-        engine=Mock()
-        engine.request.return_value={'components':[['answer']], 'rule':{'body':[]}}
-        program={'relations':[], 'rules':[]}
-        evidence_dag(engine,program)
-        self.assertEqual(engine.request.call_args.args[0],
-                         {'operation':'evidence-dag','action':'graph','program':program})
-        self.assertEqual(components(engine,program),[['answer']])
-        self.assertEqual(canonical_rule(engine,{'body':[]}),{'body':[]})
-        self.assertTrue(all(call.args[0]['operation']=='evidence-dag'
-                            for call in engine.request.call_args_list))
+        relation=lambda name,source:{'name':name,'source':source,'columns':[{'kind':'symbol'}],'rows':[]}
+        atom=lambda name:{'relation':name,'terms':[{'var':'x'}]}
+        program={'relations':[relation('input',True),relation('answer',False)],
+                 'rules':[{'head':[atom('answer')],'body':[atom('input')]}]}
+        graph=evidence_graph(program)
+        self.assertEqual([n['relations'] for n in graph['nodes']],[['input'],['answer']])
+        self.assertEqual(len(graph['edges']),1)
+        self.assertEqual(components(program),[['answer']])
+        self.assertEqual(canonical_rule(program['rules'][0])['head'][0]['terms'],[{'var':'0'}])
 
     def test_relaxed_head_surface_preserves_meaning_and_caller_input(self):
         atom={'relation':'answer','terms':[{'var':'x'}]}
@@ -25,6 +22,5 @@ class DerivationStructure(unittest.TestCase):
         self.assertEqual(value['rules'][0]['head'],[atom])
         self.assertIsInstance(original['rules'][0]['head'],dict)
         self.assertEqual(value['relations'],[])
-
 
 if __name__=='__main__':unittest.main()

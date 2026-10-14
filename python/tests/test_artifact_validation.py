@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ascent_engine.artifact import ArtifactValidation
+from ascent.artifact import ArtifactValidation
 
 
 class ArtifactValidationTest(unittest.TestCase):

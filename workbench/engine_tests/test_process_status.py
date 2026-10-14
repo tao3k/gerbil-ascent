@@ -13,26 +13,28 @@ class EmbeddedProcessStatus(unittest.TestCase):
         root=Path(__file__).resolve().parents[2]
         code='''
 import os,subprocess,sys
-from ascent_engine import Engine
-engine=Engine(os.environ.get('ASCENT_ENGINE_LIBRARY','.gerbil/lib/libascent.dylib'))
+from ascent import Engine
+engine=Engine()
+engine.describe()
 for status in (7,0,9):
  child=subprocess.Popen([sys.executable,'-c',f'import sys; sys.exit({status})'])
  assert child.wait()==status, 'embedded runtime consumed child status'
 print('EMBEDDED-PROCESS-STATUS-OK',flush=True)
 '''
-        subprocess.run([sys.executable,'-u','-c',code],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')+':'+str(root/'python/src')},check=True)
+        subprocess.run([sys.executable,'-u','-c',code],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')},check=True)
 
     def test_host_descriptor_flags_survive_initialization_and_evaluation(self):
         root=Path(__file__).resolve().parents[2]
         code="""
 import os,fcntl
-from ascent_engine import Engine
-from ascent_engine.derivations import EvidenceChain
+from ascent import Engine
+from ascent.derivations import EvidenceChain
 from ascent_workbench import inference_reuse_study as s
 read,write=os.pipe()
 fds=(0,1,2,read,write)
 before={fd:fcntl.fcntl(fd,fcntl.F_GETFL) for fd in fds}
-engine=Engine(os.environ.get('ASCENT_ENGINE_LIBRARY','.gerbil/lib/libascent.dylib'))
+engine=Engine()
+engine.describe()
 assert before=={fd:fcntl.fcntl(fd,fcntl.F_GETFL) for fd in fds}, 'host flags changed on init'
 case=s.workload(3);p=s.program(case['source'],s.oracle_contract(case))
 with EvidenceChain(engine,[r for r in p['relations'] if r['source']],True) as chain:
@@ -41,18 +43,19 @@ assert before=={fd:fcntl.fcntl(fd,fcntl.F_GETFL) for fd in fds}, 'host flags cha
 os.write(write,b'host');assert os.read(read,4)==b'host'
 print('EMBEDDED-HOST-IO-FLAGS-OK',flush=True)
 """
-        subprocess.run([sys.executable,'-u','-c',code],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')+':'+str(root/'python/src')},check=True)
+        subprocess.run([sys.executable,'-u','-c',code],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')},check=True)
 
     def test_each_scheme_worker_finishes_without_reusing_a_host_queue(self):
         root=Path(__file__).resolve().parents[2]
         code="""
 import concurrent.futures,multiprocessing,os,fcntl
-from ascent_engine import Engine
-from ascent_engine.derivations import EvidenceChain
+from ascent import Engine
+from ascent.derivations import EvidenceChain
 from ascent_workbench import inference_reuse_study as s
 def job(index):
  flags={fd:fcntl.fcntl(fd,fcntl.F_GETFL) for fd in (0,1,2)}
- engine=Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',str(s.ROOT/'.gerbil/lib/libascent.dylib')))
+ engine=Engine()
+ engine.describe()
  case=s.workload(3);p=s.program(case['source'],s.oracle_contract(case))
  with EvidenceChain(engine,[r for r in p['relations'] if r['source']],True) as chain:
   result=chain.query(p)
@@ -67,7 +70,7 @@ if __name__=='__main__':
 """
         with tempfile.TemporaryDirectory() as temp:
             script=Path(temp)/'workers.py';script.write_text(code)
-            subprocess.run([sys.executable,'-u',str(script)],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')+':'+str(root/'python/src')},check=True)
+            subprocess.run([sys.executable,'-u',str(script)],cwd=root,env={**os.environ,'PYTHONPATH':str(root/'workbench/src')},check=True)
 
 
 if __name__=='__main__':unittest.main()

@@ -6,8 +6,8 @@ import hashlib
 import json
 import copy
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
+from ascent import Engine
+from ascent.evidence import EvidenceStore
 from .complex_movie_study import atom, rule, var, declaration
 
 
@@ -28,7 +28,7 @@ def qualify(corpus, library, output):
     def mask(result):
         if not result['complete']:raise ValueError('incomplete retained query')
         return sum(2**int(row[0][-1]) for row in result['relations']['answer'])
-    with Engine(library) as engine:
+    with Engine() as engine:
         for source in range(16):
             with engine.open(program(source)) as session:
                 first=session.run();old=mask(first)

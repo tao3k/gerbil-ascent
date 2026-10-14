@@ -1,6 +1,6 @@
 """Independent weighted UF export/query refinement through actual API and ABI."""
 import unittest
-from ascent_engine import EngineError
+from ascent import EngineError
 
 import test_uf_materialization as oracle
 from test_uf_boundary import decode
@@ -158,7 +158,7 @@ class UFWeightedTests(unittest.TestCase):
                         pass
                 with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as cut:
                     held = cut.reference()
-                    with self.assertRaisesRegex(EngineError, 'invalid ASCENT UF view column'):
+                    with self.assertRaisesRegex(EngineError, 'view column outside row'):
                         with owner.call('gerbil-ascent-view-rows', held, [1, 1, 3], [3, 4, 2],
                                         module=oracle.VIEW):
                             pass

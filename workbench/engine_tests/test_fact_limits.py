@@ -2,7 +2,7 @@
 import unittest
 import os
 
-from ascent_engine import Engine, EngineError, FactLimits
+from ascent import Engine, EngineError, FactLimits
 
 
 SOURCE = '''
@@ -19,8 +19,10 @@ SOURCE = '''
 (def (make-operator)
   (relational-op-compile (relational-op-source 'input 1 [])))
 (def (echo-value value) value)
-(def (reference-count rows)
-  (length (relational-op-reference (relational-op-source 'input 1 rows))))
+(def (evaluation-count rows)
+  (let-values (((program output)
+                (relational-op-compile (relational-op-source 'input 1 rows))))
+    (length (relational-query-name (relational-solve (relational-admit program)) output))))
 (def (change-count before added)
   (let-values (((old current delta)
                 (relational-op-delta-change (relational-op-function 1 identity)
@@ -57,7 +59,7 @@ class FactLimitTests(unittest.TestCase):
     def test_native_reference_and_positive_change_have_no_default_count_ceiling(self):
         from test_module_calls import decode
         with self.engine.dsl(SOURCE, trusted=True) as owner:
-            with owner.call('reference-count', [[n] for n in range(5000)]) as value:
+            with owner.call('evaluation-count', [[n] for n in range(5000)]) as value:
                 self.assertEqual(decode(value.graph), 5000)
             with owner.call('change-count', [[n] for n in range(100)],
                             [[n] for n in range(100, 5000)]) as value:

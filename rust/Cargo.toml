@@ -1,0 +1,51 @@
+[workspace]
+members = ["ascent", "ascent-python", "ascent-scheme"]
+exclude = ["ascent-oracle"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+
+[workspace.dependencies]
+gerbil-scheme = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "2c82b845c141ce68147cf74cb5a4ec680c6ffb07", features = ["external-program"] }
+gerbil-scheme-sys = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "2c82b845c141ce68147cf74cb5a4ec680c6ffb07", features = ["external-program"] }
+gerbil-scheme-rust-ir = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "2c82b845c141ce68147cf74cb5a4ec680c6ffb07" }
+gerbil-scheme-aot-build = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "2c82b845c141ce68147cf74cb5a4ec680c6ffb07" }
+asp-rust = { git = "https://github.com/tao3k/asp-rust", rev = "2419414ee5379bad89506496e3eaab928df68daf", version = "0.1.2", default-features = false }
+gerbil-ascent = { path = "ascent", default-features = false }
+ascent = "=0.8.1"
+rayon = "=1.12.0"
+tokio = { version = "=1.53.2", features = ["sync"] }
+smallvec = "=1.16.2"
+num-rational = "=0.4.2"
+num-bigint = "=0.4.8"
+num-traits = "=0.2.19"
+sha2 = "=0.10.9"
+serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
+pyo3 = { version = "=0.27.2", features = ["abi3-py310", "num-bigint"] }
+
+[profile.dev]
+opt-level = 2
+debug = 2
+debug-assertions = true
+overflow-checks = true
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+overflow-checks = true
+
+[profile.dev.build-override]
+opt-level = 2
+
+[profile.release.build-override]
+opt-level = 3
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }

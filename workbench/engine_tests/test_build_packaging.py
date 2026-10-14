@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ascent_engine.build import build, sha, transfer_resource
+from ascent.build import build, sha, transfer_resource
 
 
 class NativeArtifactPackaging(unittest.TestCase):
@@ -103,7 +103,7 @@ class NativeArtifactPackaging(unittest.TestCase):
         directory.mkdir()
         target = directory / source.name
         source.write_bytes(b"compiled generation")
-        with patch("ascent_engine.build.os.link", side_effect=OSError(errno.EXDEV, "cross volume")):
+        with patch("ascent.build.os.link", side_effect=OSError(errno.EXDEV, "cross volume")):
             self.assertEqual("copied", transfer_resource(source, target))
         source.write_bytes(b"changed source")
         self.assertEqual(b"compiled generation", target.read_bytes())
@@ -113,7 +113,7 @@ class NativeArtifactPackaging(unittest.TestCase):
         source.write_bytes(b"compiled generation")
         directory = self.root / "published"
         directory.mkdir()
-        with patch("ascent_engine.build.os.link", side_effect=OSError(errno.EIO, "I/O failure")):
+        with patch("ascent.build.os.link", side_effect=OSError(errno.EIO, "I/O failure")):
             with self.assertRaises(OSError):
                 transfer_resource(source, directory / source.name)
         self.assertFalse((directory / source.name).exists())
@@ -139,7 +139,7 @@ class NativeArtifactPackaging(unittest.TestCase):
                 compiled.write_bytes(b"illegal in-place modification")
             return result
 
-        with patch("ascent_engine.build.shutil.copyfile", side_effect=mutate_after_staging):
+        with patch("ascent.build.shutil.copyfile", side_effect=mutate_after_staging):
             with self.assertRaisesRegex(ValueError, "resource changed before publication"):
                 build(self.root, self.output, self.native)
         self.assertFalse(self.output.exists())

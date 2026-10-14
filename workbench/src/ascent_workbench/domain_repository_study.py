@@ -120,7 +120,7 @@ def prepare(destination):
         case['expectedTestNames']=sorted(name for _,name in receipts[1]['cases'])
     shutil.copy2(study.ROOT/'.gerbil/lib/libascent.dylib',destination/'libascent.dylib')
     paths=[Path(__file__),Path(study.__file__),Path(inspect.getfile(row_normalization)),
-           *[study.ROOT/'python/src/ascent_engine'/name for name in ('domain_evidence.py','derivations.py','evidence.py','conversation.py','__init__.py')],
+           *[study.ROOT/'python/src/ascent'/name for name in ('domain_evidence.py','derivations.py','evidence.py','conversation.py','__init__.py')],
            *[study.ROOT/'workbench/src/ascent_workbench'/name for name in ('model_study.py','movie_study.py','inference_effort.py','inference_reuse_study.py','repository_corpus.py','evidence_chain_study.py')],
            study.ROOT/'applications/domain-evidence.ss',study.ROOT/'interface/engine-api.ss']
     hashes={str(p.relative_to(study.ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}

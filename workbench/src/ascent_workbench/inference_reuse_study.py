@@ -9,7 +9,7 @@ import shutil
 import time
 from pathlib import Path
 
-from ascent_engine import Engine
+from ascent import Engine
 from .complex_movie_study import atom, rule, var, declaration, identity, ROOT
 from .query_contract import output_format
 from .movie_study import provider_key, MAX_OUTPUT_TOKENS
@@ -181,7 +181,7 @@ def prepare(directory, library):
              'Withdraw sources and check against independent oracle; never return stale answer.'],
           'producerHashes':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()
             for p in [Path(__file__),Path(__file__).with_name('query_contract.py'),Path(__file__).with_name('model_study.py'),
-                      Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent_engine/__init__.py']},
+                      Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent/__init__.py']},
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'priceSource':'https://api-docs.deepseek.com/quick_start/pricing/'}
     (directory/'plan.json').write_text(json.dumps(plan,indent=2)+'\n')
 

@@ -11,10 +11,10 @@ class CompoundInferenceQualification(unittest.TestCase):
     def test_compound_oracles_withdrawal_and_scope_mutations(self):
         code='''
 import copy,os
-from ascent_engine import Engine
+from ascent import Engine
 from ascent_workbench import complex_inference_workload as c
 from ascent_workbench import inference_reuse_study as s
-with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent.dylib')) as engine:
+with Engine() as engine:
   def evaluate(case,source,contract):
     with engine.open(s.program(source,contract)) as session:
       result=session.run()
@@ -46,7 +46,7 @@ with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent
       print('UNIVERSAL-TO-EXISTENTIAL-FAULT-DETECTED',flush=True)
 '''
         subprocess.run([sys.executable,'-u','-'],input=code,text=True,check=True,
-                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')+':'+str(ROOT/'python/src')})
+                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')})
 
 
 if __name__=='__main__':unittest.main()

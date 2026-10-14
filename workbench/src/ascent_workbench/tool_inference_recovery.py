@@ -6,7 +6,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
-from ascent_engine.conversation import ResponseHistory
+from ascent.conversation import ResponseHistory
 from . import complex_inference_workload as workload
 from .compound_inference_recovery import censored_episodes
 from .inference_effort import until_verified

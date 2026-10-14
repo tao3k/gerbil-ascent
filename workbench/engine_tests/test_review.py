@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Real CFFI review tests; no mock relational evaluator."""
+"""Installed Rust review semantics through the typed PyO3 API."""
 import copy
 import os
 from pathlib import Path
 import unittest
 
-from ascent_engine import Engine
-from ascent_engine.review import EvidenceReview, sources
+from ascent import Engine
+from ascent.review import EvidenceReview, review_sources as sources
 
 
 def facts():
@@ -27,13 +27,11 @@ def facts():
 class ReviewIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        api = os.environ.get("ASCENT_ENGINE_BACKEND") == "api"
-        library = None if api else os.environ.get("ASCENT_ENGINE_LIBRARY")
-        if not api and (not library or not Path(library).is_file()):
-            raise RuntimeError("ASCENT_ENGINE_LIBRARY must select a real built engine")
-        cls.engine = Engine(library)
-        if cls.engine.backend != ("api" if api else "abi"):
-            raise AssertionError("binding backend mismatch")
+        cls.engine=Engine()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.engine.shutdown()
 
     def result(self, value):
         with EvidenceReview(self.engine, value) as review:
@@ -79,7 +77,7 @@ class ReviewIntegration(unittest.TestCase):
             self.assertEqual(second["result"]["relations"]["Reusable"], [])
             self.assertIn("missing-premise", self.reasons(second))
             with self.assertRaisesRegex(ValueError, "unknown result"):
-                review.chain.answer(first["resultReference"], "Established")
+                review.answer(first["resultReference"], "Established")
 
     def test_unbound_missing_and_cyclic_dependencies_cannot_justify_claim(self):
         for dependency in ("absent", "cause-receipt"):
@@ -105,11 +103,11 @@ class ReviewIntegration(unittest.TestCase):
             sources(value)
 
     def test_engine_failure_propagates_without_a_review_receipt(self):
-        with EvidenceReview(self.engine, facts()) as review:
-            from unittest.mock import patch
-            with patch.object(review.chain, "query", side_effect=RuntimeError("engine unavailable")):
-                with self.assertRaisesRegex(RuntimeError, "unavailable"):
-                    review.review()
+        with Engine() as engine, EvidenceReview(engine,facts()) as review:
+            engine.shutdown()
+            with self.assertRaisesRegex(RuntimeError,"closed"):
+                review.review()
+
 
 
 if __name__ == "__main__":

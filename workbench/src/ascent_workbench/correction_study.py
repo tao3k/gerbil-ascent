@@ -3,11 +3,11 @@
 """Shared-prefix, whole-task correction controls on fresh recursive programs."""
 import argparse, contextlib, copy, hashlib, io, json, random
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.conversation import ResponseHistory
-from ascent_engine.derivations import EvidenceChain, evidence_dag
-from ascent_engine.evidence import identity
-from ascent_engine.trajectory import Trajectory
+from ascent import Engine
+from ascent.conversation import ResponseHistory
+from ascent.derivations import EvidenceChain, evidence_graph
+from ascent.evidence import identity
+from ascent.trajectory import Trajectory
 from .trajectory_study import relation, atom, rule, extract
 from .model_study import provider
 from .movie_study import provider_key
@@ -132,7 +132,7 @@ def run(library,output,live,cases=None):
           'sharedPrefix':'One actual initial call is retained in both paired task trajectories and charged to BOTH policies; experimental expenditure counts it once.',
           'intervention':'Completed intermediate relations only, after a real failed initial answer or before the second query. No final answer in packets.',
           'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/trajectory.ss',
-             'python/src/ascent_engine/derivations.py','python/src/ascent_engine/trajectory.py']},
+             'python/src/ascent/derivations.py','python/src/ascent/trajectory.py']},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'outputSchemaEnforced':False}
     (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine(library);records=[];calls_audit=[];key=provider_key() if live else None
     def invoke(history,folder,stem):
@@ -150,7 +150,7 @@ def run(library,output,live,cases=None):
             with EvidenceChain(engine,case['sources']) as preflight:
                 for program,gold in zip([case['program'],case['secondProgram']],case['gold']):
                     feedback=preflight.query(program);assert sorted(r[0] for r in feedback['result']['relations']['answer'])==gold
-                dag=evidence_dag(engine,case['program']);(output/f'{case["case"]}-dag.json').write_text(json.dumps(dag,indent=2))
+                dag=evidence_graph(case['program']);(output/f'{case["case"]}-dag.json').write_text(json.dumps(dag,indent=2))
             if not live:continue
             common=output/(case['case']+'-shared');common.mkdir();initial_history=ResponseHistory(case['question'])
             initial,initial_terminal=invoke(initial_history,common,'initial')

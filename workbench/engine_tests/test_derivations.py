@@ -8,14 +8,14 @@ class DerivationChainIntegration(unittest.TestCase):
     def test_scheme_closure_is_reused_across_rounds_but_not_after_source_change(self):
         code='''
 import copy,os
-from ascent_engine import Engine
-from ascent_engine.derivations import EvidenceChain
+from ascent import Engine
+from ascent.derivations import EvidenceChain
 from ascent_workbench import inference_reuse_study as s
 case=s.workload(3);source=case['source'];contract=s.oracle_contract(case)
 stage=copy.deepcopy(contract);stage['rules']=[r for r in stage['rules'] if r['head'][0]['relation']=='reachable']
 p1=s.program(source,stage);p1['queries']=['reachable']
 p2=s.program(source,contract)
-with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent.dylib')) as engine:
+with Engine() as engine:
  for retained in (False,True):
   with EvidenceChain(engine,[r for r in p1['relations'] if r['source']],retained) as chain:
    first=chain.query(p1);second=chain.query(p2)
@@ -35,7 +35,7 @@ with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent
    print('SCHEME-CROSS-ROUND-CLOSURE-OK',retained,flush=True)
 '''
         subprocess.run([sys.executable,'-u','-'],input=code,text=True,check=True,
-                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')+':'+str(ROOT/'python/src')})
+                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')})
 
 
 if __name__=='__main__':unittest.main()

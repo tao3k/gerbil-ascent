@@ -7,11 +7,11 @@ charged again to this alternative policy, but not to physical expenditure.
 """
 import argparse,contextlib,copy,hashlib,io,json
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.derivations import EvidenceChain
-from ascent_engine.evidence import identity
-from ascent_engine.trajectory import Trajectory
-from ascent_engine.conversation import ResponseHistory
+from ascent import Engine
+from ascent.derivations import EvidenceChain
+from ascent.evidence import identity
+from ascent.trajectory import Trajectory
+from ascent.conversation import ResponseHistory
 from .trajectory_study import extract
 from .model_study import provider
 from .movie_study import provider_key

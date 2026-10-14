@@ -9,7 +9,7 @@ name = "ascent-workbench"
 version = "1"
 description = "Independent ASCENT consumer for qualification and research"
 requires-python = ">=3.10"
-dependencies = ["ascent-engine>=1,<2"]
+dependencies = ["gerbil-ascent>=0.1,<0.2"]
 
 [project.scripts]
 ascent-workbench = "ascent_workbench.__main__:main"
@@ -19,4 +19,4 @@ where = ["src"]
 include = ["ascent_workbench*"]
 
 [tool.uv.sources]
-ascent-engine = { path = "../python", editable = true }
+gerbil-ascent = { path = "../python", editable = true }

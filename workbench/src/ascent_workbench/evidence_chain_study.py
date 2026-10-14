@@ -3,9 +3,9 @@
 """Independent three-arm study isolating retained component reuse from execution."""
 import argparse,concurrent.futures,contextlib,copy,hashlib,json,multiprocessing,os,shutil,time
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.conversation import ResponseHistory
-from ascent_engine.derivations import EvidenceChain,normalize_contract
+from ascent import Engine
+from ascent.conversation import ResponseHistory
+from ascent.derivations import EvidenceChain,normalize_contract
 from . import evidence_chain_workload as workload
 from . import inference_reuse_study as s
 from .inference_effort import until_verified,paired_reduction
@@ -45,8 +45,8 @@ def prepare(library,directory):
     directory.mkdir(parents=True,exist_ok=False);shutil.copy2(library,directory/library.name)
     paths=[Path(__file__),Path(workload.__file__),Path(s.__file__),
            Path(__file__).with_name('model_study.py'),Path(__file__).with_name('inference_effort.py'),Path(__file__).with_name('movie_study.py'),
-           s.ROOT/'python/src/ascent_engine/__init__.py',s.ROOT/'python/src/ascent_engine/derivations.py',
-           s.ROOT/'python/src/ascent_engine/evidence.py',s.ROOT/'python/src/ascent_engine/conversation.py']
+           s.ROOT/'python/src/ascent/__init__.py',s.ROOT/'python/src/ascent/derivations.py',
+           s.ROOT/'python/src/ascent/evidence.py',s.ROOT/'python/src/ascent/conversation.py']
     plan={'schema':'ascent.evidence-chain-study.v1','corpusKind':'synthetic-mechanism-regression','arms':list(ARMS),'repetitions':2,'maxTurns':8,'maxOutputTokens':131072,'workers':2,
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),
           'cases':[workload.workload(i,20271011+i*1009) for i in range(4)],
@@ -261,7 +261,7 @@ def shared_packet(store, task, ids):
 
 
 def shared_qualify(engine):
-    from ascent_engine.evidence import ComputationalEvidence
+    from ascent.evidence import ComputationalEvidence
     results=[]
     for task in shared_tasks():
         with ComputationalEvidence(engine) as store:
@@ -316,8 +316,8 @@ def shared_qualify(engine):
 
 def shared_freeze(library, directory, *, search_tasks=None):
     directory.mkdir(parents=True,exist_ok=False)
-    from ascent_engine.evidence import ComputationalEvidence
-    import ascent_engine.evidence as evidence_module
+    from ascent.evidence import ComputationalEvidence
+    import ascent.evidence as evidence_module
     root=s.ROOT.resolve(); library=library.resolve(); dst=directory/library.name;shutil.copy2(library,dst)
     # Use the installed API extension when available, rather than falling back silently.
     with Engine() as engine:
@@ -329,9 +329,9 @@ def shared_freeze(library, directory, *, search_tasks=None):
     assert 'candidate/evidence-store.ss' in binding and 'interface/engine-api.ss' in binding
     binding['gerbil.pkg']=hashlib.sha256((root/'gerbil.pkg').read_bytes()).hexdigest()
     names=['bindings/c/runtime.c','bindings/c/ascent.h','python/pyproject.toml','build.ss',
-           'python/src/ascent_engine/__init__.py','python/src/ascent_engine/evidence.py',
-           'python/src/ascent_engine/conversation.py','python/src/ascent_engine/build.py',
-           'python/src/ascent_engine/api_build.py','workbench/src/ascent_workbench/evidence_chain_study.py',
+           'python/src/ascent/__init__.py','python/src/ascent/evidence.py',
+           'python/src/ascent/conversation.py','python/src/ascent/build.py',
+           'python/src/ascent/api_build.py','workbench/src/ascent_workbench/evidence_chain_study.py',
            'workbench/src/ascent_workbench/model_study.py','workbench/src/ascent_workbench/movie_study.py',
            'workbench/src/ascent_workbench/inference_reuse_study.py','workbench/src/ascent_workbench/complex_movie_study.py',
            'workbench/src/ascent_workbench/evidence_chain_workload.py','workbench/src/ascent_workbench/query_contract.py',
@@ -339,7 +339,7 @@ def shared_freeze(library, directory, *, search_tasks=None):
            'packages/proofs/lean/ProofDag.lean','docs/research/agent-inference/factor-reuse-2026-study.org']
     import sys
     names += [str(Path(m.__file__).resolve().relative_to(root)) for n,m in sys.modules.items()
-              if n.startswith(('ascent_engine','ascent_workbench')) and getattr(m,'__file__',None)]
+              if n.startswith(('ascent','ascent_workbench')) and getattr(m,'__file__',None)]
     if (root/'.research-source.json').exists():names.append('.research-source.json')
     names += ['workbench/engine_tests/test_computational_evidence.py','python/tests/test_shared_premise.py',
               'python/RESEARCH.md','python/uv.lock','packages/proofs/quint/package.json','packages/proofs/quint/package-lock.json',
@@ -439,7 +439,7 @@ def shared_action(terminal):
 
 
 def shared_live(directory, output):
-    from ascent_engine.evidence import ComputationalEvidence
+    from ascent.evidence import ComputationalEvidence
     plan=shared_check(directory);output.mkdir(parents=True,exist_ok=False);rows=[]
     save=lambda: (output/'ledger.json').write_text(json.dumps(rows,indent=2)+'\n')
     with Engine() as engine:
@@ -725,7 +725,7 @@ def branch_candidates(task, branch):
 
 
 def branch_qualify(engine,tasks):
-    from ascent_engine.evidence import ComputationalEvidence
+    from ascent.evidence import ComputationalEvidence
     checks=[]
     for task in tasks:
         with ComputationalEvidence(engine) as store:
@@ -1134,7 +1134,7 @@ def branch_output_qualify(directory, output):
 
 
 def branch_live(directory, output):
-    from ascent_engine.evidence import ComputationalEvidence
+    from ascent.evidence import ComputationalEvidence
     plan=shared_check(directory);assert plan['experiment']=='sibling-search'
     qualification=json.loads((directory/'output-qualification.json').read_text())
     assert qualification['passed'] and qualification.get('acceptedForPlanSha256',qualification['planSha256'])==hashlib.sha256((directory/'plan.json').read_bytes()).hexdigest(),'live output gate required'
@@ -1157,7 +1157,7 @@ def branch_live(directory, output):
                             entry_packet=branch_observe(store,task,source,support=arm=='scheme')
                             context['nativeEvidence']=entry_packet
                             if plan.get('compactEvidence'):
-                                from ascent_engine.evidence import compact_observation, expand_observation
+                                from ascent.evidence import compact_observation, expand_observation
                                 context['nativeEvidence']=compact_observation(entry_packet)
                                 assert expand_observation(context['nativeEvidence'])==entry_packet
                             supplied=[o['conclusion']['atom'] for o in entry_packet['observations'] if o['conclusion']['status']=='verified']

@@ -9,7 +9,7 @@
         (only-in :gerbil/runtime/gambit current-readtable
                  readtable-eval-allowed?-set readtable-sharing-allowed?-set)
         (only-in :clan/poo/object .ref))
-(export ascent-load-evidence-module ascent-load-evidence-source ascent-load-evidence-components ascent-evidence-module
+(export ascent-load-evidence-module ascent-load-evidence-source ascent-load-module-source ascent-load-evidence-components ascent-evidence-module
         evidence-module? evidence-module-program evidence-module-explain evidence-module-bindings
         ascent-evidence-module-descriptors ascent-source-scope-count)
 
@@ -84,8 +84,10 @@
     (error "source module runtime load limit")))
 (def (ascent-load-evidence-source source trusted (ceiling #f))
   (load-evidence-scope source trusted #f (gensym 'ascent-source) [] #t ceiling))
+(def (ascent-load-module-source source trusted (ceiling #f))
+  (load-evidence-scope source trusted #f (gensym 'ascent-module) [] [] ceiling #t))
 
-(def (load-evidence-scope source trusted context namespace imports exports ceiling)
+(def (load-evidence-scope source trusted context namespace imports exports ceiling (module-source? #f))
   (unless (and (eq? trusted #t) (string? source)
                (<= (u8vector-length (string->utf8 source)) 262144))
     (error "explicit trusted host Scheme authorization and Evidence DSL required"))
@@ -101,7 +103,7 @@
                     (if (eof-object? form) (reverse forms)
                       (let ()
                         (unless (and (< (length forms) 256) (list? form) (pair? form)
-                                     (not (memq (car form) '(import export module))))
+                                     (not (memq (car form) (if module-source? '(module) '(import export module)))))
                           (error "Evidence definitions required; module/import/build scaffolding belongs to the Library"))
                         (def (visit value depth)
                           (set! nodes (+ nodes 1))
@@ -135,7 +137,7 @@
                      (let (read-binding (eval-syntax `(lambda () ,alias) #t))
                        (hash-put! aliases identifier read-binding) read-binding))))
                  (procedure (read-binding)))
-            (unless (procedure? procedure) (error "module export is not callable"))
+            (unless (procedure? procedure) (error "module export is not a procedure"))
             (apply procedure arguments))))))))
 
 ;; The manifest is transport data. Dependency selection and hygienic linking

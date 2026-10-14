@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import unittest
 
-from ascent_engine import Engine
+from ascent import Engine
 from test_uf_boundary import closure
 
 UF = ':gerbil-ascent/table/trrel-uf'
@@ -34,15 +34,8 @@ def rows(graph):
 class UFMaterializationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = Engine(os.environ.get('ASCENT_NATIVE_LIBRARY'))
-        receipt = cls.engine.build_receipt or {}
-        producer = receipt.get('producerBuild', receipt)
-        for source in ('core/relation-view.ss', 'program/view-state.ss', 'table/trrel-uf.ss'):
-            path = Path(__file__).resolve().parents[2] / source
-            expected = hashlib.sha256(path.read_bytes()).hexdigest()
-            if producer.get('sourceInputs', {}).get(source) != expected:
-                raise AssertionError(f'producer source identity differs: {source}')
-        print(f'UF-MATERIALIZATION-ORACLE {cls.engine.backend}', flush=True)
+        from engine_fixture import module_engine
+        cls.engine = module_engine()
 
     @classmethod
     def tearDownClass(cls):

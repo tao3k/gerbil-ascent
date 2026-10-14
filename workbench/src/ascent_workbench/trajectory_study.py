@@ -12,11 +12,11 @@ import io
 import json
 import random
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.derivations import EvidenceChain, evidence_dag
-from ascent_engine.evidence import identity
-from ascent_engine.trajectory import Trajectory
-from ascent_engine.conversation import ResponseHistory
+from ascent import Engine
+from ascent.derivations import EvidenceChain, evidence_graph
+from ascent.evidence import identity
+from ascent.trajectory import Trajectory
+from ascent.conversation import ResponseHistory
 from .movie_study import provider_key
 from .model_study import provider
 
@@ -122,7 +122,7 @@ def run(library,output,live):
           'primary':'Actual cumulative provider thinking through first independently verified correct answer, including failures and repairs.',
           'sampling':'Eight independent generated cases; arm order alternates; evidence appears only after an actual error.',
           'providerOutputSchemaEnforced':False,'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in
-            ['program/evidence-dag.ss','program/trajectory.ss','python/src/ascent_engine/trajectory.py',__file__]},
+            ['program/evidence-dag.ss','program/trajectory.ss','python/src/ascent/trajectory.py',__file__]},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest()}
     (output/'plan.json').write_text(json.dumps(plan,indent=2))
     engine=Engine(library);records=[];key=provider_key() if live else None
@@ -133,7 +133,7 @@ def run(library,output,live):
                 feedback=preflight.query(case['program'])
                 native=sorted(x[0] for x in feedback['result']['relations']['answer'])
                 if native!=case['gold']:raise AssertionError(f'oracle mismatch: {case["case"]}')
-                dag=evidence_dag(engine,case['program'])
+                dag=evidence_graph(case['program'])
                 positions={n['id']:i for i,n in enumerate(dag['nodes'])}
                 assert all(positions[e['from']]<positions[e['to']] for e in dag['edges'])
                 (output/f'{case["case"]}-dag.json').write_text(json.dumps(dag,indent=2))

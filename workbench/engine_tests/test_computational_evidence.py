@@ -11,15 +11,15 @@ class ComputationalEvidenceIntegration(unittest.TestCase):
     def test_caller_owned_counts_preserve_complete_source_and_finite_rejection(self):
         code = '''
 import copy, os
-from ascent_engine import Engine
-from ascent_engine.evidence import ComputationalEvidence
+from ascent import Engine
+from ascent.evidence import ComputationalEvidence
 library = os.environ.get('ASCENT_ENGINE_LIBRARY') if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else None
 source = {'identity':'caller-count-policy','generation':0,
           'relations':[['seed',1,[[i] for i in range(1100)]]]}
 candidate = ['candidate',['relation','answer',1],
              ['rule',['answer',0],['seed',0]],['query','answer',0],
              ['limits','unlimited','unlimited','unlimited']]
-with Engine(library) as engine, ComputationalEvidence(engine) as store:
+with Engine() as engine, ComputationalEvidence(engine) as store:
     original = copy.deepcopy(source)
     resolved = store.resolve(source, candidate)
     assert resolved['status'] == 'verified', resolved
@@ -52,11 +52,11 @@ print('CALLER-PROOF-COUNTS-OK',flush=True)
     def test_native_store_through_selected_public_binding(self):
         code = '''
 import copy, os
-from ascent_engine import Engine, EngineError
-from ascent_engine.evidence import ComputationalEvidence, compact_observation, expand_observation
+from ascent import Engine, EngineError
+from ascent.evidence import ComputationalEvidence, compact_observation, expand_observation
 from ascent_workbench.evidence_chain_study import shared_qualify, shared_tasks, shared_source, SHARED_CANDIDATE
 library = os.environ.get('ASCENT_ENGINE_LIBRARY') if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else None
-with Engine(library) as engine:
+with Engine() as engine:
     checks = shared_qualify(engine)
     assert len(checks['taskChecks']) == 2 and len(checks['nativeQuintRows']) == 32
     with ComputationalEvidence(engine) as a, ComputationalEvidence(engine) as b:

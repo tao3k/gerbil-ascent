@@ -5,7 +5,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 from test_module_calls import decode
 
 
@@ -28,7 +28,7 @@ class ModuleLoadingTests(unittest.TestCase):
             Engine(cls.library)
 
     def test_repeated_engine_reuses_runtime_but_preserves_caller_limits(self):
-        with patch('ascent_engine._preserve_host_io',
+        with patch('ascent._preserve_host_io',
                    side_effect=AssertionError('re-entered native initialization')):
             engine = Engine(self.library, max_request_bytes=10)
         self.assertEqual(engine.max_request_bytes, 10)

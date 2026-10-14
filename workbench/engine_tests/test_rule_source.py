@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 
 
 RULES = """(ascent-fragment
@@ -24,7 +24,7 @@ class NativeRuleSourceTests(unittest.TestCase):
     def setUpClass(cls):
         library = None if os.environ.get("ASCENT_ENGINE_BACKEND") == "api" else os.environ.get(
             "ASCENT_ENGINE_LIBRARY", Path(__file__).parents[2] / ".gerbil/lib/libascent.dylib")
-        cls.engine = Engine(library)
+        cls.engine = Engine()
 
     def run_catalog(self, source, rows, queries):
         catalog = self.engine.read_rules(source)

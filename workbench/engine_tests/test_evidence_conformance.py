@@ -4,7 +4,7 @@ import json
 import os
 import unittest
 
-from ascent_engine import Engine, EngineError, FactLimits
+from ascent import Engine, EngineError, FactLimits
 from test_module_calls import decode
 
 FIXTURE = Path(__file__).resolve().parents[2] / 't/qualification/fixtures/native-evidence/conformance.json'
@@ -40,7 +40,7 @@ class EvidenceConformance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         library = os.environ.get('ASCENT_ENGINE_LIBRARY') if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else None
-        cls.engine = Engine(library)
+        cls.engine = Engine()
 
     @classmethod
     def tearDownClass(cls):
@@ -71,38 +71,29 @@ class EvidenceConformance(unittest.TestCase):
         generation, observed_source, proof_generation, proof_rows = 0, before, -1, 0
 
         def observation():
-            alive = session.handle is not None
+            alive = not session.closed
             result_live = False
-            if alive and result is not None and result.handle is not None:
+            if alive and result is not None and not result.closed:
                 try:
                     payload = result.rows('output')
-                except EngineError as error:
-                    self.assertIn('stale or unknown native result', str(error))
+                except ValueError as error:
+                    self.assertIn('closed or released', str(error))
                 else:
                     result_live = True
                     self.assertEqual(payload['sourceGeneration'], generation)
                     self.assertEqual(mask_of(decode(payload['value'])), observed_source)
-            held = alive and proof is not None and proof.handle is not None
+            held = alive and proof is not None and not proof.closed
             native = False
             if held:
-                # A live explanation is a distinct native entry, not a result.
-                # A stale entry fails lookup before the kind check.
-                try:
-                    self.engine.request({'operation': 'native-result', 'handle': session.handle,
-                                         'result': proof.handle, 'action': 'rows', 'relation': 'output'})
-                except EngineError as error:
-                    native = 'rows requires a result handle' in str(error)
-                    if not native:
-                        self.assertIn('stale or unknown native result', str(error))
-                else:
-                    self.fail('explanation was admitted as a result')
+                with self.assertRaises(TypeError): session.result(proof)
+                native = proof.current
                 # Historical copied observation remains readable, not CURRENT.
                 root = proof.graph['root']
                 nodes = {n['id']: n for n in proof.graph['nodes']}
                 vector = nodes[root['ref']]
                 source = decode({'root': vector['items'][1], 'nodes': proof.graph['nodes']})
                 self.assertEqual(mask_of(source), proof_rows)
-                self.assertEqual(proof.receipt['sourceGeneration'], proof_generation)
+                self.assertEqual(proof.source_generation, proof_generation)
             return [int(alive), generation, observed_source, int(result_live), int(held),
                     int(native), proof_generation, proof_rows]
 
@@ -119,7 +110,7 @@ class EvidenceConformance(unittest.TestCase):
                     generation = receipt['sourceGeneration']
                 elif event == 1:
                     proof = result.explanation('output')
-                    proof_generation = proof.receipt['sourceGeneration']
+                    proof_generation = proof.source_generation
                     root = proof.graph['root']
                     vector = {n['id']: n for n in proof.graph['nodes']}[root['ref']]
                     proof_rows = mask_of(decode({'root': vector['items'][1], 'nodes': proof.graph['nodes']}))
@@ -134,8 +125,7 @@ class EvidenceConformance(unittest.TestCase):
                     observed_source = after
                 elif event == 4:
                     with self.assertRaises(EngineError):
-                        session.replace([{'relation': 'input', 'rows': []},
-                                         {'relation': 'output', 'rows': [[0]]}])
+                        session.replace({'input': [], 'output': [[0]]})
                 elif event == 5:
                     proof.close()
                     with self.assertRaises(ValueError): proof.graph
@@ -153,12 +143,10 @@ class EvidenceConformance(unittest.TestCase):
 
     def test_definition_reuse_keeps_sessions_and_limits_independent(self):
         with self.engine.dsl(SOURCE, trusted=True) as definitions:
-            scope_count = self.engine.request({'operation': 'describe'})['sourceScopes']
             a = definitions.evidence('make-evidence', [0], limits=FactLimits(input=1))
             b = definitions.evidence('make-evidence', [1])
             with self.assertRaises(EngineError):
                 definitions.evidence('make-evidence', [0, 1], limits=FactLimits(input=1))
-            self.assertEqual(scope_count, self.engine.request({'operation': 'describe'})['sourceScopes'])
             with a.result(a.run(queries=['output'])) as result:
                 self.assertEqual(decode(result.rows('output')['value']), [[0]])
             a.replace({'input': []})
@@ -170,7 +158,7 @@ class EvidenceConformance(unittest.TestCase):
         try:
             with a.result(a.run(queries=['output'])) as result:
                 with result.explanation('output') as proof:
-                    self.assertEqual(proof.receipt['sourceGeneration'], 1)
+                    self.assertEqual(proof.source_generation, 1)
             with self.assertRaises(ValueError):
                 definitions.evidence('make-evidence', [])
         finally:

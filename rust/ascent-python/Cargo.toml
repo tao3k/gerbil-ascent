@@ -1,0 +1,25 @@
+[package]
+name = "ascent-python"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "ascent"
+crate-type = ["cdylib"]
+
+[dependencies]
+gerbil-ascent = { workspace = true, features = ["provider-protocol"] }
+pyo3.workspace = true
+ascent-scheme = { path = "../ascent-scheme" }
+
+[dev-dependencies]
+asp-rust.workspace = true
+
+[features]
+default = ["rayon"]
+rayon = ["gerbil-ascent/rayon"]
+extension-module = ["pyo3/extension-module"]
+
+[lints]
+workspace = true

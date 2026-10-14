@@ -1,6 +1,6 @@
 """Order and hygiene at the upstream DSL collection boundaries."""
 import unittest
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 from test_module_calls import decode
 
 
@@ -92,7 +92,7 @@ class DSLCollectionTests(unittest.TestCase):
                     with other.call('answer') as result:
                         self.assertEqual(decode(result.graph), 99)
                 with owner.call('replace', False): pass
-                with self.assertRaisesRegex(EngineError, 'not callable'):
+                with self.assertRaisesRegex(EngineError, 'not a procedure'):
                     owner.call('answer')
                 with owner.call('replace', 11): pass
                 with owner.call('answer') as result:

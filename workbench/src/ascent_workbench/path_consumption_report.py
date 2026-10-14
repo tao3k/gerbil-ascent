@@ -7,7 +7,7 @@ import json
 import shutil
 from pathlib import Path
 from .interactive_study import balanced_oracle, tagged_oracle, obligation_acceptance
-from ascent_engine.interaction import expand_feedback
+from ascent.interaction import expand_feedback
 
 
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -153,7 +153,7 @@ def main():
     (out/'rounds.org').write_text('\n'.join(rounds)+'\n');(out/'visible-answers.org').write_text('\n'.join(visible)+'\n')
     shutil.copyfile(cache/'encoding-receipt.json',out/'encoding-receipt.json')
     sources=out/'execution-sources';sources.mkdir(exist_ok=True)
-    for name,source in [('raw-baseline-interaction.py',cache/'baseline-host/ascent_engine/interaction.py'),('column-pilot-interaction.py',cache/'column-pilot-interaction.py'),('readable-interaction.py',root/'python/src/ascent_engine/interaction.py'),('study.py',root/'workbench/src/ascent_workbench/interactive_study.py')]:shutil.copyfile(source,sources/name)
+    for name,source in [('raw-baseline-interaction.py',cache/'baseline-host/ascent/interaction.py'),('column-pilot-interaction.py',cache/'column-pilot-interaction.py'),('readable-interaction.py',root/'python/src/ascent/interaction.py'),('study.py',root/'workbench/src/ascent_workbench/interactive_study.py')]:shutil.copyfile(source,sources/name)
     for p in out.rglob('*.json'):p.with_name(p.name+'.license').write_text('SPDX-FileCopyrightText: 2026 tao3k team and Contributors\nSPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n')
     print(json.dumps({'runs':len(results),'physicalResponses':len(audit),'physicalThinking':physical_thinking,'partialRequests':len(partial),'localChecks':sum(r['independentLocalChecks'] for r in results),'baselineThinking':baseline_total,'readableFreshThinking':fresh_total,'readableRetainedThinking':retained_total,'reduction':100*(1-retained_total/baseline_total)}))
 

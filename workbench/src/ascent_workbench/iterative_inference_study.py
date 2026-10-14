@@ -7,8 +7,8 @@ import json
 import shutil
 import time
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
+from ascent import Engine
+from ascent.evidence import EvidenceStore
 from . import inference_reuse_study as study
 from . import complex_inference_workload as complex_workload
 from .inference_effort import until_verified,paired_reduction
@@ -43,8 +43,8 @@ def prepare(directory,library):
     directory.mkdir(parents=True,exist_ok=False);shutil.copy2(library,directory/library.name)
     paths=[Path(__file__),Path(study.__file__),Path(__file__).with_name('inference_effort.py'),Path(complex_workload.__file__),
            Path(__file__).with_name('model_study.py'),Path(__file__).with_name('movie_study.py'),
-           Path(__file__).with_name('query_contract.py'),study.ROOT/'python/src/ascent_engine/evidence.py',
-           study.ROOT/'python/src/ascent_engine/__init__.py']
+           Path(__file__).with_name('query_contract.py'),study.ROOT/'python/src/ascent/evidence.py',
+           study.ROOT/'python/src/ascent/__init__.py']
     plan={'schema':'ascent.iterative-inference-plan.v2','maxTurns':8,'maxProviderCalls':128,
           'maxOutputTokens':MAX_OUTPUT_TOKENS,'conservativePeakCeilingUsd':12,
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),

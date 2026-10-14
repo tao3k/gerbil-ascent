@@ -7,8 +7,8 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
+from ascent import Engine
+from ascent.evidence import EvidenceStore
 from . import iterative_inference_study as loop
 from . import inference_reuse_study as study
 from . import complex_inference_workload as workload

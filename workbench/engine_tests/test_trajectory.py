@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import os
 import unittest
-from ascent_engine import Engine, EngineError
-from ascent_engine.trajectory import Trajectory
-from ascent_engine.derivations import EvidenceChain, evidence_dag
-from ascent_engine.evidence import identity
+from ascent import Engine, EngineError
+from ascent.trajectory import Trajectory
+from ascent.derivations import EvidenceChain, evidence_graph
+from ascent.evidence import identity
 
 
 def relation(name, source, rows=()):
@@ -100,7 +100,7 @@ class TrajectoryIntegration(unittest.TestCase):
                 second=chain.query(program)
                 self.assertTrue(second['retainedCompleted'])
                 self.assertEqual(chain.answer(second['resultReference'],'answer'),[['a']])
-                graph=evidence_dag(self.engine,program)
+                graph=evidence_graph(program)
                 self.assertEqual(len(graph['edges']),1)
                 chain.replace([relation('input',True,[['b']])])
                 with self.assertRaises(ValueError):chain.answer(first['resultReference'],'answer')

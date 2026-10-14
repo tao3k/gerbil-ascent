@@ -11,9 +11,9 @@ import multiprocessing
 import shutil
 import time
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
-from ascent_engine.conversation import ResponseHistory
+from ascent import Engine
+from ascent.evidence import EvidenceStore
+from ascent.conversation import ResponseHistory
 from . import iterative_inference_study as loop
 from . import inference_reuse_study as study
 from . import complex_inference_workload as workload
@@ -45,8 +45,8 @@ def prepare(original,directory):
            Path(__file__).with_name('inference_effort.py'),Path(__file__).with_name('model_study.py'),
            Path(__file__).with_name('movie_study.py'),Path(__file__).with_name('query_contract.py'),
            Path(__file__).with_name('complex_movie_study.py'),
-           study.ROOT/'python/src/ascent_engine/conversation.py',study.ROOT/'python/src/ascent_engine/evidence.py',
-           study.ROOT/'python/src/ascent_engine/__init__.py']
+           study.ROOT/'python/src/ascent/conversation.py',study.ROOT/'python/src/ascent/evidence.py',
+           study.ROOT/'python/src/ascent/__init__.py']
     plan.update(schema='ascent.tool-thinking-plan.v1',maxOutputTokens=131072,workers=2,
                 scope='Corrected tool-history development evaluation on the same frozen compound questions; follows diagnosis of the original protocol. Not a new independent holdout.',
                 conservativePeakCeilingUsd=24,

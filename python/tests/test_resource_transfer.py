@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ascent_engine.build import transfer_resource
+from ascent.build import transfer_resource
 
 
 class NativePublicationPermission(unittest.TestCase):
@@ -19,8 +19,8 @@ class NativePublicationPermission(unittest.TestCase):
             target.parent.mkdir()
             source.write_bytes(b"original generation")
             denial = PermissionError(errno.EPERM, "not permitted")
-            with patch("ascent_engine.build.os.link", side_effect=denial), \
-                 patch("ascent_engine.build.shutil.copyfile") as copy:
+            with patch("ascent.build.os.link", side_effect=denial), \
+                 patch("ascent.build.shutil.copyfile") as copy:
                 with self.assertRaisesRegex(PermissionError, "hard-link access") as observed:
                     transfer_resource(source, target)
                 self.assertEqual(observed.exception.errno, errno.EPERM)

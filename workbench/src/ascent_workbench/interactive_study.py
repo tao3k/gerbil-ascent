@@ -10,10 +10,10 @@ import io
 import json
 import random
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.interaction import EvidenceOperation, EvidenceInteraction, EvidenceConversation
-from ascent_engine.trajectory import Trajectory
-from ascent_engine.evidence import identity
+from ascent import Engine
+from ascent.interaction import EvidenceOperation, EvidenceInteraction, EvidenceConversation
+from ascent.trajectory import Trajectory
+from ascent.evidence import identity
 from .correction_study import balanced, tagged
 from .trajectory_study import atom, rule, relation, extract
 from .consumption_study import oracle as balanced_oracle
@@ -112,8 +112,8 @@ def obligation_acceptance(verdicts):
 
 def run(library,output,*,live=False,index=0,arm='retained',resume_prefix=None,failed_prefix=None,checkpoint_prefix=None,seed_offset=0):
     output.mkdir(parents=True,exist_ok=False);case=corpus(seed_offset)[index]
-    paths=[__file__,'python/src/ascent_engine/interaction.py','python/src/ascent_engine/trajectory.py',
-           'python/src/ascent_engine/derivations.py','program/trajectory.ss','program/evidence-dag.ss']
+    paths=[__file__,'python/src/ascent/interaction.py','python/src/ascent/trajectory.py',
+           'python/src/ascent/derivations.py','program/trajectory.ss','program/evidence-dag.ss']
     plan={'schema':'ascent.interactive-study.v1','case':public(case),'arm':arm,'model':'deepseek-flash',
           'maxOutputTokens':131072,'maxCallsPerStage':8,'maxFinalFailuresPerStage':3,
           'endpoint':'Entire three-stage task: all calls through first independently correct answer for every stage, including source update and repairs.',

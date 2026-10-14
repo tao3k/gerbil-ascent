@@ -7,11 +7,12 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from ascent_engine import Engine
+from ascent import Engine
 from . import complex_movie_study as study
 from .query_contract import output_format,compact_request
 from .model_study import provider,response_outcome
 from .movie_study import provider_key,MAX_OUTPUT_TOKENS
+from ascent import rows_equal
 
 
 def singleton_heads(contract):
@@ -71,7 +72,7 @@ def validate(preview,results,library,output):
     report={'schema':'ascent.complex-movie-validation.v1','purpose':'post-hoc diagnostics; original scores unchanged',
             'additionalProviderCalls':0,'originalResultSha256':hashlib.sha256((results/'result.json').read_bytes()).hexdigest(),
             'sourceTransfer':[],'witnesses':{}}
-    with Engine(library) as engine:
+    with Engine() as engine:
         for case in plan['cases']:
             source=study.source_for(plan['source'],case)
             report['witnesses'][case['name']]=witnesses(engine,source,case)
@@ -90,7 +91,7 @@ def validate(preview,results,library,output):
                     views=study.materialize(engine,source) if record['arm']=='reuse' else None
                     actual=study.case_program(engine,source,variant,candidate,views)
                     expected=study.case_program(engine,source,variant,study.gold(variant))
-                    equal=engine.request({'operation':'compare','actual':actual,'expected':expected})['equal']
+                    equal=rows_equal(actual, expected)
                     grades.append({'withdrawal':withdrawal,'correct':equal,'answers':len(actual)})
                 diagnostic={'case':case['name'],'arm':record['arm'],'originalOutcome':record['outcome'],
                             'singletonHeadRepairs':count,'transfers':grades}
@@ -133,10 +134,10 @@ def recover(preview,results,library,output):
                 if index==0:result['review']=candidate
                 else:
                     case=next(c for c in plan['cases'] if c['name']==record['case']);source=study.source_for(plan['source'],case)
-                    with Engine(library) as engine:
+                    with Engine() as engine:
                         views=study.materialize(engine,source) if record['arm']=='reuse' else None
                         actual=study.case_program(engine,source,case,candidate,views)
-                        correct=engine.request({'operation':'compare','actual':actual,'expected':plan['gold'][case['name']]})['equal']
+                        correct=rows_equal(actual, plan['gold'][case['name']])
                     result['outcome']=response_outcome(meta,correct);result['answer']=actual
             except Exception as error:result['outcome']='invalid_recovery';result['failure']=str(error)[:2048]
         report['calls'].append(result)
@@ -173,10 +174,10 @@ def review_semantics(preview,results,library,output):
         try:
             prediction=json.loads(answer);case=next(c for c in plan['cases'] if c['name']==record['case'])
             source=study.source_for(plan['source'],case)
-            with Engine(library) as engine:
+            with Engine() as engine:
                 views=study.materialize(engine,source) if record['arm']=='reuse' else None
                 actual=study.case_program(engine,source,case,prediction['contract'],views)
-                equal=engine.request({'operation':'compare','actual':actual,'expected':plan['gold'][case['name']]})['equal']
+                equal=rows_equal(actual, plan['gold'][case['name']])
             report.update(outcome=response_outcome(meta,equal),diagnosis=prediction['diagnosis'],contract=prediction['contract'],answer=actual)
         except Exception as error:report.update(outcome='invalid_review',failure=str(error)[:2048])
     (output/'result.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
@@ -201,7 +202,7 @@ def compact(preview,results,library,output):
         (output/f'{i:02d}.request.json').write_text(json.dumps(req,ensure_ascii=False,indent=2)+'\n')
     (output/'plan.json').write_text(json.dumps(report,indent=2)+'\n')
     cache={}
-    with Engine(library) as engine:
+    with Engine() as engine:
         for i,(case,req) in enumerate(requests):
             source=study.source_for(plan['source'],case);sid=study.identity(source);started=time.monotonic()
             hit=sid in cache
@@ -216,7 +217,7 @@ def compact(preview,results,library,output):
                 try:
                     candidate=json.loads(raw)
                     actual=study.case_program(engine,source,case,candidate,cache[sid])
-                    correct=engine.request({'operation':'compare','actual':actual,'expected':plan['gold'][case['name']]})['equal']
+                    correct=rows_equal(actual, plan['gold'][case['name']])
                     result.update(outcome=response_outcome(meta,correct),answer=actual)
                 except Exception as error:result.update(outcome='admission_or_execution_failure',failure=str(error)[:2048])
             report['calls'].append(result)

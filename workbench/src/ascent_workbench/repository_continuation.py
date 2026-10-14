@@ -10,7 +10,7 @@ import json
 import multiprocessing
 from pathlib import Path
 
-from ascent_engine.conversation import ResponseHistory
+from ascent.conversation import ResponseHistory
 from . import repository_model_study as study
 
 

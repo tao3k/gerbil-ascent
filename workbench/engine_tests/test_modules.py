@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Real C ABI module controls. Run in a fresh process with a matched artifact."""
+"""Installed native module controls with typed results and explanations."""
 import os
 import unittest
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 
 MODULE = ':gerbil-ascent/t/qualification/evidence-api-module'
 
@@ -11,7 +11,8 @@ MODULE = ':gerbil-ascent/t/qualification/evidence-api-module'
 class ModuleTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = Engine(os.environ.get('ASCENT_NATIVE_LIBRARY'))
+        from engine_fixture import module_engine
+        cls.engine = module_engine()
 
     @classmethod
     def tearDownClass(cls):
@@ -31,27 +32,22 @@ class ModuleTests(unittest.TestCase):
                 kinds = {node['type'] for node in encoded['nodes']}
                 self.assertTrue({'vector', 'u8vector', 'pair'} <= kinds)
                 self.assertIn('1/3', str(encoded))
-                explanation = result.explain('output')
-                self.assertIn('recorded-only', str(explanation))
-                self.assertIn('dependencies', str(explanation))
-                with self.assertRaises(EngineError):
-                    self.engine.request({'operation': 'native-result', 'handle': session.handle,
-                                         'result': explanation['explanationHandle'], 'action': 'rows',
-                                         'relation': 'output'})
-                self.engine.request({'operation': 'native-result', 'handle': session.handle,
-                                     'result': explanation['explanationHandle'], 'action': 'release'})
+                explanation = result.explanation('output')
+                self.assertIn('recorded-only', str(explanation.graph))
+                self.assertIn('dependencies', str(explanation.graph))
+                with self.assertRaises(TypeError): session.result(explanation)
+                explanation.close()
                 second = session.run(queries=['output'])
                 self.assertTrue(second['nativeResultReused'])
                 session.result(second).close()
                 session.replace({'input': [[{'type': 'number', 'value': '7/2'}]]})
-                with self.assertRaises(EngineError): result.rows('output')
+                with self.assertRaises(ValueError): result.rows('output')
                 with session.result(session.run(queries=['output'])) as updated:
                     self.assertIn('7/2', str(updated.rows('output')))
-                    explanation = updated.explain('output')
-                    self.assertIn('7/2', str(explanation))
-                    self.assertNotIn('1/3', str(explanation))
-                    self.engine.request({'operation': 'native-result', 'handle': session.handle,
-                                         'result': explanation['explanationHandle'], 'action': 'release'})
+                    explanation = updated.explanation('output')
+                    self.assertIn('7/2', str(explanation.graph))
+                    self.assertNotIn('1/3', str(explanation.graph))
+                    explanation.close()
 
     def test_upstream_lattice_aggregate_and_operator(self):
         for constructor, arguments, relation, expected in (
@@ -85,8 +81,7 @@ class ModuleTests(unittest.TestCase):
         result = session.result(receipt)
         with self.engine.open_module(MODULE, 'make-values', [2]) as other:
             with self.assertRaises(EngineError):
-                self.engine.request({'operation': 'native-result', 'handle': other.handle,
-                                     'result': result.handle, 'action': 'rows', 'relation': 'output'})
+                other.result(receipt)
         session.close()
         with self.assertRaises(ValueError): result.rows('output')
         result.close()
@@ -123,9 +118,16 @@ class ModuleTests(unittest.TestCase):
                 self.assertEqual(len(symbols), 2)
                 self.assertNotEqual(symbols[0]['id'], symbols[1]['id'])
                 self.assertTrue(all(not node['interned'] for node in symbols))
-                session.replace({'input': [[{'type': 'reference', 'result': result.handle,
-                                             'node': opaque['id']}]]})
-                with self.assertRaises(EngineError): result.rows('input')
+                by_id = {node['id']: node for node in nodes}
+                cursor, index = graph['root'], 0
+                while cursor.get('type') != 'null':
+                    pair = by_id[cursor['ref']]
+                    row = by_id[pair['car']['ref']]
+                    if row['car'] == {'ref': opaque['id']}: break
+                    cursor, index = pair['cdr'], index + 1
+                else: self.fail('opaque value is not a source tuple')
+                session.replace({'input': [[result.reference('input', index, 0)]]})
+                with self.assertRaises(ValueError): result.rows('input')
             with session.result(session.run(queries=['input'])) as updated:
                 self.assertIn('native-reference-only', str(updated.rows('input')))
 
@@ -143,10 +145,9 @@ class ModuleTests(unittest.TestCase):
             self.assertEqual(receipt['relations']['checked_step'], [['finished']])
             self.assertEqual(receipt['relations']['missing_step'], [['missing']])
             with session.result(receipt) as result:
-                proof = result.explain('missing_step')
-                self.assertIn('source refinement', str(proof))
-                self.engine.request({'operation': 'native-result', 'handle': session.handle,
-                                     'result': proof['explanationHandle'], 'action': 'release'})
+                proof = result.explanation('missing_step')
+                self.assertIn('source refinement', str(proof.graph))
+                proof.close()
 
 
 if __name__ == '__main__':

@@ -5,8 +5,8 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
+from ascent import Engine
+from ascent.evidence import EvidenceStore
 from . import iterative_inference_study as loop
 from .inference_effort import until_verified
 from . import inference_reuse_study as study

@@ -11,10 +11,10 @@ class EvidenceIntegration(unittest.TestCase):
     def test_real_scheme_evidence_survives_repeat_and_rebuilds_after_withdrawal(self):
         code='''
 import copy,os
-from ascent_engine import Engine
-from ascent_engine.evidence import EvidenceStore
+from ascent import Engine
+from ascent.evidence import EvidenceStore
 from ascent_workbench import inference_reuse_study as s
-with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent.dylib')) as engine:
+with Engine() as engine:
   for i in range(4):
     case=s.workload(i);source=case['source'];contract=s.oracle_contract(case)
     p=s.program(source,contract);sources=[r for r in p['relations'] if r['source']]
@@ -69,7 +69,7 @@ with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent
     print('EVIDENCE-SUBGOAL-COMPOSITION-OK',flush=True)
 '''
         subprocess.run([sys.executable,'-u','-'],input=code,text=True,check=True,
-                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')+':'+str(ROOT/'python/src')})
+                       env={**os.environ,'PYTHONPATH':str(ROOT/'workbench/src')})
 
 
 if __name__=='__main__':unittest.main()

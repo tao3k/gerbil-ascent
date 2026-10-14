@@ -48,10 +48,10 @@ class InferenceReuse(unittest.TestCase):
 
     def test_actual_scheme_repeat_and_source_update_match_fresh_evaluation(self):
         code='''
-from ascent_engine import Engine
+from ascent import Engine
 from ascent_workbench import inference_reuse_study as s
 import os
-with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent.dylib')) as e:
+with Engine() as e:
     for i in range(4):
         case=s.workload(i);source=case['source'];contract=s.oracle_contract(case)
         with e.open(s.program(source,contract)) as retained:
@@ -69,7 +69,7 @@ with Engine(os.environ.get('ASCENT_ENGINE_LIBRARY',s.ROOT/'.gerbil/lib/libascent
             print('RETAINED-SOURCE-UPDATE-OK',case['name'],flush=True)
 '''
         subprocess.run([sys.executable,'-u','-'],input=code,text=True,check=True,
-                       env={**os.environ,'PYTHONPATH':str(study.ROOT/'workbench/src')+':'+str(study.ROOT/'python/src')})
+                       env={**os.environ,'PYTHONPATH':str(study.ROOT/'workbench/src')})
 
     def test_finite_recursive_source_correspondence_and_stale_answer_control(self):
         import tempfile

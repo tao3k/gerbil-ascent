@@ -9,14 +9,15 @@ import threading
 import unittest
 import copy
 sys.path.insert(0,str(Path(__file__).parents[1]/'src'))
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
+from ascent import rows_equal
 
 ROOT=Path(__file__).parents[2]
 
 class EngineLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine=Engine(os.environ.get('ASCENT_ENGINE_LIBRARY', ROOT/'.gerbil/lib/libascent.dylib'))
+        cls.engine=Engine()
         cls.wire=json.loads(Path(os.environ['ASCENT_ENGINE_WIRE']).read_text())
         print('CFFI-RUNTIME-INITIALIZED',flush=True)
     @classmethod
@@ -107,21 +108,19 @@ class EngineLibrary(unittest.TestCase):
         repaired,count=singleton_heads(malformed)
         self.assertEqual(count,1);self.assertEqual(repaired,valid)
         actual=study.case_program(self.engine,source,case,repaired,views)
-        self.assertTrue(self.engine.request({'operation':'compare','actual':actual,
-                        'expected':[['Q123351'],['Q208026'],['Q202589']]})['equal'])
+        self.assertTrue(rows_equal(actual, [['Q123351'],['Q208026'],['Q202589']]))
         changed={**case,'withdrawal':['Q25188','Q123351']};current=study.source_for(source,changed)
         fresh_views=study.materialize(self.engine,current)
         correct=study.case_program(self.engine,current,changed,repaired,fresh_views)
         stale=study.case_program(self.engine,current,changed,repaired,views)
-        self.assertTrue(self.engine.request({'operation':'compare','actual':correct,
-                        'expected':[['Q208026'],['Q202589']]})['equal'])
-        self.assertFalse(self.engine.request({'operation':'compare','actual':stale,'expected':correct})['equal'])
+        self.assertTrue(rows_equal(correct, [['Q208026'],['Q202589']]))
+        self.assertFalse(rows_equal(stale, correct))
         union={**case,'combine':'any','scope':'both'}
         mistaken={**union,'combine':'all'}
         union_answer=study.case_program(self.engine,source,union,study.gold(union,True),views)
         join_answer=study.case_program(self.engine,source,union,study.gold(mistaken,True),views)
         self.assertEqual(len(union_answer),154);self.assertEqual(len(join_answer),3)
-        self.assertFalse(self.engine.request({'operation':'compare','actual':union_answer,'expected':join_answer})['equal'])
+        self.assertFalse(rows_equal(union_answer, join_answer))
         scoped,qualified,withdrawal=study.cases('country-qualified')
         single=study.case_program(self.engine,source,qualified,study.gold(qualified,True),views)
         self.assertEqual(single,[['Q208026']])

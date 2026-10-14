@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Actual Scheme Evidence DAG contracts through the compiled Library ABI/API."""
+"""Rust structural graphs and private, source-bound completed component reuse."""
 import copy
 import os
 import unittest
 
-from ascent_engine import Engine, EngineError
-from ascent_engine.derivations import components, canonical_rule, evidence_dag
+from ascent import Engine, EngineError
+from ascent.derivations import EvidenceChain, components, canonical_rule, evidence_graph, slice_program
 
 
 def atom(name, variable='x'):
@@ -20,23 +20,21 @@ def declaration(name, source=False, rows=None, kind='symbol'):
 class EvidenceDagTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = (Engine(os.environ['ASCENT_ENGINE_LIBRARY'])
-                      if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else Engine())
+        cls.engine=Engine()
 
     @classmethod
     def tearDownClass(cls):
         cls.engine.shutdown()
 
     def slice(self, program, facts, queries):
-        return self.engine.request({'operation': 'evidence-dag', 'action': 'slice',
-                                    'program': program, 'facts': facts, 'queries': queries})
+        return slice_program(program,facts,queries)
 
     def test_recursive_and_multihead_dependencies_stay_atomic(self):
         program = {'relations': [declaration(n) for n in ('reach', 'answer', 'left', 'right')],
                    'rules': [{'head': [atom('reach')], 'body': [atom('reach')]},
                              {'head': [atom('answer')], 'body': [atom('reach')]},
                              {'head': [atom('left'), atom('right')], 'body': [atom('reach')]}]}
-        groups = components(self.engine, program)
+        groups = components(program)
         self.assertIn(['left', 'right'], groups)
         self.assertLess(groups.index(['reach']), groups.index(['answer']))
 
@@ -45,7 +43,7 @@ class EvidenceDagTests(unittest.TestCase):
                    'rules': [{'head': [atom('reach')], 'body': [atom('input')]},
                              {'head': [atom('reach')], 'body': [atom('reach')]},
                              {'head': [atom('answer')], 'body': [atom('reach')]}]}
-        dag = evidence_dag(self.engine, program)
+        dag = evidence_graph(program)
         self.assertEqual([node['relations'] for node in dag['nodes']],
                          [['input'], ['reach'], ['answer']])
         self.assertTrue(dag['nodes'][1]['recursive'])
@@ -59,8 +57,8 @@ class EvidenceDagTests(unittest.TestCase):
                     'body': [{'relation': 'edge', 'terms': [{'var': a}, {'var': b}]}]}
         original = rule('x', 'y')
         saved = copy.deepcopy(original)
-        self.assertEqual(canonical_rule(self.engine, original),
-                         canonical_rule(self.engine, rule('a', 'z')))
+        self.assertEqual(canonical_rule(original),
+                         canonical_rule(rule('a', 'z')))
         self.assertEqual(original, saved)
 
     def test_slice_keeps_negative_and_reducer_dependencies(self):
@@ -78,66 +76,69 @@ class EvidenceDagTests(unittest.TestCase):
     def test_slice_rejects_extra_rule_fields_and_bool_integer(self):
         program = {'relations': [declaration('input', True, kind='integer'), declaration('answer')],
                    'rules': [{'head': [atom('answer')], 'body': [atom('input')], 'waiver': True}]}
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             self.slice(program, {'input': [[1]]}, ['answer'])
         del program['rules'][0]['waiver']
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             self.slice(program, {'input': [[True]]}, ['answer'])
 
     def test_slice_rejects_missing_sources_and_undefined_or_source_heads(self):
         program = {'relations': [declaration('input', True), declaration('answer')],
                    'rules': [{'head': [atom('answer')], 'body': [atom('input')]}]}
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             self.slice(program, {}, ['answer'])
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             self.slice({**program, 'rules': []}, {'input': []}, ['answer'])
         program['rules'][0]['head'] = [atom('input')]
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             self.slice(program, {'input': []}, ['input'])
 
     def test_query_dag_rejects_changed_source_before_reuse(self):
-        source = declaration('input', True, [['a']])
-        program = {'relations': [source, declaration('answer')],
-                   'rules': [{'head': [atom('answer')], 'body': [atom('input')]}],
-                   'queries': ['answer']}
-        request = {'operation': 'evidence-dag', 'action': 'query', 'program': program,
-                   'trusted': {'input': copy.deepcopy(source)}, 'sources': ['input'],
-                   'sourceIdentity': 'actual-host-bound-source', 'retain': True, 'certificates': {}}
-        dag = self.engine.request(request)
-        self.assertEqual(dag['mapping'], {})
-        self.assertEqual(len(dag['fresh']), 1)
-        program['relations'][0]['rows'] = []
-        with self.assertRaises(EngineError):
-            self.engine.request(request)
+        source=declaration('input',True,[['a']])
+        program={'relations':[copy.deepcopy(source),declaration('answer')],
+                 'rules':[{'head':[atom('answer')],'body':[atom('input')]}],
+                 'queries':['answer']}
+        with EvidenceChain(self.engine,[source]) as chain:
+            first=chain.query(program)
+            self.assertEqual(len(first['freshComponents']),1)
+            program['relations'][0]['rows']=[]
+            with self.assertRaises(ValueError):chain.query(program)
+            self.assertEqual(chain.answer(first['resultReference'],'answer'),[['a']])
 
     def test_query_dag_reuses_exact_completed_alias_and_retains_all_sources(self):
-        source = declaration('input', True, [['a']])
-        program = {'relations': [source, declaration('answer')],
-                   'rules': [{'head': [atom('answer')], 'body': [atom('input')]}], 'queries': ['answer']}
-        request = {'operation': 'evidence-dag', 'action': 'query', 'program': program,
-                   'trusted': {'input': source}, 'sources': ['input'],
-                   'sourceIdentity': 'same-bound-source', 'retain': True, 'certificates': {}}
-        first = self.engine.request(request)
-        request['certificates'][first['keys']['answer']] = {'answer': 'input'}
-        rejected_alias = self.engine.request(request)
-        self.assertFalse(rejected_alias['mapping'])
-        self.assertFalse(rejected_alias['reused'])
-        request['trusted']['completed_answer'] = declaration('completed_answer', True, [['a']])
-        request['certificates'][first['keys']['answer']] = {'answer': 'completed_answer'}
-        second = self.engine.request(request)
-        self.assertEqual(second['mapping'], {'answer': 'completed_answer'})
-        self.assertEqual(second['lowered']['rules'], [])
-        self.assertEqual(second['lowered']['queries'], ['completed_answer'])
-        self.assertEqual([r['name'] for r in second['lowered']['relations']], ['input'])
-        request['sourceIdentity'] = 'changed-bound-source'
-        self.assertFalse(self.engine.request(request)['reused'])
+        source=declaration('input',True,[['a']])
+        unused=declaration('unused',True,[])
+        program={'relations':[copy.deepcopy(source),unused,declaration('answer')],
+                 'rules':[{'head':[atom('answer')],'body':[atom('input')]}],
+                 'queries':['answer']}
+        with EvidenceChain(self.engine,[source,unused]) as chain:
+            first=chain.query(program)
+            second=chain.query(program)
+            self.assertFalse(first['reusedComponents'])
+            self.assertEqual(len(second['reusedComponents']),1)
+            self.assertTrue(second['retainedCompleted'])
+            self.assertEqual(first['result'],second['result'])
+            # Certificates and aliases are private native owner state, not caller packets.
+            with self.assertRaises(TypeError):chain.query(program,certificates={'answer':'input'})
+            forged=copy.deepcopy(program);forged['relations'][-1]['source']=True
+            forged['relations'][-1]['rows']=[['forged']]
+            with self.assertRaises(ValueError):chain.query(forged)
+            omitted=copy.deepcopy(program);omitted['relations'].pop(1)
+            with self.assertRaises(ValueError):chain.query(omitted)
+            changed=declaration('input',True,[['b']])
+            chain.replace([changed,unused])
+            program['relations'][0]=changed
+            fresh=chain.query(program)
+            self.assertFalse(fresh['reusedComponents'])
+            self.assertEqual(chain.answer(fresh['resultReference'],'answer'),[['b']])
+            with self.assertRaises(ValueError):chain.answer(first['resultReference'],'answer')
 
     def test_capability_is_public_and_request_unknown_fields_are_rejected(self):
-        self.assertIn('evidence-dag', self.engine.request({'operation': 'describe'})['operations'])
+        self.assertTrue(callable(components))
+        self.assertFalse(hasattr(self.engine,'request'))
+        with self.assertRaises(TypeError):components({'relations':[],'rules':[]},waiver=True)
         with self.assertRaises(EngineError):
-            self.engine.request({'operation': 'evidence-dag', 'action': 'components',
-                                 'program': {'relations': [], 'rules': []}, 'waiver': True})
+            self.engine.open({'relations':[],'rules':[],'waiver':True})
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__=='__main__':unittest.main()

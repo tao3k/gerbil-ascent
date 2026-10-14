@@ -3,7 +3,7 @@
 """Native inert-source sessions retain execution, authority and lifecycle contracts."""
 import os
 import unittest
-from ascent_engine import Engine, EngineError, FactLimits
+from ascent import Engine, EngineError, FactLimits
 
 RULES = """(ascent-fragment
  (relation input ((x symbol?)))

@@ -17,11 +17,11 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 
-from ascent_engine import Engine
-from ascent_engine.conversation import ResponseHistory
-from ascent_engine.derivations import EvidenceChain
-from ascent_engine.domain_evidence import DomainEvidence
-from ascent_engine.evidence import identity
+from ascent import Engine
+from ascent.conversation import ResponseHistory
+from ascent.derivations import EvidenceChain
+from ascent.domain import DomainEvidence
+from ascent.evidence import identity
 from .evidence_chain_study import loose_json
 from .inference_effort import until_verified, paired_reduction
 from .inference_reuse_study import price
@@ -78,7 +78,7 @@ def prepare(directory):
         case['provenance'] = admitted
         tasks.append(case)
     library = ROOT/'.gerbil/lib/libascent.dylib'; shutil.copy2(library, directory/'libascent.dylib')
-    paths = [Path(__file__), Path(__file__).with_name('model_study.py'), Path(__file__).with_name('movie_study.py'), Path(__file__).with_name('inference_effort.py'), Path(__file__).with_name('inference_reuse_study.py'), Path(__file__).with_name('repository_corpus.py'), Path(__file__).with_name('evidence_chain_study.py'), ROOT/'python/src/ascent_engine/derivations.py', ROOT/'python/src/ascent_engine/evidence.py', ROOT/'python/src/ascent_engine/conversation.py', ROOT/'python/src/ascent_engine/__init__.py']
+    paths = [Path(__file__), Path(__file__).with_name('model_study.py'), Path(__file__).with_name('movie_study.py'), Path(__file__).with_name('inference_effort.py'), Path(__file__).with_name('inference_reuse_study.py'), Path(__file__).with_name('repository_corpus.py'), Path(__file__).with_name('evidence_chain_study.py'), ROOT/'python/src/ascent/derivations.py', ROOT/'python/src/ascent/evidence.py', ROOT/'python/src/ascent/conversation.py', ROOT/'python/src/ascent/__init__.py']
     hashes = {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
     for path in paths:
         snapshot = directory/'producer-snapshot'/path.relative_to(ROOT); snapshot.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(path,snapshot)

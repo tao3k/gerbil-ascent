@@ -16,6 +16,7 @@ import time
 import shlex
 import re
 import shutil
+from ascent import rows_equal
 
 ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
 SCHEME_ENTRY = 't/qualification/ascent-movie-cast-test.ss'
@@ -280,8 +281,7 @@ def ffi_grade(engine, wire, preview, plan, item, raw):
             if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
                 raise ValueError('expected actor array')
             expected = json.loads((preview/'private'/(item['id']+'.answer.json')).read_text())
-            return [{'id':item['id'], 'correct':engine.request({'operation':'compare',
-                     'actual':[[x] for x in value], 'expected':[[x] for x in expected]})['equal']}]
+            return [{'id':item['id'], 'correct':rows_equal([[x] for x in value], [[x] for x in expected])}]
         if (not isinstance(value, dict) or set(value) != {'combine','exclude_scope'}
                 or value['combine'] not in ('any','all') or value['exclude_scope'] not in ('none','left','both')):
             raise ValueError('expected finite query contract')
@@ -294,8 +294,7 @@ def ffi_grade(engine, wire, preview, plan, item, raw):
                                      for relation,field in (('left_film','left'),('right_film','right'),('blocked_actor','blocked'))])
                 result = session.run()
                 expected = json.loads((preview/'private'/(case['id']+'.answer.json')).read_text())
-                equal = engine.request({'operation':'compare','actual':result['relations']['actor_answer'],
-                                        'expected':[[x] for x in expected]})['equal']
+                equal = rows_equal(result['relations']['actor_answer'], [[x] for x in expected])
                 observations.append({'id':case['id'],'correct':bool(result['complete'] and equal),
                                      'scheme':result})
             return observations
@@ -304,7 +303,7 @@ def ffi_grade(engine, wire, preview, plan, item, raw):
 
 
 def continue_ffi(preview, output, frozen_root, library, wire_path):
-    from ascent_engine import Engine
+    from ascent import Engine
     from .model_study import provider
     plan, records = continuation_plan(preview, output, frozen_root)
     key = provider_key()
@@ -321,7 +320,7 @@ def continue_ffi(preview, output, frozen_root, library, wire_path):
         'currentBackend':'general Scheme C ABI via Python CFFI',
         'librarySha256':digest(copied.read_bytes()),'wireSha256':digest((cut/'wire.json').read_bytes()),
         'driverSha256':digest(Path(__file__).read_bytes()),
-        'bindingSha256':digest((ROOT/'python/src/ascent_engine/__init__.py').read_bytes()),
+        'bindingSha256':digest((ROOT/'python/src/ascent/__init__.py').read_bytes()),
         'maxTotalCalls':9,'retries':0,'budgetCeilingUsd':1},indent=2)+'\n')
     wire = json.loads((cut/'wire.json').read_text())
     started = time.monotonic()
@@ -365,7 +364,7 @@ def continue_ffi(preview, output, frozen_root, library, wire_path):
 
 def reflect(preview, pilot, output, wire_path, library):
     """Two separately recorded diagnostic calls; never rewrite original scores."""
-    from ascent_engine import Engine
+    from ascent import Engine
     from .model_study import provider, response_outcome
     plan = json.loads((preview/'plan.json').read_text())
     original = json.loads((pilot/'ffi-result.json').read_text())
@@ -446,7 +445,7 @@ def reflect(preview, pilot, output, wire_path, library):
 
 def budget_control(preview, pilot, output, wire_path, library):
     """Matched control: change only the output ceiling, keep original failure."""
-    from ascent_engine import Engine
+    from ascent import Engine
     from .model_study import provider, response_outcome
     plan=json.loads((preview/'plan.json').read_text());item=plan['order'][2]
     original=(preview/item['request']).read_bytes()

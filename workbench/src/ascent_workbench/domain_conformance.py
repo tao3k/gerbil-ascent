@@ -6,7 +6,7 @@ from fractions import Fraction
 from itertools import product
 import json
 from pathlib import Path
-from ascent_engine import Engine
+from ascent import Engine
 
 
 def generate(engine, destination):

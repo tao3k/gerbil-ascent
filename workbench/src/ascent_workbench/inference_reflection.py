@@ -5,7 +5,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from ascent_engine import Engine
+from ascent import Engine
 from . import inference_reuse_study as study
 from .movie_study import provider_key
 from .model_study import provider, response_outcome

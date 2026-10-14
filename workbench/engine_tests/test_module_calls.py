@@ -3,7 +3,7 @@
 """Public upstream objects through the real ABI, not a Python DSL substitute."""
 from contextlib import ExitStack
 import unittest
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 
 INTERFACE = ':gerbil-ascent/program/interface'
 QUALIFICATION = ':gerbil-ascent/t/qualification/evidence-api-module'
@@ -31,7 +31,9 @@ def decode(graph):
 
 class ModuleCallTests(unittest.TestCase):
     @classmethod
-    def setUpClass(cls): cls.engine = Engine()
+    def setUpClass(cls):
+        from engine_fixture import module_engine
+        cls.engine = module_engine()
 
     @classmethod
     def tearDownClass(cls): cls.engine.shutdown()

@@ -1,7 +1,7 @@
 """Python-only consumers of full host-authorized native Scheme modules."""
 import unittest
 
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 from test_module_calls import decode
 
 
@@ -35,8 +35,9 @@ class ModuleSourceTests(unittest.TestCase):
     def test_authorization_required_by_python_and_native(self):
         with self.assertRaisesRegex(ValueError, 'explicitly authorized'):
             self.engine.dsl(SOURCE)
-        with self.assertRaises(EngineError):
-            self.engine.request({'operation': 'dsl-open', 'source': SOURCE, 'trusted': False})
+        with self.assertRaisesRegex(ValueError, 'explicitly authorized'):
+            self.engine.evidence(SOURCE, 'make-evidence', trusted=False)
+        self.assertFalse(hasattr(self.engine, 'request'))
 
     def test_macro_import_constructor_update_withdrawal_and_explanation(self):
         with self.engine.evidence(SOURCE, 'make-evidence',

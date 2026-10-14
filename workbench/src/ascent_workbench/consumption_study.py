@@ -3,11 +3,11 @@
 """Text consumption versus checked execution on shared initial real responses."""
 import argparse, contextlib, copy, hashlib, io, json, random, time
 from pathlib import Path
-from ascent_engine import Engine, EngineError
-from ascent_engine.derivations import EvidenceChain
-from ascent_engine.evidence import identity
-from ascent_engine.trajectory import Trajectory
-from ascent_engine.conversation import ResponseHistory
+from ascent import Engine, EngineError
+from ascent.derivations import EvidenceChain
+from ascent.evidence import identity
+from ascent.trajectory import Trajectory
+from ascent.conversation import ResponseHistory
 from .correction_study import balanced
 from .trajectory_study import atom, rule
 from .model_study import provider
@@ -65,7 +65,7 @@ def run(library,output,live,index=None):
     plan={'schema':'ascent.evidence-consumption-study.v1','cases':cases,'model':'deepseek-flash','maxOutputTokens':131072,
           'maxAttemptsPerGoal':3,'primary':'Whole task until all THREE goals pass, including shared initial usage and every failure/repair.',
           'intervention':'Checked executable continuation versus correct intermediate facts with manual result enumeration; this is tool offloading, not a pure reasoning-content treatment.',
-          'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/evidence-dag.ss','program/trajectory.ss','python/src/ascent_engine/derivations.py','python/src/ascent_engine/trajectory.py']},
+          'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/evidence-dag.ss','program/trajectory.ss','python/src/ascent/derivations.py','python/src/ascent/trajectory.py']},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest()}
     (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine(library);records=[];audit=[];key=provider_key() if live else None
     def invoke(history,folder,stem):

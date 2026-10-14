@@ -1,6 +1,6 @@
 """Fresh-process scope lifetime bounds, without any downstream Scheme imports."""
 import unittest
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 from test_module_calls import decode
 
 
@@ -22,15 +22,15 @@ class EvidenceDSLLifecycle(unittest.TestCase):
                     self.assertEqual(decode(value.graph), 42)
             with self.assertRaisesRegex(EngineError, 'runtime load limit'):
                 engine.dsl('(def (answer) 2)', trusted=True)
-            self.assertEqual(engine.request({'operation': 'describe'})['abi'], 1)
+            self.assertEqual(engine.describe()['abi'], 1)
             unlimited = Engine()
             self.assertIsNone(unlimited.max_source_scopes)
-            self.assertEqual(unlimited.request({'operation': 'describe'})['sourceScopes'], 64)
+            self.assertEqual(unlimited.describe()['sourceScopes'], 64)
             for _ in range(16):
                 with unlimited.dsl('(def (answer) 3)', trusted=True) as owner:
                     with owner.call('answer') as value:
                         self.assertEqual(decode(value.graph), 3)
-            self.assertEqual(engine.request({'operation': 'describe'})['sourceScopes'], 80)
+            self.assertEqual(engine.describe()['sourceScopes'], 80)
             with self.assertRaisesRegex(EngineError, 'runtime load limit'):
                 engine.dsl('(def (answer) 2)', trusted=True)
             manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
@@ -45,17 +45,17 @@ class EvidenceDSLLifecycle(unittest.TestCase):
                     lambda: engine.evidence('(def (build) 1)', 'build', trusted=True)):
                 with self.assertRaisesRegex(EngineError, 'runtime load limit'):
                     invoke()
-            self.assertEqual(engine.request({'operation': 'describe'})['sourceScopes'], 80)
+            self.assertEqual(engine.describe()['sourceScopes'], 80)
             with unlimited.components(manifest, sources, 'entry', trusted=True) as owner:
                 with owner.call('build') as value:
                     self.assertEqual(decode(value.graph), 4)
-            self.assertEqual(engine.request({'operation': 'describe'})['sourceScopes'], 82)
+            self.assertEqual(engine.describe()['sourceScopes'], 82)
             for invalid in (False, 0, -1, '64'):
                 with self.assertRaisesRegex(EngineError, 'positive integer'):
-                    unlimited.request({'operation': 'dsl-open', 'source': '(def (answer) 1)',
+                    __import__('ascent')._scheme_call({'operation': 'dsl-open', 'source': '(def (answer) 1)',
                                        'trusted': True, 'maxSourceScopes': invalid})
             for invalid in (0, -1, True, '64'):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(EngineError):
                     Engine(max_source_scopes=invalid)
 
 

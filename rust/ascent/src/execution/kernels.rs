@@ -1,0 +1,819 @@
+//! Rust-owned storage/index kernels and Rayon scheduling for Scheme AOT rules.
+use super::values::Row;
+use super::{Bindings, Budget, Cancellation, Cell, Fact, FactSet, Limits, Pattern};
+use crate::{
+    Result,
+    graph::{Atom, Clause, Graph, Rule},
+};
+#[cfg(feature = "rayon")]
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
+};
+#[cfg(feature = "rayon")]
+use rayon::slice::ParallelSlice;
+use smallvec::SmallVec;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::{Arc, RwLock},
+};
+
+include!(concat!(env!("OUT_DIR"), "/execution.rs"));
+type Key = SmallVec<[Cell; 2]>;
+const CHUNK: usize = 128;
+#[cfg(feature = "rayon")]
+const TASK_ROWS: usize = 256;
+
+fn project_value(term: &Pattern, bindings: &Bindings) -> Option<Cell> {
+    match term {
+        Pattern::Variable(id) => bindings[*id as usize],
+        Pattern::Literal(value) => Some(*value),
+        Pattern::Wildcard => None,
+    }
+}
+fn project(terms: &[Pattern], bindings: &Bindings) -> Option<Row> {
+    match terms {
+        [] => Some(Arc::new([])),
+        [one] => Some(Arc::new([project_value(one, bindings)?])),
+        [one, two] => Some(Arc::new([
+            project_value(one, bindings)?,
+            project_value(two, bindings)?,
+        ])),
+        _ => terms
+            .iter()
+            .map(|term| project_value(term, bindings))
+            .collect::<Option<Vec<_>>>()
+            .map(Into::into),
+    }
+}
+
+enum Lookup {
+    One {
+        column: usize,
+        rows: HashMap<Cell, Vec<Row>>,
+    },
+    Many {
+        columns: Vec<usize>,
+        rows: HashMap<Key, Vec<Row>>,
+    },
+}
+struct Index {
+    rows: Vec<Row>,
+    keys: Vec<Lookup>,
+    known: FactSet,
+    lattice: HashMap<Vec<Cell>, Fact>,
+}
+impl Index {
+    fn new(requirements: &[Vec<usize>]) -> Self {
+        Self {
+            rows: vec![],
+            known: FactSet::default(),
+            lattice: HashMap::new(),
+            keys: requirements
+                .iter()
+                .map(|columns| match columns.as_slice() {
+                    [column] => Lookup::One {
+                        column: *column,
+                        rows: HashMap::new(),
+                    },
+                    _ => Lookup::Many {
+                        columns: columns.clone(),
+                        rows: HashMap::new(),
+                    },
+                })
+                .collect(),
+        }
+    }
+    fn insert(&mut self, row: Fact) -> bool {
+        if !self.known.insert(row.clone()) {
+            return false;
+        }
+        self.append(row.row);
+        true
+    }
+    fn append(&mut self, row: Row) {
+        for lookup in &mut self.keys {
+            match lookup {
+                Lookup::One { column, rows } => {
+                    rows.entry(row[*column]).or_default().push(row.clone());
+                }
+                Lookup::Many { columns, rows } => {
+                    rows.entry(columns.iter().map(|i| row[*i]).collect())
+                        .or_default()
+                        .push(row.clone());
+                }
+            }
+        }
+        self.rows.push(row);
+    }
+    fn candidates(&self, atom: &Atom, bindings: &Bindings) -> &[Row] {
+        let Some(slot) = atom.index else {
+            return &self.rows;
+        };
+        let value = |i: usize| match &atom.terms[i] {
+            Pattern::Variable(v) => bindings[*v as usize]
+                .as_ref()
+                .expect("admitted bound index"),
+            Pattern::Literal(value) => value,
+            Pattern::Wildcard => unreachable!("wildcard is not indexed"),
+        };
+        match &self.keys[slot] {
+            Lookup::One { column, rows } => rows.get(value(*column)),
+            Lookup::Many { columns, rows } => {
+                let key: Key = columns.iter().map(|i| *value(*i)).collect();
+                rows.get(&key)
+            }
+        }
+        .map_or(&[], Vec::as_slice)
+    }
+}
+// Only inexact folds need canonical tuple order; exact integer/rational folds commute.
+fn ordered_reduction_rows<'a>(
+    rows: &'a [Row],
+    atom: &Atom,
+    inputs: &[usize],
+    store: &Store,
+    budget: &Budget,
+) -> std::borrow::Cow<'a, [Row]> {
+    let Some(input) = inputs.first() else {
+        return std::borrow::Cow::Borrowed(rows);
+    };
+    let Some(column) = atom
+        .terms
+        .iter()
+        .position(|term| matches!(term,Pattern::Variable(slot) if *slot as usize==*input))
+    else {
+        return std::borrow::Cow::Borrowed(rows);
+    };
+    let values = store.values.read().expect("reducer ordering values");
+    let inexact = rows.iter().any(|row| {
+        if !budget.work(1) {
+            return true;
+        }
+        crate::numbers::Number::is_inexact(values.scalar(row[column]))
+    });
+    if !inexact || !budget.active() {
+        return std::borrow::Cow::Borrowed(rows);
+    }
+    let mut ordered = rows.to_vec();
+    ordered.sort_unstable_by(|a, b| {
+        budget.work(1);
+        a.iter()
+            .map(|cell| values.scalar(*cell))
+            .cmp(b.iter().map(|cell| values.scalar(*cell)))
+    });
+    std::borrow::Cow::Owned(ordered)
+}
+pub(crate) struct Store {
+    lattices: Vec<Option<crate::LatticeJoin>>,
+    values: RwLock<super::Values>,
+    all: Vec<Index>,
+    delta: Vec<Index>,
+    #[cfg(feature = "rayon")]
+    parallel: bool,
+}
+
+/// Binding batches are local to one rule/pivot. Indexes are immutable while
+/// workers read them; only completed rounds publish delta rows.
+pub(crate) struct Batch(Vec<Bindings>);
+impl Batch {
+    pub fn initial(variables: usize) -> Self {
+        Self(vec![std::iter::repeat_n(None, variables).collect()])
+    }
+    pub fn join(
+        self,
+        (step, atom): (usize, &Atom),
+        store: &Store,
+        pivot: Option<usize>,
+        budget: &Budget,
+    ) -> Self {
+        let index = if pivot == Some(step) {
+            &store.delta[atom.relation]
+        } else {
+            &store.all[atom.relation]
+        };
+        let extend = |bindings: &[Bindings]| join_group(index, atom, bindings, budget);
+        #[cfg(feature = "rayon")]
+        if store.parallel && self.0.len() >= TASK_ROWS * 2 {
+            return Self(
+                self.0
+                    .par_chunks(TASK_ROWS)
+                    .flat_map_iter(|task| task.chunks(CHUNK).flat_map(extend))
+                    .collect(),
+            );
+        }
+        #[cfg(feature = "rayon")]
+        if store.parallel && self.0.len() == 1 {
+            let prior = &self.0[0];
+            let rows = index.candidates(atom, prior);
+            if rows.len() >= TASK_ROWS * 2 {
+                return Self(
+                    rows.par_chunks(TASK_ROWS)
+                        .flat_map_iter(|task| {
+                            task.chunks(CHUNK)
+                                .flat_map(|chunk| join_chunk(&atom.terms, prior, chunk, budget))
+                        })
+                        .collect(),
+                );
+            }
+        }
+        Self(self.0.chunks(CHUNK).flat_map(extend).collect())
+    }
+
+    pub fn exclude(self, (_step, atom): (usize, &Atom), store: &Store, budget: &Budget) -> Self {
+        let index = &store.all[atom.relation];
+        Self(
+            self.0
+                .into_iter()
+                .filter(|bindings| {
+                    budget.poll()
+                        && !index
+                            .candidates(atom, bindings)
+                            .iter()
+                            .any(|row| budget.work(1) && bind(&atom.terms, row, bindings).is_some())
+                })
+                .collect(),
+        )
+    }
+    pub fn advance(
+        self,
+        (step, clause): (usize, &Clause),
+        store: &Store,
+        pivot: Option<usize>,
+        budget: &Budget,
+    ) -> Self {
+        match clause {
+            Clause::Relation {
+                atom,
+                negative: false,
+            } => self.join((step, atom), store, pivot, budget),
+            Clause::Relation {
+                atom,
+                negative: true,
+            } => self.exclude((step, atom), store, budget),
+            Clause::Guard(expression) => self.guard(expression, store, budget),
+            Clause::Compute { output, expression } => {
+                self.compute(*output, expression, store, budget)
+            }
+            Clause::Reduce {
+                output,
+                operator,
+                atom,
+                inputs,
+            } => self.reduce(*output, *operator, atom, inputs, store, budget),
+        }
+    }
+    fn guard(self, expression: &crate::Expression, store: &Store, budget: &Budget) -> Self {
+        let values = store.values.read().expect("expression values");
+        Self(
+            self.0
+                .into_iter()
+                .filter(|bindings| super::expressions::guard(expression, bindings, &values, budget))
+                .collect(),
+        )
+    }
+    fn compute(
+        self,
+        output: usize,
+        expression: &crate::Expression,
+        store: &Store,
+        budget: &Budget,
+    ) -> Self {
+        let mut retained = Vec::new();
+        for mut bindings in self.0 {
+            let value = {
+                let values = store.values.read().expect("expression values");
+                super::expressions::evaluate(expression, &bindings, &values, budget)
+            };
+            match value {
+                Ok(value) => {
+                    let cell = store
+                        .values
+                        .write()
+                        .expect("computed values")
+                        .intern(&value);
+                    if bindings[output].is_none_or(|prior| prior == cell) {
+                        bindings[output] = Some(cell);
+                        retained.push(bindings);
+                    }
+                }
+                Err(error) => {
+                    budget.evaluation_error(error);
+                    break;
+                }
+            }
+        }
+        Self(retained)
+    }
+    fn reduce(
+        self,
+        output: usize,
+        operator: crate::Reducer,
+        atom: &Atom,
+        inputs: &[usize],
+        store: &Store,
+        budget: &Budget,
+    ) -> Self {
+        let index = &store.all[atom.relation];
+        let mut retained = Vec::new();
+        for mut prior in self.0 {
+            let mut accumulator = super::reductions::Reduction::default();
+            let candidates =
+                ordered_reduction_rows(index.candidates(atom, &prior), atom, inputs, store, budget);
+            for row in candidates.iter() {
+                if !budget.work(1) {
+                    break;
+                }
+                let Some(binding) = bind(&atom.terms, row, &prior) else {
+                    continue;
+                };
+                let values = store.values.read().expect("reducer input values");
+                let value = inputs
+                    .first()
+                    .and_then(|input| binding[*input])
+                    .map(|cell| values.scalar(cell));
+                if let Err(error) = accumulator.push(operator, value, budget) {
+                    budget.evaluation_error(error);
+                    break;
+                }
+            }
+            if !budget.active() {
+                break;
+            }
+            let value = match accumulator.finish(operator) {
+                Ok(value) => value,
+                Err(error) => {
+                    budget.evaluation_error(error);
+                    break;
+                }
+            };
+            if let Some(value) = value {
+                let cell = store.values.write().expect("reduced values").intern(&value);
+                if prior[output].is_none_or(|old| old == cell) {
+                    prior[output] = Some(cell);
+                    retained.push(prior);
+                }
+            }
+        }
+        Self(retained)
+    }
+    pub fn project(self, rule: &Rule, store: &Store, budget: &Budget) -> bool {
+        project_group(&self.0, rule, store, budget)
+    }
+}
+fn project_group(bindings: &[Bindings], rule: &Rule, store: &Store, budget: &Budget) -> bool {
+    let mut projection = Projection {
+        rule,
+        store,
+        budget,
+        unique: FactSet::default(),
+        pending: Vec::with_capacity(CHUNK),
+    };
+    for chunk in bindings.chunks(CHUNK) {
+        if !projection.extend(chunk) {
+            break;
+        }
+    }
+    projection.flush()
+}
+fn match_rows<'a>(
+    terms: &'a [Pattern],
+    prior: &'a Bindings,
+    rows: &'a [Row],
+    budget: &'a Budget,
+) -> impl Iterator<Item = Bindings> + 'a {
+    rows.iter().filter_map(move |row| {
+        if !budget.active() {
+            return None;
+        }
+        bind(terms, row, prior)
+    })
+}
+fn join_chunk(terms: &[Pattern], prior: &Bindings, rows: &[Row], budget: &Budget) -> Vec<Bindings> {
+    if !budget.work(rows.len()) {
+        return Vec::new();
+    }
+    match_rows(terms, prior, rows, budget).collect()
+}
+fn join_group(index: &Index, atom: &Atom, bindings: &[Bindings], budget: &Budget) -> Vec<Bindings> {
+    let inputs: SmallVec<[(&Bindings, &[Row]); CHUNK]> = bindings
+        .iter()
+        .map(|prior| (prior, index.candidates(atom, prior)))
+        .collect();
+    let work = inputs
+        .iter()
+        .try_fold(0_usize, |total, (_, rows)| total.checked_add(rows.len()));
+    if let Some(count) = work.filter(|count| *count <= CHUNK) {
+        if !budget.work(count) {
+            return Vec::new();
+        }
+        return inputs
+            .into_iter()
+            .flat_map(|(prior, rows)| match_rows(&atom.terms, prior, rows, budget))
+            .collect();
+    }
+    inputs
+        .into_iter()
+        .flat_map(|(prior, rows)| {
+            rows.chunks(CHUNK)
+                .flat_map(move |chunk| join_chunk(&atom.terms, prior, chunk, budget))
+        })
+        .collect()
+}
+
+struct Projection<'a> {
+    rule: &'a Rule,
+    store: &'a Store,
+    budget: &'a Budget,
+    unique: FactSet,
+    pending: Vec<Fact>,
+}
+impl Projection<'_> {
+    fn extend(&mut self, chunk: &[Bindings]) -> bool {
+        if !self.budget.work(chunk.len()) {
+            return false;
+        }
+        chunk
+            .iter()
+            .all(|bindings| self.budget.active() && self.push(bindings))
+    }
+    fn push(&mut self, bindings: &Bindings) -> bool {
+        let projected = project(&self.rule.head.terms, bindings).expect("admitted head bindings");
+        if !self.rule.head.accepts(&projected) {
+            self.budget.evaluation_error(crate::Error::Evaluation(
+                "derived row violates column domain".into(),
+            ));
+            return false;
+        }
+        let row = self.budget.fact(projected);
+        if let Some(mode) = self.store.lattices[self.rule.head.relation] {
+            let values = self.store.values.read().expect("lattice value owner");
+            if let Err(error) =
+                crate::lattice::numeric(values.scalar(*row.row.last().expect("lattice arity")))
+            {
+                self.budget.evaluation_error(error);
+                return false;
+            }
+            if let Some(prior) = self.store.all[self.rule.head.relation]
+                .lattice
+                .get(super::lattice::key(&row.row))
+            {
+                match super::lattice::improves(mode, &row, prior, &values) {
+                    Ok(false) => return true,
+                    Ok(true) => (),
+                    Err(error) => {
+                        self.budget.evaluation_error(error);
+                        return false;
+                    }
+                }
+            }
+        }
+        if self.store.all[self.rule.head.relation].known.contains(&row)
+            || !self.unique.insert(row.clone())
+        {
+            return true;
+        }
+        self.pending.push(row);
+        self.pending.len() < CHUNK || self.flush()
+    }
+    fn flush(&mut self) -> bool {
+        if self.pending.is_empty() {
+            return self.budget.active();
+        }
+        let pending = std::mem::replace(&mut self.pending, Vec::with_capacity(CHUNK));
+        self.unique.clear();
+        if let Some(mode) = self.store.lattices[self.rule.head.relation] {
+            let values = self.store.values.read().expect("lattice value owner");
+            self.budget
+                .admit_lattice(self.rule.head.relation, pending, mode, &values)
+        } else {
+            self.budget.admit(self.rule.head.relation, pending)
+        }
+    }
+}
+
+pub(crate) struct Round<'a> {
+    graph: &'a Graph,
+    store: Store,
+    budget: &'a Budget,
+    stratum: usize,
+    first: bool,
+    done: bool,
+}
+type RuleKernel = fn(&Rule, &Store, Option<usize>, &Budget) -> bool;
+impl Round<'_> {
+    fn tasks_for<'a>(&self, rule: &'a Rule) -> Vec<(&'a Rule, Option<usize>)> {
+        if self.first {
+            return vec![(rule, None)];
+        }
+        rule.body
+            .iter()
+            .enumerate()
+            .filter_map(|(step, clause)| match clause {
+                Clause::Relation {
+                    atom,
+                    negative: false,
+                } if !self.store.delta[atom.relation].rows.is_empty() => Some((rule, Some(step))),
+                _ => None,
+            })
+            .collect()
+    }
+    fn evaluate(self, kernel: RuleKernel) -> Self {
+        let tasks: Vec<_> = self
+            .graph
+            .rules
+            .iter()
+            .filter(|rule| self.graph.strata[rule.head.relation] == self.stratum)
+            .flat_map(|rule| self.tasks_for(rule))
+            .collect();
+        let apply = |(rule, pivot): &(&Rule, Option<usize>)| {
+            kernel(rule, &self.store, *pivot, self.budget);
+        };
+        #[cfg(feature = "rayon")]
+        if self.store.parallel {
+            tasks.par_iter().for_each(apply);
+            return self;
+        }
+        tasks.iter().for_each(apply);
+        self
+    }
+    fn publish(mut self) -> Self {
+        self.store.delta = self
+            .graph
+            .indexes
+            .iter()
+            .map(|shapes| Index::new(shapes))
+            .collect();
+        let tasks: Vec<_> = self
+            .store
+            .all
+            .iter_mut()
+            .zip(&mut self.store.delta)
+            .enumerate()
+            .filter_map(|(relation, (all, delta))| {
+                let rows = self.budget.pending_len(relation);
+                (rows != 0).then_some(Publisher {
+                    relation,
+                    all,
+                    delta,
+                    rows,
+                    lattice: self.graph.program.relations[relation].lattice,
+                    shapes: &self.graph.indexes[relation],
+                })
+            })
+            .collect();
+        #[cfg(feature = "rayon")]
+        let admitted: usize = if self.store.parallel
+            && tasks.len() > 1
+            && tasks.iter().map(|task| task.rows).sum::<usize>() >= 512
+        {
+            tasks
+                .into_par_iter()
+                .map(|task| task.commit(self.budget))
+                .sum()
+        } else {
+            tasks.into_iter().map(|task| task.commit(self.budget)).sum()
+        };
+        #[cfg(not(feature = "rayon"))]
+        let admitted: usize = tasks.into_iter().map(|task| task.commit(self.budget)).sum();
+        self.done = admitted == 0 || !self.budget.poll();
+        self.first = false;
+        self
+    }
+}
+struct Publisher<'a> {
+    lattice: Option<crate::LatticeJoin>,
+    shapes: &'a [Vec<usize>],
+    relation: usize,
+    all: &'a mut Index,
+    delta: &'a mut Index,
+    rows: usize,
+}
+impl Publisher<'_> {
+    fn commit(self, budget: &Budget) -> usize {
+        budget.publish(self.relation, |pending| {
+            debug_assert_eq!(
+                pending.len(),
+                self.rows,
+                "producer join freezes pending membership"
+            );
+            if self.lattice.is_some() {
+                publish_lattice(self.all, self.delta, pending, self.shapes, budget)
+            } else {
+                publish_relation(self.all, self.delta, pending, budget)
+            }
+        })
+    }
+}
+
+fn publish_lattice(
+    all: &mut Index,
+    delta: &mut Index,
+    pending: &mut FactSet,
+    shapes: &[Vec<usize>],
+    budget: &Budget,
+) -> usize {
+    let changed = pending.len();
+    for fact in pending.drain() {
+        if !budget.work(1) {
+            return 0;
+        }
+        all.lattice
+            .insert(super::lattice::key(&fact.row).to_vec(), fact.clone());
+        delta.insert(fact);
+    }
+    let mut rebuilt = Index::new(shapes);
+    for fact in all.lattice.values() {
+        if !budget.work(1) {
+            return 0;
+        }
+        rebuilt.insert(fact.clone());
+    }
+    rebuilt.lattice = std::mem::take(&mut all.lattice);
+    *all = rebuilt;
+    changed
+}
+
+fn publish_relation(
+    all: &mut Index,
+    delta: &mut Index,
+    pending: &mut FactSet,
+    budget: &Budget,
+) -> usize {
+    if !budget.poll() {
+        pending.clear();
+        return 0;
+    }
+    all.known.reserve(pending.len());
+    all.rows.reserve(pending.len());
+    delta.rows.reserve(pending.len());
+    pending
+        .drain()
+        .enumerate()
+        .take_while(|(i, _)| (i % CHUNK != 0 || budget.poll()) && budget.active())
+        .filter_map(|(_, fact)| {
+            let row = fact.row.clone();
+            if !all.insert(fact) {
+                return None;
+            }
+            delta.append(row);
+            Some(())
+        })
+        .count()
+}
+
+fn initial_indexes(
+    graph: &Graph,
+    sources: &[HashSet<crate::Row>],
+    budget: &Budget,
+) -> Result<(super::Values, Vec<Index>)> {
+    let mut values = graph.values.clone();
+    let mut all: Vec<_> = graph
+        .indexes
+        .iter()
+        .map(|shapes| Index::new(shapes))
+        .collect();
+    for (relation, source_rows) in sources.iter().enumerate() {
+        let fixed;
+        let rows = if graph.program.relations[relation].source {
+            source_rows
+        } else {
+            fixed = graph.program.relations[relation]
+                .rows
+                .iter()
+                .cloned()
+                .collect::<HashSet<_>>();
+            &fixed
+        };
+        if !graph.program.relations[relation].auxiliary
+            && !budget.relation_facts(relation, rows.len())
+        {
+            break;
+        }
+        let mode = graph.program.relations[relation].lattice;
+        if mode.is_none() && !budget.facts(rows.len()) {
+            break;
+        }
+        for (i, row) in rows.iter().enumerate() {
+            if (i % CHUNK == 0 && !budget.poll()) || !budget.active() {
+                break;
+            }
+            let encoded = row
+                .iter()
+                .map(|value| values.intern(value))
+                .collect::<Vec<_>>()
+                .into();
+            let fact = budget.fact(encoded);
+            if let Some(mode) = mode {
+                super::lattice::merge(&mut all[relation].lattice, vec![fact], mode, &values)?;
+            } else {
+                all[relation].insert(fact);
+            }
+        }
+        if mode.is_some() {
+            if !budget.facts(all[relation].lattice.len()) {
+                break;
+            }
+            let facts = all[relation].lattice.values().cloned().collect::<Vec<_>>();
+            for fact in facts {
+                all[relation].insert(fact);
+            }
+        }
+    }
+    budget.result()?;
+    Ok((values, all))
+}
+
+pub(crate) fn evaluate(
+    graph: &Graph,
+    sources: &[HashSet<crate::Row>],
+    limits: &Limits,
+    cancellation: &Cancellation,
+    parallel: bool,
+) -> Result<Vec<Vec<crate::Row>>> {
+    #[cfg(not(feature = "rayon"))]
+    let _ = parallel;
+    let budget = Budget::new(
+        limits,
+        cancellation,
+        sources.len(),
+        graph.program.fact_limits,
+        graph.program.relation_limit,
+    );
+    let (values, all) = initial_indexes(graph, sources, &budget)?;
+    let store = Store {
+        lattices: graph.program.relations.iter().map(|r| r.lattice).collect(),
+        values: RwLock::new(values),
+        all,
+        delta: graph
+            .indexes
+            .iter()
+            .map(|shapes| Index::new(shapes))
+            .collect(),
+        #[cfg(feature = "rayon")]
+        parallel,
+    };
+    let mut round = Round {
+        graph,
+        store,
+        budget: &budget,
+        stratum: 0,
+        first: true,
+        done: false,
+    };
+    for stratum in 0..=graph.strata.iter().copied().max().unwrap_or(0) {
+        round.stratum = stratum;
+        round.first = true;
+        round.done = false;
+        while !round.done {
+            budget.result()?;
+            round = advance_round(round);
+        }
+        budget.result()?;
+    }
+    let values = round.store.values.into_inner().expect("joined value owner");
+    let rows = round
+        .store
+        .all
+        .into_iter()
+        .enumerate()
+        .map(|(relation, index)| {
+            if graph.program.relations[relation].source {
+                sources[relation].iter().cloned().collect()
+            } else {
+                decode_rows(index, &values, &budget, parallel)
+            }
+        })
+        .collect();
+    budget.result()?;
+    Ok(rows)
+}
+fn decode_rows(
+    index: Index,
+    values: &super::Values,
+    budget: &Budget,
+    parallel: bool,
+) -> Vec<crate::Row> {
+    let Index {
+        rows,
+        keys,
+        known,
+        lattice,
+    } = index;
+    drop(lattice);
+    drop(keys);
+    drop(known);
+    let decode = |(i, row): (usize, Row)| {
+        ((i % CHUNK != 0 || budget.poll()) && budget.active()).then(|| values.decode(&row))
+    };
+    #[cfg(feature = "rayon")]
+    if parallel && rows.len() >= 8192 {
+        return rows
+            .into_par_iter()
+            .enumerate()
+            .filter_map(decode)
+            .collect();
+    }
+    #[cfg(not(feature = "rayon"))]
+    let _ = parallel;
+    rows.into_iter().enumerate().filter_map(decode).collect()
+}

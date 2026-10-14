@@ -44,7 +44,7 @@ def qualification_inputs(files: list[Path]) -> dict[str, str]:
     for name, asset in producer["syntaxResources"].items():
         expected[str(library.parent / "syntax" / name)] = asset["sha256"] if isinstance(asset, dict) else asset
     paths = [*files, sidecar, ROOT / "justfile", ROOT / ".github/workflows/ci.yml"]
-    for folder in (ROOT / "workbench/src/ascent_workbench", ROOT / "python/src/ascent_engine"):
+    for folder in (ROOT / "workbench/src/ascent_workbench", ROOT / "python/src/ascent"):
         paths.extend(folder.glob("*.py"))
     extension = importlib.util.find_spec("_ascent_cffi")
     if extension is None or not extension.origin:

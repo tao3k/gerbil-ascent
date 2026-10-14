@@ -9,10 +9,11 @@ from pathlib import Path
 import shutil
 import time
 
-from ascent_engine import Engine
+from ascent import Engine
 from .movie_study import provider_key, MAX_OUTPUT_TOKENS
 from .model_study import provider, response_outcome
 from .query_contract import output_format,compact_request
+from ascent import rows_equal
 
 ROOT = Path.cwd().resolve()
 FIXTURE = ROOT/'t/qualification/fixtures/complex-movie/source.json'
@@ -202,7 +203,7 @@ def prepare(directory, library, stratum='shared-actor',compiler_context='facts')
           'compilerContext':compiler_context,
           'producerHashes':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in
               [Path(__file__),Path(__file__).with_name('query_contract.py'),Path(__file__).with_name('model_study.py'),
-               Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent_engine/__init__.py']},
+               Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent/__init__.py']},
           'primaryMetrics':['exact answer sets','source withdrawal freshness','total provider usage'],
           'reuseBoundary':'Whole-source identity; exact materialized typed views; conservative full invalidation on change',
           'order':[],'gold':{},'offline':[]}
@@ -215,7 +216,7 @@ def prepare(directory, library, stratum='shared-actor',compiler_context='facts')
             if views!=fresh: raise RuntimeError('view cache stale')
             expected=case_program(engine,s,case,gold(case))
             reused=case_program(engine,s,case,gold(case,True),views)
-            if not engine.request({'operation':'compare','actual':expected,'expected':reused})['equal']:
+            if not rows_equal(expected, reused):
                 raise RuntimeError('materialized substitution differs')
             plan['gold'][case['name']]=expected
             plan['offline'].append({'case':case['name'],'answers':len(expected),'viewCacheHit':hit,
@@ -265,7 +266,7 @@ def live(directory, output):
                 if not hit: cache[sid]=materialize(engine,s)
                 views=cache[sid]
                 frozen=json.loads(req['input'][0]['content'].split('\n',1)[1])['materializedViews']
-                if not all(engine.request({'operation':'compare','actual':rows,'expected':frozen[name]})['equal']
+                if not all(rows_equal(rows, frozen[name])
                            for name,rows in views.items()):
                     raise ValueError('runtime views differ from frozen context')
             setup_seconds=time.monotonic()-setup
@@ -283,8 +284,7 @@ def live(directory, output):
                             raise ValueError('answer domain')
                         answer=[[x] for x in candidate]
                     else: answer=case_program(engine,s,case,candidate,views)
-                    record['correct']=engine.request({'operation':'compare','actual':answer,
-                                                       'expected':plan['gold'][case['name']]})['equal']
+                    record['correct']=rows_equal(answer, plan['gold'][case['name']])
                     record['answer']=answer;record['viewCacheHit']=hit
                     record['outcome']=response_outcome(meta,record['correct'])
                 except Exception as error:
@@ -340,7 +340,7 @@ def qualify(corpus, library, output):
                 views={n:result['relations'][n] for n in ('eligible','coactor')}
                 if sid: reused.replace([{'relation':n,'rows':rows} for n,rows in {**source['rows'],**views}.items()])
                 retained=reused.run()
-                if not retained['complete'] or not all(engine.request({'operation':'compare','actual':rows,'expected':retained['relations'][name]})['equal'] for name,rows in result['relations'].items()):
+                if not retained['complete'] or not all(rows_equal(rows, retained['relations'][name]) for name,rows in result['relations'].items()):
                     raise RuntimeError(f'retained source/view replacement differs {sid}')
                 for mode in range(6):
                     n=sid*6+mode;answer=result['relations'][f'answer{mode}']
@@ -355,16 +355,16 @@ def qualify(corpus, library, output):
         clean={**source,'rows':{n:r for n,r in source['rows'].items() if n not in ('omitted_film','blocked')}}
         correct=case_program(engine,clean,c,gold(c,True),views)
         wrong=case_program(engine,clean,{**c,'scope':'both'},gold({**c,'scope':'both'},True),views)
-        if engine.request({'operation':'compare','actual':wrong,'expected':correct})['equal']:
+        if rows_equal(wrong, correct):
             raise RuntimeError('global exclusion mutation survived')
         join={**c,'combine':'all'}
         correct=case_program(engine,clean,join,gold(join,True),views)
-        if engine.request({'operation':'compare','actual':case_program(engine,clean,c,gold(c,True),views),'expected':correct})['equal']:
+        if rows_equal(case_program(engine,clean,c,gold(c,True),views), correct):
             raise RuntimeError('union mutation survived')
         updated=make_source(511);updated['rows']={n:r for n,r in updated['rows'].items() if n not in ('omitted_film','blocked')}
         correct=case_program(engine,updated,join,gold(join))
         stale=case_program(engine,updated,join,gold(join,True),views)
-        if engine.request({'operation':'compare','actual':stale,'expected':correct})['equal']:
+        if rows_equal(stale, correct):
             raise RuntimeError('stale materialized views survived')
         print('COMPLEX-FAULT-CONTROLS global-exclusion union-for-join stale-views detected=3',flush=True)
     output.write_text(json.dumps({'schema':'ascent.materialized-movie-correspondence.v1',

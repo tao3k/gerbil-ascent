@@ -6,9 +6,9 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from ascent_engine import Engine, EngineError
-from ascent_engine.datalog import compile_program, evaluate
-from ascent_engine.derivations import EvidenceChain
+from ascent import Engine, EngineError, ResourceLimitError
+from ascent.datalog import read_datalog, evaluate_datalog as evaluate
+from ascent.derivations import EvidenceChain
 
 
 class TranslationTests(unittest.TestCase):
@@ -16,23 +16,22 @@ class TranslationTests(unittest.TestCase):
         for facts in ({"a": [[1], ["1"]], "b": []},
                       {"a": [[True]], "b": [[1]]}):
             with self.assertRaisesRegex(ValueError, "incompatible"):
-                compile_program(facts, "out(X) <= a(X) & b(X)",
+                read_datalog(facts, "out(X) <= a(X) & b(X)",
                                 {"answer": "out(X)"}, schema="infer")
 
     def test_empty_numeric_relations_get_types_from_operator_constraints(self):
-        program, _ = compile_program({"a": []}, "out(X) <= a(X) & (X < 10)",
+        program, _ = read_datalog({"a": []}, "out(X) <= a(X) & (X < 10)",
                                      {"answer": "out(X)"}, schema="infer")
         self.assertTrue(all(r["columns"] == [{"kind": "integer"}] for r in program["relations"]))
 
     def test_scalar_types_remain_distinct(self):
-        program, _ = compile_program({"input": [[1], ["1"]]},
+        program, _ = read_datalog({"input": [[1], ["1"]]},
                                      "result(X) <= input(X)", {"answer": "result(X)"})
-        self.assertEqual(program["relations"][0]["rows"], [['"1"'], ['1']])
-        # Public wire values must retain their shape across the native planner.
-        self.assertEqual(json.loads(json.dumps(program)), program)
+        self.assertEqual(program["relations"][0]["rows"], [[1], ['1']])
+        self.assertEqual(program["relations"][0]["columns"],[{"kind":"value"}])
 
     def test_dependency_slice_includes_every_alternative_and_negative_premise(self):
-        program, _ = compile_program({"a": [], "b": [], "deny": [], "noise": []},
+        program, _ = read_datalog({"a": [], "b": [], "deny": [], "noise": []},
             "out(X) <= a(X) & ~deny(X)\nout(X) <= b(X)\nunused(X) <= noise(X) & (X < 1)",
             {"answer": "out(X)"})
         self.assertEqual({r["name"] for r in program["relations"]}, {"out", "a", "b", "deny"})
@@ -43,28 +42,28 @@ class TranslationTests(unittest.TestCase):
                      "out(X) <= a(X + 1)", "out(X) <= missing(X)",
                      "out(X) <= a(X)\nout(X,Y) <= a(X) & a(Y)"):
             with self.subTest(rule=rule), self.assertRaises(ValueError):
-                compile_program({"a": []}, rule, {"answer": "out(X)"})
+                read_datalog({"a": []}, rule, {"answer": "out(X)"})
 
     def test_source_authority_and_query_projection_cannot_change(self):
         with self.assertRaisesRegex(ValueError, "source facts"):
-            compile_program({"a": [], "out": [["forged"]]}, "out(X) <= a(X)", {"a": "out(X)"})
+            read_datalog({"a": [], "out": [["forged"]]}, "out(X) <= a(X)", {"a": "out(X)"})
         with self.assertRaisesRegex(ValueError, "distinct"):
-            compile_program({"a": []}, "out(X,Y) <= a(X) & a(Y)", {"a": "out(X,X)"})
+            read_datalog({"a": []}, "out(X,Y) <= a(X) & a(Y)", {"a": "out(X,X)"})
 
 
 class NativeDatalogTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        api = os.environ.get("ASCENT_ENGINE_BACKEND") == "api"
-        library = None if api else os.environ.get("ASCENT_ENGINE_LIBRARY")
-        if not api and (not library or not Path(library).is_file()):
-            raise RuntimeError("select the real API backend or ASCENT_ENGINE_LIBRARY")
-        cls.engine = Engine(library)
+        cls.engine=Engine()
+
+    @classmethod
+    def tearDownClass(cls):cls.engine.shutdown()
 
     def test_loaded_engine_advertises_checked_operator_surface(self):
-        capabilities = self.engine.request({"operation": "describe"})["clauseOperators"]
-        self.assertEqual(capabilities, {"where": ["<", "even?"], "compute": ["+", "identity"],
-                                        "reduce": ["count", "sum", "min", "max"]})
+        self.assertFalse(hasattr(self.engine,'request'))
+        self.assertEqual(evaluate(self.engine,{'n':[[2],[3]]},
+            'out(Y) <= n(X) & where("even?", X) & bind(Y, X + 1)',
+            {'answer':'out(Y)'},schema='infer')[0],{'answer':[(3,)]})
 
     def test_inferred_integer_order_is_native_numeric_not_symbol_order(self):
         result, _ = evaluate(self.engine, {"a": [[2], [10], [-1]]},
@@ -102,44 +101,43 @@ class NativeDatalogTests(unittest.TestCase):
 
     def test_exact_repeat_keeps_native_session_without_reimporting_outputs(self):
         facts = {"input": [[str(n)] for n in range(2100)]}
-        program, _ = compile_program(facts, "out(X) <= input(X)", {"answer": "out(X)"})
+        program, _ = read_datalog(facts, "out(X) <= input(X)", {"answer": "out(X)"})
         with EvidenceChain(self.engine, [r for r in program["relations"] if r["source"]]) as chain:
-            with patch.object(self.engine, "request", wraps=self.engine.request) as requests:
-                first = chain.query(program)
-                second = chain.query(program)
+            first=chain.query(program)
+            second=chain.query(program)
             self.assertEqual(first["result"], second["result"])
             self.assertEqual(len(second["result"]["relations"]["out"]), 2100)
             self.assertTrue(second["retainedCompleted"])
             self.assertEqual(second["freshComponents"], [])
             self.assertEqual(first["pathIdentity"], second["pathIdentity"])
-            calls = [call.args[0] for call in requests.call_args_list]
-            self.assertEqual(sum(c["operation"] == "open" for c in calls), 1)
-            self.assertEqual([c["timeoutNanoseconds"] for c in calls if c["operation"] == "run"],
-                             [1000000000, 0])
+            self.assertTrue(first['evaluated'])
+            self.assertFalse(second['evaluated'])
+            self.assertEqual(first['evaluationCount'],1)
+            self.assertEqual(second['evaluationCount'],1)
 
     def test_total_input_fact_limit_is_not_relaxed_by_repeat_fix(self):
-        from ascent_engine import FactLimits
-        program, _ = compile_program({"a": [[str(n)] for n in range(2050)],
+        from ascent import FactLimits
+        program, _ = read_datalog({"a": [[str(n)] for n in range(2050)],
                                       "b": [[str(n)] for n in range(2050)]},
                                      "out(X) <= a(X) & b(X)", {"answer": "out(X)"})
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ResourceLimitError):
             with EvidenceChain(self.engine, [r for r in program["relations"] if r["source"]],
                                limits=FactLimits(input=4096)):
                 pass
 
     def test_native_admission_rejects_negative_cycle(self):
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             evaluate(self.engine, {"domain": [["a"]]},
                 "left(X) <= domain(X) & ~right(X)\nright(X) <= domain(X) & ~left(X)",
                 {"answer": "left(X)"})
 
     def test_replacement_invalidates_negative_results(self):
         rules = "out(X) <= domain(X) & ~denied(X)"
-        first, _ = compile_program({"domain": [["a"]], "denied": []}, rules, {"answer": "out(X)"})
-        second, _ = compile_program({"domain": [["a"]], "denied": [["a"]]}, rules, {"answer": "out(X)"})
+        first, _ = read_datalog({"domain": [["a"]], "denied": []}, rules, {"answer": "out(X)"})
+        second, _ = read_datalog({"domain": [["a"]], "denied": [["a"]]}, rules, {"answer": "out(X)"})
         with EvidenceChain(self.engine, [r for r in first["relations"] if r["source"]]) as chain:
             old = chain.query(first)
-            self.assertEqual(old["result"]["relations"]["out"], [['"a"']])
+            self.assertEqual(old["result"]["relations"]["out"], [['a']])
             chain.replace([r for r in second["relations"] if r["source"]])
             new = chain.query(second)
             self.assertEqual(new["result"]["relations"]["out"], [])
@@ -171,10 +169,10 @@ class NativeDatalogTests(unittest.TestCase):
     def test_aggregate_dependency_and_operator_change_do_not_reuse_wrong_claim(self):
         facts = {"n": [[2], [5]]}
         schema = {"n": ["integer"], "sum": ["integer"], "out": ["integer"]}
-        first, _ = compile_program(facts,
+        first, _ = read_datalog(facts,
             'sum(T) <= reduce(T, "sum", n(X), X)\nout(Y) <= sum(T) & bind(Y, T + 1)',
             {"answer": "out(Y)"}, schema=schema)
-        second, _ = compile_program(facts,
+        second, _ = read_datalog(facts,
             'sum(T) <= reduce(T, "sum", n(X), X)\nout(Y) <= sum(T) & bind(Y, T + 2)',
             {"answer": "out(Y)"}, schema=schema)
         with EvidenceChain(self.engine, [r for r in first["relations"] if r["source"]]) as chain:
@@ -192,15 +190,15 @@ class NativeDatalogTests(unittest.TestCase):
         for body in ('n(X) & where("system", X)', 'n(X) & where("<", X)',
                      'n(X) & reduce(Y, "count", n(Z), Z)',
                      'n(X) & reduce(Y, "sum", n(Z))'):
-            with self.subTest(body=body), self.assertRaises(EngineError):
+            with self.subTest(body=body), self.assertRaises(ValueError):
                 evaluate(self.engine, {"n": [[1]]}, "out(X) <= " + body,
                          {"answer": "out(X)"}, schema={"n": ["integer"], "out": ["integer"]})
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             evaluate(self.engine, {"n": [["text"]]}, 'out(Y) <= n(X) & bind(Y, X + 1)',
                      {"answer": "out(Y)"}, schema={"n": ["symbol"], "out": ["integer"]})
 
     def test_native_rejects_aggregate_recursion(self):
-        with self.assertRaises(EngineError):
+        with self.assertRaises(ValueError):
             evaluate(self.engine, {"n": [[1]]},
                 'out(T) <= n(X) & reduce(T, "sum", out(Y), Y)',
                 {"answer": "out(T)"}, schema={"n": ["integer"], "out": ["integer"]})

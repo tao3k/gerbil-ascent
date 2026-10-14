@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from ascent_engine import Engine
+from ascent import Engine
 from .inference_effort import until_verified, paired_reduction
 from .inference_reuse_study import price
 from .repository_statistics import records, billing, repair_effort

@@ -8,7 +8,7 @@ import sys
 import threading
 import unittest
 
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError
 
 
 class BindingContract(unittest.TestCase):
@@ -79,7 +79,7 @@ class BindingContract(unittest.TestCase):
                             os._exit(2)
                     else:
                         os._exit(3)
-                from ascent_engine import _shutdown
+                from ascent import _shutdown
                 _shutdown()  # inherited atexit cleanup must not enter Scheme
                 os._exit(0)
             except BaseException:

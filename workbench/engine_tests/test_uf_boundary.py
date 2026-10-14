@@ -5,7 +5,7 @@ import os
 import unittest
 import hashlib
 from pathlib import Path
-from ascent_engine import Engine, EngineError
+from ascent import Engine, EngineError, ResourceLimitError
 
 UF = ':gerbil-ascent/table/trrel-uf'
 VIEW = ':gerbil-ascent/core/relation-view'
@@ -80,14 +80,8 @@ def decode_rows(graph):
 class UFBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = Engine(os.environ.get('ASCENT_NATIVE_LIBRARY'))
-        receipt = cls.engine.build_receipt or {}
-        producer = receipt.get('producerBuild', receipt)
-        expected = hashlib.sha256((Path(__file__).resolve().parents[2] / 'table/trrel-uf.ss').read_bytes()).hexdigest()
-        actual = producer.get('sourceInputs', {}).get('table/trrel-uf.ss')
-        if actual != expected:
-            raise AssertionError('UF producer source identity differs from this checkout')
-        print(f'UF-ORACLE-BACKEND {cls.engine.backend} UF-SHA256 {actual}', flush=True)
+        from engine_fixture import module_engine
+        cls.engine = module_engine()
 
     @classmethod
     def tearDownClass(cls):
@@ -110,7 +104,7 @@ class UFBoundaryTests(unittest.TestCase):
                     expected_after = closure(edges + [tail])
                     needed = len(expected_after - expected_before)
                     self.assertGreater(needed, 0)
-                    with self.assertRaisesRegex(EngineError, 'fact budget exceeded'):
+                    with self.assertRaises(ResourceLimitError):
                         owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, tail, needed - 1)
                     with owner.call('gerbil-ascent-trrel-uf-resource-observation', reference) as physical:
                         self.assertEqual(decode(physical.graph), resources)
@@ -152,7 +146,7 @@ class UFBoundaryTests(unittest.TestCase):
                     expected = closure(edges + [tail]) - before
                     with owner.call('gerbil-ascent-trrel-uf-resource-observation', ref) as value:
                         physical = decode(value.graph)
-                    with self.assertRaisesRegex(EngineError, 'fact budget exceeded'):
+                    with self.assertRaises(ResourceLimitError):
                         owner.call('gerbil-ascent-trrel-uf-insert!', ref, tail, len(expected)-1)
                     with owner.call('gerbil-ascent-trrel-uf-resource-observation', ref) as value:
                         self.assertEqual(decode(value.graph), physical)

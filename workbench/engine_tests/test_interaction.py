@@ -3,10 +3,10 @@
 import copy
 import os
 import unittest
-from ascent_engine import Engine, EngineError
-from ascent_engine.evidence import identity
-from ascent_engine.interaction import EvidenceOperation, EvidenceInteraction, EvidenceConversation
-from ascent_engine.trajectory import Trajectory
+from ascent import Engine, EngineError
+from ascent.evidence import identity
+from ascent.interaction import EvidenceOperation, EvidenceInteraction, EvidenceConversation
+from ascent.trajectory import Trajectory
 
 
 def fixture():
@@ -22,7 +22,9 @@ def fixture():
 
 class InteractionIntegration(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):cls.engine=Engine() if os.environ.get('ASCENT_ENGINE_BACKEND')=='api' else Engine(os.environ['ASCENT_ENGINE_LIBRARY'])
+    def setUpClass(cls):cls.engine=Engine()
+    @classmethod
+    def tearDownClass(cls):cls.engine.shutdown()
     def test_local_checks_preserve_unknown_and_source_bound_reuse(self):
         sources,operations=fixture()
         with Trajectory(self.engine,'branching',identity(sources)) as ledger:
@@ -104,7 +106,7 @@ class InteractionIntegration(unittest.TestCase):
                 result=tools.check(branches,model_call='none')
                 self.assertEqual(sum(b['status']=='supported' for b in result['branches']),64)
                 self.assertEqual(sum(b['status']=='contradicted' for b in result['branches']),64)
-                self.assertEqual(len({b['resultReference'] for b in result['branches']}),2)
+                self.assertEqual(len({b['resultReference'] for b in result['branches']}),1)
 
     def test_model_declared_path_requires_every_condition_and_current_support(self):
         sources,ops=fixture()

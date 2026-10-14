@@ -1,0 +1,76 @@
+#+title: Python Library and Workbench boundary
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Independent projects
+
+| Project | Distribution | Owns |
+|---------+--------------+------|
+| python | ascent-engine | Public Library bindings and artifact API |
+| workbench | ascent-workbench | Downstream research, provider IO and qualification |
+
+The workbench declares the Library dependency and consumes =ascent_engine=.
+The Library distribution explicitly includes only =ascent_engine*= packages.
+There is no reverse dependency, namespace compatibility shim or second query
+engine. Scheme retains semantic ownership and its native =t/= tests.
+
+The workbench's own unit and native consumer tests preserve the existing Cases.
+Only public binding unit tests remain in =python/tests/=. Frozen studies and
+archived producers keep their original bytes/SHA; an active producer move does
+not refresh a past source identity or transfer a paid-call authorization.
+
+* Python orchestration and finite checking
+
+The formal entry calls one Python workbench command. The former Shell checker
+is removed. Declarative model configurations preserve the 51 models and all 327
+original checks; four arithmetic counterexamples additionally reject negative
+counters and future completion snapshots. Native CPU/heap capacity schedules
+independent TLC processes. A fresh process remains mandatory for every native
+consumer file/backend because runtime shutdown is terminal.
+
+The failed GitHub formal job reached hundreds of millions of generated states
+and was cancelled at its original 15-minute deadline. Two new models had
+unbounded cost/event counters. Increasing parallelism cannot make an infinite
+state space exhaustible.
+
+=AccountingAbstraction.lean= proves that every nonnegative increment is included
+in the finite sign/order transitions, and that the observed safety predicates
+have the same truth values. Negative counters and snapshots after current cost
+remain represented. Arbitrarily many actions still run: no call-count cutoff or
+generation-bound reduction was introduced. These laws concern the modeled
+safety observations; they do not prove arbitrary Scheme semantics or liveness.
+
+All 51 models, 331 checks and the Lean kernel subsequently passed in
+94.636/900 seconds with the original CI generation cutoff 4. The historical
+cancelled run remains failed. A complete new exact-head CI run must qualify the
+project migration separately. Raw process and checker logs stay under =.cache/=.
+
+The project migration passed 15 binding unit tests and 148 workbench unit tests.
+Separately installed wheels were checked for disjoint package contents, a
+one-way Library dependency and the installed command's checkout resource paths.
+The complete native consumer inventory retains 33 ABI groups and seven API
+controls: 243 test executions, no skips, 24.678/120 seconds. Its 2565 inputs
+include both actual artifacts, published generations, producer sources and
+consumer code; all matched before and after execution. The final no-diagnostic
+Library has 137 native source inputs and 1031 retained compiled generations.
+The full Lean/Quint verification also passed again in 81.478/900 seconds.
+These are local receipts. Consumer graph 022 subsequently passed all 1348
+tests with no failures, errors, skips or input drift; its parent completed in
+245.08/300 seconds. Independent read 022 returned =CURRENT/PASS= in
+3.121/15 seconds, with no backend or checkout drift. This qualifies that fixed
+workflow snapshot, not arbitrary runtime execution or portable native binaries.
+New exact-head remote CI remains a separate gate.
+
+* Native publication permission
+
+An =EPERM= hard-link denial now fails publication explicitly. It cannot silently
+publish a copied compiled generation. The original cross-volume copy behavior
+remains recorded as =copied=; it does not claim retained-inode performance.
+Mutable metadata continues to be copied. Exact generation names, byte checks
+and removal of unrecorded contiguous generations retain their existing contract.
+
+Earlier copied diagnostic packages timed out during official dynamic loading
+and Darwin signature checks. A retained-generation diagnostic passed the six
+lifecycle cases in 8.737/15 seconds; the subsequent no-diagnostic package passed
+in 9.562/15 seconds. This does not establish portable cold-load performance or
+stable Actor execution acceleration. Historical failures are preserved.

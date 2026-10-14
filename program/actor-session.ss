@@ -65,16 +65,20 @@
             (spawn/name 'ascent-session-owner
              (lambda ()
                (let ((pending initial) (committed initial) (published #f)
+                     (snapshot-source #f) (snapshot-relations #f)
                      (generation 0) (running #f) (closing []))
                  (def (reply! channel value) (thread-send channel value))
                  (def (snapshot)
                    ;; Compute outside the POO slot scope: `relations` inside its
                    ;; own slot expression would resolve recursively to that slot.
-                   (let (next-relations
-                         (map (lambda (relation position)
-                                (.o (:: @ relation) rows: (gerbil-ascent-source-cut-rows pending position)))
-                              relations (iota (length relations))))
-                     (.o (:: @ program) relations: next-relations)))
+                   (unless (eq? pending snapshot-source)
+                     (set! snapshot-relations
+                       (map (lambda (relation position)
+                              (.o (:: @ relation) rows: (gerbil-ascent-source-cut-rows pending position)))
+                            relations (iota (length relations))))
+                     (set! snapshot-source pending))
+                   ;; Reuse owned row declarations, not lazy Program slots or results.
+                   (.o (:: @ program) relations: snapshot-relations))
                  (def (mark-canceled!)
                    (when running
                      (set! generation (+ generation 1))
@@ -85,7 +89,9 @@
                  (def (update! replacements append?)
                    (when running (error "ASCENT actor Session source update while running"))
                    (let (next (gerbil-ascent-source-cut-update pending positions arities replacements append? input-limit))
-                     (set! pending next) (set! generation (+ generation 1)) (void)))
+                     (set! pending next)
+                     (set! snapshot-source #f) (set! snapshot-relations #f)
+                     (set! generation (+ generation 1)) (void)))
                  (let loop ()
                    (match (thread-receive)
                      (['request channel operation args]
@@ -130,6 +136,7 @@
                                  (reply! (vector-ref running 4) outcome))
                           (begin
                             (set! pending committed)
+                            (set! snapshot-source #f) (set! snapshot-relations #f)
                             (reply! (vector-ref running 4)
                               (if (= epoch generation) outcome
                                 (vector #f (session-failure "ASCENT actor Session canceled"))))))

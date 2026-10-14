@@ -66,7 +66,10 @@
   (unless source-core-context
     (let (context (make-top-context))
       (parameterize ((current-expander-context context))
-        (eval-syntax '(import :gerbil/core)))
+        (eval-syntax '(import :gerbil/core))
+        (eval-syntax '(import :gerbil-ascent/evidence/interface
+                              :gerbil-ascent/evidence/module
+                              (only-in :clan/poo/object .ref))))
       (set! source-core-context context)))
   ;; Each declaration has a fresh module namespace and private gensym aliases.
   ;; Reuse the import context; it does not own the user's lexical definitions.
@@ -117,9 +120,7 @@
     (unless context (set! context (make-source-context)))
       (parameterize ((current-expander-context context))
         (eval-syntax `(module ,namespace
-                       (import :gerbil-ascent/evidence/interface
-                               :gerbil-ascent/evidence/module
-                               (only-in :clan/poo/object .ref) ,@imports)
+                       ,@(if (null? imports) [] [(cons 'import imports)])
                        (export ,@(if (eq? exports #t) '(#t) exports)) ,@forms)))
     (lambda (export arguments)
       (unless (and (string? export) (< 0 (string-length export) 129) (list? arguments))

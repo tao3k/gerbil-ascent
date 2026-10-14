@@ -12,5 +12,9 @@ manifest.ss
 # Python Project environments and generated package metadata.
 python/.venv/
 python/src/*.egg-info/
+python/build/
+workbench/.venv/
+workbench/src/*.egg-info/
+workbench/build/
 __pycache__/
 *.pyc

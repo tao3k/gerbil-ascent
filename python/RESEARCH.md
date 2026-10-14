@@ -42,10 +42,10 @@ uv run --project python python -m ascent_engine.api_build \
   --library "$BUILD/libascent.dylib" --header bindings/c/ascent.h \
   --out "$BUILD/api" --cc /opt/homebrew/bin/gcc-16
 PYTHONPATH="$BUILD/api" uv run --project python python -m unittest \
-  discover -s python/engine_tests -p test_computational_evidence.py -v
+  discover -s workbench/engine_tests -p test_computational_evidence.py -v
 ASCENT_ENGINE_BACKEND=abi ASCENT_ENGINE_LIBRARY="$BUILD/libascent.dylib" \
   uv run --project python python -m unittest \
-  discover -s python/engine_tests -p test_computational_evidence.py -v
+  discover -s workbench/engine_tests -p test_computational_evidence.py -v
 uv run --project python python -m unittest discover \
   -s python/tests -p test_shared_premise.py -v
 quint typecheck packages/proofs/quint/SharedPremiseReuse.qnt
@@ -61,7 +61,7 @@ qualification. The current extension is not a portable binary wheel.
 
 ## Freeze, execute, annotate and replay
 
-All modes live in the existing `ascent_test_support.evidence_chain_study` module.
+All modes live in the existing `ascent_workbench.evidence_chain_study` module.
 `PLAN` and `RUN` are fresh caller-selected directories. API mode must be selected
 explicitly by placing the receipt-bound extension on `PYTHONPATH`; no fallback
 library is loaded. The source and binary identities are checked before and after
@@ -70,15 +70,15 @@ execution. A changed producer stops admission.
 ```sh
 export PYTHONPATH="$BUILD/api"
 export ASCENT_CFFI_RECEIPT="$BUILD/api/receipt.json"
-uv run --project python python -m ascent_test_support.evidence_chain_study \
+uv run --project python python -m ascent_workbench.evidence_chain_study \
   shared-freeze "$BUILD/libascent.dylib" "$PLAN"
-uv run --project python python -m ascent_test_support.evidence_chain_study \
+uv run --project python python -m ascent_workbench.evidence_chain_study \
   shared-check "$PLAN" "$RUN"
-uv run --project python python -m ascent_test_support.evidence_chain_study \
+uv run --project python python -m ascent_workbench.evidence_chain_study \
   shared-live "$PLAN" "$RUN"
-uv run --project python python -m ascent_test_support.evidence_chain_study \
+uv run --project python python -m ascent_workbench.evidence_chain_study \
   shared-label "$PLAN" "$RUN"
-uv run --project python python -m ascent_test_support.evidence_chain_study \
+uv run --project python python -m ascent_workbench.evidence_chain_study \
   shared-report "$PLAN" "$RUN"
 ```
 
@@ -149,7 +149,7 @@ Completed branches and incumbent objective improvement measure exploration
 coverage and quality; this fixture does not measure arbitrary tree depth.
 
 `branch-freeze`, `branch-live`, `shared-label` and `branch-report` remain modes
-of the existing `ascent_test_support.evidence_chain_study` module. Freezing
+of the existing `ascent_workbench.evidence_chain_study` module. Freezing
 requires a clean committed producer and exact source/API identities. The
 annotation rule now splits within-response, same-branch and cross-branch
 repetitions, and credits supplied evidence only after its tool return. The

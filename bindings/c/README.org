@@ -49,7 +49,7 @@ expectations do not certify natural-language intent or source completeness.
 
 =t/qualification/ascent-engine-interface-test.ss= exercises recursion,
 negation, retained updates and invalid transactions directly in Scheme.
-=python/engine_tests/test_engine.py= exercises actual shared-library ownership,
+=workbench/engine_tests/test_engine.py= exercises actual shared-library ownership,
 thread errors, parsing boundaries, retained sessions and all 1,536 frozen
 movie observations corresponding to Lean and Quint. This finite correspondence
 does not prove generic C ABI memory safety or arbitrary-program refinement.

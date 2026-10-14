@@ -5,9 +5,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ascent-test-support"
+name = "ascent-engine"
 version = "1"
-description = "Provider byte IO and process supervision for native Scheme tests"
+description = "Public Python bindings for the ASCENT Scheme Library"
 requires-python = ">=3.10"
 dependencies = ["cffi>=1.16,<3"]
 
@@ -16,3 +16,4 @@ native-build = ["setuptools>=68"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["ascent_engine*"]

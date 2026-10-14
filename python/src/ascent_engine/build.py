@@ -27,6 +27,7 @@ def transfer_resource(source, target):
     Native compilation creates a new .oN or unlinks an invalidated generation;
     it must never overwrite a published generation in place. Identity checks
     remain mandatory, including when linking is unavailable across volumes.
+    A permission denial must not silently change the publication mode.
     """
     if re.fullmatch(r"\.o[1-9][0-9]*", source.suffix):
         if source.name != target.name:
@@ -35,7 +36,10 @@ def transfer_resource(source, target):
             os.link(source.resolve(strict=True), target)
             return "linked-generation"
         except OSError as error:
-            if error.errno not in (errno.EXDEV, errno.ENOTSUP, errno.EPERM, errno.EMLINK, errno.ENOSYS):
+            if error.errno == errno.EPERM:
+                raise PermissionError(error.errno,
+                    "compiled generation publication requires permitted hard-link access", str(target)) from error
+            if error.errno not in (errno.EXDEV, errno.ENOTSUP, errno.EMLINK, errno.ENOSYS):
                 raise
     shutil.copyfile(source, target)
     return "copied"

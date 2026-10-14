@@ -351,15 +351,7 @@ prepare-quint:
 # Lean kernel checking and exhaustive Quint protocol exploration are independent.
 # Both parent exit statuses are required; cached model results are never reused.
 check-formal: prepare-quint
-    #!/usr/bin/env bash
-    set -euo pipefail
-    just check-lean-proofs &
-    lean=$!
-    status=0
-    just _check-quint all || status=$?
-    wait "$lean" || status=$?
-    [[ "$status" = 0 ]] || exit "$status"
-    echo 'ALL-FORMAL-CHECK-OK'
+    PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.formal all
 
 check-nonmembership-formal: check-lean-proofs
     just _check-quint Nonmembership
@@ -407,7 +399,7 @@ check-provider-routing-formal:
     just _check-quint ProviderRouting
 
 _check-quint group='all': prepare-quint
-    bash packages/proofs/quint/check.sh "{{ group }}"
+    PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.formal quint "{{ group }}"
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.
@@ -664,7 +656,7 @@ byods-session-rows:
 
 # Verify the immutable paper input envelope before the native complete count.
 steensgaard-data directory='.cache/ascent/paper-data/steensgaard':
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.paper_source "{{ directory }}" docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+    @PYTHONPATH="{{ justfile_directory() }}/workbench/src:{{ justfile_directory() }}/python/src" python3 -m ascent_workbench.paper_source "{{ directory }}" docs/evidence/scheme-application-admission-20261007/openjdk-source.json
     @just _oracle-native steensgaard-data "{{ directory }}" 440438706
 
 steensgaard-rows:

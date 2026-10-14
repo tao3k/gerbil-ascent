@@ -106,10 +106,10 @@ partition model:
 
 #+begin_src sh
 set -e
-PYTHONPATH=python/src python3 -m ascent_test_support.paper_source \
+PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source \
   .cache/ascent/paper-data/steensgaard \
   docs/evidence/scheme-application-admission-20261007/openjdk-source.json
-PYTHONPATH=python/src python3 -m ascent_test_support.supervision \
+PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.supervision \
   --startup-seconds 5 --idle-seconds 5 -- \
   rust/ascent-oracle/target/debug/examples/steensgaard_data_truth \
   .cache/ascent/paper-data/steensgaard

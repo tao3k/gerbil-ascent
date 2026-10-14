@@ -84,25 +84,16 @@ jobs:
           sudo apt-get install -y nodejs npm python3-cffi python3-setuptools
           just prepare-quint
           export PATH="$PWD/.cache/ascent/tools/quint/node_modules/.bin:$PATH"
-          export PYTHONPATH="$PWD/python/src"
+          export PYTHONPATH="$PWD/workbench/src:$PWD/python/src"
           export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
           export ASCENT_ENGINE_LIBRARY="$PWD/.gerbil/lib/libascent.so"
-          gerbil env /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.build --build-dir "$PWD/.gerbil" --output "$ASCENT_ENGINE_LIBRARY"
+          gerbil env /usr/bin/python3 -m ascent_workbench.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.build --build-dir "$PWD/.gerbil" --output "$ASCENT_ENGINE_LIBRARY"
           GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
-          /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.api_build --library "$ASCENT_ENGINE_LIBRARY" --header bindings/c/ascent.h --out "$PWD/.cache/ascent/cffi-api" --cc gcc
+          /usr/bin/python3 -m ascent_workbench.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.api_build --library "$ASCENT_ENGINE_LIBRARY" --header bindings/c/ascent.h --out "$PWD/.cache/ascent/cffi-api" --cc gcc
           export PYTHONPATH="$PWD/.cache/ascent/cffi-api:$PYTHONPATH"
           # Runtime shutdown is terminal. Each file gets a fresh native owner;
           # the existing 120-second deadline still covers the entire matrix.
-          /usr/bin/python3 -m ascent_test_support.supervision -- timeout 120s bash -euo pipefail -c '
-            export ASCENT_ENGINE_BACKEND=abi
-            for test_file in python/engine_tests/test_*.py; do
-              /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "${test_file##*/}" -v
-            done
-            export ASCENT_ENGINE_BACKEND=api
-            for test_file in test_binding_modes.py test_computational_evidence.py test_datalog.py test_review.py test_rule_source.py test_rule_sources.py test_uf_weighted.py; do
-              /usr/bin/python3 -u -m unittest discover -s python/engine_tests -p "$test_file" -v
-            done
-          '
+          /usr/bin/python3 -m ascent_workbench.native_tests
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry
@@ -230,7 +221,7 @@ jobs:
           while read -r relation; do
             curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
           done < <(jq -r '.files[].relation' "$manifest")
-          PYTHONPATH=python/src python3 -m ascent_test_support.paper_source "$dataset" "$manifest"
+          PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
           cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
           timeout 180s .cache/ascent/native-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
@@ -247,7 +238,7 @@ jobs:
           while read -r relation; do
             curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
           done < <(jq -r '.files[].relation' "$manifest")
-          PYTHONPATH=python/src python3 -m ascent_test_support.paper_source "$dataset" "$manifest"
+          PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
       - name: Check independent Polonius reference controls
         if: matrix.shard == 'byods-scale'
         run: cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
@@ -272,7 +263,7 @@ jobs:
       - name: Install Lean and protocol verification tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi
+          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi python3-venv
           elan toolchain install leanprover/lean4:v4.34.0
       - name: Check Lean contracts, Quint protocols and counterexamples
         env:
@@ -285,8 +276,16 @@ jobs:
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
       - name: Qualify Python byte IO and process supervision
         env:
-          PYTHONPATH: python/src
-        run: python3 -m unittest discover -s python/tests -v
+          PYTHONPATH: workbench/src:python/src
+        run: |
+          python3 -m unittest discover -s python/tests -v
+          python3 -m unittest discover -s workbench/tests -v
+      - name: Verify independent Python project installation
+        run: |
+          python3 -m venv .cache/ascent/python-projects
+          .cache/ascent/python-projects/bin/python -m pip install ./python ./workbench
+          .cache/ascent/python-projects/bin/python -c 'from importlib.metadata import distribution; from ascent_engine import Engine; from ascent_workbench import formal; from pathlib import Path; library = distribution("ascent-engine"); consumer = distribution("ascent-workbench"); assert not any(str(p).startswith("ascent_workbench/") for p in library.files); assert not any(str(p).startswith("ascent_engine/") for p in consumer.files); assert any(r.startswith("ascent-engine") for r in consumer.requires); assert not any("ascent-workbench" in r for r in library.requires); assert formal.ROOT == Path.cwd()'
+          .cache/ascent/python-projects/bin/ascent-workbench --help
   native-and-oracle:
     if: ${{ always() }}
     needs: [scheme, oracle, formal]

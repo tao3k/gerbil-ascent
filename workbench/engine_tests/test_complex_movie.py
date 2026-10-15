@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import hashlib
+import importlib.util
 import copy
 import json
 import unittest
-import os
 import subprocess
 import sys
 import tempfile
@@ -46,10 +47,11 @@ class ComplexMovieProtocol(unittest.TestCase):
     def test_finite_views_and_withdrawals_through_real_scheme(self):
         with tempfile.TemporaryDirectory() as directory:
             output=study.Path(directory)/'result.json'
-            library=os.environ.get('ASCENT_ENGINE_LIBRARY',study.ROOT/'.gerbil/lib/libascent.dylib')
+            library=study.Path(importlib.util.find_spec('ascent._core').origin)
             subprocess.run([sys.executable,'-u','-m','ascent_workbench.complex_movie_study','qualify',
                             str(study.FIXTURE.parent/'conformance.json'),str(library),str(output)],check=True)
             receipt=json.loads(output.read_text())
+            self.assertEqual(receipt['librarySha256'], hashlib.sha256(library.read_bytes()).hexdigest())
             self.assertEqual(receipt['observations'],3072)
             self.assertEqual(len(receipt['faultControlsDetected']),3)
 

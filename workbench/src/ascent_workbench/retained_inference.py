@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Replay finite retained-query observations in the actual Scheme CFFI engine."""
+"""Replay finite retained-query observations in the Scheme engine through the Rust/PyO3 runtime."""
 import argparse
+import importlib.util
 import hashlib
 import json
 import copy
@@ -12,6 +13,9 @@ from .complex_movie_study import atom, rule, var, declaration
 
 
 def qualify(corpus, library, output):
+    extension = Path(importlib.util.find_spec('ascent._core').origin).resolve()
+    if library.resolve() != extension:
+        raise ValueError('qualification requires the installed PyO3 extension')
     observations=json.loads(corpus.read_text());actual=[];stale_faults=0
     domains={'Actor':['actor0','actor1']}
     a,b,c=(var(n) for n in ('a','b','c'))

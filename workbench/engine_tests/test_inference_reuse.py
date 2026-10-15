@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import hashlib
+import importlib.util
 import copy
 import json
 import os
@@ -79,11 +81,12 @@ with Engine() as e:
         import tempfile
         with tempfile.TemporaryDirectory() as directory:
             output=Path(directory)/'receipt.json'
-            library=os.environ.get('ASCENT_ENGINE_LIBRARY',study.ROOT/'.gerbil/lib/libascent.dylib')
+            library=Path(importlib.util.find_spec('ascent._core').origin)
             subprocess.run([sys.executable,'-u','-m','ascent_workbench.retained_inference',
                 str(study.ROOT/'t/qualification/fixtures/inference-reuse/conformance.json'),
                 str(library),str(output)],check=True)
             receipt=json.loads(output.read_text())
+            self.assertEqual(receipt['librarySha256'], hashlib.sha256(library.read_bytes()).hexdigest())
             self.assertEqual(receipt['observations'],32)
             self.assertEqual(receipt['changedSourceStaleAnswerFaultsDetected'],8)
             self.assertEqual(receipt['publishedSubgoalExtensionObservations'],32)

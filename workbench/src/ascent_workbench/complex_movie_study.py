@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Frozen multi-hop movie experiment; Scheme owns every relational operation."""
 import argparse
+import importlib.util
 import copy
 import hashlib
 import json
@@ -297,6 +298,9 @@ def live(directory, output):
 
 
 def qualify(corpus, library, output):
+    extension = Path(importlib.util.find_spec('ascent._core').origin).resolve()
+    if library.resolve() != extension:
+        raise ValueError('qualification requires the installed PyO3 extension')
     observations=json.loads(corpus.read_text());checked=0
     if len(observations)!=3072: raise ValueError('finite corpus bound')
     def contract(reuse):

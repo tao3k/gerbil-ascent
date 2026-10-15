@@ -92,13 +92,13 @@ impl Trajectory {
         }
         engine
             .trajectory_owners
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
                 (n < 64).then_some(n + 1)
             })
             .map_err(|_| invalid("trajectory owner capacity"))?;
         let permit = Permit(engine.trajectory_owners.clone());
         let handle = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
             .map_err(|_| invalid("trajectory identity exhausted"))?;
         Ok(Self {
             engine: engine.clone(),

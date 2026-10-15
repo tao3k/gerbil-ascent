@@ -54,7 +54,7 @@ impl EvidenceInteraction {
         let registry = Registry::new(&sources, &operations)?;
         let chain = EvidenceChain::new(engine, sources.clone(), retain, FactLimits::default())?;
         let owner = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
             .map_err(|_| invalid("interaction identity exhausted"))?;
         Ok(Self {
             engine: engine.clone(),

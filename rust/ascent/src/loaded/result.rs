@@ -56,7 +56,7 @@ impl SourceResult {
         scope.check()?;
         scope
             .owners
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |n| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |n| {
                 (n < 64).then_some(n + 1)
             })
             .map_err(|_| Error::InvalidUpdate("result owner limit; release results".into()))?;

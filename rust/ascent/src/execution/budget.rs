@@ -114,7 +114,7 @@ impl Budget {
             return false;
         }
         if counter
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |prior| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |prior| {
                 prior.checked_add(count).filter(|next| *next <= limit)
             })
             .is_err()
@@ -132,7 +132,7 @@ impl Budget {
         }
         let admitted = self
             .work
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |prior| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |prior| {
                 prior
                     .checked_add(count)
                     .filter(|next| *next <= self.limits.max_states)

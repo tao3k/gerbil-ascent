@@ -139,7 +139,7 @@ impl ComputationalEvidence {
         }
         let support = support::acyclic(&graph)?;
         let handle = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
             .map_err(|_| invalid("receipt handles exhausted"))?;
         let scope = Data::List(vec![
             Data::List(vec![

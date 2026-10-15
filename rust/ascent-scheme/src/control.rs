@@ -36,7 +36,7 @@ impl Control {
             .checked_add(limits.timeout)
             .ok_or(Error::Timeout)?;
         let id = NEXT
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |v| {
                 (v < i64::MAX as u64).then_some(v + 1)
             })
             .map_err(|_| crate::failure("execution request identity exhausted"))?;

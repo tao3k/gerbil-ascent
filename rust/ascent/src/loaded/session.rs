@@ -18,7 +18,7 @@ static NEXT_SOURCE: AtomicU64 = AtomicU64::new(1);
 /// Rejects exhaustion instead of recycling a provenance authority.
 pub fn allocate_source_identity() -> Result<u64> {
     NEXT_SOURCE
-        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+        .try_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
             value.checked_add(1)
         })
         .map_err(|_| Error::InvalidUpdate("source identities exhausted".into()))
@@ -298,7 +298,7 @@ impl SourceSession {
             .checked_add(1)
             .ok_or_else(|| Error::InvalidUpdate("run index exhausted".into()))?;
         let id = NEXT_RESULT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
                 value.checked_add(1)
             })
             .map_err(|_| Error::InvalidUpdate("result handles exhausted".into()))?;

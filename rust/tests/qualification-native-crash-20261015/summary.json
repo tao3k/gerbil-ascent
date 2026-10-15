@@ -37,12 +37,12 @@
     "undo-regression/stack-overflow-undo.c": "65195d0b639b714bd8ec032731f87c1112abd7de67ba45414b4daaf6c10f19da",
     "undo-regression/upstream-fix.patch.gz": "ffaa0ecc57ba763a601307176bd81f702f577f9a1c4dad2bc129acdb8dcf8ef8",
     "undo-regression/receipt.json": "8fcf1ecaa6b74e40c5d1a44e874a8ca3c1480360353230b77cce0684e3302483",
-    "undo-regression/original/run.log": "d7217ee1d7df3cfa059aacda8a4557fce01df999946f023f8e7c2706db4cf165",
-    "undo-regression/original/compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "undo-regression/original/run.log.gz": "2816f30758536ab659a6dc24398dab5afbed501c7d24a583225e60cde2442fd2",
     "undo-regression/original/header.sha256": "ad3ec18fed0fd1d011fe124f0eb7e008c059335970c81f3c62a1c8a71c025147",
-    "undo-regression/fixed/run.log": "b790d5cfb1b946d31f17cd3d9cb10c184583baa743eec28f787838917df68b75",
-    "undo-regression/fixed/compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "undo-regression/fixed/header.sha256": "af497225b6a5ca38c8dc71df7c462fb9f17ee4d84cbf7140ff7a6e7c002ee81b"
+    "undo-regression/original/compile.log.gz": "021956b661d8eb08efb101530a41405e0eb429df3a10d4f21dca406b40ff61ac",
+    "undo-regression/fixed/run.log.gz": "c4b72cb59f37c270e0a3bb46899ba9f5cd0f87ade35aded23d011fa67f14d106",
+    "undo-regression/fixed/header.sha256": "af497225b6a5ca38c8dc71df7c462fb9f17ee4d84cbf7140ff7a6e7c002ee81b",
+    "undo-regression/fixed/compile.log.gz": "021956b661d8eb08efb101530a41405e0eb429df3a10d4f21dca406b40ff61ac"
   },
   "sdk_build": {
     "run": 38670345873,

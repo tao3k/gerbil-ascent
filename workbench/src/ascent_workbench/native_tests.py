@@ -29,6 +29,11 @@ def inventory(directory: Path) -> list[tuple[str, Path]]:
     files = sorted(directory.glob("test_*.py"))
     if not files or any(not (directory / name).is_file() for name in API_FILES):
         raise ValueError("incomplete native consumer inventory")
+    # Complete UF exports are the longest consumer (24s in the qualified Linux
+    # baseline). Start that work before the short consumers rather than leaving
+    # it in the serial tail. Keep the same complete inventory and global real-
+    # output watchdog; scheduling never supplies progress or changes admission.
+    files.sort(key=lambda path: (path.name != "test_uf_materialization.py", path.name))
     return [("pyo3", path) for path in files]
 
 

@@ -9,6 +9,9 @@ complete Rust workspace tests, strict Clippy, wheel construction, and the
 original Python interface semantics. These have separate step timings. Rust
 and PyO3 share one Cargo target directory, Gerbil environment, Python interpreter,
 and equivalent production feature selection. Rust Ascent remains a dev-dependency.
+The Python consumer scheduler starts the longest complete UF export group first
+to avoid a long serial tail. All groups, assertions, the 120-second matrix budget
+and the five-second watchdog on actual consumer output remain unchanged.
 
 The Cargo cache is scoped by OS/architecture, Rust/Python compiler identity,
 Gerbil/C compiler identity, lockfile, and source/configuration digests. Restore

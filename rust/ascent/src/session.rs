@@ -7,7 +7,7 @@ use rayon::{ThreadPool, slice::ParallelSliceMut};
 use std::{
     collections::{BTreeMap, HashSet},
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
 };
@@ -19,8 +19,6 @@ pub struct Engine {
     pool: Arc<ThreadPool>,
     parallel: bool,
     closed: Arc<AtomicBool>,
-    pub(crate) module_sources: Arc<Mutex<BTreeMap<String, String>>>,
-    pub(crate) module_owners: Arc<AtomicUsize>,
     pub(crate) evidence_owners: Arc<AtomicUsize>,
     pub(crate) trajectory_owners: Arc<AtomicUsize>,
 }
@@ -43,8 +41,6 @@ impl Engine {
             Ok(Self {
                 parallel: false,
                 closed: Arc::default(),
-                module_owners: Arc::default(),
-                module_sources: Arc::default(),
                 evidence_owners: Arc::default(),
                 trajectory_owners: Arc::default(),
             })
@@ -65,8 +61,6 @@ impl Engine {
             pool,
             parallel: true,
             closed: Arc::default(),
-            module_owners: Arc::default(),
-            module_sources: Arc::default(),
             evidence_owners: Arc::default(),
             trajectory_owners: Arc::default(),
         }
@@ -125,15 +119,24 @@ impl Engine {
         {
             return Err(Error::SourceFactLimit);
         }
-        let sources: Vec<HashSet<Row>> = graph
+        let sources: Vec<Vec<Row>> = graph
             .program
             .relations
             .iter()
             .map(|r| {
                 if r.source {
-                    r.rows.iter().cloned().collect()
+                    if r.initial_occurrences {
+                        r.rows.clone()
+                    } else {
+                        r.rows
+                            .iter()
+                            .cloned()
+                            .collect::<HashSet<_>>()
+                            .into_iter()
+                            .collect()
+                    }
                 } else {
-                    HashSet::new()
+                    Vec::new()
                 }
             })
             .collect();
@@ -183,8 +186,8 @@ pub struct Session {
     committed_generation: u64,
     engine: Engine,
     graph: Arc<Graph>,
-    sources: Vec<HashSet<Row>>,
-    committed: Vec<HashSet<Row>>,
+    sources: Vec<Vec<Row>>,
+    committed: Vec<Vec<Row>>,
     generation: u64,
     clean: bool,
     last: Option<Arc<Snapshot>>,
@@ -208,6 +211,16 @@ impl Session {
     pub(crate) fn program(&self) -> &Program {
         &self.graph.program
     }
+    pub(crate) fn current_program(&self) -> Program {
+        let mut program = self.graph.program.clone();
+        for (relation, rows) in program.relations.iter_mut().zip(&self.sources) {
+            if relation.source {
+                relation.rows.clone_from(rows);
+            }
+        }
+        program
+    }
+
     /// Validate the entire transaction before publishing any source replacement.
     /// # Errors
     /// Rejects non-source relations, incorrect rows or exhausted generation IDs.
@@ -218,7 +231,15 @@ impl Session {
         for (name, rows) in updates {
             let id = self.graph.validate_rows(&name, &rows)?;
             counts[id] = rows.len();
-            checked.push((id, rows.into_iter().collect()));
+            let rows = if self.graph.program.relations[id].initial_occurrences {
+                rows
+            } else {
+                rows.into_iter()
+                    .collect::<HashSet<_>>()
+                    .into_iter()
+                    .collect()
+            };
+            checked.push((id, rows));
         }
         if checked.is_empty() {
             return Ok(());

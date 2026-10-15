@@ -169,7 +169,7 @@ impl EvidenceResult {
             self.owner
                 .provenance(self.handle, relation, &limits, &cancel)
         })
-        .map(super::provenance::Provenance)
+        .map(|p| super::provenance::Provenance(super::provenance::Proof::Scheme(p)))
         .map_err(source_error)
     }
     fn close(&self) {

@@ -1,5 +1,6 @@
 //! Thin ASCENT application binding over gerbil-scheme-rust.
 mod application;
+mod control;
 mod dag;
 mod ffi;
 mod values;
@@ -27,5 +28,9 @@ mod api;
 #[doc(hidden)]
 pub mod benchmark;
 pub use api::{
-    Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, ResultValue, Source,
+    Backend, Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, NativeProvenance,
+    ResultValue, Source,
 };
+
+mod identity;
+pub use identity::build_identity;

@@ -1,0 +1,60 @@
+"""Observe compiler/test interference while running the unchanged shape matrix."""
+import json
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+# Resolve the checkout directly; receipt directories never choose a second checkout.
+root=Path('/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent')
+out=root/'rust/benchmarks/results-hybrid-20261015-final'
+checks=[]
+phase="admission"
+stop=threading.Event()
+forbidden={'cargo','cargo-clippy','rustc','clippy-driver','clang','clang++','gcc','g++','cc','c++','gsc','gsc-boot','gsc-script','gxi','java','quint','ld','rust-lld','swift-frontend','lean','lake','make','gmake','ninja','cmake','maturin','gxc','gerbil','gxtest'}
+def snapshot():
+    run=subprocess.run(['/bin/ps','-axo','pid=,ppid=,comm='],capture_output=True,text=True,check=True,timeout=5)
+    processes={}
+    for line in run.stdout.splitlines():
+        pid, parent, command=line.strip().split(maxsplit=2)
+        processes[int(pid)]={'pid':int(pid),'parent':int(parent),'command':command}
+    busy=[]
+    for pid, process in processes.items():
+        if Path(process['command']).name not in forbidden:continue
+        ancestors=[]
+        parent=process['parent']
+        for _ in range(8):
+            if parent not in processes:break
+            ancestors.append(processes[parent])
+            parent=processes[parent]['parent']
+        busy.append(dict(process,ancestors=ancestors))
+    checks.append({'seconds':time.monotonic(),'phase':phase,'busy':busy})
+    return busy
+def monitor():
+    while not stop.wait(.5):
+        try: snapshot()
+        except Exception as error: checks.append({'phase':phase,'error':str(error)})
+admission_started=time.monotonic()
+quiet_since=None
+print('Waiting for 60 continuous seconds without compiler/checker activity',flush=True)
+while True:
+    busy=snapshot()
+    now=time.monotonic()
+    if busy:quiet_since=None
+    elif quiet_since is None:quiet_since=now
+    elif now-quiet_since>=60:break
+    if now-admission_started>900:raise SystemExit('bounded isolation admission exhausted; no measurements started')
+    time.sleep(.5)
+phase="measurement"
+if snapshot():raise SystemExit('compiler/checker activity at measurement admission')
+print('Quiet admission passed; starting unchanged matrix',flush=True)
+watch=threading.Thread(target=monitor);watch.start()
+try:
+    result=subprocess.run([sys.executable,str(root/'rust/benchmarks/run-hybrid.py'),'--binary',str(root/'rust/target/debug/hybrid-benchmark'),'--output',str(out)],cwd=root)
+finally:
+    stop.set();watch.join();snapshot()
+    if out.is_dir():
+        receipt={'interval_seconds':.5,'checks':checks,'quiet_seconds_required':60,'build_isolation_passed':all(not c.get('busy') and 'error' not in c for c in checks if c['phase']=='measurement')}
+        (out/'process-audit.json').write_text(json.dumps(receipt,indent=2)+'\n')
+if result.returncode:raise SystemExit(result.returncode)
+if any(c.get('busy') or 'error' in c for c in checks if c['phase']=='measurement'):raise SystemExit('concurrent build/test interference observed; timings diagnostic only')

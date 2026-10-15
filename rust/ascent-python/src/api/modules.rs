@@ -93,6 +93,17 @@ impl OwnedValue {
             .map_err(source_error)
     }
 
+    #[pyo3(signature=(*,limits=None))]
+    fn project_session(
+        &self,
+        py: Python<'_>,
+        limits: Option<PyRef<'_, super::sources::FactLimits>>,
+    ) -> PyResult<super::sources::SourceSession> {
+        let policy = limits.map(|p| p.0).unwrap_or_default();
+        py.detach(|| self.0.project_session(policy))
+            .map(super::sources::SourceSession::owned)
+            .map_err(source_error)
+    }
     #[getter]
     fn graph<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let graph = py

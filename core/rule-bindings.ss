@@ -4,6 +4,7 @@
 
 ;;; Runtime operations over admitted terms and evaluation-local environments.
 (import (only-in "ordered-call.ss" dispatch-ordered-call))
+(import :gerbil-ascent/program/execution-control)
 (export gerbil-ascent-expression-value gerbil-ascent-bind-row gerbil-ascent-head-row
         gerbil-ascent-binding-values gerbil-ascent-call-with-bindings
         gerbil-ascent-extend-pattern)
@@ -90,6 +91,7 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-bind-row terms row environment)
+  (ascent-execution-checkpoint! 1 0)
   (let loop ((patterns terms) (values row) (bindings environment))
     (match patterns
       ([] bindings)

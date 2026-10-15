@@ -5,11 +5,13 @@
         :gerbil-ascent/program/interface
         :gerbil-ascent/program/syntax
         :gerbil-ascent/program/higher-order
+        :gerbil-ascent/program/scheme-checked
         :gerbil-ascent/interface/evidence-module
         (only-in :clan/poo/object .ref))
 (export (import: :gerbil-ascent/program/interface)
         (import: :gerbil-ascent/program/syntax)
         (import: :gerbil-ascent/program/higher-order)
+        (import: :gerbil-ascent/program/scheme-checked)
         ascent-evidence-module define-evidence
         make-declared-evidence recorded-evidence-explanation)
 

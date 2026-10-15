@@ -33,11 +33,11 @@ mod object_graph;
 pub use object_graph::{GraphItem, ObjectGraph, ObjectNode, rows_graph};
 mod frozen;
 pub use frozen::FrozenValue;
-mod modules;
-pub use loaded::{RowValue, SourceObservation, SourceResult, SourceSession};
-pub use modules::{
-    Component, Dependency, Evidence, Explanation, Module, ModuleValue, ObjectInput, ValueReference,
+mod module_input;
+pub use loaded::{
+    RowValue, SourceObservation, SourceResult, SourceSession, allocate_source_identity,
 };
+pub use module_input::{Component, Dependency, ObjectInput, ValueReference};
 mod provenance;
 pub use provenance::{
     Provenance, ProvenanceEdge, ProvenanceGraph, ProvenanceLimits, ProvenanceNode,
@@ -88,3 +88,6 @@ pub use provider::read_provider_arguments;
 
 mod rows;
 pub use rows::rows_equal;
+
+#[cfg(feature = "artifacts")]
+pub mod artifacts;

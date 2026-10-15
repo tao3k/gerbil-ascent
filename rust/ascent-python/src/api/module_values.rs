@@ -151,7 +151,7 @@ pub(super) fn graph<'py>(py: Python<'py>, graph: &ObjectGraph) -> PyResult<Bound
     out.set_item("format", "native-value-graph.v1")?;
     out.set_item("root", item(py, &graph.root)?)?;
     let nodes = PyList::empty(py);
-    for (id, node) in &graph.nodes {
+    for (id, node) in graph.nodes.iter() {
         let out = match node {
             ObjectNode::Text(value) => {
                 let out = tagged(py, "string")?;

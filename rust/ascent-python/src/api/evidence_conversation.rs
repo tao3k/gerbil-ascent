@@ -27,6 +27,20 @@ impl EvidenceConversation {
     fn history(&self, py: Python<'_>) -> Py<ResponseHistory> {
         self.history.clone_ref(py)
     }
+    fn restore_history(&self, py: Python<'_>, input: &Bound<'_, PyAny>) -> PyResult<()> {
+        let restored = History::restore(&packets::read(input)?).map_err(error)?;
+        let owner = self.history.borrow(py);
+        let mut retained = owner.lock()?;
+        if retained.snapshot().list().map_err(error)?.first()
+            != restored.snapshot().list().map_err(error)?.first()
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "provider history question changed",
+            ));
+        }
+        *retained = restored;
+        Ok(())
+    }
     #[pyo3(signature=(response,*,call_id,round))]
     fn accept(
         &self,

@@ -1,0 +1,10 @@
+test_admission_unknown_fields_stale_handles_and_budget (test_engine.EngineLibrary.test_admission_unknown_fields_stale_handles_and_budget) ... ok
+test_all_1536_quint_lean_observations_through_rust (test_engine.EngineLibrary.test_all_1536_quint_lean_observations_through_rust) ... ok
+test_c_bytes_and_thread_errors_do_not_enter_scheme (test_engine.EngineLibrary.test_c_bytes_and_thread_errors_do_not_enter_scheme) ... ok
+test_general_recursive_graph_negation_and_literal_updates (test_engine.EngineLibrary.test_general_recursive_graph_negation_and_literal_updates) ... ok
+test_movie_contract_shape_repair_and_current_source_witnesses (test_engine.EngineLibrary.test_movie_contract_shape_repair_and_current_source_witnesses) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.160s
+
+OK

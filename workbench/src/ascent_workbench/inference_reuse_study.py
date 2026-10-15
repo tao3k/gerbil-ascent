@@ -158,7 +158,7 @@ def prepare(directory, library):
     shutil.copy2(library,frozen_library)
     library=frozen_library
     cases=[workload(i) for i in range(4)]
-    with Engine(library) as engine:
+    with Engine() as engine:
         for case in cases:
             for phase,source in [('cold',case['source']),('updated',updated(case))]:
                 with engine.open(program(source,oracle_contract(case))) as session:
@@ -181,7 +181,7 @@ def prepare(directory, library):
              'Withdraw sources and check against independent oracle; never return stale answer.'],
           'producerHashes':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()
             for p in [Path(__file__),Path(__file__).with_name('query_contract.py'),Path(__file__).with_name('model_study.py'),
-                      Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent/__init__.py']},
+                      Path(__file__).with_name('movie_study.py'),ROOT/'rust/ascent-python/src/api/exports.rs']},
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'priceSource':'https://api-docs.deepseek.com/quick_start/pricing/'}
     (directory/'plan.json').write_text(json.dumps(plan,indent=2)+'\n')
 
@@ -219,7 +219,7 @@ def live(directory,library,output):
         try:prediction=json.loads(raw) if rec['outcome']=='completed_ungraded' else None
         except ValueError:prediction=None
         return rec,prediction
-    with Engine(library) as engine:
+    with Engine() as engine:
         for rep in range(2):
             for case in plan['cases']:
                 session=None

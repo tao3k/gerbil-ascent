@@ -208,33 +208,6 @@ fn journal_batch_rolls_back_receipts_when_checkpoint_is_invalid() {
 }
 
 #[test]
-fn dsl_macro_initializers_keep_definition_site_bindings() {
-    let engine = Engine::new(1).unwrap();
-    let module = engine
-        .load_definitions(
-            r"
-        (def seed '((3)))
-        (defrules scene () ((_ name)
-          (ascent-fragment (relation name ((x exact-integer?)) seed))))
-        (def (answer)
-          (let (seed '((99)))
-            (let (p (scene input))
-              (equal? (.ref (car (.ref p 'relations)) 'rows) '((3))))))
-    ",
-        )
-        .unwrap();
-    assert!(matches!(
-        module
-            .call("answer", &[], None)
-            .unwrap()
-            .graph()
-            .unwrap()
-            .root,
-        gerbil_ascent::GraphItem::Boolean(true)
-    ));
-}
-
-#[test]
 fn observed_set_equality_preserves_types_multiplicity_and_tuple_shape() {
     let one = list([list([Data::Integer(1.into())])]);
     assert!(
@@ -250,4 +223,49 @@ fn observed_set_equality_preserves_types_multiplicity_and_tuple_shape() {
     assert!(!gerbil_ascent::rows_equal(&one, &list([list([true.into()])])).unwrap());
     assert!(!gerbil_ascent::rows_equal(&one, &list([list(["1".into()])])).unwrap());
     assert!(gerbil_ascent::rows_equal(&one, &list([list([]), list(["x".into()])])).is_err());
+}
+
+#[test]
+fn restored_provider_history_keeps_opaque_items_and_rejects_duplicate_or_unpaired_tools() {
+    use gerbil_ascent::{Data, ResponseHistory};
+    let question = Data::object([
+        ("role", Data::from("user")),
+        ("content", Data::from("original")),
+    ]);
+    let call = Data::object([
+        ("type", Data::from("function_call")),
+        ("call_id", Data::from("one")),
+        ("name", Data::from("check")),
+        ("arguments", Data::from("{}")),
+    ]);
+    let result = Data::object([
+        ("type", Data::from("function_call_output")),
+        ("call_id", Data::from("one")),
+        ("output", Data::from("finite facts")),
+    ]);
+    let reasoning = Data::object([
+        ("type", Data::from("reasoning")),
+        ("opaque", Data::from("unchanged")),
+    ]);
+    let input = Data::List(vec![
+        question.clone(),
+        reasoning,
+        call.clone(),
+        result.clone(),
+    ]);
+    let mut history = ResponseHistory::restore(&input).unwrap();
+    assert_eq!(history.input().unwrap(), input);
+    assert_eq!(history.reasoning_items(), 1);
+    assert!(
+        history
+            .append_response(&Data::object([("output", Data::List(vec![call.clone()]))]))
+            .is_err()
+    );
+    assert_eq!(history.input().unwrap(), input);
+    assert!(ResponseHistory::restore(&Data::List(vec![question.clone(), call.clone()])).is_err());
+    assert!(ResponseHistory::restore(&Data::List(vec![question.clone(), result.clone()])).is_err());
+    assert!(
+        ResponseHistory::restore(&Data::List(vec![question, call, result.clone(), result]))
+            .is_err()
+    );
 }

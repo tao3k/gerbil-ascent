@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander
+        (only-in :gerbil-ascent/program/scheme-checked relational-scalar? relational-operator-description)
         "../evidence/declaration.ss"
         (only-in "closed-evidence.ss" ascent-closed-evidence-scope)
         (only-in :gerbil/runtime/init gerbil-load-expander!)
@@ -19,7 +20,18 @@
           ((eq? predicate exact-integer?) "integer")
           ((eq? predicate boolean?) "boolean")
           ((eq? predicate string?) "string")
+          ((eq? predicate relational-scalar?) "scalar")
           (else "native")))
+  (def (column predicate)
+    (let (description (relational-operator-description predicate))
+      (if (and description (eq? (vector-ref description 0) 'domain))
+        (hash ("kind" "scalar")
+              ("domain" (map (lambda (v)
+                    (cond ((symbol? v) (hash ("type" "symbol") ("value" (symbol->string v))))
+                          ((char? v) (hash ("type" "graph") ("value"
+                              (hash ("root" (hash ("type" "character") ("value" (char->integer v)))) ("nodes" [])))))
+                          (else v))) (vector-ref description 1))))
+        (hash ("kind" (kind predicate))))))
   (let (sources (.ref program 'source-handles))
     (unless (andmap (lambda (b) (memq (cdr b) (map (cut .ref <> 'name) (.ref program 'relations)))) bindings)
       (error "Evidence binding does not name a native relation"))
@@ -29,7 +41,7 @@
              (hash ("name" (symbol->string (if binding (car binding) n)))
                    ("columns" (let (predicates (.ref relation 'field-predicates))
                      (if (pair? predicates)
-                       (map (lambda (p) (hash ("kind" (kind p)))) predicates)
+                       (map column predicates)
                        (make-list (.ref relation 'arity) (hash ("kind" "native"))))))
                    ("source" (and (memq n sources) #t)))))
          (.ref program 'relations))))

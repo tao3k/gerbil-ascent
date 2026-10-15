@@ -79,21 +79,6 @@ jobs:
           fi
       - name: Qualify complete standard Gerbil source tests
         run: GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
-      - name: Qualify public C ABI and Python CFFI against formal observations
-        run: |
-          sudo apt-get install -y nodejs npm python3-cffi python3-setuptools
-          just prepare-quint
-          export PATH="$PWD/.cache/ascent/tools/quint/node_modules/.bin:$PATH"
-          export PYTHONPATH="$PWD/workbench/src:$PWD/python/src"
-          export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
-          export ASCENT_ENGINE_LIBRARY="$PWD/.gerbil/lib/libascent.so"
-          gerbil env /usr/bin/python3 -m ascent_workbench.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.build --build-dir "$PWD/.gerbil" --output "$ASCENT_ENGINE_LIBRARY"
-          GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
-          /usr/bin/python3 -m ascent_workbench.supervision -- timeout 120s /usr/bin/python3 -m ascent_engine.api_build --library "$ASCENT_ENGINE_LIBRARY" --header bindings/c/ascent.h --out "$PWD/.cache/ascent/cffi-api" --cc gcc
-          export PYTHONPATH="$PWD/.cache/ascent/cffi-api:$PYTHONPATH"
-          # Runtime shutdown is terminal. Each file gets a fresh native owner;
-          # the existing 120-second deadline still covers the entire matrix.
-          /usr/bin/python3 -m ascent_workbench.native_tests
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry
@@ -104,6 +89,30 @@ jobs:
         run: just check-retained-benefit
       - name: Qualify actual native compiler source closure
         run: just check-model-source-closure
+      - name: Build and qualify Rust, PyO3 and the original Scheme semantics
+        run: |
+          sudo apt-get install -y nodejs npm python3-venv patchelf libsqlite3-dev
+          just prepare-quint
+          export PATH="$PWD/.cache/ascent/tools/quint/node_modules/.bin:$PATH"
+          export GERBIL_PATH="$PWD/.gerbil"
+          export PYTHONPATH="$PWD/workbench/src"
+          cargo test --locked --manifest-path rust/Cargo.toml --workspace --all-features -- --test-threads=1
+          cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+          python3 -m venv .cache/ascent/python-runtime
+          .cache/ascent/python-runtime/bin/pip install 'maturin>=1.9,<2'
+          gerbil env .cache/ascent/python-runtime/bin/maturin build --locked --manifest-path rust/ascent-python/Cargo.toml --auditwheel repair --out .cache/ascent/wheels
+          .cache/ascent/python-runtime/bin/pip install --no-deps .cache/ascent/wheels/*.whl
+          export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
+          .cache/ascent/python-runtime/bin/python -m ascent_workbench.native_tests
+      - name: Preserve the exact wheel and its runtime syntax closure
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .cache/ascent/wheels
+            .gerbil/lib
+            .ci/gerbil-release/v19
+          key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
   oracle:
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -221,7 +230,7 @@ jobs:
           while read -r relation; do
             curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
           done < <(jq -r '.files[].relation' "$manifest")
-          PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
+          PYTHONPATH=workbench/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
           cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
           timeout 180s .cache/ascent/native-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
@@ -238,7 +247,7 @@ jobs:
           while read -r relation; do
             curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
           done < <(jq -r '.files[].relation' "$manifest")
-          PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
+          PYTHONPATH=workbench/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
       - name: Check independent Polonius reference controls
         if: matrix.shard == 'byods-scale'
         run: cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
@@ -250,6 +259,7 @@ jobs:
           jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' docs/evidence/scheme-application-admission-20261007/polonius-reference.json > .cache/ascent/polonius-output.sha256
           sha256sum --check .cache/ascent/polonius-output.sha256
   formal:
+    needs: scheme
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -274,17 +284,31 @@ jobs:
           just check-formal
       - name: Compare Quint and Lean outputs with the Scheme conformance corpus
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
-      - name: Qualify Python byte IO and process supervision
-        env:
-          PYTHONPATH: workbench/src:python/src
-        run: |
-          python3 -m unittest discover -s python/tests -v
-          python3 -m unittest discover -s workbench/tests -v
-      - name: Verify independent Python project installation
+      - name: Restore the producer wheel and matching runtime resources
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .cache/ascent/wheels
+            .gerbil/lib
+            .ci/gerbil-release/v19
+          key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Install the exact producer wheel for independent Python consumers
         run: |
           python3 -m venv .cache/ascent/python-projects
-          .cache/ascent/python-projects/bin/python -m pip install ./python ./workbench
-          .cache/ascent/python-projects/bin/python -c 'from importlib.metadata import distribution; from ascent_engine import Engine; from ascent_workbench import formal; from pathlib import Path; library = distribution("ascent-engine"); consumer = distribution("ascent-workbench"); assert not any(str(p).startswith("ascent_workbench/") for p in library.files); assert not any(str(p).startswith("ascent_engine/") for p in consumer.files); assert any(r.startswith("ascent-engine") for r in consumer.requires); assert not any("ascent-workbench" in r for r in library.requires); assert formal.ROOT == Path.cwd()'
+          .cache/ascent/python-projects/bin/pip install --no-deps .cache/ascent/wheels/*.whl
+          .cache/ascent/python-projects/bin/pip install --no-deps ./workbench
+          source .ci/gerbil-release/v19/activate
+          printf 'GERBIL_HOME=%s\nGERBIL_PATH=%s/.gerbil\n' "$GERBIL_HOME" "$PWD" >> "$GITHUB_ENV"
+      - name: Qualify Python byte IO and process supervision
+        env:
+          PYTHONPATH: workbench/src
+        run: |
+          .cache/ascent/python-projects/bin/python -m unittest discover -s python/tests -v
+          .cache/ascent/python-projects/bin/python -m unittest discover -s workbench/tests -v
+      - name: Verify independent Python project installation
+        run: |
+          .cache/ascent/python-projects/bin/python -c 'from importlib.metadata import distribution; from ascent import Engine; from ascent_workbench import formal; from pathlib import Path; library = distribution("gerbil-ascent"); consumer = distribution("ascent-workbench"); assert not any(str(p).startswith("ascent_workbench/") for p in library.files); assert not any(str(p).startswith("ascent/") for p in consumer.files); assert any(r.startswith("gerbil-ascent") for r in consumer.requires); assert not any("ascent-workbench" in r for r in library.requires or []); assert formal.ROOT == Path.cwd()'
           .cache/ascent/python-projects/bin/ascent-workbench --help
   native-and-oracle:
     if: ${{ always() }}

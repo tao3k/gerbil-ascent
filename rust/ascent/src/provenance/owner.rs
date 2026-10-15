@@ -82,7 +82,7 @@ impl ProvenanceGraph {
         Self {
             status,
             source_identity,
-            checker_version: 2,
+            checker_version: 3,
             generation,
             query: query.into(),
             nodes: Vec::new(),

@@ -17,6 +17,8 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-canonical-set-storage-provider?))
 
+(import "execution-control.ss")
+
 (export gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
@@ -166,9 +168,9 @@
        (lambda (failure) (vector #f failure))
        (lambda () (vector #t (thunk)))))
     (def (recover! rows failure)
-      (let (restored (attempt (lambda () (restore! rows))))
+      (let (restored (attempt (lambda () (ascent-with-recovery (lambda () (restore! rows))))))
         (unless (vector-ref restored 0)
-          (restore! committed)))
+          (ascent-with-recovery (lambda () (restore! committed)))))
       (raise failure))
     (def (record-append! index source-state)
       (let (replacement (vector-ref engine-overrides index))
@@ -257,7 +259,7 @@
         (lambda () (replace-sources/idle! replacements accept-result))
         (lambda () (set! replacement-active? #f))))
     (def (replace-sources/idle! replacements accept-result)
-      (unless (and initialized? clean?)
+      (when (and initialized? (not clean?))
         (error "batch replacement requires a completed clean session"))
       (unless (list? replacements)
         (error "batch replacements must be a list" replacements))
@@ -283,10 +285,12 @@
          replacements)
         (let* ((cut (prepare-source-cut prospective))
                (candidate (source-snapshot-program cut))
-               (fresh (gerbil-ascent-make-updated-engine
-                       committed candidate committed-result
-                       engine-analysis engine-schema measure-rule-times? cut
-                       (and engine ((.ref engine '.native-publication)))))
+               (fresh (if initialized?
+                       (gerbil-ascent-make-updated-engine
+                        committed candidate committed-result
+                        engine-analysis engine-schema measure-rule-times? cut
+                        (and engine ((.ref engine '.native-publication))))
+                       (gerbil-ascent-make-engine candidate #t engine-analysis engine-schema measure-rule-times?)))
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))
@@ -295,7 +299,9 @@
           ;; Session operations are rejected for the whole transaction.
           (when (and accept-result (not (eq? #t (accept-result result))))
             (error "ASCENT replacement result was not accepted"))
+          (ascent-accept-publication!)
           (adopt-engine! fresh cut)
+          (set! initialized? #t)
           (set! pending (snapshot-copy prospective))
           (set! committed (snapshot-copy prospective))
           (set! last-result result)
@@ -305,11 +311,15 @@
           result)))
     (def (run!)
       (check-idle!)
+      (ascent-execution-checkpoint!)
       (if clean?
         last-result
         (let* ((next-pending
                 (if direct-appends? (engine-source-snapshot) pending))
-               (outcome (attempt (lambda () ((.ref engine '.run))))))
+               (outcome (attempt (lambda ()
+                  (let (result ((.ref engine '.run)))
+                    (ascent-accept-publication!)
+                    result)))))
           (unless (vector-ref outcome 0)
             (recover! committed (vector-ref outcome 1)))
           (set! initialized? #t)
@@ -323,6 +333,7 @@
           last-result)))
     (def (run-timeout! duration-nanoseconds)
       (check-idle!)
+      (ascent-execution-checkpoint!)
 
       (unless (and (exact-integer? duration-nanoseconds)
                    (>= duration-nanoseconds 0))
@@ -348,7 +359,9 @@
                               candidate #t engine-analysis engine-schema
                               measure-rule-times?)))
                        (adopt-engine! fresh cut)))
-                   ((.ref engine '.run-timeout) duration-nanoseconds)))))
+                   (let (result ((.ref engine '.run-timeout) duration-nanoseconds))
+                     (when (.ref result 'finished) (ascent-accept-publication!))
+                     result)))))
           (unless (vector-ref outcome 0)
             (recover! committed (vector-ref outcome 1)))
 

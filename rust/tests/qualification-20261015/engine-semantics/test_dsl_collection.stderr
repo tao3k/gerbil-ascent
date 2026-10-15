@@ -1,0 +1,14 @@
+test_declarative_evidence_binding_errors_do_not_infer_sources (test_dsl_collection.DSLCollectionTests.test_declarative_evidence_binding_errors_do_not_infer_sources) ... ok
+test_declarative_evidence_rules_sources_aliases_and_owned_explanation (test_dsl_collection.DSLCollectionTests.test_declarative_evidence_rules_sources_aliases_and_owned_explanation) ... ok
+test_empty_program_and_explicit_bounds (test_dsl_collection.DSLCollectionTests.test_empty_program_and_explicit_bounds) ... ok
+test_hygienic_relation_and_rule_identifiers (test_dsl_collection.DSLCollectionTests.test_hygienic_relation_and_rule_identifiers) ... ok
+test_include_effects_and_declaration_order (test_dsl_collection.DSLCollectionTests.test_include_effects_and_declaration_order) ... ok
+test_macro_scope_default_storage_and_rule_order (test_dsl_collection.DSLCollectionTests.test_macro_scope_default_storage_and_rule_order) ... ok
+test_malformed_declarations_still_rejected (test_dsl_collection.DSLCollectionTests.test_malformed_declarations_still_rejected) ... ok
+test_public_typed_higher_order_dsl_without_downstream_import (test_dsl_collection.DSLCollectionTests.test_public_typed_higher_order_dsl_without_downstream_import) ... ok
+test_retained_callable_reads_mutable_export_and_keeps_scope_isolation (test_dsl_collection.DSLCollectionTests.test_retained_callable_reads_mutable_export_and_keeps_scope_isolation) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.073s
+
+OK

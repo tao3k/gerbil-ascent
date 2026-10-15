@@ -24,23 +24,6 @@ pub(super) fn read(text: &str) -> Result<Datum> {
 pub(super) fn invalid(detail: &str) -> Error {
     Error::InvalidProgram(detail.into())
 }
-pub(crate) fn definitions(text: &str) -> Result<Vec<Datum>> {
-    if text.len() > 65_536 {
-        return Err(invalid("definition source byte bound"));
-    }
-    let mut reader = Reader(text.chars().peekable(), true);
-    let mut forms = Vec::new();
-    loop {
-        reader.space();
-        if reader.0.peek().is_none() {
-            return Ok(forms);
-        }
-        if forms.len() >= 256 {
-            return Err(invalid("definition count bound"));
-        }
-        forms.push(reader.datum(0)?);
-    }
-}
 struct Reader<'a>(Peekable<Chars<'a>>, bool);
 impl Reader<'_> {
     fn space(&mut self) {

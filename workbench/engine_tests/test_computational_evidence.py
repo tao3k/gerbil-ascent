@@ -82,9 +82,9 @@ with Engine() as engine:
         assert 'support' not in stale['observations'][0]
         assert expand_observation(compact_observation(stale)) == stale
         try:
-            engine.request({'operation':'computational-evidence','action':'stats','owner':a.owner,'eval':'42'})
+            a.stats(eval='42')
             raise AssertionError('extra request fields admitted')
-        except EngineError: pass
+        except TypeError: pass
         assert a.stats()['proof-builds'] == 1
     try: a.stats(); raise AssertionError('closed owner used')
     except ValueError: pass

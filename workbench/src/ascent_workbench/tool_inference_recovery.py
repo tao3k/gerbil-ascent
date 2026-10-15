@@ -16,9 +16,7 @@ from .movie_study import provider_key
 
 
 def continuation_history(request,terminal):
-    history=ResponseHistory('')
-    history.items=copy.deepcopy(request['input'])
-    history.seen={x['call_id'] for x in history.items if x.get('type')=='function_call'}
+    history=ResponseHistory.restore(request['input'])
     calls=history.append_response(terminal)
     for call in calls:
         history.append_result(call['call_id'],{'error':'Incomplete response: tool not executed.'})

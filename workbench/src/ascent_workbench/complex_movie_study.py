@@ -90,8 +90,8 @@ def materialize(engine, source):
         result=session.run()
         if not result['complete']: raise RuntimeError('Scheme views incomplete')
         # Verify retained completed evaluation, without recomputing answers.
-        retained=session.run(0)
-        if retained != result: raise RuntimeError('retained view differs')
+        retained=session.run()
+        if retained['relations'] != result['relations']: raise RuntimeError('retained view differs')
         return result['relations']
 
 
@@ -203,11 +203,11 @@ def prepare(directory, library, stratum='shared-actor',compiler_context='facts')
           'compilerContext':compiler_context,
           'producerHashes':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in
               [Path(__file__),Path(__file__).with_name('query_contract.py'),Path(__file__).with_name('model_study.py'),
-               Path(__file__).with_name('movie_study.py'),ROOT/'python/src/ascent/__init__.py']},
+               Path(__file__).with_name('movie_study.py'),ROOT/'rust/ascent-python/src/api/exports.rs']},
           'primaryMetrics':['exact answer sets','source withdrawal freshness','total provider usage'],
           'reuseBoundary':'Whole-source identity; exact materialized typed views; conservative full invalidation on change',
           'order':[],'gold':{},'offline':[]}
-    with Engine(directory/library.name) as engine:
+    with Engine() as engine:
         cache={}
         for i,case in enumerate(plan['cases']):
             s=source_for(source,case);key=identity(s)
@@ -255,7 +255,7 @@ def live(directory, output):
     receipt={'schema':'ascent.complex-movie-result.v1','planSha256':hashlib.sha256((directory/'plan.json').read_bytes()).hexdigest(),
              'purpose':plan['purpose'],'records':[],'savingsConclusion':None}
     cache={};startup=time.monotonic()
-    with Engine(lib) as engine:
+    with Engine() as engine:
         receipt['engineInitializationSeconds']=time.monotonic()-startup
         for i,item in enumerate(plan['order']):
             case=next(c for c in plan['cases'] if c['name']==item['case']);s=source_for(plan['source'],case)
@@ -329,7 +329,7 @@ def qualify(corpus, library, output):
         p['queries']=['eligible','coactor']+[f'answer{m}' for m in range(6)]
         return p
     started=time.monotonic()
-    with Engine(library) as engine:
+    with Engine() as engine:
         first=make_source(0)
         with engine.open(combined(first,False)) as fresh, engine.open(combined(first,True,{'eligible':[],'coactor':[]})) as reused:
             for sid in range(512):

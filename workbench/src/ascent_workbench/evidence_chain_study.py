@@ -45,8 +45,8 @@ def prepare(library,directory):
     directory.mkdir(parents=True,exist_ok=False);shutil.copy2(library,directory/library.name)
     paths=[Path(__file__),Path(workload.__file__),Path(s.__file__),
            Path(__file__).with_name('model_study.py'),Path(__file__).with_name('inference_effort.py'),Path(__file__).with_name('movie_study.py'),
-           s.ROOT/'python/src/ascent/__init__.py',s.ROOT/'python/src/ascent/derivations.py',
-           s.ROOT/'python/src/ascent/evidence.py',s.ROOT/'python/src/ascent/conversation.py']
+           s.ROOT/'rust/ascent-python/src/api/exports.rs',s.ROOT/'rust/ascent/src/derivations.rs',
+           s.ROOT/'rust/ascent-python/src/api/evidence.rs',s.ROOT/'rust/ascent/src/conversation.rs']
     plan={'schema':'ascent.evidence-chain-study.v1','corpusKind':'synthetic-mechanism-regression','arms':list(ARMS),'repetitions':2,'maxTurns':8,'maxOutputTokens':131072,'workers':2,
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),
           'cases':[workload.workload(i,20271011+i*1009) for i in range(4)],
@@ -318,20 +318,24 @@ def shared_freeze(library, directory, *, search_tasks=None):
     directory.mkdir(parents=True,exist_ok=False)
     from ascent.evidence import ComputationalEvidence
     import ascent.evidence as evidence_module
-    root=s.ROOT.resolve(); library=library.resolve(); dst=directory/library.name;shutil.copy2(library,dst)
+    from importlib.util import find_spec
+    from .native_tests import qualification_inputs, compiled_inputs
+    root=s.ROOT.resolve()
+    library=Path(find_spec('ascent._core').origin).resolve()
+    dst=directory/library.name;shutil.copy2(library,dst)
     # Use the installed API extension when available, rather than falling back silently.
     with Engine() as engine:
         qualification=shared_qualify(engine)
         if search_tasks is not None:qualification['branchTaskChecks']=branch_qualify(engine,search_tasks)
     (directory/'qualification.json').write_text(json.dumps(qualification,indent=2)+'\n')
-    native_receipt=json.loads(library.with_suffix(library.suffix+'.json').read_text())
-    binding=dict(native_receipt['schemeSourceSha256'])
+    native_receipt=compiled_inputs()
+    binding=dict(native_receipt['sourceInputs'])
     assert 'candidate/evidence-store.ss' in binding and 'interface/engine-api.ss' in binding
     binding['gerbil.pkg']=hashlib.sha256((root/'gerbil.pkg').read_bytes()).hexdigest()
     names=['bindings/c/runtime.c','bindings/c/ascent.h','python/pyproject.toml','build.ss',
-           'python/src/ascent/__init__.py','python/src/ascent/evidence.py',
-           'python/src/ascent/conversation.py','python/src/ascent/build.py',
-           'python/src/ascent/api_build.py','workbench/src/ascent_workbench/evidence_chain_study.py',
+           'rust/ascent-python/src/api/exports.rs','rust/ascent-python/src/api/evidence.rs',
+           'rust/ascent/src/conversation.rs','rust/ascent/src/artifacts.rs',
+           'rust/ascent-python/src/api/artifacts.rs','workbench/src/ascent_workbench/evidence_chain_study.py',
            'workbench/src/ascent_workbench/model_study.py','workbench/src/ascent_workbench/movie_study.py',
            'workbench/src/ascent_workbench/inference_reuse_study.py','workbench/src/ascent_workbench/complex_movie_study.py',
            'workbench/src/ascent_workbench/evidence_chain_workload.py','workbench/src/ascent_workbench/query_contract.py',
@@ -339,27 +343,20 @@ def shared_freeze(library, directory, *, search_tasks=None):
            'packages/proofs/lean/ProofDag.lean','docs/research/agent-inference/factor-reuse-2026-study.org']
     import sys
     names += [str(Path(m.__file__).resolve().relative_to(root)) for n,m in sys.modules.items()
-              if n.startswith(('ascent','ascent_workbench')) and getattr(m,'__file__',None)]
+              if n.startswith(('ascent','ascent_workbench')) and getattr(m,'__file__',None)
+              and Path(m.__file__).resolve().is_relative_to(root)]
     if (root/'.research-source.json').exists():names.append('.research-source.json')
-    names += ['workbench/engine_tests/test_computational_evidence.py','python/tests/test_shared_premise.py',
+    names += ['workbench/engine_tests/test_computational_evidence.py','workbench/tests/test_shared_premise.py',
               'python/RESEARCH.md','python/uv.lock','packages/proofs/quint/package.json','packages/proofs/quint/package-lock.json',
               'packages/proofs/lean/lean-toolchain']
     if search_tasks is not None:names += ['t/research/reproduce-clean.sh','t/research/output-check-fixture.json']
     for name in names: binding[name]=hashlib.sha256((root/name).read_bytes()).hexdigest()
-    assert native_receipt['runtimeSourceSha256']==binding['bindings/c/runtime.c']
-    assert native_receipt['headerSha256']==binding['bindings/c/ascent.h']
     for name,h in binding.items():
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==h,'source drift '+name
         target=directory/'inputs'/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(root/name,target)
-    api=Path(os.environ['ASCENT_CFFI_RECEIPT']);api_receipt=json.loads(api.read_text())
-    assert api_receipt['producerReceiptSha256'] and api_receipt['producerInputs']['header']==binding['bindings/c/ascent.h']
-    # API bundling changes the dylib install name, so its hash is separately bound.
-    assert api_receipt['producerInputs']['library']==hashlib.sha256(library.read_bytes()).hexdigest()
-    import _ascent_cffi
-    assert hashlib.sha256(Path(_ascent_cffi.__file__).read_bytes()).hexdigest()==api_receipt['extensionSha256']
-    shutil.copytree(api.parent,directory/'api-runtime')
-    shutil.copy2(api,directory/'cffi-api-receipt.json')
-    shutil.copy2(library.with_suffix(library.suffix+'.json'),directory/'native-build-receipt.json')
+    runtime_inputs=qualification_inputs([])
+    (directory/'pyo3-runtime-receipt.json').write_text(json.dumps(runtime_inputs,indent=2)+'\n')
+    (directory/'native-build-receipt.json').write_text(json.dumps(native_receipt,indent=2)+'\n')
     metadata={'schema':'ascent.shared-premise-diagnostic.v1','tasks':shared_tasks(),'candidate':SHARED_CANDIDATE,
         'question':SHARED_QUESTION,'tool':SHARED_TOOL,'arms':['baseline','facts','scheme'],
         'orders':[['baseline','facts','scheme'],['scheme','facts','baseline']],
@@ -378,7 +375,7 @@ def shared_freeze(library, directory, *, search_tasks=None):
         'papers':[{'id':'BYODS','url':'https://kmicinski.com/assets/byods.pdf','role':'concretization/delta semantics; separate from model efficacy'},
                   {'id':'DatalogBench-v1','url':'https://arxiv.org/html/2609.37233v1','role':'held-out execution and oracle mutation tests'},
                   {'id':'MiniCache-v1','url':'https://arxiv.org/html/2607.20507v1','role':'shared computation with different request variables'}],
-        'formalBoundary':'SharedPremiseReuse.qnt models finite fixture truth and source-generation admission. ProofDag.lean proves specified ordered positive-DAG soundness under premises, not CFFI correctness or model behavior. VerifiedCandidate assumes independent grader validity. Native correspondence receipts are separate.'}
+        'formalBoundary':'SharedPremiseReuse.qnt models finite fixture truth and source-generation admission. ProofDag.lean proves specified ordered positive-DAG soundness under premises, not FFI correctness or model behavior. VerifiedCandidate assumes independent grader validity. Native correspondence receipts are separate.'}
     (directory/'plan.json').write_text(json.dumps(metadata,indent=2)+'\n')
     (directory/'plan.sha256').write_text(hashlib.sha256((directory/'plan.json').read_bytes()).hexdigest()+'\n')
     print('SHARED_PREMISE_FROZEN', (directory/'plan.sha256').read_text().strip(),flush=True)
@@ -396,10 +393,9 @@ def shared_check(directory, _output=None):
         assert (s.ROOT/path).resolve().is_relative_to(s.ROOT.resolve())
         assert hashlib.sha256((directory/'inputs'/path).read_bytes()).hexdigest()==h,'snapshot drift '+name
         assert hashlib.sha256((s.ROOT/path).read_bytes()).hexdigest()==h,'loaded checkout drift '+name
-    import _ascent_cffi
-    api=json.loads((directory/'cffi-api-receipt.json').read_text())
-    assert hashlib.sha256(Path(_ascent_cffi.__file__).read_bytes()).hexdigest()==api['extensionSha256'],'loaded API extension drift'
-    assert hashlib.sha256((Path(_ascent_cffi.__file__).parent/api['library']).read_bytes()).hexdigest()==api['librarySha256'],'loaded API library drift'
+    from .native_tests import qualification_inputs
+    runtime=json.loads((directory/'pyo3-runtime-receipt.json').read_text())
+    assert qualification_inputs([])==runtime,'loaded PyO3 runtime or syntax resources drift'
     return plan
 
 
@@ -459,9 +455,9 @@ def shared_live(directory, output):
                                 context['task']={'edges':task['edges'],'needColumns':['id','a','b','c','d'],
                                     'rules':plan['candidate'][3:6], 'query':['ready','?f'],
                                     'semantics':'Positive rules with conjunctive bodies; path is directed reachability over edge; ready(id) requires both paths in its need row.'}
-                                history=ResponseHistory(json.dumps(context,separators=(',',':')));new_items=history.items
+                                history=ResponseHistory(json.dumps(context,separators=(',',':')));new_items=history.snapshot()
                             else:
-                                history.append_feedback(context);new_items=[history.items[-1]]
+                                history.append_feedback(context);new_items=[history.snapshot()[-1]]
                             req={'model':plan['model'],'input':history.input(),'tools':[plan['tool']],'tool_choice':'auto',
                                  'reasoning':{'effort':plan['reasoningEffort']},'stream':True,'store':False,
                                  'text':{'format':{'type':'json_schema','name':'permitted_transitions','schema':plan['tool']['parameters']}},
@@ -490,7 +486,7 @@ def shared_live(directory, output):
                             for call in calls:history.append_result(call['call_id'],{'recorded':True})
                             prior_usage=record['grossTokens']
                             # A paired result is extra input too, not part of the previous usage.
-                            if calls:prior_usage+=sum(len(json.dumps(x,ensure_ascii=False).encode()) for x in history.items[-len(calls):])
+                            if calls:prior_usage+=sum(len(json.dumps(x,ensure_ascii=False).encode()) for x in history.snapshot()[-len(calls):])
                             (folder/'receipt.json').write_text(json.dumps(record,indent=2)+'\n');save()
                             print('SHARED_TURN',case,arm,turn,row['grossTokens'],'correct',record['correct'],flush=True)
                         row['stop']=row['stop'] or 'schedule_complete'
@@ -653,7 +649,7 @@ def shared_report(directory, output):
     (output/'report.md').write_text('\n'.join(lines)+'\n')
     doc=s.ROOT/'docs/research/agent-inference/fact-reuse-results/shared-premise-diagnostic';doc.mkdir(parents=True,exist_ok=False)
     for name in ['report.json','report.md','ledger.json','annotation-ledger.json']:shutil.copy2(output/name,doc/name)
-    for name in ['plan.json','plan.sha256','qualification.json','cffi-api-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
+    for name in ['plan.json','plan.sha256','qualification.json','pyo3-runtime-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
     with tarfile.open(doc/'raw.tar.gz','w:gz') as archive:
         archive.add(directory,arcname='frozen');archive.add(output,arcname='run')
     (doc/'integrity.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in doc.iterdir() if p.is_file()},indent=2)+'\n')
@@ -1220,7 +1216,7 @@ def branch_live(directory, output):
                                             if f['status']=='verified' and f['atom'] not in supplied:supplied.append(f['atom'])
                                         history.append_result(c['call_id'],packet);packets.append(packet)
                                     rec['nativePacket']={'returnedToolPackets':packets,'nativeStats':store.stats()}
-                                    prior_usage=rec['grossTokens'];new_results=history.items[-len(calls):]
+                                    prior_usage=rec['grossTokens'];new_results=history.snapshot()[-len(calls):]
                                 else:
                                     if calls:
                                         assert len(calls)==1 and calls[0]['name']=='submit_selection','mixed or unknown tool calls'
@@ -1308,7 +1304,7 @@ def branch_report(directory, output):
     (output/'report.md').write_text('\n'.join(lines)+'\n')
     doc=s.ROOT/'docs/research/agent-inference/fact-reuse-results'/plan.get('artifactDirectory','sibling-search');doc.mkdir(parents=True,exist_ok=False)
     for name in ['report.json','report.md','ledger.json','annotation-ledger.json']:shutil.copy2(output/name,doc/name)
-    for name in ['plan.json','plan.sha256','qualification.json','cffi-api-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
+    for name in ['plan.json','plan.sha256','qualification.json','pyo3-runtime-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
     with tarfile.open(doc/'raw.tar.gz','w:gz') as archive:
         archive.add(directory,arcname='frozen');archive.add(output,arcname='run')
     (doc/'integrity.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in doc.iterdir() if p.is_file()},indent=2)+'\n')

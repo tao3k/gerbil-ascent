@@ -468,49 +468,6 @@ fn load(sources: &[&str], general: bool) -> Result<Program> {
     }
     finish(program)
 }
-pub(crate) enum NativePart {
-    Declaration(Datum),
-    Included(Program),
-}
-pub(crate) fn native_parts(parts: Vec<NativePart>) -> Result<Program> {
-    let mut program = Program::default();
-    let mut names = BTreeMap::new();
-    let mut seen = HashSet::new();
-    for part in parts {
-        match part {
-            NativePart::Declaration(form) => append(
-                &mut program,
-                &mut names,
-                &mut seen,
-                &Datum::List(vec![Datum::Atom("ascent".into()), form]),
-                true,
-            )?,
-            NativePart::Included(included) => merge_native(&mut program, &mut names, included)?,
-        }
-    }
-    if program.relations.is_empty() && program.rules.is_empty() {
-        return Ok(program);
-    }
-    finish(program)
-}
-fn merge_native(
-    program: &mut Program,
-    names: &mut BTreeMap<String, Vec<Type>>,
-    included: Program,
-) -> Result<()> {
-    for relation in included.relations {
-        if names
-            .insert(relation.name.clone(), relation.columns.clone())
-            .is_some()
-        {
-            return Err(invalid("duplicate included relation declaration"));
-        }
-        program.relations.push(relation);
-    }
-    program.rules.extend(included.rules);
-    program.fact_limits = program.fact_limits.tighten(included.fact_limits)?;
-    Ok(())
-}
 fn finish(mut program: Program) -> Result<Program> {
     let heads: BTreeSet<_> = program
         .rules

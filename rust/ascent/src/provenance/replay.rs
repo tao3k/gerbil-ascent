@@ -23,6 +23,7 @@ struct Replay<'a> {
     nodes: Vec<ProvenanceNode>,
     by_row: BTreeMap<(String, Row), usize>,
     relations: BTreeMap<String, Vec<usize>>,
+    initial_occurrences: BTreeSet<String>,
     edges: BTreeSet<ProvenanceEdge>,
 }
 impl Replay<'_> {
@@ -65,20 +66,42 @@ impl Replay<'_> {
     }
     fn seed(&mut self, program: &Program, result: &SourceResult) -> Result<()> {
         for relation in &program.relations {
+            if relation.initial_occurrences {
+                self.initial_occurrences.insert(relation.name.clone());
+            }
             self.relations.insert(relation.name.clone(), Vec::new());
-            let rows = if relation.source {
+            let rows = if relation.source && !relation.initial_occurrences {
                 &result.relations()?[&relation.name]
             } else {
                 &relation.rows
             };
+            self.seed_rows(relation, rows)?;
+        }
+        Ok(())
+    }
+    fn seed_rows(&mut self, relation: &crate::Relation, rows: &[Row]) -> Result<()> {
+        if relation.initial_occurrences {
+            for row in rows.iter().rev() {
+                let (id, fresh) = self.node(&relation.name, row.clone(), relation.source)?;
+                if !fresh {
+                    self.relations.get_mut(&relation.name).unwrap().push(id);
+                }
+                self.edge(ProvenanceEdge {
+                    output: id,
+                    rule: None,
+                    inputs: vec![],
+                    witnesses: vec![],
+                })?;
+            }
+        } else {
             let rows = self.unique_rows(rows)?;
             for row in rows {
                 let (id, _) = self.node(&relation.name, row, relation.source)?;
                 self.edge(ProvenanceEdge {
                     output: id,
                     rule: None,
-                    inputs: Vec::new(),
-                    witnesses: Vec::new(),
+                    inputs: vec![],
+                    witnesses: vec![],
                 })?;
             }
         }
@@ -264,7 +287,9 @@ impl Replay<'_> {
                 }
             }
         }
-        if values.iter().any(crate::numbers::Number::is_inexact) {
+        if !self.initial_occurrences.contains(&atom.relation)
+            && values.iter().any(crate::numbers::Number::is_inexact)
+        {
             let mut grouped = rows.into_iter().zip(values).collect::<Vec<_>>();
             grouped.sort_unstable_by(|a, b| self.nodes[a.0].row.cmp(&self.nodes[b.0].row));
             for _ in 0..grouped.len() {
@@ -298,11 +323,17 @@ impl Replay<'_> {
     }
     fn same_closure(&self, result: &SourceResult) -> Result<bool> {
         for (name, rows) in result.relations()? {
-            let expected: BTreeSet<_> = rows.iter().cloned().collect();
-            let actual: BTreeSet<_> = self.relations[name]
+            let mut expected: Vec<_> = rows.clone();
+            let mut actual: Vec<_> = self.relations[name]
                 .iter()
                 .map(|id| self.nodes[*id].row.clone())
                 .collect();
+            expected.sort();
+            actual.sort();
+            if !self.initial_occurrences.contains(name) {
+                expected.dedup();
+                actual.dedup();
+            }
             if expected != actual {
                 return Ok(false);
             }
@@ -391,6 +422,7 @@ pub(super) fn generate(
         nodes: Vec::new(),
         by_row: BTreeMap::new(),
         relations: BTreeMap::new(),
+        initial_occurrences: BTreeSet::new(),
         edges: BTreeSet::new(),
     };
     let replayed = (|| {
@@ -422,7 +454,7 @@ pub(super) fn generate(
     Ok(ProvenanceGraph {
         status,
         source_identity,
-        checker_version: 2,
+        checker_version: 3,
         generation,
         query: query.into(),
         nodes: replay.nodes,

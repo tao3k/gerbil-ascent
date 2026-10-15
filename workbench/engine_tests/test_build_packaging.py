@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ascent.build import build, sha, transfer_resource
+from ascent.build import build, sha, transfer_resource, prepare
 
 
 class NativeArtifactPackaging(unittest.TestCase):
@@ -103,8 +103,9 @@ class NativeArtifactPackaging(unittest.TestCase):
         directory.mkdir()
         target = directory / source.name
         source.write_bytes(b"compiled generation")
-        with patch("ascent.build.os.link", side_effect=OSError(errno.EXDEV, "cross volume")):
-            self.assertEqual("copied", transfer_resource(source, target))
+        # The Rust unit test injects CrossesDevices at the actual link syscall.
+        # The language binding checks explicit copied-publication ownership.
+        self.assertEqual("copied", transfer_resource(source, target, copy=True))
         source.write_bytes(b"changed source")
         self.assertEqual(b"compiled generation", target.read_bytes())
 
@@ -113,10 +114,11 @@ class NativeArtifactPackaging(unittest.TestCase):
         source.write_bytes(b"compiled generation")
         directory = self.root / "published"
         directory.mkdir()
-        with patch("ascent.build.os.link", side_effect=OSError(errno.EIO, "I/O failure")):
-            with self.assertRaises(OSError):
-                transfer_resource(source, directory / source.name)
-        self.assertFalse((directory / source.name).exists())
+        target = directory / source.name
+        target.mkdir()  # A real failing publication destination, without Python I/O hooks.
+        with self.assertRaises(OSError): transfer_resource(source, target)
+        self.assertTrue(target.is_dir())
+        self.assertEqual(list(target.iterdir()), [])
 
     def test_generation_cannot_be_renamed_even_with_identical_bytes(self):
         source = self.root / "phase~1.o2"
@@ -130,18 +132,10 @@ class NativeArtifactPackaging(unittest.TestCase):
         compiled.write_bytes(b"original generation")
         self.receipt["syntaxResources"][compiled.name] = {"path": str(compiled), "sha256": sha(compiled)}
         self.publish_receipt()
-        import shutil
-        copy = shutil.copyfile
-
-        def mutate_after_staging(source, target, **kwargs):
-            result = copy(source, target, **kwargs)
-            if Path(source).resolve() == self.library.resolve():
-                compiled.write_bytes(b"illegal in-place modification")
-            return result
-
-        with patch("ascent.build.shutil.copyfile", side_effect=mutate_after_staging):
-            with self.assertRaisesRegex(ValueError, "resource changed before publication"):
-                build(self.root, self.output, self.native)
+        staged = prepare(self.root, self.output, self.native)
+        compiled.write_bytes(b"illegal in-place modification")
+        with self.assertRaisesRegex(ValueError, "resource changed before publication"):
+            staged.publish()
         self.assertFalse(self.output.exists())
 
     def test_repackaging_removes_unrecorded_contiguous_generations(self):

@@ -10,8 +10,15 @@
   gerbil-ascent-guard gerbil-ascent-rule gerbil-ascent-fragment gerbil-ascent-program)
   (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
   (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
-(export ascent-closed-dsl-parts ascent-closed-dsl-forms? ascent-closed-dsl-core-name?)
+(export ascent-closed-dsl-parts ascent-closed-dsl-forms? ascent-closed-dsl-core-name? ascent-closed-guard-description)
 
+(def +closed-guards+ (make-hash-table test: eq? weak-keys: #t))
+(def (copy-expression value)
+  (cond ((pair? value) (cons (copy-expression (car value)) (copy-expression (cdr value))))
+        ((string? value) (string-copy value)) (else value)))
+(def (ascent-closed-guard-description procedure)
+  (let (description (hash-get +closed-guards+ procedure))
+    (and description (copy-expression description))))
 (def operators
   (list (cons '< <) (cons '<= <=) (cons '> >) (cons '>= >=) (cons '= =) (cons 'equal? equal?)
         (cons '+ +) (cons '- -) (cons '* *) (cons 'not not)
@@ -121,8 +128,10 @@
   (match clause
     (['not atom] (gerbil-ascent-negation (car atom) (map lower-term (cdr atom))))
     (['if inputs expression]
-     (let (evaluate (compile-expression expression (map cons inputs (iota (length inputs)))))
-       (gerbil-ascent-guard inputs (make-guard-procedure evaluate (length inputs)))))
+     (let* ((evaluate (compile-expression expression (map cons inputs (iota (length inputs)))))
+            (procedure (make-guard-procedure evaluate (length inputs))))
+       (hash-put! +closed-guards+ procedure (copy-expression (list inputs expression)))
+       (gerbil-ascent-guard inputs procedure)))
     (_ (lower-atom clause))))
 (def (predicate name)
   (case name

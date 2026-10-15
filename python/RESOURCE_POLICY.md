@@ -4,12 +4,12 @@ ASCENT is a native Library for Agentic AI. Its ordinary Program constructor,
 `ascent` form, operator compiler, operator reference evaluation and positive
 insertion plans now default to unlimited fact/row counts (`+inf.0` in Scheme).
 This is not a large replacement integer. Existing explicit finite DSL bounds
-are retained. Infinity is reported as `"unlimited"`, never non-standard JSON.
+are retained. Infinity is reported as `"unlimited"`, as a typed policy value.
 
 Python callers can impose native ceilings without parsing or rewriting DSL:
 
 ```python
-from ascent_engine import Engine, FactLimits
+from ascent import Engine, FactLimits
 
 source = """
 (define-evidence (make-events)
@@ -21,7 +21,6 @@ source = """
 engine = Engine()  # No request-byte ceiling by default.
 with engine.evidence(source, "make-events", trusted=True) as session:
     assert session.fact_limits["input"] == "unlimited"
-    session.run(queries=[])  # Complete initial session before replacing sources.
     session.replace({"event": [[1], [2]]})
     result = session.run(queries=["event"])
 

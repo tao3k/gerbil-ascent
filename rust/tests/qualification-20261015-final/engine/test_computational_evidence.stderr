@@ -1,0 +1,7 @@
+test_caller_owned_counts_preserve_complete_source_and_finite_rejection (test_computational_evidence.ComputationalEvidenceIntegration.test_caller_owned_counts_preserve_complete_source_and_finite_rejection) ... ok
+test_native_store_through_selected_public_binding (test_computational_evidence.ComputationalEvidenceIntegration.test_native_store_through_selected_public_binding) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.748s
+
+OK

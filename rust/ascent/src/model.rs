@@ -14,6 +14,22 @@ pub enum Value {
     Text(Arc<str>),
     Symbol(Arc<str>),
 }
+impl Value {
+    /// Construct an inexact number using the engine's canonical numeric encoding.
+    /// # Errors
+    /// Rejects invalid frozen numeric observations.
+    pub fn inexact(value: f64) -> crate::Result<Self> {
+        crate::numbers::Number::Inexact(value).value()
+    }
+    /// Read an owned Scheme number without evaluating Scheme syntax.
+    /// # Errors
+    /// Rejects malformed and unsupported numeric encodings.
+    pub fn number(text: &str) -> crate::Result<Self> {
+        crate::numbers::parse_number(text)
+            .ok_or_else(|| crate::Error::Evaluation("invalid native number".into()))?
+            .value()
+    }
+}
 impl From<i64> for Value {
     fn from(value: i64) -> Self {
         Self::Integer(value.into())
@@ -141,6 +157,8 @@ pub struct Rule {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Relation {
     pub(crate) auxiliary: bool,
+    /// Preserve original Scheme initial/source occurrences while derived insertions stay sets.
+    pub initial_occurrences: bool,
     pub lattice: Option<crate::LatticeJoin>,
     pub name: String,
     pub columns: Vec<Type>,
@@ -152,6 +170,7 @@ impl Relation {
     pub fn new(name: impl Into<String>, columns: Vec<Type>, source: bool) -> Self {
         Self {
             auxiliary: false,
+            initial_occurrences: false,
             lattice: None,
             name: name.into(),
             domains: vec![None; columns.len()],

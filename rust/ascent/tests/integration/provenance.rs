@@ -169,7 +169,7 @@ fn stratified_negation_scalar_and_grouped_reductions_have_checked_witnesses() {
                 )
                 .unwrap();
             let graph = proof.graph().unwrap();
-            assert_eq!(graph.checker_version, 2);
+            assert_eq!(graph.checker_version, 3);
             assert_eq!(graph.status, ProvenanceStatus::Complete);
             assert!(
                 proof

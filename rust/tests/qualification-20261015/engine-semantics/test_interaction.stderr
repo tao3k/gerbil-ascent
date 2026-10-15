@@ -1,0 +1,13 @@
+test_checkpoint_rejects_unknown_negation_and_unobserved_calls_atomically (test_interaction.InteractionIntegration.test_checkpoint_rejects_unknown_negation_and_unobserved_calls_atomically) ... ok
+test_conversation_pairs_first_round_tools_and_preserves_reasoning (test_interaction.InteractionIntegration.test_conversation_pairs_first_round_tools_and_preserves_reasoning) ... ok
+test_fresh_control_does_not_admit_retained_components (test_interaction.InteractionIntegration.test_fresh_control_does_not_admit_retained_components) ... ok
+test_full_candidate_batch_does_not_open_one_session_per_branch (test_interaction.InteractionIntegration.test_full_candidate_batch_does_not_open_one_session_per_branch) ... ok
+test_local_checks_preserve_unknown_and_source_bound_reuse (test_interaction.InteractionIntegration.test_local_checks_preserve_unknown_and_source_bound_reuse) ... ok
+test_model_declared_path_requires_every_condition_and_current_support (test_interaction.InteractionIntegration.test_model_declared_path_requires_every_condition_and_current_support) ... ok
+test_reuse_and_extension_recheck_the_same_path_without_retyping (test_interaction.InteractionIntegration.test_reuse_and_extension_recheck_the_same_path_without_retyping) ... ok
+test_unknown_and_mismatched_requests_do_not_become_proofs (test_interaction.InteractionIntegration.test_unknown_and_mismatched_requests_do_not_become_proofs) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.008s
+
+OK

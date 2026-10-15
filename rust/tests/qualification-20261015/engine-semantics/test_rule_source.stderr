@@ -1,0 +1,11 @@
+test_checked_comparison_and_literal (test_rule_source.NativeRuleSourceTests.test_checked_comparison_and_literal) ... ok
+test_fragment_merge_has_one_relation_contract (test_rule_source.NativeRuleSourceTests.test_fragment_merge_has_one_relation_contract) ... ok
+test_native_semantic_admission_rejects_bad_arity_binding_and_strata (test_rule_source.NativeRuleSourceTests.test_native_semantic_admission_rejects_bad_arity_binding_and_strata) ... ok
+test_reader_evaluation_sharing_and_host_code_are_rejected (test_rule_source.NativeRuleSourceTests.test_reader_evaluation_sharing_and_host_code_are_rejected) ... ok
+test_recursion_negation_and_python_only_consumer (test_rule_source.NativeRuleSourceTests.test_recursion_negation_and_python_only_consumer) ... ok
+test_source_text_budgets_and_unsupported_terms_fail_closed (test_rule_source.NativeRuleSourceTests.test_source_text_budgets_and_unsupported_terms_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.093s
+
+OK

@@ -41,7 +41,7 @@ def recover(plan_dir,primary_dir,output):
                               'providerCalls':0,'additionalPeakEstimateUsd':0,'episodes':[]}
     def save():(output/'result.json').write_text(json.dumps(receipt,indent=2)+'\n')
     save()
-    with Engine(library) as engine:
+    with Engine() as engine:
         for episode in failed:
             case=next(c for c in plan['cases'] if c['name']==episode['case']);source=case['source']
             assisted=episode['arm']=='scheme-evidence'

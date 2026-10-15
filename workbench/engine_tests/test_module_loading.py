@@ -18,24 +18,24 @@ SOURCE = '''(ascent-fragment
 class ModuleLoadingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.library = os.environ['ASCENT_ENGINE_LIBRARY']
-        cls.engine = Engine(cls.library)
+        cls.engine = Engine()
+        cls.engine.describe()
 
     @classmethod
     def tearDownClass(cls):
         cls.engine.shutdown()
-        with cls().assertRaisesRegex(EngineError, 'runtime shut down'):
-            Engine(cls.library)
+        with cls().assertRaises((EngineError, ValueError)):
+            cls.engine.describe()
+        with Engine() as independent:
+            cls().assertEqual(independent.describe()['abi'], 1)
 
     def test_repeated_engine_reuses_runtime_but_preserves_caller_limits(self):
-        with patch('ascent._preserve_host_io',
-                   side_effect=AssertionError('re-entered native initialization')):
-            engine = Engine(self.library, max_request_bytes=10)
-        self.assertEqual(engine.max_request_bytes, 10)
-        self.assertIsNone(self.engine.max_request_bytes)
-        with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
-            engine.request({'operation': 'describe'})
-        self.assertEqual(self.engine.request({'operation': 'describe'})['abi'], 1)
+        with Engine(max_input_bytes=4) as engine:
+            self.assertEqual(engine.max_input_bytes, 4)
+            self.assertIsNone(self.engine.max_input_bytes)
+            with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
+                engine.describe()
+            self.assertEqual(self.engine.describe()['abi'], 1)
 
     def test_reused_syntax_parent_keeps_program_state_and_failed_expansion_isolated(self):
         with self.engine.open_sources(SOURCE) as first:

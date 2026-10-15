@@ -1,0 +1,12 @@
+test_bound_axes_match_full_closure_order (test_uf_weighted.UFWeightedTests.test_bound_axes_match_full_closure_order) ... ok
+test_complete_points_keep_grouped_owners_and_repeated_tiny_reads (test_uf_weighted.UFWeightedTests.test_complete_points_keep_grouped_owners_and_repeated_tiny_reads) ... ok
+test_grouped_composite_queries_keep_owner_and_repeat_constraints (test_uf_weighted.UFWeightedTests.test_grouped_composite_queries_keep_owner_and_repeat_constraints) ... ok
+test_grouped_weighted_cut_keeps_both_scopes (test_uf_weighted.UFWeightedTests.test_grouped_weighted_cut_keeps_both_scopes) ... ok
+test_indexed_membership_and_complete_delta_keep_frozen_owner_truth (test_uf_weighted.UFWeightedTests.test_indexed_membership_and_complete_delta_keep_frozen_owner_truth) ... ok
+test_repeated_queries_keep_partial_owner_intersections_and_tiny_cuts (test_uf_weighted.UFWeightedTests.test_repeated_queries_keep_partial_owner_intersections_and_tiny_cuts) ... ok
+test_weighted_cut_survives_extension_and_retirement (test_uf_weighted.UFWeightedTests.test_weighted_cut_survives_extension_and_retirement) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 5.820s
+
+OK

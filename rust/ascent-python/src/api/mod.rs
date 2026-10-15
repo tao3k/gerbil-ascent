@@ -39,3 +39,5 @@ mod datalog;
 
 mod evidence_conversation;
 mod interaction;
+
+mod artifacts;

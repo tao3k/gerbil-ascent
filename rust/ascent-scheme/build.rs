@@ -11,17 +11,6 @@ fn main() {
         .canonicalize()
         .unwrap();
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    for directory in [
-        "interface",
-        "evidence",
-        "program",
-        "core",
-        "table",
-        "candidate",
-        "applications",
-    ] {
-        println!("cargo:rerun-if-changed={}", root.join(directory).display());
-    }
     for key in [
         "GERBIL_HOME",
         "GERBIL_GXI",
@@ -58,7 +47,7 @@ fn main() {
     )
     .unwrap();
     let expression = format!(
-        "(import :std/make :gerbil/compiler {:?}) (make [\"interface/evidence-module\" \"interface/engine-api\" \"interface/hybrid\"] srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?})",
+        "(import :std/make :gerbil/compiler {:?}) (make [\"program/execution-control\" \"core/rule-bindings\" \"program/evaluate\" \"program/session\" \"program/scheme-checked\" \"program/higher-order\" \"interface/value-graph\" \"interface/closed-source\" \"interface/evidence-module\" \"evidence/interface\" \"interface/engine-api\" \"interface/hybrid\"] srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?})",
         workspace.join("scheme/program-build.ss").to_str().unwrap(),
         root.to_str().unwrap(),
         root.join(".gerbil/lib").to_str().unwrap(),
@@ -87,11 +76,23 @@ fn main() {
     for directive in receipt.cargo_directives {
         match directive.kind {
             CargoDirectiveKind::RustcLinkSearch => {
-                println!("cargo:rustc-link-search={}", directive.value)
+                println!("cargo:rustc-link-search={}", directive.value);
             }
             CargoDirectiveKind::RustcLinkLib => {
-                println!("cargo:rustc-link-lib={}", directive.value)
+                println!("cargo:rustc-link-lib={}", directive.value);
             }
         }
     }
+    run_native_process(
+        gerbil_command("gxi")
+            .arg(root.join("interface/build-identity.ss"))
+            .arg(&root)
+            .arg(&out)
+            .arg(root.join(".gerbil/lib"))
+            .arg(gsc.parent().unwrap().parent().unwrap().join("lib"))
+            .current_dir(&root),
+        "record compiled source and runtime identities",
+        true,
+    )
+    .unwrap();
 }

@@ -14,6 +14,23 @@ def cases(path):
     return [f"{path.stem}.{cls.name}.{fn.name}" for cls in tree.body if isinstance(cls,ast.ClassDef)
             for fn in cls.body if isinstance(fn,(ast.FunctionDef,ast.AsyncFunctionDef)) and fn.name.startswith("test_")]
 
+def parse_outcomes(stderr):
+    """Warnings may separate unittest's test header from its final outcome."""
+    observed = {}
+    pending = None
+    outcome = r"(?:ok|FAIL|ERROR|skipped[^\n]*)"
+    for line in stderr.splitlines():
+        header = re.match(r"^test_\w+ \(([^)]+)\) \.\.\. (.*)$", line)
+        if header:
+            pending, tail = header.groups()
+            if re.fullmatch(outcome, tail):
+                observed[pending] = tail
+                pending = None
+        elif pending is not None and re.fullmatch(outcome, line):
+            observed[pending] = line
+            pending = None
+    return observed
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--python",type=Path,required=True)
@@ -41,7 +58,7 @@ def main():
             if isinstance(stderr,bytes):stderr=stderr.decode(errors="replace")
         (args.output/f"{path.stem}.stdout").write_text(stdout)
         (args.output/f"{path.stem}.stderr").write_text(stderr)
-        observed={name:outcome for name,outcome in re.findall(r"^test_\w+ \(([^)]+)\) \.\.\. (ok|FAIL|ERROR|skipped[^\n]*)",stderr,re.MULTILINE)}
+        observed=parse_outcomes(stderr)
         declared=cases(path)
         outcomes={name:observed.get(name,"unresolved-import-or-setup" if status!=0 else "unresolved-not-executed") for name in declared}
         receipt=dict(file=str(path.relative_to(root)),source_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),

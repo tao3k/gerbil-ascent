@@ -29,7 +29,36 @@ impl ProvenanceLimits {
     }
 }
 #[pyclass(name = "Provenance", frozen)]
-pub(super) struct Provenance(pub(super) engine::Provenance);
+pub(super) struct Provenance(pub(super) Proof);
+pub(super) enum Proof {
+    Core(engine::Provenance),
+    Scheme(ascent_scheme::NativeProvenance),
+}
+impl Proof {
+    fn graph(&self) -> engine::Result<std::sync::Arc<engine::ProvenanceGraph>> {
+        match self {
+            Self::Core(p) => p.graph(),
+            Self::Scheme(p) => p.graph(),
+        }
+    }
+    fn verify(
+        &self,
+        g: &engine::ProvenanceGraph,
+        l: &engine::ProvenanceLimits,
+        c: &engine::Cancellation,
+    ) -> engine::Result<bool> {
+        match self {
+            Self::Core(p) => p.verify(g, l, c),
+            Self::Scheme(p) => p.verify(g, l, c),
+        }
+    }
+    fn close(&self) {
+        match self {
+            Self::Core(p) => p.close(),
+            Self::Scheme(p) => p.close(),
+        }
+    }
+}
 #[pymethods]
 impl Provenance {
     #[getter]

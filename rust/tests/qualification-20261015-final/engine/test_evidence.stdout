@@ -1,0 +1,5 @@
+EVIDENCE-LOOP-OK mentor-chain
+EVIDENCE-LOOP-OK witness-local-exclusion
+EVIDENCE-LOOP-OK anti-existential
+EVIDENCE-LOOP-OK recursive-mentor
+EVIDENCE-SUBGOAL-COMPOSITION-OK

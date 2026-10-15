@@ -1,0 +1,13 @@
+test_authority_type_and_budget_rejections_preserve_generation (test_rule_sources.RuleSourceTests.test_authority_type_and_budget_rejections_preserve_generation) ... ok
+test_executable_and_malformed_sources_have_no_fallback (test_rule_sources.RuleSourceTests.test_executable_and_malformed_sources_have_no_fallback) ... ok
+test_full_projection_execution_and_withdrawal (test_rule_sources.RuleSourceTests.test_full_projection_execution_and_withdrawal) ... ok
+test_general_dsl_guards_keep_projection_gap_and_native_answers (test_rule_sources.RuleSourceTests.test_general_dsl_guards_keep_projection_gap_and_native_answers) ... ok
+test_general_dsl_multisource_composition_retains_recursive_closure (test_rule_sources.RuleSourceTests.test_general_dsl_multisource_composition_retains_recursive_closure) ... ok
+test_general_dsl_short_circuit_preserves_scheme_truth_and_boolean_admission (test_rule_sources.RuleSourceTests.test_general_dsl_short_circuit_preserves_scheme_truth_and_boolean_admission) ... ok
+test_general_dsl_wide_guard_retains_upstream_macro_language (test_rule_sources.RuleSourceTests.test_general_dsl_wide_guard_retains_upstream_macro_language) ... ok
+test_recursive_multisource_matches_existing_native_catalog_execution (test_rule_sources.RuleSourceTests.test_recursive_multisource_matches_existing_native_catalog_execution) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.094s
+
+OK

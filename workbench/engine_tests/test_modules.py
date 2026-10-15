@@ -23,7 +23,7 @@ class ModuleTests(unittest.TestCase):
                   {'type': 'u8vector', 'value': [0, 255]},
                   {'type': 'number', 'value': '1/3'}]
         with self.engine.open_module(MODULE, 'make-values', values) as session:
-            self.assertEqual(session.projection['status'], 'unsupported')
+            self.assertEqual(session.projection['status'], 'supported')
             first = session.run(queries=['output'])
             self.assertTrue(first['complete'])
             self.assertEqual(first['scalarProjection'], 'partial')

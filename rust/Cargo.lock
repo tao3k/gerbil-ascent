@@ -112,6 +112,7 @@ dependencies = [
  "asp-rust",
  "gerbil-ascent",
  "pyo3",
+ "serde_json",
 ]
 
 [[package]]
@@ -124,6 +125,7 @@ dependencies = [
  "gerbil-scheme-aot-build",
  "gerbil-scheme-sys",
  "num-bigint",
+ "num-rational",
  "tokio",
 ]
 
@@ -578,6 +580,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "smallvec",
+ "tempfile",
 ]
 
 [[package]]

@@ -132,9 +132,9 @@ def run(library,output,live,cases=None):
           'sharedPrefix':'One actual initial call is retained in both paired task trajectories and charged to BOTH policies; experimental expenditure counts it once.',
           'intervention':'Completed intermediate relations only, after a real failed initial answer or before the second query. No final answer in packets.',
           'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/trajectory.ss',
-             'python/src/ascent/derivations.py','python/src/ascent/trajectory.py']},
+             'rust/ascent/src/derivations.rs','rust/ascent-python/src/api/trajectory.rs']},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'outputSchemaEnforced':False}
-    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine(library);records=[];calls_audit=[];key=provider_key() if live else None
+    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine();records=[];calls_audit=[];key=provider_key() if live else None
     def invoke(history,folder,stem):
         request={'model':plan['model'],'input':history.input(),'reasoning':{'effort':'high'},'max_output_tokens':131072,'stream':True,'store':False}
         (folder/f'{stem}-request.json').write_text(json.dumps(request,indent=2))

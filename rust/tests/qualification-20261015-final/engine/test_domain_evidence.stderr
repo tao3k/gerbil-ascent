@@ -1,0 +1,6 @@
+test_exact_domain_constraints_retention_and_invalidation (test_domain_evidence.DomainEvidenceIntegration.test_exact_domain_constraints_retention_and_invalidation) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+OK

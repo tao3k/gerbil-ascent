@@ -18,7 +18,6 @@ ROOT = Path.cwd().resolve()
 RUNTIME = ROOT / '.cache/ascent/candidate-interaction/runtime'
 PREPARED = ROOT / '.cache/ascent/evidence-interaction/runtime/lib'
 CANONICAL = ROOT / '.cache/ascent/candidate-interaction/canonical-runtime/lib'
-sys.path.insert(0, str(ROOT / 'python/src'))
 from ascent_workbench.model_study import provider
 from ascent_workbench.movie_study import provider_key
 

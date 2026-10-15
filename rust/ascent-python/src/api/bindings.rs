@@ -22,15 +22,24 @@ pub(super) struct Engine(pub(super) ascent_scheme::Engine);
 #[pymethods]
 impl Engine {
     #[new]
-    #[pyo3(signature = (workers=None, *, max_source_scopes=None, max_input_bytes=None))]
+    #[pyo3(signature = (workers=None, *, max_source_scopes=None, max_input_bytes=None, backend=None))]
     fn new(
         workers: Option<usize>,
         max_source_scopes: Option<&Bound<'_, PyAny>>,
         max_input_bytes: Option<&Bound<'_, PyAny>>,
+        backend: Option<&str>,
     ) -> PyResult<Self> {
+        let backend = backend
+            .map(|v| match v {
+                "scheme" => Ok(ascent_scheme::Backend::Scheme),
+                "rayon" => Ok(ascent_scheme::Backend::Rayon),
+                _ => Err(PyValueError::new_err("backend must be scheme or rayon")),
+            })
+            .transpose()?;
         let ceiling = super::types::ceiling(max_source_scopes)?;
         let bytes = super::types::ceiling(max_input_bytes)?;
         ascent_scheme::Engine::new(workers.unwrap_or(1))
+            .map(|engine| backend.map_or(engine.clone(), |backend| engine.with_backend(backend)))
             .and_then(|engine| engine.with_source_scope_limit(ceiling))
             .and_then(|engine| engine.with_input_limit(bytes))
             .map(Self)
@@ -107,7 +116,7 @@ impl Engine {
             .map_err(super::types::source_error)?;
         match loaded {
             ascent_scheme::Source::Rayon(session) => {
-                Py::new(py, sources::SourceSession::owned(session)).map(Py::into_any)
+                Py::new(py, sources::SourceSession::owned(*session)).map(Py::into_any)
             }
             ascent_scheme::Source::Scheme(session) => {
                 Py::new(py, super::evidence::EvidenceSession(session)).map(Py::into_any)
@@ -128,7 +137,7 @@ impl Engine {
             .map_err(super::types::source_error)?;
         match loaded {
             ascent_scheme::Source::Rayon(session) => {
-                Py::new(py, sources::SourceSession::owned(session)).map(Py::into_any)
+                Py::new(py, sources::SourceSession::owned(*session)).map(Py::into_any)
             }
             ascent_scheme::Source::Scheme(session) => {
                 Py::new(py, super::evidence::EvidenceSession(session)).map(Py::into_any)
@@ -247,19 +256,20 @@ impl Engine {
     fn closed(&self) -> bool {
         self.0.is_closed()
     }
-    fn shutdown(&self) {
-        self.0.shutdown();
+    fn shutdown(&self, py: Python<'_>) {
+        py.detach(|| self.0.shutdown());
     }
     fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
         slf
     }
     fn __exit__(
         &self,
+        py: Python<'_>,
         _ty: &Bound<'_, PyAny>,
         _value: &Bound<'_, PyAny>,
         _traceback: &Bound<'_, PyAny>,
     ) {
-        self.shutdown();
+        self.shutdown(py);
     }
     #[getter]
     fn workers(&self) -> usize {
@@ -300,27 +310,31 @@ impl Session {
         let timeout = Duration::try_from_secs_f64(timeout_seconds)
             .map_err(|_| PyValueError::new_err("invalid timeout"))?;
         let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
-        let limits = engine::Limits {
+        let mut limits = engine::Limits {
             timeout,
             max_facts,
             max_states,
         };
+        let deadline = super::types::admission_deadline(timeout).map_err(error)?;
         py.detach(|| {
-            self.0
-                .lock()
-                .map_err(|_| PyRuntimeError::new_err("session lock poisoned"))?
+            let mut session =
+                super::types::lock_before(&self.0, deadline, &cancellation).map_err(error)?;
+            limits.timeout = super::types::remaining(deadline).map_err(error)?;
+            session
                 .run(&limits, &cancellation)
                 .map(Snapshot)
                 .map_err(error)
         })
     }
-    fn last_completed(&self) -> PyResult<Option<Snapshot>> {
-        Ok(self
-            .0
-            .lock()
-            .map_err(|_| PyRuntimeError::new_err("session lock poisoned"))?
-            .last_completed()
-            .map(Snapshot))
+    fn last_completed(&self, py: Python<'_>) -> PyResult<Option<Snapshot>> {
+        py.detach(|| {
+            Ok(self
+                .0
+                .lock()
+                .map_err(|_| PyRuntimeError::new_err("session lock poisoned"))?
+                .last_completed()
+                .map(Snapshot))
+        })
     }
 }
 #[pyclass(name = "Snapshot", frozen)]

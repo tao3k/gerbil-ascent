@@ -29,39 +29,30 @@ def inventory(directory: Path) -> list[tuple[str, Path]]:
     files = sorted(directory.glob("test_*.py"))
     if not files or any(not (directory / name).is_file() for name in API_FILES):
         raise ValueError("incomplete native consumer inventory")
-    return [("abi", path) for path in files] + [("api", directory / name) for name in API_FILES]
+    return [("pyo3", path) for path in files]
+
+
+def compiled_inputs():
+    from ascent.build import runtime_identity
+    return runtime_identity()
 
 
 def qualification_inputs(files: list[Path]) -> dict[str, str]:
-    """Bind consumers to actual public artifacts and their producer sources."""
-    library = Path(os.environ["ASCENT_ENGINE_LIBRARY"]).resolve(strict=True)
-    sidecar = library.with_suffix(library.suffix + ".json")
-    producer = json.loads(sidecar.read_text())
-    source_root = Path(producer["sourceRoot"])
-    expected = {str(library): producer["librarySha256"]}
-    for name, sha in producer["sourceInputs"].items():
-        expected[str(source_root / name)] = sha
-    for name, asset in producer["syntaxResources"].items():
-        expected[str(library.parent / "syntax" / name)] = asset["sha256"] if isinstance(asset, dict) else asset
-    paths = [*files, sidecar, ROOT / "justfile", ROOT / ".github/workflows/ci.yml"]
-    for folder in (ROOT / "workbench/src/ascent_workbench", ROOT / "python/src/ascent"):
-        paths.extend(folder.glob("*.py"))
-    extension = importlib.util.find_spec("_ascent_cffi")
-    if extension is None or not extension.origin:
-        raise ValueError("prepared public API extension is required")
-    api_directory = Path(extension.origin).parent
-    api_sidecar = api_directory / "receipt.json"
-    api = json.loads(api_sidecar.read_text())
-    if api["producerBuild"]["sourceInputs"] != producer["sourceInputs"]:
-        raise ValueError("ABI and API producer sources differ")
-    expected[str(Path(extension.origin))] = api["extensionSha256"]
-    expected[str(api_directory / api["library"])] = api["librarySha256"]
-    paths.append(api_sidecar)
+    """Bind actual installed PyO3 bytes, build-frozen inputs and runtime syntax resources."""
+    receipt=compiled_inputs()
+    if receipt['schema']!='ascent.rust-build.v1': raise ValueError('compiled Rust identity required')
+    expected={str(ROOT/name):sha for name,sha in receipt['sourceInputs'].items()}
+    expected.update(receipt['runtimeInputs'])
+    extension=importlib.util.find_spec('ascent._core')
+    if extension is None or not extension.origin: raise ValueError('installed PyO3 extension required')
+    paths=[*files,Path(extension.origin),ROOT/'justfile',ROOT/'.github/workflows/ci.yml']
+    paths.extend((ROOT/'workbench/src/ascent_workbench').glob('*.py'))
+    paths.extend((ROOT/'python/src/ascent').glob('*.py'))
     for path in paths:
-        expected[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
-    for name, sha in expected.items():
-        if hashlib.sha256(Path(name).read_bytes()).hexdigest() != sha:
-            raise ValueError("qualification input drift: " + name)
+        expected[str(path.resolve())]=hashlib.sha256(path.read_bytes()).hexdigest()
+    for name,sha in expected.items():
+        if not Path(name).is_file() or hashlib.sha256(Path(name).read_bytes()).hexdigest()!=sha:
+            raise ValueError('qualification input drift: '+name)
     return expected
 
 
@@ -70,7 +61,7 @@ def main() -> int:
     deadline = started + 120  # The original whole-matrix deadline.
     directory = ROOT / "workbench/engine_tests"
     tasks = inventory(directory)
-    files = [path for backend, path in tasks if backend == "abi"]
+    files = [path for _, path in tasks]
     output = ROOT / ".cache/ascent/native-consumers" / uuid.uuid4().hex
     output.mkdir(parents=True)
     inputs = qualification_inputs(files)
@@ -90,7 +81,7 @@ def main() -> int:
             # independent processes; no VM is reused across files or backends.
             child = subprocess.Popen([sys.executable, "-u", "-m", "unittest", "discover",
                 "-s", str(directory), "-p", path.name, "-v"],
-                cwd=ROOT, env={**os.environ, "ASCENT_ENGINE_BACKEND": backend},
+                cwd=ROOT, env=os.environ.copy(),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
             selector = selectors.DefaultSelector()
             selector.register(child.stdout, selectors.EVENT_READ)
@@ -142,7 +133,7 @@ def main() -> int:
                if not Path(name).is_file() or hashlib.sha256(Path(name).read_bytes()).hexdigest() != sha]
     passed = (len(outcomes) == len(tasks) and not any(outcomes.values()) and not changed
               and error is None and time.monotonic() <= deadline)
-    (output / "receipt.json").write_text(json.dumps({"expectedGroups": len(tasks), "outcomes": outcomes,
+    (output / "receipt.json").write_text(json.dumps({"schema": "ascent.pyo3-consumers.v1", "expectedGroups": len(tasks), "outcomes": outcomes,
         "seconds": time.monotonic() - started, "budgetSeconds": 120, "inputs": inputs,
         "changedInputs": changed, "error": error, "passed": passed}, indent=2) + "\n")
     return 0 if passed else 1

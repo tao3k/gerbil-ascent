@@ -1,0 +1,10 @@
+test_compact_singletons_with_weighted_target_and_retained_export (test_uf_materialization.UFMaterializationTests.test_compact_singletons_with_weighted_target_and_retained_export) ... ok
+test_compacted_indexed_right_axis_and_repeated_query_constraints (test_uf_materialization.UFMaterializationTests.test_compacted_indexed_right_axis_and_repeated_query_constraints) ... ok
+test_dense_complete_rows (test_uf_materialization.UFMaterializationTests.test_dense_complete_rows) ... ok
+test_grouped_complete_rows (test_uf_materialization.UFMaterializationTests.test_grouped_complete_rows) ... ok
+test_sparse_cut_survives_full_scc_retirement (test_uf_materialization.UFMaterializationTests.test_sparse_cut_survives_full_scc_retirement) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 7.481s
+
+OK

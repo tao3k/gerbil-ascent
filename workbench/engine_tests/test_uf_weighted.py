@@ -158,7 +158,7 @@ class UFWeightedTests(unittest.TestCase):
                         pass
                 with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as cut:
                     held = cut.reference()
-                    with self.assertRaisesRegex(EngineError, 'view column outside row'):
+                    with self.assertRaisesRegex(EngineError, 'invalid ASCENT UF view column'):
                         with owner.call('gerbil-ascent-view-rows', held, [1, 1, 3], [3, 4, 2],
                                         module=oracle.VIEW):
                             pass

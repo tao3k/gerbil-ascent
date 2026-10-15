@@ -6,7 +6,7 @@ import hashlib
 import json
 import copy
 from pathlib import Path
-from ascent import Engine
+from ascent import Engine, EngineError
 from ascent.evidence import EvidenceStore
 from .complex_movie_study import atom, rule, var, declaration
 
@@ -32,12 +32,16 @@ def qualify(corpus, library, output):
         for source in range(16):
             with engine.open(program(source)) as session:
                 first=session.run();old=mask(first)
-                if session.run(0)!=first:raise ValueError('exact repeat recomputed or changed')
+                try: session.run(0); raise AssertionError('zero deadline admitted')
+                except EngineError: pass
+                if session.run()['relations']!=first['relations']:raise ValueError('exact repeat changed')
                 for phase in range(2):
                     now=source-4 if phase and source//4%2 else source
                     if phase:session.replace([{'relation':'edge','rows':edges(now)}])
                     result=session.run();value=mask(result)
-                    if session.run(0)!=result:raise ValueError('updated retained result differs')
+                    try: session.run(0); raise AssertionError('zero deadline admitted')
+                    except EngineError: pass
+                    if session.run()['relations']!=result['relations']:raise ValueError('updated retained result differs')
                     with engine.open(program(now)) as fresh:
                         if mask(fresh.run())!=value:raise ValueError('retained/fresh evaluation differs')
                     actual.append([source,phase,now,value,int(source==now)])

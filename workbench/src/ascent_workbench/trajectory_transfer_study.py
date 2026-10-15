@@ -61,7 +61,7 @@ def run(library,output,live):
              [__file__,'workbench/src/ascent_workbench/trajectory_study.py','program/trajectory.ss','program/evidence-dag.ss']},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest()}
     (output/'plan.json').write_text(json.dumps(plan,indent=2))
-    engine=Engine(library);records=[];key=provider_key() if live else None
+    engine=Engine();records=[];key=provider_key() if live else None
     try:
         for index,case in enumerate(cases):
             with EvidenceChain(engine,case['sources']) as preflight:

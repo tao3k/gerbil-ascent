@@ -168,19 +168,23 @@ impl SourceSession {
 impl SourceSession {
     #[getter]
     fn descriptors<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
-        descriptors(py, self.lock()?.descriptors())
+        let values = py.detach(|| self.lock().map(|session| session.descriptors().to_vec()))?;
+        descriptors(py, &values)
     }
     #[getter]
     fn projection<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        super::catalog::projection(py, self.lock()?.program())
+        let program = py.detach(|| self.lock().map(|session| session.program().clone()))?;
+        super::catalog::projection(py, &program)
     }
     #[getter]
     fn queries<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
-        PyTuple::new(py, self.lock()?.queries())
+        let queries = py.detach(|| self.lock().map(|session| session.queries().to_vec()))?;
+        PyTuple::new(py, queries)
     }
     #[getter]
     fn fact_limits<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        policy(py, self.lock()?.fact_limits(), true)
+        let limits = py.detach(|| self.lock().map(|session| session.fact_limits()))?;
+        policy(py, limits, true)
     }
     #[pyo3(signature=(sources,*,timeout_nanoseconds=1_000_000_000,cancellation=None))]
     fn replace<'py>(
@@ -190,12 +194,21 @@ impl SourceSession {
         timeout_nanoseconds: u64,
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<Bound<'py, PyDict>> {
-        let limits = runtime_limits(timeout_nanoseconds)?;
-        let descriptors = self.lock()?.descriptors().to_vec();
-        let updates = replacements(sources, &descriptors)?;
+        let mut limits = runtime_limits(timeout_nanoseconds)?;
+        let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
         let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let descriptors = py
+            .detach(|| {
+                super::types::lock_before(&self.0, deadline, &cancellation)
+                    .map(|session| session.descriptors().to_vec())
+            })
+            .map_err(source_error)?;
+        let updates = replacements(sources, &descriptors)?;
         let generation = py.detach(|| {
-            self.lock()?
+            let mut session = super::types::lock_before(&self.0, deadline, &cancellation)
+                .map_err(source_error)?;
+            limits.timeout = super::types::remaining(deadline).map_err(source_error)?;
+            session
                 .replace(updates, &limits, &cancellation)
                 .map_err(source_error)
         })?;
@@ -212,22 +225,28 @@ impl SourceSession {
         queries: Option<Vec<String>>,
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<Bound<'py, PyDict>> {
-        let limits = runtime_limits(timeout_nanoseconds)?;
+        let mut limits = runtime_limits(timeout_nanoseconds)?;
+        let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
         let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
         let result = py.detach(|| {
-            self.lock()?
+            let mut session = super::types::lock_before(&self.0, deadline, &cancellation)
+                .map_err(source_error)?;
+            limits.timeout = super::types::remaining(deadline).map_err(source_error)?;
+            session
                 .run(queries.as_deref(), &limits, &cancellation)
                 .map_err(source_error)
         })?;
         drop(queries);
         receipt(py, result)
     }
-    fn result(&self, receipt: &Bound<'_, PyAny>) -> PyResult<ResultOwner> {
+    fn result(&self, py: Python<'_>, receipt: &Bound<'_, PyAny>) -> PyResult<ResultOwner> {
         let handle = super::types::result_handle(&receipt.get_item("resultHandle")?)?;
-        self.lock()?
-            .result(handle)
-            .map(|result| ResultOwner { result, handle })
-            .map_err(source_error)
+        py.detach(|| {
+            self.lock()?
+                .result(handle)
+                .map(|result| ResultOwner { result, handle })
+                .map_err(source_error)
+        })
     }
     #[pyo3(signature=(receipt,relation,*,limits=None,cancellation=None))]
     fn provenance(
@@ -239,29 +258,36 @@ impl SourceSession {
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<super::provenance::Provenance> {
         let handle = super::types::result_handle(&receipt.get_item("resultHandle")?)?;
-        let limits = limits.map(|l| l.0.clone()).unwrap_or_default();
+        let mut limits = limits.map(|l| l.0.clone()).unwrap_or_default();
+        let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
         let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
         py.detach(|| {
-            self.lock()?
+            let session =
+                super::types::lock_before(&self.0, deadline, &cancel).map_err(source_error)?;
+            limits.timeout = super::types::remaining(deadline).map_err(source_error)?;
+            session
                 .provenance(handle, relation, &limits, &cancel)
-                .map(super::provenance::Provenance)
+                .map(|p| super::provenance::Provenance(super::provenance::Proof::Core(p)))
                 .map_err(source_error)
         })
     }
-    fn close(&self) -> PyResult<()> {
-        self.lock()?.close();
-        Ok(())
+    fn close(&self, py: Python<'_>) -> PyResult<()> {
+        py.detach(|| {
+            self.lock()?.close();
+            Ok(())
+        })
     }
     fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
         slf
     }
     fn __exit__(
         &self,
+        py: Python<'_>,
         _ty: &Bound<'_, PyAny>,
         _value: &Bound<'_, PyAny>,
         _traceback: &Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        self.close()
+        self.close(py)
     }
 }
 #[pyclass(name = "Result", frozen)]
@@ -284,9 +310,14 @@ impl ResultOwner {
     }
 
     #[new]
-    fn new(session: PyRef<'_, SourceSession>, handle: &Bound<'_, PyAny>) -> PyResult<Self> {
+    fn new(
+        py: Python<'_>,
+        session: PyRef<'_, SourceSession>,
+        handle: &Bound<'_, PyAny>,
+    ) -> PyResult<Self> {
         let handle = super::types::result_handle(handle)?;
-        let result = session.lock()?.result(handle).map_err(source_error)?;
+        let source: &SourceSession = &session;
+        let result = py.detach(|| source.lock()?.result(handle).map_err(source_error))?;
         drop(session);
         Ok(Self { result, handle })
     }

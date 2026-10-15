@@ -115,15 +115,14 @@ class FactLimitTests(unittest.TestCase):
         with self.engine.dsl(SOURCE, trusted=True) as owner:
             with owner.call('echo-value', data) as value:
                 self.assertEqual(decode(value.graph), data)
-        limited = Engine(library=os.environ['ASCENT_ENGINE_LIBRARY'], max_request_bytes=128) if self.engine.backend == 'abi' else Engine(max_request_bytes=128)
-        with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
-            limited.request({'operation': 'compare', 'actual': [['long-value' * 20]], 'expected': []})
-        # Initialization does not exempt a caller-supplied internal operation.
-        # Do not shorten the installed path to hide this policy boundary.
-        with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
-            limited.request({'operation': 'configure-syntax', 'path': 'x' * 256})
-        self.assertEqual(limited.max_request_bytes, 128)
-        self.assertEqual(self.engine.request({'operation': 'describe'})['maxInputBytes'], 'unlimited')
+        with Engine(max_input_bytes=128) as limited:
+            with self.assertRaisesRegex(EngineError, 'caller input byte bound'):
+                limited.dsl('(def (echo x) x)' + ' ' * 256, trusted=True)
+            # Rejection before VM entry must leave the shared VM usable.
+            self.assertEqual(limited.describe()['abi'], 1)
+            self.assertEqual(limited.max_input_bytes, 128)
+        self.assertIsNone(self.engine.max_input_bytes)
+
 
 
 if __name__ == '__main__': unittest.main()

@@ -19,6 +19,7 @@ rayon = ["gerbil-ascent/rayon"]
 gerbil-scheme-aot-build.workspace = true
 
 [dev-dependencies]
+num-rational.workspace = true
 asp-rust.workspace = true
 
 [lints.rust]

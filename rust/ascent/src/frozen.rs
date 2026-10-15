@@ -31,7 +31,7 @@ struct Node {
 }
 /// Frozen structural equality ignores sharing, while observations retain original sharing.
 /// Tables, uninterned symbols and opaque objects retain owner-local identity.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct FrozenValue {
     owner: u64,
     observation: u64,
@@ -39,6 +39,17 @@ pub struct FrozenValue {
     graph: Arc<ObjectGraph>,
     hash: u64,
     numeric: Option<Arc<crate::numbers::Number>>,
+}
+impl std::fmt::Debug for FrozenValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FrozenValue")
+            .field("owner", &self.owner)
+            .field("observation", &self.observation)
+            .field("root", &self.graph.root)
+            .field("canonical_nodes", &self.key.len())
+            .field("digest", &self.hash)
+            .finish_non_exhaustive()
+    }
 }
 impl PartialEq for FrozenValue {
     fn eq(&self, other: &Self) -> bool {
@@ -62,7 +73,25 @@ impl Hash for FrozenValue {
     }
 }
 impl FrozenValue {
-    pub(crate) fn new(owner: u64, observation: u64, graph: ObjectGraph) -> Result<Self> {
+    /// Freeze a validated observation and compute its cycle-safe structural key.
+    /// Transport reachable immutable data, retaining sharing within one native call.
+    #[must_use]
+    pub fn native_input(&self) -> crate::Data {
+        crate::Data::object([
+            ("type", crate::Data::from("graph")),
+            ("value", self.graph.to_native()),
+            (
+                "namespace",
+                crate::Data::List(vec![
+                    crate::Data::from(self.owner),
+                    crate::Data::from(self.observation),
+                ]),
+            ),
+        ])
+    }
+    /// # Errors
+    /// Rejects dangling references and graphs exceeding structural key limits.
+    pub fn new(owner: u64, observation: u64, graph: ObjectGraph) -> Result<Self> {
         let mut builder = Builder {
             owner,
             nodes: Vec::new(),
@@ -107,14 +136,6 @@ impl FrozenValue {
             key: key.into(),
             graph: Arc::new(graph),
         })
-    }
-    pub(crate) fn detached_scalar(&self) -> bool {
-        self.owner == 0
-            && self.graph.nodes.is_empty()
-            && matches!(
-                self.graph.root,
-                GraphItem::Number(_) | GraphItem::Character(_)
-            )
     }
     pub(crate) fn is_scalar(&self) -> bool {
         match &self.graph.root {
@@ -170,7 +191,7 @@ impl Builder {
             GraphItem::Void => Label::Void,
             GraphItem::Null => Label::Null,
             GraphItem::Boolean(v) => Label::Boolean(*v),
-            GraphItem::Number(v) => Label::Number(v.clone()),
+            GraphItem::Number(v) => Label::Number(crate::numbers::canonical_text(v)),
             GraphItem::Character(v) => Label::Character(*v),
             GraphItem::Reference(_) => unreachable!(),
         };

@@ -13,6 +13,16 @@ use std::{
 };
 
 static NEXT_SOURCE: AtomicU64 = AtomicU64::new(1);
+/// Allocate one process-unique source identity across VM and owned-data sessions.
+/// # Errors
+/// Rejects exhaustion instead of recycling a provenance authority.
+pub fn allocate_source_identity() -> Result<u64> {
+    NEXT_SOURCE
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            value.checked_add(1)
+        })
+        .map_err(|_| Error::InvalidUpdate("source identities exhausted".into()))
+}
 static NEXT_RESULT: AtomicU64 = AtomicU64::new(1);
 
 /// Execution receipt; results stay in Rust and can be retained without rerunning.
@@ -72,11 +82,7 @@ impl Engine {
             .collect::<Vec<_>>()
             .into();
         let session = self.open(program)?;
-        let identity = NEXT_SOURCE
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
-                value.checked_add(1)
-            })
-            .map_err(|_| Error::InvalidUpdate("source identities exhausted".into()))?;
+        let identity = allocate_source_identity()?;
         let scope = Arc::new(Scope {
             identity,
             engine: self.clone(),
@@ -160,13 +166,23 @@ impl Engine {
     }
 }
 impl SourceSession {
-    pub(crate) fn validate_value(&self, value: &crate::RowValue) -> Result<()> {
+    /// Validate a live cell lease against this source owner.
+    /// # Errors
+    /// Rejects closed, stale or foreign cell leases.
+    pub fn validate_value(&self, value: &crate::RowValue) -> Result<()> {
         self.scope.check()?;
         value.value()?;
         if !value.in_scope(&self.scope) {
             return Err(Error::InvalidUpdate("foreign result value".into()));
         }
         Ok(())
+    }
+    /// Snapshot the current admitted sources together with immutable declarations.
+    /// # Errors
+    /// Rejects closed source owners.
+    pub fn source_program(&self) -> Result<Program> {
+        self.scope.check()?;
+        Ok(self.session.current_program())
     }
     /// Admitted declarations are immutable and available for typed projection.
     #[must_use]
@@ -346,7 +362,7 @@ impl SourceSession {
     ) -> Result<crate::Provenance> {
         self.scope.check()?;
         crate::Provenance::generate(
-            self.program().clone(),
+            self.session.current_program(),
             &self.result(handle)?,
             query,
             limits,

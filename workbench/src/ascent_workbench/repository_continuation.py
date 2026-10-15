@@ -18,9 +18,7 @@ def restored_history(directory, record):
     last = record['attempts'][-1]['turn']
     request = json.loads((directory / f'{last}.request.json').read_text())
     terminal = json.loads((directory / f'{last}.response.json').read_text())['terminal']
-    history = ResponseHistory('')
-    history.items = request['input']
-    history.seen = {item['call_id'] for item in history.items if item.get('type') == 'function_call'}
+    history = ResponseHistory.restore(request['input'])
     calls = history.append_response(terminal)
     results = {action['callId']: action['result'] for action in record['attempts'][-1]['actions'] if 'callId' in action}
     for call in calls:

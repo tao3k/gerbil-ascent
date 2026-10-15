@@ -28,7 +28,7 @@ def recover(plan_dir,results_dir,output):
         'primarySha256':hashlib.sha256(rp.read_bytes()).hexdigest(),'planSha256':hashlib.sha256(pp.read_bytes()).hexdigest(),
         'producerSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'attempts':attempts}
     key=provider_key()
-    with Engine(library) as engine:
+    with Engine() as engine:
         base=study.program(source,{'relations':[],'rules':[]})
         with EvidenceStore(engine,[r for r in base['relations'] if r['source']]) as evidence:
             for index in range(2):

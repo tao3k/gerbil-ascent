@@ -1,11 +1,10 @@
 //! Original Scheme source admission followed by owned-data execution.
-use super::{Engine, Evidence, id, invoke, policy};
-use gerbil_ascent::{Catalog, Data, FactLimits, Result, SourceSession};
-use std::collections::BTreeMap;
+use super::{Backend, Engine, Evidence, id, invoke, policy};
+use gerbil_ascent::{Data, FactLimits, Result, SourceSession};
 
 /// Native callback session or a finite DAG transferred to the caller's Rayon pool.
 pub enum Source {
-    Rayon(SourceSession),
+    Rayon(Box<SourceSession>),
     Scheme(Evidence),
 }
 impl Engine {
@@ -19,7 +18,7 @@ impl Engine {
         rules_only: bool,
     ) -> Result<Source> {
         super::check(self, false)?;
-        let loaded = invoke(
+        let loaded = self.load(
             if rules_only {
                 "open-rule-sources"
             } else {
@@ -34,39 +33,21 @@ impl Engine {
             ],
         )?;
         let projection = loaded.field("projection")?;
-        if projection.field("status")?.text()? != "supported" {
+        if self.backend() == Some(Backend::Scheme) {
             return Evidence::new(self, loaded).map(Source::Scheme);
         }
-        let result = (|| {
-            let mut catalog = Catalog::read(projection.field("program")?)?;
-            let ceiling = |name| -> Result<Option<usize>> {
-                let value = loaded.field("factLimits")?.field(name)?;
-                if value == &Data::from("unlimited") {
-                    Ok(None)
-                } else {
-                    value.index().map(Some)
-                }
-            };
-            catalog.program.fact_limits = FactLimits {
-                input: ceiling("input")?,
-                derived: ceiling("derived")?,
-                output: ceiling("output")?,
-            };
-            let aliases = loaded
-                .field("descriptors")?
-                .list()?
-                .iter()
-                .zip(&catalog.program.relations)
-                .map(|(descriptor, relation)| {
-                    Ok((
-                        descriptor.field("name")?.text()?.into(),
-                        relation.name.clone(),
-                    ))
-                })
-                .collect::<Result<BTreeMap<_, _>>>()?;
-            self.open_exported_program(catalog.program, aliases, limits)
-                .map(Source::Rayon)
-        })();
+        if projection.field("status")?.text()? != "supported" {
+            if self.backend() == Some(Backend::Rayon) {
+                invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
+                return Err(crate::failure(
+                    "program requires Scheme callbacks; Rayon projection unavailable",
+                ));
+            }
+            return Evidence::new(self, loaded).map(Source::Scheme);
+        }
+        let result = self
+            .open_projection(&loaded, limits)
+            .map(|session| Source::Rayon(Box::new(session)));
         // Projection owns only Rust values; release the temporary VM session on
         // admission failure as well as success, before any Rayon execution.
         invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
@@ -77,7 +58,7 @@ impl Engine {
     /// Rejects executable syntax and malformed declarations through native admission.
     pub fn read_rules(&self, texts: &[String]) -> Result<Data> {
         super::check(self, false)?;
-        invoke(
+        self.invoke(
             "read-rules",
             [(
                 "sources",

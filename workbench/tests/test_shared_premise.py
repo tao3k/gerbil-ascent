@@ -150,7 +150,7 @@ class BranchEntryTest(unittest.TestCase):
 class NativeProjectionTest(unittest.TestCase):
     def test_columns_preserve_unknown_scope_and_shared_parents(self):
         import copy,json
-        from ascent_engine.evidence import compact_observation,expand_observation
+        from ascent.evidence import compact_observation,expand_observation
         packet={'scope':{'generation':7,'source-digest':'source'},'observations':[
             {'conclusion':{'status':'verified','atom':['path',0,2],'handle':9},'support':{'roots':[3]}},
             {'conclusion':{'status':'unknown','atom':['path',2,0],'handle':9}}],
@@ -162,7 +162,7 @@ class NativeProjectionTest(unittest.TestCase):
         self.assertEqual(packet,original)
 
     def test_heterogeneous_native_fields_are_not_erased(self):
-        from ascent_engine.evidence import compact_observation,expand_observation
+        from ascent.evidence import compact_observation,expand_observation
         packet={'observations':[{'conclusion':{'status':'unknown'}},{'conclusion':{'status':'verified','atom':['path',0,1]}}]}
         self.assertEqual(expand_observation(compact_observation(packet)),packet)
 
@@ -216,7 +216,7 @@ class SemanticQuoteCoverageTest(unittest.TestCase):
 
     def test_support_projection_preserves_absence_and_heterogeneous_predicates(self):
         import json
-        from ascent_engine.evidence import compact_observation,expand_observation
+        from ascent.evidence import compact_observation,expand_observation
         packet={'observations':[
             {'conclusion':{'atom':['path',0,2],'support-nodes':[3]},'support':{'roots':[3]}},
             {'conclusion':{'atom':['path',2,0],'support-nodes':[]}}],

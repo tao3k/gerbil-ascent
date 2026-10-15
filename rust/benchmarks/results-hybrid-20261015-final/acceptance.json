@@ -1,0 +1,127 @@
+{
+  "performance_acceptance": true,
+  "configurations": 36,
+  "measured_samples": 252,
+  "warmups_per_configuration": 1,
+  "samples_per_configuration": 7,
+  "process_checks": 76,
+  "quiet_seconds_required": 60,
+  "observed_interference": false,
+  "source_drift": [],
+  "results": [
+    {
+      "shape": [
+        1,
+        16,
+        16
+      ],
+      "output_rows": 1920,
+      "median_ms": {
+        "vm-1": 9.253833,
+        "rayon-1": 0.878041,
+        "rayon-2": 0.910167,
+        "rayon-4": 0.947792,
+        "rayon-8": 0.901333,
+        "rayon-12": 0.89625
+      },
+      "best_threads": 1,
+      "vm_speedup": 10.539180972186948,
+      "parallel_speedup": 1.0
+    },
+    {
+      "shape": [
+        1,
+        256,
+        16
+      ],
+      "output_rows": 30720,
+      "median_ms": {
+        "vm-1": 140.705667,
+        "rayon-1": 16.364083,
+        "rayon-2": 15.2715,
+        "rayon-4": 12.856792,
+        "rayon-8": 13.219042,
+        "rayon-12": 14.909542
+      },
+      "best_threads": 4,
+      "vm_speedup": 10.94407275158531,
+      "parallel_speedup": 1.272796744320045
+    },
+    {
+      "shape": [
+        8,
+        32,
+        16
+      ],
+      "output_rows": 30720,
+      "median_ms": {
+        "vm-1": 139.6715,
+        "rayon-1": 15.76125,
+        "rayon-2": 13.446583,
+        "rayon-4": 11.735042,
+        "rayon-8": 13.01,
+        "rayon-12": 12.896917
+      },
+      "best_threads": 4,
+      "vm_speedup": 11.902087781194137,
+      "parallel_speedup": 1.3430927643889132
+    },
+    {
+      "shape": [
+        1,
+        32,
+        64
+      ],
+      "output_rows": 64512,
+      "median_ms": {
+        "vm-1": 274.245041,
+        "rayon-1": 36.760792,
+        "rayon-2": 29.900125,
+        "rayon-4": 25.679667,
+        "rayon-8": 27.992792,
+        "rayon-12": 31.630916
+      },
+      "best_threads": 4,
+      "vm_speedup": 10.679462510164171,
+      "parallel_speedup": 1.4315135784276332
+    },
+    {
+      "shape": [
+        1,
+        2048,
+        16
+      ],
+      "output_rows": 245760,
+      "median_ms": {
+        "vm-1": 1090.836375,
+        "rayon-1": 187.875875,
+        "rayon-2": 144.454042,
+        "rayon-4": 114.380083,
+        "rayon-8": 104.50225,
+        "rayon-12": 110.503541
+      },
+      "best_threads": 8,
+      "vm_speedup": 10.438400847828635,
+      "parallel_speedup": 1.7978165541890248
+    },
+    {
+      "shape": [
+        8,
+        256,
+        16
+      ],
+      "output_rows": 245760,
+      "median_ms": {
+        "vm-1": 1142.013583,
+        "rayon-1": 136.236917,
+        "rayon-2": 95.169792,
+        "rayon-4": 65.893709,
+        "rayon-8": 68.889125,
+        "rayon-12": 69.158458
+      },
+      "best_threads": 4,
+      "vm_speedup": 17.33114739375196,
+      "parallel_speedup": 2.067525399124217
+    }
+  ]
+}

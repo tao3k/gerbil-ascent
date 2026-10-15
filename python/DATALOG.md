@@ -1,13 +1,13 @@
 # Relational Datalog Binding
 
-`ascent_engine.datalog` translates relational text into the existing native
+`ascent.datalog` translates relational text into the existing native
 declarative contract. It does not evaluate rules in Python. Joins, recursive
 closure, stratified negation and completed-component reuse run through
-`EvidenceChain` in the Scheme shared library via the CFFI API.
+the Rust execution library and checked evidence API.
 
 ```python
-from ascent_engine import Engine
-from ascent_engine.datalog import evaluate
+from ascent import Engine
+from ascent.datalog import evaluate
 
 with Engine() as engine:
     answers, evidence = evaluate(
@@ -21,10 +21,10 @@ with Engine() as engine:
 ```
 
 `compile_program` provides the native contract and named query mapping without
-loading the runtime. It uses Python's AST parser, never `eval`. Demand slicing
+loading the runtime. It uses the Rust finite expression reader, never `eval`. Demand slicing
 retains every rule alternative and every positive/negative dependency of the
 requested relations. It is not a filter over facts or unsuccessful derivations.
-String/integer cells are JSON-tagged symbols, so integer `1` and string `"1"`
+String/integer cells are typed symbols, so integer `1` and string `"1"`
 remain different. Variables must be bound in a positive relational atom.
 
 Before native execution, `evaluate` interns every symbol through a
@@ -62,7 +62,7 @@ local to the aggregate. Empty count/sum yield zero; empty min/max yield no row.
 Types, arity, unsafe bindings and recursive aggregation are checked by Scheme.
 Typed mode preserves native integers/booleans instead of tagged string cells.
 
-`ascent_engine.operators.where/compute/reduce` also build these same inert JSON
+`ascent.operators.where/compute/reduce` also build these same inert JSON
 clauses directly for `Engine.open` and `EvidenceChain`. No arithmetic or reducer
 is implemented in Python. The engine delegates to its existing closed
 `relational-where`, `relational-compute` and `relational-reducer` constructors.

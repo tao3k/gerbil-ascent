@@ -26,8 +26,7 @@ def run(source,library,output):
     remaining=3-failed['attempt']
     if remaining<=0:raise ValueError('no remaining matched repair allowance')
     request_path=source/(case['case']+'-reflection')/f"2-{failed['attempt']+1}-request.json"
-    request=json.loads(request_path.read_text());history=ResponseHistory(case['question'])
-    history.items=copy.deepcopy(request['input']);history.pending={};history.seen=set()
+    request=json.loads(request_path.read_text());history=ResponseHistory.restore(request['input'])
     output.mkdir(parents=True,exist_ok=False)
     repair_plan={'schema':'ascent.failed-prefix-repair.v1','case':case,'source':str(source),'control':control,
        'prefix':control['calls'][:index+1],'remainingRepairs':remaining,'pairedRepairRequestSha256':hashlib.sha256(request_path.read_bytes()).hexdigest(),
@@ -35,7 +34,7 @@ def run(source,library,output):
        'primary':'Whole-task cumulative thinking including every shared/failed prefix call until both goals pass.',
        'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),'sourceSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     (output/'plan.json').write_text(json.dumps(repair_plan,indent=2))
-    engine=Engine(library);trajectory=Trajectory(engine,'failed-prefix:'+case['case'],identity(case['sources']));calls=[];key=provider_key()
+    engine=Engine();trajectory=Trajectory(engine,'failed-prefix:'+case['case'],identity(case['sources']));calls=[];key=provider_key()
     try:
         for c in repair_plan['prefix']:
             trajectory.model_call(c['callId'],c['round'],c['usage'])
@@ -44,8 +43,10 @@ def run(source,library,output):
             first=chain.query(case['program']);second=chain.query(case['secondProgram'])
             packet=chain.intermediates(second['resultReference'],case['intermediates'])
             assert 'answer' not in packet['facts']
-            feedback=json.loads(history.items[-1]['content']);feedback['verifiedIntermediates']=packet
-            history.items[-1]['content']=json.dumps(feedback,sort_keys=True)
+            restored_input=history.input()
+            feedback=json.loads(restored_input[-1]['content']);feedback['verifiedIntermediates']=packet
+            restored_input[-1]['content']=json.dumps(feedback,sort_keys=True)
+            history=ResponseHistory.restore(restored_input)
             for attempt in range(1,remaining+1):
                 request['input']=history.input();(output/f'{attempt}-request.json').write_text(json.dumps(request,indent=2))
                 print('CALL repair',case['case'],attempt,flush=True)

@@ -1,0 +1,11 @@
+test_all_arms_share_question_and_raw_evidence_without_private_gold (test_complex_movie.ComplexMovieProtocol.test_all_arms_share_question_and_raw_evidence_without_private_gold) ... ok
+test_compact_intent_keeps_bindings_without_enumerating_source_or_answers (test_complex_movie.ComplexMovieProtocol.test_compact_intent_keeps_bindings_without_enumerating_source_or_answers) ... ok
+test_finite_views_and_withdrawals_through_real_scheme (test_complex_movie.ComplexMovieProtocol.test_finite_views_and_withdrawals_through_real_scheme) ... ok
+test_model_cannot_replace_trusted_source_declarations (test_complex_movie.ComplexMovieProtocol.test_model_cannot_replace_trusted_source_declarations) ... ok
+test_model_cannot_write_source_or_materialized_heads (test_complex_movie.ComplexMovieProtocol.test_model_cannot_write_source_or_materialized_heads) ... ok
+test_source_withdrawal_changes_identity_without_mutating_frozen_facts (test_complex_movie.ComplexMovieProtocol.test_source_withdrawal_changes_identity_without_mutating_frozen_facts) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.155s
+
+OK

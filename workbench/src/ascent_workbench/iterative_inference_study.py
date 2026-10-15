@@ -43,8 +43,8 @@ def prepare(directory,library):
     directory.mkdir(parents=True,exist_ok=False);shutil.copy2(library,directory/library.name)
     paths=[Path(__file__),Path(study.__file__),Path(__file__).with_name('inference_effort.py'),Path(complex_workload.__file__),
            Path(__file__).with_name('model_study.py'),Path(__file__).with_name('movie_study.py'),
-           Path(__file__).with_name('query_contract.py'),study.ROOT/'python/src/ascent/evidence.py',
-           study.ROOT/'python/src/ascent/__init__.py']
+           Path(__file__).with_name('query_contract.py'),study.ROOT/'rust/ascent-python/src/api/evidence.rs',
+           study.ROOT/'rust/ascent-python/src/api/exports.rs']
     plan={'schema':'ascent.iterative-inference-plan.v2','maxTurns':8,'maxProviderCalls':128,
           'maxOutputTokens':MAX_OUTPUT_TOKENS,'conservativePeakCeilingUsd':12,
           'library':library.name,'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest(),
@@ -78,7 +78,7 @@ def live(directory,output):
     receipt={'schema':'ascent.iterative-inference-result.v1','planSha256':hashlib.sha256(pp.read_bytes()).hexdigest(),
              'scope':plan['scope'],'providerCalls':0,'peakEstimateUsd':0,'episodes':[]}
     def save():(output/'result.json').write_text(json.dumps(receipt,indent=2)+'\n')
-    with Engine(library) as engine:
+    with Engine() as engine:
         trials=[(case,rep) for case in plan['cases'] for rep in range(plan['repetitions'])]
         for ci,(case,rep) in enumerate(trials):
             arms=plan['arms'] if ci%2==0 else list(reversed(plan['arms']))

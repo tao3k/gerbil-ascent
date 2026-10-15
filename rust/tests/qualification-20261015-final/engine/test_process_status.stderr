@@ -1,0 +1,8 @@
+test_each_scheme_worker_finishes_without_reusing_a_host_queue (test_process_status.EmbeddedProcessStatus.test_each_scheme_worker_finishes_without_reusing_a_host_queue) ... ok
+test_failed_child_status_survives_embedded_runtime_initialization (test_process_status.EmbeddedProcessStatus.test_failed_child_status_survives_embedded_runtime_initialization) ... ok
+test_host_descriptor_flags_survive_initialization_and_evaluation (test_process_status.EmbeddedProcessStatus.test_host_descriptor_flags_survive_initialization_and_evaluation) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.406s
+
+OK

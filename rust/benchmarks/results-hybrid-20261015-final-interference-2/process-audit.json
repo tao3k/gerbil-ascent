@@ -1,0 +1,6561 @@
+{
+  "interval_seconds": 0.5,
+  "checks": [
+    {
+      "seconds": 5346.489426583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5347.027485541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5347.568782708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5348.107652666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5348.646855375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5349.186845375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5349.721511916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5350.260975625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5350.802367833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5351.341141791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5351.881667916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5352.422451875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5352.962247541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5353.5014285,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5354.03971325,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5354.579686333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5355.120009541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5355.660830291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5356.197825041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5356.737534791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5357.275973625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5357.84653325,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5358.388160416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5358.927965708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5359.464411458,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5360.005254958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5360.54310125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5361.082995041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5361.623314208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5362.164092125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5362.704193666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5363.238621083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5363.778771791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5364.320155916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5364.856728541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5365.395786583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5365.936311833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5366.476852958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5367.017088833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5367.556647791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5368.097509208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5368.636891583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5369.176030875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5369.715963666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5370.255783833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5370.794880875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5371.334851625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5371.874737291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5372.415796416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5372.956072416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5373.495099791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5374.0305165,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5374.569201708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5375.105951666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5375.646069,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5376.185827583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5376.725960833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5377.266298875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5377.806222083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5378.348302083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5378.889852166,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5379.429433833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5379.969935125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5380.509836083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5381.045932625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5381.5865715,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5382.127686666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5382.667995416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5383.21108825,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5383.751156458,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5384.292345875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5384.83239775,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5385.369173291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5385.909401708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5386.450350208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5386.99178125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5387.532504541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5388.073279708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5388.615574791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5389.155338958,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5389.69557125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5390.236305583,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5390.777040708,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 65856,
+          "parent": 65854,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 65854,
+              "parent": 65852,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 65852,
+              "parent": 1704,
+              "command": "/bin/zsh"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5391.31724325,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 65864,
+          "parent": 65846,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc",
+          "ancestors": [
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 65900,
+          "parent": 65896,
+          "command": "/nix/store/cbsa0j0sqa44ls1wr2bgvbcx87k50j8h-clang-21.1.8/bin/clang",
+          "ancestors": [
+            {
+              "pid": 65896,
+              "parent": 65865,
+              "command": "/opt/homebrew/bin/gcc-16"
+            },
+            {
+              "pid": 65865,
+              "parent": 65864,
+              "command": "/bin/sh"
+            },
+            {
+              "pid": 65864,
+              "parent": 65846,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc"
+            },
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5391.857117875,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5392.399395916,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5392.940718041,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5393.483110541,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5394.02417125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66016,
+          "parent": 65846,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc",
+          "ancestors": [
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66052,
+          "parent": 66048,
+          "command": "/nix/store/cbsa0j0sqa44ls1wr2bgvbcx87k50j8h-clang-21.1.8/bin/clang",
+          "ancestors": [
+            {
+              "pid": 66048,
+              "parent": 66017,
+              "command": "/opt/homebrew/bin/gcc-16"
+            },
+            {
+              "pid": 66017,
+              "parent": 66016,
+              "command": "/bin/sh"
+            },
+            {
+              "pid": 66016,
+              "parent": 65846,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc"
+            },
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5394.57122025,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5395.130190833,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66153,
+          "parent": 65846,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc",
+          "ancestors": [
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66190,
+          "parent": 66186,
+          "command": "/nix/store/cbsa0j0sqa44ls1wr2bgvbcx87k50j8h-clang-21.1.8/bin/clang",
+          "ancestors": [
+            {
+              "pid": 66186,
+              "parent": 66155,
+              "command": "/opt/homebrew/bin/gcc-16"
+            },
+            {
+              "pid": 66155,
+              "parent": 66153,
+              "command": "/bin/sh"
+            },
+            {
+              "pid": 66153,
+              "parent": 65846,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc"
+            },
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5395.677553958,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 65846,
+          "parent": 65845,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66257,
+          "parent": 65846,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc",
+          "ancestors": [
+            {
+              "pid": 65846,
+              "parent": 65845,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 65845,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5396.222523583,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66004,
+          "parent": 66002,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66002,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5396.764527208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5397.305645041,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 66380,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66380,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5397.84714125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 66380,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66380,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5398.38886125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 66380,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66380,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5398.929452666,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 66380,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66380,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5399.474362833,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 66380,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66380,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5400.015596541,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66382,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5400.556018125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5401.109387,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5401.651234458,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5402.1918835,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5402.737345833,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5403.281739166,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66517,
+          "parent": 66449,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66449,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5403.823069333,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66451,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5404.390629291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5404.929419333,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 66520,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66520,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5405.473588666,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 66520,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66520,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5406.013757083,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 66520,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66520,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5406.563158166,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 66520,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66520,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5407.111201875,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 66520,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66520,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5407.666237833,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66522,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5408.20411425,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5408.744863333,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 66674,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66674,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5409.286285708,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 66674,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66674,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5409.826965166,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 66674,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66674,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5410.370746416,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 66674,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66674,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5410.919476708,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 66674,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66674,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5411.46004275,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66681,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5412.002293208,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5412.5479245,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5413.088156458,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5413.632378958,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5414.17609175,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5414.720167666,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66829,
+          "parent": 66752,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66752,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5415.264450833,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66754,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5415.807615541,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5416.367655333,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5416.91416375,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5417.454416916,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5418.00181275,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5418.553893125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66833,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66908,
+          "parent": 66832,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66832,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5419.096571458,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5419.638486583,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66692,
+          "parent": 66691,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 66691,
+              "parent": 66689,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 66689,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5420.178159125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5420.7204345,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5421.257750375,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5421.801791125,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5422.348564166,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66917,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 66979,
+          "parent": 66911,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66911,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5422.886415875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5423.427862958,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 66989,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66989,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5423.970370583,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 66989,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66989,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5424.513057375,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 66989,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66989,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5425.053130166,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 66989,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66989,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5425.595213916,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 66989,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 66989,
+              "parent": 65998,
+              "command": "/opt/homebrew/opt/node/bin/node"
+            },
+            {
+              "pid": 65998,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5426.142338208,
+      "phase": "admission",
+      "busy": [
+        {
+          "pid": 66991,
+          "parent": 1,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5426.68247575,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5427.222622208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5427.762202708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5428.301643916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5428.843602041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5429.384495916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5429.92624275,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5430.466791875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5431.00673025,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5431.547608708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5432.086526208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5432.627337291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5433.167613541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5433.708804416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5434.249289875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5434.7877305,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5435.329721083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5435.8710085,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5436.41129325,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5436.950253708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5437.49284975,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5438.033185791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5438.57192375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5439.11197325,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5439.658183208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5440.201704916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5440.746114625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5441.2890695,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5441.827644583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5442.368031333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5442.912445083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5443.453762416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5443.995817125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5444.539598041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5445.078516791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5445.619204833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5446.1562575,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5446.695342041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5447.237292375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5447.777995541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5448.319704625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5448.857218375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5449.400291291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5449.942731791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5450.485041083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5451.026283375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5451.565813875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5452.108228166,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5452.646281833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5453.187426625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5453.729928208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5454.272063875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5454.814905625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5455.356671291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5455.898699083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5456.444607208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5456.986700291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5457.528452291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5458.066615458,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5458.609116416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5459.149848333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5459.691829875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5460.232439625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5460.770326958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5461.312590625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5461.85378425,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5462.414790708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5462.957087333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5463.504113,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5464.045178375,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5464.583541666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5465.124570083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5465.666184708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5466.203763625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5466.741925833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5467.284770958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5467.827127583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5468.367688958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5468.910208208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5469.452771541,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5469.994387125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5470.533879625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5471.077459708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5471.620107458,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5472.162119875,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5472.705240583,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5473.242273958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5473.783578416,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5474.326899833,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5474.866077958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5475.40747425,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5475.9457515,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5476.486951916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5477.034271125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5477.574715666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5478.116393666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5478.656935916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5479.196158625,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5479.736086916,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5480.278188666,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5480.846974791,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5481.386127333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5481.928029291,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5482.468397041,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5483.007897958,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5483.547748125,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5484.0892835,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5484.630799083,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5485.174623333,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5485.717124,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5486.253779208,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5486.795127708,
+      "phase": "admission",
+      "busy": []
+    },
+    {
+      "seconds": 5486.831216083,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5487.381490125,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5487.929593875,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5488.474002791,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5489.019094625,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5489.562778125,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5490.103663791,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5490.648597875,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5491.24656425,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5491.788940208,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 67607,
+          "parent": 67480,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gsc",
+          "ancestors": [
+            {
+              "pid": 67480,
+              "parent": 67478,
+              "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil"
+            },
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5492.331207583,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67480,
+          "parent": 67478,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gerbil",
+          "ancestors": [
+            {
+              "pid": 67478,
+              "parent": 1704,
+              "command": "timeout"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5492.872909416,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5493.41483525,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5493.958424291,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5494.500976375,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5495.044547541,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5495.58832825,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5496.130235458,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5496.66881325,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5497.211239375,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5497.74981425,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5498.292211958,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5498.831803208,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5499.375254875,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5499.919546208,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5500.463245541,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5501.006385958,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5501.554186958,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5502.099148666,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5502.641722541,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5503.184259416,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5503.73221225,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5504.270721833,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5504.813637416,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5505.354899666,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5505.902760833,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5506.443776958,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5506.986938375,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5507.537284958,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5508.091570041,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5508.635977166,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5509.183102,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5509.72485025,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5510.269051208,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5510.809365041,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67695,
+          "parent": 67693,
+          "command": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.20261009110849.1cfb032.patch618d76f9eb72/current/bin/gxi",
+          "ancestors": [
+            {
+              "pid": 67693,
+              "parent": 67692,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 67692,
+              "parent": 1704,
+              "command": "/run/current-system/sw/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5511.353140875,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5511.909426791,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5512.460316041,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5513.008138208,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5513.5621615,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5514.106980875,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5514.652989041,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5515.198314125,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5515.740009,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5516.288784291,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5516.834321,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67746,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 67763,
+          "parent": 67745,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67745,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5517.444195958,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5517.984339625,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5518.526807166,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5519.070401041,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5519.613901833,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5520.156094958,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5520.704704791,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5521.254733708,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67807,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        },
+        {
+          "pid": 67821,
+          "parent": 67793,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67793,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5521.797373625,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5522.33729975,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5522.889462625,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5523.431599083,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5523.972776291,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5524.513126541,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5525.067017375,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "/opt/homebrew/Cellar/node/26.10.0_2/bin/node"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5525.6192565,
+      "phase": "measurement",
+      "busy": [
+        {
+          "pid": 67841,
+          "parent": 67834,
+          "command": "/usr/bin/java",
+          "ancestors": [
+            {
+              "pid": 67834,
+              "parent": 67720,
+              "command": "(node)"
+            },
+            {
+              "pid": 67720,
+              "parent": 67718,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 67718,
+              "parent": 1704,
+              "command": "/Users/guangtao/ghq/github.com/tao3k/gerbil-bazel/.data/gambit-SMP/.venv/bin/python3"
+            },
+            {
+              "pid": 1704,
+              "parent": 683,
+              "command": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+            },
+            {
+              "pid": 683,
+              "parent": 1,
+              "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+            },
+            {
+              "pid": 1,
+              "parent": 0,
+              "command": "/sbin/launchd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5526.167545583,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5526.714902416,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5527.25733425,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5527.80365875,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5528.35153225,
+      "phase": "measurement",
+      "busy": []
+    },
+    {
+      "seconds": 5528.791312916,
+      "phase": "measurement",
+      "busy": []
+    }
+  ],
+  "quiet_seconds_required": 60,
+  "build_isolation_passed": false
+}

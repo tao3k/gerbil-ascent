@@ -126,3 +126,44 @@ pub(super) fn result_handle(value: &Bound<'_, PyAny>) -> PyResult<u64> {
     }
     Ok(handle)
 }
+
+pub(super) fn admission_deadline(
+    timeout: std::time::Duration,
+) -> engine::Result<std::time::Instant> {
+    std::time::Instant::now()
+        .checked_add(timeout)
+        .ok_or(engine::Error::Timeout)
+}
+
+pub(super) fn remaining(deadline: std::time::Instant) -> engine::Result<std::time::Duration> {
+    let duration = deadline.saturating_duration_since(std::time::Instant::now());
+    if duration.is_zero() {
+        Err(engine::Error::Timeout)
+    } else {
+        Ok(duration)
+    }
+}
+
+pub(super) fn lock_before<'a, T>(
+    mutex: &'a std::sync::Mutex<T>,
+    deadline: std::time::Instant,
+    cancellation: &engine::Cancellation,
+) -> engine::Result<std::sync::MutexGuard<'a, T>> {
+    loop {
+        if cancellation.is_canceled() {
+            return Err(engine::Error::Canceled);
+        }
+        let time_left = remaining(deadline)?;
+        match mutex.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(engine::Error::Closed),
+            Err(std::sync::TryLockError::WouldBlock) => {
+                std::thread::sleep(time_left.min(std::time::Duration::from_millis(1)));
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "../../tests/unit/admission.rs"]
+mod admission_tests;

@@ -1,0 +1,19 @@
+test_compiled_generation_drift_is_rejected (test_build_packaging.NativeArtifactPackaging.test_compiled_generation_drift_is_rejected) ... ok
+test_compiled_generations_preserve_names_bytes_and_origin (test_build_packaging.NativeArtifactPackaging.test_compiled_generations_preserve_names_bytes_and_origin) ... ok
+test_cross_volume_generation_copy_remains_independent (test_build_packaging.NativeArtifactPackaging.test_cross_volume_generation_copy_remains_independent) ... ok
+test_failed_repackaging_preserves_previous_resources_and_library (test_build_packaging.NativeArtifactPackaging.test_failed_repackaging_preserves_previous_resources_and_library) ... ok
+test_generation_cannot_be_renamed_even_with_identical_bytes (test_build_packaging.NativeArtifactPackaging.test_generation_cannot_be_renamed_even_with_identical_bytes) ... ok
+test_in_place_generation_change_before_publication_is_rejected (test_build_packaging.NativeArtifactPackaging.test_in_place_generation_change_before_publication_is_rejected) ... ok
+test_link_io_failure_does_not_turn_into_a_copy_success (test_build_packaging.NativeArtifactPackaging.test_link_io_failure_does_not_turn_into_a_copy_success) ... ok
+test_missing_receipt_does_not_attempt_native_build (test_build_packaging.NativeArtifactPackaging.test_missing_receipt_does_not_attempt_native_build) ... ok
+test_only_packages_exact_native_outputs_without_a_compiler (test_build_packaging.NativeArtifactPackaging.test_only_packages_exact_native_outputs_without_a_compiler) ... ok
+test_published_generation_survives_native_unlink_and_replacement (test_build_packaging.NativeArtifactPackaging.test_published_generation_survives_native_unlink_and_replacement) ... ok
+test_repackaging_removes_unrecorded_contiguous_generations (test_build_packaging.NativeArtifactPackaging.test_repackaging_removes_unrecorded_contiguous_generations) ... ok
+test_resource_drift_is_rejected (test_build_packaging.NativeArtifactPackaging.test_resource_drift_is_rejected) ... ok
+test_source_and_resource_paths_cannot_escape_package_roots (test_build_packaging.NativeArtifactPackaging.test_source_and_resource_paths_cannot_escape_package_roots) ... ok
+test_stale_source_is_rejected_without_timestamp_inference (test_build_packaging.NativeArtifactPackaging.test_stale_source_is_rejected_without_timestamp_inference) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.038s
+
+OK

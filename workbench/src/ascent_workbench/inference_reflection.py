@@ -51,7 +51,7 @@ def reflect(plan_dir,results_dir,library,output):
         contract['rules']=[study.rule(study.atom('support',*[study.var(n) for n in ('a','b','c','f','d','k')]),
                                       *contract['rules'][0]['body'])]
         p=study.program(source,contract);p['queries']=['support']
-        with Engine(library) as engine:
+        with Engine() as engine:
             with engine.open(p) as session:
                 result=session.run()
                 if not result['complete']:raise ValueError('support search incomplete')

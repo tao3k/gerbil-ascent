@@ -134,6 +134,9 @@ fn ordered_reduction_rows<'a>(
     store: &Store,
     budget: &Budget,
 ) -> std::borrow::Cow<'a, [Row]> {
+    if store.initial_occurrences[atom.relation] {
+        return std::borrow::Cow::Borrowed(rows);
+    }
     let Some(input) = inputs.first() else {
         return std::borrow::Cow::Borrowed(rows);
     };
@@ -170,6 +173,7 @@ pub(crate) struct Store {
     delta: Vec<Index>,
     #[cfg(feature = "rayon")]
     parallel: bool,
+    initial_occurrences: Vec<bool>,
 }
 
 /// Binding batches are local to one rule/pivot. Indexes are immutable while
@@ -663,7 +667,7 @@ fn publish_relation(
 
 fn initial_indexes(
     graph: &Graph,
-    sources: &[HashSet<crate::Row>],
+    sources: &[Vec<crate::Row>],
     budget: &Budget,
 ) -> Result<(super::Values, Vec<Index>)> {
     let mut values = graph.values.clone();
@@ -677,11 +681,17 @@ fn initial_indexes(
         let rows = if graph.program.relations[relation].source {
             source_rows
         } else {
-            fixed = graph.program.relations[relation]
-                .rows
-                .iter()
-                .cloned()
-                .collect::<HashSet<_>>();
+            fixed = if graph.program.relations[relation].initial_occurrences {
+                graph.program.relations[relation].rows.clone()
+            } else {
+                graph.program.relations[relation]
+                    .rows
+                    .iter()
+                    .cloned()
+                    .collect::<HashSet<_>>()
+                    .into_iter()
+                    .collect()
+            };
             &fixed
         };
         if !graph.program.relations[relation].auxiliary
@@ -693,22 +703,14 @@ fn initial_indexes(
         if mode.is_none() && !budget.facts(rows.len()) {
             break;
         }
-        for (i, row) in rows.iter().enumerate() {
-            if (i % CHUNK == 0 && !budget.poll()) || !budget.active() {
-                break;
-            }
-            let encoded = row
-                .iter()
-                .map(|value| values.intern(value))
-                .collect::<Vec<_>>()
-                .into();
-            let fact = budget.fact(encoded);
-            if let Some(mode) = mode {
-                super::lattice::merge(&mut all[relation].lattice, vec![fact], mode, &values)?;
-            } else {
-                all[relation].insert(fact);
-            }
-        }
+        insert_initial_rows(
+            rows,
+            graph.program.relations[relation].initial_occurrences,
+            mode,
+            &mut all[relation],
+            &mut values,
+            budget,
+        )?;
         if mode.is_some() {
             if !budget.facts(all[relation].lattice.len()) {
                 break;
@@ -723,9 +725,44 @@ fn initial_indexes(
     Ok((values, all))
 }
 
+fn insert_initial_rows(
+    rows: &[crate::Row],
+    occurrences: bool,
+    mode: Option<crate::LatticeJoin>,
+    index: &mut Index,
+    values: &mut super::Values,
+    budget: &Budget,
+) -> Result<()> {
+    let ordered: Box<dyn Iterator<Item = &crate::Row>> = if occurrences {
+        Box::new(rows.iter().rev())
+    } else {
+        Box::new(rows.iter())
+    };
+    for (i, row) in ordered.enumerate() {
+        if (i % CHUNK == 0 && !budget.poll()) || !budget.active() {
+            break;
+        }
+        let encoded = row
+            .iter()
+            .map(|value| values.intern(value))
+            .collect::<Vec<_>>()
+            .into();
+        let fact = budget.fact(encoded);
+        if let Some(mode) = mode {
+            super::lattice::merge(&mut index.lattice, vec![fact], mode, values)?;
+        } else if occurrences {
+            index.known.insert(fact.clone());
+            index.append(fact.row);
+        } else {
+            index.insert(fact);
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn evaluate(
     graph: &Graph,
-    sources: &[HashSet<crate::Row>],
+    sources: &[Vec<crate::Row>],
     limits: &Limits,
     cancellation: &Cancellation,
     parallel: bool,
@@ -741,6 +778,12 @@ pub(crate) fn evaluate(
     );
     let (values, all) = initial_indexes(graph, sources, &budget)?;
     let store = Store {
+        initial_occurrences: graph
+            .program
+            .relations
+            .iter()
+            .map(|r| r.initial_occurrences)
+            .collect(),
         lattices: graph.program.relations.iter().map(|r| r.lattice).collect(),
         values: RwLock::new(values),
         all,
@@ -777,8 +820,10 @@ pub(crate) fn evaluate(
         .into_iter()
         .enumerate()
         .map(|(relation, index)| {
-            if graph.program.relations[relation].source {
-                sources[relation].iter().cloned().collect()
+            if graph.program.relations[relation].source
+                && graph.program.relations[relation].lattice.is_none()
+            {
+                sources[relation].clone()
             } else {
                 decode_rows(index, &values, &budget, parallel)
             }

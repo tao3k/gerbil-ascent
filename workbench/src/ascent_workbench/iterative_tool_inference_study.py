@@ -45,8 +45,8 @@ def prepare(original,directory):
            Path(__file__).with_name('inference_effort.py'),Path(__file__).with_name('model_study.py'),
            Path(__file__).with_name('movie_study.py'),Path(__file__).with_name('query_contract.py'),
            Path(__file__).with_name('complex_movie_study.py'),
-           study.ROOT/'python/src/ascent/conversation.py',study.ROOT/'python/src/ascent/evidence.py',
-           study.ROOT/'python/src/ascent/__init__.py']
+           study.ROOT/'rust/ascent/src/conversation.rs',study.ROOT/'rust/ascent-python/src/api/evidence.rs',
+           study.ROOT/'rust/ascent-python/src/api/exports.rs']
     plan.update(schema='ascent.tool-thinking-plan.v1',maxOutputTokens=131072,workers=2,
                 scope='Corrected tool-history development evaluation on the same frozen compound questions; follows diagnosis of the original protocol. Not a new independent holdout.',
                 conservativePeakCeilingUsd=24,

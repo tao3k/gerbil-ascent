@@ -32,6 +32,63 @@ impl ResponseHistory {
             seen: BTreeSet::new(),
         }
     }
+    /// Restore exact provider items after validating every unique call and output pairing.
+    /// # Errors
+    /// Rejects duplicate calls, orphan outputs, unknown item types and unfinished calls.
+    pub fn restore(input: &Data) -> Result<Self> {
+        let mut history = Self {
+            items: vec![],
+            pending: BTreeMap::new(),
+            seen: BTreeSet::new(),
+        };
+        for item in input.list()? {
+            history.restore_item(item)?;
+        }
+        history.ready()?;
+        Ok(history)
+    }
+    /// Read detached audit items, including pending calls; these are not a ready provider input.
+    #[must_use]
+    pub fn snapshot(&self) -> Data {
+        Data::List(self.items.clone())
+    }
+    /// Read the complete immutable set of observed provider call identities.
+    #[must_use]
+    pub fn seen(&self) -> BTreeSet<String> {
+        self.seen.clone()
+    }
+    fn restore_item(&mut self, item: &Data) -> Result<()> {
+        match item.get("type").map(Data::text).transpose()? {
+            Some("function_call") => {
+                let id = item.field("call_id")?.identity()?;
+                if !self.seen.insert(id.into()) {
+                    return Err(invalid("tool call identity must be unique"));
+                }
+                self.pending.insert(id.into(), item.clone());
+            }
+            Some("function_call_output") => {
+                let id = item.field("call_id")?.identity()?;
+                item.field("output")?.text()?;
+                if self.pending.remove(id).is_none() {
+                    return Err(invalid("orphan or duplicate tool output"));
+                }
+            }
+            Some("reasoning" | "message") => (),
+            None => {
+                self.ready()?;
+                if !matches!(
+                    item.field("role")?.text()?,
+                    "user" | "system" | "developer" | "assistant"
+                ) {
+                    return Err(invalid("unsupported history role"));
+                }
+                item.field("content")?;
+            }
+            _ => return Err(invalid("unsupported history item")),
+        }
+        self.items.push(item.clone());
+        Ok(())
+    }
     /// # Errors
     /// Rejects unpaired tool calls before exposing the next provider input.
     pub fn input(&self) -> Result<Data> {

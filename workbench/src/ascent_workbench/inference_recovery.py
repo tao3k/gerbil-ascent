@@ -41,7 +41,7 @@ def recover(plan_dir,results_dir,library,output):
     if result['outcome']=='completed_ungraded':
         try:
             contract=json.loads(raw)
-            with Engine(library) as engine:
+            with Engine() as engine:
                 with engine.open(study.program(case['source'],contract)) as session:
                     for phase in ('cold','repeat','updated'):
                         source=study.updated(case) if phase=='updated' else case['source']

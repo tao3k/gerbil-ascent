@@ -16,6 +16,10 @@ dev-dependency for repository checks.
 
 ## Validation
 
+The [final local qualification report](benchmarks/qualification-hybrid-20261015-final.md)
+records the full semantic corpus, installed-wheel checks and accepted isolated
+36-configuration performance matrix, with source and executable identities.
+
 The public semantic corpus lives in `workbench/engine_tests`. Its `run_suite.py`
 runner saves individual test outcomes, source digests, failures and timeouts.
 Historical implementation and test records are retained under `tests/history`;
@@ -25,8 +29,29 @@ The matched performance harness is `benchmarks/run-hybrid.py`. Accepted timings
 require all builds and semantic checks to finish first. Results from runs with
 concurrent build interference are diagnostic only.
 
-The public interface conversion is incomplete: native rejection handling,
-result ownership, resource admission, packaging and the full semantic corpus
-must pass before claiming complete support. The previous Rust Scheme evaluator
-has not yet been retired. Current native wheels still require the configured
-Gerbil SDK and syntax resources; they are not yet self-contained distributions.
+The Rust Scheme evaluator has been removed. Modules, components, lexical
+closures and `Value.apply` enter the original Scheme runtime. `open_session`
+keeps native callbacks and explanations; `project_session` transfers an admitted
+finite snapshot to Rust. `Engine.load_sources` selects the finite path when it
+is available, with explicit Scheme/Rayon selection for matched tests. Opaque
+objects and arbitrary callbacks remain in the VM.
+
+Initial Scheme source occurrences are preserved, including duplicates; derived
+relations retain set semantics. Numeric structural keys normalize representation
+without changing exactness or inexact rounding. Checked provenance compares the
+complete native answer with an independent replay, preserves multiplicity, and
+revalidates source generation and current source content. Unsupported callbacks
+return an explicit unsupported proof and never a positive verification result.
+
+Cancellation covers admission queues, owner locks, native expansion and rule
+execution. Source replacement has a final acceptance boundary before publishing
+its generation. Cancellation and failure before that boundary retain the prior
+committed source and result. Closing an engine revokes retained leases and
+releases its native owner slots.
+
+Wheel builds can repair external shared-library dependencies. Native DSL loading
+still requires matching Gerbil SDK/syntax resources; the wheel is not a standalone
+Gerbil SDK. Build-frozen source/resource digests are exposed by
+`ascent.build.runtime_identity()` and checked by the consumer harness. Final
+qualification and isolated benchmark receipts must be tied to the exact tested
+artifact; the dated benchmark report records the observed results and limits.

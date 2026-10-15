@@ -9,7 +9,7 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         Data::Null,
         Data::Bool(false),
         Data::Bool(true),
-        Data::Integer((-1234567891011121314151617181920212223i128).into()),
+        Data::Integer((-1_234_567_891_011_121_314_151_617_181_920_212_223i128).into()),
         Data::Text("原生\0Scheme 🦀".into()),
         Data::object([(
             "items",

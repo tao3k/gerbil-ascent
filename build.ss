@@ -80,6 +80,7 @@
     "program/positive-components"
     "program/execution-publication"
     "program/round-workspace"
+    "program/execution-control"
     "program/evaluate"
     "program/session"
     "program/source-cut"

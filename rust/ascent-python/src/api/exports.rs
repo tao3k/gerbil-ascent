@@ -4,6 +4,7 @@ use pyo3::{
     types::{PyAnyMethods, PyModule, PyModuleMethods},
 };
 pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {
+    super::artifacts::install(root)?;
     install_evidence(root)?;
     install_frontends(root)?;
     install_interaction(root)?;

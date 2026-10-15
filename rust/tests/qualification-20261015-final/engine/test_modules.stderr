@@ -1,0 +1,11 @@
+test_closed_session_and_wrong_owner (test_modules.ModuleTests.test_closed_session_and_wrong_owner) ... ok
+test_execution_program_declares_observation_sources (test_modules.ModuleTests.test_execution_program_declares_observation_sources) ... ok
+test_hygienic_constructor_native_values_and_explanation (test_modules.ModuleTests.test_hygienic_constructor_native_values_and_explanation) ... ok
+test_rejected_update_and_failed_constructor_preserve_runtime (test_modules.ModuleTests.test_rejected_update_and_failed_constructor_preserve_runtime) ... ok
+test_shared_cyclic_and_opaque_native_values (test_modules.ModuleTests.test_shared_cyclic_and_opaque_native_values) ... ok
+test_upstream_lattice_aggregate_and_operator (test_modules.ModuleTests.test_upstream_lattice_aggregate_and_operator) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.114s
+
+OK

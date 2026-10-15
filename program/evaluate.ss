@@ -55,6 +55,8 @@
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
 
+(import "execution-control.ss")
+
 (export gerbil-ascent-evaluate-program gerbil-ascent-make-engine
         gerbil-ascent-make-updated-engine)
 
@@ -326,6 +328,7 @@
                         (not accepted-any?))
                (set! dirty? #f)))))
         (def (run-retained! (deadline #f))
+         (ascent-execution-checkpoint!)
          (gerbil-ascent-storage-check-readiness! storage-readiness)
          (when publication-failed?
            (error "ASCENT engine publication requires source replay"))
@@ -361,6 +364,7 @@
                 (vector-set! pending index
                   (cons stored (vector-ref pending index)))))
             (def (emit-row! atom row)
+              (ascent-execution-checkpoint! 1 0)
               (let* ((index (vector-ref atom 0))
                      (pending-table
                       (and (not (vector-ref lattice-joins index))
@@ -537,6 +541,7 @@
             (let ((active-rules (vector-ref active-by-stratum stratum))
                   (active? #t) (round (if resume-stratum resume-round 0)))
             (def (commit! index)
+                (ascent-execution-checkpoint!)
                 (if (view-relation? index)
                   (let (frontier (vector-ref pending index))
                     (if (> (gerbil-ascent-frontier-count frontier) 0)
@@ -701,7 +706,7 @@
                    (when (and (= round 1) first-run?)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! #f parts-access)
+                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
@@ -712,7 +717,7 @@
                      ;; position without emitting the same join repeatedly.
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! #f parts-access)
+                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!))))
@@ -725,7 +730,7 @@
                                           (vector-ref prunable delta-at)) 0))
                           (if positive-plan
                             (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at rows-access emit-row! #f parts-access)
+                             positive-plan frame delta-at rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
                             (visit-body body delta-at 0 []
                               (lambda (environment)
                                 (gerbil-ascent-emit-heads! heads environment emit-row!))))))

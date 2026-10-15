@@ -320,7 +320,7 @@ def continue_ffi(preview, output, frozen_root, library, wire_path):
         'currentBackend':'general Scheme C ABI via Python CFFI',
         'librarySha256':digest(copied.read_bytes()),'wireSha256':digest((cut/'wire.json').read_bytes()),
         'driverSha256':digest(Path(__file__).read_bytes()),
-        'bindingSha256':digest((ROOT/'python/src/ascent/__init__.py').read_bytes()),
+        'bindingSha256':digest((ROOT/'rust/ascent-python/src/api/exports.rs').read_bytes()),
         'maxTotalCalls':9,'retries':0,'budgetCeilingUsd':1},indent=2)+'\n')
     wire = json.loads((cut/'wire.json').read_text())
     started = time.monotonic()

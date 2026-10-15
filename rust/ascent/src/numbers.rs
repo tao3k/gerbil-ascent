@@ -49,54 +49,6 @@ impl Number {
             (a, b) => Self::Inexact(a.inexact() + b.inexact()),
         }
     }
-    pub(crate) fn subtract(self, other: Self) -> Self {
-        match (self, other) {
-            (Self::Exact(a), Self::Exact(b)) => Self::Exact(a - b),
-            (a, b) => Self::Inexact(a.inexact() - b.inexact()),
-        }
-    }
-    pub(crate) fn multiply(self, other: Self) -> Self {
-        match (self, other) {
-            (Self::Exact(a), Self::Exact(b)) => Self::Exact(a * b),
-            (a, b) => Self::Inexact(a.inexact() * b.inexact()),
-        }
-    }
-    pub(crate) fn divide(self, other: Self) -> Result<Self> {
-        Ok(match (self, other) {
-            (Self::Exact(a), Self::Exact(b)) => {
-                if b.is_zero() {
-                    return Err(Error::Evaluation("division by zero".into()));
-                }
-                Self::Exact(a / b)
-            }
-            (a, b) => Self::Inexact(a.inexact() / b.inexact()),
-        })
-    }
-    pub(crate) fn negative(self) -> Self {
-        match self {
-            Self::Exact(n) => Self::Exact(-n),
-            Self::Inexact(n) => Self::Inexact(-n),
-        }
-    }
-    pub(crate) fn compare(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        use std::cmp::Ordering;
-        match (self, other) {
-            (Self::Exact(a), Self::Exact(b)) => Some(a.cmp(b)),
-            (Self::Inexact(a), Self::Inexact(b)) => a.partial_cmp(b),
-            (Self::Exact(a), Self::Inexact(b)) => {
-                if b.is_nan() {
-                    None
-                } else if *b == f64::INFINITY {
-                    Some(Ordering::Less)
-                } else if *b == f64::NEG_INFINITY {
-                    Some(Ordering::Greater)
-                } else {
-                    Some(a.cmp(&BigRational::from_float(*b)?))
-                }
-            }
-            (Self::Inexact(_), Self::Exact(_)) => other.compare(self).map(Ordering::reverse),
-        }
-    }
     pub(crate) fn extreme(self, other: Self, minimum: bool) -> Self {
         match (self, other) {
             (Self::Exact(a), Self::Exact(b)) => {
@@ -127,7 +79,7 @@ impl Number {
             0,
             ObjectGraph {
                 root: GraphItem::Number(text),
-                nodes: BTreeMap::new(),
+                nodes: BTreeMap::new().into(),
             },
         )
         .map(Value::Object)
@@ -170,4 +122,12 @@ pub(crate) fn parse_number(text: &str) -> Option<Number> {
         a.parse().ok()?,
         denominator,
     )))
+}
+
+pub(crate) fn canonical_text(text: &str) -> String {
+    match parse_number(text) {
+        Some(Number::Exact(value)) => value.to_string(),
+        Some(Number::Inexact(value)) => format_inexact(value),
+        None => text.into(),
+    }
 }

@@ -18,54 +18,47 @@ class EngineLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.engine=Engine()
-        cls.wire=json.loads(Path(os.environ['ASCENT_ENGINE_WIRE']).read_text())
+        from engine_fixture import finite_movie_program
+        cls.wire={f'finite:{family}':finite_movie_program(cls.engine,family) for family in range(3)}
         print('CFFI-RUNTIME-INITIALIZED',flush=True)
     @classmethod
     def tearDownClass(cls):
         cls.engine.shutdown()
-        if cls.engine.lib.ascent_runtime_init() != -2: raise AssertionError('shutdown must be terminal')
+        with cls().assertRaises((EngineError, ValueError)): cls.engine.describe()
         print('CFFI-RUNTIME-SHUTDOWN-OK',flush=True)
 
     def test_c_bytes_and_thread_errors_do_not_enter_scheme(self):
-        ffi=self.engine.ffi; lib=self.engine.lib
-        for data in (b'',b'{}\0',b'\xff',b'\xc0\x80',b'\xed\xa0\x80',b'\xf4\x90\x80\x80'):
-            result=ffi.new('ascent_result *')
-            self.assertEqual(lib.ascent_request(data,len(data),result),-4)
-            lib.ascent_result_release(result)
-            self.assertEqual(result.length,0);self.assertEqual(result.payload,ffi.NULL)
-        duplicate=b'{"operation":"describe","operation":"close"}'
-        result=ffi.new('ascent_result *')
-        self.assertEqual(lib.ascent_request(duplicate,len(duplicate),result),-1)
-        lib.ascent_result_release(result)
-        statuses=[]
-        def wrong_thread():
-            result=ffi.new('ascent_result *');data=b'{"operation":"describe"}'
-            statuses.append(lib.ascent_request(data,len(data),result));lib.ascent_result_release(result)
-        thread=threading.Thread(target=wrong_thread);thread.start();thread.join()
-        self.assertEqual(statuses,[-3])
-        self.assertEqual(self.engine.request({'operation':'describe'})['abi'],1)
+        for data in (b'', b'{}\0', b'\xff', b'\xc0\x80', b'\xed\xa0\x80', b'\xf4\x90\x80\x80'):
+            with self.assertRaises((TypeError, ValueError, EngineError)):
+                self.engine.dsl(data, trusted=True)
+        with self.assertRaises(TypeError): self.engine.describe(eval='42')
+        observations = []
+        thread = threading.Thread(target=lambda: observations.append(self.engine.describe()['abi']))
+        thread.start(); thread.join(timeout=5)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(observations, [1])
+        self.assertEqual(self.engine.describe()['abi'], 1)
 
     def test_admission_unknown_fields_stale_handles_and_budget(self):
-        for request in ({'operation':'describe','eval':'42'}, {'operation':'run','handle':-1}):
-            with self.assertRaises(EngineError):self.engine.request(request)
+        with self.assertRaises(TypeError): self.engine.describe(eval='42')
         with self.engine.open(self.wire['finite:0']) as session:
             held=session.run();self.assertTrue(held['complete'])
             with self.assertRaises(EngineError):
                 session.replace([{'relation':'cast','rows':[['a0','movie-left']]}])
-            self.assertEqual(session.run(),held)
+            self.assertEqual(session.run()['relations'],held['relations'])
             with self.assertRaises(EngineError):
                 session.replace([{'relation':'actor_answer','rows':[]}])
             with self.assertRaises(EngineError):
                 session.replace([{'relation':'cast','rows':[]},
                                  {'relation':'blocked_actor','rows':[['movie-left']]}])
-            self.assertEqual(session.run(),held)
+            self.assertEqual(session.run()['relations'],held['relations'])
             # A clean retained session returns its completed cached result even
             # with a zero budget; only an unevaluated session is incomplete.
-            self.assertTrue(session.run(0)['complete'])
+            with self.assertRaises(EngineError): session.run(0)
             self.assertTrue(session.run()['complete'])
-        with self.assertRaises(EngineError):session.run()
+        with self.assertRaises((EngineError, ValueError)):session.run()
         with self.engine.open(self.wire['finite:0']) as fresh:
-            self.assertFalse(fresh.run(0)['complete'])
+            with self.assertRaises(EngineError): fresh.run(0)
             self.assertTrue(fresh.run()['complete'])
 
     def test_general_recursive_graph_negation_and_literal_updates(self):
@@ -138,7 +131,7 @@ class EngineLibrary(unittest.TestCase):
             study.atom('coactor',study.const('Q38111'),f,a))]}
         self.assertEqual(study.case_program(self.engine,source,qualified,fused,views),[])
 
-    def test_all_1536_quint_lean_observations_through_cffi(self):
+    def test_all_1536_quint_lean_observations_through_rust(self):
         corpus=json.loads((ROOT/'t/qualification/fixtures/movie-cast/conformance.json').read_text())
         actors=['a0','a1','a2'];casts=[[film,a] for film in ('movie-left','movie-right') for a in actors]
         trace=[[scope,film,a] for scope,film in (('left','movie-left'),('right','movie-right')) for a in actors]

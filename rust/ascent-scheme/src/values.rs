@@ -28,7 +28,7 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
         }
         Data::Text(value) => runtime
             .string_from_utf8(value)
-            .map(|value| value.into_object())
+            .map(gerbil_scheme::RootedSchemeString::into_object)
             .map_err(native_error),
         Data::List(values) => {
             let values = values
@@ -37,7 +37,7 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
                 .collect::<Result<Vec<_>>>()?;
             runtime
                 .collection_from_objects(CollectionKind::List, &values.iter().collect::<Vec<_>>())
-                .map(|value| value.into_object())
+                .map(gerbil_scheme::RootedSchemeCollection::into_object)
                 .map_err(native_error)
         }
         Data::Map(values) => {

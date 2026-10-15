@@ -1,5 +1,5 @@
 //! Catalog terms and checked operators are lowered exactly once at admission.
-use super::{scalar, shape};
+use super::values::{scalar_in, shape};
 use crate::{
     Atom, Clause, Data, Expression, Operator, Reducer, Relation, Result, Term, Type,
     invalid_data as invalid,
@@ -13,7 +13,7 @@ pub(super) fn variable(name: &str, names: &mut Names) -> Result<u32> {
     let next = u32::try_from(names.len()).map_err(|_| invalid("variable bound"))?;
     Ok(*names.entry(name.into()).or_insert(next))
 }
-fn term(value: &Data, ty: Type, names: &mut Names) -> Result<Term> {
+fn term(value: &Data, ty: Type, names: &mut Names, pool: &[crate::Value]) -> Result<Term> {
     if value.map()?.len() != 1 {
         return Err(invalid("one variable or constant field required"));
     }
@@ -26,12 +26,13 @@ fn term(value: &Data, ty: Type, names: &mut Names) -> Result<Term> {
     if let Some(name) = value.get("var") {
         return variable(name.text()?, names).map(Term::Variable);
     }
-    scalar(value.field("const")?, ty).map(Term::Literal)
+    scalar_in(value.field("const")?, ty, pool).map(Term::Literal)
 }
 pub(super) fn atom(
     value: &Data,
     relations: &BTreeMap<String, &Relation>,
     names: &mut Names,
+    pool: &[crate::Value],
 ) -> Result<Atom> {
     let label = value.field("relation")?.text()?;
     let declaration = relations
@@ -46,7 +47,7 @@ pub(super) fn atom(
         cells
             .iter()
             .zip(&declaration.columns)
-            .map(|(cell, ty)| term(cell, *ty, names))
+            .map(|(cell, ty)| term(cell, *ty, names, pool))
             .collect::<Result<_>>()?,
     ))
 }
@@ -54,11 +55,12 @@ pub(super) fn clause(
     value: &Data,
     relations: &BTreeMap<String, &Relation>,
     names: &mut Names,
+    pool: &[crate::Value],
 ) -> Result<Clause> {
     let Some(mode) = value.get("mode") else {
         shape(value, &["relation", "terms"], &["not"])?;
         return Ok(Clause::Relation {
-            atom: atom(value, relations, names)?,
+            atom: atom(value, relations, names, pool)?,
             negative: value
                 .get("not")
                 .map(Data::boolean)
@@ -67,6 +69,14 @@ pub(super) fn clause(
         });
     };
     match mode.text()? {
+        "guard-expression" => {
+            shape(value, &["mode", "expression"], &[])?;
+            let mut remaining = 65_536;
+            Ok(Clause::Guard {
+                inputs: vec![],
+                expression: expression(value.field("expression")?, names, 0, &mut remaining, pool)?,
+            })
+        }
         "reduce" => {
             shape(
                 value,
@@ -75,7 +85,7 @@ pub(super) fn clause(
             )?;
             let operator = Reducer::named(value.field("operator")?.text()?)
                 .ok_or_else(|| invalid("unknown reducer"))?;
-            let target = atom(value, relations, names)?;
+            let target = atom(value, relations, names, pool)?;
             let inputs = value
                 .field("inputs")?
                 .list()?
@@ -89,11 +99,16 @@ pub(super) fn clause(
                 output: variable(value.field("output")?.text()?, names)?,
             })
         }
-        "where" | "compute" => scalar_clause(value, mode.text()?, names),
+        "where" | "compute" => scalar_clause(value, mode.text()?, names, pool),
         _ => Err(invalid("unknown operator mode")),
     }
 }
-fn scalar_clause(value: &Data, mode: &str, names: &mut Names) -> Result<Clause> {
+fn scalar_clause(
+    value: &Data,
+    mode: &str,
+    names: &mut Names,
+    pool: &[crate::Value],
+) -> Result<Clause> {
     let required = if mode == "where" {
         vec!["mode", "operator", "terms"]
     } else {
@@ -108,7 +123,7 @@ fn scalar_clause(value: &Data, mode: &str, names: &mut Names) -> Result<Clause> 
             .field("terms")?
             .list()?
             .iter()
-            .map(|v| term(v, Type::Symbol, names).map(Expression::Term))
+            .map(|v| term(v, Type::Symbol, names, pool).map(Expression::Term))
             .collect::<Result<_>>()?,
     );
     match mode {
@@ -125,4 +140,34 @@ fn scalar_clause(value: &Data, mode: &str, names: &mut Names) -> Result<Clause> 
         }
         _ => Err(invalid("unsupported checked operator mode")),
     }
+}
+
+fn expression(
+    value: &Data,
+    names: &mut Names,
+    depth: usize,
+    remaining: &mut usize,
+    pool: &[crate::Value],
+) -> Result<Expression> {
+    if depth > 128 || *remaining == 0 {
+        return Err(invalid("expression structure bound"));
+    }
+    *remaining -= 1;
+    if value.get("operator").is_none() {
+        return term(value, Type::Any, names, pool).map(Expression::Term);
+    }
+    shape(value, &["operator", "arguments"], &[])?;
+    let operator = Operator::named(value.field("operator")?.text()?)
+        .ok_or_else(|| invalid("unknown owned operator"))?;
+    let arguments = value.field("arguments")?.list()?;
+    if !operator.arity(arguments.len()) {
+        return Err(invalid("operator arity"));
+    }
+    Ok(Expression::Call(
+        operator,
+        arguments
+            .iter()
+            .map(|v| expression(v, names, depth + 1, remaining, pool))
+            .collect::<Result<_>>()?,
+    ))
 }

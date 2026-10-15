@@ -3,7 +3,7 @@
 
 # ASCENT Workbench
 
-An independent Python project that consumes the public `ascent_engine` Library.
+An independent Python project that consumes the public `ascent` Library.
 It owns research experiments, provider byte IO, process supervision, formal
 qualification and native consumer tests. It does not implement relational truth
 or distribute the Library's bindings.
@@ -12,7 +12,7 @@ The two projects have separate package metadata:
 
 | Project | Package | Responsibility |
 | --- | --- | --- |
-| `python/` | `ascent-engine` | Public Python bindings and Library artifacts |
+| `python/` | `gerbil-ascent` | Public Python bindings and Library artifacts |
 | `workbench/` | `ascent-workbench` | Downstream experiments and qualification |
 
 For a local checkout, install both projects independently:
@@ -21,7 +21,7 @@ For a local checkout, install both projects independently:
 python3 -m pip install -e ./python -e ./workbench
 ```
 
-The workbench declares `ascent-engine` as a dependency. Its uv source declaration
+The workbench declares `gerbil-ascent` as a dependency. Its uv source declaration
 selects the adjacent Library project for local development. The Library has no
 dependency on the workbench.
 
@@ -39,8 +39,10 @@ equivalence laws. Every TLC check still executes; only source-bound compilation
 artifacts can be reused. Processes share the original whole-run deadlines, and
 native capacity determines independent checker concurrency.
 
-Native consumer tests require an explicitly prepared Library, API backend and
-wire fixture. Scheme owns compilation, source admission and query semantics.
+Native consumer tests use the installed Rust/PyO3 wheel and matching Gerbil
+syntax resources. The consumer verifies build-frozen source/resource identities.
+The original Scheme implementation owns DSL loading and host evaluation; Rust
+owns finite execution, resource admission and checked provenance.
 Run logs and checker outputs stay under `.cache/ascent/`.
 
 Research records and archived source snapshots retain their original bytes,

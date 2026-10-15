@@ -112,8 +112,8 @@ def obligation_acceptance(verdicts):
 
 def run(library,output,*,live=False,index=0,arm='retained',resume_prefix=None,failed_prefix=None,checkpoint_prefix=None,seed_offset=0):
     output.mkdir(parents=True,exist_ok=False);case=corpus(seed_offset)[index]
-    paths=[__file__,'python/src/ascent/interaction.py','python/src/ascent/trajectory.py',
-           'python/src/ascent/derivations.py','program/trajectory.ss','program/evidence-dag.ss']
+    paths=[__file__,'rust/ascent-python/src/api/evidence_conversation.rs','rust/ascent-python/src/api/trajectory.rs',
+           'rust/ascent/src/derivations.rs','program/trajectory.ss','program/evidence-dag.ss']
     plan={'schema':'ascent.interactive-study.v1','case':public(case),'arm':arm,'model':'deepseek-flash',
           'maxOutputTokens':131072,'maxCallsPerStage':8,'maxFinalFailuresPerStage':3,
           'endpoint':'Entire three-stage task: all calls through first independently correct answer for every stage, including source update and repairs.',
@@ -125,7 +125,7 @@ def run(library,output,*,live=False,index=0,arm='retained',resume_prefix=None,fa
           'replayedFirstCallFrom':str(resume_prefix) if resume_prefix is not None else None,
           'failedPrefixFrom':str(failed_prefix) if failed_prefix is not None else None,
           'checkpointPrefixFrom':str(checkpoint_prefix) if checkpoint_prefix is not None else None}
-    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine(library);calls=[];checks=[];verdicts=[]
+    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine();calls=[];checks=[];verdicts=[]
     operations=case['operations']
     if arm=='source-only':operations={s['name']:EvidenceOperation({'relations':case['sources'],'rules':[],'queries':[]},s['name'],
         'Arguments are a ground tuple in source '+s['name']+'. Checks source membership only.',True) for s in case['sources']}
@@ -158,10 +158,7 @@ def run(library,output,*,live=False,index=0,arm='retained',resume_prefix=None,fa
                     next_stem=old['calls'][cut]['id'] if cut<len(old['calls']) else f'stage-{start_stage}-call-{prefix_count}'
                     original_input=json.loads((prefix/(next_stem+'-request.json')).read_text())['input']
                     if original_input[0]!={'role':'user','content':question}:raise ValueError('failed-prefix question changed')
-                    conversation.history.items=copy.deepcopy(original_input)
-                    conversation.history.seen={i['call_id'] for i in original_input if i.get('type')=='function_call'}
-                    paired={i['call_id'] for i in original_input if i.get('type')=='function_call_output'}
-                    if conversation.history.seen!=paired:raise ValueError('failed-prefix tools are not fully paired')
+                    conversation.restore_history(original_input)
                     for original in old['calls'][:cut]:
                         if original['stage']==2 and interaction.chain.source_identity!=identity(case['changed']):
                             interaction.replace(case['changed']);current_round=0

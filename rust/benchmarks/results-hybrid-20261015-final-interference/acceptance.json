@@ -1,0 +1,4 @@
+{
+  "performance_acceptance": false,
+  "reason": "additional external Gerbil process observed during measurement; semantic checks passed"
+}

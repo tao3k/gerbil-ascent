@@ -1,29 +1,9 @@
 //! Native owned catalog admission shared by every language binding and workflow.
 use super::clauses;
+pub(crate) use super::values::shape;
+use super::values::{scalar, scalar_in};
 use crate::{Data, Program, Relation, Result, Rule, Type, Value, invalid_data as invalid};
 use std::collections::{BTreeMap, BTreeSet};
-pub(crate) fn shape(value: &Data, required: &[&str], optional: &[&str]) -> Result<()> {
-    let fields = value.map()?;
-    if required.iter().any(|k| !fields.contains_key(*k))
-        || fields
-            .keys()
-            .any(|k| !required.contains(&k.as_str()) && !optional.contains(&k.as_str()))
-    {
-        return Err(invalid("catalog fields"));
-    }
-    Ok(())
-}
-pub(crate) fn scalar(value: &Data, ty: Type) -> Result<Value> {
-    match value {
-        Data::Integer(n) => Ok(Value::Integer(n.clone())),
-        Data::Bool(v) => Ok(Value::Boolean(*v)),
-        Data::Text(v) if matches!(ty, Type::Symbol | Type::Scalar) && v.len() <= 4096 => {
-            Ok(Value::Symbol(v.as_str().into()))
-        }
-        Data::Text(v) => Ok(Value::Text(v.as_str().into())),
-        _ => Err(invalid("typed catalog scalar required")),
-    }
-}
 /// Fully owned program and explicit observation projection, independent from Python.
 #[derive(Clone, Debug)]
 pub struct Catalog {
@@ -34,13 +14,14 @@ impl Catalog {
     /// # Errors
     /// Rejects unknown fields, malformed types/terms and unrecognized operators.
     pub fn read(value: &Data) -> Result<Self> {
-        shape(value, &["relations", "rules"], &["queries"])?;
+        shape(value, &["relations", "rules"], &["queries", "values"])?;
+        let pool = read_pool(value.get("values"))?;
         let mut program = Program {
             relations: value
                 .field("relations")?
                 .list()?
                 .iter()
-                .map(read_relation)
+                .map(|r| read_relation_in(r, &pool))
                 .collect::<Result<_>>()?,
             ..Program::default()
         };
@@ -56,7 +37,7 @@ impl Catalog {
             .field("rules")?
             .list()?
             .iter()
-            .map(|rule| read_rule(rule, &declarations))
+            .map(|rule| read_rule(rule, &declarations, &pool))
             .collect::<Result<Vec<_>>>()?
             .into_iter()
             .flatten()
@@ -78,7 +59,14 @@ impl Catalog {
     }
 }
 pub(crate) fn read_relation(raw: &Data) -> Result<Relation> {
-    shape(raw, &["name", "columns", "source"], &["rows"])?;
+    read_relation_in(raw, &[])
+}
+fn read_relation_in(raw: &Data, pool: &[Value]) -> Result<Relation> {
+    shape(
+        raw,
+        &["name", "columns", "source"],
+        &["rows", "lattice", "initialOccurrences"],
+    )?;
     let name = raw.field("name")?.identity()?;
     let columns = raw.field("columns")?.list()?;
     if columns.len() > 16 {
@@ -92,6 +80,19 @@ pub(crate) fn read_relation(raw: &Data) -> Result<Relation> {
         .unzip();
     let mut relation = Relation::new(name, types, raw.field("source")?.boolean()?);
     relation.domains = domains;
+    relation.initial_occurrences = raw
+        .get("initialOccurrences")
+        .map(Data::boolean)
+        .transpose()?
+        .unwrap_or(false);
+    relation.lattice = raw
+        .get("lattice")
+        .map(|v| match v.text()? {
+            "min" => Ok(crate::LatticeJoin::Min),
+            "max" => Ok(crate::LatticeJoin::Max),
+            _ => Err(invalid("unsupported native lattice")),
+        })
+        .transpose()?;
     if let Some(rows) = raw.get("rows") {
         relation.rows = rows
             .list()?
@@ -104,7 +105,7 @@ pub(crate) fn read_relation(raw: &Data) -> Result<Relation> {
                 cells
                     .iter()
                     .zip(&relation.columns)
-                    .map(|(v, ty)| scalar(v, *ty))
+                    .map(|(v, ty)| scalar_in(v, *ty, pool))
                     .collect::<Result<Vec<_>>>()
                     .map(Into::into)
             })
@@ -113,14 +114,18 @@ pub(crate) fn read_relation(raw: &Data) -> Result<Relation> {
     Ok(relation)
 }
 
-fn read_rule(raw: &Data, declarations: &BTreeMap<String, &Relation>) -> Result<Vec<Rule>> {
+fn read_rule(
+    raw: &Data,
+    declarations: &BTreeMap<String, &Relation>,
+    pool: &[Value],
+) -> Result<Vec<Rule>> {
     shape(raw, &["head", "body"], &[])?;
     let mut names = BTreeMap::new();
     let body = raw
         .field("body")?
         .list()?
         .iter()
-        .map(|c| clauses::clause(c, declarations, &mut names))
+        .map(|c| clauses::clause(c, declarations, &mut names, pool))
         .collect::<Result<Vec<_>>>()?;
     let heads = raw.field("head")?.list()?;
     if heads.is_empty() {
@@ -139,7 +144,7 @@ fn read_rule(raw: &Data, declarations: &BTreeMap<String, &Relation>) -> Result<V
                 return Err(invalid("negative rule head"));
             }
             Ok(Rule {
-                head: clauses::atom(head, declarations, &mut names)?,
+                head: clauses::atom(head, declarations, &mut names, pool)?,
                 body: body.clone(),
             })
         })
@@ -166,4 +171,45 @@ fn read_column(column: &Data) -> Result<(Type, Option<BTreeSet<Value>>)> {
         })
         .transpose()?;
     Ok((ty, domain))
+}
+
+fn read_pool(value: Option<&Data>) -> Result<Vec<Value>> {
+    let Some(value) = value else {
+        return Ok(vec![]);
+    };
+    let graph = crate::ObjectGraph::read_native(value)?;
+    let crate::GraphItem::Reference(id) = graph.root else {
+        return Err(invalid("owned value pool root"));
+    };
+    let Some(crate::ObjectNode::Vector(roots)) = graph.nodes.get(&id) else {
+        return Err(invalid("owned value pool vector required"));
+    };
+    if graph.nodes.values().any(|n| {
+        matches!(
+            n,
+            crate::ObjectNode::Opaque(_)
+                | crate::ObjectNode::Table(_)
+                | crate::ObjectNode::Symbol {
+                    interned: false,
+                    ..
+                }
+        )
+    }) {
+        return Err(invalid("identity-bearing objects require the Scheme VM"));
+    }
+    let identity = crate::allocate_source_identity()?;
+    roots
+        .iter()
+        .map(|root| {
+            crate::FrozenValue::new(
+                identity,
+                identity,
+                crate::ObjectGraph {
+                    root: root.clone(),
+                    nodes: graph.nodes.clone(),
+                },
+            )
+            .map(Value::Object)
+        })
+        .collect()
 }

@@ -48,7 +48,7 @@ class InferenceReuse(unittest.TestCase):
 
     def test_actual_scheme_repeat_and_source_update_match_fresh_evaluation(self):
         code='''
-from ascent import Engine
+from ascent import Engine, EngineError
 from ascent_workbench import inference_reuse_study as s
 import os
 with Engine() as e:
@@ -57,7 +57,9 @@ with Engine() as e:
         with e.open(s.program(source,contract)) as retained:
             initial=retained.run()
             assert initial['complete'] and sorted(initial['relations']['answer'])==s.expected(case,source)
-            assert retained.run(0)==initial
+            try: retained.run(0); raise AssertionError('zero deadline admitted')
+            except EngineError: pass
+            assert retained.run()['relations']==initial['relations']
             current=s.updated(case)
             retained.replace([{'relation':n,'rows':r} for n,r in current['rows'].items()])
             result=retained.run()
@@ -65,7 +67,9 @@ with Engine() as e:
             assert result['relations']['answer']!=initial['relations']['answer']
             with e.open(s.program(current,contract)) as fresh:
                 assert sorted(fresh.run()['relations']['answer'])==sorted(result['relations']['answer'])
-            assert retained.run(0)==result
+            try: retained.run(0); raise AssertionError('zero deadline admitted')
+            except EngineError: pass
+            assert retained.run()['relations']==result['relations']
             print('RETAINED-SOURCE-UPDATE-OK',case['name'],flush=True)
 '''
         subprocess.run([sys.executable,'-u','-'],input=code,text=True,check=True,

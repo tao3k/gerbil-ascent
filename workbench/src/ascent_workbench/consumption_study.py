@@ -65,9 +65,9 @@ def run(library,output,live,index=None):
     plan={'schema':'ascent.evidence-consumption-study.v1','cases':cases,'model':'deepseek-flash','maxOutputTokens':131072,
           'maxAttemptsPerGoal':3,'primary':'Whole task until all THREE goals pass, including shared initial usage and every failure/repair.',
           'intervention':'Checked executable continuation versus correct intermediate facts with manual result enumeration; this is tool offloading, not a pure reasoning-content treatment.',
-          'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/evidence-dag.ss','program/trajectory.ss','python/src/ascent/derivations.py','python/src/ascent/trajectory.py']},
+          'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in [__file__,'program/evidence-dag.ss','program/trajectory.ss','rust/ascent/src/derivations.rs','rust/ascent-python/src/api/trajectory.rs']},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest()}
-    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine(library);records=[];audit=[];key=provider_key() if live else None
+    (output/'plan.json').write_text(json.dumps(plan,indent=2));engine=Engine();records=[];audit=[];key=provider_key() if live else None
     def invoke(history,folder,stem):
         folder.mkdir(exist_ok=True);request={'model':'deepseek-flash','input':history.input(),'reasoning':{'effort':'high'},'max_output_tokens':131072,'stream':True,'store':False}
         (folder/(stem+'-request.json')).write_text(json.dumps(request,indent=2));print('CALL',folder.name,stem,flush=True)
@@ -131,7 +131,7 @@ def run(library,output,live,index=None):
 
 
 def legacy_repair(library,output):
-    output.mkdir(parents=True,exist_ok=False);engine=Engine(library);records=[]
+    output.mkdir(parents=True,exist_ok=False);engine=Engine();records=[]
     try:
         for index in range(4):
             source=Path(f'.cache/ascent/correction/holdout-{index}');plan=json.loads((source/'plan.json').read_text());case=plan['cases'][0]

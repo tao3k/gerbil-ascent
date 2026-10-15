@@ -1,0 +1,9 @@
+test_explicit_empty_query_keeps_visitor_order (test_uf_lookup.UFLookupTests.test_explicit_empty_query_keeps_visitor_order) ... ok
+test_grouped_selectors_follow_independent_closure_and_held_order (test_uf_lookup.UFLookupTests.test_grouped_selectors_follow_independent_closure_and_held_order) ... ok
+test_union_and_explicit_fallback_preserve_complete_order (test_uf_lookup.UFLookupTests.test_union_and_explicit_fallback_preserve_complete_order) ... ok
+test_weighted_products_keep_checked_selectors_after_component_retirement (test_uf_lookup.UFLookupTests.test_weighted_products_keep_checked_selectors_after_component_retirement) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 2.764s
+
+OK

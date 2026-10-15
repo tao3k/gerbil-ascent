@@ -17,7 +17,7 @@ class ExhaustedThinkingContinuation(unittest.TestCase):
         self.assertEqual(result.input()[-2],incomplete)
         with self.assertRaises(ValueError):
             result.append_response({'output':[{'type':'function_call','call_id':'scan','name':'scan_facts','arguments':'{}'}]})
-        result.items[1]['content'][0]['text']='changed'
+        result.snapshot()[1]['content'][0]['text']='changed'
         self.assertEqual(prior['content'][0]['text'],'opaque prior')
 
 

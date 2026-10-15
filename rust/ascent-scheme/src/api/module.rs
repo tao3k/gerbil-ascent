@@ -16,7 +16,7 @@ impl Owner {
     pub fn check(&self) -> Result<()> {
         check(&self.engine, self.closed.load(Ordering::Acquire))
     }
-    fn close(&self) {
+    pub(super) fn close(&self) {
         if !self.closed.swap(true, Ordering::AcqRel) {
             let _ = invoke("module-close", [("owner", Data::from(self.id))]);
         }
@@ -31,7 +31,7 @@ impl Drop for Owner {
 #[derive(Clone)]
 pub struct Module(pub(super) Arc<Owner>);
 impl Module {
-    pub(super) fn new(engine: &Engine, result: Data) -> Result<Self> {
+    pub(super) fn new(engine: &Engine, result: &Data) -> Result<Self> {
         let components = result
             .get("components")
             .map(|v| {
@@ -42,12 +42,14 @@ impl Module {
             })
             .transpose()?
             .unwrap_or_default();
-        Ok(Self(Arc::new(Owner {
+        let module = Self(Arc::new(Owner {
             engine: engine.clone(),
-            id: id(&result, "owner")?,
+            id: id(result, "owner")?,
             closed: AtomicBool::new(false),
             components,
-        })))
+        }));
+        engine.track_module(&module.0)?;
+        Ok(module)
     }
     /// Call a public native export in its current lexical environment.
     /// # Errors
@@ -87,10 +89,18 @@ impl Module {
         if let Some(v) = component {
             fields.push(("component", Data::from(v)));
         }
-        if let Some(v) = module {
-            fields.push(("module", Data::from(v)));
+        let target = match module {
+            Some(name) if self.0.engine.is_registered(name)? => {
+                Some(self.0.engine.resolve_module(name)?)
+            }
+            _ => None,
+        };
+        if let Some(target) = &target {
+            fields.push(("moduleOwner", Data::from(target.0.id)));
+        } else if let Some(name) = module {
+            fields.push(("module", Data::from(name)));
         }
-        ModuleValue::new(self.clone(), self.0.engine.invoke("module-call", fields)?)
+        ModuleValue::new(self.clone(), &self.0.engine.invoke("module-call", fields)?)
     }
     /// List selected component identities.
     /// # Errors
@@ -113,16 +123,16 @@ pub struct ModuleValue {
     owner: Module,
     handle: u64,
     count: usize,
-    graph: Data,
+    graph: Option<Data>,
     released: AtomicBool,
 }
 impl ModuleValue {
-    fn new(owner: Module, receipt: Data) -> Result<Self> {
+    fn new(owner: Module, receipt: &Data) -> Result<Self> {
         Ok(Self {
             owner,
-            handle: id(&receipt, "valueHandle")?,
+            handle: id(receipt, "valueHandle")?,
             count: receipt.field("valueCount")?.index()?,
-            graph: receipt.field("value")?.clone(),
+            graph: receipt.get("value").cloned(),
             released: AtomicBool::new(false),
         })
     }
@@ -143,7 +153,9 @@ impl ModuleValue {
     /// Rejects released or closed values.
     pub fn graph(&self) -> Result<Data> {
         self.check()?;
-        Ok(self.graph.clone())
+        self.graph.clone().ok_or_else(|| {
+            crate::failure("native graph transport bound; value remains available by reference")
+        })
     }
     /// Number of native multiple return values.
     /// # Errors
@@ -160,6 +172,8 @@ impl ModuleValue {
         let node = if let Some(node) = node {
             if !self
                 .graph
+                .as_ref()
+                .ok_or_else(|| crate::failure("native graph is unavailable"))?
                 .field("nodes")?
                 .list()?
                 .iter()
@@ -169,16 +183,19 @@ impl ModuleValue {
             }
             node
         } else {
-            invoke(
-                "module-value",
-                [
-                    ("owner", Data::from(self.owner.0.id)),
-                    ("value", Data::from(self.handle)),
-                    ("action", Data::from("reference")),
-                ],
-            )?
-            .field("node")?
-            .index()?
+            self.owner
+                .0
+                .engine
+                .invoke(
+                    "module-value",
+                    [
+                        ("owner", Data::from(self.owner.0.id)),
+                        ("value", Data::from(self.handle)),
+                        ("action", Data::from("reference")),
+                    ],
+                )?
+                .field("node")?
+                .index()?
         };
         Ok(ValueReference {
             owner: self.owner.0.id,
@@ -193,7 +210,7 @@ impl ModuleValue {
         self.check()?;
         Self::new(
             self.owner.clone(),
-            self.owner.0.engine.invoke(
+            &self.owner.0.engine.invoke(
                 "module-apply",
                 [
                     ("owner", Data::from(self.owner.0.id)),
@@ -208,7 +225,7 @@ impl ModuleValue {
     /// Rejects non-program values, invalid limits and revoked owners.
     pub fn open_session(&self, limits: FactLimits) -> Result<Evidence> {
         self.check()?;
-        let receipt = invoke(
+        let receipt = self.owner.0.engine.invoke(
             "value-evidence",
             [
                 ("owner", Data::from(self.owner.0.id)),
@@ -217,6 +234,33 @@ impl ModuleValue {
             ],
         )?;
         Evidence::new(&self.owner.0.engine, receipt)
+    }
+    /// Export admitted immutable data into a Rayon session, without VM entry during solving.
+    /// The native session API remains available for Scheme callbacks and explanations.
+    /// # Errors
+    /// Rejects non-projectable host semantics; no Rust Scheme evaluator is used.
+    pub fn project_session(&self, limits: FactLimits) -> Result<gerbil_ascent::SourceSession> {
+        self.check()?;
+        let loaded = self.owner.0.engine.invoke(
+            "value-evidence",
+            [
+                ("owner", Data::from(self.owner.0.id)),
+                ("value", Data::from(self.handle)),
+                ("factLimits", super::policy(limits)),
+            ],
+        )?;
+        let result = (|| {
+            let projection = loaded.field("projection")?;
+            if projection.field("status")?.text()? != "supported" {
+                return Err(crate::failure(
+                    "program requires Scheme callbacks; Rayon projection unavailable",
+                ));
+            }
+            self.owner.0.engine.open_projection(&loaded, limits)
+        })();
+        let released = invoke("close", [("handle", loaded.field("handle")?.clone())]);
+        released?;
+        result
     }
     /// Release native retained state exactly once.
     pub fn close(&self) {

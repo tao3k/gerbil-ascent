@@ -1,0 +1,14 @@
+test_cancel_during_replacement_preserves_result_and_generation (test_execution_authority.ExecutionAuthority.test_cancel_during_replacement_preserves_result_and_generation) ... ok
+test_canceled_queued_replace_never_commits_after_the_vm_becomes_free (test_execution_authority.ExecutionAuthority.test_canceled_queued_replace_never_commits_after_the_vm_becomes_free) ... ok
+test_deadline_during_replacement_preserves_result_and_generation (test_execution_authority.ExecutionAuthority.test_deadline_during_replacement_preserves_result_and_generation) ... ok
+test_fresh_replace_is_transactional_without_an_initial_solve (test_execution_authority.ExecutionAuthority.test_fresh_replace_is_transactional_without_an_initial_solve) ... ok
+test_limits_apply_to_existing_modules_and_source_admission (test_execution_authority.ExecutionAuthority.test_limits_apply_to_existing_modules_and_source_admission) ... ok
+test_open_does_not_run_user_rule_callbacks (test_execution_authority.ExecutionAuthority.test_open_does_not_run_user_rule_callbacks) ... ok
+test_proof_revoked_by_native_session_close (test_execution_authority.ExecutionAuthority.test_proof_revoked_by_native_session_close) ... ok
+test_proof_survives_result_release_and_is_revoked_on_replace (test_execution_authority.ExecutionAuthority.test_proof_survives_result_release_and_is_revoked_on_replace) ... ok
+test_zero_deadline_and_precancellation_reject_cached_native_results (test_execution_authority.ExecutionAuthority.test_zero_deadline_and_precancellation_reject_cached_native_results) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.691s
+
+OK

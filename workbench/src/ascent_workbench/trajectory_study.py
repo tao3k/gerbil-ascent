@@ -122,10 +122,10 @@ def run(library,output,live):
           'primary':'Actual cumulative provider thinking through first independently verified correct answer, including failures and repairs.',
           'sampling':'Eight independent generated cases; arm order alternates; evidence appears only after an actual error.',
           'providerOutputSchemaEnforced':False,'sourceHashes':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in
-            ['program/evidence-dag.ss','program/trajectory.ss','python/src/ascent/trajectory.py',__file__]},
+            ['program/evidence-dag.ss','program/trajectory.ss','rust/ascent-python/src/api/trajectory.rs',__file__]},
           'librarySha256':hashlib.sha256(library.read_bytes()).hexdigest()}
     (output/'plan.json').write_text(json.dumps(plan,indent=2))
-    engine=Engine(library);records=[];key=provider_key() if live else None
+    engine=Engine();records=[];key=provider_key() if live else None
     try:
         for index,case in enumerate(cases):
             # Independently derived closure must agree with actual Scheme execution.

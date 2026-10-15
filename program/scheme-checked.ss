@@ -19,7 +19,7 @@
         relational-finite-view relational-captured-value
         relational-term-fingerprint relational-reducer
         relational-operator-literal relational-operand-variables
-        relational-where relational-compute relational-stable-procedure?)
+        relational-where relational-compute relational-stable-procedure? relational-operator-description)
 
 (def +stable-procedures+
   (make-hash-table test: eq? weak-keys: #t lock: (make-mutex)))
@@ -30,6 +30,18 @@
   (hash-put! +stable-procedures+ procedure #t) procedure)
 (def (relational-stable-procedure? procedure)
   (and (procedure? procedure) (hash-get +stable-procedures+ procedure) #t))
+
+
+;; A projection may read sealed semantics, never a caller-owned descriptor.
+(def (copy-description value)
+  (cond ((pair? value) (cons (copy-description (car value)) (copy-description (cdr value))))
+        ((vector? value) (list->vector (map copy-description (vector->list value))))
+        ((string? value) (string-copy value)) (else value)))
+(def (seal-operator procedure description)
+  (hash-put! +stable-procedures+ procedure (copy-description description)) procedure)
+(def (relational-operator-description procedure)
+  (let (description (hash-get +stable-procedures+ procedure))
+    (and (vector? description) (copy-description description))))
 
 ;;; The checked language admits only scalar atoms with stable equality and
 ;;; hash behavior. Copy list spines before a source or mapping retains rows.
@@ -115,7 +127,8 @@
          (map identity atoms)) domains))
 
 (def (relational-domain-predicates domains)
-  (map (lambda (atoms) (lambda (value) (and (member value atoms) #t))) domains))
+  (map (lambda (atoms)
+    (seal-operator (lambda (value) (and (member value atoms) #t)) (vector 'domain atoms))) domains))
 
 (def (relational-finite-source name arity rows domains)
   (let (copied (relational-domain-copy arity domains))
@@ -136,7 +149,7 @@
 ;;; Lattice joins are chosen by a closed descriptor and rebuilt during
 ;;; admission. The last column is an exact integer; keys stay scalar.
 (def (relational-lattice-join mode)
-  (relational-stable
+  (seal-operator
   (case mode
     ((max)
      (lambda (left right)
@@ -148,7 +161,7 @@
        (unless (and (exact-integer? left) (exact-integer? right))
          (error "min lattice needs exact integer values"))
        (min left right)))
-    (else (error "unknown checked lattice join" mode)))))
+    (else (error "unknown checked lattice join" mode))) (vector 'lattice mode)))
 
 (def (relational-checked-lattice name arity rows mode)
   (unless (and (exact-integer? arity) (> arity 0) (list? rows))
@@ -299,7 +312,7 @@
 (def (relational-reducer output mode inputs relation terms)
   (gerbil-ascent-aggregate
    output relation terms inputs
-   (relational-reducer-procedure mode inputs) #f
+   (seal-operator (relational-reducer-procedure mode inputs) (vector 'reducer mode (map identity inputs))) #f
    (vector 'reduce mode output relation
            (map identity inputs)
            (relational-term-fingerprint terms))))
@@ -346,9 +359,9 @@
          (inputs (relational-operand-variables operands)))
     (gerbil-ascent-guard
      inputs
-     (relational-operator-call
-      (relational-operator-procedure 'where operation (length operands))
-      operands)
+     (seal-operator
+      (relational-operator-call (relational-operator-procedure 'where operation (length operands)) operands)
+      (vector 'where operation operands))
      (vector 'where operation operands))))
 
 (def (relational-compute output operation variables)
@@ -356,7 +369,7 @@
          (inputs (relational-operand-variables operands)))
     (gerbil-ascent-binding
      output inputs
-     (relational-operator-call
-      (relational-operator-procedure 'compute operation (length operands))
-      operands)
+     (seal-operator
+      (relational-operator-call (relational-operator-procedure 'compute operation (length operands)) operands)
+      (vector 'compute operation operands))
      (vector 'compute operation operands output))))

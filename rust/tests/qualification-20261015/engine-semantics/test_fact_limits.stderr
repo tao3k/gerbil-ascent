@@ -1,0 +1,14 @@
+test_default_has_no_fact_ceiling_and_withdraws_large_source (test_fact_limits.FactLimitTests.test_default_has_no_fact_ceiling_and_withdraws_large_source) ... ok
+test_explicit_output_and_derived_ceilings_are_native_failures (test_fact_limits.FactLimitTests.test_explicit_output_and_derived_ceilings_are_native_failures) ... ok
+test_finite_limits_count_duplicates_and_leave_rejected_update_atomic (test_fact_limits.FactLimitTests.test_finite_limits_count_duplicates_and_leave_rejected_update_atomic) ... ok
+test_invalid_finite_policy_is_rejected_natively (test_fact_limits.FactLimitTests.test_invalid_finite_policy_is_rejected_natively) ... ok
+test_large_request_default_and_explicit_caller_byte_policy (test_fact_limits.FactLimitTests.test_large_request_default_and_explicit_caller_byte_policy) ... ok
+test_native_reference_and_positive_change_have_no_default_count_ceiling (test_fact_limits.FactLimitTests.test_native_reference_and_positive_change_have_no_default_count_ceiling) ... ok
+test_operator_default_and_native_program_constructor_are_unlimited (test_fact_limits.FactLimitTests.test_operator_default_and_native_program_constructor_are_unlimited) ... ok
+test_policy_cannot_loosen_explicit_dsl_bounds (test_fact_limits.FactLimitTests.test_policy_cannot_loosen_explicit_dsl_bounds) ... ok
+test_pure_dsl_text_uses_unlimited_counts_but_respects_explicit_bounds (test_fact_limits.FactLimitTests.test_pure_dsl_text_uses_unlimited_counts_but_respects_explicit_bounds) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.248s
+
+OK

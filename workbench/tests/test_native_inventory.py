@@ -14,14 +14,24 @@ from ascent_workbench.native_tests import API_FILES, ROOT, inventory, qualificat
 
 
 class NativeInventory(unittest.TestCase):
+    def test_unittest_warnings_do_not_hide_outcomes_or_admit_missing_results(self):
+        import runpy
+        parse=runpy.run_path(str(ROOT/'workbench/engine_tests/run_suite.py'))['parse_outcomes']
+        text=("test_fork (module.Contract.test_fork) ... warning: fork\n"
+              "  pid = os.fork()\n"
+              "ok\n"
+              "test_failure (module.Contract.test_failure) ... FAIL\n"
+              "test_missing (module.Contract.test_missing) ... ")
+        self.assertEqual(parse(text),{'module.Contract.test_fork':'ok',
+                                     'module.Contract.test_failure':'FAIL'})
+
     def test_original_matrix_has_every_file_and_selected_api_controls(self):
         tasks = inventory(ROOT / "workbench/engine_tests")
-        abi = [path.name for backend, path in tasks if backend == "abi"]
-        api = [path.name for backend, path in tasks if backend == "api"]
-        self.assertEqual(len(abi), 33)
-        self.assertEqual(len(set(abi)), 33)
-        self.assertEqual(api, list(API_FILES))
-        self.assertEqual(len(tasks), 40)
+        bindings = [path.name for backend,path in tasks if backend == 'pyo3']
+        self.assertEqual(len(bindings),34)
+        self.assertEqual(len(set(bindings)),34)
+        self.assertTrue(set(API_FILES)<=set(bindings))
+        self.assertEqual(len(tasks),34)
 
     def test_missing_selected_backend_control_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -33,37 +43,27 @@ class NativeInventory(unittest.TestCase):
 
     def test_source_resource_and_backend_identity_changes_are_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder).resolve()
-            library = root / "bundle/libascent.so"
-            resource = library.parent / "syntax/module.o1"
-            extension = root / "api/_ascent_cffi.so"
-            source = root / "program.ss"
-            for path in (library, resource, extension, source, root / "justfile", root / ".github/workflows/ci.yml"):
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b"original")
-            sha = hashlib.sha256(b"original").hexdigest()
-            producer = {"sourceRoot": str(root), "sourceInputs": {"program.ss": sha},
-                        "librarySha256": sha, "syntaxResources": {"module.o1": {"sha256": sha}}}
-            library.with_suffix(".so.json").write_text(json.dumps(producer))
-            api = {"producerBuild": producer, "extensionSha256": sha,
-                   "library": "libascent.so", "librarySha256": sha}
-            (extension.parent / api["library"]).write_bytes(b"original")
-            api_sidecar = extension.parent / "receipt.json"
-            api_sidecar.write_text(json.dumps(api))
-            with patch("ascent_workbench.native_tests.ROOT", root), \
-                 patch.dict(os.environ, ASCENT_ENGINE_LIBRARY=str(library)), \
-                 patch("ascent_workbench.native_tests.importlib.util.find_spec", return_value=SimpleNamespace(origin=str(extension))):
-                self.assertIn(str(resource), qualification_inputs([]))
-                for changed in (source, resource, extension):
-                    changed.write_bytes(b"modified")
-                    with self.assertRaisesRegex(ValueError, "input drift"):
-                        qualification_inputs([])
-                    changed.write_bytes(b"original")
-                api["producerBuild"] = {"sourceInputs": {"program.ss": "other-producer"}}
-                api_sidecar.write_text(json.dumps(api))
-                with self.assertRaisesRegex(ValueError, "producer sources differ"):
-                    qualification_inputs([])
+            root=Path(folder).resolve()
+            source=root/'program.ss'
+            resource=root/'syntax/module.o1'
+            extension=root/'api/_core.so'
+            for path in (source,resource,extension,root/'justfile',root/'.github/workflows/ci.yml'):
+                path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_bytes(b'original')
+            sha=hashlib.sha256(b'original').hexdigest()
+            receipt={'schema':'ascent.rust-build.v1','sourceInputs':{'program.ss':sha},'runtimeInputs':{str(resource):sha}}
+            with patch('ascent_workbench.native_tests.ROOT',root), \
+                 patch('ascent_workbench.native_tests.compiled_inputs',return_value=receipt), \
+                 patch('ascent_workbench.native_tests.importlib.util.find_spec',return_value=SimpleNamespace(origin=str(extension))):
+                self.assertIn(str(resource),qualification_inputs([]))
+                for changed in (source,resource):
+                    changed.write_bytes(b'modified')
+                    with self.assertRaisesRegex(ValueError,'input drift'): qualification_inputs([])
+                    changed.write_bytes(b'original')
+                before=qualification_inputs([])
+                extension.write_bytes(b'modified')
+                self.assertNotEqual(before[str(extension)],qualification_inputs([])[str(extension)])
+                receipt['sourceInputs']['program.ss']='other-producer'
+                with self.assertRaisesRegex(ValueError,'input drift'): qualification_inputs([])
 
-
-if __name__ == "__main__":
-    unittest.main()
+if __name__=='__main__': unittest.main()

@@ -18,16 +18,14 @@ class NativePublicationPermission(unittest.TestCase):
             source.parent.mkdir()
             target.parent.mkdir()
             source.write_bytes(b"original generation")
-            denial = PermissionError(errno.EPERM, "not permitted")
-            with patch("ascent.build.os.link", side_effect=denial), \
-                 patch("ascent.build.shutil.copyfile") as copy:
-                with self.assertRaisesRegex(PermissionError, "hard-link access") as observed:
-                    transfer_resource(source, target)
-                self.assertEqual(observed.exception.errno, errno.EPERM)
-                self.assertIs(observed.exception.__cause__, denial)
-                copy.assert_not_called()
-            self.assertFalse(target.exists())
+            target.mkdir()
+            # Rust unit coverage separately injects EPERM/EACCES/EIO into the
+            # native hard-link operation and requires zero copy fallback.
+            with self.assertRaises(OSError): transfer_resource(source, target)
+            self.assertTrue(target.is_dir())
+            self.assertEqual(list(target.iterdir()), [])
             self.assertEqual(source.read_bytes(), b"original generation")
+
 
 
 if __name__ == "__main__":

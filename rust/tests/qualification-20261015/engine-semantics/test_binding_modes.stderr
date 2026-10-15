@@ -1,0 +1,12 @@
+test_backend_switch_rejects_before_loading_another_runtime (test_binding_modes.BindingContract.test_backend_switch_rejects_before_loading_another_runtime) ... ok
+test_fork_child_cannot_enter_or_clean_up_inherited_runtime (test_binding_modes.BindingContract.test_fork_child_cannot_enter_or_clean_up_inherited_runtime) ... ok
+test_host_observes_child_failure (test_binding_modes.BindingContract.test_host_observes_child_failure) ... ok
+test_result_memory_is_released_on_c_errors (test_binding_modes.BindingContract.test_result_memory_is_released_on_c_errors) ... ok
+test_session_exception_releases_handle (test_binding_modes.BindingContract.test_session_exception_releases_handle) ... ok
+test_typed_error_does_not_poison_next_request (test_binding_modes.BindingContract.test_typed_error_does_not_poison_next_request) ... ok
+test_wrong_os_thread_is_rejected (test_binding_modes.BindingContract.test_wrong_os_thread_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.999s
+
+OK

@@ -18,6 +18,19 @@ impl ResponseHistory {
     fn new(question: &Bound<'_, PyAny>) -> PyResult<Self> {
         Ok(Self(Mutex::new(History::new(packets::read(question)?))))
     }
+    #[staticmethod]
+    fn restore(input: &Bound<'_, PyAny>) -> PyResult<Self> {
+        History::restore(&packets::read(input)?)
+            .map(|history| Self(Mutex::new(history)))
+            .map_err(error)
+    }
+    fn snapshot(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        packets::write(py, &self.lock()?.snapshot())
+    }
+    #[getter]
+    fn seen(&self) -> PyResult<std::collections::BTreeSet<String>> {
+        Ok(self.lock()?.seen())
+    }
     fn input(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         packets::write(py, &self.lock()?.input().map_err(error)?)
     }

@@ -73,9 +73,10 @@ impl Trajectory {
 impl Trajectory {
     #[new]
     fn new(engine: &Engine, task: &str, source_identity: &str) -> PyResult<Self> {
-        Ledger::new(&engine.0, task, source_identity)
+        let execution: &gerbil_ascent::Engine = &engine.0;
+        Ledger::new(execution, task, source_identity)
             .map(|ledger| Self {
-                engine: std::ops::Deref::deref(&engine.0).clone(),
+                engine: execution.clone(),
                 state: Mutex::new(State {
                     ledger,
                     sequence: 0,

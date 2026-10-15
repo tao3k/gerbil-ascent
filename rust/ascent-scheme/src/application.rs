@@ -20,7 +20,16 @@ impl Runtime {
         // exactly the pinned bridge and ASCENT application exports.
         let program = unsafe { LinkedGerbilProgram::from_linker(___LNK_ascent__hybrid) };
         GerbilRuntime::initialize_program(program)
-            .map(|runtime| Self { runtime })
+            .map(|runtime| {
+                // SAFETY: the process-lived callback takes only integer request
+                // identities; registration and calls stay on the VM owner thread.
+                unsafe {
+                    crate::ffi::ascent_hybrid_set_checkpoint(
+                        crate::control::ascent_hybrid_checkpoint,
+                    );
+                }
+                Self { runtime }
+            })
             .map_err(native_error)
     }
 
@@ -28,6 +37,21 @@ impl Runtime {
     /// # Errors
     /// Preserves native validation/evaluation failures. Roots never leave this VM.
     pub fn call(&self, request: &Data) -> Result<Data> {
+        if request.get("executionControl").is_some() {
+            return self.invoke_rooted(request);
+        }
+        let limits = gerbil_ascent::Limits {
+            max_states: usize::MAX,
+            max_facts: usize::MAX,
+            ..Default::default()
+        };
+        let control =
+            crate::control::Control::new(&limits, &gerbil_ascent::Cancellation::default())?;
+        let mut payload = request.map()?.clone();
+        payload.insert("executionControl".into(), control.id());
+        self.invoke_rooted(&Data::Map(payload))
+    }
+    fn invoke_rooted(&self, request: &Data) -> Result<Data> {
         let request = values::encode(&self.runtime, request)?;
         // SAFETY: this linked export borrows a strong input and transfers one
         // fresh upstream root; gerbil-rs-rooted-call contains every exception.
@@ -51,6 +75,10 @@ pub(crate) fn failure(message: &str) -> Error {
 }
 fn scheme_failure(message: &str) -> Error {
     match message {
+        "ASCENT execution canceled" => Error::Canceled,
+        "ASCENT execution deadline exhausted" => Error::Timeout,
+        "ASCENT execution work exhausted" => Error::StateLimit,
+        "ASCENT execution control closed" => Error::Closed,
         "ASCENT trrel output fact budget exceeded"
         | "ASCENT eqrel output fact budget exceeded"
         | "ASCENT output fact budget exceeded"

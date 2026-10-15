@@ -4,42 +4,38 @@
 
 * Library package
 
-=python/pyproject.toml= defines =ascent-engine=. Its =ascent_engine= package
-provides the public CFFI client, Library artifact building/admission, Datalog,
-evidence, and trajectory APIs. Scheme owns query semantics, source admission,
-execution and result ownership. Python transports inert values and calls those
-public contracts.
+=gerbil-ascent= provides =ascent= through Rust/PyO3. The original Scheme ASCENT
+owns DSL expansion, modules, components, complex values and host callbacks.
+The library build prepares the C ABI and AOT closure. Users load Scheme DSL
+at runtime without invoking a compiler. Values cross the bridge as typed
+objects, without JSON program or result transport.
 
-See [[file:NATIVE.md][Native API]], [[file:DATALOG.md][Datalog]] and
-[[file:REVIEW.md][Evidence review]]. A pure Python package wheel does not qualify
-portable native binaries or the target's Gambit runtime.
+Each Gambit VM has one owning OS thread. Owned finite relational snapshots
+execute on Rayon, enabled by default. =Engine(backend="scheme")= selects the
+VM path; =Engine(backend="rayon")= requires an admissible finite projection.
+Arbitrary Scheme callbacks remain on the VM owner. The pinned upstream runtime
+currently admits one VM per process.
 
-* Independent downstream project
+See [[file:../rust/README.md][runtime contracts and qualification boundaries]].
+The wheel still requires matching Gerbil syntax resources; it does not bundle
+a standalone Gerbil SDK. =ascent.build.runtime_identity()= exposes the actual
+build-frozen source and resource identities.
 
-Research, provider IO, process supervision, formal orchestration and native
-consumer qualification belong to [[file:../workbench/README.md][ASCENT Workbench]].
-It has its own =pyproject.toml=, dependency declaration, CLI and test directories.
-It imports =ascent_engine=; the Library does not depend on the workbench.
-
-=python/tests/= contains binding unit tests. =workbench/tests/= contains the
-application's unit tests. =workbench/engine_tests/= exercises the public Library
-through real native consumer calls. Native Scheme tests remain under =t/=.
-Historical research records and source snapshots retain their original hashes;
-this project migration does not transfer their live-call authorization.
-
-* Local development
+* Development and validation
 
 #+begin_src console
 python3 -m pip install -e ./python -e ./workbench
 python3 -m unittest discover -s python/tests -v
+python3 workbench/engine_tests/run_suite.py --python /absolute/venv/bin/python --output /new/receipt/directory
 ascent-workbench formal all
 #+end_src
 
-Build the native Library through its existing build entry and supply the
-prepared Library explicitly to native consumers. Existing build, request and
-qualification deadlines remain unchanged.
+=python/tests/= checks package contracts. =workbench/engine_tests/= contains
+the complete public semantic corpus. =workbench/tests/= checks downstream
+orchestration. Original Scheme semantic tests remain under =t/qualification/=.
+The workbench imports the library; the library does not depend on it.
+Historical study records retain their original hashes and authorization scope.
 
-Compiled =.oN= publication retains the original generation name and uses hard
-links when available. Permission denial fails explicitly; use the normal
-authorized publisher rather than accepting a silently copied generation.
-Actual cross-volume copies are recorded as copies, with all byte checks retained.
+Compiled =.oN= publication preserves immutable generation identities and byte
+validation. Permission denial fails explicitly. Cross-volume copying is recorded
+as copying; it cannot bypass validation or atomic publication.

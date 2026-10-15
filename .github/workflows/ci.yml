@@ -21,7 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev gdb
           just --version
       - name: Restore immutable release archive
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -78,7 +78,25 @@ jobs:
             exit 1
           fi
       - name: Qualify complete standard Gerbil source tests
-        run: GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
+        id: full_scheme
+        run: |
+          mkdir -p .cache/ascent/native-crashes
+          sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/native-crashes/core.%e.%p"
+          ulimit -c unlimited
+          GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
+      - name: Extract native crash backtraces
+        if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
+        run: bash tools/ci/capture-native-crashes.sh .cache/ascent/native-crashes
+      - name: Preserve native cores and complete test batch logs
+        if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-crashes-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            .cache/ascent/native-crashes
+            .cache/ascent/test-modules
+          include-hidden-files: true
+          retention-days: 30
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry

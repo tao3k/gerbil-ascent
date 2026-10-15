@@ -107,20 +107,107 @@ jobs:
         run: just check-retained-benefit
       - name: Qualify actual native compiler source closure
         run: just check-model-source-closure
-      - name: Build and qualify Rust, PyO3 and the original Scheme semantics
+  rust-pyo3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+      GERBIL_RELEASE_ARCHIVE_CACHE: ${{ github.workspace }}/.ci/archives
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install system dependencies
         run: |
-          sudo apt-get install -y nodejs npm python3-venv patchelf libsqlite3-dev
+          sudo apt-get update
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev nodejs npm python3-venv patchelf libsqlite3-dev
+          just --version
+      - name: Restore immutable release archive
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .ci/archives
+          key: gerbil-archive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Install immutable Gerbil v0.19 release
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+      - name: Record machine and compiler capacity
+        id: capacity
+        run: |
+          cores="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}"
+          printf 'GERBIL_BUILD_CORES=%s\n' "$cores" >> "$GITHUB_ENV"
+          printf 'CI-CAPACITY online=%s selected=%s\n' "$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" "$cores"
+          gerbil env gxi -e '(displayln "CI-GERBIL-CPU " (##cpu-count))'
+          fingerprint="$(sha256sum "$(command -v gcc)" "$GERBIL_PREFIX/bin/gxi" "$GERBIL_PREFIX/bin/gsc" | sha256sum | cut -d ' ' -f 1)"
+          printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+      - name: Restore declared dependency build
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+          key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Remove restored application outputs
+        run: |
+          # Dependency caches never authorize reuse of this checkout's library.
+          rm -rf .gerbil/lib/gerbil-ascent
+          rm -f .gerbil/lib/static/gerbil-ascent__*
+      - name: Install declared Gerbil dependencies
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Restore content-bound native artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .cache/ascent/native-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+      - name: Build Scheme package
+        run: just build
+      - name: Record Rust and Python compiler identity
+        id: rust
+        run: |
+          { rustc -Vv; python3 --version; } > "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
+          cat "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
+          printf 'compiler=%s\n' "$(sha256sum "$RUNNER_TEMP/ascent-rust-python-toolchain.txt" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: Restore Rust dependency and compilation cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ascent-cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', '**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '.github/workflows/ci.yml') }}
+          restore-keys: |
+            ascent-cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/Cargo.lock') }}-
+      - name: Prepare shared Python build environment and protocol tools
+        run: |
           just prepare-quint
-          export PATH="$PWD/.cache/ascent/tools/quint/node_modules/.bin:$PATH"
-          export GERBIL_PATH="$PWD/.gerbil"
-          export PYTHONPATH="$PWD/workbench/src"
-          cargo test --locked --manifest-path rust/Cargo.toml --workspace --all-features -- --test-threads=1
-          cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+          echo "$PWD/.cache/ascent/tools/quint/node_modules/.bin" >> "$GITHUB_PATH"
           python3 -m venv .cache/ascent/python-runtime
           .cache/ascent/python-runtime/bin/pip install 'maturin>=1.9,<2'
-          gerbil env .cache/ascent/python-runtime/bin/maturin build --locked --manifest-path rust/ascent-python/Cargo.toml --auditwheel repair --out .cache/ascent/wheels
+          printf 'PYO3_PYTHON=%s/.cache/ascent/python-runtime/bin/python\n' "$PWD" >> "$GITHUB_ENV"
+      - name: Qualify Rust workspace semantics
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: gerbil env cargo test --locked --manifest-path rust/Cargo.toml --workspace --all-features -- --test-threads=1
+      - name: Enforce strict workspace Clippy
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+      - name: Build and install the PyO3 wheel
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          gerbil env .cache/ascent/python-runtime/bin/maturin build --locked --manifest-path rust/ascent-python/Cargo.toml --features extension-module,gerbil-ascent/default --auditwheel repair --out .cache/ascent/wheels
           .cache/ascent/python-runtime/bin/pip install --no-deps .cache/ascent/wheels/*.whl
-          export ASCENT_ENGINE_WIRE="$PWD/.cache/ascent/movie-wire.json"
+      - name: Qualify original Python and Scheme interface semantics
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          PYTHONPATH: workbench/src
+          ASCENT_ENGINE_WIRE: ${{ github.workspace }}/.cache/ascent/movie-wire.json
+        run: |
           GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
           .cache/ascent/python-runtime/bin/python -m ascent_workbench.native_tests
       - name: Preserve the exact wheel and its runtime syntax closure
@@ -277,7 +364,7 @@ jobs:
           jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' docs/evidence/scheme-application-admission-20261007/polonius-reference.json > .cache/ascent/polonius-output.sha256
           sha256sum --check .cache/ascent/polonius-output.sha256
   formal:
-    needs: scheme
+    needs: rust-pyo3
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -330,15 +417,17 @@ jobs:
           .cache/ascent/python-projects/bin/ascent-workbench --help
   native-and-oracle:
     if: ${{ always() }}
-    needs: [scheme, oracle, formal]
+    needs: [scheme, rust-pyo3, oracle, formal]
     runs-on: ubuntu-latest
     steps:
       - name: Require all independent qualification jobs
         env:
           SCHEME_RESULT: ${{ needs.scheme.result }}
+          RUST_PYO3_RESULT: ${{ needs.rust-pyo3.result }}
           ORACLE_RESULT: ${{ needs.oracle.result }}
           FORMAL_RESULT: ${{ needs.formal.result }}
         run: |
           test "$SCHEME_RESULT" = success
+          test "$RUST_PYO3_RESULT" = success
           test "$ORACLE_RESULT" = success
           test "$FORMAL_RESULT" = success

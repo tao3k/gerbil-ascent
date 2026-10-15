@@ -1,0 +1,4 @@
+Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+/home/runner/work/gerbil-ascent/gerbil-ascent/.ci/gerbil-release/v19/2591dcd/bin/gerbil: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=e1d6e8b2ab649f3fb8b329ba721cf268c8fb027f, for GNU/Linux 3.2.0, with debug_info, not stripped
+2a63ab49f703b50514c2b813f608c6b90f015e451b8b69505445908d4f463374  /home/runner/work/gerbil-ascent/gerbil-ascent/.ci/gerbil-release/v19/2591dcd/bin/gerbil
+/home/runner/work/gerbil-ascent/gerbil-ascent/.cache/ascent/native-crashes/core.%e.%p

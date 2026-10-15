@@ -19,6 +19,8 @@ dev-dependency for repository checks.
 The [final local qualification report](benchmarks/qualification-hybrid-20261015-final.md)
 records the full semantic corpus, installed-wheel checks and accepted isolated
 36-configuration performance matrix, with source and executable identities.
+The [native crash diagnosis](tests/qualification-native-crash-20261015/README.md)
+records the Ubuntu core, the matched upstream regression and the repaired SDK pin.
 
 The public semantic corpus lives in `workbench/engine_tests`. Its `run_suite.py`
 runner saves individual test outcomes, source digests, failures and timeouts.

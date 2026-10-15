@@ -1,0 +1,1 @@
+.cache/ascent/native-crashes/core.gxi.73253: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), too many program headers (2697)

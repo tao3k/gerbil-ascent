@@ -1,0 +1,17 @@
+{
+  "artifact_id": 11945624253,
+  "artifact_digest": "sha256:641852d9fe0ac64be314e6a5ed519143f6be60daf6da096ba58bcc146b549b27",
+  "download_sha256": "641852d9fe0ac64be314e6a5ed519143f6be60daf6da096ba58bcc146b549b27",
+  "producer_run": 38674508991,
+  "workflow_commit": "7843492d0b1a28f6639a11f3647f0af370e08a56",
+  "recipe_commit": "7f7a1b9877ceb49134a2942dceea492811538741",
+  "source_revision": "1cfb032c7a1612637da6205f5f8a15683eba3ba0",
+  "gambit_revision": "ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f",
+  "patchset_sha": "9599b09b82f8e2030be8fdbc34cf7c309272ae6e",
+  "archive": ".cache/ascent/gxi-debug/fixed-linux-sdk/bundle/gerbil-v0.19-1cfb032c7a1612637da6205f5f8a15683eba3ba0-linux-x86_64-portable-full-single-host-unlimited-multiple-vms-patch9599b09b82f8.tar.gz",
+  "archive_sha256": "143c691fee5af4f9f631fd339f69a66f562e42e0bfc1d4ee2cda5fa8d35c35ee",
+  "binary_sha256": "d9bc2d1e68de07cae2439867106381a809c60a1bb6886e1fe8cdaed5ef51648e",
+  "configured_multiple_vms": true,
+  "continuation_invalidation_operations": 5,
+  "verified": true
+}

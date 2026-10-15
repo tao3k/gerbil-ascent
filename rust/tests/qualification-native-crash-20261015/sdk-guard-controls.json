@@ -1,0 +1,24 @@
+{
+  "scope": "actual installer metadata and header admission, not Linux execution on Mac",
+  "installer_sha256": "57fba980058ed40e930b8e753daf13f524240d2549b2e977298b57e6ccb971b7",
+  "results": [
+    {
+      "variant": "fixed-mac",
+      "exit": 0,
+      "stdout": "CI-GERBIL-SDK gerbil=1cfb032c7a1612637da6205f5f8a15683eba3ba0 gambit=ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f\n",
+      "stderr": ""
+    },
+    {
+      "variant": "old-linux",
+      "exit": 65,
+      "stdout": "",
+      "stderr": "SDK-ADMISSION-ERROR: require Gerbil 1cfb032c7a1612637da6205f5f8a15683eba3ba0 / Gambit ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f, SMP, multiple VMs and continuation undo invalidation; inspect /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.cache/ascent/gxi-debug/linux-sdk/gerbil-v0.19-linux-x86_64/gerbil-build-receipt.json\n"
+    },
+    {
+      "variant": "fixed-linux",
+      "exit": 0,
+      "stdout": "CI-GERBIL-SDK gerbil=1cfb032c7a1612637da6205f5f8a15683eba3ba0 gambit=ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f\n",
+      "stderr": ""
+    }
+  ]
+}

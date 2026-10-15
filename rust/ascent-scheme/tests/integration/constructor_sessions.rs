@@ -77,7 +77,10 @@ fn original_constructor_update_withdrawal_explanation_and_independent_lifetimes(
         .replace(BTreeMap::from([("input".into(), vec![])]), &limits, &cancel)
         .unwrap();
     assert!(retained.rows("output").is_err());
-    assert!(session.run(None, &limits, &cancel).unwrap().relations["output"].is_empty());
+    assert_eq!(
+        session.run(None, &limits, &cancel).unwrap().relations["output"],
+        [] as [std::sync::Arc<[gerbil_ascent::Value]>; 0]
+    );
     session.close();
     assert!(session.run(None, &limits, &cancel).is_err());
 }

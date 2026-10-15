@@ -87,13 +87,9 @@ fn current_component_receipts_and_continuation_preserve_all_conjuncts() {
     let accepted = chain
         .consume(reference, &contract, &contract, Data::Null)
         .unwrap();
-    assert!(
-        !accepted
-            .field("reusedComponents")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
+    assert_ne!(
+        accepted.field("reusedComponents").unwrap().list().unwrap(),
+        []
     );
     let answer = accepted.field("resultReference").unwrap().text().unwrap();
     assert_eq!(
@@ -254,10 +250,10 @@ fn cancelled_closure_insertion_and_failed_exports_leave_cut_unchanged() {
     let cancel = Cancellation::default();
     assert!(held.rows(&[], 2, &cancel).is_err());
     assert_eq!(held.len(), 3);
-    assert!(
+    assert_eq!(
         held.rows(&[(0, 0.into()), (0, 1.into())], 100, &cancel)
-            .unwrap()
-            .is_empty()
+            .unwrap(),
+        [] as [std::sync::Arc<[Value]>; 0]
     );
 }
 fn candidate() -> Data {
@@ -326,14 +322,7 @@ fn checked_receipts_are_owner_source_generation_and_candidate_bound() {
             support: true,
         })
         .unwrap();
-    assert!(
-        !observed
-            .field("supportNodes")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    assert_ne!(observed.field("supportNodes").unwrap().list().unwrap(), []);
     assert_eq!(
         gerbil_ascent::expand_observation(&gerbil_ascent::compact_observation(&observed).unwrap())
             .unwrap(),
@@ -361,12 +350,5 @@ fn checked_receipts_are_owner_source_generation_and_candidate_bound() {
         absent.field("status").unwrap(),
         &Data::from("finite-absent")
     );
-    assert!(
-        absent
-            .field("support-nodes")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    assert_eq!(absent.field("support-nodes").unwrap().list().unwrap(), []);
 }

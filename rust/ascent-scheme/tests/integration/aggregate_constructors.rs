@@ -85,7 +85,10 @@ fn original_mean_constructor_preserves_inexact_rounding_empty_groups_and_proof_a
         .unwrap();
     assert!(proof.graph().is_err());
     let result = session.run(None, &limits, &cancel).unwrap();
-    assert!(result.relations["average"].is_empty());
+    assert_eq!(
+        result.relations["average"],
+        [] as [std::sync::Arc<[gerbil_ascent::Value]>; 0]
+    );
     assert_eq!(
         session
             .provenance(

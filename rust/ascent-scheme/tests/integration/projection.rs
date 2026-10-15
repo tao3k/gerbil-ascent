@@ -109,15 +109,14 @@ fn registered_call_module_retains_export_locations_and_caller_value_authority() 
             )],
         )
         .unwrap();
-    assert!(
-        !echo
-            .graph()
+    assert_ne!(
+        echo.graph()
             .unwrap()
             .field("nodes")
             .unwrap()
             .list()
-            .unwrap()
-            .is_empty()
+            .unwrap(),
+        []
     );
     target.close();
     assert!(value.graph().is_ok());

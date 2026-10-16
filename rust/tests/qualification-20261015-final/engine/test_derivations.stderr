@@ -1,6 +1,0 @@
-test_scheme_closure_is_reused_across_rounds_but_not_after_source_change (test_derivations.DerivationChainIntegration.test_scheme_closure_is_reused_across_rounds_but_not_after_source_change) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.059s
-
-OK

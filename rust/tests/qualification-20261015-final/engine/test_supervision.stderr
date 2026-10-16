@@ -1,8 +1,0 @@
-test_backpressure_preserves_all_bytes_and_descriptor_mode (test_supervision.OutputForwardingTests.test_backpressure_preserves_all_bytes_and_descriptor_mode) ... ok
-test_stalled_sink_rejects_without_resetting_its_deadline (test_supervision.OutputForwardingTests.test_stalled_sink_rejects_without_resetting_its_deadline) ... ok
-test_supervisor_retains_nonzero_exit_with_nonblocking_stdout (test_supervision.OutputForwardingTests.test_supervisor_retains_nonzero_exit_with_nonblocking_stdout) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 0.364s
-
-OK

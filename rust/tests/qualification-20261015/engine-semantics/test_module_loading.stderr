@@ -1,7 +1,0 @@
-test_repeated_engine_reuses_runtime_but_preserves_caller_limits (test_module_loading.ModuleLoadingTests.test_repeated_engine_reuses_runtime_but_preserves_caller_limits) ... ok
-test_reused_syntax_parent_keeps_program_state_and_failed_expansion_isolated (test_module_loading.ModuleLoadingTests.test_reused_syntax_parent_keeps_program_state_and_failed_expansion_isolated) ... ok
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.022s
-
-OK

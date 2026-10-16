@@ -1,5 +1,7 @@
 # Native gxi crash diagnosis — 2026-10-15
 
+Raw diagnostics and qualification receipts are local artifacts under `.cache/ascent/rust-tests/qualification-native-crash-20261015/`, excluded from Git. Historical relative filenames below refer to that archive. The upstream regression source is retained unchanged at `workbench/fixtures/gambit/stack-overflow-undo.c`. This relocation preserves historical results and does not requalify the current runtime.
+
 The unchanged Ubuntu corpus crashed in two different long-lived batches at
 `a346550`. This directory records the subsequent native diagnosis, not a retry
 accepted as a repair. The original assertions, 120-second test boundary, heap

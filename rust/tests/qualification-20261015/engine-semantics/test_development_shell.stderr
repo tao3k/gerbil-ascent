@@ -1,8 +1,0 @@
-test_import_definitions_and_engine_call (test_development_shell.DevelopmentShellTest.test_import_definitions_and_engine_call) ... ok
-test_invalid_expression_returns_nonzero_status (test_development_shell.DevelopmentShellTest.test_invalid_expression_returns_nonzero_status) ... ok
-test_source_reload_updates_exported_binding (test_development_shell.DevelopmentShellTest.test_source_reload_updates_exported_binding) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 4.304s
-
-OK

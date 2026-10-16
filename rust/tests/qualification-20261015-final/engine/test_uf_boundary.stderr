@@ -1,9 +1,0 @@
-test_complete_scc_releases_root_arcs (test_uf_boundary.UFBoundaryTests.test_complete_scc_releases_root_arcs) ... ok
-test_existing_endpoint_bridge (test_uf_boundary.UFBoundaryTests.test_existing_endpoint_bridge) ... ok
-test_partial_scc_and_surviving_boundary (test_uf_boundary.UFBoundaryTests.test_partial_scc_and_surviving_boundary) ... ok
-test_scalar_weighted_frontier_and_retained_publication (test_uf_boundary.UFBoundaryTests.test_scalar_weighted_frontier_and_retained_publication) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 4.854s
-
-OK

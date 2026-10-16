@@ -1,8 +1,0 @@
-test_all_quint_trajectories (test_evidence_conformance.EvidenceConformance.test_all_quint_trajectories) ... ok
-test_definition_reuse_keeps_sessions_and_limits_independent (test_evidence_conformance.EvidenceConformance.test_definition_reuse_keeps_sessions_and_limits_independent) ... ok
-test_scope_isolation_foreign_reference_and_failed_load (test_evidence_conformance.EvidenceConformance.test_scope_isolation_foreign_reference_and_failed_load) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 1.227s
-
-OK

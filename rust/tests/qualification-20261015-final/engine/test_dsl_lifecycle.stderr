@@ -1,6 +1,0 @@
-test_complete_runtime_scope_limit_is_not_reset_by_close (test_dsl_lifecycle.EvidenceDSLLifecycle.test_complete_runtime_scope_limit_is_not_reset_by_close) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.986s
-
-OK

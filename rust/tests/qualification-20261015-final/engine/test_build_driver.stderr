@@ -1,6 +1,0 @@
-test_standard_script_receives_package_prefix_cores_and_build_flags (test_build_driver.BuildDriverRouting.test_standard_script_receives_package_prefix_cores_and_build_flags) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.494s
-
-OK

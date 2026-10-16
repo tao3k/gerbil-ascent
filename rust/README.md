@@ -19,12 +19,13 @@ dev-dependency for repository checks.
 The [final local qualification report](../docs/performance/rust/qualification-hybrid-20261015-final.md)
 records the full semantic corpus, installed-wheel checks and accepted isolated
 36-configuration performance matrix, with source and executable identities.
-The [native crash diagnosis](tests/qualification-native-crash-20261015/README.md)
+The [native crash diagnosis](../docs/performance/rust/native-crash-20261015.md)
 records the Ubuntu core, the matched upstream regression and the repaired SDK pin.
 
 The public semantic corpus lives in `workbench/engine_tests`. Its `run_suite.py`
 runner saves individual test outcomes, source digests, failures and timeouts.
-Historical implementation and test records are retained under `tests/history`;
+Historical implementation and test records are local artifacts under
+`.cache/ascent/rust-tests/history`;
 they are not library components or an indication of completed support.
 
 Cargo owns benchmark targets in each crate's `benches/` directory. Build the

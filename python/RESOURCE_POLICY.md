@@ -101,8 +101,13 @@ partial result or Python fallback is published. Empty input returns an empty
 mapping. This is identity transport, not evidence admission or a cached verdict.
 Callers retain their complete entry/exit source checks and execution deadlines.
 
-Host build dependencies and the development-only `asp-rust` and
-`gerbil-scheme-rust-project-harness` tools are compiled at `opt-level=0`.
-Their complete policy checks still run; they are not shipped in the wheel.
-Library release code remains at `opt-level=3` with thin LTO and overflow checks.
-Build timings and installed-wheel execution timings are separate observations.
+Build dependencies and policy tools use `opt-level=3`, as does Library release
+code (with thin LTO and overflow checks). `asp-rust` remains a development
+dependency, absent from the release wheel's normal/build graph. Its override
+only affects development builds. All policy checks still run.
+
+An optimized initial build may legitimately exceed a runtime test's wall-clock
+budget. Supervise builds using real process-group CPU/output progress and an
+explicit idle watchdog, not artificial heartbeat output or reduced optimization.
+This build policy does not extend inference, regression or test deadlines.
+Build timings and installed-wheel execution timings remain separate observations.

@@ -39,24 +39,21 @@ lto = "thin"
 overflow-checks = true
 
 [profile.dev.build-override]
-opt-level = 0
+opt-level = 3
 
 [profile.release.build-override]
-opt-level = 0
+opt-level = 3
 
-# This host-side policy tool is not shipped in the runtime wheel. Compile its
-# checks without optimizer work; do not change runtime or admission semantics.
+# Keep policy/build tools optimized too; their first-build CPU work is not a
+# stalled compiler and must not be judged using a runtime wall-clock budget.
 [profile.dev.package.gerbil-scheme-rust-project-harness]
-opt-level = 0
+opt-level = 3
 
 [profile.release.package.gerbil-scheme-rust-project-harness]
-opt-level = 0
+opt-level = 3
 
 [profile.dev.package.asp-rust]
-opt-level = 0
-
-[profile.release.package.asp-rust]
-opt-level = 0
+opt-level = 3
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

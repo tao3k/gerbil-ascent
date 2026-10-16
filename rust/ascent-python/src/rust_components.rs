@@ -1,6 +1,7 @@
 //! Structured component declarations enter Rust scopes, never a Python linker.
 use crate::rust_api::{Evidence, Owner, error, packets};
 use gerbil_ascent::{Component, Data, Dependency, EvidenceProgram, FactLimits};
+use gerbil_scheme_python::ValueLimits;
 use pyo3::{
     Bound, PyAny, PyRef, PyResult, Python,
     exceptions::PyValueError,
@@ -53,7 +54,7 @@ fn names(value: &Data) -> gerbil_ascent::Result<Vec<String>> {
 #[pyclass(name = "Module", frozen)]
 pub(super) struct Components {
     engine: gerbil_ascent::Engine,
-    components: Vec<Component>,
+    entries: Vec<Component>,
     entry: String,
     loaded: Vec<String>,
     closed: Arc<AtomicBool>,
@@ -82,7 +83,7 @@ impl Components {
         }
         Ok(Self {
             engine: engine.0.clone(),
-            components,
+            entries: components,
             entry: entry.into(),
             loaded,
             closed: Arc::new(AtomicBool::new(false)),
@@ -120,7 +121,7 @@ impl Components {
             ));
         }
         let selected = component.unwrap_or(&self.entry);
-        let target = self.components.iter().find(|entry| entry.id == selected)
+        let target = self.entries.iter().find(|entry| entry.id == selected)
             .filter(|_| self.loaded.iter().any(|id| id == selected))
             .ok_or_else(|| error(gerbil_ascent::Error::InvalidProgram("unselected Evidence component".into())))?;
         if target.exports.as_ref().is_some_and(|names| !names.iter().any(|name| name == constructor)) {
@@ -128,7 +129,7 @@ impl Components {
         }
         let entry = py
             .detach(|| {
-                EvidenceProgram::read_components(&self.components, selected, Some(constructor))
+                EvidenceProgram::read_components(&self.entries, selected, Some(constructor))
             })
             .map_err(error)?;
         Ok(Declaration {
@@ -245,7 +246,7 @@ impl Policy {
 fn ceiling(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<usize>> {
     value
         .map(|v| {
-            gerbil_scheme_python::OwnedValue::from_python(v, Default::default())?.positive_usize()
+            gerbil_scheme_python::OwnedValue::from_python(v, ValueLimits::default())?.positive_usize()
         })
         .transpose()
 }

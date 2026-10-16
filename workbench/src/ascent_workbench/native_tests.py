@@ -46,10 +46,13 @@ def qualification_inputs(files: list[Path]) -> dict[str, str]:
     """Bind actual installed PyO3 bytes, build-frozen inputs and runtime syntax resources."""
     receipt=compiled_inputs()
     if receipt['schema']!='ascent.rust-build.v1': raise ValueError('compiled Rust identity required')
-    expected={str(ROOT/name):sha for name,sha in receipt['sourceInputs'].items()}
-    expected.update(receipt['runtimeInputs'])
     extension=importlib.util.find_spec('ascent._core')
     if extension is None or not extension.origin: raise ValueError('installed PyO3 extension required')
+    package=Path(extension.origin).resolve().parent
+    sources=Path(receipt['sourceRoot']).resolve(strict=True)
+    if sources != package/'_sources': raise ValueError('compiled package source root required')
+    expected={str(sources/name):sha for name,sha in receipt['sourceInputs'].items()}
+    expected.update(receipt['runtimeInputs'])
     paths=[*files,Path(extension.origin),ROOT/'justfile',ROOT/'.github/workflows/ci.yml']
     paths.extend((ROOT/'workbench/src/ascent_workbench').glob('*.py'))
     paths.extend((ROOT/'python/src/ascent').glob('*.py'))

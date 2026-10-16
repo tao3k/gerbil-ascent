@@ -1,5 +1,6 @@
 //! Rust-only declaration loading and execution; Python transports owned values.
 use gerbil_ascent::{Cancellation, Engine, Row, SourceSession, Type, Value};
+use gerbil_scheme_python::{OwnedValue, ValueLimits};
 use pyo3::{
     Bound, Py, PyAny, PyErr, PyRef, PyResult, Python, pyclass, pymethods, pymodule,
     types::{
@@ -41,7 +42,7 @@ mod types;
 pyo3::create_exception!(ascent, EngineError, pyo3::exceptions::PyValueError);
 use EngineError as PyValueError;
 
-pub(super) fn error(e: gerbil_ascent::Error) -> PyErr {
+pub(super) fn error(e: impl std::fmt::Display) -> PyErr {
     PyValueError::new_err(e.to_string())
 }
 
@@ -85,8 +86,8 @@ impl Owner {
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Engine::new(workers).map(Self).map_err(error)
     }
-    #[getter]
-    fn backend(&self) -> &'static str {
+    #[classattr]
+    fn backend() -> &'static str {
         "rust"
     }
     #[getter]
@@ -209,8 +210,9 @@ impl Owner {
         .map(Evidence::owned)
         .map_err(error)
     }
+    #[staticmethod]
     #[pyo3(signature=(*texts))]
-    fn read_rules(&self, py: Python<'_>, texts: &Bound<'_, PyTuple>) -> PyResult<Py<PyAny>> {
+    fn read_rules(py: Python<'_>, texts: &Bound<'_, PyTuple>) -> PyResult<Py<PyAny>> {
         let texts = texts
             .iter()
             .map(|t| t.extract::<String>())
@@ -339,8 +341,8 @@ impl Evidence {
         Ok(out)
     }
     #[getter]
-    fn queries(&self) -> PyResult<Vec<String>> {
-        Ok(self.queries.clone())
+    fn queries(&self) -> Vec<String> {
+        self.queries.clone()
     }
     #[getter]
     fn descriptors<'py>(&self, py: Python<'py>) -> PyResult<Vec<Bound<'py, PyDict>>> {
@@ -582,7 +584,7 @@ impl ResultOwner {
     }
     fn graph(&self, py: Python<'_>, relation: &str) -> PyResult<Py<PyAny>> {
         let rows = self.0.rows(relation).map_err(error)?;
-        let graph = gerbil_ascent::rows_graph(&rows).map_err(error)?;
+        let graph = gerbil_ascent::rows_graph(rows).map_err(error)?;
         packets::write(py, &graph.to_native())
     }
     fn rows(&self, py: Python<'_>, relation: &str) -> PyResult<Py<PyAny>> {
@@ -598,7 +600,7 @@ impl ResultOwner {
             .flat_map(|row| row.iter())
             .any(|v| matches!(v, Value::Object(_)) && v.as_binary64().is_none())
         {
-            let graph = gerbil_ascent::rows_graph(&rows).map_err(error)?;
+            let graph = gerbil_ascent::rows_graph(rows).map_err(error)?;
             return packets::write(
                 py,
                 &gerbil_ascent::Data::object([
@@ -745,7 +747,6 @@ pub(super) fn cell(value: &Bound<'_, PyAny>, ty: Type) -> PyResult<Value> {
     if let Ok(object) = value.extract::<PyRef<'_, Object>>() {
         return Ok(object.0.clone());
     }
-    use gerbil_scheme_python::{OwnedValue, ValueLimits};
     match (ty, OwnedValue::from_python(value, ValueLimits::default())?) {
         (Type::Integer | Type::Number | Type::Scalar | Type::Any, OwnedValue::Integer(v)) => {
             Ok(Value::Integer(v))

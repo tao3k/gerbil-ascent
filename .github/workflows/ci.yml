@@ -218,6 +218,13 @@ jobs:
         run: |
           GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
           .cache/ascent/python-runtime/bin/python -m ascent_workbench.native_tests
+      - name: Publish the qualified Python wheel for downstream consumers
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ascent-python-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: .cache/ascent/wheels/*.whl
+          if-no-files-found: error
+          retention-days: 14
       - name: Preserve the exact wheel and its runtime syntax closure
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:

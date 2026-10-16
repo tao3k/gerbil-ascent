@@ -14,7 +14,7 @@ ascent-c-abi = { path = "../ascent-c-abi", optional = true }
 pyo3.workspace = true
 serde_json.workspace = true
 ascent-scheme = { path = "../ascent-scheme", optional = true }
-gerbil-scheme-python = { workspace = true, features = ["rust-backend", "c-abi"], optional = true }
+gerbil-scheme-python = { workspace = true, features = ["rust-backend", "c-abi", "parallel-verification"], optional = true }
 
 [build-dependencies]
 gerbil-scheme-python.workspace = true

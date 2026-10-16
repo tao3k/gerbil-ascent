@@ -16,20 +16,20 @@ class FileIdentities(unittest.TestCase):
         build = runtime_identity()
         root = Path(build["sourceRoot"])
         paths = [root / name for name in build["sourceInputs"]]
-        expected = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+        expected = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
         self.assertEqual(file_identities(paths + paths), expected)
         self.assertEqual(file_identities([]), {})
 
     def test_matched_source_bytes_three_alternating_pairs(self):
         build = runtime_identity()
         paths = [Path(build["sourceRoot"]) / name for name in build["sourceInputs"]]
-        expected = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+        expected = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
         observations = []
         for pair in range(3):
             for mode in (("python", "rust") if pair % 2 == 0 else ("rust", "python")):
                 started = time.perf_counter()
                 result = (file_identities(paths) if mode == "rust" else
-                          {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths})
+                          {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths})
                 seconds = time.perf_counter() - started
                 self.assertEqual(result, expected)
                 observations.append({"pair": pair, "mode": mode, "seconds": seconds})

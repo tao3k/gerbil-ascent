@@ -621,10 +621,11 @@ dependencies = [
 [[package]]
 name = "gerbil-scheme-python"
 version = "0.1.0"
-source = "git+https://github.com/tao3k/gerbil-scheme-rust?rev=7ebc26dac9e32f982f9ab1455b664b01f2f6e007#7ebc26dac9e32f982f9ab1455b664b01f2f6e007"
+source = "git+https://github.com/tao3k/gerbil-scheme-rust?rev=bb71bbb5ad91bbaef2035979319514c7ced4c4ca#bb71bbb5ad91bbaef2035979319514c7ced4c4ca"
 dependencies = [
  "num-bigint",
  "pyo3",
+ "rayon",
  "serde",
  "serde_json",
  "sha2 0.10.9",

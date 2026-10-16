@@ -44,14 +44,15 @@ class NativeInventory(unittest.TestCase):
     def test_source_resource_and_backend_identity_changes_are_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder).resolve()
-            source=root/'program.ss'
+            source=root/'api/_sources/program.ss'
             resource=root/'syntax/module.o1'
             extension=root/'api/_core.so'
             for path in (source,resource,extension,root/'justfile',root/'.github/workflows/ci.yml'):
                 path.parent.mkdir(parents=True,exist_ok=True)
                 path.write_bytes(b'original')
             sha=hashlib.sha256(b'original').hexdigest()
-            receipt={'schema':'ascent.rust-build.v1','sourceInputs':{'program.ss':sha},'runtimeInputs':{str(resource):sha}}
+            receipt={'schema':'ascent.rust-build.v1','sourceRoot':str(source.parent),
+                     'sourceInputs':{'program.ss':sha},'runtimeInputs':{str(resource):sha}}
             with patch('ascent_workbench.native_tests.ROOT',root), \
                  patch('ascent_workbench.native_tests.compiled_inputs',return_value=receipt), \
                  patch('ascent_workbench.native_tests.importlib.util.find_spec',return_value=SimpleNamespace(origin=str(extension))):

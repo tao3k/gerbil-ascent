@@ -95,6 +95,11 @@ jobs:
           sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/native-crashes/core.%e.%p"
           ulimit -c unlimited
           GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
+      - name: Qualify independent Scheme source consumers
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          PYTHONPATH: workbench/src
+        run: python3 -m unittest discover -s workbench/source_tests -v
       - name: Extract native crash backtraces
         if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
         run: bash tools/ci/capture-native-crashes.sh .cache/ascent/native-crashes

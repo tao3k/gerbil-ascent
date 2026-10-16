@@ -58,3 +58,18 @@ Run from the checkout root with the workbench installed. Pass output directories
 under `.cache/ascent/`; raw samples, stdout/stderr and generated receipts are
 local artifacts, not versioned source. Historical reports live in
 `docs/performance/rust/`. Moving a producer does not requalify historical timings.
+
+
+## Qualification responsibilities
+
+| Directory | Required environment | Responsibility |
+| --- | --- | --- |
+| `tests/` | Python and installed public bindings | Host orchestration, inventory and admission unit tests |
+| `source_tests/` | Maintainer checkout with installed Gerbil SDK | Independent Scheme-source API oracle and compiler/linker environment controls |
+| `engine_tests/` | Installed wheel and its declared runtime resources | Complete downstream consumer matrix; no external SDK or `gxi` requirement |
+
+CI runs `python3 -m unittest discover -s workbench/source_tests -v` in the
+Scheme maintenance job. Installed-wheel consumers retain their complete native
+inventory, original whole-matrix deadline, source checks and SDK-hidden controls.
+Source-dependent tests remain mandatory in their separate qualification domain;
+no unavailable-SDK skip or downstream SDK installation is introduced.

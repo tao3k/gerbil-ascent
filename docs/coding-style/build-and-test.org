@@ -32,6 +32,9 @@ macro requires it; it previously arrived through the removed process imports.
 | =t/performance/reference-studies.ss= and =reference-run.ss= | Legacy reference experiments with their original budgets and gates |
 | =t/model/= and =t/research/= | Model correspondence and independent research consumers |
 | =packages/proofs/quint/{prepare,check}.sh= | Pinned tool preparation and existing exhaustive protocol checks |
+| =workbench/tests/= | Host orchestration and admission unit tests |
+| =workbench/source_tests/= | Maintainer SDK-dependent Scheme source and toolchain controls |
+| =workbench/engine_tests/= | Installed-wheel consumers with no external SDK requirement |
 | =tools/ci/= | CI SDK installation only |
 
 =Justfile= recipes select an entry and its arguments. Compilation, scenario

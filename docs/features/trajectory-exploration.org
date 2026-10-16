@@ -92,6 +92,13 @@ The generic runtime and SMP adapter have focused native tests. Evaluation of
 agent efficiency still needs held-out prefixes and matched continuations;
 no seven-in-ten reduction or whole-task speedup is claimed.
 
+The read-only =context= projection exposes retained attempt premises before a
+candidate is chosen. It never exposes result references or selects an action.
+Both context and exploration packets bind =ownerIdentity=, source, generation
+and event count. =exploration_current= checks that exact owner revision, not
+the validity of underlying evidence or any execution authorization. Replaying
+the same events into a different owner cannot make its packet current there.
+
 * Finite Protocol Model
 
 =packages/proofs/quint/TrajectoryEvidenceChain.qnt= is a small composition of

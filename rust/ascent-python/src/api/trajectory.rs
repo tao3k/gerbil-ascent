@@ -290,6 +290,9 @@ impl Trajectory {
         let result = self.lock()?.ledger.explore(&candidate).map_err(source_error)?;
         packets::write(py, &result)
     }
+    fn context(&self, py: Python<'_>) -> PyResult<pyo3::Py<PyAny>> {
+        packets::write(py, &self.lock()?.ledger.context().map_err(source_error)?)
+    }
     fn exploration_current(&self, packet: &Bound<'_, PyAny>) -> PyResult<bool> {
         self.lock()?
             .ledger

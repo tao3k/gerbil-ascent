@@ -33,6 +33,14 @@ class TrajectoryIntegration(unittest.TestCase):
             candidate = dict(questionIdentity='question', scopeIdentity='scope',
                              operationIdentity='test', inputIdentity='input-a',
                              toolIdentity='tool', modelIdentity='model')
+            context = trajectory.context()
+            self.assertTrue(trajectory.exploration_current(context))
+            self.assertEqual(set(context), {'schema', 'sourceIdentity', 'generation',
+                                            'eventCount', 'ownerIdentity', 'attempts',
+                                            'executionAuthorized', 'actionSelected'})
+            self.assertEqual(context['attempts'][0]['earlierEvent'], 'event:1')
+            self.assertNotIn('resultReference', context['attempts'][0])
+            self.assertFalse(context['actionSelected'])
             packet = trajectory.explore(candidate)
             self.assertEqual(set(packet), {'schema', 'sourceIdentity', 'generation',
                                            'eventCount', 'ownerIdentity', 'comparisons',
@@ -52,6 +60,8 @@ class TrajectoryIntegration(unittest.TestCase):
             self.assertEqual(trajectory.explore(changed)['comparisons'][0]['relation'],
                              'changed-premise')
             trajectory.invalidate('source-b')
+            self.assertFalse(trajectory.exploration_current(context))
+            self.assertTrue(trajectory.context()['attempts'][0]['historical'])
             self.assertEqual(trajectory.explore(candidate)['comparisons'][0]['relation'],
                              'historical')
 

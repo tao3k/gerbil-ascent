@@ -1,6 +1,7 @@
 //! Read-only, open-world attempt comparison. Unknown inputs never imply equality.
 use super::State;
 use crate::{Data, Result};
+use std::collections::BTreeMap;
 
 const PREMISES: [&str; 6] = [
     "questionIdentity",
@@ -12,6 +13,43 @@ const PREMISES: [&str; 6] = [
 ];
 
 impl State {
+    pub(super) fn context(&self) -> Result<Data> {
+        let attempts = self
+            .events
+            .iter()
+            .filter_map(|event| self.context_attempt(event).transpose())
+            .collect::<Result<Vec<_>>>()?;
+        Ok(Data::object([
+            ("schema", "ascent.trajectory-context.v1".into()),
+            ("sourceIdentity", self.source.clone().into()),
+            ("generation", self.generation.into()),
+            ("eventCount", self.events.len().into()),
+            ("attempts", Data::List(attempts)),
+            ("executionAuthorized", false.into()),
+            ("actionSelected", false.into()),
+        ]))
+    }
+
+    fn context_attempt(&self, event: &Data) -> Result<Option<Data>> {
+        if event.field("kind")?.text()? != "attempt" {
+            return Ok(None);
+        }
+        let premises = PREMISES
+            .into_iter()
+            .chain(["proposalIdentity", "purpose"])
+            .filter_map(|key| event.get(key).map(|value| (key.into(), value.clone())))
+            .collect::<BTreeMap<_, _>>();
+        Ok(Some(Data::object([
+            ("earlierEvent", event.field("id")?.clone()),
+            ("generation", event.field("generation")?.clone()),
+            (
+                "historical",
+                (event.field("generation")?.natural()? != &self.generation.into()).into(),
+            ),
+            ("premises", Data::Map(premises)),
+        ])))
+    }
+
     pub(super) fn explore(&self, candidate: &Data) -> Result<Data> {
         validate_candidate(candidate)?;
         let comparisons = self

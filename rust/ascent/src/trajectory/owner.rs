@@ -196,6 +196,18 @@ impl Trajectory {
         set(&mut packet, "ownerIdentity", self.handle.into())?;
         Ok(packet)
     }
+    /// Inspect retained attempt premises without choosing a candidate or exposing results.
+    /// # Errors
+    /// Rejects a closed owner; never changes the ledger.
+    pub fn context(&self) -> Result<Data> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Err(Error::Closed);
+        }
+        let mut packet = self.state.context()?;
+        set(&mut packet, "ownerIdentity", self.handle.into())?;
+        Ok(packet)
+    }
     /// Check whether an immutable advice packet still names this exact ledger revision.
     /// This does not review underlying evidence or grant execution permission.
     /// # Errors
@@ -205,8 +217,10 @@ impl Trajectory {
         if self.closed.is_some() {
             return Ok(false);
         }
-        Ok(packet.field("schema")?.text()? == "ascent.trajectory-exploration.v1"
-            && *packet.field("ownerIdentity")?.natural()? == self.handle.into()
+        Ok(matches!(
+            packet.field("schema")?.text()?,
+            "ascent.trajectory-exploration.v1" | "ascent.trajectory-context.v1"
+        ) && *packet.field("ownerIdentity")?.natural()? == self.handle.into()
             && packet.field("sourceIdentity")?.text()? == self.state.source
             && *packet.field("generation")?.natural()? == self.state.generation.into()
             && *packet.field("eventCount")?.natural()? == self.state.events.len().into())

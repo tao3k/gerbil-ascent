@@ -320,20 +320,20 @@ All failures and raw streams are retained; no quality/depth improvement establis
 
 - [[file:crosspath-branch-protocol.md][Frozen v3 protocol, budget and evidence boundaries]]
 - [[file:crosspath-search-v3-report.md][Real-model v3 results and matched-spend checkpoints]]
-- [[file:crosspath-v3-thinking-annotations.md][Exact returned-thinking spans and repeated deductions]]
+- [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v3-thinking-annotations.md][Exact returned-thinking spans and repeated deductions]]
 
 * Historical deep-branch truncation repair
 
 - [[file:crosspath-branch-v4-protocol.md][Frozen v4 protocol and adversarial calibration]]
 - [[file:crosspath-search-v4-report.md][Real-model v4 results at common gross-token checkpoints]]
-- [[file:crosspath-v4-thinking-annotations.md][Anchored v4 thinking derivation labels]]
+- [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v4-thinking-annotations.md][Anchored v4 thinking derivation labels]]
 
 * Historical branch round conclusion and bounded measurement repair
 
 - [[file:crosspath-branch-round-summary.md][Output repair passed; cognitive benefit remains unproved]]
 - [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-branch-round-summary.json][Matched-spend metrics, cost ledger and semantic label diagnostics]]
 - [[file:crosspath-search-v4-bounded-report.md][Fixed two-call extraction and retained original failures]]
-- [[file:crosspath-v4-bounded-thinking-annotations.md][Exact positive-repeat links and rejected labels]]
+- [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v4-bounded-thinking-annotations.md][Exact positive-repeat links and rejected labels]]
 
 * Clean Library consumer and sibling-search diagnostic (2026-10-11)
 

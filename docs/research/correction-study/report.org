@@ -36,7 +36,7 @@ All eight obligations agreed between an independently implemented Python fixed-p
 | context-balanced-paths-2026103303 | {"nodes":24,"contexts":2,"openingEdges":34,"closingEdges":33,"oracleRounds":7,"intermediateRows":537,"requests":96} | 47 | 40 |
 | context-balanced-paths-2026103304 | {"nodes":28,"contexts":3,"openingEdges":38,"closingEdges":37,"oracleRounds":11,"intermediateRows":1262,"requests":96} | 53 | 41 |
 
-[[file:questions.org][Complete prompts, sources and follow-up rules]]; [[file:visible-answers.org][every actual visible answer]]; [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/plan.json][frozen plan and independent grader sets]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/questions.org][Complete prompts, sources and follow-up rules]]; [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/visible-answers.org][every actual visible answer]]; [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/plan.json][frozen plan and independent grader sets]].
 
 * Whole-task results and retained failures
 

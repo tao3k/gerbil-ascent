@@ -13,6 +13,8 @@ RAW_SUFFIXES = frozenset({
 BUILD_DIRECTORIES = frozenset({'.cache', '.gerbil', '.lake', '__pycache__',
                                'target', 'node_modules', '.venv'})
 DOCUMENT_SUFFIXES = frozenset({'.md', '.org', '.svg', '.png', '.jpg', '.jpeg', '.webp'})
+TRANSCRIPT_NAMES = frozenset({'questions.org', 'visible-answers.org', 'rounds.org',
+                              'thinking-episodes.md', 'thinking-evidence.md'})
 
 
 def violation(name):
@@ -28,6 +30,9 @@ def violation(name):
         return 'workspace output directory; use crate tests/ or benches/'
     if name.startswith('docs/') and base.suffix not in DOCUMENT_SUFFIXES:
         return 'documentation contains generated records or source snapshots'
+    if name.startswith('docs/research/') and (
+            base.name in TRANSCRIPT_NAMES or base.name.endswith('thinking-annotations.md')):
+        return 'generated experiment transcripts belong in .cache, regardless of text format'
     if name.startswith('t/performance/'):
         if base.suffix not in {'.ss', '.md', '.org'} and base.name not in {'baseline.txt', 'justfile'}:
             return 'performance results belong in .cache; keep executable fixtures here'

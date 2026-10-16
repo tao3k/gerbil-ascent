@@ -16,7 +16,8 @@ answers to make a failing test pass.
 
 * What belongs in the cache
 
-Logs, stdout/stderr, timings, qualification receipts, model responses, run source
+Logs, stdout/stderr, timings, qualification receipts, model responses, generated
+question/answer transcripts and span annotations (including Markdown/Org), run source
 snapshots, compressed run archives and native binaries belong in =.cache/ascent/=.
 New generated research reports are staged under
 =.cache/ascent/research-reports/=; reviewed narrative reports may then be

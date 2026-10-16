@@ -16,7 +16,10 @@ class RepositoryPolicyTests(unittest.TestCase):
         for name in ('x/stdout.log', 'docs/a.json', 'x/raw.tar.gz', 'x/git.bundle',
                      'x/lib.dylib', 'x/lib.o12', 'x/result.stderr', 'x/result.stdout.license',
                      'x/lib.so.3', 'x/target/a.rs', 'rust/tests/receipt.json',
-                     't/performance/rounds/receipt.sexp'):
+                     't/performance/rounds/receipt.sexp',
+                     'docs/research/study/visible-answers.org',
+                     'docs/research/study/thinking-episodes.md',
+                     'docs/research/study/direct-thinking-annotations.md'):
             with self.subTest(name=name):
                 self.assertIsNotNone(violation(name))
 

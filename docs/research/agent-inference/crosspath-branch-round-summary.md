@@ -28,7 +28,7 @@ All raw failed responses, incomplete reasoning, invalid prefixes/completions, ma
 - [Frozen v4 protocol](crosspath-branch-v4-protocol.md)
 - [V4 native outcomes and original failed measurements](crosspath-search-v4-report.md)
 - [Bounded extraction report and ledger](crosspath-search-v4-bounded-report.md)
-- [Exact thinking spans and prior links](crosspath-v4-bounded-thinking-annotations.md)
+- [Exact thinking spans and prior links](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v4-bounded-thinking-annotations.md)
 - [V3 failed-control trial](crosspath-search-v3-report.md)
 - [Machine-readable summary and retrospective diagnostics](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-branch-round-summary.json)
 

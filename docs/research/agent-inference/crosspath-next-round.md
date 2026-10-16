@@ -43,8 +43,8 @@ Both initial packets already contained admitted F0 and its derivation nodes. Thi
 Source HEAD: `652934cd728d7edee32df020af75e9632dffc755`. Plans: `2e5464ae5c1230e3ce210217b405bb61c02d9c17ce548b0d227fe0c0b79b079a` and `1150d2e7ff106b48b6f16fc2b89c0c951c8f8caaba796e43ef91269aee9f40db`.
 
 - [Oracle-free replay report](crosspath-search-v2-report.md) and [portable ledger](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-v2-ledger.json).
-- [Direct span audit and paired quotes](crosspath-thinking-span-review.md); [all replay labels](crosspath-v2-thinking-annotations.md).
-- [Original instrumentation report](crosspath-search-report.md) and [all original labels](crosspath-thinking-annotations.md).
+- [Direct span audit and paired quotes](crosspath-thinking-span-review.md); [all replay labels](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v2-thinking-annotations.md).
+- [Original instrumentation report](crosspath-search-report.md) and [all original labels](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-thinking-annotations.md).
 - [Original raw archive](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-raw.tar.gz), [replay raw archive](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-v2-raw.tar.gz).
 - [Original integrity receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-integrity.json), [replay integrity receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-v2-integrity.json).
 

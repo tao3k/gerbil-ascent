@@ -21,7 +21,7 @@ Gross solver cost includes every input, all output and thinking, including prefi
 | no-oracle-shared-search-3 / 0 | retained | None | 0 / 0 | 0 | output_budget_exhausted |
 | no-oracle-shared-search-3 / 1 | retained | None | 0 / 0 | 0 | output_budget_exhausted |
 
-Direct thinking annotations are in [the span report](crosspath-v2-thinking-annotations.md), including source hashes, character ranges, exact excerpts, prior links and rejected entries. Native fact truth does not prove an annotation’s semantic completeness.
+Direct thinking annotations are in [the span report](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-v2-thinking-annotations.md), including source hashes, character ranges, exact excerpts, prior links and rejected entries. Native fact truth does not prove an annotation’s semantic completeness.
 
 One disjoint fixed task / two task-goal pairs: descriptive instrumentation replay; fixed arm ordering, no statistical or general cognitive claim.
 Same packets/control policy in fresh and retained: native cache state alone is not a visible model treatment.

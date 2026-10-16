@@ -32,7 +32,7 @@ Tasks contain 36–48 nodes, 109–145 edges, recursive fixed points, cycles, mu
 | conjunctive-prerequisite-closure-2026102338 | 44 | 133 | 3 | 0 | 2 |
 | bidirectional-recursive-impact-2026102357 | 48 | 145 | 5 | 4 | 1 |
 
-The [[file:questions.org][complete questions and input programs]] are printed in a readable appendix. Frozen plans include seeds, input programs, independent gold sets, source hashes and artifact identities. The [[file:visible-answers.org][actual visible answers]] print every model attempt and repeat. [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/provider-audit.json][Provider audit]] binds raw responses, requests and answers by SHA256 and retains reported usage.
+The [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/questions.org][complete questions and input programs]] are printed in a readable appendix. Frozen plans include seeds, input programs, independent gold sets, source hashes and artifact identities. The [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/visible-answers.org][actual visible answers]] print every model attempt and repeat. [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/provider-audit.json][Provider audit]] binds raw responses, requests and answers by SHA256 and retains reported usage.
 
 * Experiment A: first answer, exact repeat and invalidation
 

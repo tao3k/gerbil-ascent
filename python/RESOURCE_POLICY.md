@@ -90,3 +90,19 @@ Consumers import Python only and supply ordinary DSL definitions. Scheme module
 imports, hygienic expansion, inference, aggregation, lattice and incremental
 state remain in the Library. Maintenance builds belong to Library `build.ss` /
 `defbuild-script` / upstream `std/make`, not a downstream compilation workflow.
+# Batched File Identity Transport
+
+Rayon-enabled wheels expose `ascent.build.file_identities(paths)`. One call
+returns a deterministic path-to-SHA256 mapping after deduplicating identical
+paths and hashing every file's current bytes. Rust performs the work with the
+GIL released. Relative paths, symlinks (including parent aliases), special files,
+missing files and detected changes during reading fail the entire call; no
+partial result or Python fallback is published. Empty input returns an empty
+mapping. This is identity transport, not evidence admission or a cached verdict.
+Callers retain their complete entry/exit source checks and execution deadlines.
+
+The host-side `gerbil-scheme-rust-project-harness` package is compiled at
+`opt-level=0` to avoid optimizing a build/policy tool. Its checks still run.
+Library release code remains at `opt-level=3` with thin LTO and overflow checks.
+Build timings and installed-wheel execution timings are separate observations.
+

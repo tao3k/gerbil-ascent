@@ -44,6 +44,14 @@ opt-level = 2
 [profile.release.build-override]
 opt-level = 3
 
+# This host-side policy tool is not shipped in the runtime wheel. Compile its
+# checks without optimizer work; do not change runtime or admission semantics.
+[profile.dev.package.gerbil-scheme-rust-project-harness]
+opt-level = 0
+
+[profile.release.package.gerbil-scheme-rust-project-harness]
+opt-level = 0
+
 [workspace.lints.rust]
 unsafe_code = "forbid"
 

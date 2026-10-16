@@ -64,6 +64,42 @@ pub fn sha(path: &Path) -> Result<String> {
     }
     Ok(format!("{:x}", Sha256::digest(bytes)))
 }
+/// Hash canonical, deduplicated regular files in parallel, retaining each path.
+/// Every invocation reads bytes again; no verification verdict is cached.
+/// # Errors
+/// Rejects relative paths, aliases, special files and changes during hashing.
+#[cfg(feature = "rayon")]
+pub fn file_identities(paths: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>> {
+    use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+    let paths = paths.iter().collect::<std::collections::BTreeSet<_>>();
+    let rows = paths
+        .into_iter()
+        .collect::<Vec<_>>()
+        .par_iter()
+        .map(|path| {
+            if !path.is_absolute()
+                || path
+                    .components()
+                    .any(|c| matches!(c, Component::ParentDir | Component::CurDir))
+                || fs::symlink_metadata(path)?.file_type().is_symlink()
+                || !fs::metadata(path)?.is_file()
+                || fs::canonicalize(path)? != **path
+            {
+                return Err(invalid("canonical regular identity path required"));
+            }
+            let hash = sha(path)?;
+            if fs::canonicalize(path)? != **path {
+                return Err(invalid("identity path changed during validation"));
+            }
+            Ok(((*path).clone(), hash))
+        })
+        .collect::<Vec<Result<_>>>();
+    rows.into_iter().collect()
+}
+
+#[cfg(all(test, feature = "rayon"))]
+#[path = "../tests/unit/file_identities.rs"]
+mod identity_tests;
 #[cfg(unix)]
 fn identity(path: &Path) -> io::Result<(u64, u64, u64, i64, i64, i64, i64)> {
     use std::os::unix::fs::MetadataExt;

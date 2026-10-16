@@ -125,9 +125,18 @@ fn runtime_identity(py: Python<'_>) -> PyResult<Py<PyAny>> {
         ("inventoryScope", "local Rust/PyO3/bridge sources and build inputs; transitive dependency revisions in Cargo.lock".into()),
     ]))
 }
+/// Full per-path hashes; released GIL and Rayon, not a metadata-only cache.
+#[cfg(feature = "rayon")]
+#[pyfunction]
+fn file_identities(py: Python<'_>, paths: Vec<PathBuf>) -> PyResult<BTreeMap<PathBuf, String>> {
+    py.detach(|| gerbil_ascent::artifacts::file_identities(&paths))
+        .map_err(failure)
+}
 pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {
     let build = PyModule::new(root.py(), "ascent.build")?;
     build.add_function(wrap_pyfunction!(runtime_identity, &build)?)?;
+    #[cfg(feature = "rayon")]
+    build.add_function(wrap_pyfunction!(file_identities, &build)?)?;
     build.add_class::<Inventory>()?;
     build.add_class::<Verified>()?;
     root.py()

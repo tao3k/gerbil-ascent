@@ -40,7 +40,7 @@ their respective owners. It adds no alternative compiler or module registry.
 
 All measurements are local macOS observations on 2026-10-13. They do not
 establish remote CI, Linux performance or portable-wheel qualification.
-[[file:module-loading-qualification.json][The qualification receipt]] contains source hashes, SDK identity, raw
+[[file:../../.cache/ascent/archived-runs/docs/features/module-loading-qualification.json][The qualification receipt]] contains source hashes, SDK identity, raw
 samples, log hashes and the tested engine library identity. Concurrent unrelated
 checkout edits are not qualified by this receipt.
 

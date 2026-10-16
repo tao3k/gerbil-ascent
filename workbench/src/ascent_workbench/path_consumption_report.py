@@ -24,8 +24,8 @@ def decode_historical(packet):
 
 
 def main():
-    root=Path.cwd();cache=root/'.cache/ascent/path-consumption';out=root/'docs/research/path-consumption-study'
-    out.mkdir(exist_ok=True);records={};plans={};results=[];audit={};partial=[];disagreements=[];stage_costs=[]
+    root=Path.cwd();cache=root/'.cache/ascent/path-consumption';out=root/'.cache/ascent/research-reports/path-consumption-study'
+    out.mkdir(parents=True,exist_ok=True);records={};plans={};results=[];audit={};partial=[];disagreements=[];stage_costs=[]
     for folder in sorted(p for p in cache.iterdir() if p.is_dir() and (p/'records.json').exists()):
         data=json.loads((folder/'records.json').read_text());plan=json.loads((folder/'plan.json').read_text());records[folder.name]=data;plans[folder.name]=plan
         accepted,first=obligation_acceptance(data['verdicts']);calls=data['calls'];checks=data['checks']

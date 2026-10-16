@@ -1,8 +1,0 @@
-[
-  {
-    "request": ".cache/ascent/interactive/conjunction-balanced-fresh/stage-0-call-4-request.json",
-    "streamBytes": 2013170,
-    "usage": "unknown",
-    "classification": "turn-interrupted before terminal receipt"
-  }
-]

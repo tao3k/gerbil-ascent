@@ -180,9 +180,9 @@ The faults were three instead of four hops, globalizing the right-branch
 exclusion, and replacing universal target coverage with existential coverage.
 These tests establish that the workload distinguishes those errors; they do
 not establish model accuracy or thinking savings. The qualified frozen plan is
-[[file:compound-thinking-plan.json][compound-thinking-plan.json]], and the
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-plan.json][compound-thinking-plan.json]], and the
 counts, withdrawal identities and qualification scope are retained in
-[[file:compound-thinking-qualification.json][compound-thinking-qualification.json]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-qualification.json][compound-thinking-qualification.json]].
 
 * Scheme, Lean and Quint responsibilities
 
@@ -238,7 +238,7 @@ no visible answer. Three initial requests used a frozen temporary AOT scorer;
 six used public CFFI. Regrading all responses through CFFI agreed without new
 calls. Continuation time was 22.757 seconds, a single host observation.
 The key was read from the project .env as data and never printed.
-[[file:movie-pilot-result.json][Original pilot receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/movie-pilot-result.json][Original pilot receipt]].
 
 The full failed question was: using only supplied cast facts, return actors in
 Inception other than Leonardo DiCaprio, OR actors in The Revenant. Exclude
@@ -259,7 +259,7 @@ error. Its ceiling includes reasoning and visible output
 Reflection proposed {"combine":"any","exclude_scope":"left"}. Scheme returned
 20 left witnesses, 18 right witnesses and 38 branch traces, deduplicated to 36
 actors including Q38111. Full identifiers and usage are retained in
-[[file:movie-reflection-result.json][Reflection receipt]]. The original failure
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/movie-reflection-result.json][Reflection receipt]]. The original failure
 remains incomplete, not a rewritten success or observed wrong answer.
 
 The raised-ceiling success used only 1,948 tokens, below the old ceiling;
@@ -396,10 +396,10 @@ fine-grained minimal invalidation and arbitrary language-equivalence reuse are
 not established. Eight related questions, one repetition and six films do not
 justify independent structural generalization or confidence intervals.
 
-[[file:complex-movie-plan.json][Initial plan]],
-[[file:country-qualified-movie-plan.json][Adaptive country plan]],
-[[file:complex-movie-result.json][All 39 calls and diagnostics]],
-[[file:materialized-movie-correspondence.json][Finite correspondence]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/complex-movie-plan.json][Initial plan]],
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/country-qualified-movie-plan.json][Adaptive country plan]],
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/complex-movie-result.json][All 39 calls and diagnostics]],
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/materialized-movie-correspondence.json][Finite correspondence]].
 
 * Historical retained-query experiment
 
@@ -453,8 +453,8 @@ withdrawal phases: 32 observations, not a TLC exploration. Actual CFFI checks
 retained/fresh parity, completed run(0), and 8 stale-answer fault controls.
 Subgoal extension adds 32 matching observations under conditional relation
 equivalence. This does not prove arbitrary language compilation or the full ABI.
-[[file:inference-reuse-result.json][Full reuse experiment]],
-[[file:retained-inference-correspondence.json][Actual replay receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/inference-reuse-result.json][Full reuse experiment]],
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/retained-inference-correspondence.json][Actual replay receipt]].
 
 * Historical iterative experiments and protocol correction
 
@@ -467,7 +467,7 @@ including first construction. That single task reduced calls 33.3% and thinking
 26.5%. The other two assigned assisted trajectories only scanned facts: they
 provide no evidence of actual Scheme enhancement. All stay in assigned-arm
 results; adoption was 1/3. One 3-to-2 observation is not sustained benefit.
-[[file:iterative-evidence-prototype-result.json][Prototype and adoption audit]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/iterative-evidence-prototype-result.json][Prototype and adoption audit]].
 
 ** Forced witness development protocol: historical negative result
 
@@ -494,7 +494,7 @@ schema and feedback now require bare names and provide specific repair guidance.
 Two adaptive continuation calls repaired the selector and answered correctly:
 all six calls consumed 15,260 reasoning and 28,560 total model tokens. The
 primary four-turn failure is unchanged. Recovery is not a new held-out success.
-[[file:iterative-inference-result.json][Full trajectories and recovery]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/iterative-inference-result.json][Full trajectories and recovery]].
 
 ** Current implementation changes and remaining evidence
 

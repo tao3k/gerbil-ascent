@@ -19,7 +19,7 @@ Native direct-column truth also checks changing caller-owned headers between
 helper calls and malicious callback header mutation. Declared engine layouts
 and mutable low-level helper inputs have different ownership contracts; the
 protocol model covers the former. The [[file:proofs.org::*Provider concretization constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
-[[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
 complete application benefit as further obligations.
 
 

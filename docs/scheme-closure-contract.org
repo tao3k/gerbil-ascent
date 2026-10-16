@@ -137,7 +137,7 @@ and model-validation gates; this work changes no Rust runtime or authority owner
 
 * 2026-10-04 focused native qualification
 
-The [[file:evidence/scheme-closure-20261004/receipt.json][receipt]] records six distinct modules, 51 CASE-OK entries, six
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-closure-20261004/receipt.json][receipt]] records six distinct modules, 51 CASE-OK entries, six
 HARNESS-OK and six final OK markers, exit 0 and no failure/overflow markers.
 The native gate retained five-second real-output progress and the existing
 120-second per-module deadline. Four new termination/composition Cases check

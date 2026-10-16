@@ -32,7 +32,7 @@ Tasks contain 36–48 nodes, 109–145 edges, recursive fixed points, cycles, mu
 | conjunctive-prerequisite-closure-2026102338 | 44 | 133 | 3 | 0 | 2 |
 | bidirectional-recursive-impact-2026102357 | 48 | 145 | 5 | 4 | 1 |
 
-The [[file:questions.org][complete questions and input programs]] are printed in a readable appendix. Frozen plans include seeds, input programs, independent gold sets, source hashes and artifact identities. The [[file:visible-answers.org][actual visible answers]] print every model attempt and repeat. [[file:provider-audit.json][Provider audit]] binds raw responses, requests and answers by SHA256 and retains reported usage.
+The [[file:questions.org][complete questions and input programs]] are printed in a readable appendix. Frozen plans include seeds, input programs, independent gold sets, source hashes and artifact identities. The [[file:visible-answers.org][actual visible answers]] print every model attempt and repeat. [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/provider-audit.json][Provider audit]] binds raw responses, requests and answers by SHA256 and retains reported usage.
 
 * Experiment A: first answer, exact repeat and invalidation
 
@@ -102,7 +102,7 @@ The implementation now supports both exact-repeat call avoidance and independent
 
 Use the normal native build and existing package/API builders, then run ascent_test_support.trajectory_study and ascent_test_support.trajectory_transfer_study with --live and separate fresh output directories. Credentials are read internally from the environment/local .env and are never written to these reports. Raw provider responses remain in .cache/ascent/trajectory/{live,transfer-live}; durable plans, native trajectory records, usage audit, questions and visible answers are linked here.
 
-[[file:results.json][Aggregate measured results]]; [[file:single-records.json][single-query native trajectories]]; [[file:transfer-records.json][two-query native trajectories]]; [[file:single-plan.json][single-query frozen plan]]; [[file:transfer-plan.json][two-query frozen plan]]; [[file:../../features/trajectory-qualification.json][artifact and qualification receipt]]; [[file:../../features/trajectory.org][architecture, formal design and paper use cases]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/results.json][Aggregate measured results]]; [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/single-records.json][single-query native trajectories]]; [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/transfer-records.json][two-query native trajectories]]; [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/single-plan.json][single-query frozen plan]]; [[file:../../../.cache/ascent/archived-runs/docs/research/trajectory-study/transfer-plan.json][two-query frozen plan]]; [[file:../../../.cache/ascent/archived-runs/docs/features/trajectory-qualification.json][artifact and qualification receipt]]; [[file:../../features/trajectory.org][architecture, formal design and paper use cases]].
 
 * Token coverage and observed provider time
 

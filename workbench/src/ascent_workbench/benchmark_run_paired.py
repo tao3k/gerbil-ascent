@@ -1,5 +1,6 @@
 """Interleave frozen pre-change and current binaries without timing process startup."""
 import argparse
+from .repository_policy import artifact_path
 import csv
 import hashlib
 import json
@@ -14,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--before", type=Path, required=True)
     parser.add_argument("--after", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     manifest = {name: dict(path=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest()) for name, path in [("before", args.before), ("after", args.after)]}

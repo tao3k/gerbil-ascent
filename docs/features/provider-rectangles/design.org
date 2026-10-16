@@ -85,7 +85,7 @@ these structural counts do not establish allocator or whole-engine gains.
 
 The new native module and both proof artifacts are registered in the existing
 acceptance paths and GitHub formal job. The dated
-[[file:../../evidence/scheme-provider-views-20261007/receipt.json][receipt]] records successful exits, source hashes and rejected preparation
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/receipt.json][receipt]] records successful exits, source hashes and rejected preparation
 attempts. Completing the remaining engine migration requires the existing
 initialization/admission, evaluator, index and publication owners to consume
 these views consistently, followed by the temporal and cost gates above.

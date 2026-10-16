@@ -10,7 +10,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 The primary text was reread at sections 3.1 and 3.3. The active-domain eqrel
 instance now has Lean least-insertion and finite-history laws, reusable state
 invariants, group isolation and exact emitted/total decomposition. The
-[[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][source-bound receipt]] records native independent Floyd per-batch qualification,
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-frontier-20261006/receipt.json][source-bound receipt]] records native independent Floyd per-batch qualification,
 budget rejection/retry and non-singleton merges. This closes this algebraic
 instance; it does not close arbitrary Provider contracts or universal hash /
 component representation extraction. Section 5.1's asymptotic and measured
@@ -59,7 +59,7 @@ full OpenJDK output equality, peak memory, universal speedup or all BYODS
 application closure. Explicit full export still requires space proportional to
 the number of returned pairs. Completed-closure reuse admission is unchanged.
 
-The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] records the full native and formal gates plus
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] records the full native and formal gates plus
 supplementary compiled-engine and worker probes. The small application control
 is explicit equivalence rules versus the current implicit provider, not the
 previous implicit implementation. All twelve alternating pairs and six

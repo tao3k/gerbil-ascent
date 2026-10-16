@@ -36,7 +36,7 @@ All eight obligations agreed between an independently implemented Python fixed-p
 | context-balanced-paths-2026103303 | {"nodes":24,"contexts":2,"openingEdges":34,"closingEdges":33,"oracleRounds":7,"intermediateRows":537,"requests":96} | 47 | 40 |
 | context-balanced-paths-2026103304 | {"nodes":28,"contexts":3,"openingEdges":38,"closingEdges":37,"oracleRounds":11,"intermediateRows":1262,"requests":96} | 53 | 41 |
 
-[[file:questions.org][Complete prompts, sources and follow-up rules]]; [[file:visible-answers.org][every actual visible answer]]; [[file:plan.json][frozen plan and independent grader sets]].
+[[file:questions.org][Complete prompts, sources and follow-up rules]]; [[file:visible-answers.org][every actual visible answer]]; [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/plan.json][frozen plan and independent grader sets]].
 
 * Whole-task results and retained failures
 
@@ -90,4 +90,4 @@ No remote CI or publication was used. Package and API producer inputs bind the n
 
 * Artifacts and reproduction
 
-Run the normal native build, package/API builders and existing Scheme/pytest/formal entry points. Run ascent_test_support.correction_study with --live and a fresh output directory. Credentials are read internally and never saved in reports. [[file:records.json][Full native trajectories and evidence packets]], [[file:actual-calls.json][distinct call observations]], [[file:provider-audit.json][request/response/answer hashes and provider usage]], [[file:results.json][aggregate results]] and [[file:../../features/correction-qualification.json][qualification receipt]] retain denominators, censored paths and source identity.
+Run the normal native build, package/API builders and existing Scheme/pytest/formal entry points. Run ascent_test_support.correction_study with --live and a fresh output directory. Credentials are read internally and never saved in reports. [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/records.json][Full native trajectories and evidence packets]], [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/actual-calls.json][distinct call observations]], [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/provider-audit.json][request/response/answer hashes and provider usage]], [[file:../../../.cache/ascent/archived-runs/docs/research/correction-study/results.json][aggregate results]] and [[file:../../../.cache/ascent/archived-runs/docs/features/correction-qualification.json][qualification receipt]] retain denominators, censored paths and source identity.

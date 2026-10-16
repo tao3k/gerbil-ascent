@@ -21,7 +21,7 @@ transaction now publishes through touched keys; two new KeyCoverage faults
 bring its controls to nine. Native lattice retained-session controls remain
 separate from both universal Lean laws and bounded temporal publication checks.
 See [[file:../../scheme-trrel-uf-design.org][the ownership and premises]] and
-[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the acceptance receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the acceptance receipt]].
 
 
 
@@ -41,6 +41,6 @@ are retained in the projection gate. Native tests add a one-slot repeated-key
 case and typed budget refusal/held-result/reconstruction comparison. No runtime
 failure was found in these controls; injected faults demonstrate discrimination.
 See [[file:../../scheme-trrel-uf-design.org][the design and resource semantics]] and
-[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
 
 

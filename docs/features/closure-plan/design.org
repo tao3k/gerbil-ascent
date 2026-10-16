@@ -150,7 +150,7 @@ remain proof-thread-owned; the runtime bridge retains their stated premises.
 
 ** Earlier qualified runtime cut and cost baseline
 
-[[file:../../evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources at published =978b294= with digest
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources at published =978b294= with digest
 =89527a08478920e4ceef362fe1e7ec0fda567e1ba004c9e7f9245c0c07541493=.
 The full native gate passed 85 modules and 808 Cases, with 85 final =OK= markers
 and exit zero. The independent relation-view module passed 19 Cases and emitted

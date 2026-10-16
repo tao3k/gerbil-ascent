@@ -1,5 +1,6 @@
 """Run prebuilt hybrid binaries; Python orchestrates, Rust checks every tuple."""
 import argparse
+from .repository_policy import artifact_path
 import csv
 import hashlib
 import json
@@ -15,7 +16,7 @@ HEADER = "components groups width backend threads sample replace_ns call_ns expo
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     parser.add_argument("--samples", type=int, default=7)
     args = parser.parse_args()
     root = Path.cwd().resolve()

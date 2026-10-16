@@ -1,3 +1,0 @@
-Current repaired contract control; prior rejection retained under ../history/candidate-model-rules-rejected/dynamic-diagnosis.txt
-
-DYNAMIC-CONTRACT-CONTROL-OK

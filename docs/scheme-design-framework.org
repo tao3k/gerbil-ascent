@@ -31,9 +31,9 @@ paid-call authorization. MR/MRR integration is a separate future research task,
 not a prerequisite or a deliverable of current ASCENT library closure. The
 pinned Rust ASCENT oracle remains a library differential reference.
 
-The [[file:evidence/scheme-index-sharing-20261006/receipt.json][current native receipt]] binds Scheme source =77fbabe= to 82 modules, 731
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][current native receipt]] binds Scheme source =77fbabe= to 82 modules, 731
 Cases and explicit successful exits, after the latest retained transaction
-preparation update. The [[file:evidence/scheme-higher-order-20261004/receipt.json][typed-change receipt]] binds the later =6efc911=
+preparation update. The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-higher-order-20261004/receipt.json][typed-change receipt]] binds the later =6efc911=
 Lean source to an 84-job build and axiom-free application/composition laws.
 No Scheme source changed between those revisions. Final-head GitHub checks
 remain an independent release gate. Earlier compiler heap, package-policy and
@@ -65,7 +65,7 @@ prediction parsing now live in the native test harness; their nine failure and
 discriminator Cases run through std/test in the AOT entry. Remaining provider
 byte IO and process supervision form the =python/= package with pyproject/src
 layout. No Python entry remains in =tools/=. On source 0e1141e, the
-[[file:evidence/scheme-native-framework-integrated-20261004/receipt.json][integrated native qualification]] passed thirteen Suites / 138 Cases with exit 0,
+[[file:../.cache/ascent/archived-runs/docs/evidence/scheme-native-framework-integrated-20261004/receipt.json][integrated native qualification]] passed thirteen Suites / 138 Cases with exit 0,
 and five Python IO controls passed. This closes this testing ownership migration,
 not the open research and model-benefit conditions in the table below. No real
 model call or new accuracy/benefit score belongs to this migration.
@@ -99,14 +99,14 @@ complete tuple enumeration, faithful encoding for admitted rows, duplicate/union
 laws and rank/height correspondence. Native scalar equality/hash conformance
 and actual descriptor/step refinement keep their separate R1 obligations.
 
-Its [[file:evidence/scheme-row-representation-20261004/receipt.json][source-bound acceptance]] covers 109 Cases across six native modules,
+Its [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-row-representation-20261004/receipt.json][source-bound acceptance]] covers 109 Cases across six native modules,
 16 new Lean laws and the existing Quint controls. A bare-source typed result now
 receives an explicit derived set view; raw source occurrences and budgets remain
 observable. Named checked Sessions accept derived query relations and restrict
 mutation to admitted source handles. Rejected duplicate-result and Session
 constructor artifacts remain failures, not acceptance evidence.
 
-The later [[file:evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle-owner integration]] preserves the upstream snapshot/admit/query/session
+The later [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle-owner integration]] preserves the upstream snapshot/admit/query/session
 split and requalifies all six modules (109 Cases) on =84ba4ac=. Source-only
 checked mutation now belongs to =program/scheme-session.ss=; the public facade
 keeps its existing exports. Formal sources are byte-identical to the checked
@@ -115,7 +115,7 @@ parent receipt; source/binary binding is independently refreshed.
 The [[file:scheme-compiler-proof-bridge.org][source-root materialization refinement]] adds eight Lean theorems connecting
 ordered checked columns, complete tuple reconstruction, set membership,
 encoding and admission to the source-only IR branch and closed lexical lowering.
-Its [[file:evidence/scheme-identity-materialization-20261005/receipt.json][acceptance receipt]] separates the current 33-Case higher-order rerun from
+Its [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-identity-materialization-20261005/receipt.json][acceptance receipt]] separates the current 33-Case higher-order rerun from
 the historical 109-Case qualification. It establishes this mathematical step;
 the native rule emitter, equality/hash implementation and exact per-term domains
 still require their own correspondence proofs. Quint lifecycle behavior is unchanged.
@@ -125,7 +125,7 @@ join, arbitrary checked projection, selection and finite mapping. Each law
 states its own arity/domain premise; mapping may change domains and requires
 validity of every frozen output entry. These are prerequisites for the concrete
 descriptor/emitter induction, whose implementation correspondence remains open.
-The [[file:evidence/scheme-primitive-domains-20261005/receipt.json][current receipt]] records formal results and the native operator gate,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-primitive-domains-20261005/receipt.json][current receipt]] records formal results and the native operator gate,
 including any rejected supervised runs rather than inheriting a historical pass.
 
 The [[file:scheme-compiler-proof-bridge.org][ordinary projection rule slice]] adds six Lean theorems for body-variable
@@ -133,14 +133,14 @@ reconstruction and soundness/completeness of one emitted positive rule against
 checked column selection. It models the existing emitter's variable patterns;
 native symbol decoding/freshness, actual rule execution and the optimized
 two-body projected-join branch remain separate obligations. The
-[[file:evidence/scheme-projection-rule-20261005/receipt.json][receipt]] distinguishes current formal acceptance from prior native evidence.
+[[file:../.cache/ascent/archived-runs/docs/evidence/scheme-projection-rule-20261005/receipt.json][receipt]] distinguishes current formal acceptance from prior native evidence.
 
 The [[file:scheme-compiler-proof-bridge.org][shared-key projected join slice]] extends the rule model to the optimized
 two-body branch. Eight new theorems connect shared variable identity, body-key
 equality, complete assignment reconstruction and projected output to the
 join-then-project IR. Membership equivalence does not imply budget/work equality
 or certify native freshness, decoding and index execution. Its
-[[file:evidence/scheme-projected-join-rule-20261005/receipt.json][receipt]] records the refreshed native artifact and exact formal snapshot.
+[[file:../.cache/ascent/archived-runs/docs/evidence/scheme-projected-join-rule-20261005/receipt.json][receipt]] records the refreshed native artifact and exact formal snapshot.
 
 R5 now also has [[file:scheme-retained-benefit.org][initialization-inclusive composed lifecycle evidence]]:
 the same checked program and evidence path cross nine source cuts, with all
@@ -149,7 +149,7 @@ does not close general benefit or the actor/Provider performance obligations.
 
 * Explicit curried physical representation
 
-The [[file:scheme-research-proof-audit.org][current research audit]] and [[file:evidence/scheme-index-sharing-20261006/receipt.json][source-bound receipt]] qualify an explicit
+The [[file:scheme-research-proof-audit.org][current research audit]] and [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][source-bound receipt]] qualify an explicit
 =gerbil-ascent-curried-index-provider= choice. Compatible logical column
 requirements share engine/worker-owned physical chains; lazy ordered views
 preserve occurrence order, expression evaluation order and old publications.
@@ -185,20 +185,20 @@ MR/MRR integration do not replace the library semantic and release gates.
 
 * Evidence and integration
 
-The [[file:evidence/scheme-closure-20261004/receipt.json][original six-module receipt]] records 51 passing Cases on its frozen
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-closure-20261004/receipt.json][original six-module receipt]] records 51 passing Cases on its frozen
 source. It remains immutable. This branch integrates the declaration-scope
 baseline 53980e47681d095b30400cefc745d90b5509e8be; acceptance on that integrated
 source requires a new artifact binding and run. GitHub CI is a separate gate
 whose result must be checked against the submitted head.
 
-The [[file:evidence/scheme-closure-integration-20261004/receipt.json][integration receipt]] records two builds of submitted source 8c2d746:
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-closure-integration-20261004/receipt.json][integration receipt]] records two builds of submitted source 8c2d746:
 both reached the unchanged 180-second compilation deadline during AOT static
 compilation/linking (exit 124). Neither started the six-Suite semantic run.
 This is an open build-delivery gate, not a semantic failure or a qualified
 integrated artifact. GitHub CI runs the same gate; its exact-head verdict
 must be recorded independently. Previous 51-case results cannot substitute.
 
-The [[file:evidence/scheme-closure-recovery-20261004/receipt.json][AOT recovery receipt]] supersedes the build-delivery failure on its own
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-closure-recovery-20261004/receipt.json][AOT recovery receipt]] supersedes the build-delivery failure on its own
 frozen source: the abandoned reasoning.o.lock was recovered under the exclusive
 lane, native compilation/linking completed under 180 seconds, and all six
 Suites / 51 Cases passed with unchanged test bounds. A source-mutation control
@@ -230,7 +230,7 @@ The [[file:scheme-session-deletion-design.org][native deletion contract]] and [[
 the new integration, independent components, callback authority, atomic
 publication, frozen result metadata and complete recursive alternatives.
 
-The [[file:evidence/scheme-model-native-20261004/receipt.json][combined native receipt]] records 11 Suites and 106 Cases on the
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-model-native-20261004/receipt.json][combined native receipt]] records 11 Suites and 106 Cases on the
 source-bound artifact, including the shared positive-key changes, 24 real
 model-task computations and 10 inert native scorer controls. The [[file:scheme-model-closure-study.org][paired model
 study contract]] specifies reasoning, history and actual computed feedback
@@ -255,7 +255,7 @@ binary artifacts. This is a byte-publication guarantee, not a semantic proof.
 
 * Historical integrated acceptance (2026-10-04)
 
-The [[file:evidence/scheme-ci-repair-20261004/receipt.json][integrated repair receipt]] binds source =e732b2b= to a compiler-exit-zero
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-ci-repair-20261004/receipt.json][integrated repair receipt]] binds source =e732b2b= to a compiler-exit-zero
 artifact built in 149.4 seconds. All twelve native Suites / 121 Cases, the five
 original Rust differentials (including 512 graphs in four configurations),
 and eleven byte/publication controls passed under unchanged limits. Historical
@@ -270,7 +270,7 @@ benefit or R6 real-model benefit, and does not authorize R7 integration.
 
 * Function fixed-point acceptance
 
-The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] binds source =b505370= and all source/
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] binds source =b505370= and all source/
 artifact/proof hashes. Twelve native Suites / 125 Cases, five original Rust
 differentials and three Lean files pass. Seven new lemmas connect pointwise
 bottom, ascending iteration, finite function-table ranks, full-height
@@ -315,7 +315,7 @@ are checked again after execution. Python owns process supervision; Scheme
 owns every test assertion, callback and verdict. Builds retain their separate
 real-output/CPU-progress supervision and have no total 180-second deadline.
 
-The [[file:evidence/scheme-native-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
 four injected failure controls and integrated proof check. Startup admission,
 native semantic conformance, proof-model validity and measured application
 benefit remain separate evidence. The research/proof sequence above continues
@@ -344,7 +344,7 @@ retains checkpoint-distance arithmetic, immutable cache identity and bucket
 extension equations. It contains no matching actor state machine. Neither
 collection alone establishes native worker liveness or VM correspondence.
 
-The [[file:evidence/scheme-actor-binding-20261005/receipt.json][actor/binding receipt]] binds source snapshot =bb2edaf=, the seven-Case
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-actor-binding-20261005/receipt.json][actor/binding receipt]] binds source snapshot =bb2edaf=, the seven-Case
 native module, four normal TLA models and ten counterexample controls. Raw
 development failures stay excluded. Native actor execution, parallel benefit
 and model comprehension retain their separate gates; this round uses no model
@@ -352,7 +352,7 @@ calls.
 
 * Native actor module pool qualification (2026-10-05)
 
-The [[file:evidence/scheme-actor-pool-20261005/receipt.json][actor pool receipt]] records 63 native modules and 560 successful Cases from
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-actor-pool-20261005/receipt.json][actor pool receipt]] records 63 native modules and 560 successful Cases from
 source =8ce6412= (55 parallel-lane modules, 8 exclusive, 2 workers). The affected
 single-module SDK mode reset and registry control gate are independently checked
 at source =b37e903=: two pooled modules/eight Cases, six actor lifecycle Cases,
@@ -434,7 +434,7 @@ policy is owned by the component module, repairing the prior CI module-size
 failure without changing its threshold. Runtime rows/frames/indexes remain
 solve-private. Native exact-identity and fresh-versus-cached projection controls,
 pure Lean identity/cache-construction equations, and replayed Quint scheduling safety are
-recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
+recorded in [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
 
@@ -445,7 +445,7 @@ installing admitted row roots and next versions; delta stays round-local.
 Reverse batch traversal preserves rebuilt bucket order. Native independent
 closure, input immutability and single/composite key controls accompany Lean
 ordered extension laws and Quint private extension/install safety with negative
-controls. [[file:evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
+controls. [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
 real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
 concurrency, large SCC partitioning and persistent worker reuse remain open.
 
@@ -483,7 +483,7 @@ module before evaluator consumers; package build and ASP policy admit all 77
 modules without errors. This repairs the 1,006-effective-line evaluator owner
 rejection without changing the policy threshold or deleting documentation.
 
-The [[file:evidence/scheme-source-initialization-20261007/receipt.json][source initialization receipt]] records the failed GitHub revision, exact
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-source-initialization-20261007/receipt.json][source initialization receipt]] records the failed GitHub revision, exact
 algorithm relocation, source hashes, policy result and ten affected native
 modules. This source ownership change adds neither a Lean theorem nor a TLA+
 protocol transition. The existing algebra/lifecycle responsibility split is

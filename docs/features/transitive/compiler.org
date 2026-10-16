@@ -34,7 +34,7 @@ budget, exercising both direct commit and planned preflight paths in =trrel=.
 UF refusal also preserves physical SCC observation counts. Replays return no
 facts at zero budget; larger controls merge two non-singleton SCCs and then
 admit an explicit loop. Existing eight-node, producer and group controls are
-retained. See the [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][source-bound receipt]].
+retained. See the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-directed-frontier-20261006/receipt.json][source-bound receipt]].
 
 These are concrete algebra and finite native observations. Hash/index
 membership, parent/root selection, SCC merge and member-rectangle extraction

@@ -51,7 +51,7 @@ This closes the stated keyed update/publication algebra and finite settled
 projection protocol, with source-bound native controls. Universal lowered-rule
 stratum extraction, all custom callback/hash representations, generic recursive
 aggregate semantics and asynchronous lattice execution remain separate gates.
-See [[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the keyed projection receipt]].
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the keyed projection receipt]].
 
 Qualification passed 99 Lean build jobs, 26 positive TLC configurations and 72
 fault controls. The new transaction explored 1,651 generated and 858 distinct
@@ -106,7 +106,7 @@ publication protocol; Lean owns universal coverage and weighted graph laws.
 No duplicate Quint weighted-graph theorem model is introduced.
 
 Acceptance and source identities are recorded in
-[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the refinement receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the refinement receipt]].
 The existing lattice native cases exercise repeated same-key writes, ineffective
 updates, multi-field false/true keys and unchanged earlier projections. These
 are finite implementation discriminators; universal native hash/vector/SCC
@@ -171,7 +171,7 @@ Replacing the inputs with one key reconstructs successfully and matches a fresh
 solve for both source and lattice rows. This distinguishes rejection safety from
 claims of in-place callback rollback or automatic repair.
 
-See [[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the source-bound admission receipt]]
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the source-bound admission receipt]]
 for the seventeen Lean laws, thirteen examples, three resource configurations,
 actual fault states and native acceptance. Remaining representation obligations
 are Scheme hash/equality, field/callback validation, native emitted-list order

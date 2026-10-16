@@ -13,7 +13,7 @@ the parent directory. No report or frozen plan has been rewritten.
 Extract into a temporary directory to inspect or replay the historical tests:
 
 ```sh
-tar -xzf docs/research/agent-inference/history/crosspath-sources.tar.gz -C "$temporary_directory"
+tar -xzf .cache/ascent/archived-runs/docs/research/agent-inference/history/crosspath-sources.tar.gz -C "$temporary_directory"
 PYTHONPATH="$temporary_directory/python/src:$PWD/python/src" python3 -m pytest -q "$temporary_directory/python/tests"
 ```
 

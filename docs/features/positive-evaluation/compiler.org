@@ -27,7 +27,7 @@ for frozen finite admitted rows; native encoding still needs refinement. Quint o
 =Tests/ComponentClosureTests.lean=, including a recursive diamond, independent
 component swap, premature successor and insufficient local rounds. The native
 same-case qualifier checks exact seed/left/right/output rows under both relation
-orders and 1/2/4 workers. See [[file:../../evidence/scheme-component-closure-20261006/receipt.json][source-bound receipt]].
+orders and 1/2/4 workers. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-closure-20261006/receipt.json][source-bound receipt]].
 
 ** Derived local termination
 
@@ -45,7 +45,7 @@ coverage and no backward read dependency as plan premises. =planned= is a
 noncomputable semantic witness, not an extracted native scheduler. Tests under
 =Tests/= qualify both recursive-diamond orders without a supplied =StablePlan=,
 duplicate heads and empty rules. The existing premature-successor and short
-iteration controls remain. See [[file:../../evidence/scheme-component-termination-20261006/receipt.json][termination qualification receipt]].
+iteration controls remain. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-termination-20261006/receipt.json][termination qualification receipt]].
 
 ** Constructed binder grounding
 
@@ -65,7 +65,7 @@ This is pure semantic construction, not Gerbil code extraction. Native scalar
 encoding, mutable row enumeration, SCC ownership and asynchronous refinement
 remain open. Lean tests live in =Tests/GroundedBindingTests.lean=; the matching
 native fixture combines repeated variables, a constant, a shared-key join,
-duplicate heads and a zero-arity head. See [[file:../../evidence/scheme-binder-grounding-20261006/receipt.json][source-bound receipt]].
+duplicate heads and a zero-arity head. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-binder-grounding-20261006/receipt.json][source-bound receipt]].
 
 ** Relation projection and component dependency contract
 
@@ -85,7 +85,7 @@ coverage, head multiplicity, exact immediate predecessor sets and source-before-
 target order. The existing multi-head qualifier covers head splitting. Lean
 controls distinguish direct edges from transitive reachability, detect an omitted
 required dependency and reject reversed order. Tests remain under =Tests/=.
-See [[file:../../evidence/scheme-component-projection-20261006/receipt.json][projection receipt]]. Arbitrary-size native graph extraction, relation encoding
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-projection-20261006/receipt.json][projection receipt]]. Arbitrary-size native graph extraction, relation encoding
 and asynchronous execution refinement remain open.
 
 ** Completed snapshot merge algebra
@@ -109,7 +109,7 @@ tail and successor-overlap controls are retained. Tests under =Tests/= qualify
 stable recursive left merge, retained right facts and a changed predecessor
 that invalidates old stability. General native trace-to-semantic-step extraction,
 intermediate chunk refinement, mutable representation and cancellation remain
-separate obligations. See [[file:../../evidence/scheme-snapshot-closure-20261006/receipt.json][snapshot closure receipt]].
+separate obligations. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-snapshot-closure-20261006/receipt.json][snapshot closure receipt]].
 
 ** Candidate batches and terminal completeness
 
@@ -134,7 +134,7 @@ credit batches and a terminal tail, deduplicates in the owner callback, and
 admits a successor only after all candidates have been seen. The existing
 terminal-tail/stale-snapshot controls remain. Quint checks delivery/credit order
 separately. The native worker-to-candidate trace certificate, cancellation,
-and complete mutable representation refinement remain open. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
+and complete mutable representation refinement remain open. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
 
 
 * Monotonicity and finite domain boundary
@@ -195,7 +195,7 @@ refinement. No runtime source changes or new performance/model claims occur.
 The native operator rerun checks existing complete-row tests, including
 zero-arity/repeated-column projected joins and combined positive operators;
 its current counts and source binding are recorded separately in the
-[[file:../../evidence/scheme-primitive-domains-20261005/receipt.json][primitive-domain receipt]]. Historical higher-order constructor qualification
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-primitive-domains-20261005/receipt.json][primitive-domain receipt]]. Historical higher-order constructor qualification
 remains in the preceding receipts. Lifecycle TLA models are unchanged.
 
 
@@ -229,7 +229,7 @@ native rule matching and incremental execution are still correspondence
 obligations. The optimized projected-join branch has two body atoms and is
 outside this one-body proof. No claim of whole-compiler verification follows.
 
-The [[file:../../evidence/scheme-projection-rule-20261005/receipt.json][projection-rule receipt]] records the current formal gate and the immutable
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-projection-rule-20261005/receipt.json][projection-rule receipt]] records the current formal gate and the immutable
 prior native evidence. This slice changes no Scheme source and runs no new
 native module. The relevant emitter and operator test bytes are compared
 against the preceding native snapshot; those comparisons preserve the scope
@@ -268,7 +268,7 @@ execution, memoization and recursive feedback remain open. The new proof is
 not an extraction of Scheme source. The ordinary one-body projection proof
 remains separate, while this slice covers the two-body optimized branch.
 
-The [[file:../../evidence/scheme-projected-join-rule-20261005/receipt.json][projected-join receipt]] binds the formal snapshot and refreshed native
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-projected-join-rule-20261005/receipt.json][projected-join receipt]] binds the formal snapshot and refreshed native
 qualification after the upstream index lifecycle change. Rejected build or
 qualification attempts, if any, remain excluded. Quint lifecycle models are
 unchanged; no model calls or performance claim is added.
@@ -330,7 +330,7 @@ Tests now live exclusively under =packages/proofs/lean/Tests/=, including the
 new [[file:../../../packages/proofs/lean/Tests/PositiveConsequenceTests.lean][bridge qualification]]. The =AscentProofTests= Lake library remains the
 existing acceptance target and explicitly names the =Tests.*= roots. Proof
 modules import no test modules. Historical JSON receipts retain original
-paths and hashes; [[file:../../evidence/scheme-positive-consequence-20261006/receipt.json][the current qualification receipt]] binds the relocated sources.
+paths and hashes; [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-positive-consequence-20261006/receipt.json][the current qualification receipt]] binds the relocated sources.
 
 
 * Complete finite-vector traversal (2026-10-06)
@@ -368,7 +368,7 @@ kernel-checked evaluation replaced two inefficient =decide= examples that hit
 the default heartbeat limit; the limit was not raised, and no native-evaluation
 axiom or custom axiom was introduced. Axiom reports stay under =Tests/=.
 
-The [[file:../../evidence/scheme-vector-traversal-20261006/receipt.json][vector traversal receipt]] records the proof boundary and exact source hashes.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-vector-traversal-20261006/receipt.json][vector traversal receipt]] records the proof boundary and exact source hashes.
 The next connected obligation is actual Scheme action/key/head and scalar/name
 decoding, followed by Provider snapshot/frontier instances and constructed
 least-model output. Callback execution, native scalar/hash conformance and
@@ -424,7 +424,7 @@ finite retained-state cases plus two false/nullary controls against independent
 list membership. Every new row enters delta, the union is complete, and replay
 uses the actual returned membership root. Existing 3282 prefix comparisons,
 first-occurrence identity and large shared/duplicate-log controls remain.
-The [[file:../../evidence/scheme-set-frontier-20261006/receipt.json][source-bound receipt]] records both verification collections.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-set-frontier-20261006/receipt.json][source-bound receipt]] records both verification collections.
 
 This closes the canonical finite Set model instance and qualifies its native
 batch observations. It does not instantiate arbitrary lattice/custom Provider

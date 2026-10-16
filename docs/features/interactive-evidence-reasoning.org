@@ -171,7 +171,7 @@ ablation with a different capability set, not a pure retention comparison.
 
 * Local implementation and real-model results
 
-[[file:interactive-evidence-qualification.json][The source-bound qualification]] records actual ABI/API checks, direct Scheme
+[[file:../../.cache/ascent/archived-runs/docs/features/interactive-evidence-qualification.json][The source-bound qualification]] records actual ABI/API checks, direct Scheme
 tests, Lean compilation and bounded Quint simulations. [[file:../research/interactive-evidence-study/report.org][The complete English report]]
 includes independent inputs, every policy trajectory, failed-answer repairs,
 interrupted requests, local feedback audits and physical provider usage.

@@ -31,7 +31,7 @@ This owner split repairs a concrete build gate: =program/evaluate.ss= reached
 run. The algorithm, row order, field callback behavior and budget checks are
 preserved. Existing exhaustive deletion/dependency and lattice-budget Cases
 remain the semantic gate; native storage Cases cover the adjacent readiness
-boundary. See [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][the revision-bound receipt]].
+boundary. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-reuse-owner-20261006/receipt.json][the revision-bound receipt]].
 
 
 
@@ -65,7 +65,7 @@ then checks the 33-row input limit after an interrupted indexed admission,
 a later replacement/append and stability of the original 32-row result.
 The existing Session deletion matrix covers replacement budgets, retained
 append logs, independent reuse, mutable callbacks and withdrawal. See
-[[file:../../evidence/scheme-source-reconstruction-20261007/receipt.json][the source reconstruction receipt]]. This closes recovery handoff and budget
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-source-reconstruction-20261007/receipt.json][the source reconstruction receipt]]. This closes recovery handoff and budget
 ownership; it makes no theorem, rollback or speedup claim.
 
 
@@ -100,7 +100,7 @@ mutates the caller's replacement row, and checks repeated reads, the previous
 result and the next append's complete input/output against explicit scalar
 facts. The timeout suite checks that eager validation still hands timed runs
 to fresh committed round boundaries. See
-[[file:../../evidence/scheme-eager-snapshot-20261007/receipt.json][the eager snapshot ownership receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eager-snapshot-20261007/receipt.json][the eager snapshot ownership receipt]].
 
 
 
@@ -140,7 +140,7 @@ source, the constant output and the original
 32-row public snapshot. The triggering row is excluded. This validates the
 reconstruction boundary on scalar facts, not rollback of external callback
 effects or a new theorem. See
-[[file:../../evidence/scheme-append-flush-20261007/receipt.json][the append flush recovery receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-append-flush-20261007/receipt.json][the append flush recovery receipt]].
 
 
 An earlier development control used a duplicate buffered source. Its pending

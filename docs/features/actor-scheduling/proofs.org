@@ -48,7 +48,7 @@ policy is owned by the component module, repairing the prior CI module-size
 failure without changing its threshold. Runtime rows/frames/indexes remain
 solve-private. Native exact-identity and fresh-versus-cached projection controls,
 pure Lean identity/cache-construction equations, and replayed Quint scheduling safety are
-recorded in [[file:../../evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
+recorded in [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
 
@@ -60,7 +60,7 @@ installing admitted row roots and next versions; delta stays round-local.
 Reverse batch traversal preserves rebuilt bucket order. Native independent
 closure, input immutability and single/composite key controls accompany Lean
 ordered extension laws and Quint private extension/install safety with negative
-controls. [[file:../../evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
+controls. [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
 real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
 concurrency, large SCC partitioning and persistent worker reuse remain open.
 
@@ -73,7 +73,7 @@ Lean's =CreditObservation= laws quantify over any positive natural period;
 the replayed Quint model proves abstract credit/drain safety only. Native matched
 controls freeze the old round protocol while sharing current worker/index
 implementation. Independent truth and cancellation/drain gates accompany every
-performance lane. See [[file:../../evidence/scheme-credit-observation-20261005/receipt.json][receipt]] for actual samples and unstable timing results.
+performance lane. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-credit-observation-20261005/receipt.json][receipt]] for actual samples and unstable timing results.
 This advances the rule planning planning implementation without expanding Provider concretization Provider
 concurrency claims. Persistent workers, large SCC partitioning and whole-runtime
 model gains remain separate open gates; no model calls or Rust integration.
@@ -96,7 +96,7 @@ verifies its successor remains unassigned, then releases the terminal tail and
 checks all 33 rows in the captured snapshot. Worker reuse follows task completion;
 worker/monitor joins occur at whole-pool exit, not at each SCC completion. This
 corrects source and design descriptions without changing scheduling behavior.
-See [[file:../../evidence/scheme-dependency-snapshot-20261006/receipt.json][qualification receipt]]. General DAG-to-relational-closure and complete native
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-dependency-snapshot-20261006/receipt.json][qualification receipt]]. General DAG-to-relational-closure and complete native
 representation/trace refinement remain open; finite TLC is protocol evidence.
 
 
@@ -116,7 +116,7 @@ actual private roots with full initialization. It must emit nothing and retain
 all roots. Floyd truth, exact owned emissions and external root preservation
 remain independent checks. Quint retains temporal readiness/credit/tail behavior
 without duplicating this iteration algebra. See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and
-[[file:../../evidence/scheme-indexed-least-20261006/receipt.json][qualification receipt]]. Universal native iteration/completion extraction,
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-indexed-least-20261006/receipt.json][qualification receipt]]. Universal native iteration/completion extraction,
 SCC/name/scalar decoding and non-Set Provider instances remain separate gates;
 MR remains a later library consumer.
 
@@ -136,7 +136,7 @@ body fixture now supplies extent zero; its native mask controls additionally
 check that selected projections preserve purity and extent. No runtime
 compatibility branch, weakened admission check or enlarged test deadline was
 introduced. The corrected selected-activation suite passes independently;
-the [[file:../../evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.
+the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.
 
 
 * BYODS selection and completion audit (2026-10-07)

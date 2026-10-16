@@ -174,7 +174,7 @@ def prepare(directory, library):
           'sourceUpdate':'Retain rules, replace trusted source rows in Scheme; invalidate completed answer. No model call.',
           'recovery':'No repair or retry in primary evaluation. Failed contracts remain failures in all retained phases.',
           'reflectionInputs':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()
-             for p in [ROOT/'docs/research/agent-inference/movie-reflection-result.json',ROOT/'docs/research/agent-inference/complex-movie-result.json']},
+             for p in [ROOT/'.cache/ascent/archived-runs/docs/research/agent-inference/movie-reflection-result.json',ROOT/'.cache/ascent/archived-runs/docs/research/agent-inference/complex-movie-result.json']},
           'reflectionDecisions':['Use structured head arrays.', 'Union and join explicit in ABI.',
              'Keep existential witness exclusion distinct from actor-wide exclusion.',
              'Compile intent without fact enumeration.', 'Retain Scheme session; do not call model on exact repeat.',

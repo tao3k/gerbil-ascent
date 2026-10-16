@@ -15,7 +15,7 @@ exactly. This completes the algebraic frontier instances for these declared
 providers alongside canonical Set and eqrel; it does not instantiate arbitrary
 custom lattices or prove universal native hash/SCC extraction.
 
-The [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][qualification receipt]] links every law to the complete Lean build and
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-directed-frontier-20261006/receipt.json][qualification receipt]] links every law to the complete Lean build and
 finite native per-insertion checks. Quint retains temporal responsibilities.
 Provider concretization sections 5.3-5.4 supply the representation motivation; their performance
 results are not attributed to the Scheme implementation. Native actor

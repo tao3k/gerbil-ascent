@@ -25,8 +25,8 @@ ordinal restoration and reusable view lifecycle on 2026-10-08:
 
 The [[file:../../../t/performance/index-sharing/README.org][benchmark specification]] defines the frozen reference, counters and
 predeclared gates. Generated numerical samples remain in
-[[file:../../evidence/scheme-curried-collection-20261008/wide.sexp][wide]], [[file:../../evidence/scheme-curried-collection-20261008/sparse.sexp][sparse]], [[file:../../evidence/scheme-curried-collection-20261008/small.sexp][small]], [[file:../../evidence/scheme-curried-collection-20261008/scalar.sexp][scalar]] and
-[[file:../../evidence/scheme-curried-collection-20261008/empty.sexp][empty]] S-expression outputs. This cumulative lifecycle comparison does not
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-curried-collection-20261008/wide.sexp][wide]], [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-curried-collection-20261008/sparse.sexp][sparse]], [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-curried-collection-20261008/small.sexp][small]], [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-curried-collection-20261008/scalar.sexp][scalar]] and
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-curried-collection-20261008/empty.sexp][empty]] S-expression outputs. This cumulative lifecycle comparison does not
 isolate the collector change or establish whole-application benefits.
 
 * Logical key adaptation qualification

@@ -54,5 +54,5 @@ cleanup, with explicit finite-model and concrete-test boundaries. A universal
 machine-checked refinement of mutable Scheme storage, arbitrary parent depth,
 grouped prefix decoding and ordered journal replay remains separate work.
 The new audit does not establish an end-to-end speedup. See
-[[file:../../evidence/scheme-provider-views-20261007/operational-scc-refinement.json][the operational receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/operational-scc-refinement.json][the operational receipt]].
 

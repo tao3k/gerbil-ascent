@@ -124,7 +124,7 @@ A finite TLC run is not a proof of arbitrary native histories or liveness.
 Full OpenJDK correctness/performance and the ten connected package gates remain
 separate from this representation implementation.
 
-The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] retains all small application pairs and the
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] retains all small application pairs and the
 negative worker sample. Full native acceptance is 86 modules / 829 Cases;
 full formal acceptance is 109 Lean jobs / 30 positive models / 87 named
 counterexample controls. The million-pair count-only engine probe does not

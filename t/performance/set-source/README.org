@@ -22,7 +22,7 @@ Allocation receipts
 -------------------
 
 The cumulative allocated-byte counter is Gambit =##process-statistics= slot 7,
-previously calibrated in =t/performance/set-emit/counter-calibration.sexp=.
+previously calibrated in =.cache/ascent/archived-runs/t/performance/set-emit/counter-calibration.sexp=.
 This measures bytes allocated during complete solves, not peak memory or
 latency. Each of 1000 alternating old/new pairs checks ordered goldens and
 original row identities outside the observed interval, after 20 warmups.

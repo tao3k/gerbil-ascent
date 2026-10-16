@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Arbitrary positive-body frontier follow-up
 
-The [[file:../../scheme-paper-closure.org][paper closure matrix]] and [[file:../../evidence/scheme-body-frontier-20261005/receipt.json][source-bound receipt]] extend
+The [[file:../../scheme-paper-closure.org][paper closure matrix]] and [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-body-frontier-20261005/receipt.json][source-bound receipt]] extend
 ProviderFrontier beyond its earlier binary join. Lean proves arbitrary finite
 positive-body decomposition, projection and output subtraction. Omitting
 all-old derivations explicitly requires prior heads to be covered by the known
@@ -28,7 +28,7 @@ evaluator assumption. Actual native index/pivot/head decoding and general
 Provider gamma contracts remain explicit implementation obligations.
 All Lean qualification modules are under =packages/proofs/lean/Tests/=;
 proof roots and test roots remain separate Lake libraries. Existing Quint
-Provider publication checks retain protocol ownership. [[file:../../evidence/scheme-positive-consequence-20261006/receipt.json][The receipt]] records the
+Provider publication checks retain protocol ownership. [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-positive-consequence-20261006/receipt.json][The receipt]] records the
 combined Lean, protocol and native regression results without promoting them
 to whole-engine refinement.
 
@@ -42,7 +42,7 @@ stable topological plans compute the least model. Independent component orders
 agree. Unlike the Quint task inventory, this proof contains no mailbox, credit,
 worker or publication state. No generation or iteration upper bound is imposed.
 
-The [[file:../../evidence/scheme-component-closure-20261006/receipt.json][receipt]] distinguishes this universal ground-rule theorem from the native
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-closure-20261006/receipt.json][receipt]] distinguishes this universal ground-rule theorem from the native
 recursive-diamond qualifier and the existing finite ready/credit protocol.
 The original conditional theorem is retained. =local_stabilizes= now derives
 local stabilization from finite ground rule-head rank, including duplicate
@@ -50,7 +50,7 @@ heads and arbitrary seeds. =planned_stable= supplies every component witness;
 =topological_least= consequently needs only complete head coverage and sound
 topological dependency ownership. Its =n <= rules.length= is a derived theorem,
 not a native round limit; the witness plan is noncomputable semantic evidence.
-See [[file:../../evidence/scheme-component-termination-20261006/receipt.json][follow-up receipt]]. Native binder/row encoding, SCC/head
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-termination-20261006/receipt.json][follow-up receipt]]. Native binder/row encoding, SCC/head
 projection, asynchronous refinement and general non-ground/lattice termination
 remain required for whole-engine closure.
 
@@ -68,7 +68,7 @@ explicit premises. This narrows the open bridge to native representation and
 SCC correspondence. It does not close arbitrary generated domains, lattices,
 mutable index publication or asynchronous execution refinement. Quint retains
 protocol ownership and no new overlapping temporal model is introduced.
-See [[file:../../evidence/scheme-binder-grounding-20261006/receipt.json][qualification receipt]].
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-binder-grounding-20261006/receipt.json][qualification receipt]].
 
 
 * Relation projection and native SCC qualification
@@ -82,7 +82,7 @@ SCC equivalence, total unique ownership, immediate predecessors, topological
 IDs and preserved projected head count. This closes the semantic projection
 contract and strengthens bounded native correspondence evidence. It is not a
 universal native Tarjan proof, nor a temporal scheduler proof. Quint models stay
-unchanged and retain ready/credit protocol ownership. See [[file:../../evidence/scheme-component-projection-20261006/receipt.json][source-bound receipt]].
+unchanged and retain ready/credit protocol ownership. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-component-projection-20261006/receipt.json][source-bound receipt]].
 
 
 * Canonical Set instance through component least model (2026-10-06)
@@ -101,7 +101,7 @@ planner then characterizes the least ordinary-binder model with head coverage
 and topology, constructing its own stabilization witness. Examples and axiom
 reports stay under =Tests/=; Quint keeps the separate temporal protocols.
 
-The [[file:../../evidence/scheme-set-frontier-20261006/receipt.json][receipt]] records the complete native Set-batch suite, the complete Lean
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-set-frontier-20261006/receipt.json][receipt]] records the complete native Set-batch suite, the complete Lean
 collection and repaired proof elaboration failures. This is a canonical Set
 semantic instance with native finite representation checks. Custom lattice
 frontiers, Gambit equality/hash and source/name decoding, native SCC/actor

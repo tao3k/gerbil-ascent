@@ -12,9 +12,9 @@ The Library source closure was consistently captured from the active dirty check
 
 A known-correct two-rule transitive-closure proposal is rejected on all four visible graphs: native status `rejected`, feedback `inconclusive`, diagnostic `planner-rejected`. The diagnostic points to the rules contract at `program/types.ss:238`. Even the empty graph is not admitted: empty returned rows are not a semantic match when execution was rejected.
 
-The same public `candidate-program` call through the coherently built dynamic Library also raises a TypeError at that rules contract, with `core/types#poo-flow-contract-validate` in its backtrace. This locates the failure in the captured admission/contract path; it does not yet establish a source fix or a benefit from caching. Full diagnostic: [dynamic-diagnosis.txt](dynamic-diagnosis.txt).
+The same public `candidate-program` call through the coherently built dynamic Library also raises a TypeError at that rules contract, with `core/types#poo-flow-contract-validate` in its backtrace. This locates the failure in the captured admission/contract path; it does not yet establish a source fix or a benefit from caching. Full diagnostic: [dynamic-diagnosis.txt](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/dynamic-diagnosis.txt).
 
-The `solve` guard was exercised and refused the frozen plan before provider key lookup or any request. See [qualification.json](qualification.json), [correct-control.json](correct-control.json), [plan.json](plan.json) and [report.json](report.json).
+The `solve` guard was exercised and refused the frozen plan before provider key lookup or any request. See [qualification.json](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/qualification.json), [correct-control.json](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/correct-control.json), [plan.json](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/plan.json) and [report.json](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/report.json).
 
 ## Retained negatives and evidence boundary
 
@@ -22,4 +22,4 @@ Earlier development failures include fixture syntax, omitted nonempty runtime su
 
 The current gate stops at the first correct control. No 448-check success is claimed for this build. No Lean/Quint proof, full DatalogBench reproduction, current-head remote CI, thinking reduction, deeper exploration or quality improvement is claimed. Library admission must pass before the model comparison can be admitted. No shared Library source was reverted or changed by this consumer study.
 
-Raw runtime, captured source, canonical build, all failed attempts, commands and logs are archived with a digest receipt in [archive.json](archive.json).
+Raw runtime, captured source, canonical build, all failed attempts, commands and logs are archived with a digest receipt in [archive.json](../../../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/candidate-model-rules-rejected/archive.json).

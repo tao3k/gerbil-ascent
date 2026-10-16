@@ -33,7 +33,7 @@ evaluation protocol; they do not certify these two tasks' difficulty or quality.
 | Group centrality order | [NetworkX PR 8931](https://github.com/networkx/networkx/pull/8931), 2026-09-27 20:08:08 | `9f6079c0120416599ea5d4018bbaba229ea2e456` | `c1ebe046ec672eca7cba4dc88d6e0145406d693a` | `networkx/algorithms/centrality/group.py` |
 | Series root precision | [SymPy issue 30698](https://github.com/sympy/sympy/issues/30698), 2026-10-08 05:24:57; [fix PR 30699](https://github.com/sympy/sympy/pull/30699) | `a0be64b90beabfaa8f76fcb31f2983b2476adfb4` | `8c02bd2b177bce1775cd3688cef07d225f69345d` | `sympy/polys/ring_series.py`, `sympy/polys/puiseux.py` |
 
-Dates and identities are recorded in the [source audit](repository-evidence-source-audit.json).
+Dates and identities are recorded in the [source audit](../../../.cache/ascent/archived-runs/docs/research/agent-inference/repository-evidence-source-audit.json).
 Recent disclosure lowers reliance on old benchmark examples; it does not prove
 that a dynamic model backend has never seen the source or solution. Exposure
 remains unknown. The two root causes are distinct; the twelve trajectories are

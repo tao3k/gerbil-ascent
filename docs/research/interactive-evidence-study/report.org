@@ -78,7 +78,7 @@ Qualification is bound to the frozen local artifact and selected source hashes, 
 
 Unique observed provider response records: 109; usage-bearing records: 109; physically reported thinking: 1358064. Replayed response IDs are counted once physically and charged to each alternative policy prefix. Runs without final result files remain host-aborted observations. Provider request/response files remain under .cache/ascent/interactive; records, plans and unique usage audit are retained here. The audit includes aborted and superseded controllers, not merely successful runs.
 
-Full per-call usage, decisions, tool arguments and final outputs are in [[file:records.json][records.json]], [[file:provider-audit.json][provider-audit.json]], and [[file:visible-answers.org][visible answers]].
+Full per-call usage, decisions, tool arguments and final outputs are in [[file:../../../.cache/ascent/archived-runs/docs/research/interactive-evidence-study/records.json][records.json]], [[file:../../../.cache/ascent/archived-runs/docs/research/interactive-evidence-study/provider-audit.json][provider-audit.json]], and [[file:visible-answers.org][visible answers]].
 
 * Final comparison and repair interpretation
 

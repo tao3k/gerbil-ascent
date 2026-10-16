@@ -35,14 +35,16 @@ artifacts, including the `.oN` binaries, before and after qualification.
 and their newly compiled artifacts. Module resolution is recorded in
 `production-resolution.log`.
 
-## Reproduction
+## Historical reproduction boundary
 
-```sh
-export GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil
-export GERBIL_BUILD_CORES=12
-gxpkg deps --install
-python3 t/qualification/asp-v0122/qualify.py > t/qualification/asp-v0122/collection.log 2>&1
-```
+This is a report of an older source snapshot, not the current test entry point.
+Its original collector and receipts are archived under
+`.cache/ascent/archived-runs/t/qualification/asp-v0122/`, with byte identities
+recorded in `.cache/ascent/repository-cleanup/relocation.json`.
+The original blobs also remain in Git commit `4712878` at their original paths.
+Run current library tests through the native `gerbil test` / `t/*-test.ss`
+entry points. Run archived collectors only with their matching historical
+source and dependencies, directing all output into `.cache/ascent/`.
 
 Use the dependency versions recorded in `dependency-pins.json`. The collector
 runs policy and the three original relation performance gates under an

@@ -25,7 +25,7 @@ launch-boundary defect; the exact historical CI syscall is still unobserved.
 Parallelism, byte capture, UTF-8 admission, semantic assertions and deadlines
 remain the same. Real pipe controls exercise backpressure, binary stdout,
 argument preservation and exit 7; an unadapted arm must fail. See
-[[file:../../evidence/scheme-application-admission-20261007/transport.json][the transport receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-application-admission-20261007/transport.json][the transport receipt]].
 
 ** Capability extraction before selected matching
 
@@ -108,7 +108,7 @@ partition model:
 set -e
 PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.paper_source \
   .cache/ascent/paper-data/steensgaard \
-  docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+  t/fixtures/paper-inputs/openjdk-source.json
 PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.supervision \
   --startup-seconds 5 --idle-seconds 5 -- \
   rust/ascent-oracle/target/debug/examples/steensgaard_data_truth \

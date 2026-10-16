@@ -1,5 +1,6 @@
 """Run prebuilt benchmark programs sequentially; retain samples and failures."""
 import argparse
+from .repository_policy import artifact_path
 import csv
 import json
 import os
@@ -16,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--samples", type=int, default=7)
     parser.add_argument("--large", action="store_true")
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     parser.add_argument("--scheme", type=Path, required=True)
     parser.add_argument("--rust", type=Path, required=True)
     args = parser.parse_args()

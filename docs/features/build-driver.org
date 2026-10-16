@@ -44,7 +44,7 @@ reuse substitutes for dependency checking.
 
 * Local comparisons
 
-The English [[file:build-driver-qualification.json][qualification receipt]] retains raw samples, qualified source
+The English [[file:../../.cache/ascent/archived-runs/docs/features/build-driver-qualification.json][qualification receipt]] retains raw samples, qualified source
 hashes, producer identity, log hashes, checks and concurrent workspace drift.
 All measurements used local macOS, Gerbil =1cfb032= / Gambit =ea114fc=, eight
 build cores and execution outside the sandbox. Processes were fresh; OS caches

@@ -1,5 +1,6 @@
 """Diagnostic independent runtime images; every image runs existing ASCENT Actors."""
 import argparse
+from .repository_policy import artifact_path
 import csv
 import json
 from pathlib import Path
@@ -12,7 +13,7 @@ SHAPES = [(1, 16, 16), (1, 256, 16), (8, 32, 16), (1, 32, 64), (1, 2048, 16), (8
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     parser.add_argument("--samples", type=int, default=7)
     args = parser.parse_args()
     root = Path.cwd().resolve()

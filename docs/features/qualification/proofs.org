@@ -34,7 +34,7 @@ The completed native inventory at integrated base =7b8b830= passed 83 modules
 and 764 Cases, with 83 native readiness markers, 83 explicit =OK= markers and
 zero output watchdog failures. All 27 three-body producer partitions completed.
 The updated direct-child controls also passed ten Cases and the three registry
-argument rejection controls. The [[file:../../evidence/scheme-native-child-admission-20261006/receipt.json][native child admission receipt]] retains source,
+argument rejection controls. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-child-admission-20261006/receipt.json][native child admission receipt]] retains source,
 carrier, registry and transcript digests, plus the earlier failures. This
 inventory result is bound to that source base and must not be relabeled as a
 subsequent revision's CI result.
@@ -64,7 +64,7 @@ native Cases: deletion/reuse 26, storage admission 18, BYODS composition 8.
 Every native command exited zero with =MODULE-OK=, =HARNESS-OK= and explicit
 =OK=. Deletion covers exhaustive three-node dependencies and consecutive
 withdrawals, lattice reused budget and opaque/mutable reuse refusal. The
-[[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][receipt]] binds these checks to source and log digests. These are focused
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-reuse-owner-20261006/receipt.json][receipt]] binds these checks to source and log digests. These are focused
 local results; full remote CI must be read at the new pushed revision.
 
 The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] distinguishes concretized total/delta facts from private
@@ -81,7 +81,7 @@ loop now belongs to =program/initialization.ss=, using one private buffer record
 and two returned count values. Its normalized algorithm text is unchanged.
 The declared native module inventory is 77, and =just check-policy= passes with
 zero errors. Ten affected native modules pass 106 Cases with all native and
-explicit completion markers and no watchdog failure. The [[file:../../evidence/scheme-source-initialization-20261007/receipt.json][source-bound receipt]]
+explicit completion markers and no watchdog failure. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-source-initialization-20261007/receipt.json][source-bound receipt]]
 retains the CI failure and controls. Full CI on the corrected revision remains
 required; previous successful formal/oracle results are not relabeled.
 
@@ -120,7 +120,7 @@ and 45 negative-control markers match the serial baseline; the complete
 execution scheduling in this environment, not an intrinsic Lean theorem or
 TLC search speedup, statistical result, or a cold GitHub benchmark. Concurrent
 processes use additional resources. The separate native Scheme CI lane remains
-the complete workflow's dominant cost. See [[file:../../evidence/scheme-provider-views-20261007/formal-execution-cost.json][the cost and equivalence receipt]].
+the complete workflow's dominant cost. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/formal-execution-cost.json][the cost and equivalence receipt]].
 
 
 * Isolated TLC standard module extraction (2026-10-07)
@@ -143,7 +143,7 @@ strict. Historical external =TLC_BIN= implementations retained their own tempora
 responsibility; the standard launcher uses the pinned jar. This changes no
 model, bound, property, worker count, timeout or heap setting.
 
-The [[file:../../evidence/scheme-provider-views-20261007/tlc-extraction-isolation.json][isolation receipt]] binds the observed remote failure, resolver mechanism,
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/tlc-extraction-isolation.json][isolation receipt]] binds the observed remote failure, resolver mechanism,
 private extraction paths and complete positive/negative gate results. Earlier
 parallel timing probes are historical measurements and do not establish
 collision-free execution for their old launcher.
@@ -163,5 +163,5 @@ Rust scripted read controls and the actual parallel other-shard rerun connect
 the model to the test adapter. No synthetic progress, widened deadline, retry of
 failed model calls or relaxation of row truth is introduced. Native OS/thread
 extraction and historical failure causality remain explicit boundaries. See
-[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
 

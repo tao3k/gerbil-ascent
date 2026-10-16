@@ -1,5 +1,6 @@
 """Summarize every retained timing; report medians, ranges, and fixed baselines."""
 import argparse
+from .repository_policy import artifact_path
 from collections import defaultdict
 import csv
 from pathlib import Path
@@ -9,7 +10,7 @@ from statistics import median
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("inputs", type=Path, nargs="+")
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     args = parser.parse_args()
     groups = defaultdict(list)
     for path in args.inputs:

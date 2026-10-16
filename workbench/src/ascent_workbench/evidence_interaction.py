@@ -465,7 +465,7 @@ def report(run,plan):
             'This is a Library consumer test, not a Library Search/Fact workflow API or MRR integration. POO Flow revision projection and reevaluation planning are exercised before model calls at fixed cuts; live revision during the model dialogue remains unqualified.',
             'Retained Session publication is checked against independently replayed finite evidence. Proof replay costs are additional; no cross-generation retained-proof algorithm or source authentication is claimed.',
             'Native proof builds/hits are not end-to-end speed or model-thinking savings. Negative and failed outcomes remain in all records.']}
-    prior=ROOT/'docs/research/agent-inference/history/consumer-calibration-failure.tar.gz'
+    prior=ROOT/'.cache/ascent/archived-runs/docs/research/agent-inference/history/consumer-calibration-failure.tar.gz'
     if prior.exists():
         result['priorProtocolFailureArchiveSha256']=sha(prior.read_bytes())
         result['priorProtocolCostBoundary']='Earlier HTTP 400 requests returned no usage. Their cost is unknown, not zero; they are excluded from known-token sums and retained in the failure archive.'
@@ -484,7 +484,7 @@ def report(run,plan):
     (run/'thinking-episodes.md').write_text('\n'.join(quotes)+'\n')
     raw={str(p.relative_to(run)):sha(p.read_bytes()) for p in sorted(run.rglob('*')) if p.is_file() and p.name!='integrity.json' and not p.name.endswith('.log')}
     save(run/'integrity.json',{'producerBindingVerified':True,'rootTaskAndEvidenceParity':True,'grossChargesAndLiteralSpansVerified':True,'rawFiles':raw})
-    doc=ROOT/'docs/research/agent-inference/evidence-interaction-results';doc.mkdir(exist_ok=True)
+    doc=ROOT/'.cache/ascent/research-reports/agent-inference/evidence-interaction-results';doc.mkdir(parents=True,exist_ok=True)
     for name in ('report.json','report.md','thinking-episodes.json','thinking-episodes.md','integrity.json','plan.json','qualification.json','ledger.json','annotation-ledger.json','calibration-ledger.json'):
         (doc/name).write_bytes((run/name).read_bytes())
     bundle=doc/'raw.tar.gz'

@@ -70,7 +70,7 @@ rectangle traversal and merge normalization have costs that require controls.
   the exclusive suite lane. These measure Provider execution/frontier only,
   excluding public engine, Rust transport, LLM and multicore behavior.
 
-Results and source/carrier binding belong to [[file:evidence/scheme-trrel-uf-20261005/receipt.json][the receipt]]. Native VM/hash/row
+Results and source/carrier binding belong to [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-trrel-uf-20261005/receipt.json][the receipt]]. Native VM/hash/row
 refinement, arbitrary user Provider conformance, concurrent Provider/lattice
 execution, index-sharing and full paper applications remain separate gates.
 No Prompt, repair, model calls or MRR Rust integration are added.
@@ -130,7 +130,7 @@ The frozen eager kernel is a qualification input, not a runtime dependency.
 Performance remains in the native performance Suite; its measurement marker
 declares exactly one solve/export followed by validation of exported rows.
 
-The [[file:evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
 source bindings from before this integration. Their results do not qualify
 the current revision. The complete OpenJDK partition agreed for all 51,022
 active members in 12,688 components, representing 440,438,706 pairs. Current

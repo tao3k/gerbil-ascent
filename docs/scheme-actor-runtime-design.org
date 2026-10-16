@@ -143,7 +143,7 @@ arithmetic, immutable cache lookup and bucket extension equations.
 
 * Qualified slice
 
-The [[file:evidence/scheme-actor-binding-20261005/receipt.json][qualification receipt]] binds implementation/proof snapshot =bb2edaf=:
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-actor-binding-20261005/receipt.json][qualification receipt]] binds implementation/proof snapshot =bb2edaf=:
 seven native index/binding Cases, 9,999 independent assignment decisions,
 125 known-column programs, the full Lean package, four normal TLA models and
 ten required counterexamples. The actor model explores 41,763 distinct states
@@ -190,7 +190,7 @@ external cancellation and source-to-model refinement remain open obligations.
 No speedup is inferred from two-worker overlap. Matched preparation, queue,
 worker execution and throughput measurements remain the performance gate.
 
-The [[file:evidence/scheme-actor-pool-20261005/receipt.json][native actor pool receipt]] retains the initial macro diagnostic failure and
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-actor-pool-20261005/receipt.json][native actor pool receipt]] retains the initial macro diagnostic failure and
 separately binds full-suite and control snapshots. The full Suite passed 63
 modules/560 Cases. The affected mode-reset and registry gates passed alongside
 the six actor lifecycle Cases. GitHub exact-head CI is a separate publication
@@ -285,7 +285,7 @@ The native Suite covers real two-worker rendezvous; multi-batch order; stop and
 join after merge failure; non-emitting cancellation; recursive graph truth for
 1/2/4 workers (including an indexed 33-edge chain); independent candidates at
 each frozen toy round; unchanged callback traces; unique-row budgets and private
-caller mailbox preservation. =docs/evidence/scheme-actor-round-20261005/receipt.json=
+caller mailbox preservation. =.cache/ascent/archived-runs/docs/evidence/scheme-actor-round-20261005/receipt.json=
 binds the qualified source and verification results. No speedup, multicore VM
 scaling or model accuracy gain is inferred from worker count. Model calls: 0;
 MRR Rust integration remains deferred.
@@ -359,7 +359,7 @@ has been retired. Native/VM refinement and fairness remain separate. TLC's
 configurable generation constraint limits exploration, not the runtime or
 specification. Stale-accept and early-close mutations must fail their invariants.
 
-The [[file:evidence/scheme-actor-session-20261005/receipt.json][Session actor qualification receipt]] records source/carrier/proof hashes,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-actor-session-20261005/receipt.json][Session actor qualification receipt]] records source/carrier/proof hashes,
 native lifecycle tests and model controls. No new model calls or MRR Rust work
 were performed. Matched throughput/CPU/allocation and cancellation latency probes,
 retained-engine reuse and independent SCC scheduling remain performance/design
@@ -478,7 +478,7 @@ negative performance result: component planning, private state and actor merge
 cost more than serial evaluation. Ready dispatch is qualified, but performance
 benefit is not established. Cache/reuse and larger matched workloads remain gates.
 
-The [[file:evidence/scheme-ready-components-20261005/receipt.json][ready-component receipt]] binds source/carrier/proof hashes and verification
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-ready-components-20261005/receipt.json][ready-component receipt]] binds source/carrier/proof hashes and verification
 results. Remaining gates include large SCC rule/row partitioning, persistent
 workers/index reuse, immutable component-plan caching, custom Provider workers,
 retained actor engine reuse and matched scale/CPU/allocation/latency measurements.
@@ -525,7 +525,7 @@ The planning probe cannot establish end-to-end or multicore benefit.
 for completed/failed cache construction. These are pure function laws, not
 publication or synchronization protocols. =ReadyComponents.qnt= is replayed unchanged because the
 cache adds no active/done/return transitions. Neither proves the native weak
-hash/mutex implementation. The [[file:evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
+hash/mutex implementation. The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
 negative measurements and the preceding CI failure. Model calls remain 0.
 
 The repaired full suite passed 72 modules and 617 Cases. The matched
@@ -581,7 +581,7 @@ latency, so it cannot establish whole-application or multicore benefit.
 Wall measurements use native jiffies. An earlier statistics-vector field was
 mislabelled as wall time and is discarded; no result from that field is promoted.
 Preflight duplicate support registration, Lean reserved identifier, test syntax
-and host =ps= timeout failures are retained in the [[file:evidence/scheme-component-index-20261005/receipt.json][qualification receipt]]. The
+and host =ps= timeout failures are retained in the [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-component-index-20261005/receipt.json][qualification receipt]]. The
 successful build requires continuous real compiler output under the unchanged
 60-second output watchdog; runtime 5/5/120-second checks remain unchanged.
 Model calls remain 0; MRR Rust integration remains deferred.
@@ -620,7 +620,7 @@ counter or refine the native VM. Generations remain unbounded.
 This is an implementation inference from our owner-credit protocol. rule planning's
 SCC/delta planning and Provider concretization's Provider contracts do not establish a cancellation
 protocol or authorize concurrent custom Providers. Measurements and limits are
-recorded in [[file:evidence/scheme-credit-observation-20261005/receipt.json][the receipt]]. No overall Runtime, LLM or multicore benefit is established.
+recorded in [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-credit-observation-20261005/receipt.json][the receipt]]. No overall Runtime, LLM or multicore benefit is established.
 
 Public Session row-spine isolation is owned by =program/result.ss=. Moving the
 existing copy from =evaluate.ss= preserves the concurrent alias-safety fix and
@@ -658,7 +658,7 @@ updates and publication tests retain their original contract.
 The actor and composed Library modules passed 17 Cases with parent status zero;
 the latter rechecks the complete multi-cut lifecycle after this runtime change.
 Concurrent-pool lifecycle timing output does not replace the earlier focused
-cost receipt. The [[file:evidence/scheme-source-preflight-20261005/receipt.json][source-bound preflight receipt]] records the resource
+cost receipt. The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-source-preflight-20261005/receipt.json][source-bound preflight receipt]] records the resource
 observations and source/carrier identities.
 
 =SourceUpdateFrame.lean= proves exact replacement count

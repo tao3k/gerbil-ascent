@@ -301,7 +301,7 @@ def solve(run):
     finally: native.close()
     verify(run,plan)
     save(run/'integrity.json',{'bindingVerified':True,'files':{str(p.relative_to(run)):digest(p) for p in sorted(run.rglob('*')) if p.is_file() and p.name!='integrity.json'}})
-    doc=ROOT/'docs/research/agent-inference/candidate-model-results';doc.mkdir(exist_ok=True)
+    doc=ROOT/'.cache/ascent/research-reports/agent-inference/candidate-model-results';doc.mkdir(parents=True,exist_ok=True)
     for name in ['plan.json','qualification.json','ledger.json','integrity.json']:(doc/name).write_bytes((run/name).read_bytes())
     lines=['# Finite Library candidate-feedback model gate','',plan['limits'],'',
            '| Task | Initial held-out matches / evaluated | Complete native attempts | Paired revisions |','|---|---:|---:|---:|']
@@ -381,7 +381,7 @@ def optimum(task):
 
 def reuse_freeze(run):
     run.mkdir(parents=True,exist_ok=False);annotation=study_annotations();tasks=[search_task(i) for i in range(2)];checks=[]
-    reference=ROOT/'docs/research/agent-inference/fact-reuse-results/plan.json'
+    reference=ROOT/'.cache/ascent/archived-runs/docs/research/agent-inference/fact-reuse-results/plan.json'
     prior=json.loads(reference.read_text())
     assert tasks==prior['tasks'] and annotation.RUBRIC==prior['annotationRubric'] and annotation.LABEL_TOOL==prior['annotationTool'],'frozen task or annotation rule changed'
     original=ROOT/'.cache/ascent/candidate-interaction/reuse-study/producers/tools/research/candidate-model.py'
@@ -664,7 +664,7 @@ def reuse_report(run):
             for e in call['accepted']:
                 snippets += [f"- task {phase['case']}, arm {phase['arm']}, call {call['turn']}, span {e['span']}, atom {e['atom']}, kind {e['kind']}, repeated Fact {e['repeatFact']}, exact repeated derivation {e['definiteRepeat']}", '', '> '+e['quote'].replace('\n','\n> '), '']
     (run/'thinking-episodes.md').write_text('\n'.join(snippets)+'\n')
-    doc=ROOT/'docs/research/agent-inference/fact-reuse-results'/run.name;doc.mkdir(exist_ok=False)
+    doc=ROOT/'.cache/ascent/research-reports/agent-inference/fact-reuse-results'/run.name;doc.mkdir(parents=True,exist_ok=False)
     for src,dst in [('reuse-report.json','report.json'),('reuse-report.md','report.md'),('plan.json','plan.json'),('qualification.json','qualification.json'),('reuse-ledger.json','ledger.json'),('reuse-annotation-ledger.json','annotation-ledger.json'),('thinking-episodes.md','thinking-episodes.md')]:shutil_copy(run/src,doc/dst)
     with tarfile.open(doc/'raw.tar.gz','w:gz') as tar:
         tar.add(run,arcname='run');tar.add(RUNTIME,arcname='runtime');tar.add(CANONICAL.parent,arcname='canonical-runtime')

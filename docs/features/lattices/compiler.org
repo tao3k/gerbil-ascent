@@ -39,7 +39,7 @@ function-valued fixed-point results.
 This bridge proves arithmetic, not the semantic sufficiency of the composite
 type height, descriptor-to-intrinsic binding translation, recursive IR or
 native delta execution. Those compiler obligations remain open. The
-[[file:../../evidence/scheme-capped-arithmetic-20261004/receipt.json][structured receipt]] binds the checked source and qualification;
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-capped-arithmetic-20261004/receipt.json][structured receipt]] binds the checked source and qualification;
 execution logs are excluded. The bound native artifact passed two focused
 modules with 49 Cases and 24 model-task native preflight checks; all six Lean
 files, both Quint models and both expected faults passed. This is not a rerun of

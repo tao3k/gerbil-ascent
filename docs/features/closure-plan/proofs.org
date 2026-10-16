@@ -23,7 +23,7 @@ The current Scheme receipt binds =77fbabe= to 82 modules / 731 Cases with
 explicit successful exits and package-policy qualification. Later =6efc911=
 changes only Lean/proof documentation and qualifies the 84-job proof build,
 including typed insertion-change application/composition with no axioms. See
-[[file:../../evidence/scheme-index-sharing-20261006/receipt.json][index and native acceptance]] and [[file:../../evidence/scheme-higher-order-20261004/receipt.json][higher-order evidence]]. Final-head CI remains
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][index and native acceptance]] and [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-higher-order-20261004/receipt.json][higher-order evidence]]. Final-head CI remains
 independent. These results do not close concrete native representation bridges,
 full higher-order change compilation or complete paper application benefits.
 
@@ -60,7 +60,7 @@ running at the later observation. Overall acceptance is blocked. A subsequent
 documentation commit needs its own final-head check; earlier CI is historical
 source evidence, not a verdict on an unseen commit.
 
-The [[file:../../evidence/scheme-integrated-closure-20261006/receipt.json][integrated receipt]] distinguishes the historical 80-module/698-Case full run,
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-integrated-closure-20261006/receipt.json][integrated receipt]] distinguishes the historical 80-module/698-Case full run,
 the rebased 84-job Lean build, unchanged Quint contracts, the Release full-scale
 oracle, and rejected rebased full-native runs. The automatic 12-process run
 failed four progress controls. A four-process run found an actual Actor Session
@@ -310,7 +310,7 @@ success, bounded TLC success, native semantic qualification, remote CI and real
 model benefit are separate entries. No new real-model call belongs to this audit.
 
 The [[file:../../scheme-design-framework.org][acceptance matrix]] remains the closure authority. This plan refines R1–R7;
-it does not mark them all closed. The [[file:../../evidence/scheme-proof-audit-20261004/receipt.json][formal receipt]] records this patch's proof and
+it does not mark them all closed. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-proof-audit-20261004/receipt.json][formal receipt]] records this patch's proof and
 model-checker results and identifies the checked files and toolchain. Execution
 logs are excluded under the [[file:../../evidence/README.org][evidence publication policy]].
 
@@ -460,7 +460,7 @@ materializes the source result as a derived set; checked named Session mutations
 continue to use only admitted source handles. Complete result membership,
 source occurrence counts and actual materialization budgets are separate checks.
 
-The [[file:../../evidence/scheme-native-entry-20261005/receipt.json][single-module carrier receipt]] connects native test admission to the current
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/receipt.json][single-module carrier receipt]] connects native test admission to the current
 proof snapshot: compile-time Suite binding, unchanged native callbacks and
 verdicts, strict output/deadline gates, and four independently injected
 lifecycle failures. It records integrated Lean/Quint checks separately from

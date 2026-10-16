@@ -86,7 +86,7 @@ replace a child with an incompatible arity, create a graph pointer cycle and
 modify source/mapping rows after compilation. All relevant entry points must
 reject malformed graphs; a generated program must retain the original owned
 rows while a fresh reference observes the later valid descriptor values.
-The [[file:../../evidence/scheme-descriptor-scope-20261004/receipt.json][descriptor receipt]] binds the final source and qualification:
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-descriptor-scope-20261004/receipt.json][descriptor receipt]] binds the final source and qualification:
 four focused native modules passed 58 Cases with all MODULE/HARNESS/final OK
 markers and exit 0; eight Lean files, both lifecycle models and both expected
 faults passed. This is not a full native-suite rerun or a performance/model
@@ -128,7 +128,7 @@ sources retain separate pipelines and results. Existing nested fixed-point,
 escaped-parameter, source-withdrawal and fragment cases remain acceptance gates.
 This is structural reuse evidence, not a runtime speedup measurement.
 
-The [[file:../../evidence/scheme-recursive-lowering-20261004/receipt.json][recursive receipt]] binds source, proofs and native qualification.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-recursive-lowering-20261004/receipt.json][recursive receipt]] binds source, proofs and native qualification.
 The formal model does not mechanize hash-table cache correctness, descriptor
 identity translation, generated rules or native semi-naive execution. These
 implementation refinement obligations remain explicit. No Quint protocol or
@@ -141,7 +141,7 @@ passed. No full native-suite rerun or new timing distribution is claimed here.
 
 * Acceptance and next refinement
 
-The [[file:../../evidence/scheme-lexical-lowering-20261004/receipt.json][receipt]] binds the checked proof files, source patch, native artifact and
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-lexical-lowering-20261004/receipt.json][receipt]] binds the checked proof files, source patch, native artifact and
 structured formal/build/qualification outcomes. Execution logs are excluded
 under the [[file:../../evidence/README.org][publication policy]]. All current Lean files run through the
 existing proof gate and GitHub =formal= job. Native admission remains under the
@@ -234,7 +234,7 @@ execution correspondence. These obligations cannot be discharged by the new
 height theorem or by finite native test samples alone.
 
 
-The [[file:../../evidence/scheme-finite-signature-20261004/receipt.json][finite-signature receipt]] binds the source patch and qualified artifact.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-finite-signature-20261004/receipt.json][finite-signature receipt]] binds the source patch and qualified artifact.
 Five native modules passed 90 Cases (including dynamically expanded model-task
 cases), with five MODULE/HARNESS/final OK markers and exit 0. Eight Lean files,
 both Quint models and both expected faults passed; the proof slice adds 20
@@ -320,7 +320,7 @@ whitelist enforces declared mutation authority, rather than proving arbitrary
 changes to those tables preserve the original typed term. Their per-column
 domains and mutation contract belong to the remaining term/rule refinement.
 
-The [[file:../../evidence/scheme-row-representation-20261004/receipt.json][row-representation receipt]] qualifies =fa521d4=, reconstructed from
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-row-representation-20261004/receipt.json][row-representation receipt]] qualifies =fa521d4=, reconstructed from
 =3abb8bc= plus the published source patch. Six native modules pass 109 Cases,
 with six MODULE/HARNESS/final OK markers and exit 0. Eight Lean files, both
 normal Quint models and both expected faults pass; 16 row representation theorems
@@ -332,7 +332,7 @@ logs, model calls or runtime performance claim are published by this slice.
 
 After the checked runtime was split into lifecycle owners, the repair moved
 into [[file:../../../program/scheme-session.ss][scheme-session]] and the [[file:../../../program/scheme-query.ss][query owner]] documents the same authority boundary.
-The [[file:../../evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
 base =6d407ea=: 365 bound input hashes (including three build-control files), a freshly built native artifact and
 the same 109 Cases across six modules, with complete success markers and exit 0.
 The eight Lean files and Quint models are unchanged from the fully checked parent
@@ -371,7 +371,7 @@ compiler assumes admitted descriptors and does not validate that contract.
 
 Lean executable controls and axiom reports stay under =Tests/=; they include
 the inadmissible fresh-key counterexample and missing head cells. The
-[[file:../../evidence/scheme-stored-actions-20261006/receipt.json][stored-action receipt]] separates universal model laws from native finite
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-stored-actions-20261006/receipt.json][stored-action receipt]] separates universal model laws from native finite
 representation checks. Actual Scheme scalar/equality/hash interpretation,
 symbol identity mapping, universal descriptor decoding, callback refinement
 and native Provider/completed-component correspondence remain open bridges.

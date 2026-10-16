@@ -36,7 +36,7 @@ arguments and outputs, prior results, rule materialization, malformed/cyclic
 rows and batches, field-callback exclusion, native receiver selection and
 shared nested-field identity. Existing duplicate order, budget refusal,
 Session recovery and built-in BYODS composition remain required regression
-checks. See the [[file:../../evidence/scheme-storage-spines-20261006/receipt.json][source-bound receipt]].
+checks. See the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-storage-spines-20261006/receipt.json][source-bound receipt]].
 
 The new custom boundary changes malformed-packet callback ordering: no stored
 field callback runs before the entire shape batch is admitted. It does not
@@ -81,7 +81,7 @@ engine reuse refuses until a fresh source solve. Session recovery uses its
 existing fresh-engine reconstruction and preserves prior results. A two-row
 rule emits once before a later guard failure and proves that this entire round
 still requires replay; a fresh engine recovers both independent consequences.
-The [[file:../../evidence/scheme-storage-state-20261006/receipt.json][receipt]] retains exact source and rejected/accepted native run boundaries.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-storage-state-20261006/receipt.json][receipt]] retains exact source and rejected/accepted native run boundaries.
 
 This closes reuse of interrupted custom engine state under independent fresh
 construction and stable fields. It does not prove arbitrary concretization
@@ -124,7 +124,7 @@ Native controls exercise field rejection, raw retry refusal, Session recovery
 and later guard failure for =eqrel=, =trrel= and =trrel_uf=. Fresh solves compare
 against explicit independent two-/three-node concrete relations. Existing
 custom state/row ownership and raw native graph budget/frontier qualification
-remain required regressions. The [[file:../../evidence/scheme-native-storage-state-20261006/receipt.json][receipt]] retains exact source and native log
+remain required regressions. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-storage-state-20261006/receipt.json][receipt]] retains exact source and native log
 boundaries. This closes the native graph publication gap under stable field
 values and independent constructors; external effects, general lattice laws
 and native-to-proof extraction remain open. No Lean/Quint source or speed claim

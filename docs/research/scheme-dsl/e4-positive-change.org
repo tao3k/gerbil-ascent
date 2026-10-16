@@ -69,7 +69,7 @@ of the five in-process microsecond samples. Counts include candidate
 row-pair checks in the two set interpreters and fixed-point body
 evaluations; they do not model the native indexed rule evaluator. All
 individual observations, including outliers, are retained in
-[[file:e4-positive-change-2026-10-01.txt][the first raw receipt]] and an [[file:e4-positive-change-2026-10-01-repeat.txt][independent repeat]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/scheme-dsl/e4-positive-change-2026-10-01.txt][the first raw receipt]] and an [[file:../../../.cache/ascent/archived-runs/docs/research/scheme-dsl/e4-positive-change-2026-10-01-repeat.txt][independent repeat]].
 
 #+NAME: scheme-e4-local-cost
 | Shape | Vertices before addition | Old/grown rows | Reference join probes | Delta join probes | Reference/delta body evaluations | Reference median us | Delta median us |

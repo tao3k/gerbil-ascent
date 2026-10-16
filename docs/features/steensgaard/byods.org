@@ -23,5 +23,5 @@ constructor bytes: the new full runs retain negative differences and reject
 physical allocation claims, including reinterpretation of historical positive
 ratios as memory savings. See
 [[file:acceptance.org::*Complete Steensgaard partition acceptance (2026-10-07)][the current closure section]] and
-[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][the acceptance evidence]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-steensgaard-partition-20261007/receipt.json][the acceptance evidence]].
 

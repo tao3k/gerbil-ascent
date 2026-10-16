@@ -127,7 +127,7 @@ and native API controls. Both Provider and engine view adapters share one carrie
 and insertion kernel. This implementation follows the architecture review above. The earlier source
 inspection describes its stated revision, not the current evaluator. Native
 qualification and measured costs are recorded in
-[[file:../../evidence/scheme-relation-views-20261007/receipt.json][the representation receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-relation-views-20261007/receipt.json][the representation receipt]].
 
 ** One production path
 
@@ -409,7 +409,7 @@ claims that the correct current implementation contains those seeded defects.
 The full gate retains two concurrent verification lanes and isolates standard
 module extraction in every JVM leaf, including the new replay leaf. No new
 execution cache, timeout relaxation or speedup claim is introduced. See
-[[file:../../evidence/scheme-provider-views-20261007/grouped-journal-refinement.json][the grouped/journal receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/grouped-journal-refinement.json][the grouped/journal receipt]].
 
 
 * Export and grouped-consumer cost repair (2026-10-07)
@@ -513,7 +513,7 @@ performance admission because other test modules may share CPU.
 
 The complete source identities, raw pairs, qualification counts and historical
 development controls are in
-[[file:../../evidence/scheme-view-export-optimization-20261007/receipt.json][the export and grouped-consumer repair receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-view-export-optimization-20261007/receipt.json][the export and grouped-consumer repair receipt]].
 The =0f20eb9= oracle byte-admission repair is included. Subsequent =c74645d=
 collector cleanup preserves every qualification input hash. Exact published
 revision CI remains a separate gate.

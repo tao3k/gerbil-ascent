@@ -49,15 +49,15 @@ unchanged. The bounded closure entrypoint shares the same representation.
 
 * Exact reference and final checks
 
-[[file:reference-verification.json][Frozen reference]] is the full preceding =dacdc89= commit. Its table module
+[[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/reference-verification.json][Frozen reference]] is the full preceding =dacdc89= commit. Its table module
 is an exact copy except for alpha-renaming the two exported values. Both module
 versions use the same native std/make compilation and dependency environment.
 [[file:native-resolution.log][Private compiled module resolution]] verifies both .ssi paths; source hashes
-in [[file:qualified.sources][qualified.sources]] and both final receipt manifests match current source.
+in [[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/qualified.sources][qualified.sources]] and both final receipt manifests match current source.
 [[file:source-resolution.log][Original source resolution]] has repository .ss context paths. These modes
 have separate receipts; timing numbers are not transferred between them.
 
-[[file:suite-coverage.json][Full exact-source suite]] passed 46 modules and 363 native Cases. Five new
+[[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/suite-coverage.json][Full exact-source suite]] passed 46 modules and 363 native Cases. Five new
 Cases cover all 512 directed three-node graphs against an independent
 Floyd-Warshall distance oracle and composition oracle; dense/sparse withdrawal
 snapshots; ordered custom visitor traces and external composition; high fanout;
@@ -74,7 +74,7 @@ runs. Its wall time includes lease contention, so it is not a suite speed claim.
 Each workload uses 20 warmups and 1000 alternating old/new pairs, identical
 input, expected semantic results, runtime and 1 GiB heap fence. There is no
 forced per-sample GC. Allocated bytes come from Gambit process-statistics slot 7,
-not the latest-GC gauge. [[file:final-first.sexp][First final raw samples]] and [[file:final-repeat.sexp][repeat final samples]]
+not the latest-GC gauge. [[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/final-first.sexp][First final raw samples]] and [[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/final-repeat.sexp][repeat final samples]]
 retain every time and allocation measurement.
 
 The five primary workloads require a non-increasing median allocation and at
@@ -125,11 +125,11 @@ The three unchanged original scenarios all pass on the final source:
 - Membership: candidate p95 191 us, baseline p95 1.023 ms, exact decisions equal.
 - Reachability closure: p95 193 us, exact 190-pair chain closure.
 
-[[file:ss-summary.json][Independent original SS outcomes]] and raw scenario logs record these runs.
+[[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/ss-summary.json][Independent original SS outcomes]] and raw scenario logs record these runs.
 The full 17-entry original SS inventory was not rerun; this is qualification of
 these three affected scenarios, not a claim of one uninterrupted full SS pass.
 
-[[file:native-gate-verification.json][Native gate source verification]] corrects an earlier reporting error:
+[[file:../../../.cache/ascent/archived-runs/t/performance/relation-materialization/native-gate-verification.json][Native gate source verification]] corrects an earlier reporting error:
 ASP builds pass/fail from p95 <= =max_total= (2 ms for table-expression), and
 benchmark-receipt-pass? checks that status. The 1.05 ms =regression_budget=
 field is metadata, not this admission predicate. Earlier raw failed receipts

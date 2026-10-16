@@ -20,7 +20,7 @@ errors are not counterexamples. General join purity/laws, hash/key extraction,
 universal native vector/SCC/hash extraction and asynchronous lattice execution
 retain separate obligations. Typed strict-edge and functional pending-key
 contracts are refined in the following section. See [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
 
 
 
@@ -41,7 +41,7 @@ held snapshots, with two added faults for lost and repeated changed keys.
 Scheme independently enumerates admissible three-node labels and rechecks the
 existing native lattice session cases. No additional weighted-graph Quint model
 repeats the Lean algebra. See
-[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the receipt]]
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the receipt]]
 for source identities, fault witnesses and the acceptance boundary.
 
 
@@ -68,6 +68,6 @@ held-result stability, and replacement/reconstruction against a fresh solve.
 They passed; no newly discovered native defect is claimed. The design and
 receipt distinguish this typed component closure from universal native hash,
 callback/SCC extraction and full paper application/cost replication. See
-[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
 
 

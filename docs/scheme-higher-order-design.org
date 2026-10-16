@@ -100,7 +100,7 @@ outside the universe, and independent admission reconstruction of predicates.
 Acceptance requires the source-bound AOT artifact and unchanged watchdog,
 heap and module deadlines; GitHub checks must match the submitted head.
 
-The [[file:evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] records 11 native Cases with unchanged bounds,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] records 11 native Cases with unchanged bounds,
 source hashes, formal source hash, and excluded 180-second build failures.
 No model calls are included.
 
@@ -129,7 +129,7 @@ input, zero-height empty codomain, builder invocation count, and bounded
 rejection of an infeasible function space. Compiled source lifecycle must also
 preserve the declared domains of compiler-created bottom sources.
 
-The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] records the new source and formal hashes,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] records the new source and formal hashes,
 excluded watchdog/timing diagnosis and three final-source deadline failures,
 then the accepted 150.7-second captured-environment build. All twelve native
 Suites / 125 Cases, the focused fifteen-Case higher-order Suite, five original

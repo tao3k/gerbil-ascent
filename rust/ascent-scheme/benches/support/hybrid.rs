@@ -8,10 +8,10 @@ use std::{collections::BTreeMap, fmt::Write, time::Instant};
 /// # Panics
 /// Panics on invalid arguments, incomplete execution or any result mismatch.
 pub fn run() {
-    execute();
+    execute(&arguments());
 }
 
-fn execute() {
+fn arguments() -> Vec<String> {
     let mut args = std::env::args()
         .skip(1)
         .filter(|arg| arg != "--bench")
@@ -24,6 +24,10 @@ fn execute() {
             .collect();
     }
     assert_eq!(args.len(), 6, "K G W vm|rayon threads samples");
+    args
+}
+
+fn execute(args: &[String]) {
     let number = |i: usize| args[i].parse::<usize>().unwrap();
     let (k, g, w, threads, samples) = (number(0), number(1), number(2), number(4), number(5));
     assert!(k > 0 && g > 0 && w > 1 && threads > 0 && samples > 0);

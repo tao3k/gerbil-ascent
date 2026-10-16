@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Native SCC union-find implementation follow-up (2026-10-05)
 
-[[file:../../scheme-trrel-uf-design.org][Implementation design]] and [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][qualification receipt]] supersede the previously
+[[file:../../scheme-trrel-uf-design.org][Implementation design]] and [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-trrel-uf-20261005/receipt.json][qualification receipt]] supersede the previously
 identified missing UF representation. That historical receipt remains immutable;
 this follow-up closes the implementation gap, not all Provider concretization formal/performance gaps.
 
@@ -34,7 +34,7 @@ refinement gates. StrictDependencies and PendingKeys close the stated typed
 weighted-edge and functional roster components below.
 This is distinct from ProviderIteration's monotone-gamma admission contract.
 See [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
 
 
 
@@ -53,7 +53,7 @@ linear-space argument. At the time of this receipt Scheme eqrel emitted
 explicit pairs into engine buffers. The subsequent compressed equivalence
 publication section supersedes that representation limitation; universal native
 ownership/recovery correspondence remains an explicit bridge obligation.
-The [[file:../../evidence/scheme-application-admission-20261007/openjdk-source.json][pinned OpenJDK source manifest]] binds four original blobs, their SHA256s,
+The [[file:../../../t/fixtures/paper-inputs/openjdk-source.json][pinned OpenJDK source manifest]] binds four original blobs, their SHA256s,
 47,069 TSV facts and arities. The complete Rust implicit application and an
 independent partition model both count 440,438,706 pairs. This admits source
 identity, shape and full-input aggregate cardinality agreement in the reference;
@@ -69,7 +69,7 @@ on the closure matrix.
 
 Local qualification for this slice admits 825 native Cases in 86 modules,
 67 other-oracle tests and 11 BYODS tests, with source-view and policy gates
-passing. The [[file:../../evidence/scheme-application-admission-20261007/receipt.json][source-bound receipt]] preserves actual paired costs and exclusions.
+passing. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-application-admission-20261007/receipt.json][source-bound receipt]] preserves actual paired costs and exclusions.
 The warmed complete application at 1,088 output pairs has median implicit /
 explicit CPU and serial allocation ratios of 0.081 and 0.144. These are local
 fixture results; worker allocation and full-data Scheme memory are not admitted.

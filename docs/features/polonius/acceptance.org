@@ -17,7 +17,7 @@ it does not substitute a subset closure fixture. =Naive= and =DatafrogOpt= are
 explicit selections. Intermediate relations must be interpreted according to
 the selected algorithm, rather than assumed identical across algorithms.
 
-The [[file:../../evidence/scheme-application-admission-20261007/polonius-reference.json][structured reference receipt]] binds all 18 input files, the runner, locked
+The [[file:../../../t/fixtures/paper-inputs/polonius-reference.json][structured reference receipt]] binds all 18 input files, the runner, locked
 dependencies and executable. The complete =DatafrogOpt= invocation terminated
 with exit zero and exported all 14 public observation fields. Large computed
 relations include =path_maybe_uninitialized_on_exit= (291,826,811 rows),

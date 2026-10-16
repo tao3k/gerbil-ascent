@@ -49,5 +49,5 @@ still required; the injection journal is not the authoritative recovery log.
 | Native decoding and scheduler correspondence | Explicit implementation refinement obligation |
 | Ordered journal replay | Existing native differential checks; general order proof open |
 
-See [[file:../../evidence/scheme-provider-views-20261007/active-support-refinement.json][the source-bound formal receipt]].
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/active-support-refinement.json][the source-bound formal receipt]].
 

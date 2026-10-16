@@ -76,7 +76,7 @@ The following gates jointly qualify the mainline:
 | Admitted Library behavior | All current native modules | Execute all concurrent and exclusive lanes; check real Cases, explicit OK and parent exit for every module |
 | Rust comparison and formal gates | Pinned oracle / all Lean roots and TLC targets | Execute current source; retain negative controls and distinguish earlier commit results |
 
-The [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated acceptance receipt]] records these gates. A finite graph corpus does
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-integrated-closure-20261006/receipt.json][integrated acceptance receipt]] records these gates. A finite graph corpus does
 not establish a general proof of the Gerbil VM. Full paper replication still
 requires the functionality, applications, scale and benefit gates below.
 Unrestricted integer recursion or an unbounded lattice need not converge.
@@ -204,7 +204,7 @@ changes, six modules passed 76 Cases. All Lean roots completed 63 jobs. Positive
 TLC exploration generated 3,169 states, 1,376 distinct states, and correctly
 detected two mutations.
 
-See the [[file:evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]] for those historical results. The earlier
+See the [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]] for those historical results. The earlier
 75-module/638-Case full run belongs to its original commit.
 
 
@@ -244,7 +244,7 @@ The frozen eager kernel is a qualification input, not a runtime dependency.
 Performance remains in the native performance Suite; its measurement marker
 declares exactly one solve/export followed by validation of exported rows.
 
-The [[file:evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
 source bindings from before this integration. Their results do not qualify
 the current revision. The complete OpenJDK partition agreed for all 51,022
 active members in 12,688 components, representing 440,438,706 pairs. Current

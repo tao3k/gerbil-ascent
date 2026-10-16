@@ -51,7 +51,7 @@ delta remains unchanged. A Session control then repeats the previous flush
 failure with an accepted duplicate source: pending reconstruction must retain
 34 source occurrences, including two copies of (0 0), rather than falling back
 to 32 committed rows. It covers both same-relation and cross-relation append
-targets. See [[file:../../evidence/scheme-index-occurrences-20261007/receipt.json][the occurrence coverage receipt]]. This closes the duplicate replay
+targets. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-occurrences-20261007/receipt.json][the occurrence coverage receipt]]. This closes the duplicate replay
 limitation recorded in the preceding slice for the qualified hash receiver;
 fresh replay may still fail for other Provider/callback reasons.
 
@@ -82,5 +82,5 @@ ProviderFrontier's new overwrite control and retained Scheme sessions cover the
 accumulated-head publication seam. Native refinement of arbitrary caller
 Providers, asynchronous protocols and application replication remain separate.
 See [[file:../../scheme-trrel-uf-design.org][the implementation/proof design]] and
-[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the source-bound receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the source-bound receipt]].
 

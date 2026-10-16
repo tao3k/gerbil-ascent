@@ -29,7 +29,7 @@ revocation, shape admission and detached candidate ownership remain active.
 The Provider contract documents occurrences explicitly instead of assuming
 unique source tuples.
 
-The [[file:../../evidence/scheme-index-occurrences-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-occurrences-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
 Only =program/index.ss= and the contract comments in =table/provider.ss= differ
 between the source freezes. Qualification passed 85 native Cases: index 24,
 storage 23, timeout 12 and source deletion 26. Every run exited zero with
@@ -67,5 +67,5 @@ arbitrary native callbacks, asynchronous lattice execution or universal native
 hash/key extraction. A complete lattice gives least-state existence; termination
 requires a separate parameterized finite-rank witness. See
 [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
 

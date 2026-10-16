@@ -73,7 +73,7 @@ Removing those Lean replicas retires their universal protocol-trace claims;
 finite TLC exploration does not inherit them. A future unbounded temporal
 claim needs a Quint proof/refinement, not another Lean state-machine copy.
 
-The [[file:evidence/scheme-proof-ownership-20261005/receipt.json][ownership qualification receipt]] records the ownership split before the
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-proof-ownership-20261005/receipt.json][ownership qualification receipt]] records the ownership split before the
 =RuleBodyFrame= addition: Lean's
 62 build jobs pass, and all existing Quint gates across eleven models and
 23 negative controls pass. Runtime code and historical receipts are unchanged.
@@ -143,7 +143,7 @@ this round. The actual SCC worker's emission checks over all 512 three-node
 graphs, plus cancellation and merge-failure drain controls, supply new executable
 implementation correspondence evidence. The [[file:scheme-paper-closure.org][global closure matrix]] retains all
 paper functionality and application gates. Passing selected compiler tests does
-not establish full replication. See the [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated source receipt]].
+not establish full replication. See the [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-integrated-closure-20261006/receipt.json][integrated source receipt]].
 
 
 * Feature modules
@@ -185,7 +185,7 @@ The frozen eager kernel is a qualification input, not a runtime dependency.
 Performance remains in the native performance Suite; its measurement marker
 declares exactly one solve/export followed by validation of exported rows.
 
-The [[file:evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/receipt.json][initial receipt]], [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/integration.json][834-Case receipt]] and [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-publication-20261007/latest-partition.json][complete member partition receipt]] retain
 source bindings from before this integration. Their results do not qualify
 the current revision. The complete OpenJDK partition agreed for all 51,022
 active members in 12,688 components, representing 440,438,706 pairs. Current

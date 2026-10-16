@@ -4,7 +4,7 @@
 import json,hashlib,shutil
 from pathlib import Path
 from ascent_workbench.interactive_study import obligation_acceptance,balanced_oracle,tagged_oracle
-root=Path.cwd();cache=root/'.cache/ascent/interactive';out=root/'docs/research/interactive-evidence-study';out.mkdir(exist_ok=True)
+root=Path.cwd();cache=root/'.cache/ascent/interactive';out=root/'.cache/ascent/research-reports/interactive-evidence-study';out.mkdir(parents=True,exist_ok=True)
 folders=sorted(p for p in cache.iterdir() if p.is_dir() and (p/'plan.json').exists() and (p/'records.json').exists())
 results=[];audit={};allrecords={};protocols={};incorrect=[]
 def thinking(c):return (c.get('usage') or {}).get('output_tokens_details',{}).get('reasoning_tokens')

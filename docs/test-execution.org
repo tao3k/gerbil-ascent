@@ -271,7 +271,7 @@ The explicit one-Case native cache-admission module was compiled successfully
 and repeated in 12.82 seconds. The repeat emitted both library and entry cache
 hits, started no compiler process, executed its Case and ended in =OK=. Its
 admitted snapshot is reused only during the current lane-owned preparation.
-See [[file:evidence/scheme-test-entrypoints-20261007/receipt.json][the structured receipt]] for source identity, accepted controls, rejected
+See [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-test-entrypoints-20261007/receipt.json][the structured receipt]] for source identity, accepted controls, rejected
 attempts and measurement limits.
 
 * Complete acceptance follow-up
@@ -333,5 +333,5 @@ scale test, plus its separate ASP gate. No model API calls were made. The moved
 Steensgaard Case passed all twelve representation and six worker pairs under
 its original budget. These focused receipts do not replace exact-head CI.
 
-See [[file:evidence/direct-test-commands-20261007/receipt.json][the direct command acceptance receipt]] for module Case counts,
+See [[file:../.cache/ascent/archived-runs/docs/evidence/direct-test-commands-20261007/receipt.json][the direct command acceptance receipt]] for module Case counts,
 failure controls, retired dependencies and evidence limits.

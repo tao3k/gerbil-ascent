@@ -77,7 +77,7 @@ This advances the generic Provider portion of BYODS beyond the canonical UF
 representation. Universal native witness-extraction refinement and abstract-lattice
 iteration/injection refinement remain explicit obligations. Application and
 matched benefit qualification remain governed by the paper closure matrix.
-See [[file:../../evidence/scheme-provider-views-20261007/custom-provider-admission.json][the admission receipt]].
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/custom-provider-admission.json][the admission receipt]].
 
 The checker hoists the already-required idle-phase guard before enumerating
 Submit packets. This preserves every transition and exploration bound while
@@ -121,5 +121,5 @@ coherence, stable bucket coverage, captured member ownership, ordinal traversal
 and the optimized grouped visitor. Existing scan/indexed and row/parts controls
 exercise repeated/reordered/absent keys and equal-but-distinct stored members.
 No Scheme defect is inferred solely from an injected model fault. See
-[[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the source-bound receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/multi-column-routing.json][the source-bound receipt]].
 

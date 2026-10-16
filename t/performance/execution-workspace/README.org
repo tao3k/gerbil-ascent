@@ -45,7 +45,7 @@ in a later invocation.
 
 * Exact reference and semantic checks
 
-[[file:reference-verification.json][Reference verification]] pins the full previous commit. Frozen analysis is
+[[file:../../../.cache/ascent/archived-runs/t/performance/execution-workspace/reference-verification.json][Reference verification]] pins the full previous commit. Frozen analysis is
 unchanged; frozen positive execution only relocates its funs import; frozen
 engine only relocates imports and alpha-renames its two public functions. Both
 versions are compiled with the same native std/make build into an isolated lib.
@@ -57,7 +57,7 @@ engines and fallback rules. Three new native Cases test 16 sustained timeout /
 append / replacement cycles with duplicate heads and old snapshots; 64-round
 custom storage with exact retained all/pending callback traces; and complete
 generic guarded fixed points with exact callback order for four graph sizes.
-[[file:suite-coverage.json][Final exact-source suite]] passed all 45 modules and 358 native Cases.
+[[file:../../../.cache/ascent/archived-runs/t/performance/execution-workspace/suite-coverage.json][Final exact-source suite]] passed all 45 modules and 358 native Cases.
 All native completion markers and absence of native error/overflow markers are
 verified, not merely process exit status. [[file:policy-final.log][Final policy]] selected 39 modules,
 with zero findings and zero errors. Suite wall time was 155.489 seconds,
@@ -75,7 +75,7 @@ All workloads require non-increasing median allocation; primary workloads also
 require at least 900 strict paired byte wins. The preceding timing claim gate
 is retained: a lower median and at least 900 strict paired time wins.
 
-[[file:final.sexp][First final raw receipt]] records the fixed production source. Its summary:
+[[file:../../../.cache/ascent/archived-runs/t/performance/execution-workspace/final.sexp][First final raw receipt]] records the fixed production source. Its summary:
 
 | Workload | Old bytes | New bytes | Reduction | Byte wins | Old / new median (ms) | Strict time wins |
 |---------+-----------+-----------+-----------+-----------+-----------------------+------------------|
@@ -96,7 +96,7 @@ qualified uniform speedup. Join latency is approximately unchanged; the
 64-append Session median is about 1.6% higher in this run. Retained allocations
 fall by about 3-5%. All raw samples and p95 statistics remain in the receipts.
 
-[[file:repeat.sexp][Repeat final raw receipt]] uses the exact same source manifest. Allocation
+[[file:../../../.cache/ascent/archived-runs/t/performance/execution-workspace/repeat.sexp][Repeat final raw receipt]] uses the exact same source manifest. Allocation
 medians are identical in the important chain workloads. Repeat medians are:
 16-node chain 18 -> 16 us (907 strict wins); 256-node chain 295 -> 257 us
 (945 wins); 1024-node chain 1.170 -> 1.016 ms (915 wins). Both long-chain
@@ -121,7 +121,7 @@ output; it is excluded from the final exact-source qualification.
 The previous original SS inventory had two time-gate failures. This change does
 not alter the table-expression algorithm, its fixture, thresholds, GC policy,
 heap fence or test scheduling. The two formerly failing original entries are
-run unchanged after the final semantic suite; their outcomes are [[file:ss-summary.json][recorded independently]]:
+run unchanged after the final semantic suite; their outcomes are [[file:../../../.cache/ascent/archived-runs/t/performance/execution-workspace/ss-summary.json][recorded independently]]:
 
 - Nonpositive Session update: passed, p95 683 us versus the unchanged 1 ms budget.
 - Table-expression: failed its time gate; median 952 us, p95 2.532 ms,

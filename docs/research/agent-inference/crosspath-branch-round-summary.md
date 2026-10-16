@@ -30,6 +30,6 @@ All raw failed responses, incomplete reasoning, invalid prefixes/completions, ma
 - [Bounded extraction report and ledger](crosspath-search-v4-bounded-report.md)
 - [Exact thinking spans and prior links](crosspath-v4-bounded-thinking-annotations.md)
 - [V3 failed-control trial](crosspath-search-v3-report.md)
-- [Machine-readable summary and retrospective diagnostics](crosspath-branch-round-summary.json)
+- [Machine-readable summary and retrospective diagnostics](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-branch-round-summary.json)
 
 The next useful system hypothesis is source-bound, branch-specific Fact/proof lookup with a small typed reference, rather than replaying the full proof packet at every expansion. It needs a new frozen experiment; this round provides no positive claim for that untested design.

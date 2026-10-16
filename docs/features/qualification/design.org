@@ -69,6 +69,6 @@ progress. The actual other oracle shard is rerun with its existing parallelism,
 including the previously failed 10,000-pair computation and independent graph
 truth. This adapter belongs to the existing test oracle; it is not MRR integration
 or a new production Rust runtime. See
-[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the source-bound receipt]]
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the source-bound receipt]]
 for final acceptance, defect evidence and the remaining cause boundary.
 

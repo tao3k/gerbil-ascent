@@ -40,7 +40,7 @@ both match all expected relations. Foreign borrowed roots retain identity.
 Merge failure and credit-time cancellation must drain the actual worker's
 =finally= and invoke no completion callback. The unified acceptance also runs
 all native modules, all existing formal gate targets and pinned Rust differential
-cases. See [[file:../../evidence/scheme-integrated-closure-20261006/receipt.json][source-bound acceptance receipt]]. Finite qualification is kept distinct from
+cases. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-integrated-closure-20261006/receipt.json][source-bound acceptance receipt]]. Finite qualification is kept distinct from
 a machine-checked operational semantics of the Gerbil VM and compiler.
 
 

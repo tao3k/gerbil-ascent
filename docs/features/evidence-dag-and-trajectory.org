@@ -82,7 +82,7 @@ ABI/API, formal and experimental evidence separately.
 
 * Local qualification
 
-[[file:evidence-dag-qualification.json][The qualification receipt]] records exact source hashes and local test results.
+[[file:../../.cache/ascent/archived-runs/docs/features/evidence-dag-qualification.json][The qualification receipt]] records exact source hashes and local test results.
 Eight direct Scheme cases check explicit SCC condensation, topological edge
 ordering, deterministic graph content under declaration/rule permutation,
 edge deduplication, undeclared dependencies, source-bound query reuse and source identity checks before retained-path selection,
@@ -91,7 +91,7 @@ Two Python unit cases check direct operation routing and surface normalization.
 
 The compiled engine integration test has been renamed and extended for graph
 output. Its compiled ABI and API execution passed nine cases in each mode against the
-new production artifact, recorded by [[file:trajectory-qualification.json][the combined qualification receipt]].
+new production artifact, recorded by [[file:../../.cache/ascent/archived-runs/docs/features/trajectory-qualification.json][the combined qualification receipt]].
 No model efficacy, Lean refinement or Quint correspondence result is claimed
 by this naming and structural-graph change.
 

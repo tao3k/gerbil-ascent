@@ -647,7 +647,7 @@ def shared_report(directory, output):
         '', 'The source-bound native qualification proves support reuse across three distinct downstream obligations, alternative-support preservation, stale-handle rejection and withdrawal recomputation on this fixture. Quint correspondence and Lean premises are separate gates. The baseline/Fact/Scheme arms share the same questions and full reasoning-history replay, and do not prune alternatives. Failures remain in the ledger. No anti-repetition instruction is supplied.',
         '', 'See plan.json for relative source hashes, paper lessons, formal scope, exact tasks, independent grader and frozen annotation rules; raw.tar.gz retains inputs, native artifacts, requests, SSE events, returned thinking and rejected labels. This is a local Darwin source snapshot, not a portable binary wheel or a verified clean Git checkout reproduction.']
     (output/'report.md').write_text('\n'.join(lines)+'\n')
-    doc=s.ROOT/'docs/research/agent-inference/fact-reuse-results/shared-premise-diagnostic';doc.mkdir(parents=True,exist_ok=False)
+    doc=s.ROOT/'.cache/ascent/research-reports/agent-inference/fact-reuse-results/shared-premise-diagnostic';doc.mkdir(parents=True,exist_ok=False)
     for name in ['report.json','report.md','ledger.json','annotation-ledger.json']:shutil.copy2(output/name,doc/name)
     for name in ['plan.json','plan.sha256','qualification.json','pyo3-runtime-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
     with tarfile.open(doc/'raw.tar.gz','w:gz') as archive:
@@ -1302,7 +1302,7 @@ def branch_report(directory, output):
             '', 'All arms fork sibling histories from the same root and receive identical initial feasible incumbents and branch constraints. At each branch entry, Fact receives native conclusions and Scheme receives the same conclusions plus named supports from the same public Python binding. Baseline has neither. Only the common submission tool is exposed; no anti-repetition instruction is supplied. Incomplete thinking is a retained censored failure and is never salvaged by non-thinking finalization. A completed plain response may use structured finalization only within the same total budget. The independent exhaustive grader is never given to the solver. A stale handle never becomes a verified tool conclusion.',
             '', 'The producer is a locally committed clean checkout. Native build, formal checks and source identities are explicit in plan/receipts; this does not qualify another machine or remote CI. raw.tar.gz retains every request, thinking, response, tool packet, failure and annotation.']
     (output/'report.md').write_text('\n'.join(lines)+'\n')
-    doc=s.ROOT/'docs/research/agent-inference/fact-reuse-results'/plan.get('artifactDirectory','sibling-search');doc.mkdir(parents=True,exist_ok=False)
+    doc=s.ROOT/'.cache/ascent/research-reports/agent-inference/fact-reuse-results'/plan.get('artifactDirectory','sibling-search');doc.mkdir(parents=True,exist_ok=False)
     for name in ['report.json','report.md','ledger.json','annotation-ledger.json']:shutil.copy2(output/name,doc/name)
     for name in ['plan.json','plan.sha256','qualification.json','pyo3-runtime-receipt.json','native-build-receipt.json']:shutil.copy2(directory/name,doc/name)
     with tarfile.open(doc/'raw.tar.gz','w:gz') as archive:

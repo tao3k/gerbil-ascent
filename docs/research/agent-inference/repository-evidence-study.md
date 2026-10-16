@@ -46,7 +46,7 @@ checked against **2026-10-10 12:21:12 UTC**. Record issue creation, PR creation,
 commit author and committer dates, merge date, the fixed commit and its first
 parent. Commit dates alone do not establish when a problem first became public.
 
-The machine-readable [source audit](repository-evidence-source-audit.json)
+The machine-readable [source audit](../../../.cache/ascent/archived-runs/docs/research/agent-inference/repository-evidence-source-audit.json)
 records all seven candidates, exclusions, revision identities, test transitions,
 artifact SHA-256 values, and the isolated environment's complete dependency list.
 

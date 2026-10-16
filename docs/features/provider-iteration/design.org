@@ -56,7 +56,7 @@ This closes the conditional abstract injection, round-equivalence, least-state
 and ranked-convergence components. Universal native state/key/equality
 extraction, asynchronous custom-domain iteration, general lattice projection
 semantics and paper application/cost acceptance retain their separate gates.
-See [[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the abstract iteration receipt]].
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the abstract iteration receipt]].
 
 Qualification passed 97 Lean build jobs, 25 positive TLC configurations and 65
 fault controls. The native BYODS invariants suite passed 14 cases with final

@@ -58,5 +58,5 @@ decoding therefore remain explicit correspondence obligations. The abstract
 =rootFrontierPairs= product/filter is an extensional plan, not a new runtime
 implementation or a performance claim. Existing Scheme controls independently
 check all 512 three-node graphs in forward and reverse insertion order, every
-frontier, refusal, repeat insertion and frozen view. See [[file:../../evidence/scheme-provider-views-20261007/root-frontier-refinement.json][the receipt]].
+frontier, refusal, repeat insertion and frozen view. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/root-frontier-refinement.json][the receipt]].
 

@@ -20,7 +20,7 @@ source-bound logical reuse with explicit withdrawal, not simply persistent
 memory or executable checking, which have direct prior art.
 
 This note extends [[file:verified-reasoning-cache.org][the initial study]]. The
-machine-readable [[file:factor-reuse-pilot-plan.json][pilot plan]] is a design
+machine-readable [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/factor-reuse-pilot-plan.json][pilot plan]] is a design
 artifact, not an executed or preregistered experiment. Exact model, task
 manifests, budgets and grader versions must be frozen before execution.
 
@@ -62,7 +62,7 @@ novelty. The older fact/memory papers below remain relevant prior art.
 
 ** What the latest experiment actually established
 
-The [[file:fact-reuse-results/complete-branch-reuse/report.md][complete-branch pilot]] and [[file:fact-reuse-results/complete-branch-reuse/audit.json][audit]] bind Library source captured at
+The [[file:fact-reuse-results/complete-branch-reuse/report.md][complete-branch pilot]] and [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/fact-reuse-results/complete-branch-reuse/audit.json][audit]] bind Library source captured at
 =7bb4ba0= plus then-uncommitted changes. The historical audit recorded matching
 Library hashes at =97e41652d7787ee8063a2388e593e893be8d2449=.
 An October 11 recheck of all 65 captured source files finds two subsequent
@@ -410,7 +410,7 @@ not claimed. No new semantic test or formal proof was introduced.
 The existing retained CFFI conformance run also passed under a 45-second watchdog:
 32 finite observations, 32 published-subgoal downstream extensions, and 8
 changed-source stale-answer fault controls detected. The
-[[file:factor-reuse-local-receipt.json][local receipt]] records commands, exits,
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/factor-reuse-local-receipt.json][local receipt]] records commands, exits,
 source hashes and the actual loaded library digest. The raw native receipt is
 in =.cache/ascent/factor-reuse-research-20261010/=. These finite fixtures qualify
 actual retained execution in that library, not current-source rebuild closure

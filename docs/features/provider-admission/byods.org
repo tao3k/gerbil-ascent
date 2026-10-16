@@ -24,7 +24,7 @@ Nested field identity remains shared, and all/pending header identity is
 preserved when the engine supplied the same root.
 
 The [[file:../../scheme-research-proof-audit.org][audit]] and
-[[file:../../evidence/scheme-storage-spines-20261006/receipt.json][receipt]] bind native ownership and malformed-packet controls. This does not
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-storage-spines-20261006/receipt.json][receipt]] bind native ownership and malformed-packet controls. This does not
 prove arbitrary concretization completeness or roll back private Provider
 state after a failed extension. Custom copies add work proportional to the
 supplied snapshots and returned batch; no speedup is claimed.
@@ -46,7 +46,7 @@ injections within the same round, but a later public engine run/append requires
 all owners ready. Session recovery reconstructs fresh states from its retained
 source snapshot. The shared schema caches dispatch only, never these owners.
 
-The [[file:../../evidence/scheme-storage-state-20261006/receipt.json][native receipt]] covers mutable callback failures, shape/field/budget
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-storage-state-20261006/receipt.json][native receipt]] covers mutable callback failures, shape/field/budget
 rejection, a later guard failure after a successful emission, source replay,
 and prior-result preservation. Native providers keep their raw state and
 existing preflight laws. This prevents silent reuse of uncertain custom state;

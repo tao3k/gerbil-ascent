@@ -125,7 +125,7 @@ v0.19/Gambit toolchain as [[file:e4-positive-change.org][the prior E4 probe]], a
 plus the uncommitted change under test. Single-update =us= numbers are
 the medians of five paired in-process samples *after* warmup. Both
 unaggregated receipts retain every sample and warning:
-[[file:e4-retained-session-2026-10-01.txt][first run]] and [[file:e4-retained-session-2026-10-01-repeat.txt][repeat]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/scheme-dsl/e4-retained-session-2026-10-01.txt][first run]] and [[file:../../../.cache/ascent/archived-runs/docs/research/scheme-dsl/e4-retained-session-2026-10-01-repeat.txt][repeat]].
 
 #+NAME: scheme-e4-retained-local-cost
 | Shape | Vertices before addition | Grown rows | First retained us | First fresh us | Repeat retained us | Repeat fresh us |
@@ -159,7 +159,7 @@ their initialization cost in the lifecycle case.
 
 On 2026-10-01, base head =42902ff= plus documentation and a new
 qualification test (no evaluator edit), the same probe completed once.
-The [[file:e4-retained-session-2026-10-01-contract-gate.txt][raw receipt]] has every sample and the final warning. The host load
+The [[file:../../../.cache/ascent/archived-runs/docs/research/scheme-dsl/e4-retained-session-2026-10-01-contract-gate.txt][raw receipt]] has every sample and the final warning. The host load
 average observed immediately after the run was about 45; a concurrent
 repeat hit the existing 120-second probe timeout and is *not* a second
 successful performance observation. The medians below exclude each

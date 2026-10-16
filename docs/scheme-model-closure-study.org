@@ -39,7 +39,7 @@ the initial response, when the follow-up task is submitted.
 
 * Frozen paired design
 
-The [[file:evidence/scheme-model-plan-requalified-20261004/receipt.json][historical requalified public plan]] binds 35 actual ASCENT modules and three
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-model-plan-requalified-20261004/receipt.json][historical requalified public plan]] binds 35 actual ASCENT modules and three
 actual lowered =core/types= files to source head =e732b2b= and a supervised
 native artifact. Its SHA256 is
 =bd7aba6a2eaf22251bb7771a7c0edddada636d6a64cdc2359e149fd6470339f5=.
@@ -113,4 +113,4 @@ active reasoning stream and silent/unknown keepalive rejection. No external mode
 calls or fees are part of this qualification. Frozen plans must be regenerated
 because producer hashes and the timeout contract changed. The [[https://api-docs.deepseek.com/quick_start/pricing/?tab=case-studies][official peak prices]]
 were rechecked on 2026-10-06 and retain the conservative USD 13 batch ceiling.
-See the [[file:evidence/scheme-provider-progress-20261006/receipt.json][source-bound transport receipt]].
+See the [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-provider-progress-20261006/receipt.json][source-bound transport receipt]].

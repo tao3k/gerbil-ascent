@@ -743,7 +743,7 @@ identity checks, and no cross-language refinement or runtime speedup is
 claimed. The retained and publication native Suites pass 8 and 5 Cases,
 respectively, with command exit 0 and explicit final OK. Source and log
 identities are recorded in
-[[file:../evidence/scheme-prepared-query-20261006/receipt.json][the prepared-query receipt]].
+[[file:../../.cache/ascent/archived-runs/docs/evidence/scheme-prepared-query-20261006/receipt.json][the prepared-query receipt]].
 
 * Prepared source transactions: bind authority to one retained Session
 
@@ -795,7 +795,7 @@ then reuses it after an intervening dynamic transaction. The independent model
 checks results and earlier snapshots. Both commands exit 0 with explicit final
 OK; no speedup, typed registry bridge or formal cross-language equivalence is
 claimed. Exact source and log identities are in
-[[file:../evidence/scheme-prepared-transaction-20261006/receipt.json][the prepared-transaction receipt]].
+[[file:../../.cache/ascent/archived-runs/docs/evidence/scheme-prepared-transaction-20261006/receipt.json][the prepared-transaction receipt]].
 
 * Retain one checked batch preparation per consumer
 
@@ -847,7 +847,7 @@ stable. Existing exhaustive finite graph and nested-source batch Cases pass
 through the migrated production consumer. These are mechanism and semantic
 checks, not a CPU, allocation or wall-clock speedup claim. The source/log
 identities are in
-[[file:../evidence/scheme-retained-preparation-cache-20261006/receipt.json][the retained preparation receipt]].
+[[file:../../.cache/ascent/archived-runs/docs/evidence/scheme-retained-preparation-cache-20261006/receipt.json][the retained preparation receipt]].
 
 * Own the lattice admission and publication protocol
 

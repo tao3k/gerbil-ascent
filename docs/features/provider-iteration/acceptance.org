@@ -21,5 +21,5 @@ lattice projection and complete application/memory/cost replication remain
 acceptance gates. Lean algebra is separated from the Quint accumulated-head
 publication fault and native retained-session truth controls. See
 [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
 

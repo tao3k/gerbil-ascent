@@ -19,5 +19,5 @@ and four fault controls. This is an acceptance-path correction, not a new BYODS
 algebra theorem or Rust runtime integration. The historical syscall cause is
 unknown because its diagnostic was lost. The original graph truth and deadlines
 are retained. See [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
 

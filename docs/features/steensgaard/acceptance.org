@@ -53,6 +53,6 @@ PageRank and LLVM/index-sharing applications, matched end-to-end benefit
 baselines, physical allocation observation and universal native algorithm
 refinement remain acceptance obligations in the ten-item matrix. MR integration
 remains deferred. See the source-bound
-[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][acceptance receipt]] for executable identities,
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-steensgaard-partition-20261007/receipt.json][acceptance receipt]] for executable identities,
 measurements, counterexamples and rejected observations.
 

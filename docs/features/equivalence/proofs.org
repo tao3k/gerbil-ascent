@@ -14,7 +14,7 @@ active-domain equivalence state, proves one-edge and arbitrary finite-history
 least closure, and proves exact emitted/total decomposition. This extends the
 canonical Set instance with a non-Set representation-semantic instance.
 
-The [[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][receipt]] records the complete Lean collection and native eqrel suite,
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-frontier-20261006/receipt.json][receipt]] records the complete Lean collection and native eqrel suite,
 including 512 graph inputs in both insertion orders, exact independent Floyd
 frontiers, budget rejection/retry, zero-budget replay and two non-singleton
 component merges. Lean test controls remain under =Tests=. Quint protocol

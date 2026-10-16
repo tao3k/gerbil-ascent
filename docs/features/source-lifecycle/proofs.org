@@ -19,7 +19,7 @@ check terminal delivery and admission; the native concurrent fixture completes
 right while left retains an older snapshot and verifies both results survive.
 This closes completed-result semantic rebasing under the explicit frame. It
 does not prove every native execution trace, arbitrary intermediate chunks,
-cancellation or mutable row encoding. See [[file:../../evidence/scheme-snapshot-closure-20261006/receipt.json][source-bound receipt]].
+cancellation or mutable row encoding. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-snapshot-closure-20261006/receipt.json][source-bound receipt]].
 
 
 * Batch publication and completed closure
@@ -35,7 +35,7 @@ The native 65-candidate/17-value fixture crosses two credit batches and a
 terminal tail and checks successor admission after complete owner observation.
 Existing Quint credit/terminal controls retain temporal ownership. This closes
 batch algebra under candidate origin and complete-delivery premises; native
-trace extraction and cancellation semantics remain outstanding. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][receipt]].
+trace extraction and cancellation semantics remain outstanding. See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-batch-closure-20261006/receipt.json][receipt]].
 
 ** Actor Session admission after expression-plan compilation
 
@@ -62,7 +62,7 @@ from its committed source cut. Whole-source replacement evaluates a fresh
 candidate before clearing this new flag. Storage owner readiness remains
 independent; direct physical index owners retain their existing rebuild path.
 
-The [[file:../../evidence/scheme-engine-publication-20261007/receipt.json][receipt]] binds the integrated source freeze to 42 native Cases: storage 19
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-engine-publication-20261007/receipt.json][receipt]] binds the integrated source freeze to 42 native Cases: storage 19
 and index ownership 23. The new Case checks multi-relation and single-Set
 entrypoints, rejection after interrupted publication, Session recovery to all
 33 facts and stability of the previous 32-fact result. Both commands exited
@@ -92,7 +92,7 @@ override and result. Once replacement selects fresh recomputation, later
 appends do not check obsolete incremental storage/index state. That state is
 not repaired or marked ready; unreplaced engines retain the existing guards.
 
-The [[file:../../evidence/scheme-source-reconstruction-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-source-reconstruction-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
 Only =program/evaluate.ss= differs between those source freezes. Green
 qualification passed 46 native Cases: storage/recovery 20 and Session deletion
 26, each exiting zero with module/harness completion and explicit =OK=. The
@@ -126,7 +126,7 @@ opaque replacement path copies the input list and row spines before engine
 acceptance and pending-source recording. Nested field identity is unchanged;
 ordinary non-retained evaluation is not used as a Session snapshot boundary.
 
-The [[file:../../evidence/scheme-eager-snapshot-20261007/receipt.json][receipt]] binds identical red/green fixtures to 545 tracked Scheme sources.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eager-snapshot-20261007/receipt.json][receipt]] binds identical red/green fixtures to 545 tracked Scheme sources.
 Only evaluator and Session production owners differ between those freezes.
 Green qualification passed 59 native Cases: storage 21, timeout 12 and source
 deletion 26. Each command exited zero with module/harness markers and explicit
@@ -159,7 +159,7 @@ programs retain direct append; lattice eager candidates retain their existing
 classification. Raw index publication quarantine and physical cache ownership
 are unchanged.
 
-The [[file:../../evidence/scheme-append-flush-20261007/receipt.json][receipt]] binds identical final fixtures and 545 tracked Scheme sources;
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-append-flush-20261007/receipt.json][receipt]] binds identical final fixtures and 545 tracked Scheme sources;
 only =program/session.ss= differs between red and green. Green passed 60
 native Cases: storage 22, timeout 12 and source deletion 26, each with exit zero,
 module/harness markers and explicit =OK=. The final control checks 34 accepted

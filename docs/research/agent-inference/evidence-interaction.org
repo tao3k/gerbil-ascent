@@ -120,8 +120,8 @@ Those round numbers described successive frozen protocols; they did not name
 different ASCENT capabilities or graph revisions. This was the wrong boundary.
 
 The exact historical sources, helper dependencies, tests and frozen plans are
-now in [[file:history/crosspath-sources.tar.gz][the historical source archive]].
-[[file:history/crosspath-source-manifest.json][The manifest]] records the original path and byte hash of each file.
+now in [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/crosspath-sources.tar.gz][the historical source archive]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/crosspath-source-manifest.json][The manifest]] records the original path and byte hash of each file.
 Existing reports and raw response archives retain all failures and their
 original names. They are historical evidence, not a supported Python API.
 The two abandoned interaction prototype files and their failed build log are
@@ -187,7 +187,7 @@ run identity belong in frozen manifests and artifact directories.
 
 The native qualification covers cross-branch proof reuse, scope changes, unknown
 evidence, query-row restrictions, detached publication, eviction and clearing.
-See [[file:evidence-store-local-receipt.json][the local receipt]] for source/artifact hashes, exact commands and results.
+See [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/evidence-store-local-receipt.json][the local receipt]] for source/artifact hashes, exact commands and results.
 The historical Python tests are replayed from a temporary extraction of the
 source archive, rather than left in the current package.
 
@@ -199,6 +199,6 @@ reduced model thinking, deeper exploration, end-to-end speed or result-quality
 improvement. The failed model outcome is retained rather than converted into
 a Library capability claim.
 
-[[file:history/consumer-build-failures.tar.gz][Development failures and the executable]] are retained with
-[[file:history/consumer-build-failures.json][a digest receipt]], separately from the earlier
-[[file:history/consumer-calibration-failure.tar.gz][provider-protocol failure archive]].
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/consumer-build-failures.tar.gz][Development failures and the executable]] are retained with
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/consumer-build-failures.json][a digest receipt]], separately from the earlier
+[[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/history/consumer-calibration-failure.tar.gz][provider-protocol failure archive]].

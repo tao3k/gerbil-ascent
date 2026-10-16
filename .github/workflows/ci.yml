@@ -10,7 +10,18 @@ on:
 permissions:
   contents: read
 jobs:
+  repository-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Admit source paths and check output isolation
+        env:
+          PYTHONPATH: workbench/src
+        run: |
+          python3 -m ascent_workbench.repository_policy
+          python3 -m unittest discover -s workbench/tests -p test_repository_policy.py -v
   scheme:
+    needs: repository-hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
@@ -108,6 +119,7 @@ jobs:
       - name: Qualify actual native compiler source closure
         run: just check-model-source-closure
   rust-pyo3:
+    needs: repository-hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
@@ -234,6 +246,7 @@ jobs:
             .ci/gerbil-release/v19
           key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
   oracle:
+    needs: repository-hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -341,7 +354,7 @@ jobs:
       - name: Qualify complete pinned Steensgaard partition
         if: matrix.shard == 'byods-scale'
         run: |
-          manifest=docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+          manifest=t/fixtures/paper-inputs/openjdk-source.json
           dataset=.cache/ascent/paper-data/steensgaard
           mkdir -p "$dataset"
           repository="$(jq -r .repository "$manifest")"
@@ -358,7 +371,7 @@ jobs:
       - name: Verify pinned complete Polonius input identity
         if: matrix.shard == 'byods-scale'
         run: |
-          manifest=docs/evidence/scheme-application-admission-20261007/polonius-clap-source.json
+          manifest=t/fixtures/paper-inputs/polonius-clap-source.json
           dataset=.cache/ascent/paper-data/polonius-clap
           mkdir -p "$dataset"
           repository="$(jq -r .repository "$manifest")"
@@ -376,7 +389,7 @@ jobs:
         run: |
           cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
           timeout 900s rust/ascent-oracle/target/release/examples/polonius_data_truth .cache/ascent/paper-data/polonius-clap .cache/ascent/polonius-reference-complete datafrog-opt
-          jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' docs/evidence/scheme-application-admission-20261007/polonius-reference.json > .cache/ascent/polonius-output.sha256
+          jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' t/fixtures/paper-inputs/polonius-reference.json > .cache/ascent/polonius-output.sha256
           sha256sum --check .cache/ascent/polonius-output.sha256
   formal:
     needs: rust-pyo3
@@ -384,12 +397,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - name: Reject committed execution logs
-        run: |
-          if [ -n "$(git ls-files '*.log' '*.log.license')" ]; then
-            echo 'Execution logs and log license sidecars must not be committed.' >&2
-            exit 1
-          fi
       - name: Install Lean and protocol verification tools
         run: |
           sudo apt-get update

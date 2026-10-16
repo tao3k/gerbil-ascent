@@ -656,7 +656,7 @@ byods-session-rows:
 
 # Verify the immutable paper input envelope before the native complete count.
 steensgaard-data directory='.cache/ascent/paper-data/steensgaard':
-    @PYTHONPATH="{{ justfile_directory() }}/workbench/src:{{ justfile_directory() }}/python/src" python3 -m ascent_workbench.paper_source "{{ directory }}" docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+    @PYTHONPATH="{{ justfile_directory() }}/workbench/src:{{ justfile_directory() }}/python/src" python3 -m ascent_workbench.paper_source "{{ directory }}" t/fixtures/paper-inputs/openjdk-source.json
     @just _oracle-native steensgaard-data "{{ directory }}" 440438706
 
 steensgaard-rows:

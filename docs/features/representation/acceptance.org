@@ -24,5 +24,5 @@ callback semantics, proof model, timeout or source pin changes in this cleanup.
 This removes obsolete orchestration, not an outstanding native refinement
 obligation. Provider multi-column routing correspondence and complete paper
 application/time/memory acceptance remain on the mainline closure plan. See
-[[file:../../evidence/scheme-provider-views-20261007/retired-collectors.json][the deletion inventory and qualified source boundary]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/retired-collectors.json][the deletion inventory and qualified source boundary]].
 

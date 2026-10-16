@@ -5,6 +5,7 @@ memory-model refinement. Python transports rows and asserts full output equality
 it does not implement the evaluator or derive expected facts.
 """
 import argparse
+from .repository_policy import artifact_path
 from collections import Counter
 import json
 from pathlib import Path
@@ -25,7 +26,7 @@ def rows(field):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("traces", type=Path)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=artifact_path, required=True)
     args = parser.parse_args()
     receipts, phases, unique = [], Counter(), set()
     for path in sorted(args.traces.glob("*.itf.json")):

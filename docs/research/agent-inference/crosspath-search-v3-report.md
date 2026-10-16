@@ -40,7 +40,7 @@ Best observed completed candidate before each boundary. A phase that never reach
 | retained / 1 | 32768 | True | 49 | 4 | 4 |
 | retained / 1 | 49152 | True | 56 | 7 | 7 |
 
-All raw requests, returned reasoning, failed calls, invalid prefixes/completions, certificate store, exact span labels and native grades are retained in [the portable ledger](crosspath-search-v3-ledger.json) and [raw archive](crosspath-search-v3-raw.tar.gz).
+All raw requests, returned reasoning, failed calls, invalid prefixes/completions, certificate store, exact span labels and native grades are retained in [the portable ledger](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-v3-ledger.json) and [raw archive](../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-search-v3-raw.tar.gz).
 
 One fixed disjoint task, two goals, fixed order and stochastic model; descriptive pilot, no statistical causal claim.
 Fresh and retained have identical model-visible packets/policy; only native state differs, so thinking differences cannot establish a cache-state cognitive effect.

@@ -26,10 +26,10 @@ Their source manifests match the retained production and benchmark sources.
 | solve projection 16 | 159000 / 160000 | 156000 / 157000 | 825 / 767 |
 | solve projection 32 | 203000 / 205000 | 183000 / 184000 | 897 / 858 |
 
-- [[file:receipts/2026-10-02-matched-1.sexp][Run 1 raw samples]] and
-  [[file:receipts/2026-10-02-matched-1.sexp.sources][source manifest]]
-- [[file:receipts/2026-10-02-matched-2.sexp][Run 2 raw samples]] and
-  [[file:receipts/2026-10-02-matched-2.sexp.sources][source manifest]]
+- [[file:../../../.cache/ascent/archived-runs/t/performance/binding/receipts/2026-10-02-matched-1.sexp][Run 1 raw samples]] and
+  [[file:../../../.cache/ascent/archived-runs/t/performance/binding/receipts/2026-10-02-matched-1.sexp.sources][source manifest]]
+- [[file:../../../.cache/ascent/archived-runs/t/performance/binding/receipts/2026-10-02-matched-2.sexp][Run 2 raw samples]] and
+  [[file:../../../.cache/ascent/archived-runs/t/performance/binding/receipts/2026-10-02-matched-2.sexp.sources][source manifest]]
 
 The full-solve cases reuse warmed declaration metadata shared by both
 evaluators, including the current SCC planner. They include per-evaluation

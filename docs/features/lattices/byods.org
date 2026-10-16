@@ -20,7 +20,7 @@ final minima, source replacement and stale ordinary projections. Strict stratum
 planning is the native boundary for non-monotone tuple materialization; this
 round does not claim all arbitrary lattice programs satisfy monotone gamma.
 See [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the source-bound receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the source-bound receipt]].
 
 
 
@@ -41,7 +41,7 @@ kind configurations and exercise real retained lattice projection. This closes
 the stated typed compilation/functional roster components while preserving the
 separate join, hash/equality, native SCC and asynchronous execution obligations.
 See [[file:../../scheme-trrel-uf-design.org][the refinement design]] and
-[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the source-bound receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the source-bound receipt]].
 
 
 
@@ -63,6 +63,6 @@ Scheme. These injected faults discriminate design violations; the current
 native implementation passed the controls. General callback/hash/SCC refinement
 and the paper's application/time/memory reproduction retain their own gates.
 See [[file:../../scheme-trrel-uf-design.org][the design]] and
-[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
 
 

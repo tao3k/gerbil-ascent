@@ -44,8 +44,8 @@ for its selected sample, not total allocations across all 20 samples.
 - Apple arm64, Gerbil =2591dcd= on Gambit =dcd677c=.
 - Baseline source commit =84b145d68cd8ce826551d2ac92ab3a1c5ff08d46=
   plus the uncommitted benchmark and proof changes in this branch.
-- Receipt 1: [[file:../t/performance/small-graph/receipts/2026-10-01-run-1.txt][run 1]].
-- Receipt 2: [[file:../t/performance/small-graph/receipts/2026-10-01-run-2.txt][run 2]].
+- Receipt 1: [[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-run-1.txt][run 1]].
+- Receipt 2: [[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-run-2.txt][run 2]].
 
 * Results
 
@@ -95,10 +95,10 @@ retained, and budget cases passed after the change.
 
 Two separate runs before and after used the same three masks, 20 samples
 per phase, machine, and ASP fixture. The receipts are
-[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-1.txt][before 1]],
-[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-2.txt][before 2]],
-[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-1.txt][after 1]], and
-[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-2.txt][after 2]].
+[[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-optimization-before-1.txt][before 1]],
+[[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-optimization-before-2.txt][before 2]],
+[[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-optimization-after-1.txt][after 1]], and
+[[file:../.cache/ascent/archived-runs/t/performance/small-graph/receipts/2026-10-01-optimization-after-2.txt][after 2]].
 The table gives the median of the six p50 values (three masks times two
 runs), in milliseconds. The last column counts mask/run pairs whose after
 p50 was smaller. It is an indicative local comparison, not a CI gate.

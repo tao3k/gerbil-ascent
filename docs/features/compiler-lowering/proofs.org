@@ -18,7 +18,7 @@ All 299 selected modules remain covered across layers of 75, 142 and 82.
 The original 1 GiB Scheme heap contract and five-second module progress limits
 remain unchanged.
 
-The [[file:../../evidence/scheme-compilation-layers-20261006/receipt.json][source-bound receipt]] records 82 native modules, 710 CASE-OK, 82 explicit OK
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-compilation-layers-20261006/receipt.json][source-bound receipt]] records 82 native modules, 710 CASE-OK, 82 explicit OK
 and parent exit zero, plus invalid-specification and missing-module refusal
 controls. The first layered run exposed stale three-field activation fixture
 metadata; references now retain the actual compiler purity field without changing
@@ -44,7 +44,7 @@ keys. It retains head order, duplicates, false values, dirty frame reuse and
 the unbound-head unsupported result. All Lean examples and axiom reports remain
 in =Tests/=. No Quint matching/vector algebra is added: existing protocol models
 retain scheduling, cancellation, ownership and publication responsibilities.
-See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and [[file:../../evidence/scheme-stored-actions-20261006/receipt.json][source-bound receipt]].
+See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-stored-actions-20261006/receipt.json][source-bound receipt]].
 
 The remaining connected gate is universal native descriptor/scalar/name
 interpretation, then concrete Provider frontier and completed component
@@ -94,7 +94,7 @@ terminal dependency snapshots, global budgets and failure drain. Commands exit
 0 with MODULE-OK, HARNESS-OK and explicit final OK using the repository's
 isolated Gerbil SDK; the default host prefix initially lacked building-api.
 
-[[file:../../evidence/scheme-delta-selector-20261006/receipt.json][The source-bound receipt]] qualifies this native contract and its consumers.
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-delta-selector-20261006/receipt.json][The source-bound receipt]] qualifies this native contract and its consumers.
 It does not prove universal native compiler refinement, whole-framework paper
 replication or a performance improvement. Those audit gaps remain as stated;
 this supplies the executable selector/projection invariant for the separate
@@ -132,6 +132,6 @@ composite-join controls remain. The first failed test is retained in the receipt
 
 The actual SCC native Suite passes 21 Cases. Both final commands exit 0 with
 MODULE-OK, HARNESS-OK and explicit final OK under the isolated SDK. The
-[[file:../../evidence/scheme-key-prefix-20261006/receipt.json][source-bound receipt]] records this Scheme slice. No Lean/TLA source is changed;
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-key-prefix-20261006/receipt.json][source-bound receipt]] records this Scheme slice. No Lean/TLA source is changed;
 universal descriptor extraction and Provider correspondence remain their
 separate obligations. No CPU, allocation or whole-framework speedup is claimed.

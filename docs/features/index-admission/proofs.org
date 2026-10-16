@@ -15,7 +15,7 @@ rebuild from committed rows; rows/version publication remains coordinator owned.
 Actor workers create private indexes over frozen row/version vector copies in
 =program/evaluate.ss=, so this change introduces no shared worker cache.
 
-The [[file:../../evidence/scheme-index-recovery-20261006/receipt.json][source-bound receipt]] separates Lean's unchanged algebra, finite TLA+
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-recovery-20261006/receipt.json][source-bound receipt]] separates Lean's unchanged algebra, finite TLA+
 cache recovery protocol and native mutation/raise/retry checks. Native recursive
 component cases exercise scalar/composite keys with 1, 2 and 4 workers. General
 native encoding/equality and asynchronous trace refinement remain open; no
@@ -60,7 +60,7 @@ results. Its first run exposed a synthetic fixture that described only key
 terms as the complete atom. The fixture now keeps the full declared row width
 and its selected key projection separate; existing cache assertions are retained.
 Qualification and source identity are recorded in
-[[file:../../evidence/scheme-provider-rows-20261006/receipt.json][the native receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-rows-20261006/receipt.json][the native receipt]].
 
 This closes tuple shape only. Candidate membership in the represented relation,
 key completeness, callback mutation of returned rows and universal Provider
@@ -99,7 +99,7 @@ Native controls exercise shape-correct forged consequences in both compiled
 and pattern execution, rejection before callbacks, recovery, equal copied
 rows, disjoint all/delta candidates, append admission, stale rows after source
 replacement, aliases and existing extension-failure revocation. The
-[[file:../../evidence/scheme-provider-members-20261006/receipt.json][source-bound receipt]] distinguishes local execution from remote CI.
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-members-20261006/receipt.json][source-bound receipt]] distinguishes local execution from remote CI.
 
 This establishes a checked subset-of-snapshot condition under the existing
 stable-value premise. It does not prove lookup completeness, uniqueness,
@@ -147,7 +147,7 @@ rows, equal copied complete answers, false values, callback suppression and
 failed Session recovery. Existing index-entry controls additionally cover
 all/delta isolation, aliases, append, replacement, extension failures, repeated
 columns, reordered composite keys and once-per-lookup expression order. See
-the [[file:../../evidence/scheme-provider-coverage-20261006/receipt.json][source-bound native receipt]].
+the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-coverage-20261006/receipt.json][source-bound native receipt]].
 
 The witness uses one row-to-key map and one per-key count map per custom
 physical index, plus a temporary candidate set per lookup. It does not store
@@ -187,7 +187,7 @@ the omission against the original key, and the same failed Session then
 recovers with a valid receiver answer. Additional index lifecycle controls
 exercise build/extend header mutation, retained callback arguments, aliases,
 all/delta lanes, source versions and exceptional extension recovery. The
-[[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] retains failing and final native source boundaries.
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-headers-20261006/receipt.json][receipt]] retains failing and final native source boundaries.
 
 This isolates engine-owned metadata spines across open dispatch. It adds
 header-copy work proportional to selected key width on custom receiver calls.
@@ -226,7 +226,7 @@ They also retain append arguments and mutate them after extension/witness
 publication: the accepted batch remains unchanged, invalid Provider state
 rejects as foreign, and a new version rebuilds from the intact root. All/delta
 isolation and prior header/coverage/aggregate controls remain qualified in
-the [[file:../../evidence/scheme-provider-row-spines-20261006/receipt.json][source-bound native receipt]].
+the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-row-spines-20261006/receipt.json][source-bound native receipt]].
 
 This closes mutable list/row-spine access through physical index dispatch.
 Nested field values are still shared and retain their stability/equality
@@ -273,7 +273,7 @@ actual Scheme bucket construction has been extracted into the abstract model.
 Native shape validation, hash/equality coherence, ordinal sorting and captured
 member identity retain their own source/test correspondence. Fault injection is
 a discrimination result, not evidence of a production defect. See
-[[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
 
 The synchronized =9cd4897= CI passed Scheme, BYODS, scale and formal gates, but
 the other oracle shard failed eight tests without a retained panic cause. A
@@ -297,5 +297,5 @@ historical syscall remains unobserved. This fix is preserved alongside panic
 receipts. The integrated execution entry passed 67/67 other-shard cases and
 14/14 Python framework tests, including four backpressure controls. The repair
 is test-process transport, not a Scheme semantic rewrite. See
-[[file:../../evidence/scheme-application-admission-20261007/transport.json][the concurrent transport evidence]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-application-admission-20261007/transport.json][the concurrent transport evidence]].
 

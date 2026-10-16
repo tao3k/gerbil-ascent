@@ -35,5 +35,5 @@ completion and four incorrect traversals. The source correspondence is explicit:
 native bucket construction/equality and optimized visitor extraction remain
 premises until refined, and full paper application/cost replication is not
 established by these routing laws. See
-[[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
 

@@ -32,7 +32,7 @@ selection even if a custom receiver mutates its argument headers.
 A negative rule provides the concrete discriminator: a receiver changes a
 represented key to an absent key and returns empty. Without header isolation
 this can pass coverage and publish a false absence result. Native controls
-and the source-bound [[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] distinguish this repair from the broader
+and the source-bound [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-headers-20261006/receipt.json][receipt]] distinguish this repair from the broader
 stable-value and callback-purity obligations. Only headers are copied; no
 new deep-value, runtime-benefit or universal Provider proof claim is made.
 
@@ -51,7 +51,7 @@ version and rethrows the original failure. Aliases rebuild that entry on their
 next read, while another all/delta lane keeps its own valid entry. Successful
 reads keep ordinary reuse; no automatic retry or callback correction is added.
 See the [[file:../../scheme-research-proof-audit.org][research audit]] and
-[[file:../../evidence/scheme-provider-lookup-recovery-20261006/receipt.json][native receipt]] for failure controls and source identity.
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-lookup-recovery-20261006/receipt.json][native receipt]] for failure controls and source identity.
 
 Rebuilding requires a Provider that can build a valid index again. Shared
 nested field stability, external effects and general storage rollback remain
@@ -75,7 +75,7 @@ including standalone budget refusal/retry. Engine dispatch conservatively
 requires source replay after a graph extension failure or interrupted round.
 Session reconstructs fresh states through its existing recovery path.
 
-The [[file:../../evidence/scheme-native-storage-state-20261006/receipt.json][native receipt]] binds the zero-frontier counterexample, stored-field
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-storage-state-20261006/receipt.json][native receipt]] binds the zero-frontier counterexample, stored-field
 rejection and later-guard controls for all three native graph Providers,
 Session recovery and raw algorithm regression. This extends the concrete
 publication protocol; it does not prove arbitrary callback purity, private
@@ -92,7 +92,7 @@ append, indexes, retained publication and actor consumption. Canonical UF/hash
 execution retains component rectangles instead of expanded membership/index
 pairs. Public ordered export replays a frozen injection journal; source replay
 continues to use only authoritative sources. See the
-[[file:../../evidence/scheme-relation-views-20261007/receipt.json][source-bound native/cost receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-relation-views-20261007/receipt.json][source-bound native/cost receipt]].
 
 This makes Provider concretization's distinction between representation and concretization concrete
 in the engine. Sparse keyed observation, repeated grouped joins, retained updates

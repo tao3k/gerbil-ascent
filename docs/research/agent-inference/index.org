@@ -67,7 +67,7 @@ one prose response still fails the action contract. At task 0's matched 32,768
 input-plus-all-output checkpoint, baseline / Fact / Scheme depths are 0 / 1 / 2.
 Completed-solution quality stays at the common seed value 79. Exact-quote labels
 do not establish reduced repetition, and the external traces do not cover
-alternative search branches. The [[file:fact-reuse-results/complete-branch-reuse/audit.json][audit]] preserves all attempt costs, rejected
+alternative search branches. The [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/fact-reuse-results/complete-branch-reuse/audit.json][audit]] preserves all attempt costs, rejected
 labels, current source bindings and the remaining evidence limits; no global
 dyld fix or general model benefit is claimed.
 
@@ -88,7 +88,7 @@ not establish paper replication or an extended formal proof.
 
 The [[file:factor-reuse-2026-study.org][2026 fact and derivation reuse method study]]
 reads six closely related methods, maps their verification boundaries to live
-ASCENT owners, and supplies a four-arm [[file:factor-reuse-pilot-plan.json][pilot design]]
+ASCENT owners, and supplies a four-arm [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/factor-reuse-pilot-plan.json][pilot design]]
 for repeated-check reduction and productive exploration at equal budgets.
 
 The [[file:verified-reasoning-cache.org][verified reasoning caching study]] separates
@@ -292,7 +292,7 @@ packets, 14/16-job tasks with fixed adjacent transition penalties, an
 independent Scheme subset-plus-last grader, and a common input-plus-thinking
 budget. It retains all calibration/censoring outcomes and separates native
 proof reuse, any-time candidate quality, model submission and exploration
-proxies. The [[file:factor-total-budget-ledger.json][complete ledger]] includes every paid response, usage and raw-file hash.
+proxies. The [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/factor-total-budget-ledger.json][complete ledger]] includes every paid response, usage and raw-file hash.
 The sample does not establish reduced model thinking or improved quality.
 
 * Native evidence interaction
@@ -300,7 +300,7 @@ The sample does not establish reduced model thinking or improved quality.
 The current [[file:evidence-interaction.org][native evidence interaction contract]] keeps ASCENT Scheme a
 Library. Computational relation/proof APIs are separate from POO Flow temporal
 ownership, MRR/Rust integration and the research consumer's branch controller.
-Its [[file:evidence-store-local-receipt.json][local qualification receipt]] covers the native feature. The new
+Its [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/evidence-store-local-receipt.json][local qualification receipt]] covers the native feature. The new
 [[file:evidence-interaction-results/report.md][frozen three-treatment model study]] and [[file:evidence-interaction-results/interpretation.md][diagnostic interpretation]] retain
 failures and do not establish thinking savings, greater depth or better quality.
 
@@ -331,7 +331,7 @@ All failures and raw streams are retained; no quality/depth improvement establis
 * Historical branch round conclusion and bounded measurement repair
 
 - [[file:crosspath-branch-round-summary.md][Output repair passed; cognitive benefit remains unproved]]
-- [[file:crosspath-branch-round-summary.json][Matched-spend metrics, cost ledger and semantic label diagnostics]]
+- [[file:../../../.cache/ascent/archived-runs/docs/research/agent-inference/crosspath-branch-round-summary.json][Matched-spend metrics, cost ledger and semantic label diagnostics]]
 - [[file:crosspath-search-v4-bounded-report.md][Fixed two-call extraction and retained original failures]]
 - [[file:crosspath-v4-bounded-thinking-annotations.md][Exact positive-repeat links and rejected labels]]
 

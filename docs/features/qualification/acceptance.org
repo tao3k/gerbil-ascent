@@ -19,7 +19,7 @@ These strengthen the evidence path rather than the paper's lattice algebra:
 actual BYODS graph/row comparisons remain required. Historical EINTR causality
 is not asserted without the missing diagnostic. See
 [[file:../../scheme-trrel-uf-design.org][the investigation]] and
-[[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
 
 
 * Remaining application admission and corrected build gate (2026-10-07)
@@ -35,7 +35,7 @@ result-publication and Steensgaard tests cover historical reads, replacements,
 partial/resumed snapshots, keyed traversal and callback mutation isolation.
 
 The complete reference Polonius =clap-rs= input is now pinned in
-[[file:../../evidence/scheme-application-admission-20261007/polonius-clap-source.json][the input manifest]]: 18 files, 1,107,599 rows and 42,271,852 bytes from
+[[file:../../../t/fixtures/paper-inputs/polonius-clap-source.json][the input manifest]]: 18 files, 1,107,599 rows and 42,271,852 bytes from
 =s-arash/polonius@7fe7cca808115828b1105c86003a768a6749383f=. Every file binds
 SHA256, Git blob identity, bytes, row count and arity. The empty drop-dereference
 file still has arity two, as declared by the pinned =facts.rs= schema. The byte

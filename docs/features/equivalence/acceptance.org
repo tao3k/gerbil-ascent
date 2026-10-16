@@ -14,7 +14,7 @@ symmetry and transitivity after each injection, least closure after every
 finite input sequence, exact newly emitted facts and isolated group updates.
 The corresponding native suite checks exact per-insertion deltas against
 independent Floyd closure, including rejected budget and retry on the actual
-state. The [[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][qualification receipt]] separates general algebra from bounded native
+state. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-frontier-20261006/receipt.json][qualification receipt]] separates general algebra from bounded native
 observations and lists the remaining representation extraction boundary.
 
 This advances eqrel's semantic instance. General gamma/join/injection laws,

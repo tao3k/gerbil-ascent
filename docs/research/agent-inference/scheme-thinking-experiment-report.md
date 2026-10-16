@@ -145,10 +145,10 @@ The actual frozen CFFI engine executed the evidence. Existing Lean/Quint corresp
 
 ## Evidence files
 
-- [Frozen plan](tool-thinking-plan.json)
-- [Offline Scheme/oracle qualification](compound-thinking-qualification.json)
-- [Real-model receipt](tool-thinking-result.json)
-- [Audited cumulative costs and pairs](tool-thinking-audit.json)
+- [Frozen plan](../../../.cache/ascent/archived-runs/docs/research/agent-inference/tool-thinking-plan.json)
+- [Offline Scheme/oracle qualification](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-qualification.json)
+- [Real-model receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/tool-thinking-result.json)
+- [Audited cumulative costs and pairs](../../../.cache/ascent/archived-runs/docs/research/agent-inference/tool-thinking-audit.json)
 
 Requests and responses are retained under `.cache/ascent/movie-study/compound-thinking-tools-validated-real-20261010/`; the tracked artifact manifest includes their identities. Frozen outcomes and costs are unchanged.
 
@@ -156,7 +156,7 @@ Requests and responses are retained under `.cache/ascent/movie-study/compound-th
 
 The union question, trial 2, raw-fact control consumed **131,362 thinking tokens** and exhausted one response without a submitted answer. Its complete prior history, including the incomplete reasoning item, was forwarded unchanged into at most two additional requests at the same 131,072 ceiling. The primary result remains censored.
 
-The continuation used **2 extra call(s)** and **36,149 additional thinking tokens**. Cumulative effort is **167,511 tokens**; independently verified: **True**. Additional peak-price estimate: USD **0.047384**. [Complete-history recovery receipt](tool-thinking-recovery.json).
+The continuation used **2 extra call(s)** and **36,149 additional thinking tokens**. Cumulative effort is **167,511 tokens**; independently verified: **True**. Additional peak-price estimate: USD **0.047384**. [Complete-history recovery receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/tool-thinking-recovery.json).
 
 After this adaptive repair, all eight control trajectories and all eight Scheme trajectories have correct answers, with **596,491 vs 199,765 thinking tokens**; observed reduction **66.51%**. This supplementary total includes the original 131,362-token failure and its repair, but is not the frozen matched-policy primary score.
 
@@ -259,10 +259,10 @@ The actual frozen CFFI engine executed the evidence. Existing Lean/Quint corresp
 
 ## Evidence files
 
-- [Frozen plan](compound-thinking-plan.json)
-- [Offline Scheme/oracle qualification](compound-thinking-qualification.json)
-- [Real-model receipt](compound-thinking-result.json)
-- [Audited cumulative costs and pairs](compound-thinking-audit.json)
+- [Frozen plan](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-plan.json)
+- [Offline Scheme/oracle qualification](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-qualification.json)
+- [Real-model receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-result.json)
+- [Audited cumulative costs and pairs](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-audit.json)
 
 Requests and responses are retained under `.cache/ascent/movie-study/compound-thinking-real-20261010/`; the tracked artifact manifest includes their identities. Frozen outcomes and costs are unchanged.
 
@@ -277,7 +277,7 @@ All four censored original trajectories were continued under the original extern
 | scoped-union-recursive-branch-seed-20261212 | 1 | scheme-evidence | 65,893 | 9,778 | 75,671 | True | 2 |
 | scoped-union-recursive-branch-seed-20261212 | 2 | raw-fact-reasoning | 65,983 | 66,468 | 132,451 | True | 1 |
 
-Adaptive recovery consumed **246,949 additional thinking tokens**; peak-price estimate USD **0.313112**. [Recovery receipt](compound-thinking-recovery.json).
+Adaptive recovery consumed **246,949 additional thinking tokens**; peak-price estimate USD **0.313112**. [Recovery receipt](../../../.cache/ascent/archived-runs/docs/research/agent-inference/compound-thinking-recovery.json).
 
 ## Financial and execution accounting
 
@@ -299,7 +299,7 @@ Failures identify a practical integration cost: rule admission errors can consum
 
 All 48 Python tests passed locally, including real engine initialization and watchdog tests. Thirteen focused history, cumulative-cost, censoring, complete-history recovery, progress-watchdog and matched-tool tests passed after report changes. The earlier exact-head CI revision `f282eca7684b363af362d7f7872f45806a8cca6b` passed; CI on this delivery is recorded separately after push.
 
-[Artifact manifest](thinking-artifact-manifest.json) records plan/result/library/source hashes, request/response/raw-output hashes and verified history continuity for every corrected request. Provider reasoning is not printed in this report. Cache files retain the raw provider receipts locally; tracked manifests do not imply that those ignored raw files are downloadable from GitHub. [Transport rejection audit](thinking-tool-transport-audit.json) preserves the exact typed interface failure and unknown-usage boundary.
+[Artifact manifest](../../../.cache/ascent/archived-runs/docs/research/agent-inference/thinking-artifact-manifest.json) records plan/result/library/source hashes, request/response/raw-output hashes and verified history continuity for every corrected request. Provider reasoning is not printed in this report. Cache files retain the raw provider receipts locally; tracked manifests do not imply that those ignored raw files are downloadable from GitHub. [Transport rejection audit](../../../.cache/ascent/archived-runs/docs/research/agent-inference/thinking-tool-transport-audit.json) preserves the exact typed interface failure and unknown-usage boundary.
 
 ## Post-run external answer audit
 

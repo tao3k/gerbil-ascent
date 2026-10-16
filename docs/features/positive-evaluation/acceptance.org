@@ -12,7 +12,7 @@ reread. The paper separates single-step decomposition, historical coverage of
 old facts, abstract data structure gamma contracts and iteration equivalence.
 The implementation must retain all four obligations.
 
-The [[file:../../evidence/scheme-body-frontier-20261005/receipt.json][joint acceptance receipt]] records the following distinct responsibilities:
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-body-frontier-20261005/receipt.json][joint acceptance receipt]] records the following distinct responsibilities:
 
 - Lean =ProviderFrontier.body_partition= proves full = old union single-delta
   pivots for finite positive bodies of arbitrary length. Environment passing
@@ -83,7 +83,7 @@ seeded initial cuts and rejects the mutation that only runs pivots while
 omitting initial full consumer publication. This finite safety check establishes
 neither Lean's iteration algebra nor unbounded temporal theorems.
 
-The [[file:../../evidence/scheme-seminaive-history-20261006/receipt.json][iteration receipt]] binds rebased source and actual checks. Earlier sections
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-seminaive-history-20261006/receipt.json][iteration receipt]] binds rebased source and actual checks. Earlier sections
 and receipts describing unproved iteration history refer to the 2026-10-05
 source. This section updates the conclusion for concrete Sets. Remaining
 mainline obligations include composed native slot/binder/index/pivot

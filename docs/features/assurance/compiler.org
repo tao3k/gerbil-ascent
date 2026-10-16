@@ -36,7 +36,7 @@ root must retain its identity. The original independent Floyd closure,
 per-owner emissions and external snapshot preservation checks remain in the
 same case. This tests completion beyond observing an empty delta loop.
 
-The [[file:../../evidence/scheme-indexed-least-20261006/receipt.json][source-bound receipt]] records the complete Lean collection and native SCC
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-indexed-least-20261006/receipt.json][source-bound receipt]] records the complete Lean collection and native SCC
 suite. The runtime's round loop and actor terminal event still need universal
 extraction to this semantic iteration. SCC projection, native scalar/hash
 representation and complete credit/tail trace correspondence remain distinct

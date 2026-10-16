@@ -147,7 +147,7 @@ correct-answer thinking and from transfer to a different query.
 
 * Qualification and experiment
 
-The [[file:trajectory-qualification.json][local qualification receipt]] records the native library, compiled API,
+The [[file:../../.cache/ascent/archived-runs/docs/features/trajectory-qualification.json][local qualification receipt]] records the native library, compiled API,
 source hashes, logs and formal checks. Both actual ABI and compiled API modes
 passed three Trajectory tests and nine Evidence DAG tests each in fresh
 processes. Five direct Scheme ledger cases passed. Four experiment intent
@@ -198,7 +198,7 @@ subgoal cannot freeze a whole-task prefix. The Lean statement and Quint
 premature-admission mutation cover this distinction; actual Scheme and both
 CFFI binding modes exercise the corresponding runtime events.
 
-The [[file:correction-qualification.json][correction qualification receipt]] binds the frozen artifact and selected local
+The [[file:../../.cache/ascent/archived-runs/docs/features/correction-qualification.json][correction qualification receipt]] binds the frozen artifact and selected local
 checks: five Trajectory/projection and nine DAG cases in each ABI/API mode,
 six direct Scheme cases, seven experiment-intent cases and the formal checks.
 The report separates native component reuse from model correctness and keeps

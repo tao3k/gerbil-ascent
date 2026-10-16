@@ -872,7 +872,7 @@ before adoption. No additional generic proof wrapper is introduced.
 
 ** Native qualification
 
-The [[file:../evidence/scheme-po-compiler-20261006/receipt.json][source-bound receipt]] records exit 0 for all 28 operator Cases and
+The [[file:../../.cache/ascent/archived-runs/docs/evidence/scheme-po-compiler-20261006/receipt.json][source-bound receipt]] records exit 0 for all 28 operator Cases and
 33 typed higher-order Cases, with MODULE-OK, HARNESS-OK and final OK for both
 modules. The new discriminators cover final-self construction after forcing
 the base method, shared-base C4 selection, independent earlier receivers,

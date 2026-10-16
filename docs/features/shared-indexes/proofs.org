@@ -77,7 +77,7 @@ native run must qualify the final receiver/adapter implementation.
 
 ** Final source-bound qualification
 
-The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][curried receiver receipt]] records the final frozen implementation: 82 native
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][curried receiver receipt]] records the final frozen implementation: 82 native
 modules, 717 CASE-OK, 82 explicit OK, parent exit zero, four concurrent module
 workers, unchanged 1 GiB compiler heap and five-second startup/idle limits.
 The complete formal collection has 84 Lean build jobs, 19 normal TLC
@@ -93,7 +93,7 @@ semantics and native PO compiler composition through =59c1710=. The complete
 requalification passes all 82 native modules, 722 CASE-OK, 82 explicit OK and
 exit zero with four workers and unchanged heap/startup/idle contracts. The
 717-Case result above remains historical; it is not relabeled as this run.
-The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] records both source boundaries.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][receipt]] records both source boundaries.
 
 Lean additionally proves that appending only missing columns covers each next
 chain requirement, preserves every earlier prefix, and retains a duplicate-free
@@ -127,7 +127,7 @@ check occurrence idempotence. The full suite passes with explicit OK and exit
 zero under the unchanged progress contract. Existing exact-budget parity,
 failed publication, complete-alternative tampering and last cyclic support
 controls remain included. The complete Lean collection passes 84 build jobs.
-See the [[file:../../evidence/scheme-founded-recovery-20261006/receipt.json][source-bound recovery receipt]].
+See the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-founded-recovery-20261006/receipt.json][source-bound recovery receipt]].
 
 ** Native owner boundaries and package policy acceptance
 
@@ -166,7 +166,7 @@ finite mathematical result; the native-to-Lean graph representation bridge and
 trie refinement remain distinct obligations. Existing Quint publication/ownership
 checks are retained without duplicating the matching algebra. Native invalid
 matching controls and independent exhaustive partition comparisons qualify the
-implementation separately. The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
+implementation separately. The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
 results and the negative complete-solve cost result. No model or Rust result is
 implied by minimum physical root count.
 
@@ -216,7 +216,7 @@ headers and require the caller's headers to remain intact. The existing 256
 retained-history corpus and compiled self-join controls remain independent.
 Lean examples and negative controls stay under =Tests/ProviderRoutingTests.lean=.
 
-See the [[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound receipt]] and the updated closure matrix. This discharges the
+See the [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-column-projection-20261008/receipt.json][source-bound receipt]] and the updated closure matrix. This discharges the
 previously named stepped-projection algebra gap. Universal native hash/trie,
 ordinal and rectangle-visitor refinement, full paper applications, and matched
 whole-application benefit remain separate obligations. No measured speedup,

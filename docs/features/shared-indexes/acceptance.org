@@ -27,7 +27,7 @@ Inputs constant is configured by operator substitution; no runtime generation
 cap is introduced. Seven faults include second-batch reset and held-reader
 mutation. Finite TLC safety is not an unbounded native trace or liveness proof.
 
-The [[file:../../evidence/scheme-provider-views-20261007/index-construction-history.json][source-bound receipt]] retains successful gates and rejected preparation /
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-provider-views-20261007/index-construction-history.json][source-bound receipt]] retains successful gates and rejected preparation /
 configuration attempts. Native equality/hash/encoding and optimized projection /
 curried visitor extraction remain obligations. Package 3 and the ten-package
 library delivery are not declared complete by this constructed index boundary.
@@ -58,7 +58,7 @@ representation change does not admit the full OpenJDK application or its
 performance and peak-memory claims. See the Provider concretization research section and the
 compressed-equivalence evidence receipt for the exact tested boundary.
 
-The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][compressed equivalence receipt]] records 86 native modules / 829 Cases,
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-eqrel-views-20261007/receipt.json][compressed equivalence receipt]] records 86 native modules / 829 Cases,
 109 Lean jobs, 30 positive TLC models and 87 named negative controls. A
 supplementary compiled-engine probe reports 1,000,000 logical pairs with one
 total descriptor; a separate application probe agrees with independently
@@ -86,7 +86,7 @@ publication and old-reader lifetime, with three discriminating layout faults.
 Independent native truth checks 96-field projections, value identities,
 mutable helper inputs, callback header isolation, 256 retained histories and
 compiled self joins. See [[file:proofs.org::*Provider concretization constructed column projection and index layout lifetime (2026-10-08)][the proof/implementation bridge]] and
-[[file:../../evidence/scheme-column-projection-20261008/receipt.json][the acceptance receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-column-projection-20261008/receipt.json][the acceptance receipt]].
 
 This closes the stepped-projection algebra obligation recorded on 2026-10-07.
 Package 3 still requires universal native hash/value and curried trie/ordinal/

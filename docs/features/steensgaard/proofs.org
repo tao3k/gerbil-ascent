@@ -29,5 +29,5 @@ admit physical allocation savings. A constructor-byte observer remains a
 separate resource gate. The current acceptance scope and negative measurements
 are recorded in
 [[file:acceptance.org::*Complete Steensgaard partition acceptance (2026-10-07)][the closure section]] and
-[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][the receipt]].
+[[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-steensgaard-partition-20261007/receipt.json][the receipt]].
 

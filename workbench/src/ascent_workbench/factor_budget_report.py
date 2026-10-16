@@ -4,7 +4,9 @@ import json, hashlib, statistics
 from pathlib import Path
 ROOT = Path.cwd()
 BASE = ROOT / '.cache/ascent/factor-budget'
-DOC = ROOT / 'docs/research/agent-inference'
+DOC = ROOT / '.cache/ascent/research-reports/agent-inference'
+
+DOC.mkdir(parents=True, exist_ok=True)
 
 def sha(b):
     return hashlib.sha256(b).hexdigest()

@@ -32,11 +32,11 @@ is shared. The original analysis vector layout remains unchanged.
 
 The reference is local commit =57cc611=. Its evaluator is copied with only
 module import relocation and exported function alpha renames; its analysis is
-an exact source copy. [[file:reference-verification.json][Reference hashes]] record those transformations.
+an exact source copy. [[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/reference-verification.json][Reference hashes]] record those transformations.
 Both engines are compiled with native std/make into an isolated benchmark lib.
 [[file:module-resolution.log][Module resolution]] verifies the loaded SSI paths.
 
-[[file:suite-coverage.json][Full qualification coverage]]: 44 modules, 355 native Cases, all passed
+[[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/suite-coverage.json][Full qualification coverage]]: 44 modules, 355 native Cases, all passed
 (102.895 seconds). Ten new Cases cover all 512 three-node directed graphs,
 failed candidates and repeated variables, false values, wildcard/nullary
 atoms, exact custom index traces, custom storage expansion, retained Sessions,
@@ -55,7 +55,7 @@ An allocation gate requires non-increasing median bytes on every workload;
 primary workloads also require at least 900 strict paired byte wins.
 A timing claim requires a lower median and at least 900 strict paired time wins.
 
-[[file:final-matched.sexp][First accepted raw samples]] and [[file:repeat-matched.sexp][repeat raw samples]] retain all samples.
+[[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/final-matched.sexp][First accepted raw samples]] and [[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/repeat-matched.sexp][repeat raw samples]] retain all samples.
 The repeat summary is:
 
 | Workload | Old bytes | New bytes | Reduction | Byte wins / 1000 | Old / new median time | Time wins / 1000 |
@@ -90,11 +90,11 @@ before running the unchanged scenario: [[file:actual-baseline-nonpositive-ss.log
 failure was not stably reproduced by this pair. These controls do not establish
 whole-inventory tail closure or erase the failed batch.
 
-[[file:remaining-ss/summary.json][Continuation]] passed ten subsequent entries, then failed table-expression:
+[[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/remaining-ss/summary.json][Continuation]] passed ten subsequent entries, then failed table-expression:
 median 951 us, p95 2.072 ms, max 40.923 ms versus the original 2 ms
 admission limit (=max_total=). The 1.05 ms =regression_budget= field is metadata. Its semantic gate completed; the typed failure is the time
 gate. No cause attribution is established by these observations.
-[[file:final-ss/summary.json][Final two entries]] record membership and shortest-candidates separately; both passed. Across
+[[file:../../../.cache/ascent/archived-runs/t/performance/positive-plan/final-ss/summary.json][Final two entries]] record membership and shortest-candidates separately; both passed. Across
 the 17 original inventory entries, 15 passed and two failed their initial
 timing gates. The old/new nonpositive controls are additional runs.
 There is no claim that one uninterrupted original SS batch passed.

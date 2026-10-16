@@ -20,7 +20,7 @@ addition to extension/install publication. Its fault control keeps an old valid
 version on a poisoned lookup and must violate =Consistent=. Native qualification
 reproduces that fault using the frozen prior implementation, then verifies the
 corrected engine's rows, alias lookup, delta isolation and successful retry.
-See [[file:../../evidence/scheme-index-recovery-20261006/receipt.json][qualification receipt]]. Lean retains the frozen-row algebra; this lifecycle
+See [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-recovery-20261006/receipt.json][qualification receipt]]. Lean retains the frozen-row algebra; this lifecycle
 belongs to Quint and native runtime checks. Neither finite TLC nor the source
 inspection constitutes a whole-engine extraction proof.
 

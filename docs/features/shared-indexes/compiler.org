@@ -22,7 +22,7 @@ rebuilding from committed rows. Native exhaustive small matching, direct row
 projection, expression-order and actor Session controls exercise these paths.
 =ComponentIndex.qnt= owns publication, failed-version recovery, alias-double
 extension and foreign-owner interference; it does not repeat lookup algebra.
-The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] binds both collections to source and retains rejected cost outcomes.
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][receipt]] binds both collections to source and retains rejected cost outcomes.
 These results do not imply a universal native matching/trie extraction theorem
 or complete Polonius/LLVM application benefit.
 
@@ -42,9 +42,9 @@ require dependency-closed invalidation and preservation of unaffected seeds.
 These universal statements do not replace complete native graph enumeration,
 source-selector decoding or transaction publication evidence. Tests and axiom
 prints remain in the corresponding =Tests= modules. The complete Lean build
-passes 84 jobs; the source-bound [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains separate native and temporal scopes.
+passes 84 jobs; the source-bound [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains separate native and temporal scopes.
 
-The [[file:../../evidence/scheme-finite-frame-20261006/receipt.json][finite-frame qualification receipt]] binds the complete native registry,
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-finite-frame-20261006/receipt.json][finite-frame qualification receipt]] binds the complete native registry,
 finite-vector proofs and package checks to the qualified source. Historical cost
 and TLC runs retain their original pre-rebase boundary; exact-head CI is a
 separate release gate. Raw execution logs are not repository artifacts.

@@ -25,3 +25,9 @@ Git records source, contracts and concise qualification summaries, not raw runs.
 Keep failed/stale/timeout observations locally and never change their identities
 to fit a new candidate. Complete consumer, sealed review, current graph and
 matched performance acceptance remain separate gates with unchanged budgets.
+
+Runtime release code keeps O3 and thin LTO. Build scripts and their maintenance
+dependencies use O1: optimizing the compiler/policy harness itself at O3 is not
+a runtime algorithm optimization. This does not omit policy tasks or change
+generated algorithm semantics. Both publication build and execution acceptance
+must be qualified independently; a warmed build cache is not a cold-build claim.

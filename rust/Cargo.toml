@@ -42,7 +42,7 @@ overflow-checks = true
 opt-level = 2
 
 [profile.release.build-override]
-opt-level = 3
+opt-level = 1
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

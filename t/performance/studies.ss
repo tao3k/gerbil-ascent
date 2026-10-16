@@ -6,6 +6,11 @@
 (defstruct study (name modules entry scenarios native? arguments keep-going? receipt-suffix) final: #t)
 (def performance-studies
   (list
+    (make-study 'uf-selector-init
+      '("core/relation-view" "t/performance/uf-selector-init/reference-relation-view" "t/performance/uf-selector-init/fixture" "t/performance/paired-study" "t/performance/uf-selector-init/runner")
+      "t/performance/uf-selector-init/runner.ss"
+      '("component-query" "point-tail" "point-absent" "grouped" "reordered" "wide" "wide-rows" "partial" "partial-absent" "conflict" "single-axis" "unindexed" "small" "repeated-small" "capture" "tiny-capture")
+      #t '(scenario receipt) #f ".ss")
     (make-study 'uf-compact-query
       '("core/relation-view" "t/performance/uf-compact-query/reference-relation-view" "t/performance/uf-compact-query/fixture" "t/performance/paired-study" "t/performance/uf-compact-query/runner")
       "t/performance/uf-compact-query/runner.ss"

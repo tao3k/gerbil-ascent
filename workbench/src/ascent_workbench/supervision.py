@@ -2,7 +2,10 @@
 """Fail a qualification command that stops producing real output."""
 
 import argparse
+import ctypes
+from functools import cache
 import os
+from pathlib import Path
 import select
 import selectors
 import signal
@@ -37,7 +40,9 @@ def forward_output(destination, chunk: bytes, timeout: float) -> None:
 
 
 def group_cpu(group: int) -> dict[int, float]:
-    """Read real CPU time of the supervised process group, without commands."""
+    """Count live and reaped compiler CPU, with native Linux tick precision."""
+    if Path('/proc/self/stat').exists():
+        return proc_group_cpu(Path('/proc'), group, os.sysconf('SC_CLK_TCK'))
     listing = subprocess.check_output(
         ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
     )
@@ -45,6 +50,12 @@ def group_cpu(group: int) -> dict[int, float]:
     for line in listing.splitlines():
         pid, pgid, elapsed = line.split()
         if int(pgid) != group:
+            continue
+        if sys.platform == 'darwin':
+            try:
+                result[int(pid)] = darwin_process_cpu(int(pid))
+            except ProcessLookupError:
+                pass
             continue
         days, separator, elapsed_time = elapsed.rpartition("-")
         parts = [float(part) for part in elapsed_time.split(":")]
@@ -55,9 +66,49 @@ def group_cpu(group: int) -> dict[int, float]:
     return result
 
 
+class RusageInfoV1(ctypes.Structure):
+    """Public Darwin sys/resource.h ABI; CPU counters are nanoseconds."""
+    _fields_ = [('uuid', ctypes.c_uint8 * 16),
+                ('user', ctypes.c_uint64), ('system', ctypes.c_uint64),
+                ('resources', ctypes.c_uint64 * 8),
+                ('child_user', ctypes.c_uint64), ('child_system', ctypes.c_uint64),
+                ('child_resources', ctypes.c_uint64 * 4)]
+
+
+@cache
+def darwin_rusage():
+    library = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+    read = library.proc_pid_rusage
+    read.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(RusageInfoV1)]
+    read.restype = ctypes.c_int
+    return read
+
+
+def darwin_process_cpu(pid: int) -> float:
+    usage = RusageInfoV1()
+    if darwin_rusage()(pid, 1, ctypes.byref(usage)) != 0:  # RUSAGE_INFO_V1
+        code = ctypes.get_errno()
+        raise OSError(code, os.strerror(code), str(pid))
+    return (usage.user + usage.system + usage.child_user + usage.child_system) / 1e9
+
+
+def proc_group_cpu(root: Path, group: int, ticks: int) -> dict[int, float]:
+    result = {}
+    for entry in root.iterdir():
+        if not entry.name.isdecimal():
+            continue
+        try:
+            # comm can contain spaces or parentheses. Fields after its final
+            # ')' start at state (3); pgrp is 5 and CPU fields are 14..17.
+            fields = (entry / 'stat').read_text().rsplit(')', 1)[1].split()
+            if int(fields[2]) == group:
+                result[int(entry.name)] = sum(map(int, fields[11:15])) / ticks
+        except (FileNotFoundError, ProcessLookupError):
+            continue  # A compiler can exit between directory and stat reads.
+    return result
+
+
 def stop_group(child: subprocess.Popen[bytes]) -> None:
-    if child.poll() is not None:
-        return
     try:
         os.killpg(child.pid, signal.SIGTERM)
         child.wait(timeout=1)
@@ -66,6 +117,13 @@ def stop_group(child: subprocess.Popen[bytes]) -> None:
         child.wait()
     except ProcessLookupError:
         pass
+    finally:
+        # A completed leader can leave compiler descendants holding pipe FDs.
+        # The supervisor owns this process group, including those descendants.
+        try:
+            os.killpg(child.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
 
 
 def main() -> int:
@@ -96,23 +154,29 @@ def main() -> int:
         selector.register(child.stderr, selectors.EVENT_READ, sys.stderr.buffer)
     last_output = time.monotonic()
     saw_output = False
-    cpu = {}
+    cpu_high_water = 0.0
     last_cpu_sample = 0.0
     signal.signal(signal.SIGTERM, lambda _signum, _frame: sys.exit(124))
     try:
-        while selector.get_map():
+        while selector.get_map() or child.poll() is None:
             ready = selector.select(timeout=0.25)
+            if not ready and child.poll() is not None:
+                # Drain ready bytes first, then terminate orphan descendants
+                # instead of waiting forever on their inherited output pipes.
+                return child.returncode
             if args.cpu_progress and time.monotonic() - last_cpu_sample >= 1:
                 current_cpu = group_cpu(child.pid)
-                advance = sum(max(0, value - cpu.get(pid, 0))
-                              for pid, value in current_cpu.items())
-                cpu = current_cpu
+                total = sum(current_cpu.values())
+                # Reaping transfers CPU from a child to its parent. Compare
+                # group totals, so that transfer alone cannot invent activity.
+                advance = max(0, total - cpu_high_water)
+                cpu_high_water = max(cpu_high_water, total)
                 last_cpu_sample = time.monotonic()
                 if advance > 0:
                     last_output = last_cpu_sample
                     saw_output = True
                     print(f"[build-activity] cpu-advance={advance:.3f}s "
-                          f"processes={len(cpu)}", file=sys.stderr, flush=True)
+                          f"processes={len(current_cpu)}", file=sys.stderr, flush=True)
             if ready:
                 for key, _events in ready:
                     chunk = os.read(key.fd, 65536)
@@ -124,7 +188,7 @@ def main() -> int:
                         saw_output = True
                     else:
                         selector.unregister(key.fileobj)
-            elif child.poll() is None and time.monotonic() - last_output > (
+            elif time.monotonic() - last_output > (
                 args.idle_seconds if saw_output else args.startup_seconds
             ):
                 limit = args.idle_seconds if saw_output else args.startup_seconds

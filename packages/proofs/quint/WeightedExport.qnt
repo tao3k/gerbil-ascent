@@ -184,6 +184,35 @@ module WeightedExport {
         NarrowQuery(q.blocks,cs,costs) == GroupSelect(GroupRows(q.blocks),cs)))
   val CompactRangeExact = q.phase != "new" implies
     not(CompactValid(List((1,0),(1,1),(3,0))))
+  // One paired cursor owns admission and first-value slots. No publication
+  // occurs before the entire suffix has met syntax and range obligations.
+  type Admission = {slots: int -> List[int], rank: int, steps: int}
+  pure def Stream(cs: List[Condition]): Admission = cs.foldl(
+    {slots: Map(0 -> List(),1 -> List(),2 -> List()), rank: 0, steps: 0}, (acc,c) => {
+      val syntax = c._1 >= 0
+      val valid = syntax and c._1 < 3
+      val previous = if (valid) acc.slots.get(c._1) else List()
+      val conflict = previous.length() > 0 and previous.nth(0) != c._2
+      val rank = if (not(syntax)) 3 else if (not(valid)) 2 else if (conflict) 1 else 0
+      if (Mutation == "admit-early" and acc.rank > 0) acc else {
+        slots: if (valid) acc.slots.set(c._1,
+          if (Mutation == "admit-last") List(c._2) else FirstSlot(previous,c._2)) else acc.slots,
+        rank: if (Mutation == "admit-priority" and acc.rank > 0) acc.rank else if (rank > acc.rank) rank else acc.rank,
+        steps: acc.steps + 1}
+    })
+  pure def AdmissionQueries: Set[List[Condition]] = Set(
+    List(),List((0,0),(1,0),(2,1)),List((2,1),(0,0),(1,0),(2,1)),
+    List((1,0),(1,1)),List((1,0),(1,1),(3,0)),List((3,0),(1,0),(-1,0)),
+    List((1,0),(1,1),(-1,0)),List((0,99),(2,0)),List((1,0),(1,0)))
+  pure def ExpectedRank(cs: List[Condition]): int =
+    if (cs.foldl(false,(bad,c) => bad or c._1 < 0)) 3
+    else if (cs.foldl(false,(bad,c) => bad or c._1 >= 3)) 2
+    else if (Compact(cs).conflict) 1 else 0
+  val StreamAdmissionExact = q.phase != "new" implies AdmissionQueries.forall(cs => Stream(cs).rank == ExpectedRank(cs))
+  val StreamAdmissionComplete = q.phase != "new" implies AdmissionQueries.forall(cs => Stream(cs).steps == cs.length())
+  val StreamFirstSlots = q.phase != "new" implies AdmissionQueries.forall(cs => Set(0,1,2).forall(c =>
+    Stream(cs).slots.get(c) == cs.foldl(List(),(slot,x) =>
+      if (x._1 == c) FirstSlot(slot,x._2) else slot)))
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State

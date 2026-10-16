@@ -26,7 +26,13 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         self.assertEqual(len(plans), 52)
-        self.assertEqual(sum(map(len, plans.values())), 336)  # Prior 331 plus five Rayon publication obligations.
+        self.assertEqual(sum(map(len, plans.values())), 339)  # Prior 336 plus three streamed UF admission faults.
+        weighted = {o.name: o for o in plans["WeightedExport"]}
+        for name, invariant in (("admit-early", "StreamAdmissionComplete"),
+                                ("admit-priority", "StreamAdmissionExact"),
+                                ("admit-last", "StreamFirstSlots")):
+            self.assertEqual(weighted[name].expected, 12)
+            self.assertEqual(weighted[name].property, invariant)
         lifetime = {o.name: o for o in plans["ReaderLifetime"]}
         self.assertEqual(lifetime["sealed-round-unfair"].expected, 13)
         self.assertEqual(lifetime["single-reader-global-fairness"].expected, 0)

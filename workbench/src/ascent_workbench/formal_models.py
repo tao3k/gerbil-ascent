@@ -179,7 +179,7 @@ CONFIGURATIONS = {'ActorRound': {'constants': 'Workers = {1,2}\n'
                                   'GroupedQueryExact FrozenPlanExact CompleteKeyExact '
                                   'TinyOwnerExact RoutedPointExact PointMemberExact '
                                   'CompactQueryExact CompactRangeExact CompactFallbackExact '
-                                  'CompactNarrowExact'},
+                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots'},
  'RectangleCompaction': {'constants': 'Mutation = "none"',
                          'invariants': 'OrderedExact WeightedCount IndependentReaders'},
  'RectangleExport': {'constants': 'Mutation = "none"',
@@ -306,7 +306,10 @@ FAULTS = {'ActorRound': (('early', 'CompletePublication', 12),
                  ('borrow', 'FrozenExact', 12),
                  ('retire', 'FrozenExact', 12),
                  ('reject', 'RejectedStable', 12)),
- 'WeightedExport': (('compact-candidate', 'CompactNarrowExact', 12),
+ 'WeightedExport': (('admit-early', 'StreamAdmissionComplete', 12),
+                    ('admit-priority', 'StreamAdmissionExact', 12),
+                    ('admit-last', 'StreamFirstSlots', 12),
+                    ('compact-candidate', 'CompactNarrowExact', 12),
                     ('compact-plan-miss', 'CompactFallbackExact', 12),
                     ('compact-conflict', 'CompactQueryExact', 12),
                     ('compact-range', 'CompactRangeExact', 12),

@@ -253,22 +253,38 @@
 ;; syntax makes the binding and publication extents explicit without a plan
 ;; object or a dynamically allocated continuation for each condition.
 (defrule (with-compact-bindings offset columns key group left right admitted rejected)
-  (let* ((base offset) (limit (+ base 2)))
-    ;; Check the whole range even if a conflicting repeat occurs first.
-    (let ranges ((pending columns))
-      (unless (null? pending)
-        (unless (< (car pending) limit) (error "invalid ASCENT UF view column"))
-        (ranges (cdr pending))))
-    (let bind ((pending columns) (values key) (group #f) (left #f) (right #f))
-      (if (null? pending) admitted
-        (let ((column (car pending)) (rest (cdr pending)))
-          (defrule (slot previous next-group next-left next-right)
-            (if (and previous (not (equal? (car previous) (car values)))) rejected
-              (bind rest (cdr values) next-group next-left next-right)))
-          (cond
-            ((= column base) (slot left group (or left values) right))
-            ((= column (+ base 1)) (slot right group left (or right values)))
-            (else (slot group (or group values) left right))))))))
+  (let ((selectors columns) (keys key))
+    (unless (and (list? selectors) (list? keys))
+      (error "invalid ASCENT UF view key"))
+    ;; The captured schema chooses a lexical cursor, not a per-condition
+    ;; comparator. Case admits only the exact integer coordinate literals.
+    (defrule (walk group-column left-column right-column group?)
+      (let bind ((pending selectors) (values keys) (group #f) (left #f) (right #f)
+                 (conflict? #f) (outside? #f))
+        (cond
+          ((null? pending)
+           (unless (null? values) (error "invalid ASCENT UF view key"))
+           (when outside? (error "invalid ASCENT UF view column"))
+           (if conflict? rejected admitted))
+          ((null? values) (error "invalid ASCENT UF view key"))
+          (else
+           (let ((column (car pending)) (rest (cdr pending)))
+             (defrule (slot previous next-group next-left next-right)
+               (bind rest (cdr values) next-group next-left next-right
+                 (or conflict? (and previous (not (equal? (car previous) (car values))))) outside?))
+             (case column
+               ((group-column)
+                (if group? (slot group (or group values) left right)
+                  (error "invalid ASCENT UF view key")))
+               ((left-column) (slot left group (or left values) right))
+               ((right-column) (slot right group left (or right values)))
+               (else
+                ;; Syntax rejection dominates range/conflict rejection even
+                ;; when it occurs in a later suffix; no consumer exists yet.
+                (unless (and (exact-integer? column) (>= column 0))
+                  (error "invalid ASCENT UF view key"))
+                (bind rest (cdr values) group left right conflict? #t))))))))
+    (if (= offset 0) (walk -1 0 1 #f) (walk 0 1 2 #t))))
 (def (compile-rectangle-bindings width columns key)
   ;; Admission precedes short-circuiting: a conflict cannot hide an invalid
   ;; later coordinate. Ordinary tail recursion needs no escape continuation.
@@ -711,17 +727,21 @@
          #t)
         (else (visit-compact-group-plan group left right consume expand point)))))
   (def (visit-compact-bindings group left right consume expand point)
-    (cond
-      ((and (= (vector-length routes) 3) group)
-       (visit-compact-group group left right consume expand point))
-      ((and left right left-plans)
-       (let ((a (hash-get left-plans (car left)))
-             (b (hash-get right-plans (car right))))
-         (if (and a b)
-           (begin (visit-plan-intersection a b #f consume expand point) #t)
-           (visit-compact-owners left right consume expand point))))
-      ((and left right) (visit-compact-owners left right consume expand point))
-      (else #f)))
+    ;; Complete endpoint bindings already select singleton stored values.
+    ;; The parts consumer accepts scalars directly: do not re-enter both
+    ;; Cartesian axis walkers for every matching frozen descriptor.
+    (let (publish-point (or point (and left right (eq? expand visit-left-members) consume)))
+      (cond
+        ((and (= (vector-length routes) 3) group)
+         (visit-compact-group group left right consume expand publish-point))
+        ((and left right left-plans)
+         (let ((a (hash-get left-plans (car left)))
+               (b (hash-get right-plans (car right))))
+           (if (and a b)
+             (begin (visit-plan-intersection a b #f consume expand publish-point) #t)
+             (visit-compact-owners left right consume expand publish-point))))
+        ((and left right) (visit-compact-owners left right consume expand publish-point))
+        (else #f))))
   (def (visit-compact-query columns key consume expand)
     (and (compact-query? columns)
       (with-compact-bindings (- (vector-length routes) 2) columns key group left right
@@ -752,13 +772,19 @@
   (def (visit-selected columns key consume admitted? (expand visit-left-members))
     (unless (visit-complete-key columns key consume)
       (visit-products columns key consume admitted? expand)))
+  (def (visit-checked columns key consume)
+    (if (and (compact-query? columns) (not (equal? columns complete-columns)))
+      (with-compact-bindings (- (vector-length routes) 2) columns key group left right
+        (unless (visit-compact-bindings group left right consume visit-left-members #f)
+          (visit-products columns key consume #f visit-left-members))
+        (void))
+      (begin (validate-key! columns key) (visit-selected columns key consume #f))))
   (def (visit-admitted columns key consume)
     (visit-selected columns key consume #t))
   ;; Select member axes through the same index/checked traversal as visitors,
   ;; then expand each admitted product directly into one owned list builder.
   ;; No row callback or intermediate public tuple runs inside the product.
   (def (materialize-selected columns key)
-    (validate-key! columns key)
     (defrule (materialize compact? group left right)
       (with-list-builder (collect!)
         ;; Select the publisher once from the captured schema; no match
@@ -777,6 +803,7 @@
           (visit-products columns key #f #f collect-product))))
     (cond
       ((and complete-columns (equal? columns complete-columns))
+       (validate-key! columns key)
        (with-list-builder (collect!)
          (visit-complete-key columns key
            (lambda (prefix left right)
@@ -789,14 +816,13 @@
          (if (and group (= (vector-length routes) 3)
                   (not (hash-get (vector-ref routes 0) (car group)))) []
            (materialize #t group left right)) []))
-      (else (materialize #f #f #f #f))))
+      (else (validate-key! columns key) (materialize #f #f #f #f))))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
-      (validate-key! columns key)
       (if (null? columns)
-        (gerbil-ascent-write-rectangles! blocks consume)
+        (begin (validate-key! columns key) (gerbil-ascent-write-rectangles! blocks consume))
         (let (write (rectangle-row-writer (and routes uniform? (vector-length routes)) consume))
-          (visit-selected columns key write #f))))
+          (visit-checked columns key write))))
     (lambda (row)
       (let (width (length row))
         (and (>= width 2)
@@ -812,6 +838,5 @@
       (materialize-rectangles blocks))
     (make-rectangle-visitors
       (lambda (columns key consume)
-        (validate-key! columns key)
-        (visit-selected columns key consume #f))
+        (visit-checked columns key consume))
       visit-admitted materialize-selected))))

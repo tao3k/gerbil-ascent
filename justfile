@@ -15,10 +15,14 @@ gerbil_command := gerbil_environment + " gerbil"
 # The captured environment already fixes the toolchain; apply that boundary
 # directly instead of importing the package-management CLI for every script.
 gerbil_package_prefix := '${GERBIL_PATH:-' + justfile_directory() + '/.gerbil}'
-gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" PATH="' + gerbil_package_prefix + '/bin:$PATH" gxi'
+gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" PATH="' + gerbil_package_prefix + '/bin:/usr/bin:/bin:$PATH" gxi'
 
 # Production, tests and AOT objects share the standard package library.
 package_library := gerbil_package_prefix + '/lib'
+
+# Compilation is bounded by real inactivity, not optimized-build wall time.
+# Runtime scenarios retain their separate fixed deadlines in the native runner.
+build_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision --cpu-progress --'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/native-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
@@ -45,7 +49,7 @@ performance-uf-selected:
     set -euo pipefail
     mkdir -p .cache/ascent/uf-selected-study
     study="$(mktemp -d "$PWD/.cache/ascent/uf-selected-study/run.XXXXXX")"
-    timeout 120s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/uf-lookup/selected-build.ss "$study" "{{ package_library }}"
+    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/uf-lookup/selected-build.ss "$study" "{{ package_library }}"
     GERBIL_LOADPATH="$study/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q :gerbil-ascent/t/performance/uf-lookup/runner all "$study/receipts" "$study/contract.sexp"
 
 # Runtime source loading is a separate gate from compiled native qualification.
@@ -98,7 +102,7 @@ test heap='2G': prepare-test-library
 
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:
-    timeout 120s {{ gxi_command }} -:max-heap=3G,debug=q t/native/build.ss library
+    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/native/build.ss library
 
 # Native performance Suites use the declared Gerbil testing isolation profile.
 test-performance-contracts: prepare-test-library
@@ -120,22 +124,25 @@ test-performance-contracts: prepare-test-library
 
 # Compiled paired weighted view controls and complete delta export.
 performance-uf-weighted: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-weighted "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-weighted "{{ package_library }}"
 
 performance-uf-membership: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-membership "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-membership "{{ package_library }}"
 
 performance-uf-query: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-query "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-query "{{ package_library }}"
+
+performance-uf-selector-init: prepare-test-library
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-selector-init "{{ package_library }}"
 
 performance-uf-compact-query: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-compact-query "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-compact-query "{{ package_library }}"
 
 performance-uf-initialization: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-initialization "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-initialization "{{ package_library }}"
 
 performance-uf-plan: prepare-test-library
-    {{ test_library_environment }} timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-plan "{{ package_library }}"
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-plan "{{ package_library }}"
 
 # Paired actor source transactions; evaluator work is outside this interval.
 performance-source-cut: prepare-test-library

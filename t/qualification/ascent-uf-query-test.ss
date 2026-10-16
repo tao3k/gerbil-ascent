@@ -154,6 +154,25 @@
                     (check-exception (gerbil-ascent-view-rows view columns key) exception?)
                     (check-exception (gerbil-ascent-visit-view-parts! view columns key void) exception?))
           '((0 3) (0 0 3) (-1) (0)) '((999 1) (7 9 1) (1) ()))))
+    (test-case "streamed admission checks complete malformed tails before publication"
+      (let* ((axis '(#f 1 2))
+             (view (gerbil-ascent-rectangle-view
+                     (map (lambda (group) (let (members (map values axis))
+                       (make-rectangle (list group) members members))) '(0 7 9)) 27 18 #t)))
+        (for-each (lambda (columns key)
+          (for-each (lambda (visit)
+            (let (calls 0)
+              (check-exception (visit view columns key
+                (lambda (_prefix _left _right) (set! calls (+ calls 1)))) exception?)
+              (check-equal? calls 0)))
+            (list gerbil-ascent-visit-view-parts!))
+          (check-exception (gerbil-ascent-view-rows view columns key) exception?)
+          (check-exception (gerbil-ascent-for-each-row void
+                             (gerbil-ascent-view-select view columns key)) exception?))
+          '((1 1 3) (1 1 -1) (1 1 nope) (1 1 0) (1 1) (3 1 nope) (1 2 . 0))
+          '((1 2 0) (1 2 0) (1 2 0) (1 2) (1 2 0) (0 1 0) (1 2 0)))
+        (check-consumers view '(2 0 1 2 1) '(#f 7 #f #f #f))
+        (check-consumers view '(1 1) '(#f 1))))
     (test-case "nested query plans and public mutations do not affect the captured cut"
       (let* ((axis '(0 1 2))
              (view (gerbil-ascent-rectangle-view

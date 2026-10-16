@@ -1911,3 +1911,58 @@ allocation targets failed and remain retained; they are not accepted benefit
 receipts. All earlier study contracts remain intact. See
 [[file:../../t/performance/uf-compact-query/README.org][compact-query qualification]]
 for complete paired scenarios, control outcomes and final evidence boundaries.
+
+* Streamed nonpoint UF admission and scalar parts publication
+
+The current-baseline follow-up removes repeated selector preflight passes from
+compact nonpoint queries. A paired cursor owns length/syntax/range admission and
+first-value slots; schema-selected lexical =case= dispatch avoids per-condition
+coordinate arithmetic. Conflict and range rejection retain complete suffix
+checking before result construction. Complete bound endpoint plans publish
+stored scalar parts directly instead of entering singleton product walkers.
+Tiny/point/scan/mixed-width and detached full-row controls remain explicit.
+
+Lean proves priority-ranked admission, trailing-syntax rejection, step count and
+ordered singleton publication; existing grounded-slot laws remain premises.
+Quint checks the new cursor properties and rejects early-exit, wrong-priority
+and last-value mutants with the original TLC exit/counterexample contract.
+Python compares 961 finite inputs through three original Scheme consumers,
+with source hash binding and an independent ordered Cartesian oracle.
+
+The fixed current-baseline native study passes 16 scenarios. Wide/reordered/
+conflicting CPU medians per eight consumers fall 3298->2428, 639->527 and
+318->231 microseconds, with 20/19/20 wins out of 20. All measured allocations
+are unchanged, including the 5376-byte small-query control. Two earlier wide
+CPU gate failures remain failures; two complete test-library preparations
+also timed out at the unchanged 120-second limit. See
+[[file:../../t/performance/uf-selector-init/README.org][complete selector qualification]]
+for source learning, fixed gates, retained attempts and evidence limits.
+No claim is made for whole-engine CPU, insertion, Rust transport or a downstream
+CURRENT graph. Other sessions' engine and provider work remains independently
+owned and must not be rolled back to qualify this batch.
+
+The three unchanged prior query studies pass another 38 scenarios (54 with
+the new study). Complete native source testing passes 169 modules /1350 Cases
+in 103/180 seconds, zero ERROR markers. Lean passes seven jobs, Quint rejects
+25 fault variants, and the formal inventory retains 339 obligations across
+52 models. Both 120-second test-library preparation failures remain separate
+from those passing source/performance receipts; no cold-build or remote-CI
+success is inferred.
+
+The follow-up repairs compilation supervision rather than increasing a build
+budget: optimized make continues while actual output or process-group CPU
+advances, and the original five-second inactivity detector rejects stalls.
+Darwin uses public process/child rusage; Linux includes reaped-child CPU ticks.
+Closed pipes and failed parent processes retain bounded cleanup. All eleven
+supervision controls pass. Complete 563-module preparation now exits zero with
+production-rebuilt=0; the two wall-clock timeout failures remain historical
+failures. Runtime source tests and A/B children keep their separate deadlines.
+
+Final standard-entry validation after native linker precedence and activity
+supervision repairs passes full preparation, compiled contracts, 54 paired
+scenarios and 169 source modules /1350 Cases (82/180 seconds, zero ERROR).
+The new-study repeat gives wide/reordered/conflict CPU improvements of
+26.7%/15.7%/26.2%, with unchanged measured allocation and all original controls.
+All 11 supervisor and the injected-linker regression pass; the native Python
+oracle retains 961 cases through three Scheme consumers. No other session's
+engine source, dependency lock or provider artifact was reverted.

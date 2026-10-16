@@ -1075,3 +1075,68 @@ theorem narrow_routing_query_refinement (rows : List α) (accept : α → Bool)
   point_candidate_refinement rows (narrowRouting current next).predicate accept
     (narrow_routing_coverage accept current next current_covers next_covers)
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- A paired compact-selector cursor condition. Consistency means agreement
+with the first grounded slot; false-like values remain ordinary values.
+Proper-list prechecks exclude cycles and improper selectors before this model. -/
+structure AdmissionCondition where
+  wellFormed : Bool
+  inRange : Bool
+  consistent : Bool
+
+def admissionRank (c : AdmissionCondition) : Nat :=
+  if !c.wellFormed then 3 else if !c.inRange then 2 else if !c.consistent then 1 else 0
+
+/-- Defer rejection until every syntax/range obligation has been checked.
+A consumer may be constructed only for rank zero. -/
+def streamedAdmission : List AdmissionCondition → Nat
+  | [] => 0
+  | c :: cs => max (admissionRank c) (streamedAdmission cs)
+
+theorem streamed_admission_accepts_exactly (cs : List AdmissionCondition) :
+    streamedAdmission cs = 0 ↔
+      ∀ c ∈ cs, c.wellFormed = true ∧ c.inRange = true ∧ c.consistent = true := by
+  induction cs with
+  | nil => simp [streamedAdmission]
+  | cons c cs ih =>
+    rcases c with ⟨s, r, k⟩
+    cases s <;> cases r <;> cases k <;>
+      simp_all [streamedAdmission, admissionRank, Nat.max_eq_zero_iff]
+
+/-- Maximum rejection rank preserves precedence under reordered conditions. -/
+theorem streamed_admission_append (xs ys : List AdmissionCondition) :
+    streamedAdmission (xs ++ ys) = max (streamedAdmission xs) (streamedAdmission ys) := by
+  induction xs with
+  | nil => simp [streamedAdmission]
+  | cons c cs ih => simp only [List.cons_append, streamedAdmission, ih, Nat.max_assoc]
+
+theorem trailing_syntax_rejected (xs ys : List AdmissionCondition) (c : AdmissionCondition)
+    (bad : c.wellFormed = false) : streamedAdmission (xs ++ c :: ys) ≥ 3 := by
+  rw [streamed_admission_append]
+  exact Nat.le_trans (by simpa [streamedAdmission, admissionRank, bad] using (Nat.le_max_left 3 (streamedAdmission ys))) (Nat.le_max_right _ _)
+
+/-- The normalizer has one admission step per condition; proper-list checking
+is a separate prerequisite and is not omitted from native measurements. -/
+def admissionSteps : List AdmissionCondition → Nat
+  | [] => 0
+  | _ :: cs => 1 + admissionSteps cs
+
+theorem streamed_admission_steps (cs : List AdmissionCondition) : admissionSteps cs = cs.length := by
+  induction cs with
+  | nil => rfl
+  | cons c cs ih => simp [admissionSteps, ih, Nat.add_comm]
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- A complete endpoint plan already owns singleton selections. Publishing
+these stored scalar values directly preserves the Cartesian product and order. -/
+theorem selected_singleton_publication (a b : α) :
+    rows (Rectangle.mk [a] [b]) = [(a, b)] := rfl
+
+theorem selected_singleton_stream (selected : List (α × α)) :
+    selected.flatMap (fun p => rows (Rectangle.mk [p.1] [p.2])) = selected := by
+  induction selected with
+  | nil => rfl
+  | cons p ps ih => simp [rows, List.flatMap_cons, ih]
+end Ascent.ProviderRectangles

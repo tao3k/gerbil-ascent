@@ -4,7 +4,10 @@
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
+
+from ascent_workbench.supervision import proc_group_cpu
 
 
 class BuildActivity(unittest.TestCase):
@@ -29,6 +32,41 @@ class BuildActivity(unittest.TestCase):
     def test_child_failure_propagates(self):
         result = self.run_child('raise SystemExit(7)')
         self.assertEqual(result.returncode, 7, result.stderr)
+
+    def test_short_lived_compiler_children_count_after_reaping(self):
+        result = self.run_child(
+            'import subprocess,sys,time\nend=time.monotonic()+4\n'
+            'while time.monotonic()<end:\n'
+            ' subprocess.run([sys.executable,"-c",'
+            '"import time; end=time.process_time()+.04\\nwhile time.process_time()<end: pass"], check=True)\n')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('cpu-advance=', result.stderr)
+
+    def test_closed_output_does_not_disable_stall_detection(self):
+        result = self.run_child('import os,time; os.close(1); os.close(2); time.sleep(10)')
+        self.assertEqual(result.returncode, 124, result.stderr)
+
+    def test_closed_output_keeps_real_cpu_work_alive(self):
+        result = self.run_child('import os,time\nos.close(1); os.close(2)\n'
+                                'end=time.monotonic()+4\nwhile time.monotonic()<end: pass\n')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_failed_leader_does_not_wait_for_orphan_pipe_owners(self):
+        result = self.run_child('import subprocess,sys; '
+                                'subprocess.Popen([sys.executable,"-c","import time; time.sleep(30)"]); '
+                                'raise SystemExit(7)')
+        self.assertEqual(result.returncode, 7, result.stderr)
+
+    def test_linux_cpu_includes_reaped_children_and_tick_precision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for pid, group, times in ((11, 42, (2, 3, 4, 5)), (12, 43, (9, 9, 9, 9))):
+                process = root / str(pid)
+                process.mkdir()
+                fields = ['S', '1', str(group)] + ['0'] * 8 + list(map(str, times))
+                (process / 'stat').write_text(f'{pid} (compiler (child)) ' + ' '.join(fields))
+            (root / '13').mkdir()  # Directory of an already exited compiler.
+            self.assertEqual(proc_group_cpu(root, 42, 100), {11: .14})
 
 
 class SeparateStreams(unittest.TestCase):

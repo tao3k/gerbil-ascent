@@ -710,39 +710,26 @@
                  (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
                        (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
                        (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
-                 (if (null? positions)
-                   (when (and (= round 1) first-run?)
+                   ;; One inline dispatch preserves the callback path and its
+                   ;; exact checkpoints without allocating a per-rule closure.
+                   (defrule (visit! pivot)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
-                       (visit-body body -1 0 []
+                        positive-plan frame pivot rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
+                       (visit-body body pivot 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
-                   (if (and (= round 1)
-                            (or first-run? (> stratum 0)))
-                     ;; At the first round every relation in this stratum has
-                     ;; delta = all. One full evaluation covers every delta
-                     ;; position without emitting the same join repeatedly.
-                     (if positive-plan
-                       (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
-                       (visit-body body -1 0 []
-                         (lambda (environment)
-                           (gerbil-ascent-emit-heads! heads environment emit-row!))))
-                     (for-each
-                      (lambda (delta-at)
-                        ;; Prefix atoms have no index, expression, pattern or
-                        ;; clause callbacks. The empty pivot uses raw rows.
-                        (unless (and (< delta-at (vector-length prunable))
-                                     (= (vector-ref delta-size
-                                          (vector-ref prunable delta-at)) 0))
-                          (if positive-plan
-                            (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
-                            (visit-body body delta-at 0 []
-                              (lambda (environment)
-                                (gerbil-ascent-emit-heads! heads environment emit-row!))))))
-                      positions))))
+                   (if (null? positions)
+                     (when (and (= round 1) first-run?) (visit! -1))
+                     (if (and (= round 1) (or first-run? (> stratum 0)))
+                       ;; Initially delta = all; one full traversal suffices.
+                       (visit! -1)
+                       (for-each
+                        (lambda (delta-at)
+                          (unless (and (< delta-at (vector-length prunable))
+                                       (= (vector-ref delta-size
+                                            (vector-ref prunable delta-at)) 0))
+                            (visit! delta-at))) positions))))
                  (when started
                    (let (index (vector-ref rule 3))
                      (vector-set! rule-ticks index

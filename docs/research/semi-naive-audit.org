@@ -114,3 +114,20 @@ from the owned implementation diff.
   directory timeouts remain in their original logs. Final feature selection
   follows current CI's mutually exclusive runtime combinations; no fallback,
   lint suppression or runtime-budget increase was added.
+
+* Source-policy qualification
+
+The first clean CI at f620a8b rejected program/evaluate.ss at 1006 effective
+lines, before semantic testing. The existing 1000-line limit is unchanged.
+The repair factors the three identical positive/general dispatches into a local
+Gerbil defrule, keeping generated dispatch and checkpoints inline without a
+per-rule closure. ASP policy then reports zero errors; no waiver was added.
+The initial CI failure remains retained in .cache/ascent/delta-audit/ci-scheme-first.log.
+
+Existing performance/allocation contracts also passed: 10 native modules /
+18 Cases, including compact UF plans, Actor credits, retained replacement,
+source-cut allocation and complete application lifecycles. These controls are
+not an isolated end-to-end parallel speedup benchmark.
+
+The policy repair also passed the complete default Scheme corpus again:
+170 modules / 1354 Cases, with the same 180-second admission deadline.

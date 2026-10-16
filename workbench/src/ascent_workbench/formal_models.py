@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Original complete Quint inventory, configurations and fault obligations."""
 
-MODEL_ORDER = ('MinimumHeight',
+MODEL_ORDER = ('RayonPublication',
+ 'MinimumHeight',
  'WithdrawalConcurrency',
  'WithdrawalSession',
  'ChangePlan',
@@ -462,3 +463,14 @@ FAULTS = {'ActorRound': (('early', 'CompletePublication', 12),
                 ('early', 'CompleteExact', 12),
                 ('refusal', 'PublishedOnlyComplete', 12),
                 ('resume', 'FailureTerminal', 12))}
+
+CONFIGURATIONS['RayonPublication'] = {
+    'constants': 'Mutation = "none"',
+    'invariants': 'TypeOK ExactFacts Bounded JoinBarrier SnapshotSafe CompletionExact',
+}
+FAULTS['RayonPublication'] = (
+    ('early', 'JoinBarrier', 12),
+    ('late', 'SnapshotSafe', 12),
+    ('digest', 'CompletionExact', 12),
+    ('uncapped', 'Bounded', 12),
+)

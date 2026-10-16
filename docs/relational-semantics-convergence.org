@@ -1,0 +1,1642 @@
+#+TITLE: Relational Representation and Operator Semantics Convergence
+#+DATE: 2026-10-16
+#+STATUS: Proposed; pre-write rollback demonstrated in temporary integration; post-write cleanup and atomic ABI publication remain OPEN
+
+Checklist identifiers such as G11 are internal document cross-references, not
+external standards or public APIs. G11 names the translation-adequacy check:
+shared source must actually determine executable behavior, including failures
+and resource checkpoints. Descriptive check names are used for results below.
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Decision and scope
+
+A shared logical representation is necessary for comparing meaning across
+frontends. It does not, by itself, remove duplicate admission or evaluation
+implementations. A generated wrapper, common ABI, operator-name table, or
+successful same-Core comparison is not evidence of shared algorithms.
+
+The target is one explicit relational contract, two distinct input contracts,
+and a genuinely shared production implementation of the closed scalar subset
+where a qualified compilation route exists. Different physical evaluators and
+an independent proof checker remain. Until the compilation prerequisites below
+close, single-source production operators are an objective, not a capability.
+The design does not claim a single implementation of the whole relational engine.
+
+This revision changes this document only. Review, current Python entry points,
+Gambit SMP/VM ownership arrangements, features, dependencies, executable code,
+tests and historical receipts remain unchanged. No consumer migration or policy
+relocation is authorized here. Future replacements must migrate consumers
+directly, without compatibility parsers, aliases, or silent backend fallback.
+
+ASCENT owns admission, inference, computational state, results and computational
+evidence. Hosts, MRR and POO Flow own source selection, external completeness
+claims, canonical fact identities, persistent history, causal commits, business
+publication and authorization. Local generations, content bindings, cache
+invalidation and failure recovery remain necessary Library mechanisms.
+
+* Current execution boundary: No Scheme VM
+
+The current default =rust-runtime= consumer selects a fixed Core C ABI over the
+Rust Library. Its alternate =scheme-runtime= feature is mutually exclusive.
+For this default path, Scheme can be a build-time algorithm authoring language;
+that does not place a Scheme VM, Gambit object heap or GC in the request path.
+
+Gambit parser allocation, GC capacity, SMP ownership and multiple-VM correctness
+are not prerequisites for this No VM path. Such obligations apply only to an
+explicitly selected VM-backed implementation. No new Gambit worker, collector
+experiment or VM migration is required or authorized by this audit.
+
+Earlier isolated scalar/arena results below are historical feasibility findings
+for their exact prototypes. They do not qualify the current Core's parser,
+allocator, ABI ownership or failure-release behavior. In particular, neither a
+prototype region cap nor source bytes in an inventory establish production
+algorithm reuse or a current-operation memory bound.
+
+* Current No VM source audit
+
+This is a static audit of the selected default path, not a fresh execution or
+memory qualification. Review and the existing Python entry points are retained.
+No new experiment, production integration or allocator substitution is proposed
+by these findings. Build-time Scheme execution and request-time Scheme execution
+are separate obligations.
+
+** Actual input-to-result chain
+
+| Stage | Actual implementation and ownership | Evidence |
+|-------+-------------------------------------+----------|
+| Backend selection | Default =rust-runtime= selects the fixed Core ABI; =scheme-runtime= is an alternate, mutually exclusive feature | [[file:../rust/ascent-python/Cargo.toml][consumer features]], [[file:../rust/ascent-python/src/lib.rs][feature guards]] |
+| Build-time producer | =gxi= executes =program/rust-execution.ss=, which constructs typed function IR; =compile_function_json= emits Rust into =OUT_DIR/execution.rs= | [[file:../rust/ascent/build.rs][build producer]], [[file:../program/rust-execution.ss][IR definitions]] |
+| Artifact consumption | =execution/kernels.rs= includes that generated file; generated binding, rule-fold and round functions are used by the evaluator | [[file:../rust/ascent/src/execution/kernels.rs][generated inclusion and evaluator]] |
+| Request transport | Owned input is encoded into borrowed ABI views, decoded into another owned value, then converted to Core Data | [[file:../rust/ascent-c-abi/src/exports.rs][Core entry]], [[file:../rust/ascent-c-abi/src/transport.rs][Data conversion]], [[file:../../gerbil-scheme-rust/crates/gerbil-scheme-python/src/c_abi.rs][upstream ownership adapter]] |
+| Runtime program input | =Owner::open= selects graph, components or source declarations. Source input goes through Rust =EvidenceProgram::read_sources=, =read_all=, definition/expansion, lowering and graph admission; it is not compiled through the build-time Scheme producer | [[file:../rust/ascent-c-abi/src/operations.rs][declaration selection]], [[file:../rust/ascent/src/source/evidence.rs][source lowering]], [[file:../rust/ascent/src/source/components.rs][component lowering]], [[file:../rust/ascent/src/graph/admission.rs][graph admission]] |
+| Execution | Generated control composition calls Rust matching storage, Batch, Round, indexes, scalar evaluation and budget primitives | [[file:../rust/ascent/src/execution/kernels.rs][Batch and Round]], [[file:../rust/ascent/src/execution/expressions.rs][scalar implementation]], [[file:../rust/ascent/src/execution/budget.rs][execution limits]] |
+| Results and evidence | SourceSession retains a generation-scoped result; Core constructs output rows/graphs and the ABI publishes an independently owned transport value | [[file:../rust/ascent/src/loaded/session.rs][session results]], [[file:../rust/ascent/src/loaded/result.rs][result leases]], [[file:../rust/ascent-c-abi/src/operations.rs][result projection]] |
+
+The ABI =NO_VM= flag alone is a producer declaration. The inspected default
+callbacks support it: they enter Rust Core directly and have no Scheme VM entry.
+A build source inventory or digest establishes identity only; the build invocation,
+generated inclusion and actual call sites establish consumption.
+
+** What is genuinely reused, and what remains separate
+
+The generated code is more than a name registry or a forwarding wrapper.
+=matching-ir= specifies wildcard/literal/variable decisions and repeated-variable
+equality checks. =binding-ir= specifies the ordered binding fold; =rule-ir= and
+=round-ir= specify composition. =graph-ir= specifies the transitive graph's
+join/project/union topology and closure composition. The fixed graph ABI uses
+the generated projection and transitive constructors. These are real
+Scheme-authored decisions consumed as executable Rust.
+
+The scope is nevertheless narrower than translating the existing Scheme
+Library. This producer constructs Rust-oriented typed IR explicitly; it does
+not compile the definitions in =program/evaluate.ss= or the Scheme scalar
+implementation into these functions. Rust =Batch::advance= chooses clause
+behavior, Rust join/project/round methods implement substantial inference
+semantics, and =RelationalGraph= implements graph primitives and their lowering.
+Rust =execution/expressions.rs= implements truth, type checks, short circuiting
+and exact integer arithmetic; its addition invokes native BigInt addition.
+The standalone source-derived scalar qualification is not connected to this
+production scalar evaluator. Therefore production scalar semantics still lack
+a shared implementation source. Sharing a relational representation does not
+remove the separate Scheme and Rust readers, admission or evaluators.
+
+The convergence claim must name the unit: existing generated matching and graph
+composition are source-derived; scalar operators and relational primitives are
+not thereby single-source. The smallest coherent future scalar replacement
+remains the closed exact-integer addition slice, including its type/failure
+contract. It must replace the actual Rust scalar branch with the generated body
+before it can count as production reuse. Calling a handwritten Rust addition
+from a generated wrapper would leave the central duplication intact. No such
+replacement is authorized in this revision.
+
+** Parsing and allocation boundaries
+
+1. Upstream =ValueLimits::default= limits depth to 128 and nodes to 1,000,000.
+   It has no byte or integer-bit field. =Encoded::new= copies text and BigInt
+   magnitudes; =decode= copies strings/bytes and constructs BigInts from spans.
+   One accepted scalar node can therefore carry a large allocation. Pointer
+   span/addressability validation is not a resource budget. Input encoding and
+   output decoding also occur outside the Core callback's execution budget.
+2. Rust =reader::read= rejects source strings above 65,536 bytes, but the active
+   source/component path calls =read_all=, which has no corresponding byte cap
+   or total-form cap. Datum nesting and per-list length limits still apply.
+   =read_sources= first collects parsed forms for all source strings. Function
+   expansion has a per-call visit bound, not a whole-request allocation budget;
+   quoted datum cloning is not charged per cloned descendant by that counter.
+   Admission after parsing cannot retroactively bound these allocations.
+3. Core transport rebuilds containers on input and clones values on output.
+   Parsing, expansion, graph construction, indexes, scalar operand cloning,
+   BigInt temporaries, row projection and ABI encoding allocate through ordinary
+   Rust containers/native arithmetic. No request-scoped byte allocator is
+   installed on this path. The historical fixed-region prototype supplies no
+   bound for these allocations.
+4. =Budget= controls cooperative work, facts, cancellation and time, not bytes.
+   Moreover, =Owner::run= uses =SourceSession::default_limits=, whose fact/work
+   ceilings are =usize::MAX=, and replaces its timeout from the request. Separate
+   declaration FactLimits still apply; the generic =Limits::default= finite
+   work/fact values must not be reported as this entry point's defaults.
+   Parsing and output conversion are not covered by the inference timeout.
+
+See [[file:../../gerbil-scheme-rust/crates/gerbil-scheme-python/src/values.rs][ValueLimits]],
+[[file:../../gerbil-scheme-rust/crates/gerbil-scheme-python/src/c_abi.rs][ABI encode/decode]],
+[[file:../rust/ascent/src/source/reader.rs][both reader entries]],
+[[file:../rust/ascent/src/source/functions.rs][expansion counter]],
+[[file:../rust/ascent/src/execution/expressions.rs][scalar allocation sites]] and
+[[file:../rust/ascent/src/loaded/session.rs][native entry defaults]]. These establish
+missing enforcement, not measured peak usage or an observed exhaustion failure.
+
+** Failure, release and publication are different boundaries
+
+Ordinary Result errors stop fallible iterator collection and Rust drops partial
+containers; this is useful failure short circuiting. It is not a guarantee that
+cleanup performs no traversal or that destruction has a bounded cost. Previously
+constructed trees, rows and snapshots may still need to be walked and freed.
+
+The upstream ownership adapter releases partially written error outputs and
+rejected ABI owners. A successful =ForeignValue= keeps its producer allocation
+until Drop, including when decoding fails. =ForeignCallable= uses an owner-affine
+lease, rejects reentrancy and releases its context on close/final drop. Core
+Owner destruction closes the session and shuts down its engine. These are
+explicit ownership mechanisms, independent of Gambit GC.
+
+Core invocation catches unwinding panics and poisons the context; normal Core
+errors become error packets. This does not establish allocation-failure recovery:
+ordinary infallible allocation may abort, not unwind. The context Box allocation
+in =ascent_core_open= is outside its catch block; caller-side input encoding and
+result decoding are outside the Core catch as well. Release catches context
+Drop panics, but this is not proof of complete or bounded cleanup after a panic,
+a process abort, or allocation failure.
+
+There is also a publication gap. =SourceSession::observe= inserts a retained
+result and updates run state before Core row/graph conversion and ABI output
+encoding. If a later fallible conversion or structural encoding fails, there is
+no rollback in =Owner::run= or =invoke= for that retained handle. Transport RAII
+reclaims temporary buffers, not the independently retained session result. Such
+an undisclosed result can remain until source replacement or owner close; the
+64-result owner limit bounds slots, not retained bytes. This is a source-level
+failure-path finding, not a reproduced failure in this audit. Successful source
+replacement separately uses a candidate session before commit; that transaction
+does not extend across output publication.
+
+** Narrow convergence decision
+
+Remove Gambit heap/GC and multiple-VM qualification from default No VM adoption
+gates. Keep VM-backed obligations explicitly attached to that alternate path.
+Preserve the historical isolated results as prototype evidence only. Do not
+extend them into production allocation claims.
+
+Before claiming one production scalar implementation, demonstrate the build
+source-to-body-to-call-site chain for the actual scalar branch, its typed input
+contract and independent negative controls. Before claiming a memory ceiling,
+define admission before transport copies/parsing and account for BigInt,
+containers, retained results, output and cleanup on this exact path. Logical
+work limits and a bounded ABI node count cannot substitute for that obligation.
+Publication failure must have an explicit retained-result policy. These remain
+open design obligations; this revision performs no implementation or experiment.
+
+* Minimal repair proposal for the current No VM path
+
+This section specifies future changes only. It adds no implementation, test run,
+experiment, ABI layout change, Python migration or Review change. The two repairs
+are input admission and rollback of unpublished result ownership. They do not
+provide a request-scoped allocator or eliminate duplicated scalar semantics.
+
+** Ownership and change surface
+
+| Responsibility | Owner and smallest intended change | Excluded responsibility |
+|----------------+------------------------------------+-------------------------|
+| Source admission | Library source reader and Evidence/component entry points: one shared, request-scoped parsing contract | Python pre-validation; host policy or persistent history |
+| Raw transport admission | Upstream owned-ABI adapter: byte-aware validation before copying incoming views; fixed Core selects its finite profile | Parsing Scheme syntax or choosing Library source limits |
+| Result lifetime rollback | Library SourceSession: scoped unpublished-result ownership with exact removal on abort | C layouts, transport status codes, whole-computation rollback |
+| Publication coordination | Fixed Core ABI: hold Library ownership pending through row conversion and encoding, then commit at output transfer | New inference algorithms, consumer acknowledgements or Python lifecycle changes |
+
+Concrete source locations are the [[file:../rust/ascent/src/source/reader.rs][reader]],
+[[file:../rust/ascent/src/source/evidence.rs][Evidence entry]],
+[[file:../rust/ascent/src/source/components.rs][component entry]],
+[[file:../rust/ascent/src/loaded/session.rs][session]],
+[[file:../rust/ascent/src/loaded/result.rs][result lease]],
+[[file:../rust/ascent-c-abi/src/operations.rs][Core operation adapter]],
+[[file:../rust/ascent-c-abi/src/exports.rs][ABI transfer point]] and
+[[file:../../gerbil-scheme-rust/crates/gerbil-scheme-python/src/c_abi.rs][upstream transport]].
+The upstream transport change belongs to its owning package, not a private
+second decoder in ASCENT. Existing C layouts and operation packets can stay
+unchanged. A tighter admission profile changes accepted sizes and must be
+explicitly documented; no compatibility parser or silent fallback is proposed.
+
+** Library parsing admission
+
+Use one internal SourceAdmission policy and one consumable parse ledger per
+public source/component operation. The single-datum and multi-datum readers
+must both use it. Keep the existing 65,536-byte per-source ceiling as the
+initial per-source rule; make it apply to =read_all= as well as =read=.
+The policy also needs finite aggregate source bytes, source/component count,
+total parsed datum nodes and total top-level forms. Existing depth and per-list
+limits remain. Byte length means UTF-8 storage bytes, not character count.
+
+Before constructing a Reader, collecting forms, building the component index,
+or traversing dependencies, scan borrowed source/component metadata to admit
+counts, each source byte length and checked aggregate bytes. Check all supplied
+component sources, including unused declarations: selecting an entry must not
+provide a size-limit bypass. This scan does not parse or copy source contents.
+Reject overflow and an exhausted limit before the next allocation-producing
+operation. Public component validation and ID-selection routes must apply the
+same pre-index policy where they accept the same input collection.
+
+During parsing, charge each datum node, including quote-generated wrapper and
+symbol nodes, and each top-level form before constructing it. Share the ledger
+across all sources/components; do not reset it for each =read_all= call. Count
+list/vector children under the same rule. The byte preflight bounds individual
+atom/string input before growing their storage; it is not a measurement of
+allocator capacity or transient growth. Reject at the first failed charge and
+stop reading later forms/sources. Drop any partial parse normally; destruction
+may still traverse already constructed values.
+
+This closes raw-source and parsed-structure admission only. Expansion,
+substitution, quote cloning, linking and graph admission allocate afterward.
+Their current per-expansion limits are not a cumulative byte budget. No claim
+of bounded expanded output, total live heap or failure-cleanup work is added by
+this minimal repair. Shared admission policy must be defined in Library and
+used by direct Library callers; ABI validation cannot be its only enforcement.
+
+** ABI admission before copying
+
+Add a finite transport profile with maximum bytes per scalar span and maximum
+aggregate payload bytes, in addition to existing depth/node limits. Include
+text, bytes, integer magnitude and map-key payloads; use checked arithmetic.
+Borrowed-view validation must check shape and remaining allowance before
+constructing a String, BigInt or owned container. A bounded validation pass over
+the full view tree before decode prevents a late oversized child from causing
+earlier payload copies. Under the ABI's existing immutable/live-span contract,
+the decoder can then consume the same validated views. It must still reject
+invalid UTF-8, integer encodings, duplicate keys and malformed shapes normally.
+No validation can make an arbitrary invalid C pointer safe; valid borrowed
+memory remains a caller obligation.
+
+Perform the corresponding bounded walk over borrowed OwnedValue input before
+=Encoded::new= clones its text or calls BigInt =to_bytes_le=. Compute magnitude
+length from bits with checked rounding, without first materializing magnitude
+bytes. Count generated map-key views in structural accounting. Preserve actual
+encoding/decoding checks; the preflight is not permission to bypass them.
+Use the same byte-accounting implementation for these transport directions,
+not a Core-local copy of its formulas. Enforce the selected profile on producer
+output encoding and consumer decode as well; otherwise a successful oversized
+publication can fail only after the transfer boundary.
+
+This boundary cannot undo memory already allocated by the caller to build its
+OwnedValue, nor count inference/formatting allocations before output encoding.
+Input validation precedes Core state mutation. There is no new public Python
+validation path and no Scheme VM/GC prerequisite.
+
+The default profiles and remaining qualification requirements are specified in
+the re-audit below. They are proposed enforcement policy, not existing code or
+measured allocator bounds. Acceptance checks both the named default values and
+the accounting contract; changing a default requires an explicit policy change,
+not merely changing expected output in a test.
+
+** Roll back unpublished result ownership
+
+Define the transaction narrowly: no unsuccessful producer publication may leave
+a newly retained result entry or consume a result-owner slot. Existing results,
+source generation and source facts remain unchanged. Successful computation,
+internal snapshot caching, diagnostics and monotone handle/run counters need
+not roll back; gaps in counters are allowed. Error responses must not expose a
+success handle. This is result-ownership rollback, not reversal of inference.
+
+Library provides an internal scoped unpublished-run operation. A provisional
+result guard is established immediately when retention is acquired, before
+inserting/cloning observation output or returning control to the ABI. Its Drop
+on error/unwind closes that exact lease and removes that exact map entry,
+releasing its snapshot reference; merely marking it released until a future run
+is insufficient. Cleanup must not format an error, allocate another result or
+execute inference. Removal does not promise zero-cost destruction. Existing
+external result clones must never be accidentally closed by this guard.
+
+A scoped publication callback must keep the session exclusively
+borrowed through the actual ABI output-slot write, not merely while Core builds
+the output. Returning an encoded value from an ordinary callback and committing
+on that return would be too early. This prevents replacement, reentry
+or another run from invalidating the pending token. Library's existing direct
+=run= behavior can commit at its own successful return; no new compatibility
+layer is needed. The internal unpublished route must be used by Core instead
+of obtaining a fully committed observation and trying to reconstruct ownership
+from an optional handle after an error.
+
+ABI success sequence:
+
+1. Validate request/output slot, then enter the Library unpublished-run scope.
+2. Build rows/graphs, the response packet and encoded producer output while the
+   Library guard remains armed. Keep encoded output under an owning Rust guard;
+   do not strand a raw producer allocation if a later step fails.
+3. After all fallible work completes, enter a transfer tail containing only
+   infallible ownership moves: write the successful RawValue output slot first,
+   then disarm the Library/result-output guards within the same exclusive scope.
+   No tracing allocation, formatting, callback or other fallible work may
+   intervene through the final success return. Return success.
+4. On conversion, encoding or recoverable unwinding failure before that tail,
+   drop both guards. A normal Core error may become the existing error packet;
+   failure to encode that error packet still leaves no new result lease. The
+   existing poison-on-panic rule remains.
+
+The upstream adapter's existing error-output release remains necessary; it
+releases transport storage and does not replace the Library guard. No changes
+to =release-result= packet shape or C ABI layouts are required.
+
+An output-slot write stages an owned RawValue. Producer publication is admitted
+only with a valid output and a successful ABI return; nonzero status requires
+release of any partially written output. A later consumer-side decode/projection
+failure after a successful return is beyond this producer boundary;
+there is no acknowledgement protocol today. Matching output admission profiles
+can prevent size-policy mismatch but cannot prove successful consumer decoding.
+Reclaiming an undisclosed handle after post-transfer consumer failure would
+require a separate release/acknowledgement design and is not claimed here.
+Likewise, process abort/OOM, invalid C memory and a panic during destruction
+are outside recoverable rollback guarantees. No catch block makes them ordinary
+allocation errors.
+
+** Independent acceptance specification (not executed)
+
+Acceptance belongs to Rust Library and ABI package tests, not Python assertions
+or another standalone arithmetic experiment. Exercise the actual public entry
+points and producer callbacks. Fault injection must target named fallible
+boundaries, not replace the evaluator or its arithmetic. Test-only visibility
+may observe parse entry, live owner counts and result entries; it must not
+provide a production diagnostics protocol.
+
+| Check | Independent observation / required result |
+|-------+-------------------------------------------|
+| Source bytes | Literal fixtures at 65,536 and 65,537 UTF-8 bytes, including multibyte text, behave consistently through single/multi-source and component paths; over-limit input never enters the parser |
+| Aggregate admission | Individually valid sources/components cross total bytes or count by one; rejection occurs before form collection/index construction, including an oversized unused component and a last oversized source |
+| Parsed structure | Hand-counted literal fixtures at and above node/form/depth/list limits, including quote/vector cases and multiple sources, match a specification count independent of production accounting helpers |
+| Arithmetic safety | Synthetic length metadata and checked-accumulator unit cases reject addition/rounding overflow without constructing giant payloads; no wrapping or unlimited fallback |
+| Transport preflight | Borrowed fixtures at byte/node/depth boundaries, a large single BigInt/text node, and an oversized final child reject before any payload conversion; an independent conversion-entry probe observes zero copies on preflight rejection |
+| Entry parity | Direct Library and ABI source paths apply the same Library profile; malformed inputs within limits retain their typed parse errors; graph input retains its separate graph admission contract |
+| Failed publication | Inject a Result error at row/graph conversion and producer encoding; after each failure, exact result entries, live leases and retained snapshot references return to their pre-run baseline, excluding documented cache retention |
+| Cleanup on unwind | Inject a recoverable panic after retention and before output transfer; rollback happens during unwind, raw output is not transferred, and the existing Core poison rule applies |
+| Error reporting failure | Force success-output encoding failure and then error-packet encoding failure; nonzero status returns with no new result slot and no unowned RawValue allocation |
+| Repeated rejection | More than 64 recoverable publication failures on the same session consume no owner slots; a later valid run succeeds; a previously published result remains usable throughout |
+| Successful transfer | One successful call retains exactly one result lease and transfers one transport owner; dropping transport releases its storage, explicit result release returns its slot, and owner close frees remaining session retention |
+| Transfer boundary | A deliberate consumer decode failure after successful transfer releases ForeignValue storage but does not assert Library rollback; this negative case prevents an end-to-end acknowledgement claim |
+
+Use expected errors and ownership invariants specified here as the oracle.
+Do not calculate expected counts by calling the new production admission helper.
+For normal error cases keep the actual session and engine running; replacing
+them with fresh sessions would hide slot leaks. For the panic case, inspect
+cleanup before closing the poisoned context rather than requiring its reuse.
+Controls that disable =read_all= admission, reset the aggregate ledger per source,
+copy a payload before preflight, omit map removal, or commit before encoding
+must each fail the relevant acceptance test. These are future acceptance
+requirements, not reported executions or evidence of a memory ceiling.
+
+* Re-audit of the minimal repair: lifetime, entry coverage and defaults
+
+The previous proposal was not yet a closed implementation specification. A guard
+created only after =SourceSession::run= returns misses observation cloning;
+a callback that returns encoded output and automatically commits misses the
+subsequent ABI transfer. The plan below replaces those ambiguous arrangements.
+It remains documentation only; neither guard behavior nor admission is claimed
+as implemented or tested.
+
+** Guard coverage and the commit point
+
+The source ordering in [[file:../rust/ascent/src/loaded/result.rs][SourceResult::retain]]
+is owner-count increment followed by Arc allocation; the ordering in
+[[file:../rust/ascent/src/loaded/session.rs][observe]] is retention, map insertion,
+run/cache updates and observation row cloning. The
+[[file:../rust/ascent-c-abi/src/exports.rs][ABI callback]] then does further conversion
+and encoding. There must be a continuously owned rollback obligation across
+all these steps, not just a guard around =publish_value=.
+
+| Phase | Required owner / behavior on recoverable error or unwind |
+|-------+----------------------------------------------------------|
+| Before retention | No provisional result exists; inference errors publish no new lease |
+| Owner-slot reservation | A nonallocating reservation guard owns any counter increment until Retained takes over; a recoverable unwind between increment and construction must restore the slot |
+| Retained construction | Transfer the reservation to a single result lease without an unowned interval; process-aborting allocation failure is outside this guarantee |
+| Map insertion | An already armed pending guard owns the lease and optional exact handle; failed insertion/unwind closes the lease and removes any inserted entry |
+| Observation cloning | The same guard remains active while cloning rows and constructing SourceObservation inside Library |
+| Core output construction | Keep the guard active through typed rows/object graphs, success packet construction and transport::write; do not move a naked observation out to an unguarded caller |
+| Producer encoding | Keep a separate encoded-output owner active immediately when publish_value returns RawValue; no trace operation may run between raw return and wrapping it |
+| ABI transfer | Write the output slot inside the guarded publication callback, then perform only nonpanicking guard disarms and ownership moves before callback completion |
+| Error packet | Abort/remove the provisional result before constructing or encoding an error packet; if that encoding also fails, return nonzero with no new lease |
+| Unwind | Library guard and encoded-output owner unwind inside the existing outer catch; only afterward mark the Core poisoned; a destructor panic/double panic remains outside the guarantee |
+
+The Library operation must expose an observation to a publication callback while
+retaining exclusive session access. For the ABI route, that callback performs
+the actual output-slot transfer; it must not merely return RawValue for a later
+write. An Ok callback result means that transfer already happened. The ABI
+adapter owns this callback and must make the success marker private to its
+transfer routine. Library remains ignorant of C types. A direct Library =run=
+can use the same retention mechanism with its own successful return boundary.
+No callback may retain the pending guard or access/reenter/replace the session.
+
+The transfer tail is valid only if committing the pending lease requires no map
+insertion, allocation, assertion, diagnostics or fallible destructor. All map
+storage must already exist. Disarming the encoded-output owner after writing
+must leave it with nothing to release. The pending guard must have explicit
+reserved/inserted/committed state so removal and the slot decrement happen
+exactly once. Its cleanup removes only its newly allocated handle in its own
+scope; it must not sweep existing released entries or revoke prior results.
+Retain normal Result failures and panic behavior separately in the acceptance
+matrix. In particular, owner-slot refusal has no reservation to undo.
+
+The isolated compilation finding below establishes a minimal callback/lifetime
+arrangement, not production integration. Production borrow checking must
+permit disjoint access to session and diagnostic fields without unsafe lifetime
+extension. Finish diagnostics and release fallible temporaries before transfer.
+There must be no fallible diagnostics after callback return: that would turn a
+committed, written success into a nonzero callback status. If that cannot be expressed, the
+design must be revised rather than adding a raw session pointer. The code review
+must also verify that no user callback, formatting or possible panic remains
+after the output write, through guard disarm and until the extern callback
+returns success. The transfer tail includes that return, not only the write.
+Any automatic drops in this tail must be audited as nonpanicking; otherwise
+move their destruction before transfer. Do not rely on catch_unwind to repair
+a failure after a committed transfer.
+
+=publish_value= currently returns an unguarded RawValue. The upstream ABI package
+should supply an owned publication object with an infallible transfer method,
+or the fixed adapter must immediately wrap the raw allocation in a local owner.
+This is transport lifetime handling, not another decoder/algorithm. There must
+be no allocating wrapper construction. The two guards protect different objects:
+releasing encoded bytes cannot release the Library result, and removing the
+result cannot release an already detached RawValue.
+
+** Complete parsing-entry coverage
+
+The audit also found pre-existing aggregate limits in
+[[file:../rust/ascent/src/source/lowering.rs][lowering::load]]: 1..16 rule fragments,
+262,144 aggregate source bytes and 65,536 bytes per single-datum source.
+Its current aggregate sum is not checked arithmetic. Those facts do not protect
+Evidence's separate multi-datum path. The common policy must not accidentally
+relax the bounded rule-fragment route.
+
+| Entry / route | Mandatory shared admission placement |
+|---------------+--------------------------------------|
+| Program::read_sources and Program::read_rule_sources | Admit the whole collection before lowering::load constructs Program/maps; pass the one operation ledger through every reader::read call |
+| Engine::open_sources and Engine::open_rule_sources | Delegate to the admitted Program route; no independent parser or reset per fragment |
+| EvidenceProgram::read_sources and Engine::open_evidence_sources | Preflight the whole collection before forms collection; pass one ledger through every read_all call |
+| EvidenceProgram::read_components | Preflight all supplied source and metadata collections before component_index/visit, then share the ledger through Scope::read |
+| EvidenceProgram::component_ids and validate_components | The same preflight and parsing ledger: these methods parse selected scopes, so metadata-only validation is insufficient |
+| Fixed Core source/component open | Apply transport preflight before copies, then invoke the admitted Library routes; no ABI-only exemption |
+| Private reader::read/read_all and Scope::read | Require an operation admission/ledger token; no default reset or unlimited helper callable from another lowering path |
+| Already typed Program/EvidenceProgram and relational graph constructors | No raw source is parsed; retain their separate typed/graph admission. Do not pretend this source policy bounds caller-created Program storage |
+| Core replace | Accepts fact-row updates, not new textual rule sources; retains transport/fact admission and existing candidate-session transaction |
+
+Preflight checks bytes and metadata for all supplied components, even unused
+ones. Parse node/form accounting covers the selected closure actually parsed;
+unused source syntax is not newly evaluated. Duplicate dependencies must consume
+edge budget even if scope memoization avoids a second parse. Each selected
+component is parsed once per operation and shares the ledger; no per-component
+reset. Count optional exports, dependency bindings, IDs and entry/constructor
+labels in metadata before cloning or qualification. Source text limits alone do
+not bound these collections. Existing syntax, name and import-authority checks
+still apply afterward. This is an input accounting contract, not a replacement
+for component semantic validation.
+
+** Proposed default profiles
+
+These are concrete design defaults for the repair, not current runtime claims.
+The source count and aggregate byte defaults preserve the existing rule-fragment
+ceiling and intentionally tighten the previously broader Evidence/component
+entry points. Other new values are conservative policy choices requiring
+consumer qualification before code adoption; they are not inferred from native
+memory experiments. No new request fields or silent unlimited overrides are
+part of this minimal design.
+
+| Library source-admission dimension | Default per operation | Accounting |
+|------------------------------------+-----------------------+------------|
+| Source strings / supplied components | 16 | Includes unused components; retain the existing nonempty rule-fragment requirement |
+| Bytes per source | 65,536 | UTF-8 bytes including comments and whitespace |
+| Aggregate source bytes | 262,144 | Checked sum across all supplied sources |
+| Parsed datum nodes | 65,536 | Shared across parsed sources, including generated quote nodes |
+| Top-level parsed forms | 4,096 | Shared across the operation; single-fragment grammar still requires one form per fragment |
+| Datum depth | 128 | Root is depth 0; depth greater than 128 rejects |
+| List/vector items | 256 | Direct children per container; quote nodes still count toward total nodes |
+| Component dependency edges | 256 | Count all supplied edges, including duplicates and unused components |
+| Component metadata string occurrences | 4,096 | Count IDs, exports, dependency targets/bindings and entry/constructor labels, including repeated occurrences |
+| Bytes per metadata string / aggregate | 1,024 / 65,536 | Checked UTF-8 byte sums; source contents counted separately |
+
+Preflight uses length checks before iteration where possible; no temporary
+flattened metadata collection. It stops on the first exceeded counter, so an
+over-limit collection is not traversed in full. Limit equality is admitted by
+size checks; syntax/semantic checks may still reject. Container storage capacity,
+allocator rounding and expanded intermediate sizes are not included.
+
+| Owned-ABI transport dimension | Default for this Core profile | Accounting |
+|-------------------------------+-------------------------------+------------|
+| View depth | 128 | Root 0; existing structural convention |
+| View nodes | 1,000,000 | Includes map key and value views, not just map entries |
+| Bytes per scalar payload | 1,048,576 | Text, bytes, map keys and canonical integer magnitude |
+| Aggregate scalar payload bytes | 8,388,608 | Sum each view occurrence, even aliased spans; checked arithmetic |
+
+Node/span accounting must agree for borrowed OwnedValue and View. Zero integer
+has zero magnitude bytes; negative sign is a flag, not an extra magnitude byte.
+Transport ceilings are independent of the smaller Library source ceilings.
+Passing the 8 MiB payload check is not passing an 8 MiB allocation or request
+memory budget: multiple copies, per-node headers and buffers remain additional.
+A result above these output limits is a publication failure and must roll back
+its pending lease; this is a deliberate new failure policy needing qualification.
+
+Select the profile at the Core factory through an upstream profile-aware
+ForeignCallable constructor, retaining it for input encoding and output decoding;
+select that same profile in fixed producer read_input/publish_value operations.
+This can be internal Rust wiring without changing public C layouts or Python
+APIs. Do not change unrelated users' shared defaults globally. Direct C callers
+receive producer-side enforcement; their own pre-call allocations are outside
+Core control. The exact profile plumbing is still unimplemented and must be
+checked before claiming all adapter copies are admitted. The original
+ValueLimits depth/node-only API alone cannot enforce these new byte ceilings.
+
+** Additional independent acceptance and open boundaries
+
+Extend the prior acceptance matrix with these specific controls, without running
+new experiments in this documentation task:
+
+- Exercise every named Program, Engine, Evidence and component validation route;
+  valid padded fixtures test exact default byte boundaries. Distinguish size
+  rejection before parsing from node/form rejection during parsing.
+- Test the default numbers literally, separately from configurable-limit helper
+  tests. Test 16/17 sources, 262,144/262,145 bytes, shared quote/node counts and
+  excess metadata/edges in unused components. A reset-per-source mutant fails.
+- Inject recoverable unwinds after slot reservation, after lease acquisition,
+  after insertion and during observation cloning, packet conversion and output
+  encoding. Independently observe exact map entries, live owners and transferred
+  transport owners; allocator abort is not a simulated unwind pass.
+- A deliberately early-commit callback that returns encoded output before the
+  slot write must fail a later-transfer fault control. A control omitting the
+  raw-output owner must fail a post-encoding/pre-transfer unwind check. Inject
+  faults before the transfer tail, never inside an asserted infallible tail.
+- Test ordinary core errors, success encoding errors, error-packet encoding
+  errors and panic poisoning separately. Repeat nonpanic failures on one live
+  session; prior published leases must survive and new failed leases must not
+  consume its 64 slots. Do not use owner close as evidence of rollback.
+
+Remaining boundaries are explicit: the minimal ownership fixture below is
+compiled; real-session integration is separately qualified only in the temporary
+copy below. Neither fixture establishes a
+complete expansion budget, real allocator bound, bounded destructor proof or
+end-to-end consumer acknowledgement. Post-transfer decoder failures can still
+leave an undisclosed Library handle until owner close; solving that requires a
+separate protocol, not a pre-transfer guard. A caller can also retain large
+already-typed inputs, and inference/output construction can exceed the admitted
+transport payload in temporary allocations. The source/transport policy may
+reject previously accepted workloads and has not been regression-qualified.
+Review, Python and production behavior remain unchanged by this document.
+
+* Minimal Rust compilation finding: unpublished result ownership
+
+This qualification is limited to the current No VM publication problem. It ran
+in an external temporary Cargo package with Rust 1.95.0
+(59807616e, 2026-04-14), offline, using a pinned dependency lock. No production,
+Review, Python, parser-budget implementation or VM experiment was changed.
+The external fixture records inspected dirty checkout content rather than HEAD
+alone. Those verification records are not part of the public design contract.
+
+** What actually compiled and ran
+
+The fixture copies the current Library Data/Error definitions, the fixed Core
+=transport::write= implementation and the upstream owned value/ABI modules and
+header without changing their bytes. It calls the actual conversion and
+=publish_value= encoder, then writes the actual RawValue layout into a valid
+exclusive output slot and decodes/releases the result with ForeignValue.
+No Scheme VM is initialized and no arithmetic algorithm is introduced.
+
+Its Session, result map, reservation, lease, observation and pending guard are
+new minimal ownership scaffolding. They preserve the audited reservation/map/
+clone/conversion/encoding order but do not compile or call the production
+SourceSession, its engine, rows_graph or the existing extern callback. In
+particular, it uses Rc<Cell<usize>> for the single-thread slot counter rather
+than the production atomic counter, and a simplified Arc snapshot. It does not
+qualify production cancellation, concurrency, graph conversion, cache retention,
+thread-affinity checks or engine shutdown. Conversion fault injection marks
+stage boundaries; it is not a native allocator-failure injection inside clone.
+
+The successful arrangement holds an exclusive mutable Session borrow across
+the publication callback, while separately borrowing the owner's trace field.
+The Library guard remains armed during observation construction, Core packet
+conversion and encoding. The callback writes output before returning success;
+Library commit is then a boolean assignment. The actual encoder's returned
+RawValue is immediately wrapped in a nonallocating output owner. Its release
+callback runs on pre-transfer failure. There is no raw session pointer or
+unsafe borrow extension; the only explicit unsafe operations are transport
+ownership/release and the write into valid ABI output storage.
+
+| Observed check | Actual result | Evidence boundary |
+|----------------+---------------+-------------------|
+| Positive compilation and execution | Six tests passed; restored baseline also passed | Minimal ownership fixture with actual Data/transport/encoder modules |
+| Error and unwind coverage | Nine phase boundaries each tested as Result error and panic; all 18 cases removed the new lease, restored its slot and preserved the prior result | Reservation, retention, insertion, observation, conversion, packet, encoding, post-encoding and pre-transfer boundaries |
+| Actual encoder rejection | Nested data crossed the encoder's existing depth limit; no new entry/slot remained and a subsequent valid run succeeded | Existing structural encoder rejection, not the proposed byte budget |
+| Repeated recoverable failures | 100 post-encoding failures on one Session left the existing lease intact; the next valid publication succeeded | Slot leak/early commit control, not whole-process allocation measurement |
+| Successful transfer | Output decoded through ForeignValue; transport release left one Library lease, and explicit map removal restored the slot and snapshot reference count | Separate transport and result ownership |
+| Owner limit | 64 published results remained intact when the next reservation was rejected | Simplified single-thread counter with production slot limit |
+| Reentry compile rejection | cargo check exited 101 with E0499 | A callback cannot mutably borrow its already borrowed Session |
+| Reference escape compile rejection | cargo check exited 101 with E0521 | A borrowed observation cannot escape the callback |
+| Early-commit source mutant | Targeted rollback test failed, exit 101 | Moving commit before callback publication leaks the pending result under a later error |
+| Missing-output-release source mutant | Targeted rollback test failed, exit 101 | The release-callback observation detects dropping ownership without producer release |
+
+The test release counter observes invocation of the actual producer release
+callback; it is not a heap profiler or proof that all native allocations were
+reclaimed. Arc reference-count checks concern the fixture snapshot, not all
+production snapshot/cache references. Panic injection unwinds Rust; allocation
+abort, destructor panic and double panic were not exercised or qualified.
+
+** Judgment and design adjustment
+
+The borrowing arrangement is feasible in safe Rust. The former blanket statement
+that it has never compiled is replaced by this bounded result; that model did not compile or test the actual SourceSession. The subsequent
+real-session finding below closes that gap in a temporary copy only. It remains
+necessary to install the rollback obligation before production retention's
+counter increment and to cover the real observation cloning path.
+
+Compilation alone does not establish the publication commit point. An ordinary
+callback returning Ok can compile while never writing an ABI result; the fixture
+includes that negative example and observes its stranded lease. Even a private
+Delivered marker in the adapter does not prove correct use by every callback.
+Treat the unpublished callback as an internal trusted API, keep the ABI transfer
+routine private, and require source review plus the early-commit mutant to bind
+its success return to a preceding output write. Do not advertise a type-level
+proof of delivery. A future production implementation must retain this negative
+control rather than silently broadening the claim.
+
+In the positive fixture, the transfer tail is output write, empty output-owner
+Drop, callback success return, boolean commit, nonpanicking Data/guard drops and
+success return from the outer catch. No tracing or user code follows the write.
+Production destructors and all equivalent tail operations must still be audited;
+compiling this simplified tail does not qualify arbitrary production Drop code.
+
+The fixture returns nonzero status directly on a normal error; it does not build
+the production error packet. Consequently error-packet construction/encoding,
+its own unwind path and final existing C callback integration remain mandatory
+acceptance cases before production use. Consumer decode failure after a
+successful transfer still cannot trigger pre-transfer rollback. No input budget
+or real allocator ceiling is claimed by this check.
+
+** Verification material ownership
+
+Fixture sources, dependency locks, input identities, replay scripts and execution
+logs belong to the external verification workspace. JSON used by those scripts
+is bookkeeping, not a Library dependency, publication protocol or design
+requirement. This design keeps conclusions, technical boundaries and acceptance
+criteria; it does not embed the fixture or generated identity/result records.
+The existing compiler's JSON IR is a separate build interface and is unchanged.
+
+* Real SourceSession and extern callback integration in a temporary copy
+
+This finding supersedes the minimal model's lack of real-session and callback
+coverage; it does not modify or qualify production deployment. The temporary
+workspace copied the inspected =feature/ascent-scheme-syntax= checkout at
+=7a769f7= plus its existing dirty contents. It retained the actual Engine,
+SourceSession, atomic result-owner accounting, snapshots, row/graph conversion,
+Data transport and fixed extern callbacks. The bridge/compiler dependency stayed
+at the workspace's pinned =431e55bee87d2c4c5fb4cfa6600f1c0ca7f4fbab= revision.
+Existing concurrent edits were copied as inputs, not reverted or redesigned.
+
+** Temporary integration changes and ownership
+
+The temporary Library copy adds a reservation guard around the actual atomic
+owner increment in =SourceResult::retain=. Its actual =SourceSession::observe=
+uses a pending guard before retention and map insertion, through construction
+of SourceObservation and a publication callback. Failure removes the exact
+new result and closes its lease. Existing run behavior delegates through the
+same implementation with immediate successful return as its boundary.
+
+The fixed Core copy splits its run operation into a publication-aware route,
+keeping its original request validation and real graph/typed-row conversion.
+Disjoint mutable borrows of session and trace compile without raw lifetime
+pointers. The callback receives an owned SourceObservation while the pending
+guard retains the exclusive session borrow; moving that data does not transfer
+or expose the pending result guard.
+
+The temporary extern =invoke= retains its input decode, owner-thread/poison
+checks and outer catch. It routes successful run publication through the guarded
+callback instead of returning RawValue from the catch and writing it afterward.
+The success packet is converted and encoded under the Library guard. A separate
+nonallocating owner immediately wraps encoded RawValue. Temporary output
+construction objects local to publish_packet are dropped before its output
+write. This does not exhaust caller-frame cleanup: SourceObservation, request
+data and other owned locals still have implicit destruction afterward. The
+post-write audit below narrows the earlier transfer-tail claim.
+The output-encoding diagnostics formerly following publish_value are not carried
+across the transfer tail; that timing wiring still needs a production design.
+
+Normal failure exits the Library scope, removing the unpublished result, before
+the extern callback builds the existing error packet. Failure in that packet's
+conversion or encoding returns nonzero without resurrecting a result. The tested pre-write panics
+unwind through both guards to the existing catch and poison the context.
+Post-write and post-commit cleanup require separate treatment below.
+The test-only hooks observe real map/atomic counts and use thread-local Cell
+markers for delivery/commit order; they are not a new diagnostics or public
+transport protocol. The existing released-entry collection policy executes
+before the new provisional transaction; already released garbage is not part
+of its rollback guarantee. Previously published live results are preserved.
+
+All integration and fault-injection edits are confined to the temporary copy.
+Review/Python source files and the production Library/ABI tree are untouched.
+The verification workspace narrows Cargo membership to Library and ABI and omits
+unrelated benchmark/dev-test targets; this is focused native qualification, not
+the repository's complete test gate. Original build-time Scheme IR generation
+remains; it is not runtime Scheme/VM execution.
+
+** Observed integrated acceptance
+
+The integrated and restored offline runs each passed seven tests. They invoke the actual
+=ascent_core_open= factory and the actual returned extern call pointer through
+the upstream ForeignCallable owner adapter. A test-only borrowed context alias
+observes retained-entry/owner counts without becoming a second release owner.
+
+| Case | Observed result / oracle |
+|------+--------------------------|
+| Successful graph and typed-row publication | Actual output decoded successfully; delivery marker preceded Library commit; one new retained lease was admitted and explicit release returned its slot |
+| Twelve normal failure stages in both output formats | 24 cases passed: reservation, retention, insertion, pre/post observation construction, pre/post graph/row conversion, packet, Data transport, encoding, post-encoding and pre-transfer; each retained-entry/atomic-owner baseline was restored before the error packet was delivered |
+| Twelve panic stages | All unwound through the actual extern catch; no success/error output transfer or Library commit occurred; new retention was removed and the context was poisoned |
+| Actual success-encoder rejection | A test envelope crossed the real encoder's existing depth limit; Library retention rolled back and the normal error packet was delivered |
+| Actual error-encoder rejection | The failure response also crossed the real encoder's depth limit; the call returned nonzero with no newly retained result and remained usable afterward |
+| Five error-packet stages, Result error and panic | Ten cases passed around error packet construction, Data conversion, encoding, encoded ownership and final transfer; Result cases kept the context usable, panic cases poisoned it; no Library commit occurred |
+| Error-packet construction panic after an ordinary run error | The result had already rolled back when reporting panicked; outer catch poisoned the context without a transferred output |
+| Repeated failures | 100 post-encoding failures on one real session preserved old results and consumed no new slots; a subsequent valid run succeeded |
+| Producer output release | Post-encoding/pre-transfer failures invoked the actual producer release callback exactly once; this measures release calls, not native heap bytes |
+| Early-commit mutant | Compiled, then failed the real-session rollback test with exit 101; the mutated commit preceded publication and retained an undisclosed result |
+| Missing-output-release mutant | Compiled, then failed the release-call oracle with exit 101; compilation rejection alone was not accepted as a negative-control pass |
+| Restored offline baseline | Seven tests passed again after restoring both source mutations |
+| Runtime dependency closure | Normal Cargo edges contain neither gerbil-scheme nor gerbil-scheme-sys; build-time Scheme generation remains separate |
+
+The conversion and clone failures above are Result/panic hooks at audited stage
+boundaries. The positive graph and typed-row conversions execute their real
+algorithms; the check does not claim a natural out-of-memory failure inside
+those algorithms. Encoding rejection is produced by the real encoder rather
+than replacing its implementation. The test envelope is deliberately invalid
+for transport depth and is not a new production output format.
+
+** Commit judgment and remaining boundaries
+
+The compiled real-session borrowing arrangement covers conversion, encoding and
+error reporting when publication stays inside the Library callback. For tested
+successful run calls, the actual ABI output write occurs before commit; the
+tested pre-write failures do not commit. Later cleanup probes below demonstrate
+why that ordering alone does not establish failure-atomic publication. This is
+control-flow and fault-injection evidence,
+not a type-level proof of delivery or an acknowledgement from the consumer.
+
+This qualification does not include actual allocator exhaustion, destructor
+panic, process abort, invalid C memory, racing callbacks, full resource budgets,
+consumer decode failure after transfer, installed-wheel deployment or repository
+wide acceptance. Output/profile defaults remain the proposed policies above;
+no parsing or byte-budget repair was implemented. Snapshot/cache retention from
+completed computation remains allowed; the guard rolls back only unpublished
+result ownership. Production code still lacks the tested temporary integration.
+
+Build validation initially hit a local Nix =cc= / macOS SDK link failure. Selecting
+the installed Apple clang only for the temporary Cargo invocation allowed the
+unchanged build chain to complete offline. An intermediate integration compile
+also identified a missing ABI-to-Library error conversion; the temporary adapter
+now maps that error explicitly before the outer catch. Neither failure was
+counted as an acceptance pass. No workspace toolchain configuration was changed.
+
+Verification sources, dependency lock, temporary patches, stage observations
+and logs remain external. JSON bookkeeping has no role in the publication
+contract and is not embedded in this design. Replaying requires the captured
+source copy, its offline dependency cache and original build-time gxi toolchain;
+the temporary runner performs focused acceptance and restores its negative
+controls before a final baseline. No output artifacts are added to Git.
+
+* Post-write cleanup audit: the publication gate remains open
+
+This re-audit checks the retained temporary integration, not a changed production
+implementation. The previous seven-test result remains valid for its exact
+pre-write cases. Its broader description of an infallible delivery tail was too
+strong: an output pointer write is not the same event as returning success from
+the extern callback. The real integration must not be adopted on that claim.
+
+** Source-backed cleanup inventory
+
+The inspected temporary =exports::publish_packet= writes output at its line 145,
+then calls the test delivery marker and returns. Its explicit =drop(owned)= and
+=drop(response)= at line 141 dispose only of that function's packet locals.
+Other active frames still own data. These source coordinates identify the
+retained verification snapshot; they are not claims that production has these
+new helper methods. Original locations are the Library
+[[file:../rust/ascent/src/loaded/session.rs][session ownership]],
+[[file:../rust/ascent-c-abi/src/operations.rs][operation adapter]] and
+[[file:../rust/ascent-c-abi/src/exports.rs][extern entry]].
+
+| Interval after output write | Remaining work in the temporary integration | Audit conclusion |
+|-----------------------------+---------------------------------------------+------------------|
+| publish_packet return | Delivery Cell marker and empty OutputOwner destructor | OutputOwner no longer holds the written RawValue; it cannot reclaim it afterward. Markers are test instrumentation, not delivery acknowledgements |
+| Operation callback return | Owned SourceObservation, including cloned relation rows, names and unused metadata, is implicitly dropped after the nested publish call | This cleanup occurs before observe's commit; explicit packet drops did not cover it |
+| observe return | Commit flag assignment, commit marker, committed pending-guard Drop and local snapshot/metadata cleanup | A panic after disarm is no longer covered by unpublished-result rollback |
+| SourceSession run wrapper return | Query-vector and closure/capture cleanup | The exclusive borrow prevents reentry; it does not remove automatic destruction |
+| Input and_then callback return | The owned decoded request Data is dropped after invoke_publication returns | This is after Library commit on the success route but still inside the outer catch |
+| Error-reporting branch return | The error value and branch locals are dropped after publish_packet stages the error output | The error packet also has a post-write tail; its prior tests stopped before the write |
+| Outer catch to extern return | Match on catch result and return 0 or poison/return 3 | The final match does not allocate; it can nevertheless observe a panic from earlier cleanup after output was written |
+
+The inspected Value, FrozenValue and Data definitions contain ordinary
+containers, integers and reference-counted values, not arbitrary user Drop
+callbacks. The audit does not identify a naturally panicking destructor in
+those definitions. Container/reference destruction still occurs, may traverse
+or free storage, and was not proved bounded or exhaustively classified by the
+seven tests. A nonallocating marker is not proof that its whole surrounding
+return path contains no destructors. Process abort or stack exhaustion during
+cleanup is not recoverable merely because an outer catch exists.
+
+** Focused destructor-frontier characterization
+
+A second external source copy preserves the previous fixture and adds a
+test-only TailDrop at four actual cleanup frontiers. Each TailDrop invokes a
+recoverable panic on scope exit. It does not replace Data/Value destruction,
+claim to reproduce allocator exhaustion or demonstrate a naturally panicking
+native destructor. The existing real Session, atomic owner counter, encoder,
+extern catch and output slot remain in use.
+
+The added test calls the returned C function pointer directly with valid owned
+input spans so it can inspect the output slot even when status is nonzero. It
+then releases the staged producer value exactly once, matching the upstream
+adapter's documented nonzero-status ownership rule. Test context aliases do not
+acquire a second callable release right. The four cases produced:
+
+| Cleanup frontier | ABI status | Output slot | Library commit marker | Entry / live-owner delta |
+|------------------+------------+-------------+-----------------------+--------------------------|
+| Operation observation cleanup, before commit | 3 | Written success packet | Absent | 0 / 0 |
+| observe scope cleanup, after commit | 3 | Written success packet | Present | +1 / +1 |
+| Decoded request cleanup, after commit | 3 | Written success packet | Present | +1 / +1 |
+| Error-reporting scope cleanup | 3 | Written error packet | Absent | 0 / 0 |
+
+All four contexts were poisoned by the actual outer catch. In the first case,
+the still-armed Library guard removes the result even though output is already
+written. In the middle two cases, the guard has committed, so a failed call can
+leave a retained result whose success packet the caller must reject. Closing
+the owner eventually clears it; poisoning alone does not roll it back. In the
+error-reporting case, result rollback had already completed, but the written
+error packet was not successfully delivered.
+
+The test suite reported eight passing tests: the previous seven plus this
+characterization test. A passing characterization means the expected failure
+modes were observed; it is not a pass for failure-atomic publication. No safety
+qualification is upgraded on that count. Logs, source snapshots, probes and
+replay instructions remain in the external temporary workspace, not Git.
+
+** Result-guard and error-path judgment
+
+Pre-write Result errors and tested single panics are covered while both owners
+remain armed. The guard cannot cover operations after its commit flag is set.
+The output owner also cannot cover a RawValue after it is detached into the
+caller's slot. The upstream adapter releases written output on nonzero status;
+that releases transport storage, not the already committed Library result.
+Therefore output-write-before-commit is a necessary ordering observation, not
+sufficient evidence of a completed ABI handoff.
+
+Error-packet coverage was also narrower than the earlier prose suggested.
+Construction, conversion, encoding and pre-write rejection were tested. The
+new error-scope probe covers one post-write panic frontier. It does not qualify
+every error destructor, partial clone cleanup or release callback. The current
+caught-panic branch returns nonzero instead of constructing a second packet;
+keep that property. Never overwrite an already written producer allocation
+with a fallback error packet. There was no observed natural late Result error
+in the inspected tail; avoiding such an error/overwrite must remain an explicit
+invariant if that code changes.
+
+Rollback itself removes a map entry, closes its lease and drops references.
+The counter returning to baseline does not prove all snapshot/cache storage
+has been reclaimed or all destructors completed. A panic while rollback is
+already unwinding can abort the process. Producer release uses an extern C
+callback; a forbidden unwind through that callback is not made recoverable by
+the outer Rust catch. These paths were not exercised as abort tests and are
+not claimed safe by this re-audit.
+
+** Revised convergence requirement
+
+Do not retain the current callback shape merely because it compiles. Before a
+production proposal, all owned request/observation/error data and other cleanup
+that could invalidate publication must finish while failure rollback is still
+armed and before staging output. The final ABI path needs an explicit inventory
+of its remaining fields and Drop implementations; no callback return may hide
+unreviewed destruction between output write, commit and successful extern return.
+
+A candidate design is to prepare an encoded output together with an armed
+Library publication guard, finish all preparation-frame cleanup, then let a
+small extern transfer routine perform write/disarm/return with only audited
+nonpanicking ownership moves. Returning encoded output alone and committing
+before that routine would recreate the original gap. Returning an armed
+composite across catch/borrow scopes is a new ownership design that still needs
+compilation and focused qualification; this audit does not implement it or
+assume the borrow checker accepts it.
+
+Alternatively, any design retaining post-write recoverable operations must
+explicitly retain rollback authority for that interval and define ownership of
+an already written RawValue on failure. It must not rely on poison or transport
+Drop to remove a Library handle. Neither option closes allocator abort,
+destructor abort or consumer-side failure after a successful return.
+
+Future acceptance must distinguish three observations: slot written, result
+committed and extern success returned. Cover observation, query, request,
+error-packet and guard cleanup frontiers, including failure after a staged output
+and after attempted commit. Assert nonzero status plus staged-output release and
+no newly admitted result for every recoverable pre-success failure. Existing
+published handles must survive. These are still OPEN acceptance requirements;
+the new probes deliberately show that the current temporary integration does
+not satisfy the general post-write failure invariant.
+
+* Source baseline and findings
+
+The inspected checkout is =feature/ascent-scheme-syntax= at
+=e6884b83c7b141ec66e2095252e4fb9e17da9869= plus uncommitted work. HEAD alone
+does not identify that source. These are static observations, not claims about
+an installed wheel, CI result, or deployment. Implementation receipts must bind
+actual dirty contents, generated artifacts and dependency identities.
+
+| Finding | Source evidence | Consequence |
+|---------+-----------------+-------------|
+| Default Python packaging selects the Rust path | [[file:../python/pyproject.toml][Packaging]], [[file:../rust/ascent-python/src/lib.rs][feature selection]] | Native Scheme descriptions cannot apply to every entry point |
+| Rust performs declaration reading, function expansion and pattern-rule expansion | [[file:../rust/ascent/src/source/evidence.rs][EvidenceProgram]], [[file:../rust/ascent/src/source/functions.rs][functions]], [[file:../rust/ascent/src/source/macros.rs][macros]] | This is a restricted frontend, not just transport |
+| Scheme admission can precede finite projection to Rust | [[file:../interface/evidence-module.ss][native construction]], [[file:../rust/ascent-scheme/src/api/sources.rs][load_sources]], [[file:../rust/ascent-scheme/src/api/projection.rs][projection admission]] | Projection correctness is an additional obligation |
+| Both languages implement relational admission and execution | [[file:../program/planning.ss][Scheme planning]], [[file:../program/evaluate.ss][Scheme evaluation]], [[file:../rust/ascent/src/graph/admission.rs][Rust admission]], [[file:../rust/ascent/src/execution/kernels.rs][Rust kernels]] | Common terminology does not establish implementation reuse |
+| The generator defines some real composition and binding logic, but delegates substantial semantics | [[file:../program/rust-execution.ss][IR producer]], [[file:../rust/ascent/build.rs][build invocation]] | Credit only the generated bodies and dependencies actually inspected |
+| The fixed C export opens the existing Rust Core | [[file:../rust/ascent-c-abi/src/exports.rs][exports]], [[file:../rust/ascent-c-abi/src/operations.rs][operations]] | This is ABI reuse of that Core, not proof of compiling the native Scheme evaluator |
+| Proof replay is independent of production execution | [[file:../rust/ascent/src/provenance/replay.rs][replay]], [[file:../rust/ascent/src/provenance/expression.rs][proof expressions]] | Independence is useful; unannounced coverage gaps are not |
+
+The existing [[file:declarative-dsl-and-compiled-graph.md][declarative DSL and compiled Graph contract]]
+constrains current =Engine.dsl=: declaration data and statically lowerable helpers
+are allowed; arbitrary procedures, imports and mutable Scheme execution are not.
+This design preserves that contract and does not restore arbitrary Scheme as the
+default. A statement of prior approval in another document is historical context,
+not an implementation or qualification receipt for this proposal.
+
+The [[file:../README.md][README]], [[file:../rust/README.md][Rust integration]],
+[[file:../python/README.org][Python documentation]],
+[[file:scheme-relational-language-design.org][native language design]] and
+[[file:c-abi-execution-boundary.md][C ABI boundary]] describe different stages or
+paths. In particular, “trusted host Scheme execution,” “Rust is a thin host,” and
+“runtime uses the native expander” need entry-point-specific scope. This revision
+does not edit those concurrently maintained files or relabel historical results.
+
+* What the previous design did not establish
+
+| Previous assumption | Revised assessment |
+|---------------------+--------------------|
+| A common representation removes duplicate semantics | It provides a comparison boundary; policy and evaluators can still be independently implemented |
+| An operator catalog makes operators single-source | It can unify names, arities and capabilities; a catalog without algorithm bodies does not unify execution |
+| Scheme emits Rust, therefore the native Scheme algorithm is reused | The current producer constructs explicit Rust function IR; that does not show translation of the existing native Scheme definitions |
+| Rust callees under generated code are physical details | Some implement negation, expression evaluation, aggregation, delta selection and publication, all of which have semantic obligations |
+| Producing Rust tokens closes the compiler prerequisite | Syntax validity and compilation do not establish purity, semantic preservation, memory ownership or error equivalence |
+| Source occurrences and derived sets are sufficiently described | Aggregation scope, occurrence identity, head writes and multi-head lowering also need explicit rules |
+| The integer baseline reduces current capabilities | It only bounds the portable claim; existing extensions and consumers remain in place |
+
+* Public logical representation
+
+This is a semantic interchange between Library components, not a new user DSL,
+a mandated JSON protocol, a Rust code-generation IR, or an already implemented
+public API. Scheme objects, Rust owned types and ABI packets must encode the same
+logical value. Physical plans are separate artifacts.
+
+#+begin_example
+RelationalProgram = {
+  semantic_contract, required_capabilities, relations, rules, outputs
+}
+Relation = {
+  scoped_id, columns, source_or_derived, optional_domains,
+  optional_lattice_descriptor
+}
+Rule = { local_id, heads, ordered_body }
+Term = Variable(rule_local_id) | Literal(typed_value) | Wildcard
+Clause = Atom(relation, terms)
+       | Not(atom_with_bound_named_variables)
+       | Guard(expression)
+       | Compute(output_variable, expression)
+       | Reduce(output_variable, reducer_id, atom, value_inputs)
+Expression = Variable | Literal | Primitive(operator_id, expressions)
+           | And(ordered_expressions) | Or(ordered_expressions)
+           | IfFalse(test, false_branch, other_branch)
+
+SolveInput = { admitted_program, source_snapshot, execution_limits }
+SourceSnapshot = { source_relation -> ordered_occurrences }
+Occurrence = { snapshot_local_id, typed_row }
+Binding = { semantic_contract, program_content, source_content,
+            optional_caller_tag }
+#+end_example
+
+** Required invariants
+
+- Program and snapshot values are immutable and have explicit ownership.
+  Source replacement changes rows, not rules. A changed rule set requires a
+  newly admitted program and invalidates incompatible plans and evidence.
+  Rule history and activation policy remain with the host.
+- IDs are scope-local, not MRR FactIds. Alpha-renaming preserves public exports,
+  source/derived identity and private scope. Local variable spelling and physical
+  index IDs do not define meaning. Operator contract identity does.
+- Named variables in a negative atom must already be bound. Wildcards are
+  existential probes that create no binding. A missing match means absence in
+  the completed lower-stratum relation, not external-world nonexistence.
+- Body order defines variable binding and expression evaluation. A Compute
+  output already bound must agree with its existing value. Guard requires an
+  actual Boolean, even though expression truth uses Scheme's false-only rule.
+- Reduce groups by the surrounding bound environment, evaluates its atom with
+  fresh aggregate-local bindings, consumes one value-input tuple per matched
+  occurrence/assignment, and exports only its output. Empty count/sum return
+  zero for an existing outer frame; empty min/max produce no binding. No outer
+  frame means no invented group. Aggregate-local variables cannot leak.
+- A source relation is externally supplied and a derived relation is rule-owned
+  in the portable profile. Mixed source/head writes require a separately defined
+  extension and must not be silently projected as the portable profile.
+- Multi-head lowering must preserve the original rule/head correspondence,
+  variable scope, source/derived restrictions and evidence mapping. All head
+  values must pass checks before the rule's outputs are published. Splitting
+  heads is not justified by final-row agreement alone.
+- Source duplicates retain snapshot-local occurrence identity and multiplicity;
+  derived rows use typed set membership. Atom joins and aggregation preserve
+  the multiplicity of the relations they read. Source duplicates are not
+  silently deduplicated at a codec or normalization boundary.
+- Strata, indexes and execution plans are derived and rechecked; caller-supplied
+  strata are not admission authority. Coverage assumptions and external clock/cut
+  tags are explicit host premises, not truth values or completed-execution flags.
+
+** Values, binding and comparison
+
+The portable scalar profile contains exact integers, Booleans, strings and
+interned symbols. Strings and symbols are distinct; missing input, an empty
+relation, =#f= and an unknown claim are not interchangeable.
+
+Object graphs, sharing/cycles, owner-local identities, rational/binary64 values
+and lattices remain existing extensions, not removed functionality. Each needs
+its own equality, transport, type, proof and resource contract. No opaque identity
+is converted into cross-process structural equality. A lowerer must either
+preserve a declared extension or reject projection; it cannot truncate it.
+
+Canonical content comparison preserves body order, typed literal contents,
+source occurrence multiplicity, public outputs and scope. Alpha-normalization
+needs independent expected cases; both lowerers using the same broken normalizer
+is not evidence of preservation. Hashes index content and bind artifacts; full
+values remain the equality authority, with explicit collision-safe comparison.
+A caller tag alone cannot certify unchanged source content.
+
+Important open obligations are an executable representation schema, extension
+encoding, source-occurrence projection, normalization laws and independent
+round-trip fixtures. The structure above specifies their target meaning; it does
+not claim current Program, wire and native objects already satisfy it.
+
+* Two input contracts
+
+| Property | Inert relational data | Trusted Scheme construction |
+|----------+----------------------+-----------------------------|
+| Input | Restricted declarations, source facts, closed operators and statically lowerable helpers/macros | Native constructors, explicit arguments and supported module capabilities |
+| Construction | Bounded parsing and declaration lowering; no arbitrary host execution | Native Gerbil reader/expander and explicitly trusted construction |
+| Common boundary | Public logical representation followed by semantic admission | Project a construction result to that representation, then admit it |
+| Outside the shared profile | Reject unsupported forms; do not execute or fall back | Use only an explicitly selected native extension path, or reject a portable request |
+| Deployment | Preserve the current Python/Core path and wheel consumption without an SDK/build workflow | Available only where the selected native runtime/resources are actually supported |
+| Evidence | Explicit execution/proof capability intersection | Projectable programs can be replayed; arbitrary callbacks do not gain proof authority |
+
+The two contracts need not accept the same source text. A source-to-source
+comparison is meaningful only for a declared overlap. Otherwise compare
+independently authored equivalent logical programs.
+
+=trusted=True= grants neither completeness nor portability. On the data path it
+does not enable arbitrary procedures; on the native construction path it is
+host authorization to run construction code, not a proof of purity/termination.
+The common representation must contain no runtime closure, mutable capture,
+provider callback or hidden clock access. Such capabilities remain explicit
+native extensions; attaching a descriptor does not make them portable.
+
+Restricted macro expansion must specify scope, capture avoidance, literals,
+repeated parameters and unsupported forms. Existing Rust pattern substitution
+is not automatically equivalent to Gerbil hygiene. Scope/capture counterexamples
+are required before claiming equivalence. Do not extend the data frontend into
+a second general Scheme implementation to fill projection gaps.
+
+Precompiled Graph captures are a construction mechanism inside the data contract.
+They select admitted algorithms/parameters, not arbitrary executable bodies, and
+must lower to the same logical boundary or explicitly declare their separate
+extension. A fixed C export does not create a third language semantics.
+
+* Single-source production operators: conditional target
+
+** Separate the three artifacts
+
+1. An operator catalog records IDs, names, arities, input/result types, control
+   behavior, error categories, domain growth and execution/proof support.
+2. An algorithm source contains actual branching, short-circuit selection,
+   value construction and error decisions. It is not just a list of names or
+   calls into an independently handwritten operator dispatcher.
+3. Generated code and linked primitive implementations form the executable
+   artifact. Their transitive dependencies determine what is actually reused.
+
+The chosen target is a closed, pure Scheme operator subset whose actual bodies
+are consumed by the native production path and translated at Library build time
+for the Rust production path. Existing independent primitive calls are allowed
+only under a small, reviewed primitive contract. The route is CONDITIONAL:
+there is no demonstrated source-to-artifact pipeline for all these bodies yet.
+Do not manufacture a second handwritten Rust-oriented AST and call it compilation
+of the existing native implementation.
+
+The current upstream [[file:../../gerbil-scheme-rust/build-support/gerbil-scheme-rust-ir/src/compiler.rs][function IR backend]]
+explicitly leaves source-level purity and call admission to its producer. It
+emits Rust tokens and validates their syntax; Rust compilation supplies further
+type checking. Neither step proves the source program was translated, callees
+are pure, or errors match native behavior. Its name/call/method nodes can delegate
+the entire algorithm. No new compiler capability is assumed in this design.
+
+A direct shared compiled export is an alternative only if it actually executes
+the same algorithm with the required initialization, allocation and ownership
+contracts. Merely exporting the current Rust Core, or wrapping a VM-dependent
+Scheme dispatcher and labelling it VM-independent, does not satisfy this target.
+Choosing that alternative requires a separate recorded decision and the same
+artifact/dependency tests; it is not an automatic fallback.
+
+** Primitive boundary and technical prerequisites
+
+| Prerequisite | Required evidence before removing a duplicate |
+|--------------+----------------------------------------------|
+| One consumed algorithm source | A source map ties both production call paths to the same admitted body; native code does not continue using an unrelated hand-maintained definition |
+| Source admission/translation | Demonstrate supported control/data forms, lexical scope, exact types, rejected effects/recursion and evaluation order; fail the build on unsupported bodies |
+| Primitive allowlist | Every call target has declared input/output, error, allocation, ownership, mutation and resource effects; reject unlisted indirect calls |
+| Representation correspondence | Relate Scheme values to owned Rust values, including integer magnitude, Unicode strings, symbol identity and immutable lifetimes; independently test codecs |
+| Lazy control lowering | And/Or/IfFalse retain selected-branch execution; eager evaluation of all arguments is forbidden |
+| Error preservation | Type/arity failures, invalid operations, cancellation and allocation/resource failures have explicit outcomes; native exceptions and Rust panics are not equated |
+| Resource discipline | Declare shared scalar work checkpoints and allocation costs; both paths enforce limits before costly work; whole-engine timeout schedules need not be identical |
+| Build/installation closure | Record source, translator, primitive, generated-body and executable hashes; install and run the actual artifact without consumer-side compilers or SDK paths |
+| Duplicate removal | The old production semantic branch is deleted and no longer reachable; a wrapper calling it fails this test |
+
+A bigint addition primitive is an acceptable arithmetic boundary only with an
+explicit exact-integer contract. “Evaluate this ASCENT expression,” “advance this
+rule,” or “publish the fixed point” are not scalar primitives: they hide the
+very policy being claimed as shared. Object equality and interning are also
+semantic dependencies, not harmless allocation utilities.
+
+Short-circuit operands stay expression trees until their branch is selected.
+An evaluated argument vector cannot recover laziness. Static admission still
+checks the structure/scope of every branch. Static traversal may consume admission
+budget; only execution costs of unselected branches are absent.
+
+** Operator contract
+
+This is a closed language profile, not compatibility with every Scheme procedure
+of the same name. A portable input is checked against this contract, not whichever
+host implementation happens to accept it.
+
+| Family | Portable scalar semantics |
+|--------+---------------------------|
+| identity | One bound value, unchanged type/value |
+| add, multiply | Two exact integers; exact integer result |
+| subtract | One integer negates; two subtract; other arities reject |
+| integer comparison | Two exact integers; Boolean result; no implicit conversion |
+| even/odd/zero/positive/negative | One exact integer; Boolean result |
+| And/Or/Not | Only #f is false; And/Or select operands left to right and return an operand; empty And is #t and empty Or is #f; Not returns Boolean |
+| Guard | Final value must be Boolean; other truthy values fail |
+| equal | Equality of portable tagged values; extended values require their own laws |
+| immediate identity | Interned symbols/Booleans only; numeric or heap identity rejects |
+| string equality/append | Two strings compare; zero or more strings concatenate in order; empty append returns empty string |
+| symbol/string conversion | One value of the declared type; no case folding or implicit normalization |
+| count | No value-input; count matched occurrences; existing empty group yields 0 |
+| integer sum/min/max | One integer value-input; empty sum is 0; empty min/max yield no binding |
+
+Known static errors reject at admission; runtime type failures abort execution
+without publishing a partial new answer. They do not become false guards.
+Vector operations remain an explicit extension with checked integer indices,
+shape/bounds errors, shared/cyclic namespaces and owner identity preserved.
+
+Mean, rational/binary64 aggregation and lattices are not silently forced into the
+integer baseline. Portable numeric qualification needs selected exact/inexact,
+NaN, signed-zero, infinity, rounding and reduction-order laws. They remain open;
+a tolerance chosen after a mismatch cannot establish semantic identity. Existing
+extension support is retained and must not be deleted merely to pass the baseline.
+
+* Responsibilities and honest residual duplication
+
+| Owner | Responsibility |
+|-------+----------------|
+| ASCENT Scheme language layer | Native construction; logical/operand contracts; admitted canonical scalar bodies and reference meaning; maintenance-time producer |
+| ASCENT Rust core | Owned logical values, restricted data lowering, boundary checks, physical plans/indexes/Rayon and lifetimes; generated scalar body execution once qualified |
+| Python and C ABI | Preserve current routing, ownership, typed transport and errors; no backend guessing or semantic repair |
+| Independent checker | Reconstruct consequences from bound program/source; validate proofs without invoking the production expression evaluator |
+| Host/MRR/POO Flow | Source/coverage authority, canonical lineage, persistence, causal/business policy and application coordination |
+
+| Duplication | Disposition and limit of claim |
+|-------------+--------------------------------|
+| Readers for different input contracts | Retain; common representation does not imply one parser |
+| Independently evolving restricted helper/macro meaning | Constrain by an explicit lowering contract; retain only contract-required parsing, with independent capture/scope cases |
+| Operator name/arity/type/capability tables | Generate from one catalog; this removes metadata duplication only |
+| Handwritten production scalar decisions | Replace only after genuine body translation/shared artifact and deletion evidence close; currently unresolved |
+| Binding safety, stratification and dependency checks | One normative policy; algorithms may remain independently implemented/rechecked; call this conformance, not eliminated duplication |
+| Join/delta/aggregation/termination/publication backends | Retain physical implementations; they still carry semantic obligations and require differential tests |
+| Independent proof evaluator | Retain intentionally; share contracts, not production calculations or proof acceptance |
+| Normalizers, codecs and source bindings | Unify normative content rules; separately verify implementations and shared trusted dependencies |
+| Direct Core versus ABI invocation | Retain current paths; same-Core transport comparison is not independent semantic evidence |
+
+Consequently even successful scalar sharing does not make the relational engine
+single-source. Aggregation, duplicate accounting, negation, fixed-point scheduling,
+head publication and source replacement remain separately implemented unless a
+later change demonstrates their actual reuse. No repository-wide “semantic
+duplication eliminated” claim is permitted by this proposal.
+
+* Execution, results and evidence
+
+Positive strata compute least fixed points. Negative/aggregate dependencies read
+completed lower strata; illegal cycles reject. Semi-naive optimization must agree
+with independent naive closure. Recursive integer/string generation may diverge;
+limits bound work and never establish logical completion or finite height.
+
+Keep execution completion, proof completion and host coverage premises separate.
+Proof outcomes include complete, closed-absent, bounded, unsupported and invalid;
+invalid input and execution failure remain distinct errors. Absence applies to
+the bound program and supplied snapshot. External-world absence additionally
+depends on host coverage, which a successful solve does not prove.
+
+Preserve Rust's atomic complete-or-error capability and explicitly resumable
+Scheme partial capability. Shared safety properties require failed work not to
+replace committed input/result or mint a complete receipt. Backends need not
+produce identical partial rows under the same wall-clock cutoff. Complete
+comparisons require all participants to finish under separately stated bounds.
+
+Distinguish detached historical snapshots from current result leases. Replacing
+sources revokes current applicability; it need not erase detached historical
+rows. Keep current stale/closed-owner checks. A reusable proof must bind actual
+program/source contents, contract, capabilities and verifier identity, not only
+caller tags or a generation number. Explain templates remain metadata unless a
+separate checked derivation accompanies them.
+
+The inspected production evaluator supports unary subtraction and string
+operations missing from the proof expression evaluator. Empty string append can
+reach an empty-argument index in that evaluator. These are static findings, not
+executed reproductions, and are not fixed here. Proof support must be checked
+before replay; unsupported operators return a structured unsupported outcome.
+A capability declaration does not replace successful proof tests.
+
+Independence is deliberately bounded. Reusing value codecs, bigint primitives or
+object operations puts them in the checker's trusted base. Test them against
+independent expected values; do not claim replay proves its shared dependencies.
+A generated production evaluator must not also generate the independent expected
+answers or become the proof evaluator under another entry-point name.
+
+* Independent differential acceptance
+
+Every gate records its own outcome. Preserve raw inputs, normalized views,
+expected answers, semantic/operator contracts, source/dirty inventory, compiler
+and primitive identities, generated artifacts, executable/wheel hashes, resource
+limits, completion states and failures. Drift makes a receipt stale. Preserve
+counterexamples and original caps; do not rewrite expectations to hide changes.
+
+| Gate | Independent comparison | Acceptance |
+|------+------------------------+------------|
+| G1 Frontends/representation | Independently authored Scheme/data programs and manually specified logical expectations; private scope, alpha-renaming, macros, multi-heads, aggregate scope and duplicate occurrences | Exact logical preservation; incompatible forms reject by their input contract; extensions cannot disappear |
+| G2 Admission | Hand-authored logical inputs; independent binding/dependency model; unsafe heads, negative/aggregate cycles, types and unsupported extensions | Same semantic decisions/categories on the overlap; two calls to one validator are not independent |
+| G3 Operators | Independent expected vectors through native, Rust and proof paths; all arities/types, short-circuit errors, empty append, unary minus, large integers and Unicode | Correct values/types/errors and branch behavior; declared proof coverage works without panic |
+| G4 Fixed points | Independent naive interpretation/hand closures against Scheme, serial Rust and multiworker Rayon; cycles, self-support, diamonds, multiple derivations, negation, aggregates | Every relation agrees after completion, including occurrence-sensitive aggregates; query samples or digests alone are insufficient |
+| G5 Updates | Independent fresh solve after each retained insertion/withdrawal/batch/rule-program change; negative additions, last support removal and invalid updates | Same complete answers and proper invalidation; failure does not commit new state or reauthorize stale evidence |
+| G6 Lifecycle/stopping | Independent state machine; open/run/result/replace/close, cancellation, zero limits, stale leases and partial/resume | Atomic and resumable profiles obey their stated safety properties; no requirement of identical wall-clock partial progress |
+| G7 Evidence/adversarial | Replay from original bound inputs; altered rules/rows/occurrences/generations/witnesses/counts; empty results, proof limits and unsupported operations | Tampering rejects; no bounded/unsupported positive verification; full closure comparison; explanation is not proof |
+| G8 ABI/install | Direct Core versus C/Python plus independent codec golden cases; ownership/release, typed rows, shared/cyclic objects; relocated installation | Full typed-value/lifetime agreement; no consumer SDK/build/fallback; same-Core comparison claims transport only |
+| G9 Retained consumers | Existing Review/Python scenarios and rejection contracts with unchanged gold expectations | Current paths remain usable; changed capability is reported rather than hidden by weakened tests |
+| G10 Algorithm provenance | Transitive generated call graph, native call graph, source-to-body map, primitive allowlist and duplicate-deletion inventory | Same source actually supplies both production decisions; delegates hiding handwritten semantics fail the gate |
+| G11 Translation adequacy | Compile a minimal scalar slice with conditional execution, checked arithmetic, errors and resource checkpoints; independent reference results and source-mutation controls | Changes to canonical semantic bodies affect the actual selected native/Rust artifacts and expected observations; an unused generated file fails |
+
+G10 must classify every reachable callee as generated semantic body, reviewed
+primitive, physical storage operation, or an unresolved semantic implementation.
+Inspect generated bodies and actual link/call selection, not names, source file
+extensions, no-VM flags or export counts. Existing =Batch::advance= and
+=Round::evaluate/publish= are unresolved semantic dependencies for any claim of
+whole-engine reuse. Their presence is acceptable for the narrower scalar claim
+only when they do not bypass its selected generated operator body.
+
+G11 mutation controls belong in isolated future qualification copies, never in
+this shared working tree or production artifacts. A semantic mutation must affect
+both production paths; a formatting/comment mutation must not change logical
+results. Content hashes establish identity, not correctness. These bounded
+controls supplement, rather than prove, general compiler preservation.
+
+G3/G4/G7/G8 extensions have separate rows for objects, floating point and lattices.
+Topology/identity expectations must be independent. Numeric comparisons use the
+selected numeric contract, never an ad hoc tolerance. Baseline success is not
+full-language qualification, and extension gaps cannot justify consumer removal.
+
+The independent reference must not call the production planner/evaluator. A
+checker may share declared low-level primitives, but those assumptions must be
+visible. Two frontends sharing a normalizer need independent expected IR values.
+Rust Ascent is only an oracle for its verified overlap, not this language's
+normative authority. Lean/Quint abstract results, bounded corpus agreement,
+installed-wheel evidence and native correctness remain different claims.
+
+* Compiler feasibility audit against G10/G11
+
+** Audit scope and result
+
+This is a static audit of ASCENT's current function-IR route, not an execution
+of the compiler, a new qualification fixture, or a change to either runtime.
+The reviewed route is =program/rust-execution.ss= to =compile_function_json=
+to =OUT_DIR/execution.rs= to Rust kernel calls. Other upstream event/source-match
+backends do not establish scalar translation merely by existing: ASCENT's
+[[file:../rust/ascent/build.rs][build script]] selects the function-IR entry.
+
+Result: no current production scalar slice has been demonstrated to share one
+implementation across native Scheme and Rust under G10/G11. The backend can
+emit a small real decision body, but the common-source frontend and native
+consumption edges are missing from the inspected route. This is a bounded
+negative finding about that route, not a claim that no compiler elsewhere could
+ever supply those edges.
+
+** What the current compiler actually establishes
+
+The upstream [[file:../../gerbil-scheme-rust/build-support/gerbil-scheme-rust-ir/src/compiler.rs][function compiler]]
+deserializes FunctionIr, checks its schema, parses Rust names/types/paths, emits
+tokens and parses the resulting ItemFn. =Name= accepts a Rust path; =Call= and
+=Method= emit calls. These operations do not enforce a primitive allowlist,
+resolve source-language scope, prove purity, or establish source/value semantics.
+Rust typechecking happens downstream, not inside the token emitter.
+
+| Available mechanism | Feasibility implication | Limit |
+|---------------------+-------------------------+-------|
+| Name, explicit parameters/result types | A monomorphic, local-variable-only body can be emitted | The producer must restrict names to lexical parameters rather than arbitrary Rust paths |
+| If | Emits an actual Rust conditional with branch bodies in place | Rust requires a Boolean condition; this does not implement Scheme truth over arbitrary values |
+| Binary And/Or | Emits Rust Boolean short-circuit operators | Not Scheme operand-returning And/Or over tagged values |
+| Binary Equal | Emits Rust == | Equality meaning depends on the actual Rust type and its implementation |
+| Binary Add and Number | Emits Rust +; the input numeric literal field is u64 | Does not establish exact unbounded Scheme integer addition, overflow policy or allocation accounting |
+| Block, Fold and Closure | Can express real control/composition in generated bodies | Iterator/method/capture behavior remains in the transitive dependencies; Fn ownership is not a source-purity proof |
+| Try | Emits Rust ? | Does not translate Scheme exceptions or define a common error taxonomy |
+| Call/Method | Can call reviewed low-level primitives | Can equally hide the complete handwritten evaluator or side effects |
+
+The upstream [[file:../../gerbil-scheme-rust/build-support/gerbil-scheme-rust-ir/tests/integration/function_ir.rs][function-IR tests]]
+and [[file:../../gerbil-scheme-rust/build-support/gerbil-scheme-rust-ir/tests/integration/closure_ir.rs][closure tests]]
+include source that invokes rustc and executes generated functions. Their inputs
+are hand-authored IR. They provide test coverage for IR emission/compiled behavior,
+not a Scheme-source translation or a shared native scalar implementation. They
+were inspected, not rerun in this document-only audit. The closure tests also
+exercise live lock-backed state: a "pure" IR label is not an enforced effect rule.
+
+** G10: transitive dependency classification
+
+| Reachable segment | What is genuinely defined there | Classification and missing edge |
+|-------------------+----------------------------------+---------------------------------|
+| matching-ir to bind_variable/bind_checked/bind_term/bind_step | Decisions for already-bound variables, literal comparison, wildcard and rejection | Real generated matching logic; not an empty wrapper |
+| Generated matching to MatchState and Cell | Binding slots, state access/update/rejection and code equality | Representation primitives requiring bounds/equality/ownership premises; see [[file:../rust/ascent/src/execution/matching.rs][MatchState]] and [[file:../rust/ascent/src/execution/values.rs][Cell/Values]] |
+| Generated bind fold | Ordered matching composition over terms and row cells | Real composition, but zip relies on prior arity admission; no native common-body consumption shown |
+| Generated apply_rule to Batch::advance/project | Body traversal delegates clause meanings and head handling | Handwritten semantic dependency, not merely storage |
+| Generated advance_round to Round::evaluate/publish | Wrapper selects existing Rust round methods | Delta task selection, stopping and publication still live in Rust |
+| Generated Graph constructors | Projection/transitive/composition graphs are assembled in the emitted bodies | Credit graph composition; [[file:../rust/ascent/src/relational_graph.rs][Graph lowering]] and evaluation remain separate dependencies |
+| Native gerbil-ascent-bind-row and checked operators | Native matching and operator execution | [[file:../core/rule-bindings.ss][Native bindings]] and [[file:../program/scheme-checked.ss][checked operators]] are not shown consuming those generated Rust-oriented bodies |
+
+Actual Rust call sites include generated =bind= in join/negation and
+=advance_round= in the fixed-point loop in
+[[file:../rust/ascent/src/execution/kernels.rs][kernels]]. This is stronger than
+merely generating an unused file. It still does not establish shared native
+consumption, scalar body reuse or matching correctness under malformed arity.
+The current generation already contributes real matching logic; describing all
+of it as wrappers would be inaccurate. Describing the complete evaluator as
+shared would also be inaccurate.
+
+For current production scalar expressions, the inspected generator does not
+emit the dispatch/body implemented in
+[[file:../rust/ascent/src/execution/expressions.rs][Rust expressions]]. Source
+production, source-to-body translation, common native consumption and duplicate
+deletion therefore remain open for the scalar claim.
+
+** Smallest credible slice: a Boolean selection kernel
+
+Identity is smaller but offers almost no evidence about control preservation.
+Exact-integer arithmetic immediately introduces bigint, allocation, overflow
+and error contracts. General Scheme truth and operand-returning And/Or introduce
+tagged values and lazy expression evaluation. The smallest useful first slice
+is a monomorphic Boolean conditional kernel over already evaluated Boolean values.
+
+Qualification source only; no public or production function is added:
+
+#+begin_src scheme
+;; Admitted signature: Boolean Boolean Boolean -> Boolean.
+(define (select-boolean test on-true on-false)
+  (if test on-true on-false))
+#+end_src
+
+The whole decision body lowers structurally to one If with three local Name
+nodes. The current backend already has those nodes and can emit the corresponding
+Rust function with three bool parameters and a bool result. No Call, Method,
+Binary operator, bigint, interning, VM object, foreign callback or allocator is
+needed inside this decision body. It therefore cannot hide selection in an
+external semantic callee. Rust bool and Scheme Boolean input correspondence
+still needs explicit boundary checks and independent expected values.
+
+This is a proposed shared scalar kernel, not a new public operation or a claim
+that a generic conditional evaluator already uses it. All three inputs are
+values: the slice proves selection of a result, not non-evaluation of arbitrary
+operand-producing expressions. It does not implement full And/Or, Scheme truth
+for non-Booleans, error propagation, arithmetic, cancellation or resource budgets.
+
+The minimal admitted source fragment is one function definition, distinct typed
+Boolean formals, local formal references, and nested if expressions whose
+condition/branches remain Boolean. No Boolean literals are required for this
+first body; the current IR has no dedicated Boolean-literal node. No encoding
+through fake arithmetic/equality or permissive Rust paths is needed. Reject
+free names, calls, mutation, imports, recursion, captures, implicit coercions and
+unknown forms. Preserve the source-derived formal/name map and branch positions.
+
+A production producer must lower the actual admitted body mechanically. Emitting
+the example's AST from a second handwritten template fails G10. The native
+consumer must execute that same admitted source body rather than a separately
+written selector or an unrelated built-in. Until both edges exist, even this
+small slice is not shared in production. The isolated experiment below closes
+these edges for qualification consumers only.
+
+** Scoped G11-S0 acceptance, without claiming full G11
+
+| test | on-true | on-false | Expected result |
+|------+---------+----------+-----------------|
+| #f | #f | #f | #f |
+| #f | #f | #t | #t |
+| #f | #t | #f | #f |
+| #f | #t | #t | #t |
+| #t | #f | #f | #f |
+| #t | #f | #t | #f |
+| #t | #t | #f | #t |
+| #t | #t | #t | #t |
+
+The expected table must be handwritten independently, not generated from the
+translator. Admission cases reject duplicate/unbound formals, non-Boolean
+boundaries and effects. Additional independently expected nested-if cases test
+structure and branch mapping; alpha-renaming leaves outcomes unchanged.
+
+In isolated future qualification copies, swap the source branches: both actual
+native and Rust consumers must change on distinguishing rows. If only emitted
+text changes, or only one consumer changes, the common-source claim fails.
+Comment/formatting changes and consistent alpha-renaming must preserve results.
+Inspect the generated body and native call path; record actual selected artifact
+hashes and absence of alternate handwritten selector branches. An isolated
+compiler sample that neither production path calls does not pass production G10.
+
+G11-S0 is only the scoped selection feasibility gate. Full G11 explicitly also
+requires arithmetic, failure and resource behavior, so it remains open after
+all eight rows and source mutations pass. Future stages must add actual
+source-derived checked arithmetic, errors and checkpoints, and separately test
+lazy branch execution with observable qualification-only traces. Do not enlarge
+the S0 claim using hand-authored IR trap calls outside its admitted source subset.
+
+** Required changes before a future implementation can qualify
+
+1. Establish an admitted source-to-function-IR producer for precisely the small
+   Boolean fragment, with local-name/type/effect checks and source mapping.
+   The isolated producer below demonstrates this fragment; production adoption
+   remains missing work, not an existing capability of compile_function alone.
+2. Give the native qualification and eventual production consumers that same
+   source body; demonstrate call selection before claiming duplicate removal.
+3. Run G11-S0 truth-table, negative, nested and mutation controls, and G10 body/
+   dependency audits, against the actual generated/selected artifacts.
+4. Establish separately whether the kernel replaces any current production
+   semantic decision. If it is only a compiler demonstration, report it as such.
+   Do not refactor Review/Python simply to manufacture an adoption claim.
+5. Only then decide whether to extend the admitted slice. Full operators and
+   engine convergence retain all other gates, profiles and consumer regressions.
+
+The static feasibility audit above performed no implementation, executable test
+or source mutation. The compiler-owned experiments below supply bounded
+S0/S1 and modeled S2 evidence; they do not close production G10 or full G11.
+
+* Compiler-owned isolated qualification: conclusions and limits
+
+The G11 test sources, minimal fixtures and offline replay entry point belong to
+[[file:../../gerbil-scheme-rust/build-support/gerbil-scheme-rust-ir/qualification/g11/README.org][the compiler package's G11 qualification]]. ASCENT retains consumer contracts,
+acceptance gates and these bounded findings. It does not vendor compiler test
+implementations, dependency snapshots, generated result dumps or history
+archives. Raw runs and generated artifacts are retained outside Git.
+
+The upstream reference above is a local working-tree reference, not a published
+or immutable upstream revision. A durable immutable reference remains OPEN
+until that compiler-owned change is committed and published; this document does
+not claim remote CI, production integration or a released qualification target.
+
+** Findings
+
+| Slice | Observed conclusion | Boundary |
+|-------+---------------------+----------|
+| Boolean selection | Native Scheme and actual IR-compiled Rust agreed on six strict Boolean source variants, truth tables and rejection controls | Restricted source admission and Boolean selection only |
+| Exact-integer addition | Both runtimes executed the same source-derived ripple-carry body, including large exact integers, source mutations and work exhaustion | The sum/carry algorithm is shared; input codecs and state primitives remain separate |
+| Resource characterization | Both runtimes matched an independent event-budget model for 346 ordinary cases and detected seven faulty-meter controls per source variant | Five variants; explicit stage admission and logical allocation traffic, not a physical heap/time bound |
+
+| Pre-encoding admission and failure exit | Nine source/control variants, 415 cases each per runtime, plus six rejected admission sources | Source-derived admission formulas and a source-requested nonlocal exit; physical runtime costs remain open |
+| Actual allocator-region bound | An isolated Rust worker confined selected native parser/BigInt and Rust-visible cleanup allocations to a fixed mmap payload; page-cap denials admitted no result | No claim for System-allocator production behavior, whole-process RSS, runtime-C allocations or Scheme/Gambit memory |
+
+Arithmetic source mutations remained effective in both runtimes; formatting
+and alpha-renaming preserved IR and results. These are isolated local findings,
+not production qualification. The compiler-owned entry point emits detailed
+receipts outside Git instead of copying them into this design. The expanded
+checks were rebuilt and rerun twice offline, including after moving the entry
+point into the compiler package. Source identities and all observations matched
+with an initially empty CARGO_HOME and externally provisioned dependencies.
+
+The original marker-only failure remains an executed control: with source
+work fuel zero, the 4098-column case parses both operands, encodes every column
+and visits all columns, including 4097 visits after source failure. The improved
+source-derived admission rejects before encoding: zero columns, visits or bit
+pushes, while both input conversions have already happened.
+
+To exercise a real in-flight failure, work fuel is revoked after one successful
+push despite initial admission succeeding. The old source visits all 4098
+columns, including 4096 after failure. The improved source exits at the second
+visit, with no subsequent source visits, no decode and no admitted partial
+result. Undercharging encoding, bypassing admission and reverting to marker-only
+failure were all detected against the independent model; numerical sum/carry
+mutations also remained effective. The compiler-owned
+document describes the actual contracts and replay procedure.
+
+** Actual allocation feasibility finding
+
+The smallest demonstrated native allocation-bound candidate is an isolated Rust
+worker whose selected GlobalAlloc requests receive actual addresses only from
+a fixed page-granular mmap payload. This replaces allocation backing for the
+experiment; it is not another logical traffic counter. Native exact-integer
+parsing, BigInt temporaries and the source-derived addition body execute under
+that allocator. Address/ownership traces are independently checked. Smaller
+payloads exercised denial in parsing, intermediate construction, output
+conversion and cleanup, with no admitted result or allocator fallback.
+
+The meaningful boundary is the selected allocator region. Fixed trace storage,
+preloaded input, stack, startup, runtime-C/unwinder allocation and serialization
+remain outside it. On the tested host the fixed trace mapping alone occupies
+1064960 bytes outside the payload, so a 16 KiB payload is explicitly not a
+16 KiB whole-request budget. The non-recycling arena retains slots until worker teardown;
+its reserved extent is neither peak live heap nor process RSS. Native denial
+terminates the worker instead of pretending that in-process exception cleanup
+completed. A deliberately allocating Drop probe demonstrates that cleanup can
+itself exhaust the region; ordinary BigInt destruction is not thereby claimed
+to allocate that probe's buffer.
+
+A System-fallback mutant and a cleanup-bypass mutant were rejected even when
+their arithmetic/error output looked correct. Source failure still executes the
+actual generated addition body. The English compiler-owned document contains
+the scope, prerequisites, measured boundaries and offline replay entry point.
+The final allocation check completed 40 worker executions and rejected five
+negative controls; relocation/offline replay matched source identities and
+observations. The prior scalar/admission/failure-exit controls also passed.
+
+For the historical Scheme reference runner, native parsing, object allocation
+and GC do not pass through this Rust allocator; their combined bound was not
+established. That separate reference limitation is not a prerequisite for the
+default No VM runtime. The result qualifies a selected prototype allocation
+region, not a production memory budget or cross-runtime failure equivalence.
+
+** Responsibility and remaining gates
+
+The addition source implements the Boolean sum/carry algorithm, and a separate
+Scheme admission source implements post-parse cost formulas and failure
+precedence. Both are compiled into executable bodies and run natively from the
+same source bytes. Scheme/Rust codecs, elementary scalar operations, resource
+ledger primitives, traversal meters and exception adapters remain independent
+trusted components.
+Differential agreement checks them; generating a wrapper does not eliminate
+their duplicated resource semantics.
+
+Input scans are bounded before byte reads and frame storage. Decimal conversion
+and bit encoding have explicit admission credits before opaque native work.
+Allocation-request injection exercises failure in every modeled allocation
+phase; the ledger measures cumulative logical traffic. It does not intercept
+all native allocations or prove equivalent Scheme/Rust allocator failures.
+Native parser/BigInt internals, process startup, cleanup, destruction, GC, live
+heap/RSS and host CPU bounds remain outside the qualified model. The compiler's
+own source parsing and IR construction are also outside these runtime budgets.
+
+Early admission and genuine source failure exit are demonstrated only in the
+isolated logical model. The exit uses an explicit nonlocal effect primitive;
+Rust unwinding and Scheme exceptions remain separately trusted. Stopping source
+visits does not prove bounded destruction or cleanup. Before the default No VM
+consumer could adopt this prototype, its actual Rust/ABI allocation, admission
+and consumer qualification must close. Gambit GC qualification is not a
+precondition for that adoption. Production G10 and full G11 remain OPEN. The
+independent proof evaluator, general Scheme support, installed-wheel behavior,
+Review and existing Python paths have not been regression-qualified or changed
+by these experiments. No duplicate production implementation is removed or
+production integration authorized by this result.
+
+* Open prerequisites and decision gates
+
+No prerequisite below is marked closed by this document.
+
+| Item | Current status | Required next evidence |
+|------+----------------+------------------------|
+| Executable common representation and projection laws | Proposed | Schema, scope/occurrence/aggregate fixtures and lossless round trips |
+| Scalar source-to-IR translation | Isolated Boolean G11-S0 and signed ripple-carry G11-S1 producers passed; production producer absent | Broader admission/translation and production qualification; do not relabel the prototypes as integrated |
+| Native path consuming that same source | Demonstrated in isolation only | Reachable production call/body map and source-mutation controls |
+| Resource semantics for the No VM path | Prototype region bounds do not qualify the selected Core/ABI allocation paths | Actual Rust parser/BigInt/ABI allocation, failure release and destruction; Gambit/GC applies only to an explicitly selected VM path |
+| Primitive semantics/effects/ownership allowlist | Unspecified | Reviewed contracts and independent expected tests; error and allocation paths included |
+| Production scalar artifact reuse | No current slice demonstrated; native consumption and adoption remain open | G10/G11, exact artifact identity and old branch deletion; scoped G11-S0 alone is insufficient |
+| Proof coverage for added operators | Known static gap | Independent supported/unsupported, zero-arity and error-path tests |
+| Macro and multi-head preservation | Unqualified | Capture/aggregate-scope/head-error counterexamples and evidence maps |
+| Object/numeric/lattice portability | Separate open extensions | Selected laws and per-capability execution/proof/codec evidence |
+| Review/Python regression on a changed implementation | Not run here | G9 against exact installed artifacts without revised gold expectations |
+
+If scalar translation cannot satisfy the prerequisites, stop claiming single
+implementation provenance. Keep the current paths and identify their separate
+implementations honestly. A common spec plus independent implementations may
+still be a valid bounded architecture, but that requires an explicit revised
+decision; generated dispatch wrappers cannot be used as a substitute.
+
+* Implementation order and exit conditions
+
+1. Agree on the input, logical representation, value and operator contracts;
+   record extension support and audit each document's actual entry-point scope.
+2. Fix independent G3/G7 regression cases before changing operator/proof code.
+3. Close G10/G11 for a small scalar slice before expanding a generator or deleting
+   any existing path. This is the feasibility gate for the single-source claim.
+4. Converge representation/admission metadata and qualified scalar bodies while
+   retaining Review/Python consumers. Remove replaced semantic branches directly
+   after their consumers and gates pass; add no compatibility layer.
+5. Complete G1-G9 independently, update applicable runtime documentation and keep
+   historical receipts tied to their original artifacts and meanings.
+
+Exit requires all portable-profile gates, explicit residual duplication, qualified
+source-to-artifact provenance for the scalar claim, and no unexplained consumer
+loss. It does not require identical physical evaluators or proof/production code.
+It cannot be reached by moving files, generating wrappers, compiling tokens or
+passing same-Core ABI comparisons. This document records design and scoped
+isolated evidence only; it supplies no production implementation.

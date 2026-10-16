@@ -25,8 +25,8 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        self.assertEqual(len(plans), 51)
-        self.assertEqual(sum(map(len, plans.values())), 331)  # 327 original plus four arithmetic faults.
+        self.assertEqual(len(plans), 52)
+        self.assertEqual(sum(map(len, plans.values())), 336)  # Prior 331 plus five Rayon publication obligations.
         lifetime = {o.name: o for o in plans["ReaderLifetime"]}
         self.assertEqual(lifetime["sealed-round-unfair"].expected, 13)
         self.assertEqual(lifetime["single-reader-global-fairness"].expected, 0)

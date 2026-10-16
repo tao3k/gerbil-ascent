@@ -18,3 +18,9 @@ workbench/src/*.egg-info/
 workbench/build/
 __pycache__/
 *.pyc
+python/src/ascent/_sources/
+python/src/ascent/.gerbil-scheme-python-package.json
+python/src/ascent/.gerbil-resources.json
+rust/benchmarks/results*/
+rust/tests/results*/
+rust/tests/history/

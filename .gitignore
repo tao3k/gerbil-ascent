@@ -21,6 +21,5 @@ __pycache__/
 python/src/ascent/_sources/
 python/src/ascent/.gerbil-scheme-python-package.json
 python/src/ascent/.gerbil-resources.json
-rust/benchmarks/results*/
 rust/tests/results*/
 rust/tests/history/

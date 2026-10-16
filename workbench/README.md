@@ -48,3 +48,13 @@ Run logs and checker outputs stay under `.cache/ascent/`.
 Research records and archived source snapshots retain their original bytes,
 paths and hashes. Moving the active producer does not transfer a frozen plan's
 authorization or qualify an old receipt against the new producer.
+
+## Benchmark orchestration
+
+Rust owns Cargo `benches/` targets in each crate. Python measurement drivers
+are workbench modules (`python3 -m ascent_workbench.benchmark_run_hybrid`,
+`benchmark_run_comparison`, `benchmark_run_paired`, and `benchmark_run_multivm`).
+Run from the checkout root with the workbench installed. Pass output directories
+under `.cache/ascent/`; raw samples, stdout/stderr and generated receipts are
+local artifacts, not versioned source. Historical reports live in
+`docs/performance/rust/`. Moving a producer does not requalify historical timings.

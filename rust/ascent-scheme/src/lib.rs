@@ -26,6 +26,7 @@ mod tests;
 
 mod api;
 #[doc(hidden)]
+#[path = "../benches/support/hybrid.rs"]
 pub mod benchmark;
 pub use api::{
     Backend, Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, NativeProvenance,

@@ -16,7 +16,7 @@ dev-dependency for repository checks.
 
 ## Validation
 
-The [final local qualification report](benchmarks/qualification-hybrid-20261015-final.md)
+The [final local qualification report](../docs/performance/rust/qualification-hybrid-20261015-final.md)
 records the full semantic corpus, installed-wheel checks and accepted isolated
 36-configuration performance matrix, with source and executable identities.
 The [native crash diagnosis](tests/qualification-native-crash-20261015/README.md)
@@ -27,7 +27,10 @@ runner saves individual test outcomes, source digests, failures and timeouts.
 Historical implementation and test records are retained under `tests/history`;
 they are not library components or an indication of completed support.
 
-The matched performance harness is `benchmarks/run-hybrid.py`. Accepted timings
+Cargo owns benchmark targets in each crate's `benches/` directory. Build the
+hybrid target with `cargo bench --locked --manifest-path rust/Cargo.toml -p
+ascent-scheme --bench hybrid_benchmark --no-run`. The independent workbench runs
+matched measurements with `python3 -m ascent_workbench.benchmark_run_hybrid`. Accepted timings
 require all builds and semantic checks to finish first. Results from runs with
 concurrent build interference are diagnostic only.
 

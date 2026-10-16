@@ -1,4 +1,0 @@
-{
-  "performance_acceptance": false,
-  "reason": "additional gxi processes observed during sampling; all 252 semantic checks completed"
-}

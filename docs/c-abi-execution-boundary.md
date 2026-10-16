@@ -62,7 +62,7 @@ and opaque values. The default `graph` representation remains explicit; unknown
 formats are rejected, not silently substituted. Both formats execute the same
 Core algorithm and native fact-budget accounting.
 
-Run `rust/benchmarks/core-c-abi-rayon.py` against an installed wheel for alternating
+Run `workbench/src/ascent_workbench/benchmark_core_c_abi_rayon.py` against an installed wheel for alternating
 one/four-worker measurements and graph/typed-row transport controls. It compares
 complete answers, identical input/source digests and the complete source inventory
 before/after. Large-output and compute-heavy small-output workloads are separate:

@@ -135,6 +135,10 @@ impl EvidenceChain {
     fn source_identity(&self) -> PyResult<String> {
         Ok(lock(&self.state)?.source_identity())
     }
+    #[getter]
+    fn sources(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        packets::write(py, lock(&self.state)?.sources())
+    }
     fn scan(&self, py: Python<'_>, names: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
         packets::write(
             py,

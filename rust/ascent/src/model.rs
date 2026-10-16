@@ -15,6 +15,14 @@ pub enum Value {
     Symbol(Arc<str>),
 }
 impl Value {
+    /// Observe only an actual IEEE binary64 value, never coerce an exact number.
+    #[must_use]
+    pub fn as_binary64(&self) -> Option<f64> {
+        match crate::numbers::Number::read(self).ok()? {
+            crate::numbers::Number::Inexact(value) => Some(value),
+            crate::numbers::Number::Exact(_) => None,
+        }
+    }
     /// Construct an inexact number using the engine's canonical numeric encoding.
     /// # Errors
     /// Rejects invalid frozen numeric observations.
@@ -65,10 +73,12 @@ pub enum Type {
     Boolean,
     Text,
     Symbol,
+    Number,
 }
 impl Type {
     pub(crate) fn accepts(self, value: &Value) -> bool {
         self == Self::Any
+            || (self == Self::Number && crate::numbers::Number::read(value).is_ok())
             || (self == Self::Scalar
                 && (matches!(
                     value,

@@ -1,56 +1,69 @@
 //! Scheme-defined relational composition lowered to Rust and caller-owned Rayon pools.
 //! The supported boundary is finite typed sets and stratified negation.
 mod catalog;
+mod computational;
 mod data;
 mod derivations;
+mod domain;
+mod error;
 pub mod evidence_graph;
 mod evidence_store;
-pub use catalog::Catalog;
-pub use derivations::EvidenceChain;
-mod domain;
-pub use domain::{domain_check, domain_contract};
-mod observations;
-pub use observations::{compact_observation, expand_observation};
-mod computational;
-pub use computational::{ComputationalEvidence, ObservationRequest};
-mod reachability;
-pub use evidence_store::EvidenceStore;
-pub use reachability::{Reachability, ReachabilitySnapshot};
-mod error;
-mod trajectory;
-pub use data::Data;
-pub use trajectory::Trajectory;
-mod fact_limits;
-pub use fact_limits::FactLimits;
 mod execution;
+mod fact_limits;
+mod frozen;
 mod graph;
 mod lattice;
 mod loaded;
 mod model;
-mod numbers;
-pub use lattice::LatticeJoin;
-mod object_graph;
-pub use object_graph::{GraphItem, ObjectGraph, ObjectNode, rows_graph};
-mod frozen;
-pub use frozen::FrozenValue;
 mod module_input;
-pub use loaded::{
-    RowValue, SourceObservation, SourceResult, SourceSession, allocate_source_identity,
-};
-pub use module_input::{Component, Dependency, ObjectInput, ValueReference};
-mod provenance;
-pub use provenance::{
-    Provenance, ProvenanceEdge, ProvenanceGraph, ProvenanceLimits, ProvenanceNode,
-    ProvenanceStatus, ProvenanceWitness,
-};
+mod numbers;
+mod object_graph;
+mod observations;
 mod operators;
-pub use operators::{Expression, Operator, Reducer};
+mod provenance;
+mod reachability;
+mod relational_graph;
 mod session;
 mod source;
-pub use error::{Error, Result};
-pub use execution::{Cancellation, Limits};
-pub use model::{Atom, Clause, Program, Relation, Row, Rule, Snapshot, Term, Type, Value};
-pub use session::{Engine, Session};
+mod trajectory;
+
+// Group the stable public surface by ownership without changing public paths.
+pub use {
+    catalog::Catalog,
+    data::Data,
+    error::{Error, Result},
+    fact_limits::FactLimits,
+    loaded::{
+        EvidenceExplanation, EvidenceProgram, RowValue, SourceObservation, SourceResult,
+        SourceSession, allocate_source_identity,
+    },
+    model::{Atom, Clause, Program, Relation, Row, Rule, Snapshot, Term, Type, Value},
+    module_input::{Component, Dependency, ObjectInput, ValueReference},
+};
+pub use {
+    computational::{ComputationalEvidence, ObservationRequest},
+    derivations::EvidenceChain,
+    domain::{domain_check, domain_contract},
+    evidence_store::EvidenceStore,
+    observations::{compact_observation, expand_observation},
+    provenance::{
+        Provenance, ProvenanceEdge, ProvenanceGraph, ProvenanceLimits, ProvenanceNode,
+        ProvenanceStatus, ProvenanceWitness,
+    },
+    reachability::{Reachability, ReachabilitySnapshot},
+    trajectory::Trajectory,
+};
+pub use {
+    execution::{
+        Cancellation, Limits, compose_graphs, make_projection_graph, make_transitive_graph,
+    },
+    frozen::FrozenValue,
+    lattice::LatticeJoin,
+    object_graph::{GraphItem, ObjectGraph, ObjectNode, rows_graph},
+    operators::{Expression, Operator, Reducer},
+    relational_graph::RelationalGraph,
+    session::{Engine, Session},
+};
 
 #[cfg(test)]
 asp_rust::asp_rust_cargo_test_gate!(

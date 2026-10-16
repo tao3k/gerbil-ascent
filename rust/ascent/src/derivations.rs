@@ -32,6 +32,11 @@ impl EvidenceChain {
     pub fn source_identity(&self) -> String {
         self.store.source_identity()
     }
+    /// Observe the admitted source snapshot, never mutable store internals.
+    #[must_use]
+    pub fn sources(&self) -> &Data {
+        self.store.sources()
+    }
     /// # Errors
     /// Rejects unknown sources and revoked materializations.
     pub fn scan(&self, names: &[String]) -> Result<Data> {

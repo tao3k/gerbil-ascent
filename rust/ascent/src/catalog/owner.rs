@@ -158,6 +158,7 @@ fn read_column(column: &Data) -> Result<(Type, Option<BTreeSet<Value>>)> {
         "integer" => Type::Integer,
         "boolean" => Type::Boolean,
         "symbol" => Type::Symbol,
+        "number" => Type::Number,
         "string" | "text" => Type::Text,
         _ => return Err(invalid("unsupported column kind")),
     };
@@ -184,19 +185,6 @@ fn read_pool(value: Option<&Data>) -> Result<Vec<Value>> {
     let Some(crate::ObjectNode::Vector(roots)) = graph.nodes.get(&id) else {
         return Err(invalid("owned value pool vector required"));
     };
-    if graph.nodes.values().any(|n| {
-        matches!(
-            n,
-            crate::ObjectNode::Opaque(_)
-                | crate::ObjectNode::Table(_)
-                | crate::ObjectNode::Symbol {
-                    interned: false,
-                    ..
-                }
-        )
-    }) {
-        return Err(invalid("identity-bearing objects require the Scheme VM"));
-    }
     let identity = crate::allocate_source_identity()?;
     roots
         .iter()

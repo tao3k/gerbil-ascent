@@ -8,6 +8,7 @@ pub(crate) enum Datum {
     Atom(String),
     Text(String),
     List(Vec<Self>),
+    Vector(Vec<Self>),
 }
 pub(super) fn read(text: &str) -> Result<Datum> {
     if text.len() > 65_536 {
@@ -20,6 +21,17 @@ pub(super) fn read(text: &str) -> Result<Datum> {
         return Err(invalid("one ASCENT fragment required"));
     }
     Ok(datum)
+}
+pub(super) fn read_all(text: &str) -> Result<Vec<Datum>> {
+    let mut reader = Reader(text.chars().peekable(), false);
+    let mut forms = Vec::new();
+    loop {
+        reader.space();
+        if reader.0.peek().is_none() {
+            return Ok(forms);
+        }
+        forms.push(reader.datum(0)?);
+    }
 }
 pub(super) fn invalid(detail: &str) -> Error {
     Error::InvalidProgram(detail.into())
@@ -49,6 +61,13 @@ impl Reader<'_> {
         match self.0.next().ok_or_else(|| invalid("missing datum"))? {
             '(' => self.list(')', depth),
             '[' => self.list(']', depth),
+            '#' if self.0.peek() == Some(&'(') => {
+                self.0.next();
+                let Datum::List(items) = self.list(')', depth)? else {
+                    unreachable!()
+                };
+                Ok(Datum::Vector(items))
+            }
             ')' | ']' => Err(invalid("unexpected closing delimiter")),
             '\'' => Ok(Datum::List(vec![
                 Datum::Atom("quote".into()),
@@ -64,7 +83,7 @@ impl Reader<'_> {
                     atom.push(c);
                     self.0.next();
                 }
-                if atom.starts_with("#%module-macro-") {
+                if atom.starts_with("#%module-macro-") || atom.starts_with("__ascent_") {
                     return Err(invalid("reserved expansion identifier"));
                 }
                 if (atom == "." && !self.1)

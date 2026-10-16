@@ -39,6 +39,7 @@ pub struct SourceObservation {
 }
 /// Loaded native DSL owner, with atomic checked replacement and scoped results.
 pub struct SourceSession {
+    explanation: Option<crate::EvidenceExplanation>,
     session: Session,
     scope: Arc<Scope>,
     queries: Arc<[String]>,
@@ -49,6 +50,39 @@ pub struct SourceSession {
     last_run: Option<Arc<crate::Snapshot>>,
 }
 impl Engine {
+    /// Open declarative Evidence directly in Rust with explicit query bindings.
+    /// # Errors
+    /// Invalid definitions, unknown constructors and caller limits fail closed.
+    pub fn open_evidence_sources(
+        &self,
+        sources: &[&str],
+        constructor: Option<&str>,
+        limits: FactLimits,
+    ) -> Result<SourceSession> {
+        let entry = crate::EvidenceProgram::read_sources(sources, constructor)?;
+        self.open_evidence_program(entry, limits)
+    }
+    /// Open a scoped, already lowered Evidence declaration in the Rust engine.
+    /// # Errors
+    /// Invalid programs, caller limits or initialization failures publish no owner.
+    pub fn open_evidence_program(
+        &self,
+        entry: crate::EvidenceProgram,
+        limits: FactLimits,
+    ) -> Result<SourceSession> {
+        let mut owner = self.open_source_program(entry.program, limits)?;
+        owner.queries = entry.outputs.into();
+        owner.explanation = entry.explanation;
+        let initial = owner.run(
+            None,
+            &SourceSession::default_limits(),
+            &Cancellation::default(),
+        )?;
+        owner.result(initial.result_handle)?.close();
+        // Constructor validation is not a completed public query receipt.
+        owner.last_run = None;
+        Ok(owner)
+    }
     /// Load native pure Scheme DSL from a prebuilt library.
     /// # Errors
     /// Rejects malformed sources, unsupported syntax and invalid caller limits.
@@ -91,6 +125,7 @@ impl Engine {
             owners: AtomicUsize::new(0),
         });
         Ok(SourceSession {
+            explanation: None,
             session,
             scope,
             queries,
@@ -166,6 +201,40 @@ impl Engine {
     }
 }
 impl SourceSession {
+    /// Observe declared metadata separately from replayed per-row provenance.
+    /// # Errors
+    /// Unknown/stale results and unsupported explanation templates remain gaps.
+    pub fn explanation_metadata(&self, handle: u64, query: &str) -> Result<crate::Data> {
+        let result = self.result(handle)?;
+        result.rows(query)?;
+        let program = crate::Catalog::observe(&self.source_program()?, &self.queries)?;
+        let scope = crate::Data::object([
+            (
+                "sourceIdentity",
+                crate::Data::Integer(result.identity()?.into()),
+            ),
+            (
+                "sourceGeneration",
+                crate::Data::Integer(result.generation()?.into()),
+            ),
+        ]);
+        if let Some(template) = &self.explanation {
+            let declaration = template.render(&program, &crate::Data::Null, query, &scope)?;
+            return Ok(crate::Data::object([
+                ("status", "recorded-only".into()),
+                ("declaration", declaration),
+                ("sources", program.field("relations")?.clone()),
+                ("scope", scope),
+                ("gap", "Reported source rows and declared dependencies are not a per-row proof or host authorization".into()),
+            ]));
+        }
+        Ok(crate::Data::object([
+            ("status", "recorded-only".into()), ("query", query.to_owned().into()),
+            ("scope", scope), ("dependencies", program.field("rules")?.clone()),
+            ("sources", program.field("relations")?.clone()),
+            ("gap", "Declaration dependencies and source rows are not a per-row proof or host authorization".into()),
+        ]))
+    }
     /// Validate a live cell lease against this source owner.
     /// # Errors
     /// Rejects closed, stale or foreign cell leases.
@@ -269,6 +338,12 @@ impl SourceSession {
         self.scope.check()?;
         let queries = queries.unwrap_or(&self.queries);
         self.validate_queries(queries)?;
+        if cancellation.is_canceled() {
+            return Err(Error::Canceled);
+        }
+        if limits.timeout.is_zero() && self.last_run.is_none() {
+            return Err(Error::Timeout);
+        }
         {
             let queries = queries.to_vec();
             self.observe(&queries, limits, cancellation)
@@ -304,7 +379,11 @@ impl SourceSession {
             .map_err(|_| Error::InvalidUpdate("result handles exhausted".into()))?;
         let previous = self.last_run.as_ref();
         let evaluated = !self.session.is_clean();
-        let snapshot = self.session.run(limits, cancellation)?;
+        let snapshot = if limits.timeout.is_zero() {
+            self.last_run.clone().ok_or(Error::Timeout)?
+        } else {
+            self.session.run(limits, cancellation)?
+        };
         let reused = previous.is_some_and(|old| Arc::ptr_eq(old, &snapshot));
         let result = SourceResult::retain(
             self.scope.clone(),

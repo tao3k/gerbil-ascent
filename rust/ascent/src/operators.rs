@@ -16,6 +16,9 @@ pub enum Operator {
     GreaterEqual,
     NumericEqual,
     Equal,
+    /// Identity comparison for interned symbols and immediate booleans only.
+    ImmediateEqual,
+    StringEqual,
     Add,
     Subtract,
     Multiply,
@@ -28,6 +31,11 @@ pub enum Operator {
     And,
     Or,
     Identity,
+    StringAppend,
+    SymbolToString,
+    StringToSymbol,
+    VectorShape,
+    VectorRef,
 }
 impl Operator {
     pub(crate) fn named(name: &str) -> Option<Self> {
@@ -38,6 +46,8 @@ impl Operator {
             ">=" => Self::GreaterEqual,
             "=" => Self::NumericEqual,
             "equal?" => Self::Equal,
+            "eq?" => Self::ImmediateEqual,
+            "string=?" => Self::StringEqual,
             "+" => Self::Add,
             "-" => Self::Subtract,
             "*" => Self::Multiply,
@@ -50,19 +60,27 @@ impl Operator {
             "and" => Self::And,
             "or" => Self::Or,
             "identity" => Self::Identity,
+            "string-append" => Self::StringAppend,
+            "symbol->string" => Self::SymbolToString,
+            "string->symbol" => Self::StringToSymbol,
+            "vector-shape?" => Self::VectorShape,
+            "vector-ref" => Self::VectorRef,
             _ => return None,
         })
     }
     pub(crate) fn arity(self, count: usize) -> bool {
         match self {
-            Self::And | Self::Or => true,
+            Self::And | Self::Or | Self::StringAppend => true,
+            Self::Subtract => count == 1 || count == 2,
             Self::Not
             | Self::Even
             | Self::Odd
             | Self::Zero
             | Self::Positive
             | Self::Negative
-            | Self::Identity => count == 1,
+            | Self::Identity
+            | Self::SymbolToString
+            | Self::StringToSymbol => count == 1,
             _ => count == 2,
         }
     }

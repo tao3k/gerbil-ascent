@@ -24,3 +24,6 @@ mod workflows;
 
 #[path = "integration/interaction.rs"]
 mod interaction;
+
+#[path = "integration/evidence_definitions.rs"]
+mod evidence_definitions;

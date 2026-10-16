@@ -15,6 +15,7 @@ pub(crate) struct Atom {
     pub keys: Vec<usize>,
     pub index: Option<usize>,
     domains: Option<Domains>,
+    pub dynamic_types: Option<Arc<[crate::Type]>>,
 }
 impl Atom {
     pub fn accepts(&self, row: &[Cell]) -> bool {
@@ -334,6 +335,9 @@ impl<'a> RuleAdmission<'a> {
             Expression::Call(operator, operands) => match operator {
                 Operator::Add | Operator::Subtract | Operator::Multiply => Some(Type::Integer),
                 Operator::Identity => self.expression_type(&operands[0]),
+                Operator::StringAppend | Operator::SymbolToString => Some(Type::Text),
+                Operator::StringToSymbol => Some(Type::Symbol),
+                Operator::VectorRef => Some(Type::Any),
                 Operator::And | Operator::Or => {
                     let first = operands
                         .first()
@@ -414,6 +418,9 @@ impl<'a> RuleAdmission<'a> {
                 _ => None,
             })
             .collect();
+        let dynamic_types = (head && atom.terms.iter().zip(&declaration.columns).any(|(term, ty)|
+            matches!(term, Term::Variable(id) if self.types.get(id) == Some(&crate::Type::Any) && *ty != crate::Type::Any)))
+            .then(|| Arc::from(declaration.columns.clone()));
         let columns = declaration.columns.clone();
         let terms = atom
             .terms
@@ -441,6 +448,7 @@ impl<'a> RuleAdmission<'a> {
             None
         };
         Ok(Atom {
+            dynamic_types,
             domains,
             relation: id,
             terms: terms
@@ -458,8 +466,19 @@ impl<'a> RuleAdmission<'a> {
                     return Err(invalid("unbound head or negative variable"));
                 }
                 if let Some(old) = self.types.get(variable) {
-                    if *old != ty && ty != crate::Type::Any {
+                    if *old != ty
+                        && ty != crate::Type::Any
+                        && *old != crate::Type::Any
+                        && !matches!(
+                            (*old, ty),
+                            (crate::Type::Number, crate::Type::Integer)
+                                | (crate::Type::Integer, crate::Type::Number)
+                        )
+                    {
                         return Err(invalid("variable column type mismatch"));
+                    }
+                    if *old == crate::Type::Any {
+                        self.types.insert(*variable, ty);
                     }
                 } else {
                     self.types.insert(*variable, ty);

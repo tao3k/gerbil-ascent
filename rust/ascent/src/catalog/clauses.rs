@@ -69,6 +69,15 @@ pub(super) fn clause(
         });
     };
     match mode.text()? {
+        "compute-expression" => {
+            shape(value, &["mode", "output", "expression"], &[])?;
+            let mut remaining = 65_536;
+            Ok(Clause::Compute {
+                inputs: vec![],
+                output: variable(value.field("output")?.text()?, names)?,
+                expression: expression(value.field("expression")?, names, 0, &mut remaining, pool)?,
+            })
+        }
         "guard-expression" => {
             shape(value, &["mode", "expression"], &[])?;
             let mut remaining = 65_536;

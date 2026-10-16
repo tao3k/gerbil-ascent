@@ -44,6 +44,7 @@ pub(super) fn kind(ty: engine::Type) -> &'static str {
         engine::Type::Boolean => "boolean",
         engine::Type::Text => "string",
         engine::Type::Symbol => "symbol",
+        engine::Type::Number => "number",
     }
 }
 pub(super) fn descriptors<'py>(

@@ -2,7 +2,7 @@
 
 ASCENT is a native Library for Agentic AI. Its ordinary Program constructor,
 `ascent` form, operator compiler, operator reference evaluation and positive
-insertion plans now default to unlimited fact/row counts (`+inf.0` in Scheme).
+insertion graphs now default to unlimited fact/row counts (`+inf.0` in Scheme).
 This is not a large replacement integer. Existing explicit finite DSL bounds
 are retained. Infinity is reported as `"unlimited"`, as a typed policy value.
 
@@ -60,7 +60,7 @@ accounting. Source identity and authorization must still be checked by the host.
 Python executor threads may supervise independent child processes. They may
 not enter a shared Engine: the C ABI runtime remains bound to its initializing
 OS thread. Scheme Actor Session and Actor Round scheduling are internal public
-Library capabilities with their own pure-plan/provider admission contracts;
+Library capabilities with their own pure-graph/provider admission contracts;
 green-thread availability does not establish C ABI thread safety or multi-core
 speed. Arbitrary actor resources require an explicit Scheme close operation.
 

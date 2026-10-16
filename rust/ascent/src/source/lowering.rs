@@ -5,13 +5,13 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-fn list(datum: &Datum) -> Result<&[Datum]> {
+pub(super) fn list(datum: &Datum) -> Result<&[Datum]> {
     match datum {
         Datum::List(items) => Ok(items),
         _ => Err(invalid("proper ASCENT form required")),
     }
 }
-fn name(datum: &Datum) -> Result<&str> {
+pub(super) fn name(datum: &Datum) -> Result<&str> {
     match datum {
         Datum::Atom(name) if !name.is_empty() && name.chars().count() <= 128 => Ok(name),
         _ => Err(invalid("ASCENT name required")),
@@ -22,7 +22,7 @@ fn relation(items: &[Datum], general: bool) -> Result<Relation> {
         return Err(invalid("typed relation declaration required"));
     };
     if !rest.is_empty() && (!general || rest.len() != 1) {
-        return Err(invalid("relation source declaration shape"));
+        return Err(invalid("typed ASCENT relation declaration: source shape"));
     }
     let columns = list(columns)?
         .iter()
@@ -40,6 +40,7 @@ fn relation(items: &[Datum], general: bool) -> Result<Relation> {
                 "boolean?" => Ok(Type::Boolean),
                 "symbol?" => Ok(Type::Symbol),
                 "string?" => Ok(Type::Text),
+                "number?" => Ok(Type::Number),
                 _ => Err(invalid("unsupported column predicate")),
             }
         })
@@ -55,7 +56,15 @@ fn relation(items: &[Datum], general: bool) -> Result<Relation> {
 }
 fn quoted_scalar(datum: &Datum) -> Result<Value> {
     match datum {
-        Datum::Atom(symbol) if !numeric_name(symbol) && !symbol.starts_with('#') => {
+        Datum::List(items) if matches!(items.first(), Some(Datum::Atom(s)) if s == "object-graph") => {
+            super::literals::graph(items)
+        }
+        Datum::List(_) | Datum::Vector(_) => super::literals::freeze(datum),
+        Datum::Atom(symbol)
+            if symbol.parse::<num_bigint::BigInt>().is_err()
+                && crate::numbers::parse_number(symbol).is_none()
+                && !symbol.starts_with('#') =>
+        {
             Ok(Value::Symbol(name(datum)?.into()))
         }
         _ => literal(datum),
@@ -66,14 +75,14 @@ fn initial_rows(datum: &Datum) -> Result<Vec<crate::Row>> {
     if raw.is_empty() {
         return Ok(Vec::new());
     }
-    let [quote, rows] = raw else {
-        return Err(invalid("quoted initial rows required"));
+    let rows = if let [Datum::Atom(quote), rows] = raw
+        && quote == "quote"
+    {
+        list(rows)?
+    } else {
+        raw
     };
-    if name(quote)? != "quote" {
-        return Err(invalid("quoted initial rows required"));
-    }
-    list(rows)?
-        .iter()
+    rows.iter()
         .map(|row| {
             list(row)?
                 .iter()
@@ -83,22 +92,16 @@ fn initial_rows(datum: &Datum) -> Result<Vec<crate::Row>> {
         })
         .collect()
 }
-fn literal(datum: &Datum) -> Result<Value> {
+pub(super) fn literal(datum: &Datum) -> Result<Value> {
     match datum {
+        Datum::Vector(_) => super::literals::freeze(datum),
         Datum::Text(text) => Ok(Value::Text(text.clone().into())),
         Datum::Atom(atom) if atom == "#t" => Ok(Value::Boolean(true)),
         Datum::Atom(atom) if atom == "#f" => Ok(Value::Boolean(false)),
-        Datum::Atom(atom) => atom
-            .parse::<num_bigint::BigInt>()
-            .map(Value::Integer)
-            .map_err(|_| invalid("exact integer literal required")),
+        Datum::Atom(atom) => Value::number(atom).map_err(|_| invalid("numeric literal required")),
         Datum::List(items) => match items.as_slice() {
-            [quote, symbol] if name(quote)? == "quote" => match symbol {
-                Datum::Atom(s) if !numeric_name(s) && !s.starts_with('#') => {
-                    Ok(Value::Symbol(name(symbol)?.into()))
-                }
-                _ => literal(symbol),
-            },
+            [Datum::Atom(tag), ..] if tag == "object-graph" => super::literals::graph(items),
+            [quote, symbol] if name(quote)? == "quote" => quoted_scalar(symbol),
             _ => Err(invalid("inert scalar literal required")),
         },
     }
@@ -158,8 +161,8 @@ fn expression(
                 literal(value)?
             })));
         }
-        let operator =
-            Operator::named(tag).ok_or_else(|| invalid("unknown closed scalar operator"))?;
+        let operator = Operator::named(tag)
+            .ok_or_else(|| invalid(&format!("unknown closed scalar operator: {tag}")))?;
         if !operator.arity(items.len() - 1) {
             return Err(invalid("operator arity"));
         }
@@ -405,6 +408,18 @@ fn clause(datum: &Datum, variables: &mut BTreeMap<String, u32>, general: bool) -
     }
 }
 fn rule(items: &[Datum], general: bool) -> Result<Vec<Rule>> {
+    if general && items.len() >= 2 && name(&items[1])? == "<--"
+        && super::structural::required(&items[2..]) {
+        return super::structural::expand(&items[2..])?.into_iter().try_fold(Vec::new(), |mut rules, body| {
+            let items = items[..2].iter().chain(&body).cloned().collect::<Vec<_>>();
+            rules.extend(rule_closed(&items, general)?);
+            if rules.len() > 256 { return Err(invalid("structural rule bound")); }
+            Ok(rules)
+        });
+    }
+    rule_closed(items, general)
+}
+fn rule_closed(items: &[Datum], general: bool) -> Result<Vec<Rule>> {
     if items.len() < if general { 2 } else { 3 } || name(&items[1])? != "<--" {
         return Err(invalid("ASCENT head <-- body required"));
     }
@@ -425,12 +440,65 @@ fn rule(items: &[Datum], general: bool) -> Result<Vec<Rule>> {
     heads
         .into_iter()
         .map(|head| {
+            let mut variables = variables.clone();
+            let mut body = body.clone();
             Ok(Rule {
-                head: atom(head, &mut variables)?,
-                body: body.clone(),
+                head: if general {
+                    computed_head(head, &mut variables, &mut body)?
+                } else {
+                    atom(head, &mut variables)?
+                },
+                body,
             })
         })
         .collect()
+}
+fn computed_head(
+    datum: &Datum,
+    variables: &mut BTreeMap<String, u32>,
+    body: &mut Vec<Clause>,
+) -> Result<Atom> {
+    let (label, values) = list(datum)?
+        .split_first()
+        .ok_or_else(|| invalid("nonempty rule head required"))?;
+    let terms = values
+        .iter()
+        .map(|value| {
+            let Datum::List(items) = value else {
+                return term(value, variables);
+            };
+            if !matches!(items.first(), Some(Datum::Atom(tag)) if tag == "expr") {
+                return term(value, variables);
+            }
+            let [_, inputs, expression_body] = items.as_slice() else {
+                return Err(invalid("head expr requires inputs and expression"));
+            };
+            let input_names = list(inputs)?
+                .iter()
+                .map(|v| name(v).map(str::to_owned))
+                .collect::<Result<BTreeSet<_>>>()?;
+            let expression = expression(expression_body, variables, Some(&input_names))?;
+            let inputs = input_names
+                .iter()
+                .map(|n| {
+                    variables
+                        .get(n)
+                        .copied()
+                        .ok_or_else(|| invalid("unbound head expr input"))
+                })
+                .collect::<Result<Vec<_>>>()?;
+            let output =
+                u32::try_from(variables.len()).map_err(|_| invalid("head expr variable bound"))?;
+            variables.insert(format!("#%head-expression-{output}"), output);
+            body.push(Clause::Compute {
+                inputs,
+                output,
+                expression,
+            });
+            Ok(Term::Variable(output))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(Atom::new(name(label)?, terms))
 }
 impl Program {
     /// Read existing `(ascent ...)` / `(ascent-fragment ...)` rule fragments.
@@ -468,7 +536,7 @@ fn load(sources: &[&str], general: bool) -> Result<Program> {
     }
     finish(program)
 }
-fn finish(mut program: Program) -> Result<Program> {
+pub(super) fn finish(mut program: Program) -> Result<Program> {
     let heads: BTreeSet<_> = program
         .rules
         .iter()
@@ -499,7 +567,7 @@ fn fact_rules(items: &[Datum]) -> Result<Vec<Rule>> {
         })
         .collect()
 }
-fn append(
+pub(super) fn append(
     program: &mut Program,
     names: &mut BTreeMap<String, Vec<Type>>,
     seen_rules: &mut HashSet<Datum>,
@@ -514,8 +582,22 @@ fn append(
             "ASCENT fragment required; host forms are not executable",
         ));
     }
+    let expanded;
+    let forms = if general {
+        expanded = super::local_rules::expand(forms)?;
+        expanded.as_slice()
+    } else {
+        forms
+    };
     for form in forms {
         let items = list(form)?;
+        if general && items.first() == Some(&Datum::Atom("include".into())) {
+            let [_, fragment] = items else {
+                return Err(invalid("inline include requires one fragment"));
+            };
+            append(program, names, seen_rules, fragment, general)?;
+            continue;
+        }
         if general && items.first() == Some(&Datum::Atom("bounds".into())) {
             let [_, input, derived, output] = items else {
                 return Err(invalid("bounds needs input/derived/output limits"));

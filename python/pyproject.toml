@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 manifest-path = "../rust/ascent-python/Cargo.toml"
 module-name = "ascent._core"
 python-source = "src"
-features = ["extension-module"]
+no-default-features = true
+features = ["rust-runtime", "rayon", "extension-module"]
 python-packages = ["ascent"]
 include = ["ascent/__init__.py"]

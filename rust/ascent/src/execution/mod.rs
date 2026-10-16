@@ -15,3 +15,4 @@ pub(crate) use matching::{Bindings, MatchState};
 pub(crate) use values::{Cell, Pattern, Values};
 
 mod reductions;
+pub use kernels::{compose_graphs, make_projection_graph, make_transitive_graph};

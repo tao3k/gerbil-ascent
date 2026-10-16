@@ -268,12 +268,9 @@ impl Batch {
     }
     fn guard(self, expression: &crate::Expression, store: &Store, budget: &Budget) -> Self {
         let values = store.values.read().expect("expression values");
-        Self(
-            self.0
-                .into_iter()
-                .filter(|bindings| super::expressions::guard(expression, bindings, &values, budget))
-                .collect(),
-        )
+        let retain =
+            |bindings: &Bindings| super::expressions::guard(expression, bindings, &values, budget);
+        Self(self.0.into_iter().filter(retain).collect())
     }
     fn compute(
         self,
@@ -442,6 +439,14 @@ impl Projection<'_> {
     }
     fn push(&mut self, bindings: &Bindings) -> bool {
         let projected = project(&self.rule.head.terms, bindings).expect("admitted head bindings");
+        if let Some(types) = &self.rule.head.dynamic_types {
+            if !self.budget.work(projected.len()) { return false; }
+            let values = self.store.values.read().expect("derived type owner");
+            if !projected.iter().zip(types.iter()).all(|(cell, ty)| ty.accepts(values.scalar(*cell))) {
+                self.budget.evaluation_error(crate::Error::Evaluation("derived row violates column type".into()));
+                return false;
+            }
+        }
         if !self.rule.head.accepts(&projected) {
             self.budget.evaluation_error(crate::Error::Evaluation(
                 "derived row violates column domain".into(),

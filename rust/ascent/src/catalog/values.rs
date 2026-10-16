@@ -35,7 +35,8 @@ pub(super) fn scalar_in(value: &Data, ty: Type, pool: &[Value]) -> Result<Value>
                     .ok_or_else(|| invalid("unknown owned value pool entry")),
                 "graph" => {
                     let graph = crate::ObjectGraph::read_native(item)?;
-                    crate::FrozenValue::new(0, 0, graph).map(Value::Object)
+                    let identity = crate::allocate_source_identity()?;
+                    crate::FrozenValue::new(identity, identity, graph).map(Value::Object)
                 }
                 _ => Err(invalid("typed catalog scalar kind")),
             }

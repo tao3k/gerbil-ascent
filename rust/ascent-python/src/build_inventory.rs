@@ -1,0 +1,84 @@
+//! Embedded source manifest, verified by the upstream package owner after install.
+use gerbil_ascent::Data;
+use gerbil_scheme_python::PackageManifest;
+use pyo3::{
+    Bound, Py, PyAny, PyResult, Python,
+    exceptions::PyValueError,
+    pyfunction,
+    types::{PyAnyMethods, PyModule, PyModuleMethods},
+    wrap_pyfunction,
+};
+use std::{collections::BTreeMap, path::PathBuf};
+
+fn failure(e: impl std::fmt::Display) -> pyo3::PyErr {
+    PyValueError::new_err(e.to_string())
+}
+#[pyfunction]
+fn runtime_identity(py: Python<'_>) -> PyResult<Py<PyAny>> {
+    let manifest = PackageManifest::from_json(include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/source_inventory.json"
+    )))
+    .map_err(failure)?;
+    let root = py
+        .import("ascent")?
+        .getattr("__file__")?
+        .extract::<PathBuf>()?
+        .parent()
+        .ok_or_else(|| failure("installed package parent required"))?
+        .canonicalize()?;
+    let resource = py.detach(|| manifest.verify(&root)).map_err(failure)?;
+    let files = &resource.manifest().files;
+    let sources = files
+        .iter()
+        .map(|(name, item)| {
+            (
+                name.trim_start_matches("_sources/").to_owned(),
+                Data::Text(item.sha256.clone()),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let runtime = files
+        .iter()
+        .map(|(name, item)| {
+            (
+                root.join(name).to_string_lossy().into_owned(),
+                Data::Text(item.sha256.clone()),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let packaged = files
+        .iter()
+        .map(|(name, item)| (name.clone(), Data::Text(item.sha256.clone())))
+        .collect::<BTreeMap<_, _>>();
+    let mapping = files
+        .keys()
+        .map(|name| {
+            (
+                root.join(name).to_string_lossy().into_owned(),
+                Data::Text(name.clone()),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    super::rust_api::packets::write(py, &Data::object([
+        ("schema", "ascent.rust-build.v1".into()),
+        ("backend", "rust".into()),
+        ("rayon", cfg!(feature="rayon").into()),
+        ("sourceInputs", Data::Map(sources)),
+        ("runtimeInputs", Data::Map(runtime)),
+        ("packageInputs", Data::Map(packaged)),
+        ("runtimePackagePaths", Data::Map(mapping)),
+        ("sourceRoot", root.join("_sources").to_string_lossy().to_string().into()),
+        ("inventoryScope", "local Rust/PyO3/bridge sources and build inputs; transitive dependency revisions in Cargo.lock".into()),
+    ]))
+}
+pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {
+    let build = PyModule::new(root.py(), "ascent.build")?;
+    build.add_function(wrap_pyfunction!(runtime_identity, &build)?)?;
+    root.py()
+        .import("sys")?
+        .getattr("modules")?
+        .set_item("ascent.build", &build)?;
+    root.add("build", build)?;
+    Ok(())
+}

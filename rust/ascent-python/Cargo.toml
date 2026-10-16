@@ -10,15 +10,23 @@ crate-type = ["cdylib"]
 
 [dependencies]
 gerbil-ascent = { workspace = true, features = ["provider-protocol", "artifacts"] }
+ascent-c-abi = { path = "../ascent-c-abi", optional = true }
 pyo3.workspace = true
 serde_json.workspace = true
-ascent-scheme = { path = "../ascent-scheme" }
+ascent-scheme = { path = "../ascent-scheme", optional = true }
+gerbil-scheme-python = { workspace = true, features = ["rust-backend", "c-abi"], optional = true }
+
+[build-dependencies]
+gerbil-scheme-python.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 asp-rust.workspace = true
 
 [features]
-default = ["rayon"]
+default = ["rayon", "rust-runtime"]
+scheme-runtime = ["dep:ascent-scheme"]
+rust-runtime = ["dep:gerbil-scheme-python", "dep:ascent-c-abi"]
 rayon = ["gerbil-ascent/rayon"]
 extension-module = ["pyo3/extension-module"]
 

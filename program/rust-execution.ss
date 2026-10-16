@@ -71,5 +71,35 @@
   (function "advance_round" '(("round" . "crate::execution::Round<'_>"))
     "crate::execution::Round<'_>"
     (method (method (name "round") "evaluate" (name "crate::execution::apply_rule")) "publish")))
+(def graph-type "crate::RelationalGraph")
+(def graph-result "crate::Result<crate::RelationalGraph>")
+(def graph-function "impl Fn(crate::RelationalGraph) -> crate::Result<crate::RelationalGraph> + Send + Sync + 'static")
+(def graph-owner "std::sync::Arc<dyn Fn(crate::RelationalGraph) -> crate::Result<crate::RelationalGraph> + Send + Sync>")
+(def (closure parameters result body)
+  (node "closure" (cons "parameters" (list->vector
+    (map (lambda (p) (hash ("name" (car p)) ("ty" (cdr p)))) parameters)))
+    (cons "result" result) (cons "move_capture" #t)
+    (cons "body" (hash ("bindings" #()) ("result" body)))))
+(def (borrow value) (node "borrow" (cons "value" value)))
+(def (checked value) (node "try" (cons "value" value)))
+(def (integer value) (node "number" (cons "value" value)))
+(def (graph-ir)
+  (list
+    (function "make_projection_graph" '(("columns" . "Vec<usize>")) graph-function
+      (closure (list (cons "input" graph-type)) graph-result
+        (method (name "input") "project" (method (name "columns") "clone"))))
+    (function "make_transitive_graph" [] graph-function
+      (closure (list (cons "edge" graph-type)) graph-result
+        (call "crate::RelationalGraph::fixed_point" (integer 2)
+          (closure (list (cons "path" graph-type)) graph-result
+            (method
+              (checked (method
+                (checked (method (name "path") "join" (borrow (name "edge")) (integer 1) (integer 0)))
+                "project" (node "vector" (cons "values" (vector (integer 0) (integer 3))))))
+              "union" (borrow (name "edge")))))))
+    (function "compose_graphs" (list (cons "first" graph-owner) (cons "second" graph-owner)) graph-function
+      (closure (list (cons "input" graph-type)) graph-result
+        (call "second" (checked (call "first" (name "input"))))))))
 (def (main . arguments)
-  (for-each (lambda (ir) (write-json (current-output-port) ir) (newline)) (append (matching-ir) (list (binding-ir) (rule-ir) (round-ir)))))
+  (for-each (lambda (ir) (write-json (current-output-port) ir) (newline))
+    (append (matching-ir) (list (binding-ir) (rule-ir) (round-ir)) (graph-ir))))

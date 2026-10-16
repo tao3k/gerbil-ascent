@@ -131,3 +131,28 @@ not an isolated end-to-end parallel speedup benchmark.
 
 The policy repair also passed the complete default Scheme corpus again:
 170 modules / 1354 Cases, with the same 180-second admission deadline.
+
+* Native build ordering
+
+The next Linux CI run at 9604403 failed during gsc -link, before the BYODS
+semantic oracle: the generated engine-api.c linker information was read at EOF
+while the two executable jobs overlapped. The pinned compiler driver has a
+Darwin dependency barrier, but Linux schedules both complete executable jobs
+without that barrier; both can regenerate shared static C from Scheme inputs.
+This identifies an unsafe producer/consumer ordering, not a delta result failure.
+
+The build entry now reuses std/make twice: drain the parallel library-module
+phase, then complete each executable product before starting the next. Compiler
+flags, currentness checks, object compilation and barriers remain upstream-owned.
+The complete spec output is byte-identical; meta/spec/clean still use the
+original complete native build script. No global single-thread setting or CI
+retry was introduced.
+
+A local mutable-workspace attempt completed both products but correctly refused
+its receipt after another task changed sources. That attempt is rejected. A
+fixed 9604403 source export plus the build patch, independent copied dependencies,
+and no application outputs then cold-built successfully with 12 build cores.
+Both products and a source-stable ascent.c-abi-build.v1 receipt were produced.
+Its build.ss SHA-256 matches this change. The missing gxpkg manifest in the first
+export attempt is retained; the accepted control uses the existing just build
+entry with the same ASP policy enabled, without rebuilding upstream sources.

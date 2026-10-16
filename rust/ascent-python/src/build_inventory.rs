@@ -129,7 +129,7 @@ fn runtime_identity(py: Python<'_>) -> PyResult<Py<PyAny>> {
 #[cfg(feature = "rayon")]
 #[pyfunction]
 fn file_identities(py: Python<'_>, paths: Vec<PathBuf>) -> PyResult<BTreeMap<PathBuf, String>> {
-    py.detach(|| gerbil_ascent::artifacts::file_identities(&paths))
+    py.detach(move || gerbil_ascent::artifacts::file_identities(&paths))
         .map_err(failure)
 }
 pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {

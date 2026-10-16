@@ -26,12 +26,25 @@ class NativeInventory(unittest.TestCase):
                                      'module.Contract.test_failure':'FAIL'})
 
     def test_original_matrix_has_every_file_and_selected_api_controls(self):
-        tasks = inventory(ROOT / "workbench/engine_tests")
+        directory = ROOT / "workbench/engine_tests"
+        tasks = inventory(directory)
         bindings = [path.name for backend,path in tasks if backend == 'pyo3']
-        self.assertEqual(len(bindings),34)
-        self.assertEqual(len(set(bindings)),34)
+        expected = {path.name for path in directory.glob("test_*.py") if path.is_file()}
+        self.assertGreaterEqual(len(expected),34)
+        self.assertEqual(set(bindings),expected)
+        self.assertEqual(len(bindings),len(expected))
         self.assertTrue(set(API_FILES)<=set(bindings))
-        self.assertEqual(len(tasks),34)
+        self.assertEqual(len(tasks),len(expected))
+
+    def test_new_controls_cannot_be_omitted_from_the_complete_inventory(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            for name in (*API_FILES, "test_added_control.py"):
+                (directory / name).touch()
+            tasks = inventory(directory)
+            self.assertEqual({path.name for _, path in tasks},
+                             {*API_FILES, "test_added_control.py"})
+            self.assertEqual(len(tasks), len(API_FILES) + 1)
 
     def test_missing_selected_backend_control_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:

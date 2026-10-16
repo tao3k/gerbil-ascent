@@ -10,9 +10,10 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
-        (only-in :gerbil-ascent/t/native/test striped-module-files)
+        (only-in :gerbil-ascent/t/native/test striped-module-files source-test-interface source-test-batches)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
-                 testing-interface-worker-count testing-interface-test-file-batches))
+                 testing-interface-worker-count testing-interface-test-file-batches
+                 testing-interface-runtime-options-for))
 (export ascent-source-import-test)
 
 (def ascent-source-import-test
@@ -44,4 +45,19 @@
         (check-equal? (list-sort string<? (apply append batches)) files)
         (check-equal? (length batches) workers)
         (when (> workers 1)
-          (check-equal? (and (member (cadr files) (car batches)) #t) #f))))))
+          (check-equal? (and (member (cadr files) (car batches)) #t) #f))))
+    (test-case "exhaustive delta corpus is isolated without dropping or resizing other work"
+      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
+             (heavy "t/qualification/ascent-semi-naive-test.ss")
+             (files (list-sort string<? (cons heavy normal)))
+             (profiled (source-test-interface "batched" "2G"))
+             (batches (source-test-batches profiled files "batched"))
+             (baseline (testing-interface-test-file-batches (testing-interface)
+                         (striped-module-files (list-sort string<? normal)
+                           (testing-interface-worker-count (length files))))))
+        (check-equal? (list-sort string<? (apply append batches)) files)
+        (check-equal? batches (append baseline (list (list heavy))))
+        (check-equal? (testing-interface-runtime-options-for profiled heavy)
+                      (testing-interface-runtime-options-for profiled (car normal)))
+        (let (isolated (source-test-batches (source-test-interface "isolated" "2G") files "isolated"))
+          (check-equal? isolated (map list files)))))))

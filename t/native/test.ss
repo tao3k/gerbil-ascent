@@ -9,16 +9,18 @@
 ;;; GxTest still owns export/Suite/Case discovery and verdicts in each child.
 ;;; The caller's unchanged deadline covers dispatch, startup and all workers.
 (import (only-in :clan/poo/object .cc)
+        (only-in :std/list/list partition)
         (only-in :std/string/misc string-contains)
         (only-in :std/string/uuid random-uuid uuid->string)
         (only-in :std/sync/wg make-wg wg-add! wg-wait!)
         (only-in :std/misc/process run-process)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-command-for testing-interface-worker-count
-                 testing-interface-test-file-batches
+                 testing-interface-test-file-batches testing-interface-test-file-isolated?
+                 testing-interface-map-profile testing-test-selector
                  +testing-memory-profile+ +testing-process-isolation-profile+)
         (only-in :gerbil-ascent/t/native/artifact-admission artifact-directory!))
-(export main striped-module-files)
+(export main striped-module-files source-test-interface source-test-batches)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -44,19 +46,34 @@
         (vector-set! lanes lane (cons file (vector-ref lanes lane)))))
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
+
+;; The exhaustive multi-runtime corpus owns one independent process. Keep it
+;; outside static stripes so a completed short stripe can accept that work;
+;; otherwise its 3072 solves serialize with the existing candidate-flow corpus.
+;; The upstream profile still owns process isolation, options and capacity.
+(def (source-test-interface mode heap)
+  (testing-interface-map-profile
+   (testing-interface profiles:
+     (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
+       (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
+   (testing-test-selector 'contains "ascent-semi-naive-test.")
+   +testing-process-isolation-profile+))
+(def (source-test-batches profiled files mode)
+  (testing-interface-test-file-batches profiled
+    (if (string=? mode "batched")
+      (let-values (((isolated compatible)
+                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
+        (append (striped-module-files compatible (testing-interface-worker-count (length files)))
+                isolated))
+      files)))
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
   (unless (member mode '("batched" "isolated")) (error "invalid native testing mode" mode))
   (unless (pair? files) (error "no discovered test modules" paths))
   (artifact-directory! log-root)
-  (let* ((profiled (testing-interface profiles:
-                    (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
-                      (if (string=? mode "isolated") (list +testing-process-isolation-profile+) []))))
-         (batches (testing-interface-test-file-batches profiled
-                    (if (string=? mode "batched")
-                      (striped-module-files files (testing-interface-worker-count (length files)))
-                      files)))
+  (let* ((profiled (source-test-interface mode heap))
+         (batches (source-test-batches profiled files mode))
          (workers (testing-interface-worker-count (length batches)))
          (group (make-wg workers))
          (failures (make-vector (length batches) #f))

@@ -156,3 +156,25 @@ Both products and a source-stable ascent.c-abi-build.v1 receipt were produced.
 Its build.ss SHA-256 matches this change. The missing gxpkg manifest in the first
 export attempt is retained; the accepted control uses the existing just build
 entry with the same ASP policy enabled, without rebuilding upstream sources.
+
+* Complete corpus scheduling
+
+At 31e4564 the clean Linux build and every independent Rust/oracle/formal job
+passed, but the Scheme matrix hit its unchanged 180-second directory deadline.
+The exhaustive delta corpus itself completed. The static stripe containing it
+also owned the existing candidate-flow graph corpus, while the other stripes
+finished at roughly 80--101 seconds and then remained idle. That timed-out run
+is rejected; it is not a semantic assertion failure or a complete matrix pass.
+
+The existing ASP process-isolation profile now gives the exhaustive corpus one
+independent work item. Compatible ordinary files retain their original striped
+batches; the same bounded Scheme workgroup assigns the isolated item when a
+worker becomes available. No test, graph, rule order, runtime thread count,
+heap allowance or global deadline is removed or increased. The new admission
+Case checks exact inventory, unchanged ordinary batches, equal runtime options,
+and full-isolation behavior through the upstream profile API.
+
+A fixed candidate with four workers then passed the complete default entry:
+170 modules / 1355 Cases in 154 seconds, within the original 180 seconds, with
+4 ordinary stripes plus 1 isolated corpus and at most 4 concurrent processes.
+All 3072 Scheme and 4096 Rust graph/oracle comparisons remain required.

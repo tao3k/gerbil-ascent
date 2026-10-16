@@ -81,6 +81,15 @@ fn runtime_identity(py: Python<'_>) -> PyResult<Py<PyAny>> {
             )
         })
         .collect::<BTreeMap<_, _>>();
+    let origins = files
+        .iter()
+        .map(|(name, item)| {
+            (
+                name.trim_start_matches("_sources/").to_owned(),
+                Data::Text(item.origin.clone()),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
     let runtime = files
         .iter()
         .map(|(name, item)| {
@@ -108,6 +117,7 @@ fn runtime_identity(py: Python<'_>) -> PyResult<Py<PyAny>> {
         ("backend", "rust".into()),
         ("rayon", cfg!(feature="rayon").into()),
         ("sourceInputs", Data::Map(sources)),
+        ("sourceOrigins", Data::Map(origins)),
         ("runtimeInputs", Data::Map(runtime)),
         ("packageInputs", Data::Map(packaged)),
         ("runtimePackagePaths", Data::Map(mapping)),

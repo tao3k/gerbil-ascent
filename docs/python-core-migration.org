@@ -34,6 +34,11 @@ runtime visitor ordering is not preserved as a compatibility interface.
 
 * Lifecycle and Limits
 
+Frozen source inputs are inert =original-path/source.bin= payloads, with a
+separate diagnostic =sourceOrigins= map. All individual SHA bindings remain;
+origins are not paths used to locate an SDK or executable code. This permits
+ordinary Python wheel installation without weakening undeclared-file checks.
+
 Caller-defined fact, request-byte and source-scope ceilings are optional.
 Source scopes are counted for the owning Engine, including failed admissions;
 closing a handle does not refund that lifetime quota. Typed ABI size is measured

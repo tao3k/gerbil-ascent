@@ -355,7 +355,7 @@
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f))
+(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f))
   ;; The compiled extent covers every read/write, including failed candidates.
   ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
   (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
@@ -368,18 +368,18 @@
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                         frame
-                        delta-at 0 rows-access emit-row! checkpoint! parts-access))
+                        delta-at 0 rows-access emit-row! checkpoint! parts-access old-rows-access))
 
 ;;; PartsAccess is private exact canonical selection, synchronous and complete.
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint! parts-access)
+(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint! parts-access old-rows-access)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth)
     (visit-positive-atoms! (cdr atoms) heads frame delta-at next-depth
-                          rows-access emit-row! checkpoint! parts-access))
+                          rows-access emit-row! checkpoint! parts-access old-rows-access))
   (defrule (accept matched?)
     (begin
       (when checkpoint! (checkpoint!))
@@ -393,13 +393,16 @@
      (case (vector-ref action 0)
        ((callbacks) (when ((vector-ref action 1) frame) (resume depth)))
        (else
-        (unless (and parts-access
+        (let (old? (and old-rows-access (< depth delta-at)))
+        (unless (and (not old?) parts-access
                   (parts-access (vector-ref action 0) frame (= depth delta-at) (vector-ref action 2)
                     (lambda (prefix left right)
                       (accept ((or (vector-ref action 4) (vector-ref action 3))
                                prefix left right frame)))))
-          (let (rows (rows-access (vector-ref action 0) frame
-                                 (= depth delta-at) (vector-ref action 2)))
+          (let (rows (if old?
+                      (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
+                      (rows-access (vector-ref action 0) frame
+                                   (= depth delta-at) (vector-ref action 2))))
             (cond
               ((or (pair? rows) (null? rows))
                (let candidates ((remaining rows))
@@ -413,7 +416,7 @@
               (else
                (gerbil-ascent-for-each-row
                 (lambda (row)
-                  (accept (match-row! (vector-ref action 1) row frame))) rows))))))))))
+                  (accept (match-row! (vector-ref action 1) row frame))) rows)))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

@@ -53,6 +53,11 @@ pub(crate) struct Budget {
     work: AtomicUsize,
     authority: RandomState,
     evaluation: Mutex<Option<Error>>,
+    // Diagnostics are compiled out of production kernels, including Rayon.
+    #[cfg(test)]
+    pub(crate) matches: AtomicUsize,
+    #[cfg(test)]
+    pub(crate) witnesses: AtomicUsize,
 }
 impl Budget {
     pub(crate) fn new(
@@ -82,6 +87,10 @@ impl Budget {
             work: AtomicUsize::new(0),
             authority: RandomState::new(),
             evaluation: Mutex::new(None),
+            #[cfg(test)]
+            matches: AtomicUsize::new(0),
+            #[cfg(test)]
+            witnesses: AtomicUsize::new(0),
         }
     }
     pub(crate) fn fact(&self, row: super::values::Row) -> Fact {

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Original complete Quint inventory, configurations and fault obligations."""
 
-MODEL_ORDER = ('RayonPublication',
+MODEL_ORDER = ('DeltaClosure','RayonPublication',
  'MinimumHeight',
  'WithdrawalConcurrency',
  'WithdrawalSession',
@@ -55,7 +55,8 @@ MODEL_ORDER = ('RayonPublication',
  'EvidenceConsumption',
  'EvidenceInteraction')
 
-CONFIGURATIONS = {'ActorRound': {'constants': 'Workers = {1,2}\n'
+CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants': 'Complete Partition FrontierExact NoOldWork UniqueWitness FailurePrivate'},
+'ActorRound': {'constants': 'Workers = {1,2}\n'
                              'GenerationCutoff = $actor_cutoff\n'
                              'RoundCutoff = $round_cutoff\n'
                              'Mutation = "none"',
@@ -204,7 +205,8 @@ CONFIGURATIONS = {'ActorRound': {'constants': 'Workers = {1,2}\n'
                                         'SizeExact WeightedDeltaExact DifferenceExact '
                                         'ExcessWeightExact SparseMassExact'}}
 
-FAULTS = {'ActorRound': (('early', 'CompletePublication', 12),
+FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), ('allold', 'NoOldWork', 12), ('overlap', 'UniqueWitness', 12)),
+'ActorRound': (('early', 'CompletePublication', 12),
                 ('stale', 'NoStaleCompletion', 12),
                 ('cancel', 'CompletePublication', 12)),
  'ActorRoundCredits': (('early', 'CompleteReturn', 12),),

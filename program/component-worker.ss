@@ -6,7 +6,7 @@
 ;;; physical indexes and output membership. Borrowed row roots stay persistent.
 (import (only-in "component-plan.ss" positive-component-members positive-component-rules)
         (only-in :std/list/list-builder with-list-builder)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-positive-rules!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-advance! row-indexes-plan-positive-rules!)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan! gerbil-ascent-pure-positive-plan?))
 (export make-component-snapshot gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
 (defstruct component-snapshot (rows sizes))
@@ -151,7 +151,7 @@
              (if first?
                (gerbil-ascent-run-positive-plan! plan frame -1 rows-access candidate! checkpoint!)
                (for-each (lambda (pivot)
-                           (gerbil-ascent-run-positive-plan! plan frame pivot rows-access candidate! checkpoint!)) pivots)))) rules)
+                           (gerbil-ascent-run-positive-plan! plan frame pivot rows-access candidate! checkpoint! #f (row-indexes-old-rows indexes))) pivots)))) rules)
         (for-each
          (lambda (index)
            (let* ((batch (vector-ref pending index)) (size (length batch)))

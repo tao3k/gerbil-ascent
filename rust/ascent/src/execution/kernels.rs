@@ -195,7 +195,13 @@ impl Batch {
         } else {
             &store.all[atom.relation]
         };
-        let extend = |bindings: &[Bindings]| join_group(index, atom, bindings, budget);
+        // A Set witness belongs to its first fresh body occurrence. Lattice
+        // refinements are not set insertion: preserve their existing traversal.
+        let excluded = pivot
+            .filter(|pivot| step < *pivot)
+            .filter(|_| store.lattices[atom.relation].is_none())
+            .map(|_| &store.delta[atom.relation]);
+        let extend = |bindings: &[Bindings]| join_group(index, atom, bindings, budget, excluded);
         #[cfg(feature = "rayon")]
         if store.parallel && self.0.len() >= TASK_ROWS * 2 {
             return Self(
@@ -213,8 +219,9 @@ impl Batch {
                 return Self(
                     rows.par_chunks(TASK_ROWS)
                         .flat_map_iter(|task| {
-                            task.chunks(CHUNK)
-                                .flat_map(|chunk| join_chunk(&atom.terms, prior, chunk, budget))
+                            task.chunks(CHUNK).flat_map(|chunk| {
+                                join_chunk(&atom.terms, prior, chunk, budget, excluded)
+                            })
                         })
                         .collect(),
                 );
@@ -381,21 +388,44 @@ fn match_rows<'a>(
     prior: &'a Bindings,
     rows: &'a [Row],
     budget: &'a Budget,
+    excluded: Option<&'a Index>,
 ) -> impl Iterator<Item = Bindings> + 'a {
     rows.iter().filter_map(move |row| {
         if !budget.active() {
             return None;
         }
-        bind(terms, row, prior)
+        if excluded.is_some_and(|fresh| fresh.known.contains(&budget.fact(row.clone()))) {
+            return None;
+        }
+        let matched = bind(terms, row, prior);
+        #[cfg(test)]
+        if matched.is_some() {
+            budget
+                .matches
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+        matched
     })
 }
-fn join_chunk(terms: &[Pattern], prior: &Bindings, rows: &[Row], budget: &Budget) -> Vec<Bindings> {
+fn join_chunk(
+    terms: &[Pattern],
+    prior: &Bindings,
+    rows: &[Row],
+    budget: &Budget,
+    excluded: Option<&Index>,
+) -> Vec<Bindings> {
     if !budget.work(rows.len()) {
         return Vec::new();
     }
-    match_rows(terms, prior, rows, budget).collect()
+    match_rows(terms, prior, rows, budget, excluded).collect()
 }
-fn join_group(index: &Index, atom: &Atom, bindings: &[Bindings], budget: &Budget) -> Vec<Bindings> {
+fn join_group(
+    index: &Index,
+    atom: &Atom,
+    bindings: &[Bindings],
+    budget: &Budget,
+    excluded: Option<&Index>,
+) -> Vec<Bindings> {
     let inputs: SmallVec<[(&Bindings, &[Row]); CHUNK]> = bindings
         .iter()
         .map(|prior| (prior, index.candidates(atom, prior)))
@@ -409,14 +439,14 @@ fn join_group(index: &Index, atom: &Atom, bindings: &[Bindings], budget: &Budget
         }
         return inputs
             .into_iter()
-            .flat_map(|(prior, rows)| match_rows(&atom.terms, prior, rows, budget))
+            .flat_map(|(prior, rows)| match_rows(&atom.terms, prior, rows, budget, excluded))
             .collect();
     }
     inputs
         .into_iter()
         .flat_map(|(prior, rows)| {
             rows.chunks(CHUNK)
-                .flat_map(move |chunk| join_chunk(&atom.terms, prior, chunk, budget))
+                .flat_map(move |chunk| join_chunk(&atom.terms, prior, chunk, budget, excluded))
         })
         .collect()
 }
@@ -438,12 +468,24 @@ impl Projection<'_> {
             .all(|bindings| self.budget.active() && self.push(bindings))
     }
     fn push(&mut self, bindings: &Bindings) -> bool {
+        #[cfg(test)]
+        self.budget
+            .witnesses
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let projected = project(&self.rule.head.terms, bindings).expect("admitted head bindings");
         if let Some(types) = &self.rule.head.dynamic_types {
-            if !self.budget.work(projected.len()) { return false; }
+            if !self.budget.work(projected.len()) {
+                return false;
+            }
             let values = self.store.values.read().expect("derived type owner");
-            if !projected.iter().zip(types.iter()).all(|(cell, ty)| ty.accepts(values.scalar(*cell))) {
-                self.budget.evaluation_error(crate::Error::Evaluation("derived row violates column type".into()));
+            if !projected
+                .iter()
+                .zip(types.iter())
+                .all(|(cell, ty)| ty.accepts(values.scalar(*cell)))
+            {
+                self.budget.evaluation_error(crate::Error::Evaluation(
+                    "derived row violates column type".into(),
+                ));
                 return false;
             }
         }
@@ -655,16 +697,18 @@ fn publish_relation(
     all.known.reserve(pending.len());
     all.rows.reserve(pending.len());
     delta.rows.reserve(pending.len());
+    delta.known.reserve(pending.len());
     pending
         .drain()
         .enumerate()
         .take_while(|(i, _)| (i % CHUNK != 0 || budget.poll()) && budget.active())
         .filter_map(|(_, fact)| {
-            let row = fact.row.clone();
-            if !all.insert(fact) {
+            if !all.insert(fact.clone()) {
                 return None;
             }
-            delta.append(row);
+            // Exact delta membership is needed by disjoint prefix reads.
+            // Keep the existing query-owned digest; never hash a Scheme value.
+            delta.insert(fact);
             Some(())
         })
         .count()
@@ -781,7 +825,18 @@ pub(crate) fn evaluate(
         graph.program.fact_limits,
         graph.program.relation_limit,
     );
-    let (values, all) = initial_indexes(graph, sources, &budget)?;
+    evaluate_budgeted(graph, sources, &budget, parallel)
+}
+
+fn evaluate_budgeted(
+    graph: &Graph,
+    sources: &[Vec<crate::Row>],
+    budget: &Budget,
+    parallel: bool,
+) -> Result<Vec<Vec<crate::Row>>> {
+    #[cfg(not(feature = "rayon"))]
+    let _ = parallel;
+    let (values, all) = initial_indexes(graph, sources, budget)?;
     let store = Store {
         initial_occurrences: graph
             .program
@@ -803,7 +858,7 @@ pub(crate) fn evaluate(
     let mut round = Round {
         graph,
         store,
-        budget: &budget,
+        budget,
         stratum: 0,
         first: true,
         done: false,
@@ -830,7 +885,7 @@ pub(crate) fn evaluate(
             {
                 sources[relation].clone()
             } else {
-                decode_rows(index, &values, &budget, parallel)
+                decode_rows(index, &values, budget, parallel)
             }
         })
         .collect();
@@ -867,3 +922,7 @@ fn decode_rows(
     let _ = parallel;
     rows.into_iter().enumerate().filter_map(decode).collect()
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/delta.rs"]
+mod delta_tests;

@@ -33,7 +33,7 @@
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in "types.ss" GerbilAscentSessionContract gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
@@ -233,6 +233,13 @@
               (not (gerbil-ascent-actor-round-eligible?
                      (apply append (vector->list all-active)) storage-providers
                      index-providers lattice-joins field-checkers)))
+             ;; A compact UF view must keep its parts visitor: materializing an
+             ;; old prefix would expand its Cartesian relation. Its existing
+             ;; overlapping delta pivots remain semi-naive and fact-exact.
+             (disjoint-sets?
+              (and (not ordered-execution?)
+                   (andmap gerbil-ascent-canonical-set-storage-provider?
+                           (vector->list storage-providers))))
              (_routed-sources
               (unless ordered-execution?
                 (gerbil-ascent-route-view-sources! rule-plans view-relation? view-state)))
@@ -678,7 +685,7 @@
                           (pivots (vector-ref rule 2))
                           (prunable (vector-ref rule 4)))
                      (def (visit! pivot)
-                       (gerbil-ascent-run-positive-plan! plan frame pivot rows emit! checkpoint! (row-indexes-visit-parts private-indexes)))
+                       (gerbil-ascent-run-positive-plan! plan frame pivot rows emit! checkpoint! (row-indexes-visit-parts private-indexes) (and disjoint-sets? (row-indexes-old-rows private-indexes))))
                      (if (null? pivots)
                        (when (and (= round 1) first-run?) (visit! -1))
                        (if (and (= round 1) (or first-run? (> stratum 0)))
@@ -701,12 +708,13 @@
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6)))
                  (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
-                       (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes))))
+                       (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
+                       (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
+                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
@@ -717,7 +725,7 @@
                      ;; position without emitting the same join repeatedly.
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
+                        positive-plan frame -1 rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!))))
@@ -730,7 +738,7 @@
                                           (vector-ref prunable delta-at)) 0))
                           (if positive-plan
                             (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access)
+                             positive-plan frame delta-at rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
                             (visit-body body delta-at 0 []
                               (lambda (environment)
                                 (gerbil-ascent-emit-heads! heads environment emit-row!))))))

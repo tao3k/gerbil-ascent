@@ -20,9 +20,9 @@
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
                            gerbil-ascent-index-row-snapshot/arity)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules!)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules!)
 
-(defstruct row-indexes (rows advance! plan! visit-parts))
+(defstruct row-indexes (rows advance! plan! visit-parts old-rows))
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
 ;;; Physical state admission precedes traversal; unused metadata stays borrowed.
@@ -192,7 +192,7 @@
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
    (lambda (visit!)
-     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f))
+     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct atom-index-view (entry permutation))
@@ -223,7 +223,42 @@
         (layouts (make-vector (vector-length all) #f)) (planned-atoms #f)
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
-        (ordered-all #f) (ordered-delta #f))
+        (ordered-all #f) (ordered-delta #f)
+        (delta-members #f))
+      ;; Only admitted pure Set rules use this lane. The first fresh occurrence
+      ;; owns a witness: prefix reads exclude delta, suffix reads remain total.
+      ;; Cache exact membership by the owner's delta version, never by row count.
+      ;; Rejected candidates and membership construction still checkpoint.
+      (def (old-rows atom environment slot-terms checkpoint!)
+        (let (index (vector-ref atom 0))
+          (cond
+            ((zero? (vector-ref delta-size index))
+             (indexed-rows atom environment #f slot-terms))
+            ((= (vector-ref all-size index) (vector-ref delta-size index)) [])
+            (else
+        (let* ((fresh (vector-ref delta index))
+               (version (vector-ref delta-version index))
+               (prior (and delta-members (vector-ref delta-members index)))
+               (present?
+                (cond
+                  ((relation-view? fresh) (lambda (row) (gerbil-ascent-view-contains? fresh row)))
+                  ((null? fresh) (lambda (_) #f))
+                  (else
+                   (let (members
+                         (if (and prior (= (car prior) version)) (cdr prior)
+                           (let (table (make-hash-table))
+                             (for-each (lambda (row)
+                                         (when checkpoint! (checkpoint!))
+                                         (hash-put! table row #t)) fresh)
+                             (unless delta-members (set! delta-members (make-vector (vector-length all) #f)))
+                             (vector-set! delta-members index (cons version table)) table)))
+                     (lambda (row) (hash-get members row)))))))
+          (with-list-builder (collect!)
+            (gerbil-ascent-for-each-row
+             (lambda (row)
+               (when checkpoint! (checkpoint!))
+               (unless (present? row) (collect! row)))
+             (indexed-rows atom environment #f slot-terms))))))))
       (def (ordered-cut captured index use-delta?)
         (let* ((cache (if use-delta?
                         (or ordered-delta (let (v (make-vector (vector-length all) #f))
@@ -403,4 +438,4 @@
                         (physical-index-entry-witness entry) rows columns))
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts)))
+    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows)))

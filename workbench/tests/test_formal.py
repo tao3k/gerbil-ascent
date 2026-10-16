@@ -25,8 +25,15 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        self.assertEqual(len(plans), 52)
-        self.assertEqual(sum(map(len, plans.values())), 339)  # Prior 336 plus three streamed UF admission faults.
+        self.assertEqual(len(plans), 53)
+        self.assertEqual(sum(map(len, plans.values())), 344)  # Retain 339; add DeltaClosure plus four faults.
+        self.assertEqual(sum(len(v) for k, v in plans.items() if k != "DeltaClosure"), 339)
+        delta = {o.name: o for o in plans["DeltaClosure"]}
+        self.assertEqual(set(delta), {"correct", "drop", "early", "allold", "overlap"})
+        for name, invariant in (("drop", "Complete"), ("early", "Complete"),
+                                ("allold", "NoOldWork"), ("overlap", "UniqueWitness")):
+            self.assertEqual(delta[name].expected, 12)
+            self.assertEqual(delta[name].property, invariant)
         weighted = {o.name: o for o in plans["WeightedExport"]}
         for name, invariant in (("admit-early", "StreamAdmissionComplete"),
                                 ("admit-priority", "StreamAdmissionExact"),

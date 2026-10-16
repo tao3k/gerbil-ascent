@@ -101,8 +101,8 @@ partial result or Python fallback is published. Empty input returns an empty
 mapping. This is identity transport, not evidence admission or a cached verdict.
 Callers retain their complete entry/exit source checks and execution deadlines.
 
-The host-side `gerbil-scheme-rust-project-harness` package is compiled at
-`opt-level=0` to avoid optimizing a build/policy tool. Its checks still run.
+Host build dependencies and the development-only `asp-rust` and
+`gerbil-scheme-rust-project-harness` tools are compiled at `opt-level=0`.
+Their complete policy checks still run; they are not shipped in the wheel.
 Library release code remains at `opt-level=3` with thin LTO and overflow checks.
 Build timings and installed-wheel execution timings are separate observations.
-

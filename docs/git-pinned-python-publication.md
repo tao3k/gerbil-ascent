@@ -26,8 +26,10 @@ Keep failed/stale/timeout observations locally and never change their identities
 to fit a new candidate. Complete consumer, sealed review, current graph and
 matched performance acceptance remain separate gates with unchanged budgets.
 
-Runtime release code keeps O3 and thin LTO. Build scripts and their maintenance
-dependencies use O1: optimizing the compiler/policy harness itself at O3 is not
-a runtime algorithm optimization. This does not omit policy tasks or change
-generated algorithm semantics. Both publication build and execution acceptance
-must be qualified independently; a warmed build cache is not a cold-build claim.
+Runtime release code keeps O3 and thin LTO; maintenance build dependencies also
+use O3. Compilation elapsed time is not query latency. Observe real completed
+compiler artifacts to distinguish continued compilation from a stalled build,
+never synthetic heartbeat messages. This build-progress policy does not extend
+consumer, sealed-review, graph or performance execution budgets. Both publication
+build and execution acceptance must be qualified independently; a warmed build
+cache is not a cold-build claim.

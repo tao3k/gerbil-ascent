@@ -29,6 +29,7 @@ impl State {
         }
         let generation = self.generation;
         match kind.as_str() {
+            "attempt" => self.attempt(&event)?,
             "model-call" => self.model(&event)?,
             "evidence" => self.evidence(&event)?,
             "direct-answer" => {
@@ -45,6 +46,21 @@ impl State {
         set(&mut event, "generation", generation.into())?;
         self.seen.insert(id, kind);
         self.events.push(event);
+        Ok(())
+    }
+    fn attempt(&self, event: &Data) -> Result<()> {
+        for key in ["questionIdentity", "operationIdentity", "inputIdentity"] {
+            event.field(key)?.identity()?;
+        }
+        for key in ["scopeIdentity", "toolIdentity", "modelIdentity", "proposalIdentity", "purpose", "contractIdentity"] {
+            if let Some(value) = event.get(key) {
+                value.identity()?;
+            }
+        }
+        if event.get("resultReference").is_some() {
+            self.reference(event, "resultReference")?;
+            event.field("contractIdentity")?.identity()?;
+        }
         Ok(())
     }
     fn reference(&self, event: &Data, key: &str) -> Result<String> {
@@ -172,9 +188,16 @@ impl State {
         if let Some(reference) = event
             .get("consumptionReference")
             .filter(|v| !matches!(v, Data::Null | Data::Bool(false)))
-            && !self.consumed.contains_key(reference.identity()?)
         {
-            return Err(invalid("verification needs admitted consumption reference"));
+            let reference = reference.identity()?;
+            if !self.consumed.contains_key(reference) {
+                return Err(invalid("verification needs admitted consumption reference"));
+            }
+            if correct {
+                self.verified_references.insert(reference.into());
+            } else {
+                self.verified_references.remove(reference);
+            }
         }
         self.last_failure = (!correct).then(|| id.to_string());
         if !correct {
@@ -198,6 +221,7 @@ impl State {
         self.generation = self.generation.checked_add(1).ok_or(Error::StateLimit)?;
         self.source = next;
         self.references.clear();
+        self.verified_references.clear();
         self.failures.clear();
         self.last_failure = None;
         self.consumed.clear();

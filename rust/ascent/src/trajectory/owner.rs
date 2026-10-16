@@ -18,6 +18,7 @@ pub(crate) struct State {
     pub events: Vec<Data>,
     pub seen: BTreeMap<String, String>,
     pub references: BTreeSet<String>,
+    pub verified_references: BTreeSet<String>,
     pub failures: BTreeSet<String>,
     pub last_failure: Option<String>,
     pub consumed: BTreeMap<String, String>,
@@ -113,6 +114,7 @@ impl Trajectory {
                 events: Vec::new(),
                 seen: BTreeMap::new(),
                 references: BTreeSet::new(),
+                verified_references: BTreeSet::new(),
                 failures: BTreeSet::new(),
                 last_failure: None,
                 consumed: BTreeMap::new(),
@@ -181,6 +183,30 @@ impl Trajectory {
         }
         self.engine.check()?;
         self.observation(true, false, None)
+    }
+    /// Describe comparable prior attempts without authorizing or selecting work.
+    /// # Errors
+    /// Rejects a closed owner or a malformed candidate; never changes the ledger.
+    pub fn explore(&self, candidate: &Data) -> Result<Data> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Err(Error::Closed);
+        }
+        self.state.explore(candidate)
+    }
+    /// Check whether an immutable advice packet still names this exact ledger revision.
+    /// This does not review underlying evidence or grant execution permission.
+    /// # Errors
+    /// Rejects a closed engine or malformed packet.
+    pub fn exploration_current(&self, packet: &Data) -> Result<bool> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Ok(false);
+        }
+        Ok(packet.field("schema")?.text()? == "ascent.trajectory-exploration.v1"
+            && packet.field("sourceIdentity")?.text()? == self.state.source
+            && *packet.field("generation")?.natural()? == self.state.generation.into()
+            && *packet.field("eventCount")?.natural()? == self.state.events.len().into())
     }
     /// # Errors
     /// Rejects a closed engine; repeated closure returns the same detached observation.

@@ -1,0 +1,138 @@
+#+title: Trajectory-Guided Exploration (Design Proposal)
+
+* Scope
+
+This is a proposed extension to ASCENT Trajectory, not a completed runtime
+feature. It is domain-independent: Gambit SMP, package builds, and other agent
+workloads may supply evidence, but the upstream protocol knows none of their
+specialized terms. Its output is an advisory observation packet, not an action
+selection, authorization, or proof-admission decision.
+
+The purpose is to make retained work available before another expensive
+attempt, leaving more time and context for new hypotheses. An agent may still
+repeat an action intentionally. The protocol must never infer hidden reasoning
+steps, treat missing usage as zero, or equate low immediate evidence gain with
+an unworthy exploratory idea.
+
+* Position in the Existing Architecture
+
+Trajectory already owns ordered calls, failures, repairs, verification,
+reported cost, and source-generation invalidation. Evidence DAG and
+EvidenceChain own applicability and current result paths. The extension joins
+these by stable references; it must not clone transcript storage or make model
+prose an independent verifier. A previous source generation remains visible
+as history but cannot supply a current result without revalidation.
+
+* Generic Attempt and Comparison
+
+The host may attach opaque =questionIdentity=, =scopeIdentity=,
+=operationIdentity=, =inputIdentity=, =toolIdentity=, optional proposal and
+purpose, and existing evidence/verdict references to an ordered attempt.
+Unknown fields remain unknown. Speculative ideas need not declare a falsifier
+until an actual experiment is proposed. A host-supplied purpose for a repeat
+records intent, not permission to bypass an external execution check.
+
+An incremental Scheme projection should derive:
+
+| Relation | Meaning |
+|----------+---------|
+| =ComparableEarlier= | Bound question, operation and relevant premise identities agree |
+| =ChangedPremise= | A source, scope, model, tool, input or proposal differs |
+| =ComparisonUnknown= | Required identities are absent; no equality conclusion |
+| =RetainedResult= | Earlier checked path still answers the current question |
+| =InformationDelta= | A host-bound new observation, result or verdict exists |
+| =OpenAlternative= | Optional host-supplied competing proposal or discriminator |
+| =RepeatNotice= | An exact current path already answers this question |
+
+These are independent descriptions, not a scalar novelty score. Textual
+similarity alone cannot establish =ComparableEarlier=. A failed experiment can
+be valuable when it contributes a new counterexample. An =OpenAlternative=
+set is always open-world; no finite list certifies that exploration is complete.
+No relation is a deny rule or a mandatory next-step schedule.
+
+* Next-Turn Packet
+
+The projection should expose current reusable results with source and verdict
+references; similar historical attempts and their changed premises; missing
+bindings; known discriminating observations; and explicit room for a new
+proposal. It should explain a repeat notice by pointing to the earlier event.
+The agent may then reuse the result, intentionally replicate, or pursue a new
+direction. The packet records that choice without granting it authority.
+
+* Measurement and Rule Evolution
+
+Measure exact-current repeated work separately from similar attempts with
+changed premises. Actual tokens, wall time, first independently checked
+success, censored runs, new observations and new proposals remain distinct.
+Unobserved internal reasoning is outside the denominator. A reduced repeat
+rate with fewer valid hypotheses or lower task completion is a regression.
+
+Evaluate a versioned rule set on held-out trajectory prefixes without future
+events leaking into the packet. Compare matched continuations with and without
+the packet; preserve failures, unknown usage and source replacements. A missed
+repeat or false similarity notice becomes a retained counterexample to a rule
+revision. New rules first run in shadow mode, then undergo source-invalidation,
+non-interference and continuation checks. They never edit historical events or
+relax existing authority boundaries.
+
+* Implemented Protocol Slice
+
+Trajectory exposes comparable, changed-premise, unknown and historical
+attempts. An attempt's =resultReference= is exposed as
+=currentEvidenceReference= only when it names current evidence, its admitted
+consumption has a successful bound verification, and the attempt, candidate
+and consumption agree on =contractIdentity=. A failed re-verification or source
+replacement revokes that reference. Ordinary attempts need no contract and
+remain explorable. The packet includes =eventCount=; callers can ask
+=exploration_current= whether the immutable packet still names the same
+Trajectory revision. This is not an independent recheck of EvidenceChain
+support and confers no execution permission.
+
+The generic runtime and SMP adapter have focused native tests. Evaluation of
+agent efficiency still needs held-out prefixes and matched continuations;
+no seven-in-ten reduction or whole-task speedup is claimed.
+
+* Finite Protocol Model
+
+=packages/proofs/quint/TrajectoryEvidenceChain.qnt= is a small composition of
+the ordered attempt, ASCENT consumption admission, bound independent verification, read-only exploration,
+source invalidation and history replay protocols. A generation stands for an
+exact source identity; =checked= stands for a successful independent check,
+not a model-authored assertion. The model deliberately keeps one comparison
+target, two attempts and one source replacement. It does not model hidden
+reasoning, arbitrary evidence DAGs, concurrent writers, or native GC.
+
+| Model transition | Implementation boundary |
+|------------------+-------------------------|
+| =AppendAttempt= | =trajectory/events.rs= admits an ordered =attempt= |
+| =Admit= then =Check= | EvidenceChain consumption, then bound independent verification |
+| =Explore= | =trajectory/exploration.rs= produces a read-only comparison |
+| =Invalidate= | Trajectory source-generation invalidation |
+| =Resume= | Persisted host history replay; old attempts remain historical |
+| =Propose= | The agent may choose a new idea, including after an exact repeat notice |
+
+The invariants separate current packet binding, bound comparison, independently
+checked result, durable history, read-only advice and open exploration. Nine
+mutations exercise missing bindings, skipped review, history loss, stale packet
+or result, wrong contract, exploratory writes, closed options and unauthorized execution. A
+healthy bounded run and mutation counterexamples establish only these finite
+protocol properties. They do not certify that a real evidence reference has
+current support, or that an agent saves tokens or reaches a correct answer.
+The healthy model passed TLC's complete reachable-state search under these
+finite bounds. Each of the nine mutations yielded the intended invariant
+counterexample in a Quint run.
+
+#+begin_src sh
+quint run packages/proofs/quint/TrajectoryEvidenceChain.qnt \
+  --main TrajectoryEvidenceChainHealthy --invariant Safety \
+  --max-samples 10000 --max-steps 25 --seed 17
+quint verify packages/proofs/quint/TrajectoryEvidenceChain.qnt \
+  --main TrajectoryEvidenceChainHealthy --invariant Safety \
+  --max-steps 8 --backend tlc
+PYTHONPATH=workbench/src python3 -m unittest workbench.tests.test_formal -q
+#+end_src
+
+In particular, a review change after packet creation requires the host to
+discard the old packet. =exploration_current= detects this Trajectory revision
+change; an API consumer must not treat an immutable old response as a live
+EvidenceChain review view.

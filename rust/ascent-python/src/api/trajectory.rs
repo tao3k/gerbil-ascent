@@ -285,6 +285,17 @@ impl Trajectory {
     fn snapshot(&self, py: Python<'_>) -> PyResult<pyo3::Py<PyAny>> {
         packets::write(py, &self.lock()?.ledger.snapshot().map_err(source_error)?)
     }
+    fn explore(&self, py: Python<'_>, candidate: &Bound<'_, PyAny>) -> PyResult<pyo3::Py<PyAny>> {
+        let candidate = packets::read(candidate)?;
+        let result = self.lock()?.ledger.explore(&candidate).map_err(source_error)?;
+        packets::write(py, &result)
+    }
+    fn exploration_current(&self, packet: &Bound<'_, PyAny>) -> PyResult<bool> {
+        self.lock()?
+            .ledger
+            .exploration_current(&packets::read(packet)?)
+            .map_err(source_error)
+    }
     #[pyo3(signature=(reason="complete"))]
     fn close(&self, py: Python<'_>, reason: &str) -> PyResult<pyo3::Py<PyAny>> {
         packets::write(

@@ -25,9 +25,14 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        self.assertEqual(len(plans), 53)
-        self.assertEqual(sum(map(len, plans.values())), 344)  # Retain 339; add DeltaClosure plus four faults.
-        self.assertEqual(sum(len(v) for k, v in plans.items() if k != "DeltaClosure"), 339)
+        self.assertEqual(len(plans), 55)
+        self.assertEqual(sum(map(len, plans.values())), 359)
+        self.assertEqual(sum(len(v) for k, v in plans.items()
+                             if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain"}), 344)
+        self.assertEqual(set(o.name for o in plans["TrajectoryEvidenceChain"]),
+                         {"correct", "guess-equal", "skip-check", "drop-history",
+                          "stale-packet", "stale-result", "wrong-contract", "write",
+                          "close-options", "authorize"})
         delta = {o.name: o for o in plans["DeltaClosure"]}
         self.assertEqual(set(delta), {"correct", "drop", "early", "allold", "overlap"})
         for name, invariant in (("drop", "Complete"), ("early", "Complete"),
@@ -45,6 +50,14 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(lifetime["single-reader-global-fairness"].expected, 0)
         self.assertIn("ExplorationBound = 4", plans["ProviderViews"][0].configuration.constants)
         self.assertIn("GenerationCutoff = 4", plans["NativeSessionPublication"][0].configuration.constants)
+
+    def test_trajectory_faults_are_checked_as_state_invariants(self):
+        for model in ("TrajectoryExploration", "TrajectoryEvidenceChain"):
+            for fault in obligations(configuration(model, {}))[1:]:
+                with self.subTest(model=model, fault=fault.name):
+                    self.assertEqual(fault.expected, 12)
+                    self.assertIn(fault.property, fault.configuration.invariants)
+                    self.assertEqual(fault.configuration.properties, ())
 
     def test_bounds_and_fixture_property_namespace_are_preserved(self):
         with self.assertRaises(ValueError):

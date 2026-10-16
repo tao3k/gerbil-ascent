@@ -24,6 +24,56 @@ class TrajectoryIntegration(unittest.TestCase):
     def tearDownClass(cls):
         cls.engine.close()
 
+    def test_exploration_packet_preserves_open_choice_and_source_history(self):
+        with Trajectory(self.engine, 'exploration', 'source-a') as trajectory:
+            before = trajectory.snapshot()['eventCount']
+            trajectory.append('attempt', questionIdentity='question', scopeIdentity='scope',
+                              operationIdentity='test', inputIdentity='input-a',
+                              toolIdentity='tool', modelIdentity='model', purpose='first probe')
+            candidate = dict(questionIdentity='question', scopeIdentity='scope',
+                             operationIdentity='test', inputIdentity='input-a',
+                             toolIdentity='tool', modelIdentity='model')
+            packet = trajectory.explore(candidate)
+            self.assertFalse(packet['executionAuthorized'])
+            self.assertFalse(packet['actionSelected'])
+            self.assertEqual(packet['comparisons'][0]['relation'], 'exact-current')
+            self.assertEqual(trajectory.snapshot()['eventCount'], before + 1)
+            incomplete = dict(candidate)
+            del incomplete['toolIdentity']
+            self.assertEqual(trajectory.explore(incomplete)['comparisons'][0]['relation'],
+                             'comparison-unknown')
+            changed = dict(candidate, inputIdentity='input-b')
+            self.assertEqual(trajectory.explore(changed)['comparisons'][0]['relation'],
+                             'changed-premise')
+            trajectory.invalidate('source-b')
+            self.assertEqual(trajectory.explore(candidate)['comparisons'][0]['relation'],
+                             'historical')
+
+    def test_exploration_result_is_withheld_until_bound_review_and_revoked_on_failure(self):
+        with Trajectory(self.engine, 'reviewed-exploration', 'source') as trajectory:
+            trajectory.append('evidence', resultReference='result', pathIdentity='path')
+            trajectory.append('attempt', questionIdentity='question',
+                              operationIdentity='test', inputIdentity='input',
+                              resultReference='result', contractIdentity='contract')
+            candidate = dict(questionIdentity='question', operationIdentity='test',
+                             inputIdentity='input', contractIdentity='contract')
+            def reference():
+                return trajectory.explore(candidate)['comparisons'][0]['currentEvidenceReference']
+            self.assertFalse(reference())
+            trajectory.append('consumption', consumedReference='result',
+                              resultReference='result', intentIdentity='intent',
+                              contractIdentity='contract')
+            self.assertFalse(reference())
+            trajectory.verify(True, 'independent-check', consumption_reference='result')
+            self.assertEqual(reference(), 'result')
+            reviewed_packet = trajectory.explore(candidate)
+            self.assertTrue(trajectory.exploration_current(reviewed_packet))
+            self.assertFalse(trajectory.explore(dict(candidate, contractIdentity='other'))
+                             ['comparisons'][0]['currentEvidenceReference'])
+            trajectory.verify(False, 'independent-check', consumption_reference='result')
+            self.assertFalse(reference())
+            self.assertFalse(trajectory.exploration_current(reviewed_packet))
+
     def test_consumption_accepts_alpha_and_conjunct_order_and_rejects_weakened_intent(self):
         import copy
         sources=[relation('input',True,[['a'],['b']]),relation('blocked',True,[['b']])]

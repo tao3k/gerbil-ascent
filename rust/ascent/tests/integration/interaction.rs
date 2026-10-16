@@ -208,6 +208,141 @@ fn journal_batch_rolls_back_receipts_when_checkpoint_is_invalid() {
 }
 
 #[test]
+fn trajectory_exploration_is_read_only_and_open_world() {
+    let engine = Engine::new(1).unwrap();
+    let mut ledger = gerbil_ascent::Trajectory::new(&engine, "task", "source-a").unwrap();
+    let attempt = Data::object([
+        ("id", "attempt-1".into()),
+        ("kind", "attempt".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input-a".into()),
+        ("scopeIdentity", "scope".into()),
+        ("toolIdentity", "tool".into()),
+        ("modelIdentity", "model".into()),
+    ]);
+    ledger.append(attempt).unwrap();
+    let candidate = Data::object([
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input-a".into()),
+        ("scopeIdentity", "scope".into()),
+        ("toolIdentity", "tool".into()),
+        ("modelIdentity", "model".into()),
+    ]);
+    let before = ledger.snapshot().unwrap();
+    let packet = ledger.explore(&candidate).unwrap();
+    assert_eq!(ledger.snapshot().unwrap(), before);
+    assert_eq!(packet.field("executionAuthorized").unwrap(), &Data::Bool(false));
+    assert_eq!(packet.field("actionSelected").unwrap(), &Data::Bool(false));
+    let comparisons = packet.field("comparisons").unwrap().list().unwrap();
+    assert_eq!(comparisons[0].field("relation").unwrap(), &Data::from("exact-current"));
+    assert_eq!(comparisons[0].field("currentEvidenceReference").unwrap(), &Data::Bool(false));
+
+    let unknown = Data::object([
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input-a".into()),
+    ]);
+    assert_eq!(
+        ledger.explore(&unknown).unwrap().field("comparisons").unwrap().list().unwrap()[0]
+            .field("relation").unwrap(),
+        &Data::from("comparison-unknown")
+    );
+    let mut changed = candidate.clone();
+    if let Data::Map(fields) = &mut changed {
+        fields.insert("inputIdentity".into(), "input-b".into());
+    }
+    assert_eq!(
+        ledger.explore(&changed).unwrap().field("comparisons").unwrap().list().unwrap()[0]
+            .field("relation").unwrap(),
+        &Data::from("changed-premise")
+    );
+    ledger.append(Data::object([
+        ("id", "source-change".into()),
+        ("kind", "invalidate".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("nextSourceIdentity", "source-b".into()),
+    ])).unwrap();
+    assert_eq!(
+        ledger.explore(&candidate).unwrap().field("comparisons").unwrap().list().unwrap()[0]
+            .field("relation").unwrap(),
+        &Data::from("historical")
+    );
+}
+
+#[test]
+fn trajectory_exploration_reference_requires_current_successful_review() {
+    let engine = Engine::new(1).unwrap();
+    let mut ledger = gerbil_ascent::Trajectory::new(&engine, "task", "source").unwrap();
+    let event = |id: &str, kind: &str, fields: Vec<(&str, Data)>| {
+        let mut base = vec![
+            ("id", id.into()),
+            ("kind", kind.into()),
+            ("sourceIdentity", "source".into()),
+        ];
+        base.extend(fields);
+        Data::Map(base.into_iter().map(|(key, value)| (key.into(), value)).collect())
+    };
+    ledger.append(event("evidence", "evidence", vec![
+        ("resultReference", "result".into()),
+        ("pathIdentity", "path".into()),
+    ])).unwrap();
+    ledger.append(event("attempt", "attempt", vec![
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input".into()),
+        ("resultReference", "result".into()),
+        ("contractIdentity", "contract".into()),
+    ])).unwrap();
+    let candidate = Data::object([
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input".into()),
+        ("contractIdentity", "contract".into()),
+    ]);
+    let reference = |ledger: &gerbil_ascent::Trajectory| {
+        ledger.explore(&candidate).unwrap().field("comparisons").unwrap()
+            .list().unwrap()[0].field("currentEvidenceReference").unwrap().clone()
+    };
+    assert_eq!(reference(&ledger), Data::Bool(false));
+    ledger.append(event("consumption", "consumption", vec![
+        ("consumedReference", "result".into()),
+        ("resultReference", "result".into()),
+        ("intentIdentity", "intent".into()),
+        ("contractIdentity", "contract".into()),
+    ])).unwrap();
+    assert_eq!(reference(&ledger), Data::Bool(false));
+    ledger.append(event("verified", "verification", vec![
+        ("verifier", "independent-check".into()),
+        ("correct", true.into()),
+        ("consumptionReference", "result".into()),
+    ])).unwrap();
+    assert_eq!(reference(&ledger), Data::from("result"));
+    let reviewed_packet = ledger.explore(&candidate).unwrap();
+    assert!(ledger.exploration_current(&reviewed_packet).unwrap());
+    let mismatched = Data::object([
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input".into()),
+        ("contractIdentity", "other-contract".into()),
+    ]);
+    assert_eq!(
+        ledger.explore(&mismatched).unwrap().field("comparisons").unwrap()
+            .list().unwrap()[0].field("currentEvidenceReference").unwrap(),
+        &Data::Bool(false)
+    );
+    ledger.append(event("rejected", "verification", vec![
+        ("verifier", "independent-check".into()),
+        ("correct", false.into()),
+        ("consumptionReference", "result".into()),
+    ])).unwrap();
+    assert_eq!(reference(&ledger), Data::Bool(false));
+    assert!(!ledger.exploration_current(&reviewed_packet).unwrap());
+}
+
+#[test]
 fn observed_set_equality_preserves_types_multiplicity_and_tuple_shape() {
     let one = list([list([Data::Integer(1.into())])]);
     assert!(

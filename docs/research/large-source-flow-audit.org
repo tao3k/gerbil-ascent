@@ -1966,3 +1966,50 @@ The new-study repeat gives wide/reordered/conflict CPU improvements of
 All 11 supervisor and the injected-linker regression pass; the native Python
 oracle retains 961 cases through three Scheme consumers. No other session's
 engine source, dependency lock or provider artifact was reverted.
+
+* Frozen UF owner routing and ordered plan construction
+
+The next complete batch follows view construction through route publication,
+shared-axis plans and all existing query consumers. A shared key formerly made
+the constructor rescan unrelated unique members of its owner; one identical
+self axis was also routed twice. Uniform, per-descriptor identity-equal axes
+now share one frozen endpoint route. Exact key hits supply ordered descriptor
+occurrences and stored representatives directly; only fresh selection spines
+are sorted. Query cursors remain invocation-owned. Mixed/non-self and tiny
+controls retain their original admission and fallback semantics.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss= separates collection of owned facts
+from ordered publication; =std/list/list-builder.ss= scopes owned result spines.
+The implementation uses those native expression and ownership contracts rather
+than adding retained query caches or public dispatch layers. Lean proves ordinal
+restoration under explicit owner partition premises, borrowed publication and
+conditional self-axis routing. Quint models representative tokens and interleaved
+owner occurrences with four new faults. Independent Python corresponds through
+594 shared-owner cases and three original Scheme API consumers; the previous
+961 admission cases remain mandatory. Native Cases check first canonical string
+identity, detached output, nested readers and repeated descriptors.
+
+An owner-plan-only candidate failed the preset CPU/allocation gates. Its complete
+run and source identity remain historical failures. The fixed current-baseline
+study additionally charges route construction and a complete query, and includes
+dense, asymmetric, disjoint, tiny and unindexed controls. See
+[[file:../../t/performance/uf-owner-plans/README.org][owner-routing qualification]] for exact gates,
+negative receipts and completed measurements. This batch does not revert or
+qualify concurrent engine/trajectory changes through its UF measurements.
+
+The complete eleven-scenario native run passes all fixed gates. Four target
+capture/lifecycle cases reduce CPU 36.6%-49.1% and allocation 30.6%-49.2%,
+with 20/20 wins each. Both dense controls reduce allocation 40.7%; asymmetric,
+disjoint, small/tiny and scan controls pass. Full original-path native source
+testing passes 170 modules /1358 Cases, zero ERROR markers, in 163/180 seconds.
+Full Lean passes 163 jobs; Quint retains all 25 existing mutants plus four
+new ones; Python retains 594 shared-owner plus 961 prior admission cases.
+The independent copied prefix's first cold all-source startup timed out inside
+Darwin module loading before any Case; that failure remains separate and is
+not claimed as passing cold-prefix qualification. See the study report for
+source identities and final old-study / exact-commit CI boundaries.
+
+The complete standard-entry performance regression also passes all 54 previous
+query scenarios and the compiled contract Suites, for 65 passing old/new native
+A/B scenarios. Compilation and runtime retain their independent original
+budgets. Exact-commit CI remains separate from these local receipts.

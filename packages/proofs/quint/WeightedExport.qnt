@@ -40,6 +40,10 @@ module WeightedExport {
     else if (Mutation == "member-miss") false
     else left.intersect(right).size() > 0
   }
+  pure def CapturedAxisRoute(bs: List[Block], axis: int, key: int): Set[int] =
+    Owners(bs,if (SelfAxes(bs) or Mutation == "route-share") 1 else axis,key)
+  val SharedAxisRouteExact = q.phase != "new" implies Set(0,1).forall(axis =>
+    Set(0,1,2,99).forall(key => CapturedAxisRoute(q.blocks,axis,key) == Owners(q.blocks,axis,key)))
   // Composite bindings are private to one invocation. Empty binding lists
   // represent unconstrained slots; #f-like endpoint values are ordinary keys.
   type Condition = (int,int)
@@ -213,6 +217,39 @@ module WeightedExport {
   val StreamFirstSlots = q.phase != "new" implies AdmissionQueries.forall(cs => Set(0,1,2).forall(c =>
     Stream(cs).slots.get(c) == cs.foldl(List(),(slot,x) =>
       if (x._1 == c) FirstSlot(slot,x._2) else slot)))
+  // Tokens distinguish equal logical keys from their first stored representative.
+  // Descriptor positions are occurrences; two positions may share one owner.
+  type Atom = (int,int)
+  pure def FirstStored(axis: List[Atom], key: int): List[int] =
+    axis.foldl(List(),(first,a) => if (first.length() == 0 and a._1 == key) List(a._2) else first)
+  pure def DirectOwnerPlan(axes: List[List[Atom]], ds: List[int], key: int): List[(int,int)] =
+    ds.foldl((0,List()),(acc,owner) => {
+      val stored = FirstStored(axes.nth(owner),key)
+      (acc._1 + 1, if (stored.length() > 0) acc._2.append((acc._1,stored.nth(0))) else acc._2)
+    })._2
+  pure def GatherOwnerPlan(axes: List[List[Atom]], ds: List[int], key: int): List[(int,int)] =
+    axes.foldl((0,List()),(acc,axis) => {
+      val stored = FirstStored(axis,key)
+      val entries = ds.foldl((0,List()),(at,owner) =>
+        (at._1 + 1, if (owner == acc._1 and stored.length() > 0 and
+          (Mutation != "owner-occurrence" or at._2.length() == 0))
+          at._2.append((at._1, if (Mutation == "owner-representative") -1 else stored.nth(0))) else at._2))._2
+      (acc._1 + 1, acc._2.concat(entries))
+    })._2
+  // Fixed finite ordering corresponds to sorting fresh ordinal entries. Native
+  // sort, Scheme object identity and hash correctness remain native obligations.
+  pure def PublishOwnerPlan(axes: List[List[Atom]], ds: List[int], key: int): List[(int,int)] = {
+    val gathered = GatherOwnerPlan(axes,ds,key)
+    val ordered = ds.foldl((0,List()),(acc,_) => (acc._1 + 1,
+      acc._2.concat(gathered.foldl(List(),(xs,e) => if (e._1 == acc._1) xs.append(e) else xs))))._2
+    if (Mutation == "owner-plan-order") Reverse(ordered) else ordered
+  }
+  val OwnerConstructionExact = q.phase != "new" implies
+    Set(List(0,1,0),List(1,0,1,0),List(0,0,1,1),List(0,1)).forall(ds =>
+      Set(0,1,9).forall(key => {
+        val axes = List(List((0,10),(0,11),(1,12)),List((0,20),(1,21)))
+        PublishOwnerPlan(axes,ds,key) == DirectOwnerPlan(axes,ds,key)
+      }))
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State

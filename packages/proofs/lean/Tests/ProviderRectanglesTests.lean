@@ -195,3 +195,15 @@ end Ascent.ProviderRectanglesTests
 
 #print axioms Ascent.ProviderRectangles.component_squares_exact
 #print axioms Ascent.ProviderRectangles.component_squares_partition_equal
+
+open Ascent.ProviderRectangles
+
+-- A reused owner contributes ordinals 0 and 2, never just one entry.
+example : orderedOwnerOccurrences [[2, 0], [1]] = [0, 1, 2] := by simp [orderedOwnerOccurrences, List.mergeSort]
+example : orderedOwnerOccurrences [[2, 0], [1]] ≠ [0, 1] := by simp [orderedOwnerOccurrences, List.mergeSort]
+example : (orderedOwnerOccurrences [[2, 0], [1]]).map (fun i => i + 10) = [10, 11, 12] := by simp [orderedOwnerOccurrences, List.mergeSort]
+#print axioms owner_occurrence_order
+#print axioms borrowed_owner_publication
+#print axioms owner_occurrence_count
+
+#print axioms Ascent.ProviderRectangles.self_axis_owner_route

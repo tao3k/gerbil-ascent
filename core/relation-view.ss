@@ -397,16 +397,25 @@
 ;; Build once from owned spines. Each component contributes its members once
 ;; per coordinate; the buckets retain descriptor references, never pair tuples.
 ;; Readers only inspect these private tables after construction.
-(def (rectangle-routing blocks small?)
+(def (rectangle-routing blocks small? shared?)
   ;; Bind the constructor profile once. The expanded large path retains the
   ;; native identity-table loop without a tiny-policy branch per insertion.
   (defrule (build tiny?)
     (let* ((arity (foldl (lambda (block n) (max n (+ 2 (length (rectangle-prefix block))))) 0 blocks))
-           ;; At most two descriptors need at most two identity associations.
-           ;; The published route stays identical; no tiny owner hash is built.
-           (owners (if tiny? (make-vector arity [])
-                     (list->vector (map (lambda (_) (make-hash-table-eq)) (iota arity)))))
-           (routes (list->vector (map (lambda (_) (make-hash-table)) (iota arity)))))
+           (limit (if shared? (- arity 1) arity))
+           (owners (make-vector arity #f))
+           (routes (make-vector arity #f)))
+      ;; A uniform self-component cut owns one immutable endpoint route. Its
+      ;; two coordinates borrow that same route after publication; per-query
+      ;; cursors and owner caches remain separate and invocation-local.
+      (let initialize ((column 0))
+        (when (< column limit)
+          (vector-set! owners column (if tiny? [] (make-hash-table-eq)))
+          (vector-set! routes column (make-hash-table))
+          (initialize (+ column 1))))
+      (when shared?
+        (vector-set! owners limit (vector-ref owners (- limit 1)))
+        (vector-set! routes limit (vector-ref routes (- limit 1))))
       (for-each (lambda (block ordinal)
         (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
           (def (add! column identity members)
@@ -421,7 +430,7 @@
               (rectangle-bucket-count-set! bucket (+ 1 (rectangle-bucket-count bucket)))))
           (for-each (lambda (column value) (add! column prefix (list value))) (iota offset) prefix)
           (add! offset (rectangle-left block) (rectangle-left block))
-          (add! (+ offset 1) (rectangle-right block) (rectangle-right block)))) blocks (iota (length blocks)))
+          (unless shared? (add! (+ offset 1) (rectangle-right block) (rectangle-right block))))) blocks (iota (length blocks)))
       (for-each (lambda (column)
         (def (publish! _ bucket)
           (using (bucket :- rectangle-bucket)
@@ -437,7 +446,7 @@
                     (hash-put! table member (cons (cons (list member) bucket) hits))))) bucket.members))))
         (if tiny?
           (for-each (lambda (entry) (publish! (car entry) (cdr entry))) (vector-ref owners column))
-          (hash-for-each publish! (vector-ref owners column)))) (iota arity))
+          (hash-for-each publish! (vector-ref owners column)))) (iota limit))
       routes))
   (if small? (build #t) (build #f)))
 ;; Choose the smallest descriptor bucket, then preserve captured traversal order.
@@ -502,49 +511,52 @@
 ;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 ;; Multiple right owners publish ordered descriptor selections once. Each plan
 ;; spine is owned by construction and borrows immutable bucket references.
-(def (ordered-right-plans routes blocks uniform?)
+(def (ordered-right-plans routes uniform?)
   (and routes uniform?
     ;; Decide whether a plan is needed before binding its tables. Immutable
     ;; bindings keep every member insertion out of mutable closure boxes.
     (hash-find (lambda (_ hits) (pair? (cdr hits)))
       (vector-ref routes (- (vector-length routes) 1)))
-    (let ((plans (make-hash-table)) (owners (make-hash-table-eq)))
+    (let (plans (make-hash-table))
       (hash-for-each (lambda (value hits)
         (when (pair? (cdr hits))
-          (hash-put! plans value [])
-          (for-each (lambda (hit)
-            (hash-put! owners (rectangle-bucket-members (cdr hit)) (cdr hit))) hits)))
+          ;; Routes already partition exact owner occurrences and retain the
+          ;; first stored singleton. Visit only owners of this shared key;
+          ;; unique values in the same component require no plan work.
+          (let (selected (with-list-builder (emit!)
+                 (for-each (lambda (hit)
+                   (with (([singleton . bucket] hit))
+                     (for-each (lambda (entry)
+                       (emit! (make-rectangle-selection (car entry) (cdr entry) singleton)))
+                       (rectangle-bucket-blocks bucket)))) hits)))
+            ;; Only fresh selection spines are sorted. Borrowed bucket blocks,
+            ;; captured member lists and their duplicate occurrences stay intact.
+            (hash-put! plans value
+              (list-sort! (lambda (a b) (< (rectangle-selection-ordinal a)
+                                         (rectangle-selection-ordinal b))) selected)))))
         (vector-ref routes (- (vector-length routes) 1)))
-      (for-each (lambda (block ordinal)
-        (let* ((members (rectangle-right block)) (bucket (hash-get owners members)))
-          (when bucket
-            (for-each (lambda (value)
-              (let (hits (hash-get plans value))
-                (when (and hits (or (null? hits) (not (= (rectangle-selection-ordinal (car hits)) ordinal))))
-                  (hash-put! plans value (cons (make-rectangle-selection ordinal block (list value)) hits))))) members)))) blocks (iota (length blocks)))
-      (hash-for-each (lambda (value hits) (hash-put! plans value (reverse! hits))) plans)
       plans)))
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((small? (or (null? blocks) (null? (cdr blocks)) (null? (cddr blocks))))
-         (routes (and indexed? (pair? blocks) (rectangle-routing blocks small?)))
+         (uniform? (or (null? blocks)
+                       (let (width (length (rectangle-prefix (car blocks))))
+                         (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
+         (self? (and indexed? uniform? (pair? blocks)
+                     (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)))
+         (routes (and indexed? (pair? blocks) (rectangle-routing blocks small? self?)))
          ;; The tiny read-only route carrier borrows stored singleton values.
          ;; It has no query keys, owner index, cursor or mutable reader state.
          (scan-route (and routes small? (make-rectangle-route routes)))
          ;; One or two descriptors are cheaper to scan than route and gather.
          (membership-routes (and routes (pair? (cdr blocks)) (pair? (cddr blocks)) routes))
          (query-columns (and membership-routes (iota (vector-length membership-routes))))
-         (uniform? (or (null? blocks)
-                       (let (width (length (rectangle-prefix (car blocks))))
-                         (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
          ;; Complete keys bind every coordinate once. Reuse the existing
          ;; membership schema and borrow owner hits without query state.
          (complete-columns (and routes uniform? (or query-columns (iota (vector-length routes)))))
-         (right-plans (and (not small?) (ordered-right-plans routes blocks uniform?)))
+         (right-plans (and (not small?) (ordered-right-plans routes uniform?)))
          ;; A self-component cut has the same owner axis on both sides.
          ;; Its frozen descriptor plan can serve either endpoint unchanged.
-         (left-plans (and right-plans
-                          (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)
-                          right-plans)))
+         (left-plans (and self? right-plans)))
   (def (selected columns key)
     (cond
       ((and routes uniform? small?)

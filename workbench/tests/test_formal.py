@@ -26,9 +26,9 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         self.assertEqual(len(plans), 55)
-        self.assertEqual(sum(map(len, plans.values())), 359)
+        self.assertEqual(sum(map(len, plans.values())), 363)
         self.assertEqual(sum(len(v) for k, v in plans.items()
-                             if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain"}), 344)
+                             if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain"}), 348)
         self.assertEqual(set(o.name for o in plans["TrajectoryEvidenceChain"]),
                          {"correct", "guess-equal", "skip-check", "drop-history",
                           "stale-packet", "stale-result", "wrong-contract", "write",
@@ -40,7 +40,11 @@ class FormalTests(unittest.TestCase):
             self.assertEqual(delta[name].expected, 12)
             self.assertEqual(delta[name].property, invariant)
         weighted = {o.name: o for o in plans["WeightedExport"]}
-        for name, invariant in (("admit-early", "StreamAdmissionComplete"),
+        for name, invariant in (("route-share", "SharedAxisRouteExact"),
+                                ("owner-occurrence", "OwnerConstructionExact"),
+                                ("owner-representative", "OwnerConstructionExact"),
+                                ("owner-plan-order", "OwnerConstructionExact"),
+                                ("admit-early", "StreamAdmissionComplete"),
                                 ("admit-priority", "StreamAdmissionExact"),
                                 ("admit-last", "StreamFirstSlots")):
             self.assertEqual(weighted[name].expected, 12)

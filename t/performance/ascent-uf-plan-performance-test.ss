@@ -18,6 +18,9 @@
     (test-case "streamed admission uses a current baseline and unchanged query controls"
       (check (benchmark-fixture-contract-pass?
                (call-with-input-file "t/performance/uf-selector-init/benchmark.ss" read)) => #t))
+    (test-case "owner construction retains fixed capture and lifecycle gates"
+      (check (benchmark-fixture-contract-pass?
+               (call-with-input-file "t/performance/uf-owner-plans/benchmark.ss" read)) => #t))
     (test-case "bounded allocation covers every key and propagates rejected legs"
       (for-each (lambda (old?)
         (let ((prepared (ui-prepare old? 'small)) (calls 0))

@@ -1140,3 +1140,51 @@ theorem selected_singleton_stream (selected : List (α × α)) :
   | nil => rfl
   | cons p ps ih => simp [rows, List.flatMap_cons, ih]
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Buckets gather descriptor occurrences, not unique owner identities. A
+partition certificate must retain multiplicity. Only fresh ordinals are sorted. -/
+def orderedOwnerOccurrences (buckets : List (List Nat)) : List Nat :=
+  buckets.flatten.mergeSort (· ≤ ·)
+
+theorem owner_occurrence_order (buckets : List (List Nat)) (direct : List Nat)
+    (partition : buckets.flatten.Perm direct) (ordered : direct.Pairwise (· ≤ ·)) :
+    orderedOwnerOccurrences buckets = direct := by
+  have sorted : (orderedOwnerOccurrences buckets).Pairwise (· ≤ ·) := by
+    simpa only [orderedOwnerOccurrences, decide_eq_true_eq] using
+      (List.pairwise_mergeSort (le := fun (a b : Nat) => decide (a ≤ b))
+        (fun _ _ _ h₁ h₂ => by simp_all only [decide_eq_true_eq]; exact Nat.le_trans h₁ h₂)
+        (fun a b => by simp only [Bool.or_eq_true, decide_eq_true_eq]; exact Nat.le_total a b)
+        buckets.flatten)
+  exact List.Perm.eq_of_pairwise (fun _ _ _ _ h₁ h₂ => Nat.le_antisymm h₁ h₂)
+    sorted ordered ((List.mergeSort_perm _ _).trans partition)
+
+/-- Restore ordinal order before reading stored representatives. Canonical
+payloads and repeated descriptor occurrences remain in original order. -/
+theorem borrowed_owner_publication (buckets : List (List Nat)) (direct : List Nat)
+    (stored : Nat → α) (partition : buckets.flatten.Perm direct)
+    (ordered : direct.Pairwise (· ≤ ·)) :
+    (orderedOwnerOccurrences buckets).map stored = direct.map stored := by
+  rw [owner_occurrence_order buckets direct partition ordered]
+
+/-- Gather visits selected owner occurrences, not unrelated owner members.
+This is an operation count; sorting and native CPU are separately qualified. -/
+theorem owner_occurrence_count (buckets : List (List Nat)) :
+    (orderedOwnerOccurrences buckets).length = (buckets.map List.length).sum := by
+  rw [orderedOwnerOccurrences, List.length_mergeSort, List.length_flatten]
+end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Identity-equal native axes imply this value equality. Only then can both
+coordinates borrow one frozen owner route without crossing owner boundaries. -/
+theorem self_axis_owner_route [DecidableEq α] (rs : List (Rectangle α)) (key : α)
+    (self : ∀ r ∈ rs, r.left = r.right) :
+    rs.filter (fun r => decide (key ∈ r.left)) =
+      rs.filter (fun r => decide (key ∈ r.right)) := by
+  induction rs with
+  | nil => rfl
+  | cons r rs ih =>
+    have head := self r (by simp)
+    have tail := ih (fun q h => self q (by simp [h]))
+    simp only [List.filter_cons, head, tail]
+end Ascent.ProviderRectangles

@@ -184,7 +184,7 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                                   'GroupedQueryExact FrozenPlanExact CompleteKeyExact '
                                   'TinyOwnerExact RoutedPointExact PointMemberExact '
                                   'CompactQueryExact CompactRangeExact CompactFallbackExact '
-                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots'},
+                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact'},
  'RectangleCompaction': {'constants': 'Mutation = "none"',
                          'invariants': 'OrderedExact WeightedCount IndependentReaders'},
  'RectangleExport': {'constants': 'Mutation = "none"',
@@ -325,7 +325,11 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
                  ('borrow', 'FrozenExact', 12),
                  ('retire', 'FrozenExact', 12),
                  ('reject', 'RejectedStable', 12)),
- 'WeightedExport': (('admit-early', 'StreamAdmissionComplete', 12),
+ 'WeightedExport': (('route-share', 'SharedAxisRouteExact', 12),
+                    ('owner-occurrence', 'OwnerConstructionExact', 12),
+                    ('owner-representative', 'OwnerConstructionExact', 12),
+                    ('owner-plan-order', 'OwnerConstructionExact', 12),
+                    ('admit-early', 'StreamAdmissionComplete', 12),
                     ('admit-priority', 'StreamAdmissionExact', 12),
                     ('admit-last', 'StreamFirstSlots', 12),
                     ('compact-candidate', 'CompactNarrowExact', 12),

@@ -135,6 +135,9 @@ performance-uf-query: prepare-test-library
 performance-uf-selector-init: prepare-test-library
     {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-selector-init "{{ package_library }}"
 
+performance-uf-owner-plans: prepare-test-library
+    {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-owner-plans "{{ package_library }}"
+
 performance-uf-compact-query: prepare-test-library
     {{ test_library_environment }} {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/run.ss uf-compact-query "{{ package_library }}"
 

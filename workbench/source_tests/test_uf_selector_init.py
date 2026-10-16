@@ -20,8 +20,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def sexp(value):
     if isinstance(value, list):
         return '(' + ' '.join(map(sexp, value)) + ')'
-    if value is False:
-        return '#f'
+    if isinstance(value, bool):
+        return '#t' if value else '#f'
     if isinstance(value, (int, float)):
         return repr(value)
     return json.dumps(value)

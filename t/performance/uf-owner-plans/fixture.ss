@@ -1,0 +1,52 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil-ascent/core/relation-view
+        (prefix-in "reference-relation-view.ss" old-))
+(export op-prepare op-consume op-expected)
+;; Input axes are prepared once, and borrowed identically by both constructors.
+;; Repeated axis identity and interleaved descriptors are deliberate.
+(def (op-prepare old? scenario)
+  (let* ((size (case scenario ((small tiny) 4) (else 128)))
+         (owners (case scenario ((small) 1) ((tiny) 2) (else 64)))
+         (axes (map (lambda (owner)
+           (case scenario
+             ((sparse sparse-lifecycle) (cons 0 (map (lambda (i) (+ 1 i (* owner size))) (iota (- size 1)))))
+             ((disjoint) (map (lambda (i) (+ i (* owner size))) (iota size)))
+             (else (iota size)))) (iota owners)))
+         (copies (if (memq scenario '(reused reused-lifecycle)) 8 1))
+         (input (apply append (map (lambda (copy)
+           (map (lambda (axis owner) (list (list (+ owner (* copy owners))) axis
+              (if (eq? scenario 'asymmetric) (map (lambda (value) (+ size value)) axis) axis))) axes (iota owners))) (iota copies))))
+         (count (* owners copies size size)))
+    (list input count (* owners copies size 2))))
+(def (op-capture input old? indexed?)
+  (defrule (build rectangle view)
+    (view (map (lambda (block) (rectangle (car block) (cadr block) (caddr block))) (car input))
+      (cadr input) (caddr input) indexed?))
+  (if old? (build old-make-rectangle old-gerbil-ascent-rectangle-view)
+    (build make-rectangle gerbil-ascent-rectangle-view)))
+(def (op-consume input scenario old?)
+  (let (view (op-capture input old? (not (eq? scenario 'unindexed))))
+    (if (memq scenario '(sparse-lifecycle reused-lifecycle dense-lifecycle))
+      (let (count 0)
+        ((if old? old-gerbil-ascent-visit-view-parts! gerbil-ascent-visit-view-parts!)
+          view '(2) '(0) (lambda (_prefix _left _right) (set! count (+ count 1))))
+        count)
+      ((if old? old-relation-view-count relation-view-count) view))))
+(def (op-expected input scenario)
+  (let* ((candidate (op-prepare #f scenario))
+         (old (op-capture input #t #t)) (new (op-capture candidate #f #t)))
+    ;; Independent explicit product order, outside every measured interval.
+    (for-each (lambda (key)
+      (let (expected (apply append (map (lambda (block)
+        (if (member key (caddr block))
+          (map (lambda (left) (append (car block) (list left key))) (cadr block)) [])) (car input))))
+        (unless (and (equal? expected (old-gerbil-ascent-view-rows old '(2) (list key)))
+                     (equal? expected (gerbil-ascent-view-rows new '(2) (list key))))
+          (error "owner-plan order differs from explicit truth" scenario key)))) '(0 1 127 128 99999))
+    (let (expected (if (memq scenario '(sparse-lifecycle reused-lifecycle dense-lifecycle))
+                    (* (length (car input)) 128) (cadr input)))
+      (unless (and (= expected (op-consume input scenario #t)) (= expected (op-consume candidate scenario #f)))
+        (error "owner-plan lifecycle differs" scenario))
+      expected)))

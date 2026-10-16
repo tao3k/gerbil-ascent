@@ -18,7 +18,7 @@ class RuleSourceTests(unittest.TestCase):
                       if os.environ.get('ASCENT_ENGINE_BACKEND') == 'abi' else Engine())
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
 
     def test_full_projection_execution_and_withdrawal(self):
         with self.engine.open_rule_sources(RULES) as session:
@@ -81,11 +81,13 @@ class RuleSourceTests(unittest.TestCase):
           (relation input ((x integer?))) (relation output ((x integer?)))
           ((output X) <-- (input X) (if (X) (and (>= X 0) (<= (+ X 1) 2)))))'''
         with self.engine.open_sources(source) as session:
-            self.assertEqual(session.projection['status'], 'unsupported')
+            self.assertEqual(session.projection['status'], 'supported')
             self.assertTrue(session.run(queries=['output'])['complete'])
             session.replace({'input': [[-1], [0], [1], [2]]})
             observed = session.run(queries=['output'])
             self.assertCountEqual(observed['relations']['output'], [[0], [1]])
+            with self.engine.open(session.projection['program']) as roundtrip:
+                self.assertEqual(roundtrip.run(queries=['output'])['relations'], observed['relations'])
             with self.assertRaises(EngineError):
                 session.replace({'input': [['invalid']]})
             self.assertEqual(session.run(queries=['output'])['relations'], observed['relations'])

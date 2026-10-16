@@ -8,9 +8,11 @@ mod api;
 #[cfg(feature = "rust-runtime")]
 mod build_inventory;
 #[cfg(feature = "rust-runtime")]
-mod rust_api;
+mod closure_cuts;
 #[cfg(feature = "rust-runtime")]
 mod core_abi;
+#[cfg(feature = "rust-runtime")]
+mod rust_api;
 #[cfg(feature = "rust-runtime")]
 mod rust_components;
 #[cfg(feature = "rust-runtime")]

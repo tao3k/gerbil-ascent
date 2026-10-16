@@ -24,7 +24,7 @@ class InteractionIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.engine=Engine()
     @classmethod
-    def tearDownClass(cls):cls.engine.shutdown()
+    def tearDownClass(cls):cls.engine.close()
     def test_local_checks_preserve_unknown_and_source_bound_reuse(self):
         sources,operations=fixture()
         with Trajectory(self.engine,'branching',identity(sources)) as ledger:

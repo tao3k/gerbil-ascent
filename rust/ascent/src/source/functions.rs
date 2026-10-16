@@ -11,6 +11,7 @@ pub(super) struct Function {
     body: Datum,
     constant: bool,
     rules: Option<super::macros::Rules>,
+    identifiers: BTreeSet<usize>,
 }
 impl Function {
     pub(super) fn scoped(&self, environment: &BTreeMap<String, String>) -> Self {
@@ -24,6 +25,7 @@ impl Function {
             body: scope_calls(&self.body, &environment),
             constant: self.constant,
             rules: self.rules.as_ref().map(|rules| rules.scoped(&environment)),
+            identifiers: self.identifiers.clone(),
         }
     }
     pub(super) fn constant(body: &Datum) -> Result<Self> {
@@ -33,6 +35,7 @@ impl Function {
             body: body.clone(),
             constant: true,
             rules: None,
+            identifiers: BTreeSet::new(),
         })
     }
     pub(super) fn read(signature: &Datum, body: &Datum) -> Result<(String, Self)> {
@@ -53,6 +56,7 @@ impl Function {
                 body: body.clone(),
                 constant: false,
                 rules: None,
+                identifiers: BTreeSet::new(),
             },
         ))
     }
@@ -65,8 +69,13 @@ impl Function {
                 body: Datum::List(vec![]),
                 constant: false,
                 rules: Some(rules),
+                identifiers: BTreeSet::new(),
             },
         ))
+    }
+    pub(super) fn with_identifiers(mut self, identifiers: BTreeSet<usize>) -> Self {
+        self.identifiers = identifiers;
+        self
     }
 }
 pub(super) fn expand(
@@ -105,6 +114,15 @@ fn expand_at(
         && let Some(function) = functions.get(label)
     {
         if let Some(rules) = &function.rules {
+            for index in &function.identifiers {
+                let argument = items
+                    .get(index + 1)
+                    .ok_or_else(|| invalid("identifier macro argument required"))?;
+                let label = name(argument)?;
+                if label.starts_with('#') || crate::numbers::parse_number(label).is_some() {
+                    return Err(invalid("identifier macro argument required"));
+                }
+            }
             return expand_at(&rules.apply(form, *nodes)?, functions, depth + 1, nodes);
         }
         if items.len() - 1 != function.parameters.len() {

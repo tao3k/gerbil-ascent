@@ -49,6 +49,16 @@ pub struct SourceSession {
     runs: u64,
     last_run: Option<Arc<crate::Snapshot>>,
 }
+impl SourceSession {
+    #[must_use]
+    pub fn is_closed(&self) -> bool {
+        self.scope.check().is_err()
+    }
+    #[must_use]
+    pub fn request_limit(&self) -> Option<usize> {
+        self.scope.engine.request_limit()
+    }
+}
 impl Engine {
     /// Open declarative Evidence directly in Rust with explicit query bindings.
     /// # Errors
@@ -59,8 +69,9 @@ impl Engine {
         constructor: Option<&str>,
         limits: FactLimits,
     ) -> Result<SourceSession> {
+        self.admit_source()?;
         let entry = crate::EvidenceProgram::read_sources(sources, constructor)?;
-        self.open_evidence_program(entry, limits)
+        self.open_evidence_program_inner(entry, limits)
     }
     /// Open a scoped, already lowered Evidence declaration in the Rust engine.
     /// # Errors
@@ -70,7 +81,18 @@ impl Engine {
         entry: crate::EvidenceProgram,
         limits: FactLimits,
     ) -> Result<SourceSession> {
-        let mut owner = self.open_source_program(entry.program, limits)?;
+        self.admit_source()?;
+        self.open_evidence_program_inner(entry, limits)
+    }
+    fn open_evidence_program_inner(
+        &self,
+        entry: crate::EvidenceProgram,
+        limits: FactLimits,
+    ) -> Result<SourceSession> {
+        let mut owner = self.open_source_program_inner(entry.program, limits)?;
+        let mut aliases = (*owner.aliases).clone();
+        aliases.extend(entry.output_aliases);
+        owner.aliases = Arc::new(aliases);
         owner.queries = entry.outputs.into();
         owner.explanation = entry.explanation;
         let initial = owner.run(
@@ -87,18 +109,28 @@ impl Engine {
     /// # Errors
     /// Rejects malformed sources, unsupported syntax and invalid caller limits.
     pub fn open_sources(&self, sources: &[&str], limits: FactLimits) -> Result<SourceSession> {
-        self.open_source_program(Program::read_sources(sources)?, limits)
+        self.admit_source()?;
+        self.open_source_program_inner(Program::read_sources(sources)?, limits)
     }
     /// Load the inert typed rule-source interface.
     /// # Errors
     /// Rejects executable forms and all rule admission failures.
     pub fn open_rule_sources(&self, sources: &[&str], limits: FactLimits) -> Result<SourceSession> {
-        self.open_source_program(Program::read_rule_sources(sources)?, limits)
+        self.admit_source()?;
+        self.open_source_program_inner(Program::read_rule_sources(sources)?, limits)
     }
     /// Open an owned catalog with the same lifecycle as loaded DSL sources.
     /// # Errors
     /// Rejects malformed declarations and policies that cannot be admitted.
     pub fn open_source_program(
+        &self,
+        program: Program,
+        limits: FactLimits,
+    ) -> Result<SourceSession> {
+        self.admit_source()?;
+        self.open_source_program_inner(program, limits)
+    }
+    fn open_source_program_inner(
         &self,
         mut program: Program,
         limits: FactLimits,
@@ -341,7 +373,7 @@ impl SourceSession {
         if cancellation.is_canceled() {
             return Err(Error::Canceled);
         }
-        if limits.timeout.is_zero() && self.last_run.is_none() {
+        if limits.timeout.is_zero() {
             return Err(Error::Timeout);
         }
         {

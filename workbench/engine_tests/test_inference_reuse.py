@@ -63,7 +63,7 @@ with Engine() as e:
             except EngineError: pass
             assert retained.run()['relations']==initial['relations']
             current=s.updated(case)
-            retained.replace([{'relation':n,'rows':r} for n,r in current['rows'].items()])
+            retained.replace(current['rows'])
             result=retained.run()
             assert result['complete'] and sorted(result['relations']['answer'])==s.expected(case,current)
             assert result['relations']['answer']!=initial['relations']['answer']

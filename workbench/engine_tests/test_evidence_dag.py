@@ -24,7 +24,7 @@ class EvidenceDagTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
 
     def slice(self, program, facts, queries):
         return slice_program(program,facts,queries)

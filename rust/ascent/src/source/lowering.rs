@@ -408,14 +408,21 @@ fn clause(datum: &Datum, variables: &mut BTreeMap<String, u32>, general: bool) -
     }
 }
 fn rule(items: &[Datum], general: bool) -> Result<Vec<Rule>> {
-    if general && items.len() >= 2 && name(&items[1])? == "<--"
-        && super::structural::required(&items[2..]) {
-        return super::structural::expand(&items[2..])?.into_iter().try_fold(Vec::new(), |mut rules, body| {
-            let items = items[..2].iter().chain(&body).cloned().collect::<Vec<_>>();
-            rules.extend(rule_closed(&items, general)?);
-            if rules.len() > 256 { return Err(invalid("structural rule bound")); }
-            Ok(rules)
-        });
+    if general
+        && items.len() >= 2
+        && name(&items[1])? == "<--"
+        && super::structural::required(&items[2..])
+    {
+        return super::structural::expand(&items[2..])?
+            .into_iter()
+            .try_fold(Vec::new(), |mut rules, body| {
+                let items = items[..2].iter().chain(&body).cloned().collect::<Vec<_>>();
+                rules.extend(rule_closed(&items, general)?);
+                if rules.len() > 256 {
+                    return Err(invalid("structural rule bound"));
+                }
+                Ok(rules)
+            });
     }
     rule_closed(items, general)
 }
@@ -534,6 +541,9 @@ fn load(sources: &[&str], general: bool) -> Result<Program> {
             general,
         )?;
     }
+    if program.relations.is_empty() {
+        return Err(invalid("rule source requires relation declarations"));
+    }
     finish(program)
 }
 pub(super) fn finish(mut program: Program) -> Result<Program> {
@@ -546,7 +556,7 @@ pub(super) fn finish(mut program: Program) -> Result<Program> {
         declaration.source =
             !heads.contains(declaration.name.as_str()) && declaration.rows.is_empty();
     }
-    if program.relations.is_empty() || program.relations.len() > 128 || program.rules.len() > 256 {
+    if program.relations.len() > 128 || program.rules.len() > 256 {
         return Err(invalid("ASCENT catalog bounds"));
     }
     crate::graph::Graph::build(program.clone())?;

@@ -1,13 +1,15 @@
-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-import errno
+"""Shared gerbil-scheme-rust publication types, without downstream compilation."""
+import copy
+import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from ascent.build import build, sha, transfer_resource, prepare
+from ascent.build import PackageManifest
 
 
 class NativeArtifactPackaging(unittest.TestCase):
@@ -15,183 +17,153 @@ class NativeArtifactPackaging(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.native = self.root / "native"
-        self.library = self.native / "bin/libascent"
+        self.native = self.root / 'producer'
+        self.library = self.native / 'assets/libascent.so'
         self.library.parent.mkdir(parents=True)
-        self.library.write_bytes(b"producer-library")
-        (self.root / "build.ss").write_text("native-build-spec")
-        self.resource = self.native / "lib/syntax~1.scm"
-        self.resource.parent.mkdir(parents=True)
-        self.resource.write_text("(define native-phase 'compiled-by-gxc)")
-        self.receipt = {
-            "schema": "ascent.c-abi-build.v1",
-            "buildOwner": "build.ss/std/make",
-            "librarySha256": sha(self.library),
-            "sourceInputs": {"build.ss": sha(self.root / "build.ss")},
-            "syntaxResources": {"syntax~1.scm": {
-                "path": str(self.resource), "sha256": sha(self.resource)}},
-        }
-        self.sidecar = self.library.with_name("libascent.json")
-        self.publish_receipt()
-        self.output = self.root / "package/libascent.so"
+        self.library.write_bytes(b'fixed-core-library')
+        self.resource = self.native / 'assets/algorithm-source.ss'
+        self.resource.write_bytes(b'fixed-algorithm-source')
+        self.output = self.root / 'package'
+        self.receipt = {'schema': 'gerbil-scheme-python.package.v1',
+                        'roots': ['assets'], 'load_paths': [],
+                        'files': {}}
+        self.record(self.library)
+        self.record(self.resource)
 
-    def publish_receipt(self):
-        self.sidecar.write_text(json.dumps(self.receipt))
+    def record(self, path):
+        name = str(path.relative_to(self.native))
+        self.receipt['files'][name] = {
+            'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+            'origin': 'fixed-producer/' + name}
+
+    def manifest(self):
+        return PackageManifest(json.dumps(self.receipt).encode())
+
+    def prepare(self):
+        return self.manifest().verify(self.native)
+
+    def snapshot(self, root):
+        return {str(p.relative_to(root)): p.read_bytes()
+                for p in root.rglob('*') if p.is_file()}
 
     def test_only_packages_exact_native_outputs_without_a_compiler(self):
-        with patch.dict("os.environ", {"PATH": "/unavailable"}), \
-                patch("subprocess.Popen", side_effect=AssertionError("compiler launched")):
-            build(self.root, self.output, self.native)
-        self.assertEqual(self.library.read_bytes(), self.output.read_bytes())
-        self.assertEqual(self.resource.read_bytes(),
-                         (self.output.parent / "syntax/syntax~1.scm").read_bytes())
-        receipt = json.loads(self.output.with_suffix(".so.json").read_text())
-        self.assertEqual("build.ss/std/make", receipt["buildOwner"])
-        self.assertEqual(sha(self.sidecar), receipt["nativeBuildReceiptSha256"])
+        with patch.dict(os.environ, PATH=''), \
+                patch('subprocess.Popen', side_effect=AssertionError('compiler launched')):
+            actual = self.prepare().publish_to(self.output)
+            actual.reverify()
+        self.assertEqual(actual.root, self.output.resolve())
+        for name, item in self.receipt['files'].items():
+            self.assertEqual(hashlib.sha256((self.output / name).read_bytes()).hexdigest(), item['sha256'])
 
     def test_missing_receipt_does_not_attempt_native_build(self):
-        self.sidecar.unlink()
-        with self.assertRaisesRegex(ValueError, "run gxi build.ss first"):
-            build(self.root, self.output, self.native)
+        with self.assertRaises(OSError):
+            PackageManifest(b'{}')
         self.assertFalse(self.output.exists())
 
     def test_compiled_generations_preserve_names_bytes_and_origin(self):
-        for generation in (1, 2):
-            name = f"syntax~1.o{generation}"
-            path = self.resource.with_name(name)
-            path.write_bytes(f"actual-linker-name:{name}".encode())
-            self.receipt["syntaxResources"][name] = {"path": str(path), "sha256": sha(path)}
-        self.receipt["compiledResourceOrigins"] = {"syntax~1.o2": {
-            "module": "syntax~1", "path": str(self.resource.with_suffix(".o2")),
-            "sha256": sha(self.resource.with_suffix(".o2")), "fallbackSha256": sha(self.resource)}}
-        self.publish_receipt()
-        build(self.root, self.output, self.native)
-        packaged = json.loads(self.output.with_suffix(".so.json").read_text())
-        self.assertEqual(self.receipt["compiledResourceOrigins"], packaged["compiledResourceOrigins"])
-        for name, asset in self.receipt["syntaxResources"].items():
-            target = self.output.parent / "syntax" / name
-            self.assertEqual(Path(asset["path"]).read_bytes(), target.read_bytes())
-            self.assertEqual(asset["sha256"], packaged["syntaxResources"][name]["sha256"])
+        for suffix in ('o1', 'o2'):
+            path = self.native / f'assets/algorithm~1.{suffix}'
+            path.write_bytes(f'actual-linker-name:{path.name}'.encode())
+            self.record(path)
+        self.prepare().publish_to(self.output)
+        for name in self.receipt['files']:
+            self.assertEqual((self.native / name).read_bytes(), (self.output / name).read_bytes())
 
     def test_compiled_generation_drift_is_rejected(self):
-        path = self.resource.with_suffix(".o1")
-        path.write_bytes(b"compiled-generation")
-        self.receipt["syntaxResources"][path.name] = {"path": str(path), "sha256": sha(path)}
-        self.publish_receipt()
-        path.write_bytes(b"changed-generation")
-        with self.assertRaisesRegex(ValueError, "resource identity changed"):
-            build(self.root, self.output, self.native)
+        path = self.native / 'assets/algorithm~1.o1'
+        path.write_bytes(b'original-generation')
+        self.record(path)
+        path.write_bytes(b'changed-generation')
+        with self.assertRaises(OSError):
+            self.prepare().publish_to(self.output)
         self.assertFalse(self.output.exists())
 
     def test_published_generation_survives_native_unlink_and_replacement(self):
-        compiled = self.resource.with_suffix(".o1")
-        compiled.write_bytes(b"original generation")
-        self.receipt["syntaxResources"][compiled.name] = {"path": str(compiled), "sha256": sha(compiled)}
-        self.publish_receipt()
-        build(self.root, self.output, self.native)
-        published = self.output.parent / "syntax" / compiled.name
-        self.assertFalse(published.is_symlink())
-        self.assertEqual(compiled.stat().st_ino, published.stat().st_ino)
-        compiled.unlink()
-        compiled.write_bytes(b"next native compilation")
-        self.assertEqual(b"original generation", published.read_bytes())
-        self.assertNotEqual(compiled.stat().st_ino, published.stat().st_ino)
+        self.prepare().publish_to(self.output)
+        published = self.output / 'assets/libascent.so'
+        before = published.read_bytes()
+        self.library.unlink()
+        self.library.write_bytes(b'next-compilation')
+        self.assertEqual(published.read_bytes(), before)
+        self.assertNotEqual(self.library.stat().st_ino, published.stat().st_ino)
 
     def test_cross_volume_generation_copy_remains_independent(self):
-        source = self.root / "phase~1.o2"
-        directory = self.root / "published"
-        directory.mkdir()
-        target = directory / source.name
-        source.write_bytes(b"compiled generation")
-        # The Rust unit test injects CrossesDevices at the actual link syscall.
-        # The language binding checks explicit copied-publication ownership.
-        self.assertEqual("copied", transfer_resource(source, target, copy=True))
-        source.write_bytes(b"changed source")
-        self.assertEqual(b"compiled generation", target.read_bytes())
+        copied = self.prepare().copy_to(self.output)
+        self.library.write_bytes(b'changed-producer')
+        copied.reverify()
+        self.assertEqual((self.output / 'assets/libascent.so').read_bytes(), b'fixed-core-library')
 
     def test_link_io_failure_does_not_turn_into_a_copy_success(self):
-        source = self.root / "phase.o1"
-        source.write_bytes(b"compiled generation")
-        directory = self.root / "published"
-        directory.mkdir()
-        target = directory / source.name
-        target.mkdir()  # A real failing publication destination, without Python I/O hooks.
-        with self.assertRaises(OSError): transfer_resource(source, target)
-        self.assertTrue(target.is_dir())
-        self.assertEqual(list(target.iterdir()), [])
+        self.output.mkdir()
+        (self.output / 'assets').write_bytes(b'not-a-directory')
+        with self.assertRaises(OSError):
+            self.prepare().copy_to(self.output)
+        self.assertEqual((self.output / 'assets').read_bytes(), b'not-a-directory')
 
     def test_generation_cannot_be_renamed_even_with_identical_bytes(self):
-        source = self.root / "phase~1.o2"
-        source.write_bytes(b"linker symbol contains phase~1.o2")
-        with self.assertRaisesRegex(ValueError, "generation filename changed"):
-            transfer_resource(source, self.root / "phase~1.o1")
-        self.assertFalse((self.root / "phase~1.o1").exists())
+        self.prepare().publish_to(self.output)
+        target = self.output / 'assets/libascent.so'
+        target.rename(target.with_name('renamed.so'))
+        with self.assertRaises(OSError):
+            self.manifest().verify(self.output)
 
     def test_in_place_generation_change_before_publication_is_rejected(self):
-        compiled = self.resource.with_suffix(".o1")
-        compiled.write_bytes(b"original generation")
-        self.receipt["syntaxResources"][compiled.name] = {"path": str(compiled), "sha256": sha(compiled)}
-        self.publish_receipt()
-        staged = prepare(self.root, self.output, self.native)
-        compiled.write_bytes(b"illegal in-place modification")
-        with self.assertRaisesRegex(ValueError, "resource changed before publication"):
-            staged.publish()
+        staged = self.prepare()
+        self.library.write_bytes(b'illegal-in-place-mutation')
+        with self.assertRaises(OSError):
+            staged.publish_to(self.output)
         self.assertFalse(self.output.exists())
 
     def test_repackaging_removes_unrecorded_contiguous_generations(self):
-        build(self.root, self.output, self.native)
-        syntax = self.output.parent / "syntax"
-        for generation in (1, 2, 3):
-            (syntax / f"syntax~1.o{generation}").write_bytes(b"old compiled module")
-        compiled = self.resource.with_suffix(".o1")
-        compiled.write_bytes(b"current compiled module")
-        self.receipt["syntaxResources"][compiled.name] = {"path": str(compiled), "sha256": sha(compiled)}
-        self.publish_receipt()
-        build(self.root, self.output, self.native)
-        self.assertEqual({"syntax~1.scm", "syntax~1.o1"}, {p.name for p in syntax.iterdir()})
-        self.assertEqual(compiled.read_bytes(), (syntax / compiled.name).read_bytes())
+        obsolete = self.native / 'assets/obsolete.o1'
+        obsolete.write_bytes(b'old-generation')
+        self.record(obsolete)
+        self.prepare().publish_to(self.output)
+        obsolete.unlink()
+        del self.receipt['files']['assets/obsolete.o1']
+        current = self.native / 'assets/current.o2'
+        current.write_bytes(b'current-generation')
+        self.record(current)
+        self.prepare().publish_to(self.output)
+        self.assertFalse((self.output / 'assets/obsolete.o1').exists())
+        self.assertEqual((self.output / 'assets/current.o2').read_bytes(), current.read_bytes())
 
     def test_failed_repackaging_preserves_previous_resources_and_library(self):
-        build(self.root, self.output, self.native)
-        syntax = self.output.parent / "syntax"
-        previous = {p.name: p.read_bytes() for p in syntax.iterdir()}
-        library = self.output.read_bytes()
-        self.resource.write_bytes(b"new valid first resource")
-        self.receipt["syntaxResources"][self.resource.name]["sha256"] = sha(self.resource)
-        later = self.resource.with_name("later.scm")
-        later.write_bytes(b"original later resource")
-        self.receipt["syntaxResources"][later.name] = {"path": str(later), "sha256": sha(later)}
-        self.publish_receipt()
-        later.write_bytes(b"changed later resource")
-        with self.assertRaisesRegex(ValueError, "resource identity changed"):
-            build(self.root, self.output, self.native)
-        self.assertEqual(previous, {p.name: p.read_bytes() for p in syntax.iterdir()})
-        self.assertEqual(library, self.output.read_bytes())
+        self.prepare().publish_to(self.output)
+        before = self.snapshot(self.output)
+        self.library.write_bytes(b'new-valid-library')
+        self.record(self.library)
+        self.resource.write_bytes(b'unrecorded-source-change')
+        with self.assertRaises(OSError):
+            self.prepare().publish_to(self.output)
+        self.assertEqual(self.snapshot(self.output), before)
 
     def test_stale_source_is_rejected_without_timestamp_inference(self):
-        (self.root / "build.ss").write_text("changed-build-spec")
-        with self.assertRaisesRegex(ValueError, "source identity changed"):
-            build(self.root, self.output, self.native)
+        stamp = self.resource.stat()
+        self.resource.write_bytes(b'changed-source-with-old-stamp')
+        os.utime(self.resource, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+        with self.assertRaises(OSError):
+            self.prepare()
         self.assertFalse(self.output.exists())
 
     def test_resource_drift_is_rejected(self):
-        self.resource.write_text("changed-phase")
-        with self.assertRaisesRegex(ValueError, "resource identity changed"):
-            build(self.root, self.output, self.native)
+        self.library.write_bytes(b'changed-library')
+        with self.assertRaises(OSError):
+            self.prepare()
         self.assertFalse(self.output.exists())
 
     def test_source_and_resource_paths_cannot_escape_package_roots(self):
-        self.receipt["sourceInputs"] = {"../build.ss": "invalid"}
-        self.publish_receipt()
-        with self.assertRaisesRegex(ValueError, "source input path"):
-            build(self.root, self.output, self.native)
-        self.receipt["sourceInputs"] = {"build.ss": sha(self.root / "build.ss")}
-        self.receipt["syntaxResources"]["../escape.scm"] = self.receipt["syntaxResources"].pop("syntax~1.scm")
-        self.publish_receipt()
-        with self.assertRaisesRegex(ValueError, "resource path"):
-            build(self.root, self.output, self.native)
-        self.assertFalse(self.output.exists())
+        for name in ('../escape.so', '/absolute.so', 'assets/../escape.so'):
+            altered = copy.deepcopy(self.receipt)
+            altered['files'][name] = altered['files'].pop('assets/libascent.so')
+            with self.assertRaises(OSError):
+                PackageManifest(json.dumps(altered).encode())
+        outside = self.root / 'outside.so'
+        outside.write_bytes(b'fixed-core-library')
+        self.library.unlink()
+        self.library.symlink_to(outside)
+        with self.assertRaises(OSError):
+            self.prepare()
 
 
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == '__main__': unittest.main()

@@ -22,7 +22,7 @@ class TrajectoryIntegration(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
 
     def test_consumption_accepts_alpha_and_conjunct_order_and_rejects_weakened_intent(self):
         import copy

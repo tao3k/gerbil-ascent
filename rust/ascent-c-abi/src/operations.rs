@@ -77,38 +77,70 @@ fn read_declaration(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
     gerbil_ascent::EvidenceProgram::read_sources(&sources, constructor)
 }
 fn read_graph(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
-    fields(input, &["algorithm", "source", "width", "rows", "output", "captures"])?;
+    fields(
+        input,
+        &["algorithm", "source", "width", "rows", "output", "captures"],
+    )?;
     let width = input.field("width")?.index()?;
     if width > 16 {
-        return Err(Error::InvalidProgram("Graph source width exceeds sixteen".into()));
+        return Err(Error::InvalidProgram(
+            "Graph source width exceeds sixteen".into(),
+        ));
     }
     let source = input.field("source")?.text()?;
     let catalog = Catalog::read(&Data::object([
-        ("relations", Data::List(vec![Data::object([
-            ("name", source.into()), ("source", true.into()),
-            ("rows", input.field("rows")?.clone()),
-            ("columns", Data::List((0..width).map(|_| Data::object([("kind", "value".into())])).collect())),
-        ])])),
+        (
+            "relations",
+            Data::List(vec![Data::object([
+                ("name", source.into()),
+                ("source", true.into()),
+                ("rows", input.field("rows")?.clone()),
+                (
+                    "columns",
+                    Data::List(
+                        (0..width)
+                            .map(|_| Data::object([("kind", "value".into())]))
+                            .collect(),
+                    ),
+                ),
+            ])]),
+        ),
         ("rules", Data::List(vec![])),
     ]))?;
-    let rows = catalog.program.relations.into_iter().next()
-        .ok_or_else(|| Error::InvalidProgram("Graph source required".into()))?.rows;
+    let rows = catalog
+        .program
+        .relations
+        .into_iter()
+        .next()
+        .ok_or_else(|| Error::InvalidProgram("Graph source required".into()))?
+        .rows;
     let graph = gerbil_ascent::RelationalGraph::source(source, width, rows)?;
     let captures = input.field("captures")?;
     let graph = match input.field("algorithm")?.text()? {
         "projection" => {
             fields(captures, &["columns"])?;
-            let columns = captures.field("columns")?.list()?.iter().map(Data::index).collect::<Result<_>>()?;
+            let columns = captures
+                .field("columns")?
+                .list()?
+                .iter()
+                .map(Data::index)
+                .collect::<Result<_>>()?;
             gerbil_ascent::make_projection_graph(columns)(graph)?
         }
         "transitive" => {
             fields(captures, &[])?;
             if width != 2 {
-                return Err(Error::InvalidProgram("transitive Graph input width must be two".into()));
+                return Err(Error::InvalidProgram(
+                    "transitive Graph input width must be two".into(),
+                ));
             }
             gerbil_ascent::make_transitive_graph()(graph)?
         }
-        _ => return Err(Error::InvalidProgram("unknown precompiled Graph algorithm".into())),
+        _ => {
+            return Err(Error::InvalidProgram(
+                "unknown precompiled Graph algorithm".into(),
+            ));
+        }
     };
     graph.evidence(input.field("output")?.text()?)
 }
@@ -136,7 +168,11 @@ fn read_component(input: &Data) -> Result<gerbil_ascent::Component> {
     })
 }
 fn read_names(input: &Data) -> Result<Vec<String>> {
-    input.list()?.iter().map(|name| name.text().map(str::to_owned)).collect()
+    input
+        .list()?
+        .iter()
+        .map(|name| name.text().map(str::to_owned))
+        .collect()
 }
 fn read_limits(input: &Data) -> Result<FactLimits> {
     let limits = input.field("limits")?;
@@ -332,7 +368,7 @@ fn typed_cell(value: &gerbil_ascent::Value) -> Data {
         Value::Object(v) => v.native_input(),
     }
 }
-fn fields(input: &Data, expected: &[&str]) -> Result<()> {
+pub(super) fn fields(input: &Data, expected: &[&str]) -> Result<()> {
     let input = input.map()?;
     if input.len() != expected.len() || expected.iter().any(|name| !input.contains_key(*name)) {
         return Err(Error::InvalidUpdate("fixed Core ABI fields".into()));

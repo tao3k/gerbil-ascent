@@ -12,7 +12,7 @@ from . import complex_movie_study as study
 from .query_contract import output_format,compact_request
 from .model_study import provider,response_outcome
 from .movie_study import provider_key,MAX_OUTPUT_TOKENS
-from ascent import rows_equal
+from ascent.evidence import rows_equal
 
 
 def singleton_heads(contract):

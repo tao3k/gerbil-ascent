@@ -29,6 +29,12 @@ uint32_t ascent_core_abi_version(void);
  * pointer, owner-thread, immutable-result and exact-once release contracts apply.
  * All named methods call existing Core operations, never a second evaluator. */
 int32_t ascent_core_open(const GerbilOwnedView *, GerbilOwnedCallable *);
+/* Fixed compressed reachability owner. Empty captures; no Scheme VM.
+ * Methods: insert(edge,budget), freeze, resources, validate, close-state;
+ * cuts: rows(cut,columns,key,limit), contains(cut,row), cut-resources,
+ * release-cut. Cut identities are owner-local and never runtime pointers.
+ * Closing mutable state retains admitted immutable cuts until release. */
+int32_t ascent_reachability_open(const GerbilOwnedView *, GerbilOwnedCallable *);
 #ifdef __cplusplus
 }
 #endif

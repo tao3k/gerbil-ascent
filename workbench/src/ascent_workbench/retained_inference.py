@@ -41,7 +41,7 @@ def qualify(corpus, library, output):
                 if session.run()['relations']!=first['relations']:raise ValueError('exact repeat changed')
                 for phase in range(2):
                     now=source-4 if phase and source//4%2 else source
-                    if phase:session.replace([{'relation':'edge','rows':edges(now)}])
+                    if phase:session.replace({'edge':edges(now)})
                     result=session.run();value=mask(result)
                     try: session.run(0); raise AssertionError('zero deadline admitted')
                     except EngineError: pass

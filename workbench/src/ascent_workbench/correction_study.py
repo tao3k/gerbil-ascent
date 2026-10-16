@@ -207,7 +207,7 @@ def run(library,output,live,cases=None):
         result={'preparedCases':len(cases),'records':records,'actualProviderRequests':len(calls_audit),'offlineQueryAgreement':len(cases)*2 if not live or not stop else None,
                 'unstartedConditionTasks':len(cases)*2-len(records)}
         (output/'result.json').write_text(json.dumps(result,indent=2));print(f'DONE tasks={len(records)} actualCalls={len(calls_audit)}',flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def holdout_corpus():

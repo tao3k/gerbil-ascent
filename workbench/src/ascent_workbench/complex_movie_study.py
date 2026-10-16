@@ -14,7 +14,7 @@ from ascent import Engine
 from .movie_study import provider_key, MAX_OUTPUT_TOKENS
 from .model_study import provider, response_outcome
 from .query_contract import output_format,compact_request
-from ascent import rows_equal
+from ascent.evidence import rows_equal
 
 ROOT = Path.cwd().resolve()
 FIXTURE = ROOT/'t/qualification/fixtures/complex-movie/source.json'
@@ -338,11 +338,11 @@ def qualify(corpus, library, output):
         with engine.open(combined(first,False)) as fresh, engine.open(combined(first,True,{'eligible':[],'coactor':[]})) as reused:
             for sid in range(512):
                 source=make_source(sid)
-                if sid: fresh.replace([{'relation':n,'rows':rows} for n,rows in source['rows'].items()])
+                if sid: fresh.replace(source['rows'])
                 result=fresh.run()
                 if not result['complete']: raise RuntimeError('fresh incomplete')
                 views={n:result['relations'][n] for n in ('eligible','coactor')}
-                if sid: reused.replace([{'relation':n,'rows':rows} for n,rows in {**source['rows'],**views}.items()])
+                if sid: reused.replace({**source['rows'],**views})
                 retained=reused.run()
                 if not retained['complete'] or not all(rows_equal(rows, retained['relations'][name]) for name,rows in result['relations'].items()):
                     raise RuntimeError(f'retained source/view replacement differs {sid}')

@@ -1,20 +1,8 @@
-"""Installed Rust engine plus explicitly registered Scheme qualification fixtures."""
-from pathlib import Path
-from ascent import Engine
-
-ROOT = Path(__file__).resolve().parents[2]
-
-
-def module_engine():
-    engine = Engine()
-    source = ROOT / 't/qualification/evidence-api-module.ss'
-    engine.register_module(':gerbil-ascent/t/qualification/evidence-api-module',
-                           source.read_text(), trusted=True)
-    return engine
+"""Finite declarative test data for the installed Library; no module registry."""
 
 
 def finite_movie_program(engine, family):
-    """The same finite movie rule families, parsed by the original Scheme reader."""
+    """The same finite movie rule families, read by the Library's typed DSL API."""
     exclusion = '(not (blocked_actor A))'
     left = exclusion
     right = exclusion if family == 1 else ''

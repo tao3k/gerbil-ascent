@@ -60,6 +60,58 @@ fn updates(rows: V) -> V {
 }
 
 #[test]
+fn fixed_closure_budget_rollback_and_retained_cut_lifetimes() {
+    let call = ascent_c_abi::open_reachability(&map([])).unwrap();
+    let insert = |a: i64, b: i64, budget: usize| {
+        map([
+            ("method", text("insert")),
+            (
+                "edge",
+                V::List(vec![V::Integer(a.into()), V::Integer(b.into())]),
+            ),
+            ("budget", V::Integer(budget.into())),
+        ])
+    };
+    assert_eq!(
+        ok(&response(&call, &insert(0, 1, 3))),
+        &V::Integer(3.into())
+    );
+    let cut = ok(&response(&call, &map([("method", text("freeze"))]))).clone();
+    let resources = ok(&response(&call, &map([("method", text("resources"))]))).clone();
+    assert_eq!(
+        field(&response(&call, &insert(1, 2, 2)), "ok"),
+        &V::Boolean(false)
+    );
+    assert_eq!(
+        ok(&response(&call, &map([("method", text("resources"))]))),
+        &resources
+    );
+    assert_eq!(
+        ok(&response(&call, &insert(1, 2, 3))),
+        &V::Integer(3.into())
+    );
+    let rows = map([
+        ("method", text("rows")),
+        ("cut", cut.clone()),
+        ("columns", V::List(vec![])),
+        ("key", V::List(vec![])),
+        ("limit", V::Integer(3.into())),
+    ]);
+    let held = ok(&response(&call, &rows)).clone();
+    ok(&response(&call, &map([("method", text("close-state"))])));
+    assert_eq!(ok(&response(&call, &rows)), &held);
+    assert_eq!(
+        field(&response(&call, &insert(2, 3, 100)), "ok"),
+        &V::Boolean(false)
+    );
+    ok(&response(
+        &call,
+        &map([("method", text("release-cut")), ("cut", cut)]),
+    ));
+    assert_eq!(field(&response(&call, &rows), "ok"), &V::Boolean(false));
+}
+
+#[test]
 fn evidence_runs_withdraws_and_retains_immutable_results_through_c_abi() {
     let call = ascent_c_abi::open(&captures(SOURCE)).unwrap();
     let first = call.call(&run()).unwrap();
@@ -186,7 +238,9 @@ fn initialization_and_unknown_fixed_operations_fail_without_fallback() {
 
 fn component_captures(exports: V) -> V {
     let mut input = captures(SOURCE);
-    let V::Map(fields) = &mut input else { panic!("capture packet"); };
+    let V::Map(fields) = &mut input else {
+        panic!("capture packet");
+    };
     fields.remove("sources");
     fields.insert("entry".into(), text("entry"));
     fields.insert("constructor".into(), text("make"));
@@ -214,21 +268,33 @@ fn component_captures(exports: V) -> V {
 fn components_link_and_withdraw_through_the_fixed_c_abi() {
     let call = ascent_c_abi::open(&component_captures(V::List(vec![text("f")]))).unwrap();
     let mut request = run();
-    let V::Map(fields) = &mut request else { panic!("run packet"); };
+    let V::Map(fields) = &mut request else {
+        panic!("run packet");
+    };
     fields.insert("resultFormat".into(), text("typed-rows"));
     let result = response(&call, &request);
-    assert_eq!(field(field(ok(&result), "relations"), "answer"),
-        &V::List(vec![V::List(vec![V::Integer(3.into())]), V::List(vec![V::Integer(7.into())])]));
+    assert_eq!(
+        field(field(ok(&result), "relations"), "answer"),
+        &V::List(vec![
+            V::List(vec![V::Integer(3.into())]),
+            V::List(vec![V::Integer(7.into())])
+        ])
+    );
     let replacement = map([
         ("method", text("replace")),
         ("sources", map([("input", V::List(vec![]))])),
     ]);
     assert_eq!(ok(&response(&call, &replacement)), &V::Integer(1.into()));
     let withdrawn = response(&call, &request);
-    assert_eq!(field(field(ok(&withdrawn), "relations"), "answer"), &V::List(vec![]));
+    assert_eq!(
+        field(field(ok(&withdrawn), "relations"), "answer"),
+        &V::List(vec![])
+    );
     assert!(ascent_c_abi::open(&component_captures(V::List(vec![]))).is_err());
     let mut ambiguous = component_captures(V::List(vec![text("f")]));
-    let V::Map(fields) = &mut ambiguous else { panic!("capture packet"); };
+    let V::Map(fields) = &mut ambiguous else {
+        panic!("capture packet");
+    };
     fields.insert("sources".into(), V::List(vec![text(SOURCE)]));
     assert!(ascent_c_abi::open(&ambiguous).is_err());
     call.close().unwrap();
@@ -239,52 +305,84 @@ fn components_link_and_withdraw_through_the_fixed_c_abi() {
 fn explicit_typed_rows_preserve_native_answers_and_reject_unknown_formats() {
     let call = ascent_c_abi::open(&captures(SOURCE)).unwrap();
     let mut request = run();
-    let V::Map(fields) = &mut request else { panic!("run packet"); };
-    fields.insert("resultFormat".into(),text("typed-rows"));
-    let result = response(&call,&request);
-    assert_eq!(field(ok(&result),"resultFormat"),&text("typed-rows"));
-    assert_eq!(field(field(ok(&result),"relations"),"added"),&V::List(vec![V::List(vec![V::Integer(2.into())])]));
-    let V::Map(fields) = &mut request else { panic!("run packet"); };
-    fields.insert("resultFormat".into(),text("auto"));
-    assert_eq!(field(&response(&call,&request),"ok"),&V::Boolean(false));
+    let V::Map(fields) = &mut request else {
+        panic!("run packet");
+    };
+    fields.insert("resultFormat".into(), text("typed-rows"));
+    let result = response(&call, &request);
+    assert_eq!(field(ok(&result), "resultFormat"), &text("typed-rows"));
+    assert_eq!(
+        field(field(ok(&result), "relations"), "added"),
+        &V::List(vec![V::List(vec![V::Integer(2.into())])])
+    );
+    let V::Map(fields) = &mut request else {
+        panic!("run packet");
+    };
+    fields.insert("resultFormat".into(), text("auto"));
+    assert_eq!(field(&response(&call, &request), "ok"), &V::Boolean(false));
     call.close().unwrap();
 }
 
 #[test]
 fn precompiled_graph_closure_captures_and_state_cross_the_c_abi() {
     let mut input = captures(SOURCE);
-    let V::Map(fields) = &mut input else { panic!("capture packet"); };
+    let V::Map(fields) = &mut input else {
+        panic!("capture packet");
+    };
     fields.remove("sources");
     fields.remove("constructor");
-    fields.insert("graph".into(), map([
-        ("algorithm", text("transitive")), ("source", text("edge")),
-        ("width", V::Integer(2.into())), ("output", text("path")),
-        ("captures", map([])),
-        ("rows", V::List(vec![
-            V::List(vec![V::Integer(1.into()), V::Integer(2.into())]),
-            V::List(vec![V::Integer(2.into()), V::Integer(3.into())]),
-        ])),
-    ]));
+    fields.insert(
+        "graph".into(),
+        map([
+            ("algorithm", text("transitive")),
+            ("source", text("edge")),
+            ("width", V::Integer(2.into())),
+            ("output", text("path")),
+            ("captures", map([])),
+            (
+                "rows",
+                V::List(vec![
+                    V::List(vec![V::Integer(1.into()), V::Integer(2.into())]),
+                    V::List(vec![V::Integer(2.into()), V::Integer(3.into())]),
+                ]),
+            ),
+        ]),
+    );
     let call = ascent_c_abi::open(&input).unwrap();
     let mut request = run();
-    let V::Map(fields) = &mut request else { panic!("run packet"); };
+    let V::Map(fields) = &mut request else {
+        panic!("run packet");
+    };
     fields.insert("resultFormat".into(), text("typed-rows"));
     let original = call.call(&request).unwrap();
     let before = original.decode(ValueLimits::default()).unwrap();
-    assert_eq!(field(field(ok(&before), "relations"), "path"), &V::List(vec![
-        V::List(vec![V::Integer(1.into()), V::Integer(2.into())]),
-        V::List(vec![V::Integer(1.into()), V::Integer(3.into())]),
-        V::List(vec![V::Integer(2.into()), V::Integer(3.into())]),
-    ]));
-    ok(&response(&call, &map([
-        ("method", text("replace")),
-        ("sources", map([("edge", V::List(vec![]))])),
-    ])));
-    assert_eq!(field(field(ok(&response(&call, &request)), "relations"), "path"), &V::List(vec![]));
+    assert_eq!(
+        field(field(ok(&before), "relations"), "path"),
+        &V::List(vec![
+            V::List(vec![V::Integer(1.into()), V::Integer(2.into())]),
+            V::List(vec![V::Integer(1.into()), V::Integer(3.into())]),
+            V::List(vec![V::Integer(2.into()), V::Integer(3.into())]),
+        ])
+    );
+    ok(&response(
+        &call,
+        &map([
+            ("method", text("replace")),
+            ("sources", map([("edge", V::List(vec![]))])),
+        ]),
+    ));
+    assert_eq!(
+        field(field(ok(&response(&call, &request)), "relations"), "path"),
+        &V::List(vec![])
+    );
     call.close().unwrap();
     assert_eq!(original.decode(ValueLimits::default()).unwrap(), before);
-    let V::Map(fields) = &mut input else { panic!("capture packet"); };
-    let V::Map(graph) = fields.get_mut("graph").unwrap() else { panic!("Graph packet"); };
+    let V::Map(fields) = &mut input else {
+        panic!("capture packet");
+    };
+    let V::Map(graph) = fields.get_mut("graph").unwrap() else {
+        panic!("Graph packet");
+    };
     graph.insert("algorithm".into(), text("eval-arbitrary-lambda"));
     assert!(ascent_c_abi::open(&input).is_err());
 }
@@ -302,31 +400,64 @@ fn declarative_match_and_finite_for_execute_through_the_c_abi() {
       ((selected N) <-- (or (and (seed N)) (and (pair N V))) (if (N) (odd? N))))";
     let call = ascent_c_abi::open(&captures(source)).unwrap();
     let mut request = run();
-    let V::Map(fields) = &mut request else { panic!("run packet"); };
+    let V::Map(fields) = &mut request else {
+        panic!("run packet");
+    };
     fields.insert("resultFormat".into(), text("typed-rows"));
     let result = response(&call, &request);
-    assert_eq!(field(field(ok(&result), "relations"), "unpacked"), &V::List(vec![
-        V::List(vec![V::Integer(2.into()), V::Integer(9.into())]),
-        V::List(vec![V::Integer(3.into()), V::Integer(10.into())]),
-    ]));
-    assert_eq!(field(field(ok(&result), "relations"), "pair"), &V::List(vec![
-        V::List(vec![V::Integer(7.into()), V::Integer(8.into())]),
-        V::List(vec![V::Integer(9.into()), V::Integer(7.into())]),
-    ]));
-    ok(&response(&call, &map([("method", text("replace")),
-        ("sources", map([("seed", V::List(vec![]))]))])));
-    assert_eq!(field(field(ok(&response(&call, &request)), "relations"), "pair"), &V::List(vec![]));
+    assert_eq!(
+        field(field(ok(&result), "relations"), "unpacked"),
+        &V::List(vec![
+            V::List(vec![V::Integer(2.into()), V::Integer(9.into())]),
+            V::List(vec![V::Integer(3.into()), V::Integer(10.into())]),
+        ])
+    );
+    assert_eq!(
+        field(field(ok(&result), "relations"), "pair"),
+        &V::List(vec![
+            V::List(vec![V::Integer(7.into()), V::Integer(8.into())]),
+            V::List(vec![V::Integer(9.into()), V::Integer(7.into())]),
+        ])
+    );
+    ok(&response(
+        &call,
+        &map([
+            ("method", text("replace")),
+            ("sources", map([("seed", V::List(vec![]))])),
+        ]),
+    ));
+    assert_eq!(
+        field(field(ok(&response(&call, &request)), "relations"), "pair"),
+        &V::List(vec![])
+    );
     let invalid = source.replace("(vector X Y)", "(vector X X)");
     assert!(ascent_c_abi::open(&captures(&invalid)).is_err());
-    let callback = source.replace("(list (vector N (+ N 1)) (vector (+ N 2) N))", "(arbitrary-callback N)");
+    let callback = source.replace(
+        "(list (vector N (+ N 1)) (vector (+ N 2) N))",
+        "(arbitrary-callback N)",
+    );
     assert!(ascent_c_abi::open(&captures(&callback)).is_err());
     let wrong_type = source.replace("#(2 9)", "#(2 #t)");
     assert!(ascent_c_abi::open(&captures(&wrong_type)).is_err());
     let empty = source.replace("(list (vector N (+ N 1)) (vector (+ N 2) N))", "(list)");
     let empty = ascent_c_abi::open(&captures(&empty)).unwrap();
-    assert_eq!(field(field(ok(&response(&empty, &request)), "relations"), "pair"), &V::List(vec![]));
-    assert_eq!(field(&response(&empty, &map([("method", text("replace")),
-        ("sources", map([("pair", V::List(vec![]))]))])), "ok"), &V::Boolean(false));
+    assert_eq!(
+        field(field(ok(&response(&empty, &request)), "relations"), "pair"),
+        &V::List(vec![])
+    );
+    assert_eq!(
+        field(
+            &response(
+                &empty,
+                &map([
+                    ("method", text("replace")),
+                    ("sources", map([("pair", V::List(vec![]))]))
+                ])
+            ),
+            "ok"
+        ),
+        &V::Boolean(false)
+    );
     empty.close().unwrap();
     call.close().unwrap();
 }

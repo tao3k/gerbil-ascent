@@ -25,18 +25,38 @@ pub(super) fn expand(forms: &[Datum]) -> Result<Vec<Datum>> {
 }
 
 fn read(items: &[Datum]) -> Result<(String, Function)> {
-    let [_, label, parameters, template] = items else {
+    let [_, label, parameters, templates @ ..] = items else {
         return Err(invalid("local macro signature/template required"));
     };
+    if templates.is_empty() {
+        return Err(invalid("local macro template required"));
+    }
+    let template = if let [template] = templates {
+        template.clone()
+    } else {
+        Datum::List(vec![
+            Datum::Atom("include".into()),
+            Datum::List(
+                std::iter::once(Datum::Atom("ascent-fragment".into()))
+                    .chain(templates.iter().cloned())
+                    .collect(),
+            ),
+        ])
+    };
     let mut seen = BTreeSet::new();
+    let mut identifiers = BTreeSet::new();
     let parameters = list(parameters)?
         .iter()
-        .map(|parameter| {
+        .enumerate()
+        .map(|(index, parameter)| {
             let [binding, kind] = list(parameter)? else {
                 return Err(invalid("typed local macro parameter required"));
             };
-            if name(kind)? != "expr" || !seen.insert(name(binding)?) {
-                return Err(invalid("unique expr macro parameters required"));
+            if !matches!(name(kind)?, "expr" | "ident") || !seen.insert(name(binding)?) {
+                return Err(invalid("unique expr/ident macro parameters required"));
+            }
+            if name(kind)? == "ident" {
+                identifiers.insert(index);
             }
             Ok(binding.clone())
         })
@@ -44,10 +64,11 @@ fn read(items: &[Datum]) -> Result<(String, Function)> {
     let pattern = std::iter::once(Datum::Atom("_".into()))
         .chain(parameters)
         .collect();
-    Function::rules(&[
+    let (label, rule) = Function::rules(&[
         Datum::Atom("defrules".into()),
         label.clone(),
         Datum::List(vec![]),
-        Datum::List(vec![Datum::List(pattern), template.clone()]),
-    ])
+        Datum::List(vec![Datum::List(pattern), template]),
+    ])?;
+    Ok((label, rule.with_identifiers(identifiers)))
 }

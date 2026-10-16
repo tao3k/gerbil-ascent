@@ -242,7 +242,7 @@ def run(library,output,*,live=False,index=0,arm='retained',resume_prefix=None,fa
                 'unknownBranches':sum(b.get('status')=='unknown' for x in checks for b in x['feedback'].get('branches',[])),
                 'providerErrors':sum(bool(c['error']) or c['status']!='completed' for c in calls)}
         (output/'result.json').write_text(json.dumps(result,indent=2));print(json.dumps(result),flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def main():

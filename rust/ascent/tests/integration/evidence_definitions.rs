@@ -14,6 +14,64 @@ const HISTORY: &str = "
  (include shared))";
 
 #[test]
+fn output_aliases_keep_authority_identity_and_withdrawal() {
+    let source = "(define-evidence (make) (sources input) (outputs (visible copied))
+        (relation input ((x integer?)) ((2) (7)))
+        (relation copied ((x integer?))) ((copied X) <-- (input X)))";
+    let engine = Engine::new(1).unwrap();
+    let mut session = engine
+        .open_evidence_sources(&[source], None, gerbil_ascent::FactLimits::default())
+        .unwrap();
+    let initial = session
+        .run(None, &Limits::default(), &Cancellation::default())
+        .unwrap();
+    assert_eq!(
+        initial.relations["visible"],
+        vec![Row::from(vec![2.into()]), Row::from(vec![7.into()])]
+    );
+    let proof = session
+        .provenance(
+            initial.result_handle,
+            "visible",
+            &gerbil_ascent::ProvenanceLimits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(proof.graph().unwrap().query, "visible");
+    assert!(
+        session
+            .replace(
+                std::collections::BTreeMap::from([("visible".into(), vec![])]),
+                &Limits::default(),
+                &Cancellation::default()
+            )
+            .is_err()
+    );
+    session
+        .replace(
+            std::collections::BTreeMap::from([("input".into(), vec![])]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert!(proof.graph().is_err());
+    let current = session
+        .run(None, &Limits::default(), &Cancellation::default())
+        .unwrap();
+    assert_eq!(
+        current.relations["visible"],
+        Vec::<gerbil_ascent::Row>::new()
+    );
+    for source in [
+        "(define-evidence (make) (sources (public input)) (outputs input) (relation input (x)))",
+        "(define-evidence (make) (sources input) (outputs (input copied)) (relation input (x)) (relation copied (x)))",
+        "(define-evidence (make) (sources input) (outputs (a copied) (b copied)) (relation input (x)) (relation copied (x)))",
+    ] {
+        assert!(EvidenceProgram::read_sources(&[source], None).is_err());
+    }
+}
+
+#[test]
 fn inline_fragment_macros_keep_budget_and_duplicate_admission() {
     let source = "(ascent
         (macro emit! ((n expr)) (fact (Seed (lit n))))
@@ -182,12 +240,12 @@ fn first_class_relation_graphs_preserve_composition_and_withdrawal() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(
+    assert_eq!(
         session
             .run(None, &Limits::default(), &Cancellation::default())
             .unwrap()
-            .relations["path"]
-            .is_empty()
+            .relations["path"],
+        Vec::<gerbil_ascent::Row>::new()
     );
     assert!(edge.project(vec![2]).is_err());
     assert!(edge.evidence("edge").is_err());
@@ -277,12 +335,12 @@ fn relational_projection_export_and_declaration_bridge_preserve_source_authority
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(
+    assert_eq!(
         session
             .run(None, &Limits::default(), &Cancellation::default())
             .unwrap()
-            .relations["answer"]
-            .is_empty()
+            .relations["answer"],
+        Vec::<gerbil_ascent::Row>::new()
     );
     session.close();
     engine.shutdown();
@@ -305,7 +363,11 @@ fn actual_investigation_links_rules_operator_sources_and_explanation() {
     assert!(!program.sources.contains("contract_dependencies"));
     let engine = Engine::new(1).unwrap();
     let mut session = engine
-        .open_evidence_sources(&sources, Some("make-investigation"), gerbil_ascent::FactLimits::default())
+        .open_evidence_sources(
+            &sources,
+            Some("make-investigation"),
+            gerbil_ascent::FactLimits::default(),
+        )
         .unwrap();
     let row =
         |values: &[&str]| Row::from(values.iter().map(|s| Value::from(*s)).collect::<Vec<_>>());
@@ -464,7 +526,11 @@ fn quoted_digit_prefixed_symbols_and_recorded_source_authority_are_not_coerced()
       ((answer '13-modules/prim_port.scm) <-- (input '13-modules/prim_port.scm))) '(input)))";
     let engine = Engine::new(1).unwrap();
     let mut session = engine
-        .open_evidence_sources(&[source], Some("case"), gerbil_ascent::FactLimits::default())
+        .open_evidence_sources(
+            &[source],
+            Some("case"),
+            gerbil_ascent::FactLimits::default(),
+        )
         .unwrap();
     session
         .replace(
@@ -547,7 +613,7 @@ fn unavailable_result_explanation_does_not_fabricate_metadata_or_block_execution
     let run = session
         .run(None, &Limits::default(), &Cancellation::default())
         .unwrap();
-    assert!(run.relations["input"].is_empty());
+    assert_eq!(run.relations["input"], Vec::<gerbil_ascent::Row>::new());
     let error = session
         .explanation_metadata(run.result_handle, "input")
         .unwrap_err();
@@ -579,8 +645,14 @@ fn definitions_preserve_sources_outputs_and_withdrawal() {
     let replaced = session
         .run(&Limits::default(), &Cancellation::default())
         .unwrap();
-    assert!(replaced.relations["added"].is_empty());
-    assert!(replaced.relations["removed"].is_empty());
+    assert_eq!(
+        replaced.relations["added"],
+        Vec::<gerbil_ascent::Row>::new()
+    );
+    assert_eq!(
+        replaced.relations["removed"],
+        Vec::<gerbil_ascent::Row>::new()
+    );
     assert_eq!(snapshot.relations["added"], rows(2));
     session.close();
     engine.shutdown();
@@ -634,8 +706,8 @@ fn production_catalog_review_history_compile_in_rust() {
             Some(constructor),
         )
         .unwrap();
-        assert!(!entry.sources.is_empty());
-        assert!(!entry.outputs.is_empty());
+        assert_ne!(entry.sources, std::collections::BTreeSet::<String>::new());
+        assert_ne!(entry.outputs, Vec::<String>::new());
         let engine = Engine::new(1).unwrap();
         let mut session = engine.open(entry.program).unwrap();
         session
@@ -696,7 +768,10 @@ fn production_review_requires_matching_identity_and_withdraws_support() {
     let withdrawn = session
         .run(&Limits::default(), &Cancellation::default())
         .unwrap();
-    assert!(withdrawn.relations["Reusable"].is_empty());
+    assert_eq!(
+        withdrawn.relations["Reusable"],
+        Vec::<gerbil_ascent::Row>::new()
+    );
     assert_eq!(
         withdrawn.relations["Decision"],
         denied.relations["Decision"]

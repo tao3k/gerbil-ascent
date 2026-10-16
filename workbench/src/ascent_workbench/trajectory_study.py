@@ -211,7 +211,7 @@ def run(library,output,live):
                     raise RuntimeError('Provider transport rejected; see recorded provider response, not output schema.')
         result={'preparedCases':len(cases),'records':records,'offlineOracleAgreement':len(cases)}
         (output/'result.json').write_text(json.dumps(result,indent=2));print(f'DONE cases={len(cases)} trajectories={len(records)}',flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def main():

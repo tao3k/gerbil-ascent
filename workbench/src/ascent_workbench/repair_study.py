@@ -68,7 +68,7 @@ def run(source,library,output):
             result={'case':case['case'],'prefix':repair_plan['prefix'],'calls':calls,'packet':packet,
                     'reusedComponents':second['reusedComponents'],'trajectory':trajectory.close('correct' if calls[-1]['correct'] else 'attempt-budget-or-provider-error')}
             (output/'result.json').write_text(json.dumps(result,indent=2));print('DONE repair',case['case'],flush=True)
-    finally:trajectory.close('exception');engine.shutdown()
+    finally:trajectory.close('exception');engine.close()
 
 
 def main():

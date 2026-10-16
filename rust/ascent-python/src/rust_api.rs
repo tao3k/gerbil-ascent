@@ -10,8 +10,8 @@ use pyo3::{
 };
 use std::{
     collections::BTreeMap,
-    sync::{Arc, Mutex},
-    time::Duration,
+    sync::{Arc, Mutex, MutexGuard, TryLockError},
+    time::{Duration, Instant},
 };
 #[path = "rust_bindings.rs"]
 mod bindings;
@@ -19,14 +19,19 @@ mod bindings;
 mod computational;
 #[path = "api/conversation.rs"]
 mod conversation;
+#[path = "api/datalog.rs"]
+mod datalog;
 #[path = "api/derivations.rs"]
 mod derivations;
 #[path = "api/domain.rs"]
 mod domain;
 #[path = "api/evidence_conversation.rs"]
 mod evidence_conversation;
+#[path = "api/explanations.rs"]
+mod explanations;
 #[path = "rust_exports.rs"]
 mod exports;
+use explanations::{Explanation, explanation};
 #[path = "api/interaction.rs"]
 mod interaction;
 #[path = "transport.rs"]
@@ -46,45 +51,168 @@ pub(super) fn error(e: impl std::fmt::Display) -> PyErr {
     PyValueError::new_err(e.to_string())
 }
 
+pub(super) fn request_bound(limit: Option<usize>, value: &OwnedValue) -> PyResult<()> {
+    if let Some(limit) = limit {
+        let size = gerbil_scheme_python::c_abi::request_size(value).map_err(error)?;
+        if size > limit {
+            return Err(PyValueError::new_err("caller request byte bound exceeded"));
+        }
+    }
+    Ok(())
+}
+
+#[pyclass(name = "Cancellation", frozen)]
+struct Control(Cancellation);
+#[pymethods]
+impl Control {
+    #[new]
+    fn new() -> Self {
+        Self(Cancellation::default())
+    }
+    fn cancel(&self) {
+        self.0.cancel();
+    }
+    #[getter]
+    fn canceled(&self) -> bool {
+        self.0.is_canceled()
+    }
+}
+
+fn lock_source<'a>(
+    owner: &'a Mutex<SourceSession>,
+    deadline: Instant,
+    cancellation: &Cancellation,
+) -> PyResult<MutexGuard<'a, SourceSession>> {
+    loop {
+        if cancellation.is_canceled() {
+            return Err(error(gerbil_ascent::Error::Canceled));
+        }
+        if Instant::now() >= deadline {
+            return Err(error(gerbil_ascent::Error::Timeout));
+        }
+        match owner.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(TryLockError::Poisoned(_)) => {
+                return Err(PyValueError::new_err("owner lock poisoned"));
+            }
+            Err(TryLockError::WouldBlock) => std::thread::sleep(Duration::from_micros(100)),
+        }
+    }
+}
+
 #[pyclass(name = "Engine", frozen)]
 pub(super) struct Owner(pub(super) Engine);
 #[pymethods]
 impl Owner {
     #[pyo3(signature=(source,constructor=None,*,trusted=false,limits=None,diagnostics=false))]
-    fn dsl(&self, source: &str, constructor: Option<&str>, trusted: bool,
-        limits: Option<PyRef<'_, crate::rust_components::Policy>>, diagnostics: bool) -> PyResult<crate::core_abi::CoreSession> {
-        if !trusted { return Err(PyValueError::new_err("explicit trusted DSL admission required")); }
-        crate::core_abi::CoreSession::open(self.0.clone(), source, constructor,
-            limits.map(|p| p.0).unwrap_or_default(), diagnostics)
+    fn dsl(
+        &self,
+        source: &str,
+        constructor: Option<&str>,
+        trusted: bool,
+        limits: Option<PyRef<'_, crate::rust_components::Policy>>,
+        diagnostics: bool,
+    ) -> PyResult<crate::core_abi::CoreSession> {
+        if !trusted {
+            return Err(PyValueError::new_err(
+                "explicit trusted DSL admission required",
+            ));
+        }
+        self.0.admit_source().map_err(error)?;
+        crate::core_abi::CoreSession::open(
+            self.0.clone(),
+            source,
+            constructor,
+            limits.map(|p| p.0).unwrap_or_default(),
+            diagnostics,
+        )
     }
     #[pyo3(signature=(graph,*,trusted=false,limits=None,diagnostics=false))]
-    fn core_graph(&self, graph: &Bound<'_, PyAny>, trusted: bool,
-        limits: Option<PyRef<'_, crate::rust_components::Policy>>, diagnostics: bool) -> PyResult<crate::core_abi::CoreSession> {
-        if !trusted { return Err(PyValueError::new_err("explicit trusted Graph admission required")); }
-        crate::core_abi::CoreSession::open_graph(self.0.clone(), graph,
-            limits.map(|p| p.0).unwrap_or_default(), diagnostics)
+    fn core_graph(
+        &self,
+        graph: &Bound<'_, PyAny>,
+        trusted: bool,
+        limits: Option<PyRef<'_, crate::rust_components::Policy>>,
+        diagnostics: bool,
+    ) -> PyResult<crate::core_abi::CoreSession> {
+        if !trusted {
+            return Err(PyValueError::new_err(
+                "explicit trusted Graph admission required",
+            ));
+        }
+        self.0.admit_source().map_err(error)?;
+        crate::core_abi::CoreSession::open_graph(
+            self.0.clone(),
+            graph,
+            limits.map(|p| p.0).unwrap_or_default(),
+            diagnostics,
+        )
     }
     #[pyo3(signature=(components,entry,constructor=None,*,trusted=false,limits=None,diagnostics=false))]
-    fn core_components(&self, components: &Bound<'_, PyAny>, entry: &str,
-        constructor: Option<&str>, trusted: bool,
-        limits: Option<PyRef<'_, crate::rust_components::Policy>>, diagnostics: bool) -> PyResult<crate::core_abi::CoreSession> {
-        if !trusted { return Err(PyValueError::new_err("explicit trusted DSL admission required")); }
-        crate::core_abi::CoreSession::open_components(self.0.clone(), components, entry, constructor,
-            limits.map(|p| p.0).unwrap_or_default(), diagnostics)
+    fn core_components(
+        &self,
+        components: &Bound<'_, PyAny>,
+        entry: &str,
+        constructor: Option<&str>,
+        trusted: bool,
+        limits: Option<PyRef<'_, crate::rust_components::Policy>>,
+        diagnostics: bool,
+    ) -> PyResult<crate::core_abi::CoreSession> {
+        if !trusted {
+            return Err(PyValueError::new_err(
+                "explicit trusted DSL admission required",
+            ));
+        }
+        self.0.admit_source().map_err(error)?;
+        crate::core_abi::CoreSession::open_components(
+            self.0.clone(),
+            components,
+            entry,
+            constructor,
+            limits.map(|p| p.0).unwrap_or_default(),
+            diagnostics,
+        )
     }
     #[pyo3(signature=(source,constructor=None,*,trusted=false,limits=None,diagnostics=false))]
-    fn core_evidence(&self, source: &str, constructor: Option<&str>, trusted: bool,
-        limits: Option<PyRef<'_, crate::rust_components::Policy>>, diagnostics: bool) -> PyResult<crate::core_abi::CoreSession> {
-        if !trusted { return Err(PyValueError::new_err("explicit trusted DSL admission required")); }
-        crate::core_abi::CoreSession::open(self.0.clone(), source, constructor,
-            limits.map(|p| p.0).unwrap_or_default(), diagnostics)
+    fn core_evidence(
+        &self,
+        source: &str,
+        constructor: Option<&str>,
+        trusted: bool,
+        limits: Option<PyRef<'_, crate::rust_components::Policy>>,
+        diagnostics: bool,
+    ) -> PyResult<crate::core_abi::CoreSession> {
+        if !trusted {
+            return Err(PyValueError::new_err(
+                "explicit trusted DSL admission required",
+            ));
+        }
+        self.0.admit_source().map_err(error)?;
+        crate::core_abi::CoreSession::open(
+            self.0.clone(),
+            source,
+            constructor,
+            limits.map(|p| p.0).unwrap_or_default(),
+            diagnostics,
+        )
     }
     #[new]
-    #[pyo3(signature=(*,backend="rust",workers=1))]
-    fn new(backend: &str, workers: usize) -> PyResult<Self> {
+    #[pyo3(signature=(*,backend="rust",workers=1,max_source_scopes=None,max_request_bytes=None))]
+    fn new(
+        backend: &str,
+        workers: usize,
+        max_source_scopes: Option<&Bound<'_, PyAny>>,
+        max_request_bytes: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Self> {
+        let limit = crate::rust_components::ceiling(max_source_scopes)?;
+        let bytes = crate::rust_components::ceiling(max_request_bytes)?;
         let workers = gerbil_scheme_python::select_backend(backend, None, Some(workers))
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
-        Engine::new(workers).map(Self).map_err(error)
+        Engine::new(workers)
+            .and_then(|engine| engine.with_source_limit(limit))
+            .and_then(|engine| engine.with_request_limit(bytes))
+            .map(Self)
+            .map_err(error)
     }
     #[classattr]
     fn backend() -> &'static str {
@@ -94,7 +222,18 @@ impl Owner {
     fn closed(&self) -> bool {
         self.0.is_closed()
     }
+    #[getter]
+    fn max_source_scopes(&self) -> Option<usize> {
+        self.0.source_limit()
+    }
+    #[getter]
+    fn max_request_bytes(&self) -> Option<usize> {
+        self.0.request_limit()
+    }
     fn describe(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        if self.0.is_closed() {
+            return Err(error(gerbil_ascent::Error::Closed));
+        }
         packets::write(
             py,
             &gerbil_ascent::Data::object([
@@ -106,6 +245,7 @@ impl Owner {
                     gerbil_ascent::Data::Integer(self.0.threads().into()),
                 ),
                 ("schemeVm", false.into()),
+                ("sourceScopes", self.0.source_scope_count().into()),
                 (
                     "operations",
                     gerbil_ascent::Data::List(
@@ -144,6 +284,16 @@ impl Owner {
                 "explicit trusted DSL admission required",
             ));
         }
+        request_bound(
+            self.0.request_limit(),
+            &OwnedValue::Map(BTreeMap::from([
+                ("source".into(), OwnedValue::Text(source.into())),
+                (
+                    "constructor".into(),
+                    constructor.map_or(OwnedValue::Null, |v| OwnedValue::Text(v.into())),
+                ),
+            ])),
+        )?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
         py.detach(|| self.0.open_evidence_sources(&[source], constructor, limits))
             .map(Evidence::owned)
@@ -159,10 +309,22 @@ impl Owner {
     ) -> PyResult<crate::rust_components::Components> {
         crate::rust_components::Components::new(self, manifest, sources, entry, trusted)
     }
-    fn source_graph(&self, name: &str, width: usize, rows: &Bound<'_, PyAny>) -> PyResult<crate::rust_graph::Graph> {
+    fn source_graph(
+        &self,
+        name: &str,
+        width: usize,
+        rows: &Bound<'_, PyAny>,
+    ) -> PyResult<crate::rust_graph::Graph> {
         crate::rust_graph::Graph::source(self, name, width, rows)
     }
-    fn projection_graph(&self, input_width: usize, columns: Vec<usize>) -> PyResult<crate::rust_graph::Graph> {
+    fn reachability(&self) -> PyResult<crate::closure_cuts::Closure> {
+        crate::closure_cuts::Closure::open(self)
+    }
+    fn projection_graph(
+        &self,
+        input_width: usize,
+        columns: Vec<usize>,
+    ) -> PyResult<crate::rust_graph::Graph> {
         crate::rust_graph::Graph::projection(self, input_width, columns)
     }
     fn transitive_graph(&self) -> PyResult<crate::rust_graph::Graph> {
@@ -179,6 +341,10 @@ impl Owner {
             .iter()
             .map(|t| t.extract::<String>())
             .collect::<PyResult<Vec<_>>>()?;
+        request_bound(
+            self.0.request_limit(),
+            &OwnedValue::List(texts.iter().cloned().map(OwnedValue::Text).collect()),
+        )?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
         py.detach(|| {
             self.0.open_sources(
@@ -200,6 +366,10 @@ impl Owner {
             .iter()
             .map(|t| t.extract::<String>())
             .collect::<PyResult<Vec<_>>>()?;
+        request_bound(
+            self.0.request_limit(),
+            &OwnedValue::List(texts.iter().cloned().map(OwnedValue::Text).collect()),
+        )?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
         py.detach(|| {
             self.0.open_rule_sources(
@@ -243,6 +413,12 @@ impl Owner {
         program: &Bound<'_, PyAny>,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
     ) -> PyResult<Evidence> {
+        if self.0.request_limit().is_some() {
+            request_bound(
+                self.0.request_limit(),
+                &OwnedValue::from_python(program, ValueLimits::default())?,
+            )?;
+        }
         let catalog = gerbil_ascent::Catalog::read(&packets::read(program)?).map_err(error)?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
         py.detach(|| {
@@ -273,18 +449,20 @@ pub(super) struct Evidence {
     owner: Arc<Mutex<SourceSession>>,
     declarations: Vec<gerbil_ascent::Relation>,
     queries: Vec<String>,
+    request_limit: Option<usize>,
 }
 impl Evidence {
     fn closed(&self, py: Python<'_>) -> PyResult<bool> {
         py.detach(|| {
             self.owner
                 .lock()
-                .map(|o| o.source_program().is_err())
+                .map(|owner| owner.is_closed())
                 .map_err(|_| PyValueError::new_err("owner lock poisoned"))
         })
     }
     pub(super) fn owned(session: SourceSession) -> Self {
         Self {
+            request_limit: session.request_limit(),
             declarations: session.descriptors().to_vec(),
             queries: session.queries().to_vec(),
             owner: Arc::new(Mutex::new(session)),
@@ -361,7 +539,16 @@ impl Evidence {
             })
             .collect()
     }
-    fn replace(&self, py: Python<'_>, sources: &Bound<'_, PyDict>) -> PyResult<()> {
+    #[pyo3(signature=(sources,*,timeout_nanoseconds=1_000_000_000,cancellation=None))]
+    fn replace(
+        &self,
+        py: Python<'_>,
+        sources: &Bound<'_, PyDict>,
+        timeout_nanoseconds: u64,
+        cancellation: Option<PyRef<'_, Control>>,
+    ) -> PyResult<Py<PyAny>> {
+        let deadline = Instant::now() + Duration::from_nanos(timeout_nanoseconds);
+        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
         let declarations: BTreeMap<_, _> = self
             .declarations
             .iter()
@@ -379,38 +566,55 @@ impl Evidence {
                 .collect::<PyResult<Vec<_>>>()?;
             updates.insert(name, values);
         }
-        py.detach(|| {
-            self.owner
-                .lock()
-                .map_err(|_| PyValueError::new_err("owner lock poisoned"))?
-                .replace(
-                    updates,
-                    &SourceSession::default_limits(),
-                    &Cancellation::default(),
-                )
-                .map(|_| ())
+        if self.request_limit.is_some() {
+            let data = gerbil_ascent::Data::Map(
+                updates
+                    .iter()
+                    .map(|(name, rows)| {
+                        gerbil_ascent::Catalog::observe_rows(rows).map(|rows| (name.clone(), rows))
+                    })
+                    .collect::<gerbil_ascent::Result<_>>()
+                    .map_err(error)?,
+            );
+            let input = ascent_c_abi::owned_packet(&data);
+            request_bound(self.request_limit, &input)?;
+        }
+        let generation = py.detach(|| {
+            let mut owner = lock_source(&self.owner, deadline, &cancellation)?;
+            let mut limits = SourceSession::default_limits();
+            limits.timeout = deadline.saturating_duration_since(Instant::now());
+            owner
+                .replace(updates, &limits, &cancellation)
                 .map_err(error)
-        })
+        })?;
+        packets::write(
+            py,
+            &gerbil_ascent::Data::object([
+                ("updated", true.into()),
+                ("sourceGeneration", generation.into()),
+            ]),
+        )
     }
-    #[pyo3(signature=(timeout_nanoseconds=1_000_000_000,*,queries=None))]
+    #[pyo3(signature=(timeout_nanoseconds=1_000_000_000,*,queries=None,cancellation=None))]
     fn run<'py>(
         &self,
         py: Python<'py>,
         timeout_nanoseconds: u64,
         queries: Option<Vec<String>>,
+        cancellation: Option<PyRef<'_, Control>>,
     ) -> PyResult<Bound<'py, PyDict>> {
-        if self.closed(py)? {
-            return Err(PyValueError::new_err("session closed"));
+        if timeout_nanoseconds == 0 {
+            return Err(error(gerbil_ascent::Error::Timeout));
         }
+        let deadline = Instant::now() + Duration::from_nanos(timeout_nanoseconds);
+        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
         let queries = queries.unwrap_or_else(|| self.queries.clone());
         let mut limits = SourceSession::default_limits();
         limits.timeout = Duration::from_nanos(timeout_nanoseconds);
         let observation = py.detach(|| {
-            let mut owner = self
-                .owner
-                .lock()
-                .map_err(|_| PyValueError::new_err("owner lock poisoned"))?;
-            Ok::<_, PyErr>(owner.run(Some(&queries), &limits, &Cancellation::default()))
+            let mut owner = lock_source(&self.owner, deadline, &cancellation)?;
+            limits.timeout = deadline.saturating_duration_since(Instant::now());
+            Ok::<_, PyErr>(owner.run(Some(&queries), &limits, &cancellation))
         })?;
         let observation = match observation {
             Ok(value) => value,
@@ -575,11 +779,26 @@ impl Object {
 struct ResultOwner(gerbil_ascent::SourceResult, Arc<Mutex<SourceSession>>, u64);
 #[pymethods]
 impl ResultOwner {
+    #[getter]
+    fn source_generation(&self) -> PyResult<u64> {
+        self.0.generation().map_err(error)
+    }
+    #[getter]
+    fn source_identity(&self) -> PyResult<u64> {
+        self.0.identity().map_err(error)
+    }
     fn __enter__(slf: PyRef<'_, Self>) -> PyResult<PyRef<'_, Self>> {
-        if slf.closed() { return Err(PyValueError::new_err("native result released")); }
+        if slf.closed() {
+            return Err(PyValueError::new_err("native result released"));
+        }
         Ok(slf)
     }
-    fn __exit__(&self, _ty: &Bound<'_, PyAny>, _value: &Bound<'_, PyAny>, _traceback: &Bound<'_, PyAny>) {
+    fn __exit__(
+        &self,
+        _ty: &Bound<'_, PyAny>,
+        _value: &Bound<'_, PyAny>,
+        _traceback: &Bound<'_, PyAny>,
+    ) {
         self.close();
     }
     fn graph(&self, py: Python<'_>, relation: &str) -> PyResult<Py<PyAny>> {
@@ -647,99 +866,6 @@ impl Reference {
         project(py, &self.0.value().map_err(error)?)
     }
 }
-#[pyclass(name = "Explanation", frozen)]
-struct Explanation(Mutex<gerbil_ascent::Provenance>, gerbil_ascent::Data);
-#[pymethods]
-impl Explanation {
-    #[getter]
-    fn current(&self, py: Python<'_>) -> PyResult<bool> {
-        py.detach(|| {
-            let owner = self
-                .0
-                .lock()
-                .map_err(|_| PyValueError::new_err("explanation lock poisoned"))?;
-            match owner.graph() {
-                Ok(_) => Ok(true),
-                Err(gerbil_ascent::Error::Closed) => Ok(false),
-                Err(failure) => Err(error(failure)),
-            }
-        })
-    }
-    #[getter]
-    fn source_generation(&self, py: Python<'_>) -> PyResult<u64> {
-        py.detach(|| {
-            self.0
-                .lock()
-                .map_err(|_| PyValueError::new_err("explanation lock poisoned"))?
-                .graph()
-                .map(|g| g.generation)
-                .map_err(error)
-        })
-    }
-    #[getter]
-    fn graph(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        py.detach(|| {
-            self.0
-                .lock()
-                .map_err(|_| PyValueError::new_err("explanation lock poisoned"))?
-                .graph()
-                .map_err(error)
-        })?;
-        packets::write(py, &self.1)
-    }
-    fn summary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let graph = py.detach(|| {
-            self.0
-                .lock()
-                .map_err(|_| PyValueError::new_err("explanation lock poisoned"))?
-                .graph()
-                .map_err(error)
-        })?;
-        let out = PyDict::new(py);
-        out.set_item("status", format!("{:?}", graph.status))?;
-        out.set_item("sourceIdentity", graph.source_identity)?;
-        out.set_item("sourceGeneration", graph.generation)?;
-        out.set_item("query", &graph.query)?;
-        out.set_item("nodes", graph.nodes.len())?;
-        out.set_item("edges", graph.edges.len())?;
-        out.set_item("roots", &graph.roots)?;
-        Ok(out)
-    }
-    fn close(&self, py: Python<'_>) -> PyResult<()> {
-        py.detach(|| {
-            self.0
-                .lock()
-                .map_err(|_| PyValueError::new_err("explanation lock poisoned"))?
-                .close();
-            Ok(())
-        })
-    }
-}
-fn explanation(
-    py: Python<'_>,
-    owner: &Arc<Mutex<SourceSession>>,
-    handle: u64,
-    relation: &str,
-) -> PyResult<Explanation> {
-    py.detach(|| {
-        let owner = owner
-            .lock()
-            .map_err(|_| PyValueError::new_err("owner lock poisoned"))?;
-        let metadata = owner
-            .explanation_metadata(handle, relation)
-            .map_err(error)?;
-        let provenance = owner
-            .provenance(
-                handle,
-                relation,
-                &gerbil_ascent::ProvenanceLimits::default(),
-                &Cancellation::default(),
-            )
-            .map_err(error)?;
-        Ok(Explanation(Mutex::new(provenance), metadata))
-    })
-}
-
 pub(super) fn cell(value: &Bound<'_, PyAny>, ty: Type) -> PyResult<Value> {
     if let Ok(reference) = value.extract::<PyRef<'_, Reference>>() {
         return reference.0.value().map_err(error);
@@ -785,11 +911,14 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     super::build_inventory::install(module)?;
     exports::install(module)?;
     module.add_class::<Owner>()?;
+    module.add_class::<Control>()?;
     module.add("EngineError", module.py().get_type::<EngineError>())?;
     module.add_class::<crate::rust_components::Policy>()?;
     module.add_class::<crate::rust_components::Components>()?;
     module.add_class::<crate::rust_components::Declaration>()?;
     module.add_class::<crate::rust_graph::Graph>()?;
+    module.add_class::<crate::closure_cuts::Closure>()?;
+    module.add_class::<crate::closure_cuts::Cut>()?;
     module.add_class::<Evidence>()?;
     module.add_class::<ResultOwner>()?;
     module.add_class::<Reference>()?;

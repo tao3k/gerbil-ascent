@@ -72,6 +72,7 @@ impl Components {
                 "explicit trusted DSL admission required",
             ));
         }
+        engine.0.admit_source().map_err(error)?;
         let components =
             components(&packets::read(manifest)?, &packets::read(sources)?).map_err(error)?;
         let loaded = manifest
@@ -94,7 +95,9 @@ impl Components {
 impl Components {
     #[getter]
     fn components(&self) -> PyResult<Vec<String>> {
-        if self.closed() { return Err(PyValueError::new_err("component owner closed")); }
+        if self.closed() {
+            return Err(PyValueError::new_err("component owner closed"));
+        }
         Ok(self.loaded.clone())
     }
     #[getter]
@@ -121,16 +124,27 @@ impl Components {
             ));
         }
         let selected = component.unwrap_or(&self.entry);
-        let target = self.entries.iter().find(|entry| entry.id == selected)
+        let target = self
+            .entries
+            .iter()
+            .find(|entry| entry.id == selected)
             .filter(|_| self.loaded.iter().any(|id| id == selected))
-            .ok_or_else(|| error(gerbil_ascent::Error::InvalidProgram("unselected Evidence component".into())))?;
-        if target.exports.as_ref().is_some_and(|names| !names.iter().any(|name| name == constructor)) {
-            return Err(error(gerbil_ascent::Error::InvalidProgram("hidden Evidence constructor".into())));
+            .ok_or_else(|| {
+                error(gerbil_ascent::Error::InvalidProgram(
+                    "unselected Evidence component".into(),
+                ))
+            })?;
+        if target
+            .exports
+            .as_ref()
+            .is_some_and(|names| !names.iter().any(|name| name == constructor))
+        {
+            return Err(error(gerbil_ascent::Error::InvalidProgram(
+                "hidden Evidence constructor".into(),
+            )));
         }
         let entry = py
-            .detach(|| {
-                EvidenceProgram::read_components(&self.entries, selected, Some(constructor))
-            })
+            .detach(|| EvidenceProgram::read_components(&self.entries, selected, Some(constructor)))
             .map_err(error)?;
         Ok(Declaration {
             engine: self.engine.clone(),
@@ -243,10 +257,11 @@ impl Policy {
         Ok(out)
     }
 }
-fn ceiling(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<usize>> {
+pub(super) fn ceiling(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<usize>> {
     value
         .map(|v| {
-            gerbil_scheme_python::OwnedValue::from_python(v, ValueLimits::default())?.positive_usize()
+            gerbil_scheme_python::OwnedValue::from_python(v, ValueLimits::default())?
+                .positive_usize()
         })
         .transpose()
 }

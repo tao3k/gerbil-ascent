@@ -16,7 +16,7 @@ import time
 import shlex
 import re
 import shutil
-from ascent import rows_equal
+from ascent.evidence import rows_equal
 
 ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
 SCHEME_ENTRY = 't/qualification/ascent-movie-cast-test.ss'

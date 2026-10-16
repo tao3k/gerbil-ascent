@@ -2,8 +2,13 @@
 mod diagnostics;
 mod exports;
 mod operations;
+mod reachability;
 mod transport;
-pub use exports::{ascent_core_abi_version, ascent_core_open, open};
+pub use exports::{
+    ascent_core_abi_version, ascent_core_open, ascent_reachability_open, open, open_reachability,
+};
+
+pub use transport::write as owned_packet;
 
 #[cfg(test)]
 asp_rust::asp_rust_cargo_test_gate!(

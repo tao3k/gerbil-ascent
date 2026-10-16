@@ -87,9 +87,6 @@ impl Graph {
         {
             return Err(invalid("invalid per-relation set limit"));
         }
-        if program.relations.is_empty() {
-            return Err(invalid("program needs relations"));
-        }
         let mut names = BTreeMap::new();
         for (id, relation) in program.relations.iter().enumerate() {
             validate_relation(relation)?;

@@ -1,62 +1,44 @@
-"""Fresh-process scope lifetime bounds, without any downstream Scheme imports."""
+"""Caller-owned declaration admission limits; no process-wide VM/expander quota."""
 import unittest
 from ascent import Engine, EngineError
-from test_module_calls import decode
 
+SOURCE = '''(define-evidence (make) (sources) (outputs answer)
+  (relation answer ((value integer?)) ((42))))'''
 
 class EvidenceDSLLifecycle(unittest.TestCase):
     def test_complete_runtime_scope_limit_is_not_reset_by_close(self):
         with Engine(max_source_scopes=64) as engine:
-            with self.assertRaises(EngineError):
-                engine.dsl('(import :gerbil/core)', trusted=True)
-            with self.assertRaises(EngineError):
-                engine.dsl('(unknown-dsl-form)', trusted=True)
-            with engine.dsl('(def (answer) 42)', trusted=True) as retained:
-                for _ in range(62):
-                    with engine.dsl('(def (answer) 1)', trusted=True) as owner:
-                        with owner.call('answer') as value:
-                            self.assertEqual(decode(value.graph), 1)
-                with self.assertRaisesRegex(EngineError, 'runtime load limit'):
-                    engine.dsl('(def (answer) 2)', trusted=True)
-                with retained.call('answer') as value:
-                    self.assertEqual(decode(value.graph), 42)
-            with self.assertRaisesRegex(EngineError, 'runtime load limit'):
-                engine.dsl('(def (answer) 2)', trusted=True)
-            self.assertEqual(engine.describe()['abi'], 1)
-            unlimited = Engine()
-            self.assertIsNone(unlimited.max_source_scopes)
-            self.assertEqual(unlimited.describe()['sourceScopes'], 64)
-            for _ in range(16):
-                with unlimited.dsl('(def (answer) 3)', trusted=True) as owner:
-                    with owner.call('answer') as value:
-                        self.assertEqual(decode(value.graph), 3)
-            self.assertEqual(engine.describe()['sourceScopes'], 80)
-            with self.assertRaisesRegex(EngineError, 'runtime load limit'):
-                engine.dsl('(def (answer) 2)', trusted=True)
+            for source in ('(import :gerbil/core)', '(unknown-dsl-form)'):
+                with self.assertRaises(EngineError): engine.dsl(source, trusted=True)
+            with engine.dsl(SOURCE, trusted=True) as retained:
+                for _ in range(61):
+                    with engine.dsl(SOURCE.replace('42', '1'), trusted=True) as owner:
+                        self.assertEqual(owner.run(result_format='typed-rows').value()['relations']['answer'], [[1]])
+                self.assertEqual(engine.describe()['sourceScopes'], 64)
+                with self.assertRaisesRegex(EngineError, 'source scope limit'):
+                    engine.dsl(SOURCE, trusted=True)
+                self.assertEqual(retained.run(result_format='typed-rows').value()['relations']['answer'], [[42]])
+            with self.assertRaisesRegex(EngineError, 'source scope limit'):
+                engine.evidence(SOURCE, trusted=True)
+            with Engine() as unlimited:
+                self.assertIsNone(unlimited.max_source_scopes)
+                for _ in range(80):
+                    with unlimited.dsl(SOURCE, trusted=True) as owner:
+                        self.assertTrue(owner.run().value()['complete'])
+                self.assertEqual(unlimited.describe()['sourceScopes'], 80)
+                self.assertEqual(engine.describe()['sourceScopes'], 64)
             manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
-                {'id': 'base', 'source': 'base.ss', 'exports': ['answer'], 'dependencies': []},
-                {'id': 'entry', 'source': 'entry.ss', 'exports': ['build'],
-                 'dependencies': [{'component': 'base', 'bindings': ['answer']}]}]}
-            sources = {'base.ss': '(def (answer) 4)', 'entry.ss': '(def (build) (answer))'}
-            preflight = Engine(max_source_scopes=81)
-            for invoke in (
-                    lambda: preflight.components(manifest, sources, 'entry', trusted=True),
-                    lambda: preflight.evidence_components(manifest, sources, 'entry', 'build', trusted=True),
-                    lambda: engine.evidence('(def (build) 1)', 'build', trusted=True)):
-                with self.assertRaisesRegex(EngineError, 'runtime load limit'):
-                    invoke()
-            self.assertEqual(engine.describe()['sourceScopes'], 80)
-            with unlimited.components(manifest, sources, 'entry', trusted=True) as owner:
-                with owner.call('build') as value:
-                    self.assertEqual(decode(value.graph), 4)
-            self.assertEqual(engine.describe()['sourceScopes'], 82)
-            for invalid in (False, 0, -1, '64'):
-                with self.assertRaisesRegex(EngineError, 'positive integer'):
-                    __import__('ascent')._scheme_call({'operation': 'dsl-open', 'source': '(def (answer) 1)',
-                                       'trusted': True, 'maxSourceScopes': invalid})
-            for invalid in (0, -1, True, '64'):
-                with self.assertRaises(EngineError):
+                {'id': 'entry', 'source': 'entry.ss', 'exports': ['make'], 'dependencies': []}]}
+            with Engine(max_source_scopes=1) as limited:
+                with limited.components(manifest, {'entry.ss': SOURCE}, 'entry', trusted=True) as factory:
+                    with factory.call('make') as declaration:
+                        with self.assertRaisesRegex(EngineError, 'source scope limit'):
+                            declaration.open_session()
+                with self.assertRaisesRegex(EngineError, 'source scope limit'):
+                    limited.components(manifest, {'entry.ss': SOURCE}, 'entry', trusted=True)
+                self.assertEqual(limited.describe()['sourceScopes'], 1)
+            for invalid in (0, -1, True, False, '64'):
+                with self.assertRaises((ValueError, TypeError, OverflowError)):
                     Engine(max_source_scopes=invalid)
-
 
 if __name__ == '__main__': unittest.main()

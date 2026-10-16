@@ -12,6 +12,7 @@ pub struct EvidenceProgram {
     pub constructor: String,
     pub sources: BTreeSet<String>,
     pub outputs: Vec<String>,
+    pub output_aliases: BTreeMap<String, String>,
     pub program: Program,
     pub explanation: Option<super::EvidenceExplanation>,
 }
@@ -77,8 +78,8 @@ pub(super) fn lower_entry(
     for form in &body {
         let items = list(form)?;
         match tag(items) {
-            Some("sources") => binding(&mut input, &items[1..])?,
-            Some("outputs") => binding(&mut output, &items[1..])?,
+            Some("sources") => binding(&mut input, &items[1..], false)?,
+            Some("outputs") => binding(&mut output, &items[1..], true)?,
             Some("explain") => {
                 let [_, value] = items else {
                     return Err(invalid("one explanation definition required"));
@@ -108,12 +109,24 @@ pub(super) fn lower_entry(
     )?;
     let mut program = finish(program)?;
     let declared: BTreeSet<_> = program.relations.iter().map(|r| r.name.clone()).collect();
-    if inputs.iter().chain(&outputs).any(|n| !declared.contains(n)) {
+    if inputs
+        .iter()
+        .chain(&outputs)
+        .any(|(_, target)| !declared.contains(target))
+    {
         return Err(invalid(
             "Evidence source/output names an undeclared relation",
         ));
     }
-    let sources: BTreeSet<_> = inputs.into_iter().collect();
+    let sources: BTreeSet<_> = inputs.into_iter().map(|(_, target)| target).collect();
+    if outputs
+        .iter()
+        .any(|(alias, target)| alias != target && declared.contains(alias))
+    {
+        return Err(invalid("Evidence output alias shadows a declared relation"));
+    }
+    let output_aliases = outputs.iter().cloned().collect();
+    let outputs = outputs.into_iter().map(|(alias, _)| alias).collect();
     for relation in &mut program.relations {
         relation.source = sources.contains(&relation.name);
     }
@@ -122,6 +135,7 @@ pub(super) fn lower_entry(
         constructor: selected,
         sources,
         outputs,
+        output_aliases,
         program,
         explanation,
     })
@@ -225,7 +239,11 @@ pub(super) fn definition(
     Ok(())
 }
 
-fn binding(slot: &mut Option<Vec<String>>, values: &[Datum]) -> Result<()> {
+fn binding(
+    slot: &mut Option<Vec<(String, String)>>,
+    values: &[Datum],
+    aliases: bool,
+) -> Result<()> {
     if slot.is_some() {
         return Err(invalid("duplicate Evidence source/output declaration"));
     }
@@ -236,15 +254,27 @@ fn binding(slot: &mut Option<Vec<String>>, values: &[Datum]) -> Result<()> {
                 let [label, reference] = items.as_slice() else {
                     return Err(invalid("source/output binding shape"));
                 };
-                if name(label)? != name(reference)? {
+                if !aliases && name(label)? != name(reference)? {
                     return Err(invalid("source/output alias must match exported relation"));
                 }
-                Ok(name(label)?.to_owned())
+                Ok((name(label)?.to_owned(), name(reference)?.to_owned()))
             }
-            _ => name(v).map(str::to_owned),
+            _ => name(v).map(|name| (name.to_owned(), name.to_owned())),
         })
         .collect::<Result<Vec<_>>>()?;
-    if labels.iter().collect::<BTreeSet<_>>().len() != labels.len() {
+    if labels
+        .iter()
+        .map(|(label, _)| label)
+        .collect::<BTreeSet<_>>()
+        .len()
+        != labels.len()
+        || labels
+            .iter()
+            .map(|(_, target)| target)
+            .collect::<BTreeSet<_>>()
+            .len()
+            != labels.len()
+    {
         return Err(invalid("duplicate Evidence source/output binding"));
     }
     *slot = Some(labels);

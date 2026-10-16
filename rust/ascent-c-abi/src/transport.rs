@@ -22,7 +22,8 @@ pub(super) fn read(value: OwnedValue) -> Result<Data> {
         }
     })
 }
-pub(super) fn write(value: &Data) -> OwnedValue {
+/// Convert a Core packet to the upstream owned ABI without executing a source.
+pub fn write(value: &Data) -> OwnedValue {
     match value {
         Data::Null => OwnedValue::Null,
         Data::Bool(v) => OwnedValue::Boolean(*v),

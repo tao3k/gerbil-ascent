@@ -4,8 +4,7 @@ use gerbil_scheme_python::{
     c_abi::{ForeignCallable, ForeignValue},
 };
 use pyo3::{
-    Bound, Py, PyAny, PyRef, PyResult, Python,
-    pyclass, pymethods,
+    Bound, Py, PyAny, PyRef, PyResult, Python, pyclass, pymethods,
     types::{PyModule, PyModuleMethods},
 };
 use std::{cell::RefCell, collections::BTreeMap, time::Instant};
@@ -35,18 +34,31 @@ impl CoreSession {
         limits: gerbil_ascent::FactLimits,
         diagnostics: bool,
     ) -> PyResult<Self> {
-        if host.is_closed() { return Err(failure("engine closed")); }
+        if host.is_closed() {
+            return Err(failure("engine closed"));
+        }
         let input = packet([
-            ("graph", OwnedValue::from_python(graph, ValueLimits::default())?),
+            (
+                "graph",
+                OwnedValue::from_python(graph, ValueLimits::default())?,
+            ),
             ("workers", OwnedValue::Integer(host.threads().into())),
             ("diagnostics", OwnedValue::Boolean(diagnostics)),
-            ("limits", packet([
-                ("input", ceiling(limits.input)),
-                ("derived", ceiling(limits.derived)),
-                ("output", ceiling(limits.output)),
-            ])),
+            (
+                "limits",
+                packet([
+                    ("input", ceiling(limits.input)),
+                    ("derived", ceiling(limits.derived)),
+                    ("output", ceiling(limits.output)),
+                ]),
+            ),
         ]);
-        Ok(Self { callable: ascent_c_abi::open(&input).map_err(failure)?, host, diagnostics })
+        crate::rust_api::request_bound(host.request_limit(), &input)?;
+        Ok(Self {
+            callable: ascent_c_abi::open(&input).map_err(failure)?,
+            host,
+            diagnostics,
+        })
     }
     pub(crate) fn open(
         host: gerbil_ascent::Engine,
@@ -55,8 +67,13 @@ impl CoreSession {
         limits: gerbil_ascent::FactLimits,
         diagnostics: bool,
     ) -> PyResult<Self> {
-        Self::open_declaration(host, [("sources", OwnedValue::List(vec![text(source)]))],
-            constructor, limits, diagnostics)
+        Self::open_declaration(
+            host,
+            [("sources", OwnedValue::List(vec![text(source)]))],
+            constructor,
+            limits,
+            diagnostics,
+        )
     }
     pub(crate) fn open_components(
         host: gerbil_ascent::Engine,
@@ -66,10 +83,19 @@ impl CoreSession {
         limits: gerbil_ascent::FactLimits,
         diagnostics: bool,
     ) -> PyResult<Self> {
-        Self::open_declaration(host, [
-            ("components", OwnedValue::from_python(components, ValueLimits::default())?),
-            ("entry", text(entry)),
-        ], constructor, limits, diagnostics)
+        Self::open_declaration(
+            host,
+            [
+                (
+                    "components",
+                    OwnedValue::from_python(components, ValueLimits::default())?,
+                ),
+                ("entry", text(entry)),
+            ],
+            constructor,
+            limits,
+            diagnostics,
+        )
     }
     fn open_declaration<const N: usize>(
         host: gerbil_ascent::Engine,
@@ -95,8 +121,13 @@ impl CoreSession {
             ),
         ]);
         if let OwnedValue::Map(fields) = &mut input {
-            fields.extend(declaration.into_iter().map(|(name, value)| (name.into(), value)));
+            fields.extend(
+                declaration
+                    .into_iter()
+                    .map(|(name, value)| (name.into(), value)),
+            );
         }
+        crate::rust_api::request_bound(host.request_limit(), &input)?;
         let callable = ascent_c_abi::open(&input).map_err(failure)?;
         Ok(Self {
             callable,
@@ -108,6 +139,7 @@ impl CoreSession {
         if self.host.is_closed() {
             return Err(failure("engine closed"));
         }
+        crate::rust_api::request_bound(self.host.request_limit(), input)?;
         let started = self.diagnostics.then(Instant::now);
         let value = self.callable.call(input).map_err(failure)?;
         let timings = started
@@ -198,10 +230,17 @@ pub(crate) struct CoreValue {
 #[pymethods]
 impl CoreValue {
     fn __enter__(slf: PyRef<'_, Self>) -> PyResult<PyRef<'_, Self>> {
-        if slf.closed() { return Err(failure("result released")); }
+        if slf.closed() {
+            return Err(failure("result released"));
+        }
         Ok(slf)
     }
-    fn __exit__(&self, _ty: &Bound<'_, PyAny>, _value: &Bound<'_, PyAny>, _traceback: &Bound<'_, PyAny>) {
+    fn __exit__(
+        &self,
+        _ty: &Bound<'_, PyAny>,
+        _value: &Bound<'_, PyAny>,
+        _traceback: &Bound<'_, PyAny>,
+    ) {
         self.close();
     }
     fn value(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {

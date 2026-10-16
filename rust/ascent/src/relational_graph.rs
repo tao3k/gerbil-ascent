@@ -127,6 +127,7 @@ impl RelationalGraph {
             constructor: output.into(),
             sources: sources.into_keys().collect::<BTreeSet<_>>(),
             outputs: vec![output.into()],
+            output_aliases: BTreeMap::new(),
             program,
             explanation: None,
         })

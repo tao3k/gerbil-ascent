@@ -5,6 +5,22 @@ use crate::{
 };
 
 impl Catalog {
+    /// Observe typed input tuples, including owned graph identities, without
+    /// projecting away values that cannot be represented as native scalars.
+    /// # Errors
+    /// Rejects invalid graph observations.
+    pub fn observe_rows(rows: &[crate::Row]) -> Result<Data> {
+        Ok(Data::List(
+            rows.iter()
+                .map(|row| {
+                    row.iter()
+                        .map(|cell| value(cell, true))
+                        .collect::<Result<Vec<_>>>()
+                        .map(Data::List)
+                })
+                .collect::<Result<_>>()?,
+        ))
+    }
     /// Observe a typed program through the existing catalog contract.
     /// # Errors
     /// Values with no lossless catalog representation remain explicit gaps.

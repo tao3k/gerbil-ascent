@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from ascent import Engine, EngineError, ResourceLimitError
+from ascent import Engine, EngineError
 from ascent.datalog import read_datalog, evaluate_datalog as evaluate
 from ascent.derivations import EvidenceChain
 
@@ -57,7 +57,7 @@ class NativeDatalogTests(unittest.TestCase):
         cls.engine=Engine()
 
     @classmethod
-    def tearDownClass(cls):cls.engine.shutdown()
+    def tearDownClass(cls):cls.engine.close()
 
     def test_loaded_engine_advertises_checked_operator_surface(self):
         self.assertFalse(hasattr(self.engine,'request'))
@@ -120,7 +120,7 @@ class NativeDatalogTests(unittest.TestCase):
         program, _ = read_datalog({"a": [[str(n)] for n in range(2050)],
                                       "b": [[str(n)] for n in range(2050)]},
                                      "out(X) <= a(X) & b(X)", {"answer": "out(X)"})
-        with self.assertRaises(ResourceLimitError):
+        with self.assertRaises(EngineError):
             with EvidenceChain(self.engine, [r for r in program["relations"] if r["source"]],
                                limits=FactLimits(input=4096)):
                 pass

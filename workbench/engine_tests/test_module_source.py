@@ -1,95 +1,90 @@
-"""Python-only consumers of full host-authorized native Scheme modules."""
+"""Python-only declarative components, fixed Graph algorithms and owned results."""
 import unittest
-
 from ascent import Engine, EngineError
 from test_module_calls import decode
 
-
 SOURCE = '''
-  (defrules copy-rule ()
-    ((_ from to)
-     (gerbil-ascent-rule
-       (list (gerbil-ascent-atom to (list (gerbil-ascent-variable 'value))))
-       (list (gerbil-ascent-atom from (list (gerbil-ascent-variable 'value)))))))
-  (def (make-closure n) (lambda (x) (+ n x)))
-  (def (return-values . items) (apply values items))
-  (def (make-cycle) (let (v (make-vector 1)) (vector-set! v 0 v) v))
-  (define-evidence (make-evidence values)
-    (gerbil-ascent-program
-      (list (gerbil-ascent-relation 'input 1 (map list values))
-            (gerbil-ascent-relation 'output 1 []))
-      (list (copy-rule 'input 'output)) 32 64 96 '(input))
-    (lambda (program result query scope)
-      (hash ("status" "recorded-only") ("scope" scope)
-            ("dependencies" (.ref program 'rules)) ("gap" "not a per-row proof"))))
+(defrules copy-rule () ((_ from to) ((to X) <-- (from X))))
+(define-evidence (make-evidence)
+  (sources input) (outputs output)
+  (relation input ((value exact-integer?)) ((1) (2)))
+  (relation output ((value exact-integer?)))
+  (copy-rule input output))
 '''
-
 
 class ModuleSourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls): cls.engine = Engine()
-
     @classmethod
-    def tearDownClass(cls): cls.engine.shutdown()
+    def tearDownClass(cls): cls.engine.close()
 
     def test_authorization_required_by_python_and_native(self):
-        with self.assertRaisesRegex(ValueError, 'explicitly authorized'):
-            self.engine.dsl(SOURCE)
-        with self.assertRaisesRegex(ValueError, 'explicitly authorized'):
-            self.engine.evidence(SOURCE, 'make-evidence', trusted=False)
+        for operation in (self.engine.dsl, self.engine.evidence):
+            with self.assertRaisesRegex(EngineError, 'trusted'):
+                operation(SOURCE)
         self.assertFalse(hasattr(self.engine, 'request'))
+        self.assertFalse(hasattr(self.engine, 'register_module'))
 
     def test_macro_import_constructor_update_withdrawal_and_explanation(self):
-        with self.engine.evidence(SOURCE, 'make-evidence',
-                                            [1, 2], trusted=True) as session:
-            with session.result(session.run(queries=['output'])) as result:
-                self.assertEqual(sorted(decode(result.rows('output')['value'])), [[1], [2]])
+        with self.engine.evidence(SOURCE, 'make-evidence', trusted=True) as session:
+            with session.result(session.run()) as result:
+                self.assertEqual(decode(result.graph('output')), [[1], [2]])
                 proof = result.explanation('output')
-            self.assertIn('not a per-row proof', str(proof.graph))
+            self.assertEqual(proof.graph['status'], 'recorded-only')
+            self.assertTrue(proof.current)
             proof.close()
             session.replace({'input': [[8]]})
-            with session.result(session.run(queries=['output'])) as result:
-                self.assertEqual(decode(result.rows('output')['value']), [[8]])
+            with session.result(session.run()) as result:
+                self.assertEqual(decode(result.graph('output')), [[8]])
             session.replace({'input': []})
-            with session.result(session.run(queries=['output'])) as result:
-                self.assertEqual(decode(result.rows('output')['value']), [])
-        with self.assertRaises(ValueError): session.run()
+            with session.result(session.run()) as result:
+                self.assertEqual(decode(result.graph('output')), [])
+        with self.assertRaises(EngineError): session.run()
 
     def test_closures_cycles_foreign_and_released_values(self):
-        with self.engine.dsl(SOURCE, trusted=True) as owner:
-            with owner.call('make-closure', 7) as function:
-                with function.apply(5) as value:
-                    self.assertEqual(decode(value.graph), 12)
-                with owner.call('make-cycle') as cycle:
-                    node = cycle.graph['nodes'][0]
-                    self.assertEqual(node['items'], [{'ref': node['id']}])
-                    reference = cycle.reference()
-                with self.assertRaises(EngineError): owner.call('make-closure', reference)
-            with self.assertRaises(ValueError): function.apply(5)
-        with self.assertRaises(ValueError): owner.call('make-cycle')
+        # Fixed projection captures replace runtime closure production.
+        with self.engine.source_graph('input', 2, [[7, 12]]) as source:
+            with self.engine.projection_graph(2, [1]) as function:
+                with function.apply(source) as graph, graph.open_session('answer') as session:
+                    with session.result(session.run()) as result:
+                        self.assertEqual(result.rows('answer')['rows'], [[12]])
+                        reference = result.reference('answer', 0, 0)
+                    with self.assertRaises(EngineError): reference.scalar()
+                with self.assertRaises(ValueError): function.apply(graph)
+        with Engine() as foreign, foreign.source_graph('foreign', 2, [[0, 5]]) as input:
+            with self.engine.projection_graph(2, [1]) as function:
+                with self.assertRaises(ValueError): function.apply(input)
+        for code in ('(def (make n) (lambda (x) (+ n x)))', '(set! x 1)'):
+            with self.assertRaises(EngineError): self.engine.dsl(code, trusted=True)
+        cyclic = '''(define-evidence (cycle) (sources) (outputs output)
+          (relation output (value) (( (object-graph (ref 0) ((0 vector (ref 0)))) ))))'''
+        with self.engine.evidence(cyclic, trusted=True) as session:
+            with session.result(session.run()) as result:
+                graph = result.graph('output')
+                vector = next(node for node in graph['nodes'] if node['type'] == 'vector')
+                self.assertEqual(vector['items'], [{'ref': vector['id']}])
 
     def test_isolated_module_names_and_export_boundaries(self):
-        source = '(def (answer) VALUE)'
-        with self.engine.dsl(source.replace('VALUE', '1'), trusted=True) as a:
-            with self.engine.dsl(source.replace('VALUE', '2'), trusted=True) as b:
-                with a.call('answer') as value: self.assertEqual(decode(value.graph), 1)
-                with b.call('answer') as value: self.assertEqual(decode(value.graph), 2)
-                with self.assertRaises(EngineError): a.call('identity', 1)
-            with a.call('answer') as value: self.assertEqual(decode(value.graph), 1)
+        with self.engine.evidence(SOURCE, trusted=True) as first:
+            with self.engine.evidence(SOURCE.replace('((1) (2))', '((99))'), trusted=True) as second:
+                self.assertEqual(second.run()['relations']['output'], [[99]])
+                with self.assertRaises(EngineError): second.run(queries=['identity'])
+            self.assertEqual(first.run()['relations']['output'], [[1], [2]])
 
     def test_invalid_source_and_failed_load_do_not_create_usable_owner(self):
-        for source in ['(import :gerbil/core)', '(module scene (import :gerbil/core))',
-                       '(export make-evidence)', '(unknown-dsl-form)']:
-            with self.assertRaises(EngineError):
-                self.engine.dsl(source, trusted=True)
+        for source in ('(import :gerbil/core)', '(module scene (import :gerbil/core))',
+                       '(export make-evidence)', '(unknown-dsl-form)'):
+            with self.assertRaises(EngineError): self.engine.dsl(source, trusted=True)
+        with self.engine.evidence(SOURCE, trusted=True) as session:
+            self.assertEqual(session.run()['relations']['output'], [[1], [2]])
 
     def test_consumer_definitions_have_no_scheme_import_module_or_build(self):
-        for token in ['(import', '(module', '(export', 'gxc', 'gerbil.pkg']:
+        for token in ('(import', '(module', '(export', 'gxc', 'gerbil.pkg'):
             self.assertNotIn(token, SOURCE)
         with self.engine.dsl(SOURCE, trusted=True) as owner:
-            with owner.call('return-values', 3, 5) as value:
-                self.assertEqual(value.receipt['valueCount'], 2)
-                self.assertEqual(decode(value.graph), [3, 5])
-
+            with owner.run(result_format='typed-rows') as value:
+                self.assertEqual(value.value()['relations']['output'], [[1], [2]])
+            with self.assertRaises(EngineError): value.value()
+        with self.assertRaises(EngineError): owner.run()
 
 if __name__ == '__main__': unittest.main()

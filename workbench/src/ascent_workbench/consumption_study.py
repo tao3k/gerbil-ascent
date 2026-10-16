@@ -127,7 +127,7 @@ def run(library,output,live,index=None):
                         snapshot=trajectory.close('all-three-goals-correct' if all_correct else 'provider-error' if fatal else 'attempt-budget')
                         records.append({'case':case['case'],'arm':arm,'verifiedAll':all_correct,'calls':calls,'trajectory':snapshot});(output/'records.json').write_text(json.dumps(records,indent=2))
         (output/'result.json').write_text(json.dumps({'records':records,'preparedCases':len(cases),'oracleAgreements':len(cases)*3,'actualCalls':len(audit)},indent=2));print('DONE',len(records),len(audit),flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def legacy_repair(library,output):
@@ -149,7 +149,7 @@ def legacy_repair(library,output):
                         trajectory.verify(True,'original-independent-oracle',scope='task' if stage==1 else 'subgoal',consumption_reference=receipt['resultReference']);reference=receipt['resultReference'];receipts.append(receipt)
                     records.append({'case':case['case'],'source':str(source),'prefix':prefix,'control':control,'receipts':receipts,'newModelCalls':0,'trajectory':trajectory.close('authorized-query-executed')})
         (output/'result.json').write_text(json.dumps(records,indent=2));print('LEGACY-REPAIR-OK',len(records),'new-model-calls=0',flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def main():

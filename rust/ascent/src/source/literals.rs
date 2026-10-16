@@ -23,6 +23,17 @@ pub(super) fn graph(form: &[Datum]) -> Result<Value> {
                 };
                 Ok(GraphItem::Reference(id(target)?))
             }
+            Datum::List(v) if matches!(v.first(), Some(Datum::Atom(s)) if s == "character") => {
+                let [_, value] = v.as_slice() else {
+                    return Err(invalid("graph character arity"));
+                };
+                let code = name(value)?
+                    .parse::<u32>()
+                    .map_err(|_| invalid("Unicode scalar required"))?;
+                char::from_u32(code)
+                    .map(GraphItem::Character)
+                    .ok_or_else(|| invalid("Unicode scalar required"))
+            }
             Datum::Atom(s) if s == "#t" => Ok(GraphItem::Boolean(true)),
             Datum::Atom(s) if s == "#f" => Ok(GraphItem::Boolean(false)),
             Datum::Atom(s) if crate::numbers::parse_number(s).is_some() => {
@@ -46,6 +57,16 @@ pub(super) fn graph(form: &[Datum]) -> Result<Value> {
             ("vector", values) => {
                 ObjectNode::Vector(values.iter().map(edge).collect::<Result<_>>()?)
             }
+            ("u8vector", values) => ObjectNode::Bytes(
+                values
+                    .iter()
+                    .map(|value| {
+                        name(value)?
+                            .parse::<u8>()
+                            .map_err(|_| invalid("byte in 0..255 required"))
+                    })
+                    .collect::<Result<_>>()?,
+            ),
             ("pair", [a, b]) => ObjectNode::Pair(edge(a)?, edge(b)?),
             ("table", entries) => ObjectNode::Table(
                 entries

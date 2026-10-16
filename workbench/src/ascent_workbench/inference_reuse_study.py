@@ -244,7 +244,7 @@ def live(directory,library,output):
                                 session=engine.open(program(source,contract));candidate['contractSha256']=identity(contract)
                             if session is None:raise ValueError('no admitted cold contract')
                             if phase=='updated':
-                                session.replace([{'relation':n,'rows':r} for n,r in source['rows'].items()])
+                                session.replace(source['rows'])
                             result=session.run(0 if phase=='repeat' else 1000000000)
                             if not result['complete']:raise ValueError('Scheme query incomplete')
                             candidate.update(answer=result['relations']['answer'],correct=sorted(result['relations']['answer'])==expected(case,source))

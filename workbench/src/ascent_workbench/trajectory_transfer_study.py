@@ -128,7 +128,7 @@ def run(library,output,live):
                 records.append(record);(output/'records.json').write_text(json.dumps(records,indent=2))
         (output/'result.json').write_text(json.dumps({'cases':len(cases),'records':records,'offlineOracleAgreement':8},indent=2))
         print(f'DONE bundles={len(cases)} trajectories={len(records)}',flush=True)
-    finally:engine.shutdown()
+    finally:engine.close()
 
 
 def main():

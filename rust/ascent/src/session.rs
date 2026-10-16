@@ -7,10 +7,11 @@ use rayon::{ThreadPool, slice::ParallelSliceMut};
 use std::{
     collections::{BTreeMap, HashSet},
     sync::{
-        Arc,
+        Arc, OnceLock,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
 };
+static RUNTIME_PROCESS: OnceLock<u32> = OnceLock::new();
 
 /// Uses an explicit pool; never configures Rayon's process-global pool.
 #[derive(Clone)]
@@ -18,7 +19,11 @@ pub struct Engine {
     #[cfg(feature = "rayon")]
     pool: Arc<ThreadPool>,
     parallel: bool,
+    process: u32,
     closed: Arc<AtomicBool>,
+    source_limit: Option<usize>,
+    request_limit: Option<usize>,
+    source_scopes: Arc<AtomicUsize>,
     pub(crate) evidence_owners: Arc<AtomicUsize>,
     pub(crate) trajectory_owners: Arc<AtomicUsize>,
 }
@@ -26,6 +31,11 @@ impl Engine {
     /// # Errors
     /// Rejects zero workers, unavailable parallelism, or pool construction failure.
     pub fn new(threads: usize) -> Result<Self> {
+        if *RUNTIME_PROCESS.get_or_init(std::process::id) != std::process::id() {
+            return Err(Error::InvalidProgram(
+                "forked Library runtime requires exec before initialization".into(),
+            ));
+        }
         if threads == 0 {
             return Err(Error::InvalidProgram(
                 "worker count must be positive".into(),
@@ -40,7 +50,11 @@ impl Engine {
             }
             Ok(Self {
                 parallel: false,
+                process: std::process::id(),
                 closed: Arc::default(),
+                source_limit: None,
+                request_limit: None,
+                source_scopes: Arc::default(),
                 evidence_owners: Arc::default(),
                 trajectory_owners: Arc::default(),
             })
@@ -60,7 +74,11 @@ impl Engine {
         Self {
             pool,
             parallel: true,
+            process: *RUNTIME_PROCESS.get_or_init(std::process::id),
             closed: Arc::default(),
+            source_limit: None,
+            request_limit: None,
+            source_scopes: Arc::default(),
             evidence_owners: Arc::default(),
             trajectory_owners: Arc::default(),
         }
@@ -158,7 +176,65 @@ impl Engine {
     /// Whether this shared engine owner has been shut down.
     #[must_use]
     pub fn is_closed(&self) -> bool {
-        self.closed.load(Ordering::Acquire)
+        self.process != std::process::id() || self.closed.load(Ordering::Acquire)
+    }
+    /// Set a caller-owned lifetime admission cap, not a process-wide VM limit.
+    /// # Errors
+    /// Rejects zero limits and policy changes after admitting a source scope.
+    pub fn with_source_limit(mut self, limit: Option<usize>) -> Result<Self> {
+        if limit == Some(0)
+            || self.source_scope_count() != 0
+            || Arc::strong_count(&self.source_scopes) != 1
+        {
+            return Err(Error::InvalidProgram(
+                "positive source limit before admission required".into(),
+            ));
+        }
+        self.source_limit = limit;
+        Ok(self)
+    }
+    #[must_use]
+    pub fn source_limit(&self) -> Option<usize> {
+        self.source_limit
+    }
+    /// Set a host transport ceiling before publishing any owner clones.
+    /// # Errors
+    /// Rejects zero ceilings or policy changes on an already shared owner.
+    pub fn with_request_limit(mut self, limit: Option<usize>) -> Result<Self> {
+        if limit == Some(0)
+            || Arc::strong_count(&self.source_scopes) != 1
+            || self.source_scope_count() != 0
+        {
+            return Err(Error::InvalidProgram(
+                "positive request limit before admission required".into(),
+            ));
+        }
+        self.request_limit = limit;
+        Ok(self)
+    }
+    #[must_use]
+    pub fn request_limit(&self) -> Option<usize> {
+        self.request_limit
+    }
+    #[must_use]
+    pub fn source_scope_count(&self) -> usize {
+        self.source_scopes.load(Ordering::Acquire)
+    }
+    /// Charge a trusted source-read attempt; failure and close do not refund it.
+    /// # Errors
+    /// Rejects closed/forked owners, exhausted caller caps and count overflow.
+    pub fn admit_source(&self) -> Result<()> {
+        self.check()?;
+        self.source_scopes
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |count| {
+                if self.source_limit.is_some_and(|limit| count >= limit) {
+                    None
+                } else {
+                    count.checked_add(1)
+                }
+            })
+            .map(|_| ())
+            .map_err(|_| Error::InvalidProgram("caller source scope limit exceeded".into()))
     }
     /// Clones share an owner; independently constructed pools do not.
     #[must_use]
@@ -170,7 +246,7 @@ impl Engine {
         self.closed.store(true, Ordering::Release);
     }
     pub(crate) fn check(&self) -> Result<()> {
-        if self.closed.load(Ordering::Acquire) {
+        if self.is_closed() {
             Err(Error::Closed)
         } else {
             Ok(())

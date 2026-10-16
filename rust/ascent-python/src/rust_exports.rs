@@ -40,6 +40,14 @@ pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
     publish(root, &derivations)?;
     root.add("derivations", derivations)?;
+    let datalog = PyModule::new(root.py(), "ascent.datalog")?;
+    datalog.add_function(wrap_pyfunction!(super::datalog::read_datalog, &datalog)?)?;
+    datalog.add_function(wrap_pyfunction!(
+        super::datalog::evaluate_datalog,
+        &datalog
+    )?)?;
+    publish(root, &datalog)?;
+    root.add("datalog", datalog)?;
     let trajectory = PyModule::new(root.py(), "ascent.trajectory")?;
     trajectory.add_class::<super::trajectory::Trajectory>()?;
     publish(root, &trajectory)?;

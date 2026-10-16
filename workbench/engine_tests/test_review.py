@@ -31,7 +31,7 @@ class ReviewIntegration(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
 
     def result(self, value):
         with EvidenceReview(self.engine, value) as review:
@@ -76,7 +76,7 @@ class ReviewIntegration(unittest.TestCase):
             self.assertNotEqual(first["sourceIdentity"], second["sourceIdentity"])
             self.assertEqual(second["result"]["relations"]["Reusable"], [])
             self.assertIn("missing-premise", self.reasons(second))
-            with self.assertRaisesRegex(ValueError, "unknown result"):
+            with self.assertRaisesRegex(ValueError, "closed|unknown result"):
                 review.answer(first["resultReference"], "Established")
 
     def test_unbound_missing_and_cyclic_dependencies_cannot_justify_claim(self):
@@ -104,8 +104,8 @@ class ReviewIntegration(unittest.TestCase):
 
     def test_engine_failure_propagates_without_a_review_receipt(self):
         with Engine() as engine, EvidenceReview(engine,facts()) as review:
-            engine.shutdown()
-            with self.assertRaisesRegex(RuntimeError,"closed"):
+            engine.close()
+            with self.assertRaisesRegex(ValueError,"closed"):
                 review.review()
 
 

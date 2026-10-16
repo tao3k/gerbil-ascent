@@ -1,5 +1,5 @@
 //! Fixed C entry, lifetime transfer and panic containment around existing Core.
-use crate::{operations, transport};
+use crate::{operations, reachability, transport};
 use gerbil_scheme_python::{
     ValueLimits,
     c_abi::{self, RawCallable, RawValue, View},
@@ -12,7 +12,33 @@ use std::{
 struct Context {
     owner: ThreadId,
     poisoned: bool,
-    core: operations::Owner,
+    core: Core,
+}
+#[derive(Clone, Copy)]
+enum Entry {
+    Evidence,
+    Reachability,
+}
+enum Core {
+    Evidence(Box<operations::Owner>),
+    Reachability(reachability::Owner),
+}
+impl Core {
+    fn trace(&mut self) -> &mut crate::diagnostics::Trace {
+        match self {
+            Self::Evidence(owner) => &mut owner.trace,
+            Self::Reachability(owner) => &mut owner.trace,
+        }
+    }
+    fn invoke(
+        &mut self,
+        input: &gerbil_ascent::Data,
+    ) -> gerbil_ascent::Result<gerbil_ascent::Data> {
+        match self {
+            Self::Evidence(owner) => owner.invoke(input),
+            Self::Reachability(owner) => owner.invoke(input),
+        }
+    }
 }
 
 /// Bind the statically linked fixed producer through the upstream owner adapter.
@@ -25,6 +51,15 @@ pub fn open(
     // and uses the shared immutable-result and release contract. Rust linking
     // retains this code for every value returned by the function.
     unsafe { c_abi::ForeignCallable::create(ascent_core_open, input) }
+}
+/// Bind only the existing compressed closure algorithm, not a generic factory.
+/// # Errors
+/// Rejects invalid captures and ABI ownership.
+pub fn open_reachability(
+    input: &gerbil_scheme_python::OwnedValue,
+) -> Result<c_abi::ForeignCallable, c_abi::Error> {
+    // SAFETY: this fixed, linked, no-VM producer uses the same owned ABI contract.
+    unsafe { c_abi::ForeignCallable::create(ascent_reachability_open, input) }
 }
 
 /// Shared layout version; function bodies are the existing Library Core.
@@ -40,6 +75,21 @@ pub extern "C" fn ascent_core_abi_version() -> u32 {
 /// No aliased/concurrent call or release is permitted; the bridge enforces this.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ascent_core_open(input: *const View, output: *mut RawCallable) -> i32 {
+    // SAFETY: the public caller guarantees the borrowed input and writable output.
+    unsafe { create(input, output, Entry::Evidence) }
+}
+/// Open the existing closure algorithm with immutable cut handles.
+/// # Safety
+/// The same owner-thread, span and exact-once release rules as `ascent_core_open` apply.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ascent_reachability_open(
+    input: *const View,
+    output: *mut RawCallable,
+) -> i32 {
+    // SAFETY: the public caller guarantees the borrowed input and writable output.
+    unsafe { create(input, output, Entry::Reachability) }
+}
+unsafe fn create(input: *const View, output: *mut RawCallable, entry: Entry) -> i32 {
     if output.is_null() {
         return 3;
     }
@@ -47,8 +97,14 @@ pub unsafe extern "C" fn ascent_core_open(input: *const View, output: *mut RawCa
         // SAFETY: input has the exact borrowed-span contract of this function.
         let input = unsafe { c_abi::read_input(input, ValueLimits::default()) }
             .map_err(|e| e.to_string())?;
-        operations::Owner::open(&transport::read(input).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())
+        let input = transport::read(input).map_err(|e| e.to_string())?;
+        match entry {
+            Entry::Evidence => operations::Owner::open(&input)
+                .map(Box::new)
+                .map(Core::Evidence),
+            Entry::Reachability => reachability::Owner::open(&input).map(Core::Reachability),
+        }
+        .map_err(|e| e.to_string())
     }));
     let Ok(Ok(core)) = owner else {
         return 3;
@@ -86,18 +142,18 @@ unsafe extern "C" fn invoke(
     }
     let result = catch_unwind(AssertUnwindSafe(|| {
         // SAFETY: the caller borrows all input spans throughout this invocation.
-        let started = context.core.trace.start();
+        let started = context.core.trace().start();
         let input = unsafe { c_abi::read_input(input, ValueLimits::default()) }?;
         let decoded = started.map(|v| v.elapsed().as_nanos());
-        let started = context.core.trace.start();
+        let started = context.core.trace().start();
         let input = transport::read(input);
         let packet = started.map(|v| v.elapsed().as_nanos());
         let observing = input
             .as_ref()
             .is_ok_and(|v| v.get("method").and_then(|v| v.text().ok()) == Some("diagnose"));
         if !observing {
-            context.core.trace.elapsed("abi.inputDecode", decoded);
-            context.core.trace.elapsed("abi.inputPacket", packet);
+            context.core.trace().elapsed("abi.inputDecode", decoded);
+            context.core.trace().elapsed("abi.inputPacket", packet);
         }
         let response = input.and_then(|input| context.core.invoke(&input));
         let response = match response {
@@ -107,15 +163,18 @@ unsafe extern "C" fn invoke(
                 ("error", error.to_string().into()),
             ]),
         };
-        let started = context.core.trace.start();
+        let started = context.core.trace().start();
         let response = transport::write(&response);
         if !observing {
-            context.core.trace.record("abi.outputOwnedPacket", started);
+            context
+                .core
+                .trace()
+                .record("abi.outputOwnedPacket", started);
         }
-        let started = context.core.trace.start();
+        let started = context.core.trace().start();
         let result = c_abi::publish_value(&response);
         if !observing {
-            context.core.trace.record("abi.outputEncode", started);
+            context.core.trace().record("abi.outputEncode", started);
         }
         result
     }));

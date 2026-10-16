@@ -1,73 +1,42 @@
-"""Independent complete UF export checks through actual native API and ABI."""
-import hashlib
-import os
-from pathlib import Path
+"""Complete immutable cut checks against an independent closure oracle."""
 import unittest
-
 from ascent import Engine
 from test_uf_boundary import closure
 
-UF = ':gerbil-ascent/table/trrel-uf'
-VIEW = ':gerbil-ascent/core/relation-view'
-
-
-def rows(graph):
-    nodes = {node['id']: node for node in graph['nodes']}
-
-    def dereference(value):
-        return nodes[value['ref']] if 'ref' in value else value
-
-    def spine(value):
-        while True:
-            value = dereference(value)
-            if value['type'] == 'null':
-                return
-            if value['type'] != 'pair':
-                raise AssertionError(value['type'])
-            yield value['car']
-            value = value['cdr']
-
-    return [[int(dereference(cell)['value']) for cell in spine(row)]
-            for row in spine(graph['root'])]
-
-
 class UFMaterializationTests(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
-        from engine_fixture import module_engine
-        cls.engine = module_engine()
+        cls.engine = Engine()
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
 
     def exercise(self, edges, tail, grouped=False):
-        with self.engine.module(UF) as owner:
-            with owner.call('gerbil-ascent-trrel-uf-state') as state:
-                reference = state.reference()
-                for edge in edges:
-                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
-                        pass
-                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as frozen:
-                    held = frozen.reference()
-                    with owner.call('gerbil-ascent-view-rows', held, module=VIEW) as public:
-                        before = rows(public.graph)
-                    expected = set()
-                    for group in sorted({edge[0] for edge in edges}) if grouped else [None]:
-                        pairs = [edge[1:] for edge in edges if edge[0] == group] if grouped else edges
-                        expected.update((group, a, b) if grouped else (a, b)
-                                        for a, b in closure(pairs))
-                    self.assertEqual(set(map(tuple, before)), expected)
-                    self.assertEqual(len(before), len(expected))
-                    for edge in tail:
-                        with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
-                            pass
-                    with owner.call('gerbil-ascent-view-rows', held, module=VIEW) as public:
-                        self.assertEqual(rows(public.graph), before)
-                    columns, key = ([0, 1], [0, 0]) if grouped else ([0], [0])
-                    with owner.call('gerbil-ascent-trrel-uf-view-lookup', held, columns, key) as public:
-                        self.assertEqual(rows(public.graph), [row for row in before
-                            if all(row[column] == value for column, value in zip(columns, key))])
+        with self.engine.reachability() as state:
+            reference = state
+            for edge in edges:
+                reference.insert(edge, budget=200000)
+                pass
+            with reference.freeze() as frozen:
+                held = frozen
+                public = held.rows()
+                before = public
+                expected = set()
+                for group in sorted({edge[0] for edge in edges}) if grouped else [None]:
+                    pairs = [edge[1:] for edge in edges if edge[0] == group] if grouped else edges
+                    expected.update(((group, a, b) if grouped else (a, b) for a, b in closure(pairs)))
+                self.assertEqual(set(map(tuple, before)), expected)
+                self.assertEqual(len(before), len(expected))
+                for edge in tail:
+                    reference.insert(edge, budget=200000)
+                    pass
+                public = held.rows()
+                self.assertEqual(public, before)
+                columns, key = ([0, 1], [0, 0]) if grouped else ([0], [0])
+                public = held.rows(columns, key)
+                self.assertEqual(public, [row for row in before if all((row[column] == value for column, value in zip(columns, key)))])
 
     def test_dense_complete_rows(self):
         edges = [[i, (i + 1) % 128] for i in range(128)]
@@ -86,21 +55,17 @@ class UFMaterializationTests(unittest.TestCase):
 
     def test_compacted_indexed_right_axis_and_repeated_query_constraints(self):
         edges = [[i, i + 1] for i in range(192)]
-        with self.engine.module(UF) as owner:
-            with owner.call('gerbil-ascent-trrel-uf-state') as state:
-                reference = state.reference()
-                for edge in edges:
-                    with owner.call('gerbil-ascent-trrel-uf-count-insert!', reference, edge, 200000):
-                        pass
-                with owner.call('gerbil-ascent-trrel-uf-freeze', reference, True) as frozen:
-                    held = frozen.reference()
-                    with owner.call('gerbil-ascent-view-rows', held, module=VIEW) as public:
-                        full = rows(public.graph)
-                    self.assertEqual(set(map(tuple, full)), closure(edges))
-                    for columns, key in (([1], [192]), ([1], [64]), ([1, 0], [192, 0]),
-                                         ([1, 1], [192, 192]), ([1, 1], [192, 64]),
-                                         ([1], [999])):
-                        with self.subTest(columns=columns, key=key):
-                            with owner.call('gerbil-ascent-trrel-uf-view-lookup', held, columns, key) as public:
-                                self.assertEqual(rows(public.graph), [row for row in full
-                                    if all(row[column] == value for column, value in zip(columns, key))])
+        with self.engine.reachability() as state:
+            reference = state
+            for edge in edges:
+                reference.insert(edge, budget=200000)
+                pass
+            with reference.freeze() as frozen:
+                held = frozen
+                public = held.rows()
+                full = public
+                self.assertEqual(set(map(tuple, full)), closure(edges))
+                for columns, key in (([1], [192]), ([1], [64]), ([1, 0], [192, 0]), ([1, 1], [192, 192]), ([1, 1], [192, 64]), ([1], [999])):
+                    with self.subTest(columns=columns, key=key):
+                        public = held.rows(columns, key)
+                        self.assertEqual(public, [row for row in full if all((row[column] == value for column, value in zip(columns, key)))])

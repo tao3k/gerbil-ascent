@@ -1,0 +1,70 @@
+#+TITLE: Installed Python Core Contract Migration
+
+* Boundary
+
+The default installed wheel executes the existing Core algorithms through the
+fixed C ABI. Python transports declarations, typed values, identities and owned
+handles. It does not register or compile Scheme modules, enter a Scheme VM, or
+silently select an alternate implementation. Runtime arbitrary Scheme functions,
+mutable closures and procedure-defined visitors are outside this contract.
+
+Evidence definitions, reusable declarative macros, source bindings, output
+aliases and closed guard expressions remain Library inputs. Source names are
+authority identities: an output alias does not grant source-update authority.
+Empty Evidence requires an explicit constructor with empty sources and outputs;
+an empty rule fragment alone is not an executable declaration.
+
+* Fixed Algorithm Exports
+
+=Engine.reachability= binds the existing compressed closure algorithm, not a
+generic callback factory. It exposes transactional insertion, validation,
+resource observations and immutable cuts. Cuts support complete rows, repeated
+selector conditions, membership and a difference composed from existing set
+negation. Closing mutable state does not revoke a retained cut; releasing the
+cut or closing its Engine does. Foreign-owner cuts cannot be combined.
+
+Generic ownership and value encoding use =gerbil-scheme-rust= C ABI types.
+The binding does not implement an independent reachability evaluator. Physical
+relation width and repeated query conditions are distinct: repetitions are not
+additional relation columns. Complete truth, exact insertion budget rollback,
+frozen traversal order and contradictory selectors remain test obligations.
+
+Explicit Graph results use canonical publication order. The former arbitrary
+runtime visitor ordering is not preserved as a compatibility interface.
+
+* Lifecycle and Limits
+
+Caller-defined fact, request-byte and source-scope ceilings are optional.
+Source scopes are counted for the owning Engine, including failed admissions;
+closing a handle does not refund that lifetime quota. Typed ABI size is measured
+by the shared encoder, not a scalar JSON projection.
+
+Historical explanation metadata and current proof authority are independent.
+Source replacement leaves recorded metadata readable but revokes current proof
+authority; source or explicit explanation closure invalidates the lease.
+Deadline and cancellation checks also apply before cached-result reuse and
+while waiting for the source mutex. Recorded metadata is not a proof or host
+authorization.
+
+A fork inherits synchronization state without its worker threads. Inherited
+Engines and new initialization in that child are rejected; an exec establishes
+a genuinely independent process. The Library does not attempt to repair an
+inherited Rayon runtime or fall back to another executor.
+
+* Qualification
+
+All original Python test files and test methods remain in the inventory.
+Runtime module tests migrate directly to declarations, Graphs and fixed
+algorithm exports. The existing fifty Quint trajectories remain unchanged.
+Independent Python graph traversal is a test oracle, never a production solver.
+
+The matrix retains its original 120-second total cap and five-second real-output
+watchdog. A local matrix, Rust gate or Clippy pass is not exact-REV remote CI,
+downstream framework acceptance, or a CURRENT graph. These must be checked
+separately after publication. Original raw failures and runs remain local and
+are not source files to commit.
+
+The prior callback-occupied VM queue control is inapplicable to this no-VM
+contract. Concurrent requests, cancellation and rollback are tested, but that
+does not by itself prove that a Python request observed a held native mutex.
+This boundary must not be relabeled as the old callback control passing.

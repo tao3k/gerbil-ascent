@@ -10,7 +10,7 @@ import unittest
 import copy
 sys.path.insert(0,str(Path(__file__).parents[1]/'src'))
 from ascent import Engine, EngineError
-from ascent import rows_equal
+from ascent.evidence import rows_equal
 
 ROOT=Path(__file__).parents[2]
 
@@ -23,7 +23,7 @@ class EngineLibrary(unittest.TestCase):
         print('CFFI-RUNTIME-INITIALIZED',flush=True)
     @classmethod
     def tearDownClass(cls):
-        cls.engine.shutdown()
+        cls.engine.close()
         with cls().assertRaises((EngineError, ValueError)): cls.engine.describe()
         print('CFFI-RUNTIME-SHUTDOWN-OK',flush=True)
 
@@ -44,13 +44,12 @@ class EngineLibrary(unittest.TestCase):
         with self.engine.open(self.wire['finite:0']) as session:
             held=session.run();self.assertTrue(held['complete'])
             with self.assertRaises(EngineError):
-                session.replace([{'relation':'cast','rows':[['a0','movie-left']]}])
+                session.replace({'cast':[['a0','movie-left']]})
             self.assertEqual(session.run()['relations'],held['relations'])
             with self.assertRaises(EngineError):
-                session.replace([{'relation':'actor_answer','rows':[]}])
+                session.replace({'actor_answer':[]})
             with self.assertRaises(EngineError):
-                session.replace([{'relation':'cast','rows':[]},
-                                 {'relation':'blocked_actor','rows':[['movie-left']]}])
+                session.replace({'cast':[], 'blocked_actor':[['movie-left']]})
             self.assertEqual(session.run()['relations'],held['relations'])
             # A clean retained session returns its completed cached result even
             # with a zero budget; only an unevaluated session is incomplete.
@@ -84,7 +83,7 @@ class EngineLibrary(unittest.TestCase):
             self.assertCountEqual(result['relations']['path'],[['a','b'],['b','c'],['a','c']])
             self.assertEqual(result['relations']['safe'],[['a','b']])
             self.assertCountEqual(result['relations']['from_a'],[['b'],['c']])
-            session.replace([{'relation':'edge','rows':[['c','d']]},{'relation':'blocked','rows':[]}])
+            session.replace({'edge':[['c','d']], 'blocked':[]})
             updated=session.run()
             self.assertEqual(updated['relations'],{'path':[['c','d']],'safe':[['c','d']],'from_a':[]})
             self.assertEqual(result,held)
@@ -145,8 +144,8 @@ class EngineLibrary(unittest.TestCase):
                     sessions[family]=self.engine.open(self.wire[f'finite:{family}'])
                     self.assertTrue(sessions[family].run()['complete'])
                 session=sessions[family]
-                session.replace([{'relation':'cast','rows':[row for i,row in enumerate(casts) if bits&(1<<i)]},
-                                 {'relation':'blocked_actor','rows':[[a] for i,a in enumerate(actors) if bits&(1<<(6+i))]}])
+                session.replace({'cast':[row for i,row in enumerate(casts) if bits&(1<<i)],
+                                 'blocked_actor':[[a] for i,a in enumerate(actors) if bits&(1<<(6+i))]})
                 result=session.run();self.assertTrue(result['complete']);rows=result['relations']
                 evidence=[['left',*r] for r in rows['left_evidence']]+[['right',*r] for r in rows['right_evidence']]
                 self.assertEqual([identity,mask(evidence,trace),mask(rows['actor_answer'],[[a] for a in actors]),

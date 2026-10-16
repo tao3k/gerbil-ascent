@@ -72,6 +72,18 @@
           (check (ascent-trajectory (hash ("action" "exploration-current")
             ("trajectory" h) ("packet" packet))) => #f))
         (close h)))
+    (test-case "equal source revisions do not admit another trajectory packet"
+      (let* ((first (open)) (other (open))
+             (candidate (hash ("questionIdentity" "q") ("operationIdentity" "read")
+                              ("inputIdentity" "s")))
+             (packet (ascent-trajectory
+               (hash ("action" "explore") ("trajectory" first) ("candidate" candidate)))))
+        (check (ascent-trajectory (hash ("action" "exploration-current")
+          ("trajectory" first) ("packet" packet))) => #t)
+        (check (ascent-trajectory (hash ("action" "exploration-current")
+          ("trajectory" other) ("packet" packet))) => #f)
+        (close first)
+        (close other)))
     (test-case "first correct includes failures and repairs but freezes before later work"
       (let (h (open))
         (call h "one" 80)

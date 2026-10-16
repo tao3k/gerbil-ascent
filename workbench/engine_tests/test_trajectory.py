@@ -34,6 +34,12 @@ class TrajectoryIntegration(unittest.TestCase):
                              operationIdentity='test', inputIdentity='input-a',
                              toolIdentity='tool', modelIdentity='model')
             packet = trajectory.explore(candidate)
+            self.assertEqual(set(packet), {'schema', 'sourceIdentity', 'generation',
+                                           'eventCount', 'ownerIdentity', 'comparisons',
+                                           'executionAuthorized', 'actionSelected'})
+            self.assertEqual(set(packet['comparisons'][0]),
+                             {'earlierEvent', 'relation', 'changedPremises',
+                              'unknownPremises', 'currentEvidenceReference'})
             self.assertFalse(packet['executionAuthorized'])
             self.assertFalse(packet['actionSelected'])
             self.assertEqual(packet['comparisons'][0]['relation'], 'exact-current')
@@ -73,6 +79,38 @@ class TrajectoryIntegration(unittest.TestCase):
             trajectory.verify(False, 'independent-check', consumption_reference='result')
             self.assertFalse(reference())
             self.assertFalse(trajectory.exploration_current(reviewed_packet))
+
+    def test_exploration_uses_real_evidence_chain_and_revokes_on_replace(self):
+        sources = [relation('input', True, [['a']])]
+        proof = {'relations': sources + [relation('proof', False)],
+                 'rules': [{'head': [atom('proof')], 'body': [atom('input')]}],
+                 'queries': ['proof']}
+        contract = {'relations': sources + [relation('proof', False), relation('answer', False)],
+                    'rules': proof['rules'] + [{'head': [atom('answer')],
+                                                'body': [atom('proof')]}],
+                    'queries': ['answer']}
+        with Trajectory(self.engine, 'generic-exploration', identity(sources)) as trajectory:
+            with EvidenceChain(self.engine, sources, trajectory=trajectory) as chain:
+                prior = chain.query(proof)
+                accepted = chain.consume(prior['resultReference'], contract, contract)
+                self.assertTrue(accepted['accepted'])
+                candidate = dict(questionIdentity='answer', operationIdentity='query',
+                                 inputIdentity=chain.source_identity,
+                                 contractIdentity=accepted['contractIdentity'])
+                trajectory.append('attempt', **candidate,
+                                  resultReference=accepted['resultReference'])
+                self.assertFalse(trajectory.explore(candidate)['comparisons'][0]
+                                 ['currentEvidenceReference'])
+                trajectory.verify(True, 'independent-answer-check',
+                                  consumption_reference=accepted['resultReference'])
+                packet = trajectory.explore(candidate)
+                self.assertEqual(packet['comparisons'][0]['currentEvidenceReference'],
+                                 accepted['resultReference'])
+                self.assertTrue(trajectory.exploration_current(packet))
+                chain.replace([relation('input', True, [['b']])])
+                self.assertFalse(trajectory.exploration_current(packet))
+                self.assertEqual(trajectory.explore(candidate)['comparisons'][0]['relation'],
+                                 'historical')
 
     def test_consumption_accepts_alpha_and_conjunct_order_and_rejects_weakened_intent(self):
         import copy

@@ -192,7 +192,9 @@ impl Trajectory {
         if self.closed.is_some() {
             return Err(Error::Closed);
         }
-        self.state.explore(candidate)
+        let mut packet = self.state.explore(candidate)?;
+        set(&mut packet, "ownerIdentity", self.handle.into())?;
+        Ok(packet)
     }
     /// Check whether an immutable advice packet still names this exact ledger revision.
     /// This does not review underlying evidence or grant execution permission.
@@ -204,6 +206,7 @@ impl Trajectory {
             return Ok(false);
         }
         Ok(packet.field("schema")?.text()? == "ascent.trajectory-exploration.v1"
+            && *packet.field("ownerIdentity")?.natural()? == self.handle.into()
             && packet.field("sourceIdentity")?.text()? == self.state.source
             && *packet.field("generation")?.natural()? == self.state.generation.into()
             && *packet.field("eventCount")?.natural()? == self.state.events.len().into())

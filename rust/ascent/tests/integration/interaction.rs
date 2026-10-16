@@ -322,6 +322,11 @@ fn trajectory_exploration_reference_requires_current_successful_review() {
     assert_eq!(reference(&ledger), Data::from("result"));
     let reviewed_packet = ledger.explore(&candidate).unwrap();
     assert!(ledger.exploration_current(&reviewed_packet).unwrap());
+    let mut other = gerbil_ascent::Trajectory::new(&engine, "task", "source").unwrap();
+    for recorded in ledger.snapshot().unwrap().field("events").unwrap().list().unwrap() {
+        other.append(recorded.clone()).unwrap();
+    }
+    assert!(!other.exploration_current(&reviewed_packet).unwrap());
     let mismatched = Data::object([
         ("questionIdentity", "question".into()),
         ("operationIdentity", "test".into()),

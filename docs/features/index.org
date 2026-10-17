@@ -22,7 +22,7 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Assurance | [[file:assurance/acceptance.org][acceptance]] / [[file:assurance/byods.org][byods]] / [[file:assurance/compiler.org][compiler]] / [[file:assurance/design.org][design]] / [[file:assurance/proofs.org][proofs]] |
 | Bitmap Lattices | [[file:bitmap-lattices/acceptance.org][acceptance]] |
 | Candidate Feedback | [[file:candidate-feedback/acceptance.org][acceptance]] |
-| Interactive Evidence Reasoning | [[file:interactive-evidence-reasoning.org][Library design and research contract]] / [[file:evidence-responsibilities.zh.org][Chinese responsibilities]] |
+| Interactive Evidence Reasoning | [[file:interactive-evidence-reasoning.org][Library design and research contract]] / [[file:evidence-responsibilities.org][Evidence responsibilities]] |
 | Closure Plan | [[file:closure-plan/design.org][design]] / [[file:closure-plan/proofs.org][proofs]] |
 | Compiler Lowering | [[file:compiler-lowering/compiler.org][compiler]] / [[file:compiler-lowering/proofs.org][proofs]] |
 | Equivalence | [[file:equivalence/acceptance.org][acceptance]] / [[file:equivalence/byods.org][byods]] / [[file:equivalence/compiler.org][compiler]] / [[file:equivalence/design.org][design]] / [[file:equivalence/proofs.org][proofs]] |

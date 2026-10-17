@@ -1,66 +1,99 @@
-#+title: 2026-10-17 构建简化与命名验收
+#+title: Build Simplification and Naming Acceptance, 2026-10-17
 
-* 变更范围
+* Scope
 
-基线为 ASCENT =3a5525376206ddea41ed91ed5a6dcd3374b3eab1=。
-=build.ss= 删除 43 行构建阶段拆分和编译器命令拼接，完整 BuildSpec 只调用一次标准构建入口。
-现有 SDK 固定值保持不变：Gerbil =1cfb032=／Gambit =ea114fc=，
-SMP、多个 VM、每 VM 一个线程。没有新增 SDK 发布或未发布补丁依赖。
+The ASCENT baseline is =3a5525376206ddea41ed91ed5a6dcd3374b3eab1=.
+=build.ss= removes 43 lines of phase scheduling and compiler command construction.
+The complete BuildSpec uses one standard build entry point.
+SDK pins remain unchanged: Gerbil =1cfb032= and Gambit =ea114fc=, with SMP,
+multiple VMs, and one thread per VM. No new SDK release or unpublished upstream
+patch is required.
 
-自有文件／目录完成 34 项改名；测试支持、执行路径、Scheme 转换、拥有结果、
-索引视图和形式模型按职责命名。上游 API 名称及历史原始 SHA／路径不改写。
-reference 源中对应接口只作机械改名；94 份性能合约数值、采样和预算不变。
-取消、资源限制、provenance、默认 Rayon 与仅供对齐的 dev-dependencies 不变。
+There are 34 file and directory renames. Test support, execution paths, Scheme
+conversion, owned results, indexed views, and formal models use responsibility
+names. Upstream API names and original historical paths and SHAs remain intact.
+Corresponding reference-source changes are mechanical identifier renames only.
+All 94 performance contracts retain their numbers, sample counts, and budgets.
+Cancellation, resource limits, provenance, default Rayon, and alignment-only
+dev-dependencies remain unchanged.
 
-* 本地验证
+* Local validation
 
-- 单次标准 BuildSpec 构建在固定 SHA 的原始 macOS Release 上通过；没有阶段拆分或上游补丁。
-- 固定 Release 的完整测试库构建通过，production-rebuilt=0；全量语义／性能另行验收。
-- Rust：92 项通过；严格 Clippy =-D warnings= 通过。
-- 独立 Scheme 后端 API 编译检查通过。
-- Lean：完整 AscentProof／AscentProofTests 构建通过，163 jobs。
-- Quint：56 个模型、377 项正例／必需反例义务通过；conformance 输出与原 fixture 逐字相同。
-- release PyO3 wheel 包含 196 个成员；独立接口矩阵绑定 288 份输入，35 组、199 项通过，原总预算 120 秒。
-- Python IO：15 项通过；workbench：162 项通过。
+- The complete standard BuildSpec passed on the SHA-verified original macOS Release, without phase splitting or upstream patches.
+- The complete test library passed on that Release with =production-rebuilt=0=.
+- After fixing the renamed import, complete Scheme semantics passed: 170 modules and 1364 Cases, at four workers in 123 seconds and twelve workers in 57 seconds. Both retained the 180-second total deadline and 2G per VM.
+- Rust: 92 tests passed; strict Clippy with =-D warnings= passed.
+- The independent Scheme backend API compilation check passed.
+- Lean: the complete AscentProof and AscentProofTests build passed, 163 jobs.
+- Quint: 56 models and 377 positive and required-counterexample obligations passed; conformance output matched the original fixture byte for byte.
+- The release PyO3 wheel contains 196 members. Its independent interface matrix binds 288 inputs; 35 groups and 199 tests passed within the original 120-second total budget.
+- Python IO: 15 tests passed. Workbench: 162 tests passed.
+- macOS UF query, plan, initialization, compact-query, selector-init, and owner-plan performance groups passed. Earlier performance-contract, index-sharing, and general scenario groups also passed.
 
-前期 Homebrew 安装目录的 macOS 全量 Scheme 语义不列为通过：
-原 180 秒总时限终止了该次运行，当时没有按 archive SHA 对齐原始发布包。
-随后比对确认 =gxi=、=gsc=、=gxtest= 三个工具与发布包的 SHA256 均不相同；
-相同 revision 不能替代相同构建产物身份，该次超时不用于判断原始 Release 有缺陷。
-保留的原生采样显示子进程位于 =dyld → dlopen → mapSegments → fcntl=；
-这只是启动阶段的观测，不能据此宣称已确认整个超时根因。
-未增大时限，也未将已完成模块替代完整语料验收。
+The unchanged macOS UF membership =export= gate failed on both the baseline and
+current implementation. Baseline CPU medians were 1815 to 3262 microseconds,
+with 5 wins in 20 pairs; current medians were 2092 to 3306 microseconds,
+with 4 wins in 20 pairs. Both arms allocated 18876160 bytes in both runs.
+Both receipts remain failures. No threshold was relaxed and no unchanged
+measurement was repeated to obtain a pass. The Linux performance gate passed.
+These controls do not establish the cause of the macOS result.
 
-固定原始 macOS Release 的 12 进程全量运行同样在 180 秒终止，不能列为通过。
-4 进程受控对照发现本地改名遗漏：一项测试仍导入旧的 =../native/artifact-admission=。
-该引用已改为 =../harness/artifact-admission=；失败收据保留，最终结果以修正后提交验收。
+The earlier full Scheme run using the Homebrew installation timed out at the
+original 180-second deadline and is not accepted. That installation had not been
+matched to the published archive SHA. Subsequent comparison found different
+SHA256 values for =gxi=, =gsc=, and =gxtest=. A matching revision does not establish
+identical artifacts, and the timeout does not demonstrate a defect in the
+original Release. Preserved process samples show
+=dyld -> dlopen -> mapSegments -> fcntl= during loading. This observation does
+not establish the cause of the entire timeout.
 
-首次从仓库根目录手动生成的 wheel 缺少源码身份资源，被原身份检查拒绝。
-改用 CI 的 Python 项目目录、完整 features 和 release 命令后，真实 wheel 的身份与接口矩阵通过。
-失败记录保留，不以手工补包或关闭身份校验通过。
+An initial twelve-worker run on the original macOS Release also reached the
+180-second deadline. A four-worker control then exposed a local rename omission:
+one test still imported =../native/artifact-admission=. The import now uses
+=../harness/artifact-admission=. Both corrected four- and twelve-worker runs
+passed as recorded above. Earlier failures remain preserved. Host cold and warm
+states were not matched, so these times do not establish parallel speedup.
 
-* 现有 Release 的最小对照
+The first wheel manually built from the repository root lacked source-identity
+resources and was rejected by the existing identity check. Building from the
+Python project directory with the complete CI features and release command
+produced a wheel whose identity and interface matrix passed. The failed receipt
+remains preserved; no manual package repair or disabled identity check was used.
 
-两个程序共享一个含值与宏的模块；只调用标准 =defbuild-script=。
-1 核和 4 核各使用独立源目录与 package prefix，各执行一次，不重试。
-两个 binary 都必须 exit 0，并精确输出 =42\n=。
+* Minimal controls using existing Releases
 
-- macOS 原始 archive 经 SHA256 =0e18d063f888a73d9f9692d441fb3776898114e8440eada6876937d289578183= 校验：两个模式均通过。
-- Linux 原始 archive 经 SHA256 =143c691fee5af4f9f631fd339f69a66f562e42e0bfc1d4ee2cda5fa8d35c35ee= 校验：两个模式均通过。
-- 原生 Linux 对照源码 =581f2591e46ff53f43654ab99a6bd0917d4f0743=，
-  完整日志／生成物／收据：https://github.com/tao3k/gerbil-ascent/actions/runs/38998285720 。
+Two executables share one module exporting a value and a macro. The build uses
+standard =defbuild-script= only. One-core and four-core cases each use a separate
+source directory and package prefix and execute once, without retries.
+Both binaries must exit zero and print exactly =42\n=.
 
-未拦截、延迟或替换编译器命令，也未注入失败。
-这些对照没有复现此前推断的正常构建缺陷，不支持“必须修改上游才能简化”的结论。
-有限案例不能证明所有并行形状正确；完整项目用现有 Release 单独验收。
-由于宿主冷暖状态未配平，不能用这组时间推导并行收益。
+- The original macOS archive passed SHA256 =0e18d063f888a73d9f9692d441fb3776898114e8440eada6876937d289578183= verification; both cases passed.
+- The original Linux archive passed SHA256 =143c691fee5af4f9f631fd339f69a66f562e42e0bfc1d4ee2cda5fa8d35c35ee= verification; both cases passed.
+- Linux control source: =581f2591e46ff53f43654ab99a6bd0917d4f0743=.
+  Logs, generated artifacts, and receipts: https://github.com/tao3k/gerbil-ascent/actions/runs/38998285720 .
 
-此前上游 bootstrap 失败及新增故障恢复契约的失败保留在原运行记录中；
-相关上游 CI 已停止，本次交付不依赖那些补丁，也未据此发布 SDK。
+No compiler command was intercepted, delayed, or replaced, and no failures were
+injected. These controls did not reproduce the previously inferred normal-build
+defect and do not support requiring upstream changes before simplifying ASCENT.
+Finite controls cannot establish correctness for every parallel build shape;
+the complete project is qualified separately using the existing Release.
+Unmatched host cold and warm states prevent parallel-speedup claims.
 
-* 最终提交的完整验收
+Earlier upstream bootstrap failures and failures of the added recovery contract
+remain in their original records. The related upstream CI was stopped. This
+change does not depend on those patches and did not publish an SDK.
 
-当前源码的 Scheme 语义、性能、Rust/PyO3、oracle 与 formal 独立执行。
-既有语料、180 秒 Scheme 总时限、每 VM 2G、性能阈值及反例要求保持不变。
-最终 CI 的归属与结论记录在 PR #1 的验收说明和对应提交 checks；
-本地通过和最小对照均不能替代该最终结果。
+* Complete runtime qualification
+
+Runtime revision =47a97ba34eb34ff476463a07d94bf406fc07399c= passed all nine
+jobs in https://github.com/tao3k/gerbil-ascent/actions/runs/38999392004 before
+that identical commit was pushed to PR #1. Complete Linux Scheme semantics
+covered 170 modules and 1364 Cases in 77 seconds. Performance, Rust/PyO3,
+three oracle shards, Lean, Quint, Python IO, and workbench checks passed.
+
+Scheme semantics, performance, Rust/PyO3, oracles, and formal checks execute
+independently. The corpus, 180-second Scheme total deadline, 2G per VM,
+performance thresholds, and required counterexamples remain unchanged.
+PR #1 records exact revision ownership and subsequent CI results, including
+https://github.com/tao3k/gerbil-ascent/actions/runs/39001305159 .
+Local checks and minimal controls do not replace current-revision acceptance.

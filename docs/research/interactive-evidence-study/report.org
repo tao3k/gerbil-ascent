@@ -4,7 +4,7 @@
 
 * Objective and Library architecture
 
-The model receives a natural-language domain specification and finite sources. Evidence tools are available from the first provider request. The model chooses candidate paths and local bindings; Scheme checks the registered domain predicates. No model-generated whole-question relational query is required. Evidence Chain manages source-bound support and completed component reuse; Trajectory records observed interactions and provider usage. Local support never certifies task correctness. See [[file:../../features/interactive-evidence-reasoning.org][the Library design]] and [[file:../../features/evidence-responsibilities.zh.org][Chinese responsibility contract]].
+The model receives a natural-language domain specification and finite sources. Evidence tools are available from the first provider request. The model chooses candidate paths and local bindings; Scheme checks the registered domain predicates. No model-generated whole-question relational query is required. Evidence Chain manages source-bound support and completed component reuse; Trajectory records observed interactions and provider usage. Local support never certifies task correctness. See [[file:../../features/interactive-evidence-reasoning.org][the Library design]] and [[file:../../features/evidence-responsibilities.org][responsibility contract]].
 
 * Research foundations and corpus
 

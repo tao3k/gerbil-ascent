@@ -16,9 +16,9 @@ Scheme Evidence DAG query kernel and Trajectory ledger. The real-model study
 and its source-bound qualification are recorded separately; existing closed-query
 consumption tests do not qualify the interactive controller's efficacy.
 
-The [[file:evidence-responsibilities.zh.org][Chinese responsibility contract]] distinguishes 证据链 (Evidence Chain),
-证据依赖图 (Evidence DAG), and 推理交互轨迹 (Trajectory). Evidence validity and
-temporal observation remain separately typed in the formal models.
+The [[file:evidence-responsibilities.org][responsibility contract]] distinguishes
+Evidence Chain, Evidence DAG, and Trajectory. Evidence validity and temporal
+observation remain separately typed in the formal models.
 
 * Interaction boundary
 

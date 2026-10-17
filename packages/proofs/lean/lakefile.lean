@@ -5,7 +5,7 @@ open Lake DSL
 
 package «gerbil-ascent-proof» where
   version := v!"0.1.0"
-  weakLeanArgs := #["-j2", "-M1024", "-T10000000"]
+  weakLeanArgs := #["-j2"]
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"

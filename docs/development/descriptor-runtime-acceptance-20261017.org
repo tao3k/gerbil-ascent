@@ -54,7 +54,9 @@ threads. The rusage number is diagnostic information, not a claimed aggregate
 process-group allocation measurement.
 
 Focused checks retain a 30-second deadline, =-j2=, =-M1024= and =-T10000000=.
-The complete library phase retains a 180-second deadline. Dependency restoration
+The complete library phase retains a 180-second deadline and uses =-j2=.
+Its previous proof budgets are retained; focused diagnostic memory/heartbeat
+flags are not imposed as new library-wide limits. Dependency restoration
 is a separate bounded metadata operation. An optional caller worker ceiling can
 only reduce detected Quint concurrency; it changes no model, exploration bound
 or obligation. Local full formal checks use two Quint workers.
@@ -93,6 +95,18 @@ fixture's startup race are retained as failures, not acceptance evidence.
 Local protocol exploration uses the driver's default generation bounds. CI
 repeats the complete inventory with its declared generation cutoff of four.
 Neither the worker ceiling nor the Guard changes those bounds.
+
+The first remote run of =73651fc= failed in Lean: a newly added library-wide
+=-M1024= diagnostic limit rejected eight existing modules on Linux. Guard
+correctly retained exit 1 and reaped the compiler. Earlier warm local builds
+reused Lake traces and did not establish cold acceptance under that new flag.
+Narrowing imports was insufficient; those experimental edits were discarded.
+The correction removes the newly imposed global diagnostic memory/heartbeat
+flags, preserving the existing proof budgets and bounded Guard deadline.
+After moving aside the isolated ASCENT Lean build directory, the cold library
+build passed all 175 jobs in 55.6 seconds. Guard recorded exit 0, direct-child
+reaping and zero additional helper threads. This supersedes the earlier warm
+build as local evidence for the corrected library invocation.
 
 Remote acceptance belongs to the current pushed commit's complete CI run in
 [[https://github.com/tao3k/gerbil-ascent/pull/1][PR #1]]. Local passes, previous commits' green runs and this report do not

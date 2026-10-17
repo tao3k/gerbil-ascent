@@ -17,6 +17,90 @@ All 94 performance contracts retain their numbers, sample counts, and budgets.
 Cancellation, resource limits, provenance, default Rayon, and alignment-only
 dev-dependencies remain unchanged.
 
+* macOS export measurement audit
+
+The green CI for =711563d3469b707315da7e6eaaec765c82f9aad5= ran on Linux.
+It did not claim macOS performance acceptance. The retained macOS membership
+=export= failure was a CPU comparison rejection (exit 70), not the 90-second
+scenario timeout. Other historical Scheme timeout receipts are separate.
+
+Using the unchanged published macOS SDK and a fixed source copy of that head:
+
+| Control before calibration | Reference CPU, us | Candidate CPU, us | Result |
+|----------------------------+-------------------+-------------------+--------|
+| Original comparison        |              1826 |              3310 | reject |
+| Current code in both arms  |              1736 |              3268 | reject |
+| Exchanged implementation roles |          1967 |              2488 | reject |
+| Collection before each arm only |         1893 |              2980 | reject |
+
+Each original comparison arm allocated 18876160 bytes. Median CPU excluding GC
+was approximately 493 and 491 microseconds; the observed difference was GC time.
+The identical-implementation rejection establishes that the short shared-heap
+measurement could misattribute cost. It does not establish a compiler defect.
+No upstream source change or new SDK is required by this correction.
+
+The sampler previously claimed 20ms calibration in a comment but performed
+none. It now collects before each arm and calibrates one common CPU repetition
+count until the slower arm reaches 20ms. Both arms execute that same count, and
+all natural GC during the measured calls remains included. Every intermediate
+batch is checked, including calibration batches. A regression test rejects an
+incorrect intermediate batch even when the last batch agrees.
+
+The 20 CPU pairs, 20 ASP admission samples, five allocation samples, workload,
+ratio, required wins, absolute CPU overhead allowance, allocation limits, heap
+limit and scenario deadline are unchanged. Admission and allocation retain the
+original eight trajectories. The absolute CPU overhead allowance is applied
+once to the entire calibrated CPU batch, not multiplied by repetitions. CPU
+receipts include the repetition count and heap precondition; batch CPU totals
+must not be compared directly with the earlier eight-trajectory totals.
+
+The compiled performance suite now checks current/current, reference/reference,
+and exchanged-role export controls, and requires rejection of deliberately
+added scalar CPU work with equal measured allocation. Historical failures,
+including the insufficient collection-only change, remain failures. This is a
+measurement correction, not an export implementation speedup claim.
+
+** Isolated macOS acceptance
+
+The final compiled executable ran each of the seven original membership
+scenarios in a fresh process with the original 90-second deadline and 1G heap.
+A continuous compiler inventory recorded 161 polls and no concurrent compiler.
+All seven scenarios passed. The export CPU batch used eight repetitions of the
+original eight trajectories: 20561 to 20481 microseconds (ratio 0.9961), with
+18876160 bytes allocated by each original allocation sample.
+
+Current/current, reference/reference and exchanged-role controls also passed.
+The equal-allocation scalar CPU negative control measured 5388 to 20164
+microseconds and was rejected with exit 70, as required. Both arms still
+allocated 18876160 bytes. The compiled suite also passed the intermediate-batch
+semantic rejection test. The numerical performance contracts were not edited.
+
+A preliminary =check-policy= invocation unexpectedly expanded to a package
+build and was stopped. Overlapping CPU observations were not admitted as
+isolated evidence; the measurements above started after compilation and the
+semantic test processes had ended. Their executable SHA256, source digests,
+individual receipts, and compiler inventory are retained with the local audit.
+
+Complete final-source Scheme semantics passed with four workers: 170 modules,
+1365 Cases, 70 seconds, the original 180-second deadline and 2G per VM. A prior
+twelve-worker invocation of the same production sources reached the original
+180-second deadline amid concurrent host work, including a Lean compiler wave;
+that timeout remains a failure and is not attributed to the SDK. Changing to
+the existing four-worker configuration was an invocation control, not a test,
+resource-limit or semantic change.
+
+* Abandoned upstream experiment cleanup
+
+The existing Release minimal controls did not justify an ASCENT dependency on
+the upstream experiment. Gerbil-bazel PRs #55 and #56 are closed. The #56 head
+=093eeeb1383fa576c69700fca5b24aa300f1da6f= is preserved by the verified remote
+annotated tag =archive/20261017/stable-shared-executable-closure=; its remote and
+local experiment branches were removed. Earlier #55 branches and other owned
+legacy experiments were already archived before removal. The remaining upstream
+branches =main=, =codex/v19-threaded-bootstrap-fix=, and
+=release/v0.19-multiple-vms= belong to active work or the existing release base
+and were preserved. No SDK was published from the abandoned experiment.
+
 * Local validation
 
 - The complete standard BuildSpec passed on the SHA-verified original macOS Release, without phase splitting or upstream patches.
@@ -30,13 +114,14 @@ dev-dependencies remain unchanged.
 - Python IO: 15 tests passed. Workbench: 162 tests passed.
 - macOS UF query, plan, initialization, compact-query, selector-init, and owner-plan performance groups passed. Earlier performance-contract, index-sharing, and general scenario groups also passed.
 
-The unchanged macOS UF membership =export= gate failed on both the baseline and
-current implementation. Baseline CPU medians were 1815 to 3262 microseconds,
-with 5 wins in 20 pairs; current medians were 2092 to 3306 microseconds,
+Before the measurement audit above, the unchanged macOS UF membership =export=
+gate failed on both the baseline and the earlier candidate. Baseline CPU medians
+were 1815 to 3262 microseconds, with 5 wins in 20 pairs; candidate medians were
+2092 to 3306 microseconds,
 with 4 wins in 20 pairs. Both arms allocated 18876160 bytes in both runs.
 Both receipts remain failures. No threshold was relaxed and no unchanged
 measurement was repeated to obtain a pass. The Linux performance gate passed.
-These controls do not establish the cause of the macOS result.
+At that stage, those controls did not establish the cause of the macOS result.
 
 The earlier full Scheme run using the Homebrew installation timed out at the
 original 180-second deadline and is not accepted. That installation had not been

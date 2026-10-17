@@ -2,11 +2,19 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit :asp-gerbil-scheme/benchmark-api)
-(export run-paired-study)
+(export run-paired-study run-paired-scenario)
 (def (median xs) (list-ref (list-sort < xs) (quotient (length xs) 2)))
-(def (measure-cpu call)
+(def (measure-cpu call (repetitions 1))
+  ;; Each arm starts from a collected heap. Alternating arm order alone does
+  ;; not remove inherited garbage/heap-growth bias, even for identical calls.
+  ;; Collection is a precondition, outside the clock; every GC caused by the
+  ;; measured complete operation remains charged to that arm.
+  (##gc)
   (let (before (##process-statistics))
-    (let (result (call))
+    (let (result (let loop ((remaining repetitions) (results []))
+                  (if (zero? remaining) results
+                    (let (result (call))
+                      (loop (- remaining 1) (cons result results))))))
       (let (after (##process-statistics))
         (values result
          (- (+ (f64vector-ref after 0) (f64vector-ref after 1))
@@ -45,10 +53,15 @@
            (expected (make-list (get 'trajectoriesPerSample) (expected-for old-state input)))
            (old-call (lambda ((count (get 'trajectoriesPerSample))) (map (lambda (_) (consume old-state input #t)) (iota count))))
            (new-call (lambda ((count (get 'trajectoriesPerSample))) (map (lambda (_) (consume new-state input #f)) (iota count))))
-           (admission-state (prepare #f input)) (ab []) (bb []) (ac []) (bc []) (agc []) (bgc []) (agn []) (bgn []) (samples 0) (admissions 0) (wins 0))
+           (admission-state (prepare #f input)) (ab []) (bb []) (ac []) (bc []) (agc []) (bgc []) (agn []) (bgn []) (samples 0) (admissions 0) (wins 0)
+           (cpu-repetitions 1))
       (def (check-results x y)
         (unless (and (equal? x y) (equal? y expected))
           (error "PAIRED-STUDY execution lifecycle differs" scenario)))
+      (def (check-cpu-results xs ys)
+        (unless (and (= (length xs) cpu-repetitions) (= (length ys) cpu-repetitions))
+          (error "PAIRED-STUDY CPU batch differs" scenario))
+        (for-each check-results xs ys))
       (def (allocation call state old?)
         (cond
           ((and allocate-consumer (memq input (get 'allocationAdapterScenarios)))
@@ -70,11 +83,11 @@
       (def (sample)
         (let-values (((x v gx nx y q gy ny)
           (if (even? samples)
-            (let-values (((x v gx nx) (measure-cpu old-call)) ((y q gy ny) (measure-cpu new-call)))
+            (let-values (((x v gx nx) (measure-cpu old-call cpu-repetitions)) ((y q gy ny) (measure-cpu new-call cpu-repetitions)))
               (values x v gx nx y q gy ny))
-            (let-values (((y q gy ny) (measure-cpu new-call)) ((x v gx nx) (measure-cpu old-call)))
+            (let-values (((y q gy ny) (measure-cpu new-call cpu-repetitions)) ((x v gx nx) (measure-cpu old-call cpu-repetitions)))
               (values x v gx nx y q gy ny)))))
-          (check-results x y)
+          (check-cpu-results x y)
           (set! ac (cons v ac)) (set! bc (cons q bc))
           (set! agc (cons gx agc)) (set! bgc (cons gy bgc))
           (set! agn (cons nx agn)) (set! bgn (cons ny bgn))
@@ -85,10 +98,20 @@
                    " old-gc=" (car agn) " new-gc=" (car bgn))
         (force-output)
         samples)
-      ;; Whole-export samples are calibrated above 20ms before final timing.
-      ;; Both legs run the same fixed repetitions; every natural GC remains
-      ;; charged to CPU. Admission measures only the candidate's full sample.
-      (##gc)
+      ;; Admission and allocation keep the contract's fixed trajectories.
+      ;; Calibrate a common CPU batch until the slower arm exceeds 20ms. Short
+      ;; allocation-heavy exports otherwise sample different heap-growth/GC
+      ;; phases. Never subtract GC or choose a different workload per arm.
+      (let calibrate ()
+        (let-values (((x u _gx _nx) (measure-cpu old-call cpu-repetitions))
+                     ((y v _gy _ny) (measure-cpu new-call cpu-repetitions)))
+          (check-cpu-results x y)
+          (when (< (max u v) .02)
+            (when (>= cpu-repetitions 1048576)
+              (error "PAIRED-STUDY CPU calibration failed" scenario))
+            (set! cpu-repetitions (* cpu-repetitions 2))
+            (calibrate))))
+      (displayln "PAIRED-STUDY-CPU-BATCH " scenario " repetitions=" cpu-repetitions)
       (for-each (lambda (_) (sample)) (iota 20))
       ;; ASP owns its group precondition; do not collect again before entering it.
       (let-values (((api-receipt _)
@@ -120,6 +143,8 @@
                            (<= y (+ (* x (if (memq input (get 'allocationTargets)) (get 'targetAllocationRatio) (get 'allocationRatio))) (get 'allocationOverheadBytes))))))
           (call-with-output-file receipt-path (lambda (out)
             (write (list (cons 'scenario scenario) (cons 'passed? pass?) (cons 'cpu-wins wins)
+                         (cons 'cpu-heap-precondition 'collect-before-each-arm)
+                         (cons 'cpu-repetitions cpu-repetitions)
                          (cons 'old-cpu-us (* u 1000000)) (cons 'new-cpu-us (* v 1000000))
                          (cons 'old-bytes x) (cons 'new-bytes y) (cons 'asp-receipt api-receipt)
                          (cons 'old-cpu ac) (cons 'new-cpu bc)

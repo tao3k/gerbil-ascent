@@ -29,7 +29,9 @@
   '(
     (("t/qualification/scheme-artifact-test.ss") "bindings/artifact")
     (("t/performance/ascent-uf-plan-performance-test.ss")
-      "t/performance/uf-plan/reference-relation-view" "t/performance/uf-plan/fixture")
+      "t/performance/uf-plan/reference-relation-view" "t/performance/uf-plan/fixture"
+      "t/performance/uf-membership/reference-relation-view" "t/performance/uf-membership/fixture"
+      "t/performance/paired-study" "t/performance/uf-membership/runner")
     (("t/performance/ascent-withdrawal-support-performance-test.ss")
       "t/performance/withdrawal-support/replay-reference" "t/performance/withdrawal-support/runner")
     (("t/performance/ascent-change-plan-performance-test.ss")

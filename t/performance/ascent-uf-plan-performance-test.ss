@@ -2,10 +2,48 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :gerbil-ascent/t/performance/uf-plan/fixture
+        (only-in :std/error Error-message)
+        (only-in :std/string/uuid random-uuid uuid->string)
+        (only-in :gerbil-ascent/t/performance/uf-membership/runner run-membership-control)
+        (only-in :gerbil-ascent/t/performance/paired-study run-paired-scenario)
         (only-in :asp-gerbil-scheme/benchmark-api benchmark-fixture-contract-pass?))
 (export ascent-uf-plan-performance-test)
 (def ascent-uf-plan-performance-test
   (test-suite "Frozen UF query plan measurement admission"
+    (test-case "calibration checks intermediate batches even when the final batch agrees"
+      (check-equal?
+        (with-catch Error-message
+          (lambda ()
+            (run-paired-scenario
+              (call-with-input-file "t/performance/uf-membership/benchmark.ss" read)
+              (lambda (_old? _input) (vector 0))
+              (lambda (state _input _old?)
+                (let (n (+ 1 (vector-ref state 0)))
+                  (vector-set! state 0 n)
+                  (if (= n 9) -1 0)))
+              (lambda (_state _input) 0) "export" ".cache/ascent/rejected-calibration.ss")
+            #f))
+        "PAIRED-STUDY execution lifecycle differs"))
+    (test-case "export identities pass and equal-allocation CPU regression is rejected"
+      (def (receipt-path mode)
+        (path-expand (string-append ".cache/ascent/export-" mode "-"
+                                   (uuid->string (random-uuid)) ".ss")))
+      (for-each (lambda (mode)
+        (let (path (receipt-path mode))
+          (run-membership-control "export" path mode)
+          (let (receipt (call-with-input-file path read))
+            (check-equal? (cdr (assq 'passed? receipt)) #t)
+            (check-equal? (cdr (assq 'old-bytes receipt)) (cdr (assq 'new-bytes receipt))))))
+        '("same-current" "same-reference" "reversed"))
+      (let* ((path (receipt-path "slower-current"))
+             (failure (with-catch Error-message
+                        (lambda () (run-membership-control "export" path "slower-current") #f)))
+             (receipt (call-with-input-file path read)))
+        (check-equal? failure "PAIRED-STUDY execution gate failed")
+        (check-equal? (cdr (assq 'passed? receipt)) #f)
+        (check-equal? (cdr (assq 'old-bytes receipt)) (cdr (assq 'new-bytes receipt)))
+        (check (> (cdr (assq 'new-cpu-us receipt))
+                  (+ (* 11/10 (cdr (assq 'old-cpu-us receipt))) 20)) => #t)))
     (test-case "fixed paired fixture admits the unchanged resource gates"
       (check (benchmark-fixture-contract-pass?
                (call-with-input-file "t/performance/uf-plan/benchmark.ss" read)) => #t))

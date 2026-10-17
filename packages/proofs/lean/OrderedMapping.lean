@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 Ordered buckets preserve direct scan order including duplicate outputs.
-Native hash equality, descriptor admission and ownership remain premises.
+Scheme hash equality, descriptor admission and ownership remain premises.
 -/
 import Std
 namespace Ascent.OrderedMapping

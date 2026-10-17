@@ -1,12 +1,12 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-;;; Native artifact admission; never evaluates model data or DSL verdicts.
+;;; Scheme artifact admission; never evaluates model data or DSL verdicts.
 (import :std/encoding/json :std/encoding/hex :std/crypto/digest
         (only-in :std/io/file call-with-file-reader)
         :std/misc/ports)
 (export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory!)
-(def cache ".cache/ascent/native-library/")
+(def cache ".cache/ascent/compiled-library/")
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
 (def (artifact-digest path)
@@ -81,7 +81,7 @@
       (let (run (load-json run-path))
         (unless (equal? token (hash-ref run "token")) (error "compile staging owner mismatch"))
         (unless (artifact-matching-sources? current (load-json freeze))
-          (error "source changed during native DSL compilation"))
+          (error "source changed during compiled DSL compilation"))
         (let (digest (artifact-digest binary))
           (save-json pending
             (hash ("schema" "ascent.dsl-closure-artifact") ("version" 1)
@@ -94,8 +94,8 @@
         (unless (equal? token (hash-ref receipt "buildRun")) (error "compile finalization owner mismatch"))
         (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
                      (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
-          (error "staged native artifact changed before finalization"))
-        (unless (finite-nonnegative? elapsed) (error "invalid native build elapsed time"))
+          (error "staged compiled artifact changed before finalization"))
+        (unless (finite-nonnegative? elapsed) (error "invalid compiled build elapsed time"))
         (hash-put! receipt "compilerExitStatus" 0)
         (hash-put! receipt "buildElapsedSeconds" elapsed)
         (save-json pending receipt)
@@ -107,10 +107,10 @@
                      (equal? (hash-get receipt "version") 1)
                      (equal? (hash-get receipt "compilerExitStatus") 0)
                      (finite-nonnegative? (hash-get receipt "buildElapsedSeconds")))
-          (error "invalid native DSL artifact binding"))
+          (error "invalid compiled DSL artifact binding"))
         (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
                      (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
-          (error "stale or changed native DSL artifact"))
+          (error "stale or changed compiled DSL artifact"))
         (displayln "DSL-ARTIFACT-VERIFIED " (hash-ref receipt "artifactSha256"))))
      (else (error "expected freeze, bind, finalize or check" mode))))
   (force-output))

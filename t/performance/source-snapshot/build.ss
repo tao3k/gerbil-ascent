@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :gerbil/compiler :std/make
-        (only-in :gerbil-ascent/t/native/artifact-admission
+        (only-in :gerbil-ascent/t/harness/artifact-admission
                  artifact-sources artifact-matching-sources?))
 (export main)
 ;;; Source closure includes all production owners and qualification imports,
@@ -18,7 +18,7 @@
                  "t/qualification/ascent-withdrawal-session-test.ss"
                  "t/qualification/ascent-timeout-test.ss"
                  "t/qualification/scheme-session-deletion-test.ss"
-                 "t/native/artifact-admission.ss" "t/performance/source-snapshot/"
+                 "t/harness/artifact-admission.ss" "t/performance/source-snapshot/"
                  "t/performance/source-log/")))
            (hash->list (artifact-sources)))))
 (def (main library binary (lane "runner"))
@@ -39,7 +39,7 @@
                "t/qualification/scheme-session-deletion-test") [])
            (list (path-strip-extension source)))
       srcdir: (current-directory) libdir: library parallelize: (##cpu-count)
-      build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+      build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
     (compile-exe source [output-dir: library output-file: binary
                         parallel: #t verbose: #t invoke-gsc: #t static: #t])
     (execute-pending-compile-jobs!)

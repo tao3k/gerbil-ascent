@@ -5,7 +5,7 @@ import subprocess
 import sys
 import unittest
 
-class NativeHostStreams(unittest.TestCase):
+class HostStreams(unittest.TestCase):
     def test_descriptor_state_and_failure_recovery_use_upstream_runtime(self):
         code = r"""
 import fcntl, os

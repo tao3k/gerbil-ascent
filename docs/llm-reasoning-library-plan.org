@@ -235,7 +235,7 @@ The following order records the bounded first implementation. Steps 1–5
 have executable evidence for their stated subsets, not for the full
 language inventory. The current public contract and the shared
 native/candidate finite-model gate are in
-[[file:native-library-acceptance.org][the native Library admission note]].
+[[file:library-acceptance.org][the native Library admission note]].
 
 1. Settle the first Scheme language design gate and its lowering IR.
    Write the new grammar, binding/mode rules, operator tiers and native

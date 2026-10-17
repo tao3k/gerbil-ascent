@@ -35,9 +35,9 @@
                  gerbil-ascent-emit-heads!)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
-        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
-                 gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
+                 gerbil-ascent-seed-session-reuse! make-closure-seed-state session-reuse-affected)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
@@ -84,7 +84,7 @@
                                       analysis schema measure-rule-times? (source-cut #f) (publication #f))
   (gerbil-ascent-make-engine
    candidate #t analysis schema measure-rule-times? #f
-   (gerbil-ascent-prepare-native-reuse previous candidate completed analysis source-cut publication)))
+   (gerbil-ascent-prepare-session-reuse previous candidate completed analysis source-cut publication)))
 
 ;; gerbil-ascent-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
@@ -207,7 +207,7 @@
       ;; Neither phase can publish a failed prospective Session.
       (when reuse
         (set! derived-count
-          (gerbil-ascent-seed-native-reuse! reuse schema
+          (gerbil-ascent-seed-session-reuse! reuse schema
             (make-closure-seed-state all seen delta all-size delta-size lattice-rows)
             source-materialized-count derived-limit output-limit)))
       (let* ((analysis
@@ -238,7 +238,7 @@
              (active-by-stratum
               (if reuse
                 (gerbil-ascent-activate-selected-rules analysis
-                 (native-reuse-affected reuse))
+                 (session-reuse-affected reuse))
                 all-active))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              ;; Exact native indexes allow sparse publication; custom indexes
@@ -768,7 +768,7 @@
            (set! materialized-dirty? #f))
          (let ((observation
                  (gerbil-ascent-result-observation
-                  (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
+                  (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (let-values (((result publication)
                          (gerbil-ascent-publish-execution! execution-publication
                            names arity all all-size deadline observation position-of complete? session?)))

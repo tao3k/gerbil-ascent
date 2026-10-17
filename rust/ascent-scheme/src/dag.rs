@@ -10,7 +10,7 @@ pub struct Dag {
 }
 impl Runtime {
     /// Load trusted native Scheme DSL and export an admitted finite execution DAG.
-    /// Native closures, macros and module expansion execute in Scheme. A program
+    /// Scheme closures, macros and module expansion execute in Scheme. A program
     /// that requires Scheme callbacks is explicitly rejected by this projection.
     /// # Errors
     /// Preserves native admission errors and rejects non-projectable programs.

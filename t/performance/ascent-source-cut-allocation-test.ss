@@ -5,7 +5,7 @@
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :gerbil-ascent/program/source-cut
           gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-source-cut-allocation-test)
 (def (diagnostic call)
   (with-catch

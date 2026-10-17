@@ -1,4 +1,4 @@
-//! Native occurrence ceilings. None means unlimited, never a large sentinel.
+//! Scheme occurrence ceilings. None means unlimited, never a large sentinel.
 use crate::{Error, Result};
 /// Optional native input, derived and output occurrence ceilings.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

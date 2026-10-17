@@ -30,7 +30,7 @@ Run from the checkout root, using installed packages:
 ```console
 ascent-workbench formal all
 python3 -m unittest discover -s workbench/tests -v
-ascent-workbench native-tests
+ascent-workbench interface-tests
 ```
 
 Formal qualification retains all models, exploration constants and original

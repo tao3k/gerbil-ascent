@@ -460,7 +460,7 @@ materializes the source result as a derived set; checked named Session mutations
 continue to use only admitted source handles. Complete result membership,
 source occurrence counts and actual materialization budgets are separate checks.
 
-The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/receipt.json][single-module carrier receipt]] connects native test admission to the current
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-study-entry-20261005/receipt.json][single-module carrier receipt]] connects native test admission to the current
 proof snapshot: compile-time Suite binding, unchanged native callbacks and
 verdicts, strict output/deadline gates, and four independently injected
 lifecycle failures. It records integrated Lean/Quint checks separately from

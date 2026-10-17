@@ -97,7 +97,7 @@ fn value(value: &Value, observation: bool) -> Result<Data> {
         Value::Text(v) => {
             Data::object([("type", "string".into()), ("value", v.to_string().into())])
         }
-        Value::Object(v) if observation => v.native_input(),
+        Value::Object(v) if observation => v.scheme_input(),
         Value::Object(v)
             if !v.graph().nodes.values().any(|node| {
                 matches!(
@@ -111,7 +111,7 @@ fn value(value: &Value, observation: bool) -> Result<Data> {
                 )
             }) =>
         {
-            Data::object([("type", "graph".into()), ("value", v.graph().to_native())])
+            Data::object([("type", "graph".into()), ("value", v.graph().to_scheme())])
         }
         Value::Object(_) => {
             return Err(invalid(

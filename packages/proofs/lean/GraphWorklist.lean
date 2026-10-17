@@ -10,7 +10,7 @@ proof relates one pop and its complete adjacency scan to the extensional
 worklist transition. It does not extract or execute Gerbil source.
 -/
 
-namespace Ascent.NativeGraphWorklist
+namespace Ascent.GraphWorklist
 
 universe u
 variable {Key : Type u} [DecidableEq Key]
@@ -485,4 +485,4 @@ theorem runFuel_compiled_closed (count : Nat)
     (runFuel_complete count (RuleGraphClosure.ruleSuccessors plans)
       (initial seeds) (initial_wellformed seeds noDup))
 
-end Ascent.NativeGraphWorklist
+end Ascent.GraphWorklist

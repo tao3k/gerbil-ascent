@@ -23,9 +23,9 @@ macro requires it; it previously arrived through the removed process imports.
 | Source | Responsibility |
 |--------+----------------|
 | =build.ss= | Production declarations and upstream build specification |
-| =t/native/build.ss= | Compile the native test dependency closure with =std/make= |
-| =t/native/library-spec.ss= | Shared fixtures and test-to-fixture dependency data |
-| =t/native/test.ss= | ASP capacity/profile projection and observed native GxTest batches |
+| =t/harness/build.ss= | Compile the native test dependency closure with =std/make= |
+| =t/harness/library-spec.ss= | Shared fixtures and test-to-fixture dependency data |
+| =t/harness/test.ss= | ASP capacity/profile projection and observed native GxTest batches |
 | =t/qualification/*-test.ss= | Semantic Suites and Cases owned by =std/test= |
 | =t/performance/*-test.ss= | Compiled allocation and timing qualification Cases |
 | =t/performance/studies.ss= and =run.ss= | Declared experiments and one native build/run implementation |

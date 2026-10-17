@@ -10,7 +10,7 @@ import unittest
 from ascent.build import PackageManifest
 
 
-class NativePublicationPermission(unittest.TestCase):
+class PublicationPermission(unittest.TestCase):
     def test_denied_generation_link_does_not_publish_a_copied_artifact(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source/module.o1"

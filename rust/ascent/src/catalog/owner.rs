@@ -1,4 +1,4 @@
-//! Native owned catalog admission shared by every language binding and workflow.
+//! Scheme owned catalog admission shared by every language binding and workflow.
 use super::clauses;
 pub(crate) use super::values::shape;
 use super::values::{scalar, scalar_in};
@@ -178,7 +178,7 @@ fn read_pool(value: Option<&Data>) -> Result<Vec<Value>> {
     let Some(value) = value else {
         return Ok(vec![]);
     };
-    let graph = crate::ObjectGraph::read_native(value)?;
+    let graph = crate::ObjectGraph::read_scheme(value)?;
     let crate::GraphItem::Reference(id) = graph.root else {
         return Err(invalid("owned value pool root"));
     };

@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
-        (only-in :gerbil-ascent/t/native/test striped-module-files source-test-interface source-test-batches)
+        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
                  testing-interface-runtime-options-for))

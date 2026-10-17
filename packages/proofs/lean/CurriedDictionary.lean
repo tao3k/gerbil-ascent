@@ -4,7 +4,7 @@ import ProviderRouting
 
 /-! Materialized node inventories, independently ordered at every path.
 The visitation policy must permute its input keys; no shared global inventory
-or common sibling visitation order is required. Native hash extraction is the
+or common sibling visitation order is required. Scheme hash extraction is the
 implementation obligation for this dictionary interface. -/
 namespace Ascent.CurriedDictionary
 open ProviderRouting

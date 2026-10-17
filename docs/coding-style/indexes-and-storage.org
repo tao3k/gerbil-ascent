@@ -298,7 +298,7 @@ or solve time. Concurrent Rust/Clang work was observed on the host; timing
 variation is recorded rather than attributed solely to any Scheme expression.
 
 The confirmation imports the actual =:gerbil-ascent/program/positive= export,
-resolved explicitly to =.cache/ascent/native-library/lib/.../positive.ssi=.
+resolved explicitly to =.cache/ascent/compiled-library/lib/.../positive.ssi=.
 Generated Scheme names the reference export and that production export as the
 two call targets. The confirmation gives =161/108= at width 128 with 937
 strict wins and =1237/465= at width 512 with 904. Controls remain

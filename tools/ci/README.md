@@ -22,7 +22,7 @@ qualification evidence and never skip tests.
 `formal` waits for `rust-pyo3` to publish its exact wheel and matching runtime
 syntax resources. It retains Lean, Quint, conformance comparisons, and the
 independent installed-wheel Python package and workbench tests. The required
-`native-and-oracle` aggregate admits success only when Scheme, Rust/PyO3,
+`runtime-and-oracle` aggregate admits success only when Scheme, Rust/PyO3,
 every differential shard, and formal all succeed.
 
 The split removes Scheme validation from the Rust producer's serial dependency

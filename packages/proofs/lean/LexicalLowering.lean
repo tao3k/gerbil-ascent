@@ -414,7 +414,7 @@ namespace ProjectedJoinRule
 
 /-- Left variables and fresh non-key right variables inhabit disjoint banks.
     The right key reuses exactly the left key's variable, as join-variables
-    does. Native gensym/symbol decoding remains a separate premise. -/
+    does. Scheme gensym/symbol decoding remains a separate premise. -/
 def rightVariable (leftKey : Fin m) (rightKey : Fin n) (column : Fin n) :
     Sum (Fin m) (Fin n) :=
   if column = rightKey then .inl leftKey else .inr column

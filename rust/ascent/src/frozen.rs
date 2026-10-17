@@ -102,10 +102,10 @@ impl FrozenValue {
     /// Freeze a validated observation and compute its cycle-safe structural key.
     /// Transport reachable immutable data, retaining sharing within one native call.
     #[must_use]
-    pub fn native_input(&self) -> crate::Data {
+    pub fn scheme_input(&self) -> crate::Data {
         crate::Data::object([
             ("type", crate::Data::from("graph")),
-            ("value", self.graph.to_native()),
+            ("value", self.graph.to_scheme()),
             (
                 "namespace",
                 crate::Data::List(vec![

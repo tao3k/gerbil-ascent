@@ -70,7 +70,7 @@ just test-file t/qualification/ascent-positive-plan-test.ss
 The retained positive-plan module passes all 13 Cases in the pinned native
 cache SDK with =GERBIL_BUILD_CORES=12=, including =MODULE-OK=, =HARNESS-OK=,
 final =OK= and exit 0. The baseline =53980e4= has green Scheme, both Rust
-oracle groups and the combined native-and-oracle CI check. This slice changes
+oracle groups and the combined runtime-and-oracle CI check. This slice changes
 only this test module and the research note; production bytes match that
 baseline. The full suite and SS scenarios were not rerun for the test-only
 slice, and no new performance improvement is claimed.

@@ -13,7 +13,7 @@
                  relational-program-replace-source!
                  relational-program-session-run relational-program-query))
 
-(export scheme-native-language-test)
+(export scheme-runtime-language-test)
 
 (def (filtered-program)
   (relational-program
@@ -25,7 +25,7 @@
      (not (blocked ?x ?y)))
    (limits 16 16 32)))
 
-(def scheme-native-language-test
+(def scheme-runtime-language-test
   (test-suite "native Scheme captured values and stratified negation"
     (test-case "explicit value capture freezes a scalar at construction"
       (let ((calls 0) (selected 'gate))

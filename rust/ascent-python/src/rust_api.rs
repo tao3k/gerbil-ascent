@@ -769,7 +769,7 @@ impl Object {
         let Value::Object(value) = &self.0 else {
             return Err(PyValueError::new_err("structured value required"));
         };
-        packets::write(py, &value.graph().to_native())
+        packets::write(py, &value.graph().to_scheme())
     }
     fn scalar(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         project(py, &self.0)
@@ -804,7 +804,7 @@ impl ResultOwner {
     fn graph(&self, py: Python<'_>, relation: &str) -> PyResult<Py<PyAny>> {
         let rows = self.0.rows(relation).map_err(error)?;
         let graph = gerbil_ascent::rows_graph(rows).map_err(error)?;
-        packets::write(py, &graph.to_native())
+        packets::write(py, &graph.to_scheme())
     }
     fn rows(&self, py: Python<'_>, relation: &str) -> PyResult<Py<PyAny>> {
         let rows = self.0.rows(relation).map_err(|e| {
@@ -824,7 +824,7 @@ impl ResultOwner {
                 py,
                 &gerbil_ascent::Data::object([
                     ("type", "graph".into()),
-                    ("value", graph.to_native()),
+                    ("value", graph.to_scheme()),
                 ]),
             );
         }

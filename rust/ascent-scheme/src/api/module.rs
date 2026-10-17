@@ -1,4 +1,4 @@
-//! Native module/value leases; no Scheme interpretation in Rust.
+//! Scheme module/value leases; no Scheme interpretation in Rust.
 use super::{Engine, Evidence, check, id, input, invoke};
 use gerbil_ascent::{Data, Error, FactLimits, ObjectInput, Result, ValueReference};
 use std::sync::{

@@ -27,7 +27,7 @@ GROUPS = {
     "Nonmembership": (
         "CertificateMaterial", "TerminalTraversal", "ExecutionFeedback", "Withholding",
         "ProofShapeAdmission", "ProofPrefix", "CountProbe", "NegativeProbe", "NumericProbe",
-        "PositiveNonmembershipSession", "SessionTransaction", "NativeSessionPublication",
+        "PositiveNonmembershipSession", "SessionTransaction", "SessionPublication",
     ),
     "ProviderViews": (
         "ProviderViews", "ReaderLifetime", "RectangleExport", "RectangleCompaction",
@@ -124,7 +124,7 @@ def obligations(base: Configuration) -> tuple[Obligation, ...]:
         result.extend(Obligation(f"capacity-{n}", base.changed(Capacity=n)) for n in (1, 3))
     if model == "LatticeProjection":
         result.extend(Obligation(f"remaining-{n}", base.changed(Remaining=n)) for n in (0, 1))
-    if model == "NativeEvidenceLifecycle":
+    if model == "EvidenceLifecycle":
         result.append(Obligation("caller-finite", base.changed(InputLimit=1)))
     if model == "ProviderFrontier":
         result.extend((Obligation("seeded", base.changed(Seeded=True)),

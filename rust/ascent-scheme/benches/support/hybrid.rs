@@ -95,9 +95,9 @@ fn execute(args: &[String]) {
             let result = runtime.call(&Data::Map(request)).unwrap();
             solved = Instant::now();
             assert_eq!(result.field("complete").unwrap(), &Data::Bool(true));
-            actual = native_rows(&result, &queries);
+            actual = scheme_rows(&result, &queries);
             let mut release = fields.clone();
-            release.insert("operation".into(), Data::from("native-result"));
+            release.insert("operation".into(), Data::from("owned-result"));
             release.insert("action".into(), Data::from("release"));
             release.insert(
                 "result".into(),
@@ -229,7 +229,7 @@ fn snapshot_rows(relations: &BTreeMap<String, Vec<Row>>, queries: &[String]) -> 
         .map(|query| relations[query].clone())
         .collect()
 }
-fn native_rows(result: &Data, queries: &[String]) -> Vec<Vec<Row>> {
+fn scheme_rows(result: &Data, queries: &[String]) -> Vec<Vec<Row>> {
     queries
         .iter()
         .map(|query| {
@@ -241,12 +241,12 @@ fn native_rows(result: &Data, queries: &[String]) -> Vec<Vec<Row>> {
                 .list()
                 .unwrap()
                 .iter()
-                .map(native_row)
+                .map(scheme_row)
                 .collect()
         })
         .collect()
 }
-fn native_row(row: &Data) -> Row {
+fn scheme_row(row: &Data) -> Row {
     row.list()
         .unwrap()
         .iter()

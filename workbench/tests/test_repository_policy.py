@@ -29,7 +29,7 @@ class RepositoryPolicyTests(unittest.TestCase):
                      't/performance/ordered-relations/baseline.txt',
                      't/performance/ordered-relations/benchmark.ss',
                      'rust/ascent/tests/closure.rs', 'rust/ascent/benches/execution.rs',
-                     'docs/performance/rust/native-crash-20261015.md'):
+                     'docs/performance/rust/runtime-crash-20261015.md'):
             with self.subTest(name=name):
                 self.assertIsNone(violation(name))
 

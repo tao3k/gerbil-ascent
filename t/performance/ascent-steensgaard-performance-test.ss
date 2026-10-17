@@ -11,7 +11,7 @@
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!))
 (import (only-in :gerbil-ascent/t/qualification/ascent-steensgaard-test steensgaard-truth)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-steensgaard-performance-test)
 
 ;; Independent partition saturation. It does not use Scheme clauses, UF,

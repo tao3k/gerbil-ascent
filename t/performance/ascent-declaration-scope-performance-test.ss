@@ -8,7 +8,7 @@
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema
                  gerbil-ascent-program-analysis)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-declaration-scope-performance-test)
 (include "../qualification/ascent-declaration-scope-fixture.ss")
 

@@ -6,7 +6,7 @@
 * Ordinary source tests
 
 =just test= discovers every flat =t/qualification/*-test.ss= and retains the
-whole-inventory 180-second deadline. =t/native/test.ss= supplies independent
+whole-inventory 180-second deadline. =t/harness/test.ss= supplies independent
 process work to =std/sync/wg=. ASP's =testing-interface= supplies the native
 GxTest command, runtime profiles and balanced batches. GxTest owns module,
 Suite, Case and assertion execution. =just test-file= retains the direct

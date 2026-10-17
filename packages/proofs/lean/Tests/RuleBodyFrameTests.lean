@@ -56,13 +56,13 @@ def fixtureCut : SourceUpdateFrame.Cut 8 Pair where
 
 example : fixtureCut.seeds = [1, 2] := by decide
 example : ¬ SourceUpdateFrame.affected (plans fixture) fixtureCut 4 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 example : SourceUpdateFrame.affected (plans fixture) fixtureCut 5 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 example : SourceUpdateFrame.affected (plans fixture) fixtureCut 7 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 
 def oldResult := iterate fixtureStep 6 fixtureCut.before
@@ -132,13 +132,13 @@ def aggregate : Rule (Fin 2) Nat Nat where
 def badPlans : List (RuleGraphClosure.Rule (Fin 2)) := [⟨[1], []⟩]
 
 theorem unselected : ¬ SourceUpdateFrame.affected badPlans cut 1 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 example : SourceUpdateFrame.affected (plans [negative]) cut 1 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 example : SourceUpdateFrame.affected (plans [aggregate]) cut 1 := by
-  unfold SourceUpdateFrame.affected NativeBitmapWorklist.marked
+  unfold SourceUpdateFrame.affected BitmapWorklist.marked
   decide
 
 example : step [negative] admit cut.before 1 = [7] := by decide

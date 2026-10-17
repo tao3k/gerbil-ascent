@@ -55,7 +55,7 @@ remain under =Tests=. Native integer-to-BitVec correspondence is exercised by
 qualification rather than claimed as extracted code correctness.
 
 Quint retains protocol ownership: =PositiveNonmembershipSession=,
-=SessionTransaction= and =NativeSessionPublication= check committed snapshots,
+=SessionTransaction= and =SessionPublication= check committed snapshots,
 provisional updates and recovery, with seven mutation counterexamples. This
 integration adds no Session transition, so no duplicate bitmap-specific
 publication model is introduced. The models are bounded protocol checks and

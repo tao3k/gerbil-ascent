@@ -4,7 +4,7 @@ import PositiveTraversal
 import SemiNaive
 
 /-! Connect ordered dirty-slot traversal to positive-body consequence membership.
-Rows are frozen finite lists. Native row encoding, actual index lookup and pivot
+Rows are frozen finite lists. Scheme row encoding, actual index lookup and pivot
 selection remain separate. List multiplicity is retained by traversal; Set
 membership is the observation used by the consequence calculus. -/
 namespace Ascent.PositiveConsequence

@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/make :gerbil/compiler
-        (only-in :gerbil-ascent/t/native/artifact-admission artifact-sources artifact-matching-sources?))
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 (def (main library binary)
   (def sources (artifact-sources))
@@ -11,7 +11,7 @@
           "t/performance/mapping-lookup/reference" "t/performance/mapping-lookup/fixture"
           "t/performance/change-plan-runner")
     srcdir: (current-directory) libdir: library
-    build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+    build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
   (compile-exe "t/performance/change-plan-runner.ss"
     [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t])
   (execute-pending-compile-jobs!)

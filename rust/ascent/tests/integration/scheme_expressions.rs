@@ -116,7 +116,7 @@ fn oracle_command() -> Command {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut command = Command::new("gxi");
     command
-        .arg(root.join("rust/ascent/tests/fixtures/native-expressions.ss"))
+        .arg(root.join("rust/ascent/tests/fixtures/scheme-expressions.ss"))
         .env("GERBIL_PATH", root.join(".gerbil"))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

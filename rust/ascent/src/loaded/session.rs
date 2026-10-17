@@ -1,4 +1,4 @@
-//! Native source loading, atomic replacement and generation-scoped results.
+//! Scheme source loading, atomic replacement and generation-scoped results.
 use super::{SourceResult, result::Scope};
 use crate::{
     Cancellation, Engine, Error, FactLimits, Limits, Program, Relation, Result, Row, Session,
@@ -485,7 +485,7 @@ impl SourceSession {
         self.results.clear();
         self.session.close();
     }
-    /// Native DSL defaults have no fact or work ceiling. Caller limits and
+    /// Scheme DSL defaults have no fact or work ceiling. Caller limits and
     /// finite declaration bounds remain independent, enforced restrictions.
     #[must_use]
     pub fn default_limits() -> Limits {

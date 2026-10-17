@@ -3,7 +3,7 @@
 import ProviderRectangles
 
 /-! Public two/three-column UF encoding and event orientation. Option.none is
-an ungrouped relation, never an alias of Option.some false. Native values and
+an ungrouped relation, never an alias of Option.some false. Scheme values and
 nested fields must have stable equality while held by a frozen view. -/
 namespace Ascent.ProviderEncoding
 

@@ -49,7 +49,7 @@ def save(path, value):
 def fields(pairs):
     return {k: v for k, v in pairs}
 
-class Native:
+class EvidenceEngine:
     def __init__(self, run, judge=False):
         self.trace = [];self.run=run;self.judge=judge
         env = os.environ.copy()
@@ -130,7 +130,7 @@ def verify(run, plan):
 def qualify(run):
     run.mkdir(parents=True, exist_ok=False)
     records = []
-    with Native(run) as native, Native(run, True) as judge:
+    with EvidenceEngine(run) as native, EvidenceEngine(run, True) as judge:
         for case in (0, 1, 2):
             contexts = []; cert_hashes = []
             task = native.call(op='task', case=case); judge_init(judge, task)
@@ -243,7 +243,7 @@ def phase(run, plan, case, arm, calibration=False, native=None, judge=None):
     folder=run/('calibration' if calibration else 'paid')/f'{case}-{arm}';folder.mkdir(parents=True,exist_ok=False)
     row={'case':case,'arm':arm,'calls':[],'expansions':[],'grossTokens':0,'failure':None,'stopReason':None,'budget':plan['budget']}
     with contextlib.ExitStack() as stack:
-        native=native or stack.enter_context(Native(run));judge=judge or stack.enter_context(Native(run,True))
+        native=native or stack.enter_context(EvidenceEngine(run));judge=judge or stack.enter_context(EvidenceEngine(run,True))
         init=native.call(op='init',case=case,arm=arm);task=init['task'];judge_init(judge,task)
         save(folder/'certificate.json',init['certificate']);save(folder/'library-lifecycle.json',init['libraryLifecycle']);row['seedGrade']=judge.call(op='grade',goal=task['goal'],selection=task['seed'])
         consecutive=0
@@ -291,7 +291,7 @@ def phase(run, plan, case, arm, calibration=False, native=None, judge=None):
 
 def calibrate(run,plan):
     verify(run,plan);rows=[]
-    with Native(run) as native,Native(run,True) as judge:
+    with EvidenceEngine(run) as native,EvidenceEngine(run,True) as judge:
         for arm in ('baseline','facts','prune'):
             rows.append(phase(run,plan,2,arm,True,native,judge));save(run/'calibration-ledger.json',{'phases':rows,'passed':False})
     passed=all(len(r['expansions'])==1 and r['calls'][0]['status']=='completed' and not r['calls'][0]['failure'] for r in rows)
@@ -304,7 +304,7 @@ def solve(run,plan):
     if not json.loads((run/'calibration-ledger.json').read_text())['passed']:raise ValueError('calibration failed')
     if (run/'ledger.json').exists():raise ValueError('study already started; do not overwrite failures')
     rows=[]
-    with Native(run) as native,Native(run,True) as judge:
+    with EvidenceEngine(run) as native,EvidenceEngine(run,True) as judge:
         for case,arm in plan['schedule']:
             rows.append(phase(run,plan,case,arm,native=native,judge=judge));save(run/'ledger.json',{'planSha256':sha((run/'plan.json').read_bytes()),'phases':rows})
     verify(run,plan);print('SOLVER_STUDY_COMPLETE',flush=True)
@@ -364,7 +364,7 @@ def annotate(run,plan):
         folder=run/'paid'/f"{row['case']}-{row['arm']}";task=next(t for t in plan['tasks'] if t['id']==f"evidence-search-{row['case']}")
         measurement={'case':row['case'],'arm':row['arm'],'calls':[],'accepted':[],'rejected':[],'grossTokens':0,'failure':None}
         memo={}
-        with Native(run) as native,Native(run,True) as judge:
+        with EvidenceEngine(run) as native,EvidenceEngine(run,True) as judge:
             native.call(op='init',case=row['case'],arm='baseline')
             for call in row['calls']:
                 text=(folder/f"{call['turn']}.thinking.txt").read_text();assert sha(text.encode())==call['thinkingSha256']

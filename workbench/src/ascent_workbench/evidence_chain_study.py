@@ -319,7 +319,7 @@ def shared_freeze(library, directory, *, search_tasks=None):
     from ascent.evidence import ComputationalEvidence
     import ascent.evidence as evidence_module
     from importlib.util import find_spec
-    from .native_tests import qualification_inputs, compiled_inputs
+    from .interface_tests import qualification_inputs, compiled_inputs
     root=s.ROOT.resolve()
     library=Path(find_spec('ascent._core').origin).resolve()
     dst=directory/library.name;shutil.copy2(library,dst)
@@ -393,7 +393,7 @@ def shared_check(directory, _output=None):
         assert (s.ROOT/path).resolve().is_relative_to(s.ROOT.resolve())
         assert hashlib.sha256((directory/'inputs'/path).read_bytes()).hexdigest()==h,'snapshot drift '+name
         assert hashlib.sha256((s.ROOT/path).read_bytes()).hexdigest()==h,'loaded checkout drift '+name
-    from .native_tests import qualification_inputs
+    from .interface_tests import qualification_inputs
     runtime=json.loads((directory/'pyo3-runtime-receipt.json').read_text())
     assert qualification_inputs([])==runtime,'loaded PyO3 runtime or syntax resources drift'
     return plan

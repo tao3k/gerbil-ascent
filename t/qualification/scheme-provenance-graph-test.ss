@@ -54,7 +54,7 @@
                   (and (vector-ref matrix position)
                        (list (quotient position 3) (modulo position 3)))) (iota 9))))
 
-(def (native-paths edges)
+(def (execution-paths edges)
   (relational-query-name
    (relational-solve
     (relational-admit
@@ -346,7 +346,7 @@
        (lambda (mask)
          (let* ((edges (edges-for-mask mask))
                 (expected (matrix-closure edges))
-                (native (native-paths edges))
+                (native (execution-paths edges))
                 (snapshot (reasoning-source-snapshot 'graph-corpus mask
                             (list (list 'edge 2 edges))))
                 (spec (make-reasoning-candidate
@@ -379,7 +379,7 @@
                              (candidate-provenance-withdraw!
                               state (list (list 'edge position)))))
                  (check-row-set rows (matrix-closure (cdr remaining)))
-                 (check-row-set rows (native-paths (cdr remaining)))
+                 (check-row-set rows (execution-paths (cdr remaining)))
                  (check-equal? (> work 0) #t)
                  (displayln "PROVENANCE-CHECKED " mask " withdrawal " position)
                  (force-output))

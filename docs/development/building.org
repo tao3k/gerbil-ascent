@@ -1,0 +1,43 @@
+#+title: ASCENT 构建与验收
+
+* 构建归属
+
+ASCENT 声明模块、两个 executable、C ABI 头文件和库自身的链接选项。
+=build.ss= 通过一次标准 =defbuild-script= 入口构建完整 BuildSpec；
+不再拆分模块阶段或逐个 executable 调用构建器，也不拼装编译器命令。
+Gerbil 的 =std/make= 与编译器负责依赖、当前性、任务执行及排空。
+
+SDK 固定引用 =tools/ci/install-gerbil-v19-release.sh= 中已有的两个 Release 和 SHA256，
+本次不更换 SDK，也不以未发布的上游补丁作为构建前置条件。
+标准 BuildSpec 的最小对照在原始 Linux／macOS Release 上各执行一次 1 核和 4 核，
+两个程序共享运行时／宏模块，构建与运行结果全部通过。
+这个有限案例不能证明所有并行构建都无缺陷；完整 ASCENT 仍需独立验收。
+
+库保留 C ABI 产物的源码身份、失效清理及发布后验收。
+这部分描述的是本库的 ABI／DSL 资源，不是另一套编译任务执行器。
+下游加载 Scheme DSL 的方式没有改变，运行时不要求用户编译 DSL。
+
+* 命名
+
+测试支持在 =t/harness/=，性能编译产物在
+=.cache/ascent/compiled-library/=，独立 Python 接口消费者由
+=ascent_workbench.interface_tests= 执行。
+形式模型按其职责命名：=GraphWorklist=、=BitmapWorklist=、
+=SessionPublication=、=EvidenceLifecycle=、=DslOwnership=。
+Scheme 的索引、复用和拥有结果分别使用 =indexed-path=、
+=session-reuse=、=owned-result=；Rust 的 Scheme 转换明确使用 =scheme=。
+上游 API 的既有标识和历史记录的原始路径／SHA 不改写。
+冻结 reference 源中涉及这些接口的修改仅为对应标识的机械改名，
+没有调整连接、控制流、数据、排序或工作负载。
+
+* 验收边界
+
+既有 94 份性能合约的采样数、预算及阈值保持不变，仅 study 标签随路径改名。
+Scheme 语义与性能仍是独立 CI job；完整 Scheme 语料保留 180 秒总时限、
+每 VM 2G。取消、资源拒绝和 provenance 条件保持原有断言。
+Rust Ascent 与 ASP Rust 仍为 dev-dependencies，Rayon 仍默认开启。
+
+最小对照直接使用发布包的 =gxi=，不注入编译失败，不拦截或延迟编译器调用。
+控制目录各自独立，保留程序、日志、SDK 身份和结果收据。
+这些时间仅记录本次过程，不用于推导并行收益（宿主冷暖状态并未配平）。
+源码、SDK 或最终提交变化之后，历史通过不能替代当前提交的完整验收。

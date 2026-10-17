@@ -497,7 +497,7 @@ fn rust_owned_graph_pool_preserves_cycles_sharing_and_local_opaque_identity() {
             ])]),
         ),
         ("rules", Data::List(vec![])),
-        ("values", graph.to_native()),
+        ("values", graph.to_scheme()),
     ]);
     let first = Catalog::read(&data).unwrap();
     let second = Catalog::read(&data).unwrap();
@@ -514,8 +514,8 @@ fn rust_owned_graph_pool_preserves_cycles_sharing_and_local_opaque_identity() {
             .values()
             .any(|n| matches!(n, Node::Opaque(_)))
     );
-    let rebuilt = ObjectGraph::read_native(&observed.to_native()).unwrap();
-    assert_eq!(rebuilt.to_native(), observed.to_native());
+    let rebuilt = ObjectGraph::read_scheme(&observed.to_scheme()).unwrap();
+    assert_eq!(rebuilt.to_scheme(), observed.to_scheme());
 }
 
 #[test]

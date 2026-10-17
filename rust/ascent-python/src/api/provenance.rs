@@ -32,7 +32,7 @@ impl ProvenanceLimits {
 pub(super) struct Provenance(pub(super) Proof);
 pub(super) enum Proof {
     Core(engine::Provenance),
-    Scheme(ascent_scheme::NativeProvenance),
+    Scheme(ascent_scheme::SchemeProvenance),
 }
 impl Proof {
     fn graph(&self) -> engine::Result<std::sync::Arc<engine::ProvenanceGraph>> {

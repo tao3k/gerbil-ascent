@@ -412,7 +412,7 @@ handle. That difference is the ownership boundary, so a common
 expander would need to keep it visible. =relational-copy-row= and the
 operator project constructor use =map identity= to copy list spines
 before retention; these are intentional copies, not redundant maps.
-The contract in =docs/native-library-acceptance.org= also keeps the
+The contract in =docs/library-acceptance.org= also keeps the
 historical =ascent= syntax on the test path, so deleting or folding it
 into the native language would be a separate interface change.
 The same snapshot-copy pattern appears in =candidate/reasoning.ss= and

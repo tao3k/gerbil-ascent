@@ -15,7 +15,7 @@
         binary-admission-reference-closure-bounded)
 
 ;; A provenance marker for the private prepared view, not a global result cache.
-(def native-path-view-tag (list 'native-path-view))
+(def indexed-path-view-tag (list 'indexed-path-view))
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -97,7 +97,7 @@
        (relation-source-visitor pairs))
      (lambda (source) (vector-ref index source))
      (lambda (source consume) (for-each consume (vector-ref index source)))
-     native-path-view-tag)))
+     indexed-path-view-tag)))
 
 ;; : (-> UIntTrieSet SourceVisitor)
 (def (relation-source-visitor pairs)
@@ -249,9 +249,9 @@
 (def (binary-admission-reference-closure-bounded source radix max-pairs)
   (let* ((view (relation-view source radix))
          (layout (and (<= 32 radix 128)
-                      (build-native-path-layout view (vector-ref view 2) radix))))
+                      (build-indexed-path-layout view (vector-ref view 2) radix))))
     (if layout
-      (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+      (path-projection (vector-ref (compute-indexed-path-analysis layout max-pairs #f) 0) radix)
       (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1)))))
 
 ;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
@@ -341,10 +341,10 @@
 ;;; The general pair frontier remains authoritative for callbacks and sparse
 ;;; graphs. Selection and analysis are both owned by the demanded expression.
 ;; : (-> IndexedSource NeighborVisitor Radix (Maybe PathRows))
-(def (build-native-path-layout view neighbors radix)
+(def (build-indexed-path-layout view neighbors radix)
   (and (<= 32 radix 128)
        (= (vector-length view) 4)
-       (eq? (vector-ref view 3) native-path-view-tag)
+       (eq? (vector-ref view 3) indexed-path-view-tag)
        (eq? neighbors (vector-ref view 2))
        (let ((targets (vector-ref view 1)) (minimum (quotient (+ (* radix 3) 3) 4)))
          ;; Reject low-degree graphs before allocating a second representation.
@@ -386,7 +386,7 @@
       (chunks (arithmetic-shift remaining -16) (fx+ offset 16)))))
 
 ;; : (-> PathRows (Maybe UInt) Boolean PathAnalysis)
-(def (compute-native-path-analysis adjacency max-pairs distances?)
+(def (compute-indexed-path-analysis adjacency max-pairs distances?)
   (when (and max-pairs (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
     (error "invalid ASCENT closure pair budget" max-pairs))
   (let* ((radix (vector-length adjacency)) (full (- (arithmetic-shift 1 radix) 1))
@@ -467,9 +467,9 @@
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))
-      (native-path-layout (build-native-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
-      (native-path-analysis (let (layout (.ref self 'native-path-layout))
-                              (and layout (compute-native-path-analysis layout #f #t))))
+      (indexed-path-layout (build-indexed-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
+      (indexed-path-analysis (let (layout (.ref self 'indexed-path-layout))
+                              (and layout (compute-indexed-path-analysis layout #f #t))))
       (compose-left
        (lambda (left-pairs)
          (with-relation-view self
@@ -485,17 +485,17 @@
               (if (eq? frontier source-pairs) visit-source (relation-source-visitor frontier))
               accumulated neighbors radix native-neighbors)))))
       (closure-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-projection (vector-ref (.ref self 'native-path-analysis) 0) radix)
+           (path-projection (vector-ref (.ref self 'indexed-path-analysis) 0) radix)
            (with-relation-view self
              (lambda (visit-source neighbors native-neighbors)
                (relation-closure visit-source neighbors radix #f native-neighbors))))))
       (closure-bounded
        (lambda (max-pairs)
-         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
            (if layout
-             (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+             (path-projection (vector-ref (compute-indexed-path-analysis layout max-pairs #f) 0) radix)
              (with-relation-view self
                (lambda (visit-source neighbors native-neighbors)
                  (relation-closure visit-source neighbors radix max-pairs native-neighbors)))))))
@@ -503,9 +503,9 @@
       (closure-contains? (.ref (.ref self 'closure-projection) 'contains?))
       (closure-set (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
       (shortest-distance-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-distance-projection (.ref self 'native-path-analysis) radix)
+           (path-distance-projection (.ref self 'indexed-path-analysis) radix)
            (with-relation-view self
              (lambda (visit-source neighbors native-neighbors)
                (relation-shortest-distance-projection visit-source neighbors radix native-neighbors))))))

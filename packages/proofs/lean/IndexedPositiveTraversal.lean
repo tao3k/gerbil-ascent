@@ -499,7 +499,7 @@ theorem indexed_pivot_output_sound (body : List (Atom Value)) (pivot : Nat)
   exact ⟨output, (row_partition body input output covered).mpr (Or.inr fresh), head⟩
 
 /-! Shared curried index views select the same ordered occurrences when a
-logical column set covers exactly one physical prefix. Native matching/planning
+logical column set covers exactly one physical prefix. Scheme matching/planning
 and trie ordinal collection are separate executable obligations. -/
 namespace SharedIndex
 variable {V : Type}
@@ -512,7 +512,7 @@ def keyValue (column : Nat) : List Nat → List V → Option V
   | _, _ => none
 
 /-- Mirror the physical-prefix recursion rather than silently truncating an
-overlong request with `take`. Native failure is represented by `none`. -/
+overlong request with `take`. Scheme failure is represented by `none`. -/
 def adaptKey : List Nat → Nat → List Nat → List V → Option (List V)
   | _, 0, _, _ => some []
   | [], _ + 1, _, _ => none
@@ -762,7 +762,7 @@ theorem maximum (graph chosen other : List Edge) (left right : List Nat)
 
 /-- A chain partition has one fewer edge than vertices per nonempty chain.
 For partitions with the same requirement count, maximum matching minimizes
-physical chain count. Native prefix coverage is a separate obligation. -/
+physical chain count. Scheme prefix coverage is a separate obligation. -/
 theorem minimum_chains (graph chosen other : List Edge) (left right : List Nat)
     (otherValid : Matching other) (otherPresent : other ⊆ graph)
     (cover : Covers graph left right) (tight : left.length + right.length = chosen.length)

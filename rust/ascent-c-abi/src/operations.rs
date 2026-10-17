@@ -222,7 +222,7 @@ impl Owner {
                     .result(handle(input)?)?
                     .rows(input.field("query")?.text()?)?,
             )?
-            .to_native()),
+            .to_scheme()),
             "release-result" => {
                 self.session.result(handle(input)?)?.close();
                 Ok(Data::Null)
@@ -280,7 +280,7 @@ impl Owner {
                                 .map(|row| Data::List(row.iter().map(typed_cell).collect()))
                                 .collect(),
                         ),
-                        _ => gerbil_ascent::rows_graph(rows)?.to_native(),
+                        _ => gerbil_ascent::rows_graph(rows)?.to_scheme(),
                     },
                 ))
             })
@@ -365,7 +365,7 @@ fn typed_cell(value: &gerbil_ascent::Value) -> Data {
         Value::Symbol(v) => {
             Data::object([("type", "symbol".into()), ("value", v.to_string().into())])
         }
-        Value::Object(v) => v.native_input(),
+        Value::Object(v) => v.scheme_input(),
     }
 }
 pub(super) fn fields(input: &Data, expected: &[&str]) -> Result<()> {

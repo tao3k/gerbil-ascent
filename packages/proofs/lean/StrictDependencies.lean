@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import RuleGraphClosure
 
-/-! Weighted read-edge extraction for admitted lowered rules. Native vector
+/-! Weighted read-edge extraction for admitted lowered rules. Scheme vector
 shape, relation-kind extraction and SCC ownership remain representation premises.
 Strict cycles have no natural-number stratum assignment; positive cycles may. -/
 namespace Ascent.StrictDependencies

@@ -379,7 +379,7 @@ All pass evidence requires the existing runner's real exit propagation,
 =NATIVE-MODULES-OK=, =MODULE-OK=, =HARNESS-OK= and final =OK= checks. Logs, baseline
 source, source fingerprints and the inert Scheme reader audit stay under ignored
 =.cache/ascent/checked-runtime-boundaries=; the first parallel-run module logs
-remain under =.cache/ascent/native-library/test.sK4Wo7=. Synthetic pool status
+remain under =.cache/ascent/compiled-library/test.sK4Wo7=. Synthetic pool status
 messages are not Case progress or pass evidence. The public build procedure,
 native test scheduling and testing implementations are unchanged by this batch.
 Final staged review removes three redundant trailing blank lines only; the

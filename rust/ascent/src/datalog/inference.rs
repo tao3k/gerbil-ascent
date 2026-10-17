@@ -1,4 +1,4 @@
-//! Native union-find solves column-kind constraints; it does not evaluate relations.
+//! Scheme union-find solves column-kind constraints; it does not evaluate relations.
 use crate::{Data, Result, invalid_data as invalid};
 use std::collections::BTreeMap;
 #[derive(Clone, Copy, PartialEq, Eq)]

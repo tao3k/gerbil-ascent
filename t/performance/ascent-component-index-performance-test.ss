@@ -9,9 +9,9 @@
         (only-in :gerbil-ascent/t/performance/index-entry/fixture index-entry-harness index-entry-atom)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build gerbil-ascent-physical-index-single-rows))
-(import (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+(import (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-component-index-performance-test)
-(def (require-native!)
+(def (require-compiled!)
   (unless (getenv "ASCENT_TEST_LIBRARY" #f)
     (error "matched performance samples require compiled native qualification"))
   (assert-native-library!))
@@ -34,7 +34,7 @@
 (def ascent-component-index-performance-test
   (test-suite "Compiled ascent-component-index matched measurements"
     (test-case "matched recursive index cost retains truth in every pair"
-      (require-native!)
+      (require-compiled!)
       (for-each
        (lambda (tagged?)
          (let* ((n 64) (request (component-index-request (component-index-program n tagged? #f)))
@@ -61,7 +61,7 @@
                            " old-bytes=" (vector-ref old 1) " new-bytes=" (vector-ref new 1))
                 (force-output))) (iota 10)))) '(#f #t)))
     (test-case "real actor coordinator cost retains independent truth"
-      (require-native!)
+      (require-compiled!)
       (let* ((n 64) (request (component-index-request (component-index-program n #t #f)))
              (truth (component-index-truth n #t #f)))
         (for-each

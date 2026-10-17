@@ -12,11 +12,11 @@ lattice evaluation and inference remain owned by the Library.
 
 | Model | State and transitions | Checked properties | Deliberate faults |
 |-------+-----------------------+--------------------+-------------------|
-| NativeDslOwnership | Reader rejection, admitted expansion failure, fresh scope, native value retain/release, close, foreign reference | Expansion accounting, isolated definitions, owner-bound references, live values | scope alias, uncharged failed expansion, close resets count, foreign reference |
-| NativeEvidenceLifecycle | Source replacement/rejection, run/repeat, result/explanation ownership, close | Current results, independent explanation ownership, frozen historical observations, atomic rejection, closed owners | stale result, coupled release, historical rewrite, partial rejection, live result after close |
+| DslOwnership | Reader rejection, admitted expansion failure, fresh scope, native value retain/release, close, foreign reference | Expansion accounting, isolated definitions, owner-bound references, live values | scope alias, uncharged failed expansion, close resets count, foreign reference |
+| EvidenceLifecycle | Source replacement/rejection, run/repeat, result/explanation ownership, close | Current results, independent explanation ownership, frozen historical observations, atomic rejection, closed owners | stale result, coupled release, historical rewrite, partial rejection, live result after close |
 | EvidenceCacheAdmission | Retained owner and exact DSL/backend/caller-policy key, host change, reuse, exception/release | Exact source/backend/policy admission, failed-owner revocation | ignore DSL identity, ignore backend, ignore policy, retain failed owner |
 
-NativeEvidenceLifecycle checks the unlimited policy and an explicit caller
+EvidenceLifecycle checks the unlimited policy and an explicit caller
 input ceiling independently. InputLimit=0 denotes absence of a count ceiling;
 it is not a substitute finite runtime bound. The two-value data domain and
 GenerationCutoff are finite exploration parameters only. Native counts default
@@ -31,7 +31,7 @@ live-owner, value-graph, structural and execution-time protections are separate.
 | Hygiene and export ownership | interface/evidence-module.ss: fresh top context and gensym namespace; interface/engine-api.ss: module-owner lookup | Distinct same-name closures, foreign/released native reference rejection |
 | Event/source generation and replacement | interface/engine-api.ss: source-replace, source-state-generation, cleared results; program/view-state.ss owns the deeper journal | All finite-domain replacement pairs through real source-replace/source-run |
 | Result and explanation lifetime | interface/engine-api.ss: native-result-lookup, retain-native-result, result-dispatch; python/src/ascent_engine/__init__.py: NativeResult/NativeExplanation | Release result while retaining explanation; reject native handles after source change; preserve copied historical observation |
-| Complete publication, bounded/failing work | Existing NativeSessionPublication and SessionTransaction models | Existing timeout/publication native regressions; not re-proved by the new copy-rule replay |
+| Complete publication, bounded/failing work | Existing SessionPublication and SessionTransaction models | Existing timeout/publication native regressions; not re-proved by the new copy-rule replay |
 | Retained consumer admission | Consumer src/gambit_smp/ascent_program.py: native_api, evaluate, close_retained_queries | Consumer test_retained_native_api.py: content tamper with restored mtime, policy change, exception, release, LRU and withdrawal |
 
 The new model's generation is the public source-state generation, not a claim
@@ -46,10 +46,10 @@ release an independently owned explanation in the same generation.
 * Reproducible Checks
 
 #+begin_src sh
-just _check-quint NativeDslOwnership
-just _check-quint NativeEvidenceLifecycle
+just _check-quint DslOwnership
+just _check-quint EvidenceLifecycle
 just _check-quint EvidenceCacheAdmission
-just check-native-evidence-conformance
+just check-evidence-conformance
 #+end_src
 
 These models are also included in the existing full _check-quint all inventory.

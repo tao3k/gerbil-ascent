@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-// Private shared-root publication protocol. Native hash semantics belong to Lean
+// Private shared-root publication protocol. Scheme hash semantics belong to Lean
 // and Scheme conformance tests. Inputs are finite data, not a generation limit.
 module ComponentIndex {
   const Owners: Set[int]

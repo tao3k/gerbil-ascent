@@ -88,7 +88,7 @@ fn scalar(value: &Value) -> Data {
         Value::Boolean(v) => Data::Bool(*v),
         Value::Text(v) => tagged("string", Data::from(v.to_string())),
         Value::Symbol(v) => tagged("symbol", Data::from(v.to_string())),
-        Value::Object(value) => value.native_input(),
+        Value::Object(value) => value.scheme_input(),
     }
 }
 pub(super) fn owned(value: &ObjectInput, ty: gerbil_ascent::Type) -> Result<Value> {

@@ -141,7 +141,7 @@ theorem selected_nodup (old : α × α → Prop) (rs : List (Rectangle α))
   · exact List.Pairwise.filter _ separate
 
 /-- Derive exact UF delta from the insertion law and a candidate encoding;
-no Exact-frontier premise is assumed. Native decoding and SCC partition
+no Exact-frontier premise is assumed. Scheme decoding and SCC partition
 homogeneity remain implementation obligations. -/
 theorem uf_selected_exact (state : DirectedFrontier.State α) (a b : α)
     (rs : List (Rectangle α))
@@ -412,7 +412,7 @@ noncomputable def equivalenceBlocks (state : EquivalenceComponents.State α)
      else [⟨left, right⟩, ⟨right, left⟩])
 
 /-- Coverage is derived from the constructed family rather than assumed as an
-Exact frontier contract. Native member extraction remains an explicit bridge. -/
+Exact frontier contract. Scheme member extraction remains an explicit bridge. -/
 theorem equivalence_blocks_exact (state : EquivalenceComponents.State α)
     (a b : α) (left right : List α)
     (leftExact : ∀ x, x ∈ left ↔ EquivalenceComponents.base state a b x a)
@@ -497,7 +497,7 @@ theorem component_squares_exact (family : Components α C) (roots : List C)
     exact ⟨⟨family.members c, family.members c⟩, ⟨c, hc, rfl⟩, hx, hy⟩
 
 /-- Equal member lists for every active root determine the complete concrete
-relation, without enumerating the Cartesian products. Native extraction of
+relation, without enumerating the Cartesian products. Scheme extraction of
 those lists and exact roster agreement remain explicit bridge obligations. -/
 theorem component_squares_partition_equal (left right : Components α C)
     (roots : List C) (same : ∀ c, c ∈ roots → left.members c = right.members c)

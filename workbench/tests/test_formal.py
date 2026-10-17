@@ -61,7 +61,7 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(lifetime["sealed-round-unfair"].expected, 13)
         self.assertEqual(lifetime["single-reader-global-fairness"].expected, 0)
         self.assertIn("ExplorationBound = 4", plans["ProviderViews"][0].configuration.constants)
-        self.assertIn("GenerationCutoff = 4", plans["NativeSessionPublication"][0].configuration.constants)
+        self.assertIn("GenerationCutoff = 4", plans["SessionPublication"][0].configuration.constants)
 
     def test_trajectory_faults_are_checked_as_state_invariants(self):
         for model in ("TrajectoryExploration", "TrajectoryEvidenceChain",

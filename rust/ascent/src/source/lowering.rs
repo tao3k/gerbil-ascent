@@ -286,7 +286,7 @@ fn binding(
         expression,
     })
 }
-fn native_guard(items: &[Datum], variables: &mut BTreeMap<String, u32>) -> Result<Clause> {
+fn scheme_guard(items: &[Datum], variables: &mut BTreeMap<String, u32>) -> Result<Clause> {
     let [tag, inputs, procedure] = items else {
         return Err(invalid("guard inputs/procedure required"));
     };
@@ -335,7 +335,7 @@ fn clause(datum: &Datum, variables: &mut BTreeMap<String, u32>, general: bool) -
         "if" => guard(items, variables, general),
         "let" if general => binding(items, variables, false),
         "bind" if general => binding(items, variables, true),
-        "guard" if general => native_guard(items, variables),
+        "guard" if general => scheme_guard(items, variables),
         "aggregate" if general => aggregate(items, variables),
         "where" if general => {
             let [_, body] = items else {

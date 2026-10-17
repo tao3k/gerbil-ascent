@@ -147,7 +147,7 @@ class BranchEntryTest(unittest.TestCase):
         self.assertEqual(len(fixture['request']['input']),1)
 
 
-class NativeProjectionTest(unittest.TestCase):
+class EvidenceProjectionTest(unittest.TestCase):
     def test_columns_preserve_unknown_scope_and_shared_parents(self):
         import copy,json
         from ascent.evidence import compact_observation,expand_observation

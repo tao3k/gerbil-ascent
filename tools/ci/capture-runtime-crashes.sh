@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 set -euo pipefail
-directory="${1:?usage: capture-native-crashes.sh DIRECTORY}"
+directory="${1:?usage: capture-runtime-crashes.sh DIRECTORY}"
 executable="$(readlink -f "$(command -v gxi)")"
 {
   uname -a

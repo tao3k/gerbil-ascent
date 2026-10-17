@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 Initial ground rule coverage remains sufficient under positive source subcuts.
-Native grounding, scalar primitives and token decoding remain obligations.
+Scheme grounding, scalar primitives and token decoding remain obligations.
 -/
 import ComponentClosure
 import SourceOccurrences

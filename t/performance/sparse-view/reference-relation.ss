@@ -19,13 +19,13 @@
         relation-closure
         relation-projection
         relation-shortest-distance-projection
-        build-native-path-layout
-        compute-native-path-analysis
+        build-indexed-path-layout
+        compute-indexed-path-analysis
         path-projection
         path-distance-projection)
 
 ;; A provenance marker for the private prepared view, not a global result cache.
-(def native-path-view-tag (list 'native-path-view))
+(def indexed-path-view-tag (list 'indexed-path-view))
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -118,7 +118,7 @@
        (relation-source-visitor pairs))
      (lambda (source) (vector-ref index source))
      (lambda (source consume) (for-each consume (vector-ref index source)))
-     native-path-view-tag)))
+     indexed-path-view-tag)))
 
 ;; : (-> UIntTrieSet SourceVisitor)
 (def (relation-source-visitor pairs)
@@ -270,9 +270,9 @@
 (def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
   (let* ((view (relation-view source radix))
          (layout (and (<= 32 radix 128)
-                      (build-native-path-layout view (vector-ref view 2) radix))))
+                      (build-indexed-path-layout view (vector-ref view 2) radix))))
     (if layout
-      (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+      (path-projection (vector-ref (compute-indexed-path-analysis layout max-pairs #f) 0) radix)
       (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1)))))
 
 ;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
@@ -361,7 +361,7 @@
 ;;; Whole-row path propagation is confined to canonical, dense snapshots.
 ;;; The general pair frontier remains authoritative for callbacks and sparse
 ;;; graphs. Selection and analysis are both owned by the demanded expression.
-;; build-native-path-layout
+;; build-indexed-path-layout
 ;;   : (-> IndexedSource NeighborVisitor Radix (Maybe PathRows))
 ;;   | doc m%
 ;;       Build private bit rows only for dense canonical views with radix 32 through 128. A replaced neighbor callback or insufficient density returns false, preserving the general visitor path.
@@ -369,14 +369,14 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (build-native-path-layout view overridden-neighbors 64)
+;;       (build-indexed-path-layout view overridden-neighbors 64)
 ;;       ;; => #f when the callback differs from the view's canonical visitor
 ;;       ```
 ;;     %
-(def (build-native-path-layout view neighbors radix)
+(def (build-indexed-path-layout view neighbors radix)
   (and (<= 32 radix 128)
        (= (vector-length view) 4)
-       (eq? (vector-ref view 3) native-path-view-tag)
+       (eq? (vector-ref view 3) indexed-path-view-tag)
        (eq? neighbors (vector-ref view 2))
        (let ((targets (vector-ref view 1)) (minimum (quotient (+ (* radix 3) 3) 4)))
          ;; Reject low-degree graphs before allocating a second representation.
@@ -417,7 +417,7 @@
             (bits (fx- word (fxarithmetic-shift-left 1 bit))))))
       (chunks (arithmetic-shift remaining -16) (fx+ offset 16)))))
 
-;; compute-native-path-analysis
+;; compute-indexed-path-analysis
 ;;   : (-> PathRows (Maybe UInt) Boolean PathAnalysis)
 ;;   | doc m%
 ;;       Compute positive closure and optional shortest distances into fresh private rows. Count source and derived pairs against the optional budget; failure leaves the input adjacency unchanged.
@@ -425,11 +425,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (compute-native-path-analysis (vector 2 4 0) 3 #f)
+;;       (compute-indexed-path-analysis (vector 2 4 0) 3 #f)
 ;;       ;; => #(#(6 4 0) #f), encoding 0->1, 0->2 and 1->2
 ;;       ```
 ;;     %
-(def (compute-native-path-analysis adjacency max-pairs distances?)
+(def (compute-indexed-path-analysis adjacency max-pairs distances?)
   (when (and max-pairs (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
     (error "invalid ASCENT closure pair budget" max-pairs))
   (let* ((radix (vector-length adjacency)) (full (- (arithmetic-shift 1 radix) 1))

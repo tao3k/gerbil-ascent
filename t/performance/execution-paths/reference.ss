@@ -11,8 +11,8 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export native-paths-reference-prototype
-        native-paths-reference-closure-bounded)
+(export execution-paths-reference-prototype
+        execution-paths-reference-closure-bounded)
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -242,7 +242,7 @@
                     (hash-get sparse pair))))))))
 
 ;; : (-> UIntTrieSet Radix Nat PairProjection)
-(def (native-paths-reference-closure-bounded source radix max-pairs)
+(def (execution-paths-reference-closure-bounded source radix max-pairs)
   (let (view (relation-view source radix))
     (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1))))
 
@@ -340,7 +340,7 @@
 ;;; This signature describes extending source slots with .mix, not a direct
 ;;; Scheme call of the prototype value.
 ;; : (-> RelationSourceSlots RelationExpressionSlots)
-(def native-paths-reference-prototype
+(def execution-paths-reference-prototype
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))

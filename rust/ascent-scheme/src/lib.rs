@@ -7,7 +7,7 @@ mod values;
 pub use dag::Dag;
 mod service;
 pub use application::Runtime;
-pub(crate) use application::{failure, native_error};
+pub(crate) use application::{failure, scheme_error};
 pub use service::call;
 
 #[cfg(test)]
@@ -21,7 +21,7 @@ asp_rust::asp_rust_cargo_test_gate!(
 );
 
 #[cfg(test)]
-#[path = "../tests/unit/native.rs"]
+#[path = "../tests/unit/runtime.rs"]
 mod tests;
 
 mod api;
@@ -29,8 +29,8 @@ mod api;
 #[path = "../benches/support/hybrid.rs"]
 pub mod benchmark;
 pub use api::{
-    Backend, Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, NativeProvenance,
-    ResultValue, Source,
+    Backend, Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, ResultValue,
+    SchemeProvenance, Source,
 };
 
 mod identity;

@@ -176,7 +176,7 @@ fn fixed_export_matches_existing_core_non_scalar_algorithm() {
         .unwrap();
     let expected = gerbil_ascent::rows_graph(&actual.relations["objects"])
         .unwrap()
-        .to_native();
+        .to_scheme();
     let V::Map(relations) = field(ok(&observed), "relations") else {
         panic!("relations required");
     };

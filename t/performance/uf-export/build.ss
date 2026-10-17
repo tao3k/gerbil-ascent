@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :std/make
         (only-in :asp-gerbil-scheme/benchmark-api make-benchmark-fixture benchmark-fixture-contract-pass?)
-        (only-in :gerbil-ascent/t/native/artifact-admission artifact-sources artifact-matching-sources?))
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 ;;; Generate the checked benchmark datum through ASP's native fixture API.
 ;;; These explicit settings preserve the gates fixed before the first sample.
@@ -46,6 +46,6 @@
             "t/performance/uf-export/fixture"
             "t/performance/uf-export/runner")
       srcdir: (current-directory) libdir: library parallelize: (##cpu-count)
-      build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+      build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
     (unless (artifact-matching-sources? sources (owners))
       (error "UF-EXPORT execution owners changed during compilation"))))

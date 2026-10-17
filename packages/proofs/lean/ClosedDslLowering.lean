@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 /-! Closed expression lowering under the same canonical primitive bindings.
 Primitive results include errors. This theorem covers the expression transform,
-not Gerbil expansion, reader admission, or arbitrary Scheme syntax. Native tests
+not Gerbil expansion, reader admission, or arbitrary Scheme syntax. Scheme tests
 must establish those representation and ownership obligations separately. -/
 namespace Ascent.ClosedDslLowering
 inductive Value where

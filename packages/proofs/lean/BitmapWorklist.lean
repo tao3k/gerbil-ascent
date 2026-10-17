@@ -1,6 +1,6 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-import NativeGraphWorklist
+import GraphWorklist
 
 /-!
 A fixed-length Boolean vector model for the selected bitmap in
@@ -9,7 +9,7 @@ This module relates vector-cell updates to the independently proved list
 worklist machine. It does not extract Gerbil or justify unchecked raw IDs.
 -/
 
-namespace Ascent.NativeBitmapWorklist
+namespace Ascent.BitmapWorklist
 
 structure Work (count : Nat) where
   selected : Vector Bool count
@@ -35,7 +35,7 @@ def pop {count : Nat} (adj : Fin count → List (Fin count))
       scan (adj source) { selected := work.selected, pending := rest }
 
 def Corresponds {count : Nat} (bitmap : Work count)
-    (list : NativeGraphWorklist.Work (Fin count)) : Prop :=
+    (list : GraphWorklist.Work (Fin count)) : Prop :=
   (∀ key, marked bitmap key ↔ key ∈ list.selected) ∧
     bitmap.pending = list.pending
 
@@ -53,22 +53,22 @@ theorem marked_set {count : Nat} (selected : Vector Bool count)
     simp [same, ne]
 
 theorem enqueue_corresponds {count : Nat} (bitmap : Work count)
-    (list : NativeGraphWorklist.Work (Fin count)) (target : Fin count)
+    (list : GraphWorklist.Work (Fin count)) (target : Fin count)
     (rep : Corresponds bitmap list) :
     Corresponds (enqueue bitmap target)
-      (NativeGraphWorklist.enqueue list target) := by
+      (GraphWorklist.enqueue list target) := by
   rcases rep with ⟨selectedRep, pendingRep⟩
   by_cases hit : marked bitmap target
   · change bitmap.selected[target.val] = true at hit
     have listHit : target ∈ list.selected := (selectedRep target).mp hit
-    simpa [enqueue, NativeGraphWorklist.enqueue, hit, listHit, Corresponds]
+    simpa [enqueue, GraphWorklist.enqueue, hit, listHit, Corresponds]
       using (show Corresponds bitmap list from ⟨selectedRep, pendingRep⟩)
   · change ¬ bitmap.selected[target.val] = true at hit
     have listMiss : target ∉ list.selected := by
       intro member
       exact hit ((selectedRep target).mpr member)
     simp only [enqueue, hit, ↓reduceIte,
-      NativeGraphWorklist.enqueue, listMiss, Corresponds]
+      GraphWorklist.enqueue, listMiss, Corresponds]
     constructor
     · intro key
       change (bitmap.selected.set target.val true target.isLt)[key.val] = true ↔
@@ -80,27 +80,27 @@ theorem enqueue_corresponds {count : Nat} (bitmap : Work count)
     · simp [pendingRep]
 
 theorem scan_corresponds {count : Nat} (targets : List (Fin count))
-    (bitmap : Work count) (list : NativeGraphWorklist.Work (Fin count))
+    (bitmap : Work count) (list : GraphWorklist.Work (Fin count))
     (rep : Corresponds bitmap list) :
     Corresponds (scan targets bitmap)
-      (NativeGraphWorklist.scan targets list) := by
+      (GraphWorklist.scan targets list) := by
   induction targets generalizing bitmap list with
   | nil => exact rep
   | cons target rest ih =>
       exact ih (enqueue bitmap target)
-        (NativeGraphWorklist.enqueue list target)
+        (GraphWorklist.enqueue list target)
         (enqueue_corresponds bitmap list target rep)
 
 theorem pop_corresponds {count : Nat}
     (adj : Fin count → List (Fin count))
-    (bitmap : Work count) (list : NativeGraphWorklist.Work (Fin count))
+    (bitmap : Work count) (list : GraphWorklist.Work (Fin count))
     (rep : Corresponds bitmap list) :
-    Corresponds (pop adj bitmap) (NativeGraphWorklist.pop adj list) := by
+    Corresponds (pop adj bitmap) (GraphWorklist.pop adj list) := by
   rcases rep with ⟨selectedRep, pendingRep⟩
   cases entries : bitmap.pending with
   | nil =>
       have listEmpty : list.pending = [] := by simpa [entries] using pendingRep.symm
-      simpa [pop, entries, NativeGraphWorklist.pop, listEmpty, Corresponds]
+      simpa [pop, entries, GraphWorklist.pop, listEmpty, Corresponds]
         using (show Corresponds bitmap list from ⟨selectedRep, pendingRep⟩)
   | cons source rest =>
       have listEntries : list.pending = source :: rest := by
@@ -108,9 +108,9 @@ theorem pop_corresponds {count : Nat}
       have base : Corresponds
           ({ selected := bitmap.selected, pending := rest } : Work count)
           ({ selected := list.selected, pending := rest } :
-            NativeGraphWorklist.Work (Fin count)) :=
+            GraphWorklist.Work (Fin count)) :=
         ⟨selectedRep, rfl⟩
-      simpa [pop, entries, NativeGraphWorklist.pop, listEntries]
+      simpa [pop, entries, GraphWorklist.pop, listEntries]
         using scan_corresponds (adj source)
           { selected := bitmap.selected, pending := rest }
           { selected := list.selected, pending := rest } base
@@ -120,10 +120,10 @@ def initial {count : Nat} (seeds : List (Fin count)) : Work count :=
     pending := seeds }
 
 theorem initial_corresponds {count : Nat} (seeds : List (Fin count)) :
-    Corresponds (initial seeds) (NativeGraphWorklist.initial seeds) := by
+    Corresponds (initial seeds) (GraphWorklist.initial seeds) := by
   constructor
   · intro key
-    simp [initial, marked, NativeGraphWorklist.initial]
+    simp [initial, marked, GraphWorklist.initial]
   · rfl
 
 def runFuel {count : Nat} (adj : Fin count → List (Fin count)) :
@@ -135,10 +135,10 @@ def runFuel {count : Nat} (adj : Fin count → List (Fin count)) :
 
 theorem runFuel_corresponds {count : Nat}
     (adj : Fin count → List (Fin count)) (fuel : Nat)
-    (bitmap : Work count) (list : NativeGraphWorklist.Work (Fin count))
+    (bitmap : Work count) (list : GraphWorklist.Work (Fin count))
     (rep : Corresponds bitmap list) :
     Corresponds (runFuel adj fuel bitmap)
-      (NativeGraphWorklist.runFuel adj fuel list) := by
+      (GraphWorklist.runFuel adj fuel list) := by
   induction fuel generalizing bitmap list with
   | zero => exact rep
   | succ fuel ih =>
@@ -150,13 +150,13 @@ theorem runFuel_corresponds {count : Nat}
               | nil =>
                   have listEmpty : listPending = [] := rep.2.symm
                   subst listPending
-                  simpa [runFuel, NativeGraphWorklist.runFuel] using rep
+                  simpa [runFuel, GraphWorklist.runFuel] using rep
               | cons source rest =>
                   have listEntries : listPending = source :: rest := rep.2.symm
                   subst listPending
-                  simpa [runFuel, NativeGraphWorklist.runFuel] using ih
+                  simpa [runFuel, GraphWorklist.runFuel] using ih
                     (pop adj ⟨selected, source :: rest⟩)
-                    (NativeGraphWorklist.pop adj ⟨listSelected, source :: rest⟩)
+                    (GraphWorklist.pop adj ⟨listSelected, source :: rest⟩)
                     (pop_corresponds adj ⟨selected, source :: rest⟩
                       ⟨listSelected, source :: rest⟩ rep)
 
@@ -171,10 +171,10 @@ theorem runFuel_compiled_exact (count : Nat)
       RuleGraphClosure.Reachable (RuleGraphClosure.ReadsInto plans)
         (fun k => k ∈ seeds) key := by
   have rep := runFuel_corresponds (RuleGraphClosure.ruleSuccessors plans)
-    (count + 1) (initial seeds) (NativeGraphWorklist.initial seeds)
+    (count + 1) (initial seeds) (GraphWorklist.initial seeds)
     (initial_corresponds seeds)
   exact (rep.1 key).trans
-    (NativeGraphWorklist.runFuel_compiled_exact count plans seeds noDup key)
+    (GraphWorklist.runFuel_compiled_exact count plans seeds noDup key)
 
 theorem runFuel_compiled_complete (count : Nat)
     (plans : List (RuleGraphClosure.Rule (Fin count)))
@@ -182,13 +182,13 @@ theorem runFuel_compiled_complete (count : Nat)
     (runFuel (RuleGraphClosure.ruleSuccessors plans)
       (count + 1) (initial seeds)).pending = [] := by
   have rep := runFuel_corresponds (RuleGraphClosure.ruleSuccessors plans)
-    (count + 1) (initial seeds) (NativeGraphWorklist.initial seeds)
+    (count + 1) (initial seeds) (GraphWorklist.initial seeds)
     (initial_corresponds seeds)
   rw [rep.2]
-  exact NativeGraphWorklist.runFuel_complete count
+  exact GraphWorklist.runFuel_complete count
     (RuleGraphClosure.ruleSuccessors plans)
-    (NativeGraphWorklist.initial seeds)
-    (NativeGraphWorklist.initial_wellformed seeds noDup)
+    (GraphWorklist.initial seeds)
+    (GraphWorklist.initial_wellformed seeds noDup)
 
 /-- The vector model supplies the affected-set closure required by the
 fixed-point frame theorem, with no assumed completion of its queue. -/
@@ -204,4 +204,4 @@ theorem runFuel_compiled_closed (count : Nat)
   exact (runFuel_compiled_exact count plans seeds noDup target).mpr
     (RuleGraphClosure.Reachable.follow sourceReach read)
 
-end Ascent.NativeBitmapWorklist
+end Ascent.BitmapWorklist

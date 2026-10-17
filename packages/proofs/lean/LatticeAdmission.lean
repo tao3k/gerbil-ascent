@@ -5,7 +5,7 @@ import PendingKeys
 /-! Effective native lattice admission: pending-before-committed lookup,
 join, unchanged-value suppression and key-ledger publication. Arbitrary merge
 functions are supported for replay equivalence; semilattice growth still needs
-JoinLaws. Native hash/equality and field checks remain representation premises. -/
+JoinLaws. Scheme hash/equality and field checks remain representation premises. -/
 namespace Ascent.LatticeAdmission
 open LatticeProjection PendingKeys
 variable {Key Value : Type} [DecidableEq Key] [DecidableEq Value]

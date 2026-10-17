@@ -194,7 +194,7 @@ class TrajectoryIntegration(unittest.TestCase):
         sources=[relation('input',True,[['a']])]
         program={'relations':sources+[relation('answer',False)],
                  'rules':[{'head':[atom('answer')],'body':[atom('input')]}], 'queries':['answer']}
-        with Trajectory(self.engine,'native-reuse',identity(sources)) as trajectory:
+        with Trajectory(self.engine,'session-reuse',identity(sources)) as trajectory:
             with EvidenceChain(self.engine,sources,trajectory=trajectory) as chain:
                 first=chain.query(program)
                 self.assertEqual(chain.answer(first['resultReference'],'answer'),[['a']])

@@ -7,9 +7,9 @@ runs semantic =t/qualification/*-test.ss= Suites through native Gerbil GxTest
 =just test-performance-contracts= compiles the declared native support closure
 and runs the unchanged compiled timing/allocation Cases.
 
-=t/native/build.ss= builds; =t/native/test.ss= observes and admits completed
+=t/harness/build.ss= builds; =t/harness/test.ss= observes and admits completed
 native verdicts. Neither defines product behavior. Dependency selection is data
-in =t/native/library-spec.ss=. Existing compiled fixtures also remain native
+in =t/harness/library-spec.ss=. Existing compiled fixtures also remain native
 make inputs, so producer changes refresh their private call references. The
 source Cases are not replaced with compiled Case execution. ASP profiles choose worker capacity and isolation;
 Gerbil owns assertion execution. Every selected module must contain Cases, and

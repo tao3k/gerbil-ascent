@@ -76,10 +76,10 @@ theorem bucket_choice_independent (coordinate : Row → Nat → Value)
   rw [coordinate_bucket_exact coordinate constraints left rows a,
       coordinate_bucket_exact coordinate constraints right rows b]
 
-/-! Native table/funs.ss and table/access.ss insert each batch row at the head
+/-! Scheme table/funs.ss and table/access.ss insert each batch row at the head
 of its bucket, reverse fresh build buckets once, and never reverse published
 buckets. The functional dictionary below models that algorithm, rather than
-assuming that its candidate enumeration is complete. Native hash/equality and
+assuming that its candidate enumeration is complete. Scheme hash/equality and
 mutable dictionary extraction remain a separate representation obligation. -/
 section Construction
 variable {Key : Type} [DecidableEq Key]

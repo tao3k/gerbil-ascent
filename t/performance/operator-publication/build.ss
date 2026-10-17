@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :gerbil/compiler :std/make
         (only-in :asp-gerbil-scheme/benchmark-api make-benchmark-fixture benchmark-fixture-contract-pass?)
-        (only-in :gerbil-ascent/t/native/artifact-admission artifact-sources artifact-matching-sources?))
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 ;;; Generate the checked benchmark datum through ASP's native fixture API.
 ;;; These explicit settings preserve the gates fixed before the first sample.
@@ -43,7 +43,7 @@
                     "t/performance/operator-publication/fixture")
                   (if binary '("t/performance/operator-publication/runner") []))
       srcdir: (current-directory) libdir: library parallelize: (##cpu-count)
-      build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+      build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
     (when binary
       (compile-exe "t/performance/operator-publication/runner.ss"
         [output-dir: library output-file: binary parallel: #t

@@ -4,7 +4,7 @@ import json
 import unittest
 from ascent import Engine, EngineError, FactLimits
 
-FIXTURE = Path(__file__).resolve().parents[2] / 't/qualification/fixtures/native-evidence/conformance.json'
+FIXTURE = Path(__file__).resolve().parents[2] / 't/qualification/fixtures/evidence-lifecycle/conformance.json'
 SOURCE = '''(define-evidence (make-evidence) (sources input) (outputs output)
   (relation input ((value exact-integer?)) INITIAL)
   (relation output ((value exact-integer?))) ((output X) <-- (input X)))'''

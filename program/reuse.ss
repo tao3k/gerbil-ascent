@@ -10,14 +10,14 @@
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key)
         (only-in "update-selection.ss" gerbil-ascent-update-selection
                  gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans))
-(export gerbil-ascent-prepare-native-reuse gerbil-ascent-reuse-active-rules
+(export gerbil-ascent-prepare-session-reuse gerbil-ascent-reuse-active-rules
         gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
-        native-reuse? native-reuse-result native-reuse-affected
-        gerbil-ascent-seed-native-reuse! make-closure-seed-state)
+        session-reuse? session-reuse-result session-reuse-affected
+        gerbil-ascent-seed-session-reuse! make-closure-seed-state)
 
 ;;; Only completed native snapshots may seed an update. The capsule is private
 ;;; to this module; checked Session owns the previous and prospective inputs.
-;; native-reuse
+;; session-reuse
 ;; : (forall (r a f p s) (-> r a f p s (NativeReuse r a f p s)))
 ;; : (-> EvaluationResult AffectedRelations (Maybe RowReader) (Maybe OwnedPublication) SourceOnlyRelations NativeReuse)
 ;; | doc m%
@@ -26,11 +26,11 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (make-native-reuse completed affected)
+;;     (make-session-reuse completed affected)
 ;;     ;; => an internal capsule after completed-result admission
 ;;     ```
 ;;   %
-(defstruct native-reuse (result affected reader publication source-only))
+(defstruct session-reuse (result affected reader publication source-only))
 
 ;;; A relation with no rule head can contain only admitted source occurrences.
 ;;; Keep every written relation conservative, including inactive/self rules.
@@ -43,7 +43,7 @@
                           (vector-ref rule 0))) (vector-ref analysis 2))
     source-only))
 
-;; gerbil-ascent-prepare-native-reuse
+;; gerbil-ascent-prepare-session-reuse
 ;; : (forall (p r a c s o) (-> (Vector (SourceLog r)) p r a (Maybe s) (Maybe o) (Maybe c)))
 ;; : (-> SourceLogVector Program EvaluationResult Analysis (Maybe SourceSnapshot) (Maybe OwnedPublication) (Maybe NativeReuse))
 ;; | doc m%
@@ -53,17 +53,17 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)
+;;     (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)
 ;;     ;; => a private reuse capsule, or #f for unsupported callbacks/providers
 ;;     ```
 ;;   %
-(def (gerbil-ascent-prepare-native-reuse previous candidate completed analysis
+(def (gerbil-ascent-prepare-session-reuse previous candidate completed analysis
                                        (source-cut #f) (publication #f))
   (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
   ;; Root evidence specializes only source equality; completed/eligible
   ;; admission and transitive dependency closure remain authoritative.
   (alet (affected (gerbil-ascent-update-selection previous candidate analysis source-cut))
-    (make-native-reuse completed affected
+    (make-session-reuse completed affected
       (gerbil-ascent-publication-reader publication completed) publication
       (source-only-relations analysis (vector-length previous)))))
 
@@ -118,7 +118,7 @@
 (def (gerbil-ascent-reuse-active-rules full-active-by-stratum reuse)
   (if (not reuse)
     full-active-by-stratum
-    (using (reuse :- native-reuse)
+    (using (reuse :- session-reuse)
       (gerbil-ascent-update-active-plans full-active-by-stratum reuse.affected))))
 
 ;;; A private frame groups buffers owned by the prospective engine. Neither
@@ -128,7 +128,7 @@
 ;; : (-> AllRows Membership DeltaRows AllSizes DeltaSizes LatticeRows ClosureSeedState)
 (defstruct closure-seed-state (all seen delta all-size delta-size lattice-rows))
 
-;; gerbil-ascent-seed-native-reuse!
+;; gerbil-ascent-seed-session-reuse!
 ;; : (forall (r s b) (-> r s b Nat Nat Nat Nat))
 ;; : (-> NativeReuse Schema ClosureSeedState Nat Nat Nat Nat)
 ;; | doc m%
@@ -139,11 +139,11 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (gerbil-ascent-seed-native-reuse! reuse schema buffers 4 20 24)
+;;     (gerbil-ascent-seed-session-reuse! reuse schema buffers 4 20 24)
 ;;     ;; => the derived count seeded from independent completed components
 ;;     ```
 ;;   %
-(def (gerbil-ascent-seed-native-reuse! reuse schema buffers
+(def (gerbil-ascent-seed-session-reuse! reuse schema buffers
                                       source-materialized-count derived-limit output-limit)
   (let ((names (vector-ref schema 1))
         (arity (vector-ref schema 2))
@@ -158,22 +158,22 @@
         (count (vector-length (vector-ref schema 1)))
         (derived-count 0))
     (when reuse
-      (unless (native-reuse? reuse) (error "invalid native reuse capsule"))
+      (unless (session-reuse? reuse) (error "invalid native reuse capsule"))
       (let seed ((index 0))
         (when (< index count)
-          (unless (vector-ref (native-reuse-affected reuse) index)
+          (unless (vector-ref (session-reuse-affected reuse) index)
             ;; Fresh source admission already owns Set rows/membership. Reuse
             ;; that state only for a relation with no rule head and the exact
             ;; prior native count. Duplicate buffered appends can change source
             ;; multiplicity, so count disagreement retains full seeding.
             (unless (and (not (vector-ref lattice-joins index))
-                         (vector-ref (native-reuse-source-only reuse) index)
+                         (vector-ref (session-reuse-source-only reuse) index)
                          (eqv? (vector-ref all-size index)
                                (gerbil-ascent-publication-size
-                                (native-reuse-publication reuse) (native-reuse-result reuse)
+                                (session-reuse-publication reuse) (session-reuse-result reuse)
                                 (vector-ref names index))))
-            (let* ((rows ((or (native-reuse-reader reuse)
-                             (.ref (native-reuse-result reuse) 'rows-of))
+            (let* ((rows ((or (session-reuse-reader reuse)
+                             (.ref (session-reuse-result reuse) 'rows-of))
                           (vector-ref names index)))
                    (base (vector-ref all index))
                    (check (vector-ref field-checkers index))

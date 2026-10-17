@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 Completed numeric reductions in candidate/finite-evidence.ss. `none` inputs
-represent noninteger matching values. Native still charges remaining probes
+represent noninteger matching values. Scheme still charges remaining probes
 after type failure; budget/publication traces belong to Quint.
 -/
 import Std

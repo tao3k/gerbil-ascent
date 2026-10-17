@@ -15,7 +15,7 @@ import statistics
 import shutil
 
 ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
-BINARY = ROOT / '.cache/ascent/native-library/dsl-closure'
+BINARY = ROOT / '.cache/ascent/compiled-library/dsl-closure'
 HARNESS = [sys.executable, '-m', 'ascent_workbench.supervision', '--', 'timeout', '120s']
 RUNTIME = [str(BINARY), '-:max-heap=1G,debug=q']
 PRICE_URL = 'https://api-docs.deepseek.com/quick_start/pricing/'
@@ -91,7 +91,7 @@ def source_environment():
     if not (sdk/'lib/gerbil/core.ssi').is_file():
         raise ValueError('installed Gerbil standard-library interface is unavailable')
     env['GERBIL_HOME'] = str(sdk)
-    env['GERBIL_LOADPATH'] = str(ROOT/'.cache/ascent/native-library/lib') + (':'+existing if existing else '') + ':' + str(sdk/'lib')
+    env['GERBIL_LOADPATH'] = str(ROOT/'.cache/ascent/compiled-library/lib') + (':'+existing if existing else '') + ':' + str(sdk/'lib')
     return env
 
 
@@ -114,7 +114,7 @@ def source_closure(imports, log):
 
 
 def probe(output):
-    subprocess.run(['gxi', str(ROOT/'t/native/artifact-admission.ss'), 'check'], cwd=ROOT, check=True)
+    subprocess.run(['gxi', str(ROOT/'t/harness/artifact-admission.ss'), 'check'], cwd=ROOT, check=True)
     output.mkdir(parents=True, exist_ok=False)
     text = native(HARNESS + RUNTIME + ['t/qualification/scheme-model-closure-test.ss'], output/'preflight.native.log')
     cases = [json.loads(line.removeprefix('STUDY-CASE ')) for line in text.splitlines() if line.startswith('STUDY-CASE ')]
@@ -145,7 +145,7 @@ def prepare(output):
                 'feedbackContract': 'only actual initial output and post-response current native score/truth; no corrective instruction',
                 'outputContract': 'raw retained; unique inert literal/quoted assertion normalization without oracle; ambiguity, EOF and executable leaves reject',
                 'primaryMetric': 'completed provider response and correct native-scored normalized datum; all scheduled attempts remain in denominator',
-                'sourceBinding': json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()),
+                'sourceBinding': json.loads((ROOT/'.cache/ascent/compiled-library/dsl-closure.json').read_text()),
                 'producerHashes': producer_hashes(), 'modules': modules, 'cases': [], 'order': [], 'families': families}
     private = output/'private'; private.mkdir()
     for case in cases:
@@ -218,8 +218,8 @@ def validate(preview, approved):
         plan['requestReadTimeoutSeconds']!=PROVIDER_IDLE_SECONDS or
         plan['requestWallDeadlineSeconds'] is not None):
         raise ValueError('frozen producer/budget contract changed')
-    subprocess.run(['gxi',str(ROOT/'t/native/artifact-admission.ss'),'check'],cwd=ROOT,check=True)
-    if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()):
+    subprocess.run(['gxi',str(ROOT/'t/harness/artifact-admission.ss'),'check'],cwd=ROOT,check=True)
+    if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/compiled-library/dsl-closure.json').read_text()):
         raise ValueError('native artifact changed after preparation')
     for name, sha in plan['modules'].items():
         if digest(module_path(name).read_bytes())!=sha:

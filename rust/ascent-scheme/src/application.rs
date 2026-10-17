@@ -1,4 +1,4 @@
-//! Native application entry; the upstream runtime owns all lifecycle checks.
+//! Scheme application entry; the upstream runtime owns all lifecycle checks.
 use crate::{
     ffi::{___LNK_ascent__hybrid, ascent_hybrid_call},
     values,
@@ -30,7 +30,7 @@ impl Runtime {
                 }
                 Self { runtime }
             })
-            .map_err(native_error)
+            .map_err(scheme_error)
     }
 
     /// Enter the native ASCENT application with owned typed data, without JSON.
@@ -56,8 +56,8 @@ impl Runtime {
         // SAFETY: this linked export borrows a strong input and transfers one
         // fresh upstream root; gerbil-rs-rooted-call contains every exception.
         let export =
-            unsafe { self.runtime.bind_object_export(ascent_hybrid_call) }.map_err(native_error)?;
-        let response = export.call(&request).into_result().map_err(native_error)?;
+            unsafe { self.runtime.bind_object_export(ascent_hybrid_call) }.map_err(scheme_error)?;
+        let response = export.call(&request).into_result().map_err(scheme_error)?;
         let response = values::decode(response, 0)?;
         let values = response.list()?;
         if values.len() != 2 {
@@ -94,6 +94,6 @@ fn scheme_failure(message: &str) -> Error {
         _ => failure(message),
     }
 }
-pub(crate) fn native_error(error: gerbil_scheme::NativeError) -> Error {
+pub(crate) fn scheme_error(error: gerbil_scheme::NativeError) -> Error {
     failure(&error.to_string())
 }

@@ -3,7 +3,7 @@
 import ProviderFrontier
 
 /-! Equivalence Provider insertion with an explicit active-node domain. Unknown
-nodes are not reflexive until admitted. Native component identities, hash
+nodes are not reflexive until admitted. Scheme component identities, hash
 representation, budget arithmetic and row order remain separate bridges. -/
 namespace Ascent.EquivalenceComponents
 variable {N : Type}
@@ -86,7 +86,7 @@ theorem insert_least (state : State N) (a b : N) (other : N → N → Prop)
   · exact trans x b y (trans x a b (lift x a xa) edge) (lift b y by')
   · exact trans x a y (trans x b a (lift x b xb) (symm a b edge)) (lift a y ay)
 
-/-- Native emission: new-node diagonals, then both cross products only when
+/-- Scheme emission: new-node diagonals, then both cross products only when
 resolved components differ. The second diagonal excludes a repeated node. -/
 def emitted (state : State N) (a b x y : N) : Prop :=
   (x = a ∧ y = a ∧ ¬ state.active a) ∨

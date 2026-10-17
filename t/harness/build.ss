@@ -14,7 +14,7 @@
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
-(def test-cache (path-expand ".cache/ascent/native-library"))
+(def test-cache (path-expand ".cache/ascent/compiled-library"))
 (def (with-test-lane thunk)
   (artifact-directory! test-cache)
   (let (lock (open-output-file/lock (path-expand "lane.lock" test-cache) 120))
@@ -28,7 +28,7 @@
          (time->seconds (file-info-last-modification-time (file-info path))))))
 
 ;; Previously compiled fixtures remain build inputs. A producer or SDK update
-;; must let native make refresh their imports, rather than leave stale private
+;; must let compiled make refresh their imports, rather than leave stale private
 ;; call entry points in a warm package prefix. Cases still load through GxTest.
 (def (cached-support-modules)
   (with-list-builder (collect)
@@ -55,8 +55,8 @@
                 (filter (lambda (entry) (ormap (cut member <> tests) (car entry)))
                   test-library-dependencies))))))
     ;; AOT links the complete fixture/reference closure. These support modules
-    ;; previously resolved from source in gxtest; source loading is not a native
-    ;; carrier dependency. Native make still owns dependency order/currentness.
+    ;; previously resolved from source in gxtest; source loading is not a compiled
+    ;; carrier dependency. Scheme make still owns dependency order/currentness.
     (let (support
           (map (lambda (name) (string-append "t/qualification/" (path-strip-extension name)))
                (list-sort string<?
@@ -85,7 +85,7 @@
       (displayln "BUILD-TEST-LIBRARY-PHASE inventory-before wall-seconds="
                  (build-elapsed started))
       ;; Upstream make owns dependency order, compiler threads and currentness.
-      ;; Only requested native consumers compile; ordinary semantic Suites are
+      ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
         (make all srcdir: (current-directory) libdir: library

@@ -9,7 +9,7 @@
     "t/performance/ascent-shortest-candidates-performance-test.ss"))
 (def (performance-contract-files)
   ;; Allocation contracts require compiled production code. Source semantic
-  ;; Suites remain in t/qualification; this native-only Case retains its bound.
+  ;; Suites remain in t/qualification; this compiled-only Case retains its bound.
   '("t/performance/ascent-withdrawal-support-performance-test.ss"
     "t/performance/ascent-uf-plan-performance-test.ss"
     "t/performance/ascent-change-plan-performance-test.ss"
@@ -22,9 +22,9 @@
      "t/performance/scheme-library-lifecycle-performance-test.ss"))
 
 (def test-library-base
-  '("t/performance/native-library" "t/performance/ascent-ss-profile"
+  '("t/performance/library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/native/artifact-admission" "t/native/test" "t/model/response-projection"))
+                            "t/harness/artifact-admission" "t/harness/test" "t/model/response-projection"))
 (def test-library-dependencies
   '(
     (("t/qualification/scheme-artifact-test.ss") "bindings/artifact")

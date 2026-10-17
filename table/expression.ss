@@ -10,16 +10,16 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :gerbil-ascent/core/binary-relation
                  relation-view
-                 native-relation-view?
+                 indexed-relation-view?
                  relation-source-visitor
                  relation-compose
                  relation-delta-step
                  relation-closure
                  relation-projection
                  relation-shortest-distance-projection
-                 native-path-distances native-sparse-distance-analysis
-                 build-native-path-layout
-                 compute-native-path-analysis
+                 indexed-path-distances indexed-sparse-distance-analysis
+                 build-indexed-path-layout
+                 compute-indexed-path-analysis
                  path-projection
                  path-distance-projection))
 
@@ -46,7 +46,7 @@
 ;;     ;; => ordered pairs and a read-only membership query
 ;;     ```
 ;;   %
-(def (distance-closure-projection (analysis :- native-path-distances))
+(def (distance-closure-projection (analysis :- indexed-path-distances))
   (let ((ordered analysis.pairs) (distance analysis.distance))
     (.o (pairs (append ordered [])) (contains? (lambda (pair) (and (distance pair) #t))))))
 
@@ -64,7 +64,7 @@
 ;;     ;; => independently owned ordered pairs and an exact distance query
 ;;     ```
 ;;   %
-(def (distance-snapshot-projection (analysis :- native-path-distances))
+(def (distance-snapshot-projection (analysis :- indexed-path-distances))
   (let ((ordered analysis.pairs) (distance analysis.distance))
     (.o (pairs (append ordered [])) (distance-of distance))))
 
@@ -76,16 +76,16 @@
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))
-      (native-path-layout (build-native-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
-      (native-path-analysis (let (layout (.ref self 'native-path-layout))
-                              (and layout (compute-native-path-analysis layout #f #t))))
+      (indexed-path-layout (build-indexed-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
+      (indexed-path-analysis (let (layout (.ref self 'indexed-path-layout))
+                              (and layout (compute-indexed-path-analysis layout #f #t))))
       ;; Only the canonical private adjacency may share full path analysis.
       ;; Callback replacements and explicitly bounded calls keep their own work.
       (native-sparse-analysis
        (and (exact-integer? radix) (> radix 512)
             (let ((view (.ref self 'indexed-source)) (neighbors (.ref self 'right-index)))
-              (and (native-relation-view? view) (eq? neighbors (vector-ref view 2))
-                   (native-sparse-distance-analysis view radix)))))
+              (and (indexed-relation-view? view) (eq? neighbors (vector-ref view 2))
+                   (indexed-sparse-distance-analysis view radix)))))
       (compose-left
        (lambda (left-pairs)
          (with-relation-view self
@@ -101,9 +101,9 @@
               (if (eq? frontier source-pairs) visit-source (relation-source-visitor frontier))
               accumulated neighbors radix native-neighbors)))))
       (closure-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-projection (vector-ref (.ref self 'native-path-analysis) 0) radix)
+           (path-projection (vector-ref (.ref self 'indexed-path-analysis) 0) radix)
            (let (analysis (.ref self 'native-sparse-analysis))
              (if analysis
                (distance-closure-projection analysis)
@@ -111,18 +111,18 @@
                  (cut relation-closure <> <> radix #f <>)))))))
       (closure-bounded
        (lambda (max-pairs)
-         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
            (if layout
-             (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+             (path-projection (vector-ref (compute-indexed-path-analysis layout max-pairs #f) 0) radix)
              (with-relation-view self
                (cut relation-closure <> <> radix max-pairs <>))))))
       (closure-pairs (.ref (.ref self 'closure-projection) 'pairs))
       (closure-contains? (.ref (.ref self 'closure-projection) 'contains?))
       (closure-set (gerbil-ascent-ordered-pair-set (.ref self 'closure-pairs)))
       (shortest-distance-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-distance-projection (.ref self 'native-path-analysis) radix)
+           (path-distance-projection (.ref self 'indexed-path-analysis) radix)
            (let (analysis (.ref self 'native-sparse-analysis))
              (if analysis
                (distance-snapshot-projection analysis)

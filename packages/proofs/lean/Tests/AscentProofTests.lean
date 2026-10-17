@@ -70,10 +70,10 @@ example : Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans true = [] := by 
 
 #print axioms Ascent.RuleGraphClosure.completed_compiled_exact
 #print axioms Ascent.RuleGraphClosure.completed_reuse_frame
-#print axioms Ascent.NativeGraphWorklist.runFuel_compiled_exact
-#print axioms Ascent.NativeGraphWorklist.runFuel_compiled_closed
-#print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_exact
-#print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_closed
+#print axioms Ascent.GraphWorklist.runFuel_compiled_exact
+#print axioms Ascent.GraphWorklist.runFuel_compiled_closed
+#print axioms Ascent.BitmapWorklist.runFuel_compiled_exact
+#print axioms Ascent.BitmapWorklist.runFuel_compiled_closed
 #print axioms Ascent.SourceUpdateFrame.completed_reuse
 
 /-- One changed source in an ordered append log reaches a recursive head,
@@ -92,17 +92,17 @@ def updateCut : Ascent.SourceUpdateFrame.Cut 5 Nat where
 example : updateCut.before 0 = [1, 2, 3] := by decide
 example : updateCut.seeds = [0] := by decide
 example : Ascent.SourceUpdateFrame.affected updateChain updateCut 3 := by
-  change (Ascent.NativeBitmapWorklist.runFuel
+  change (Ascent.BitmapWorklist.runFuel
     (Ascent.RuleGraphClosure.ruleSuccessors updateChain) 6
-    (Ascent.NativeBitmapWorklist.initial updateCut.seeds)).selected[3] = true
+    (Ascent.BitmapWorklist.initial updateCut.seeds)).selected[3] = true
   decide
 example : ¬ Ascent.SourceUpdateFrame.affected updateChain updateCut 4 := by
-  change (Ascent.NativeBitmapWorklist.runFuel
+  change (Ascent.BitmapWorklist.runFuel
     (Ascent.RuleGraphClosure.ruleSuccessors updateChain) 6
-    (Ascent.NativeBitmapWorklist.initial updateCut.seeds)).selected[4] ≠ true
+    (Ascent.BitmapWorklist.initial updateCut.seeds)).selected[4] ≠ true
   decide
 
-/-- Native head admission checks its own prior rows. This modeled evaluator
+/-- Scheme head admission checks its own prior rows. This modeled evaluator
 has only that implicit self-read, so no explicit rule-graph edge is needed. -/
 def selfReadProgram : Ascent.FunctionalDependency.Program (Fin 5)
     (fun _ => List Nat) where
@@ -137,30 +137,30 @@ def cycleAdj : Fin 3 → List (Fin 3)
   | 1 => [2]
   | 2 => [0]
 
-example : (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
-    (Ascent.NativeGraphWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
-  exact Ascent.NativeGraphWorklist.runFuel_complete 3 cycleAdj _
-    (Ascent.NativeGraphWorklist.initial_wellformed [0] (by decide))
+example : (Ascent.GraphWorklist.runFuel cycleAdj 4
+    (Ascent.GraphWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
+  exact Ascent.GraphWorklist.runFuel_complete 3 cycleAdj _
+    (Ascent.GraphWorklist.initial_wellformed [0] (by decide))
 
-example : (2 : Fin 3) ∈ (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
-    (Ascent.NativeGraphWorklist.initial ([0] : List (Fin 3)))).selected := by
+example : (2 : Fin 3) ∈ (Ascent.GraphWorklist.runFuel cycleAdj 4
+    (Ascent.GraphWorklist.initial ([0] : List (Fin 3)))).selected := by
   decide
 
-example : (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
-    (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
-  have rep := Ascent.NativeBitmapWorklist.runFuel_corresponds cycleAdj 4
-    (Ascent.NativeBitmapWorklist.initial [0])
-    (Ascent.NativeGraphWorklist.initial [0])
-    (Ascent.NativeBitmapWorklist.initial_corresponds [0])
+example : (Ascent.BitmapWorklist.runFuel cycleAdj 4
+    (Ascent.BitmapWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
+  have rep := Ascent.BitmapWorklist.runFuel_corresponds cycleAdj 4
+    (Ascent.BitmapWorklist.initial [0])
+    (Ascent.GraphWorklist.initial [0])
+    (Ascent.BitmapWorklist.initial_corresponds [0])
   rw [rep.2]
-  exact Ascent.NativeGraphWorklist.runFuel_complete 3 cycleAdj _
-    (Ascent.NativeGraphWorklist.initial_wellformed [0] (by decide))
+  exact Ascent.GraphWorklist.runFuel_complete 3 cycleAdj _
+    (Ascent.GraphWorklist.initial_wellformed [0] (by decide))
 
-example : Ascent.NativeBitmapWorklist.marked
-    (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
-      (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))) (2 : Fin 3) := by
-  change (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
-    (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))).selected[2] = true
+example : Ascent.BitmapWorklist.marked
+    (Ascent.BitmapWorklist.runFuel cycleAdj 4
+      (Ascent.BitmapWorklist.initial ([0] : List (Fin 3)))) (2 : Fin 3) := by
+  change (Ascent.BitmapWorklist.runFuel cycleAdj 4
+    (Ascent.BitmapWorklist.initial ([0] : List (Fin 3)))).selected[2] = true
   decide
 
 /-- If the negation read `source → derived` is absent from the dependency

@@ -1,6 +1,6 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-import NativeBitmapWorklist
+import BitmapWorklist
 import FunctionalDependency
 
 /-!
@@ -17,7 +17,7 @@ IDs, mutable vectors, or the native evaluator refine these definitions.
 namespace Ascent.SourceUpdateFrame
 
 open RuleGraphClosure
-open NativeBitmapWorklist
+open BitmapWorklist
 open DependencyInvalidation
 
 variable {Row : Type}

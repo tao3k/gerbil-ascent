@@ -15,8 +15,8 @@
                  relation-closure
                  relation-projection
                  relation-shortest-distance-projection
-                 build-native-path-layout
-                 compute-native-path-analysis
+                 build-indexed-path-layout
+                 compute-indexed-path-analysis
                  path-projection
                  path-distance-projection))
 
@@ -37,9 +37,9 @@
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))
-      (native-path-layout (build-native-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
-      (native-path-analysis (let (layout (.ref self 'native-path-layout))
-                              (and layout (compute-native-path-analysis layout #f #t))))
+      (indexed-path-layout (build-indexed-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
+      (indexed-path-analysis (let (layout (.ref self 'indexed-path-layout))
+                              (and layout (compute-indexed-path-analysis layout #f #t))))
       (compose-left
        (lambda (left-pairs)
          (with-relation-view self
@@ -55,25 +55,25 @@
               (if (eq? frontier source-pairs) visit-source (relation-source-visitor frontier))
               accumulated neighbors radix native-neighbors)))))
       (closure-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-projection (vector-ref (.ref self 'native-path-analysis) 0) radix)
+           (path-projection (vector-ref (.ref self 'indexed-path-analysis) 0) radix)
            (with-relation-view self
              (cut relation-closure <> <> radix #f <>)))))
       (closure-bounded
        (lambda (max-pairs)
-         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
            (if layout
-             (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
+             (path-projection (vector-ref (compute-indexed-path-analysis layout max-pairs #f) 0) radix)
              (with-relation-view self
                (cut relation-closure <> <> radix max-pairs <>))))))
       (closure-pairs (.ref (.ref self 'closure-projection) 'pairs))
       (closure-contains? (.ref (.ref self 'closure-projection) 'contains?))
       (closure-set (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
       (shortest-distance-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
+       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
-           (path-distance-projection (.ref self 'native-path-analysis) radix)
+           (path-distance-projection (.ref self 'indexed-path-analysis) radix)
            (with-relation-view self
              (cut relation-shortest-distance-projection <> <> radix <>)))))
       (shortest-distance-pairs (.ref (.ref self 'shortest-distance-projection) 'pairs))

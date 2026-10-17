@@ -5,7 +5,7 @@ import StratifiedNegation
 /-! Callback-free atom binding on admitted equal-arity rows. Variable identities
 are represented by naturals, not printed names. This models the ordinary
 association-list branch of core/rule-semantics.ss, not its private fresh-variable
-optimization or the positive-plan slot machine. Native decoding, lawful scalar
+optimization or the positive-plan slot machine. Scheme decoding, lawful scalar
 equality and arity admission remain representation obligations. -/
 namespace Ascent.AtomicBinding
 

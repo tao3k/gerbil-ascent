@@ -9,7 +9,7 @@ pub struct DatalogRequest<'a> {
     pub queries: &'a Data,
     pub schema: Option<&'a Data>,
 }
-/// Native graph data and presentation-only query aliases; it grants no source authority.
+/// Scheme graph data and presentation-only query aliases; it grants no source authority.
 pub struct DatalogGraph {
     pub program: Data,
     pub queries: Data,

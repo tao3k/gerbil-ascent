@@ -14,7 +14,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
-(import (only-in :gerbil-ascent/t/native/artifact-admission artifact-main))
+(import (only-in :gerbil-ascent/t/harness/artifact-admission artifact-main))
 (import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
 (import (only-in :gerbil-ascent/t/model/response-projection prediction-main))
 (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
@@ -59,7 +59,7 @@
 
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-data (main steensgaard-data-main)) steensgaard-data-main))
 
-(def (check-native-oracle!)
+(def (check-scheme-oracle!)
   ;; Keep row stdout unchanged while reporting actual artifact admission.
   (parameterize ((current-output-port (current-error-port)))
     (with-catch
@@ -72,17 +72,17 @@
 (def (main . args)
   (match args
     (["--oracle" "steensgaard-data" directory expected]
-     (check-native-oracle!)
+     (check-scheme-oracle!)
      (steensgaard-data-main directory expected)
      (exit 0))
     (["--oracle" "eqrel-program" . flags]
-     (check-native-oracle!)
+     (check-scheme-oracle!)
      (apply eqrel-program-main flags)
      (exit 0))
     (["--retained-benefit"] (session-benefit-main) (exit 0))
     (["--source-closure" . roots] (apply source-closure-main (if (null? roots) (model-closure-source-roots) roots)) (exit 0))
     (["--oracle" name]
-     (check-native-oracle!)
+     (check-scheme-oracle!)
      (case (string->symbol name)
        ((byods-query) (byods-query-main))
        ((byods-session) (byods-session-main))
@@ -94,7 +94,7 @@
        (else (error "unknown native differential fixture" name)))
      (exit 0))
     (["--oracle" "steensgaard" directory output-path]
-     (check-native-oracle!)
+     (check-scheme-oracle!)
      (steensgaard-main directory output-path) (exit 0))
     (["--study-compute" id] (model-closure-compute id) (exit 0))
     (["--study-project" path] (prediction-main path) (exit 0))

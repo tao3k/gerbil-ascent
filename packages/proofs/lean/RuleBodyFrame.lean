@@ -176,7 +176,7 @@ theorem completed_reuse [DecidableEq Row]
     intro source target read selected
     rcases read with self | bodyRead
     · simpa [self] using selected
-    · exact NativeBitmapWorklist.runFuel_compiled_closed count (plans rules) cut.seeds
+    · exact BitmapWorklist.runFuel_compiled_closed count (plans rules) cut.seeds
         cut.seeds_nodup source target bodyRead selected
   exact DependencyInvalidation.completed_frame (edge rules)
     (SourceUpdateFrame.affected (plans rules) cut) (step rules admit) closed

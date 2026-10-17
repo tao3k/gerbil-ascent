@@ -45,7 +45,7 @@ convergence is checked separately from relational closure.
 
 ## Read the work
 
-- [Native Library contract](docs/native-library-acceptance.org) — implemented
+- [Native Library contract](docs/library-acceptance.org) — implemented
   language, admission, and result boundaries.
 - [Feature design and assurance](docs/features/index.org) — implementation,
   paper correspondence, proofs and acceptance grouped by feature.

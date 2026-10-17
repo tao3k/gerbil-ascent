@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :gerbil/compiler :std/make
- (only-in :gerbil-ascent/t/native/artifact-admission artifact-sources artifact-matching-sources?))
+ (only-in :gerbil-ascent/t/harness/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 (def (main library binary (lane "runner"))
  (let ((sources (artifact-sources))
@@ -12,8 +12,8 @@
   (make (append (list "program/operator-lowering" "program/operator" "t/performance/operator-flow/reference" (path-strip-extension source))
     (if (equal? lane "qualify")
       (quote ("t/qualification/scheme-operator-test" "t/qualification/scheme-operator-retained-test"
-               "t/qualification/scheme-higher-order-test" "t/qualification/scheme-native-integration-test")) []))
-    srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+               "t/qualification/scheme-higher-order-test" "t/qualification/scheme-runtime-integration-test")) []))
+    srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
   (compile-exe source [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t])
   (execute-pending-compile-jobs!)
   (unless (artifact-matching-sources? sources (artifact-sources)) (error "operator flow sources changed during compilation"))))

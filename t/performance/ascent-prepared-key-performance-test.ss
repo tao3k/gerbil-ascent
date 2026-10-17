@@ -5,7 +5,7 @@
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key/terms)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-expression-value)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-prepared-key-performance-test)
 
 ;;; Frozen general key implementation from 0ac40f8. Both implementations are

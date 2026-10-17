@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :gerbil/compiler :std/make
- (only-in :gerbil-ascent/t/native/artifact-admission artifact-sources artifact-matching-sources?))
+ (only-in :gerbil-ascent/t/harness/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 ;;; Local executables bind a conservative superset of their source closure.
 ;;; Independent application/proof work cannot invalidate this owned receipt.
@@ -16,7 +16,7 @@
     "t/qualification/ascent-reasoning-library-test.ss"
     "t/qualification/ascent-positive-nonmembership-test.ss"
     "t/qualification/ascent-stratified-proof-test.ss"
-    "t/native/artifact-admission.ss"))
+    "t/harness/artifact-admission.ss"))
 (def (flow-sources)
   (let (owned (make-hash-table))
     (for-each
@@ -44,7 +44,7 @@
        "t/qualification/ascent-reasoning-library-test"
        "t/qualification/ascent-positive-nonmembership-test"
        "t/qualification/ascent-stratified-proof-test") []) (list (path-strip-extension source)))
-   srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
+   srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
   (compile-exe source [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t])
   (execute-pending-compile-jobs!)
   (unless (artifact-matching-sources? sources (flow-sources)) (error "Candidate flow sources changed during compilation"))))

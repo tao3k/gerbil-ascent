@@ -16,7 +16,7 @@ def sha(b):
 def save(p, x):
     p.write_text(json.dumps(x, ensure_ascii=False, indent=2) + '\n')
 
-class Native:
+class SchemeEngine:
 
     def __init__(self):
         env = os.environ.copy()
@@ -106,7 +106,7 @@ def question(c, phase, evidence):
     return canonical({'task': c['id'], 'phase': phase, 'jobs': list(range(n)), 'durations': c['durations'][:n], 'weights': c['weights'][phase], 'sourceEdges': c['edges'], 'transitionPenalties':c['transitionPenalties'], 'evidence': evidence, 'guidance': 'Objective changes between phases. History resets; evidence remains source-bound. Optimize under the common total budget.'})
 
 def qualify():
-    native = Native()
+    native = SchemeEngine()
     checks = []
     try:
         for seed in range(10):
@@ -304,7 +304,7 @@ def run(plan, calibration=False):
         cases = plan['cases']
     for item in order:
         c = next((x for x in cases if x['id'] == item['case']))
-        native = Native()
+        native = SchemeEngine()
         try:
             native.call(op='init', arm=plan['arms'][item['arm']], edges=c['edges'], identity=c['id'], penalties=c['transitionPenalties'])
             for phase in [1] if calibration else [0, 1]:

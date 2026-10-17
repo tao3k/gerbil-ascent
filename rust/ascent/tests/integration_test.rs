@@ -13,8 +13,8 @@ mod operators;
 #[path = "integration/loaded.rs"]
 mod loaded;
 
-#[path = "integration/native_expressions.rs"]
-mod native_expressions;
+#[path = "integration/scheme_expressions.rs"]
+mod scheme_expressions;
 
 #[path = "integration/provenance.rs"]
 mod provenance;

@@ -8,7 +8,7 @@
                    (gerbil-ascent-run-actor-round! reference-round))
         (rename-in (only-in :gerbil-ascent/t/performance/actor-coordinator/reference gerbil-ascent-run-actor-round!)
                    (gerbil-ascent-run-actor-round! pool-round))
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export main)
 (def (median xs) (list-ref (list-sort < xs) (quotient (length xs) 2)))
 (def (measure call repeats allocation?)

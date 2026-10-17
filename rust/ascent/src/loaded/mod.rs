@@ -1,4 +1,4 @@
-//! Native DSL session and retained-result ownership boundary.
+//! Scheme DSL session and retained-result ownership boundary.
 mod result;
 mod session;
 pub use crate::source::{EvidenceExplanation, EvidenceProgram};

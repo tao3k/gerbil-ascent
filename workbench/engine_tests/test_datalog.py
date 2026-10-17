@@ -51,7 +51,7 @@ class TranslationTests(unittest.TestCase):
             read_datalog({"a": []}, "out(X,Y) <= a(X) & a(Y)", {"a": "out(X,X)"})
 
 
-class NativeDatalogTests(unittest.TestCase):
+class DatalogTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.engine=Engine()

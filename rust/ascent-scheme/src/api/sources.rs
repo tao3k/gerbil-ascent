@@ -2,7 +2,7 @@
 use super::{Backend, Engine, Evidence, id, invoke, policy};
 use gerbil_ascent::{Data, FactLimits, Result, SourceSession};
 
-/// Native callback session or a finite DAG transferred to the caller's Rayon pool.
+/// Scheme callback session or a finite DAG transferred to the caller's Rayon pool.
 pub enum Source {
     Rayon(Box<SourceSession>),
     Scheme(Evidence),

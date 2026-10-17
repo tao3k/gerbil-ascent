@@ -122,13 +122,13 @@ three-field projector. The real actor callback-rejection Case passes.
 
 The preceding GitHub run =37420839719= failed with heap overflow while compiling
 the generated combined entry, before Case execution. Native entry compilation
-now runs in =t/native/compile-entry.ss= in a fresh Scheme process with the same
+now runs in =t/harness/compile-entry.ss= in a fresh Scheme process with the same
 =-:max-heap=1G,debug=q= bound. Library-make expander/optimizer contexts remain in
 the parent. Child output is forwarded, compiler errors propagate, and both child
 and parent check the generated source digest. The old executable is removed
 before compilation and the pending compiler/link jobs are drained before use.
 
-The complete =t/native/qualification.ss test 2 all= command passed all 82 modules and 708
+The complete =t/harness/qualification.ss test 2 all= command passed all 82 modules and 708
 Cases with process exit 0 and explicit =MODULE-OK=, =HARNESS-OK= and final =OK=
 for every module. This used two parallel module processes and the existing
 exclusive lane. It confirms the complete generated entry can compile and run
@@ -171,7 +171,7 @@ on GitHub. Local module passes must not be reported as remote acceptance.
 After adding mutation guards and integrating the concurrent remote changes, the
 complete native =test 2 all= rerun passed 82 modules and 713 Cases. It returned
 exit 0 with 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers. The receipt
-is =.cache/ascent/expression-plan/guarded-full-native-tests.log=. This supersedes
+is =.cache/ascent/expression-plan/guarded-full-interface-tests.log=. This supersedes
 the earlier local 708-Case count for the final guarded production sources.
 
 Concurrent commit 67da108 separates production, reference/fixture and Suite
@@ -179,7 +179,7 @@ library compilation into fresh processes under the same heap limit. Its GitHub
 run 37429219617 completed the first two layers but still overflowed in the
 Suite layer before Cases. This integration narrows the remaining cold-build
 resource boundary; it does not establish remote qualification. The final local
-integration rerun is retained in =rebased-guarded-full-native-tests.log=.
+integration rerun is retained in =rebased-guarded-full-interface-tests.log=.
 The rebased local integration rerun also returned exit 0 with all 82 modules and
 713 Cases, plus 82 of each required module/harness/final success marker. The
 production expression sources and frozen expression comparator were unchanged
@@ -190,7 +190,7 @@ Concurrent follow-up 5a75020 releases Suite compiler state per consumer instead
 of retaining all Suite contexts. Integration leaves the guarded Core sources
 byte-identical. The final expression Suite passed all 11 Cases through this
 boundary with exit 0 and all required success markers; its receipt is
-=final-consumer-native-tests.log=. The two full 713-Case passes precede this
+=final-consumer-interface-tests.log=. The two full 713-Case passes precede this
 consumer-boundary follow-up. Its complete Linux CI qualification remains open.
 
 * Shared lexical scope lowering
@@ -257,7 +257,7 @@ Source policy has zero errors and retains the existing cursor warning 041.
 
 Final complete native =test 2 all= qualification passed 82 modules and 715
 Cases, with exit 0, 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers.
-The receipt is =.cache/ascent/expression-plan/final-shared-scope-full-native-tests.log=.
+The receipt is =.cache/ascent/expression-plan/final-shared-scope-full-interface-tests.log=.
 This includes the corrected 13-Case expression Suite and actor, SCC, update,
 proof and typed-expression integration. It uses explicit local concurrency 2;
 it does not establish automatic 12-process startup or exact-head GitHub CI.
@@ -268,7 +268,7 @@ seven of each required module/harness/final success marker. This covers the
 expression Suite, typed-domain, higher-order, operator, retained operator,
 native reduction and model closure. Core lowering and both benchmark contracts,
 comparators and runner were byte-identical to the full 715-Case pass. The
-integration receipt is =integrated-scope-operator-native-tests.log=.
+integration receipt is =integrated-scope-operator-interface-tests.log=.
 
 GitHub run 37431877416 for the preceding baseline 91d42d4 completed successfully
 in all Scheme, formal and oracle jobs. That closes its earlier remote compiler

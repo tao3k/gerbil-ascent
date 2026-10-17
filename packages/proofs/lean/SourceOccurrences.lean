@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 Current-cut one-based occurrence selection retains duplicate values separately.
-Native decoding and grounded graph coverage remain representation obligations.
+Scheme decoding and grounded graph coverage remain representation obligations.
 -/
 import Std
 namespace Ascent.SourceOccurrences

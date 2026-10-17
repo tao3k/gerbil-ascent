@@ -3,13 +3,13 @@
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         :gerbil-ascent/core/binary-relation :gerbil-ascent/table/expression
-        :gerbil-ascent/t/performance/native-paths/reference)
+        :gerbil-ascent/t/performance/execution-paths/reference)
 (for-each
  (lambda (name)
    (let* ((actual (gx#module-context-path (gx#import-module (string->symbol (string-append ":gerbil-ascent/" name)))))
           (expected (string-append (getenv "ASCENT_NATIVE_PATHS_LIB") "/gerbil-ascent/" name ".ssi")))
      (unless (equal? actual expected) (error "probe must use native modules" actual expected))
-     (displayln "NATIVE-MODULE-OK " actual))) '("core/binary-relation" "table/expression" "t/performance/native-paths/reference"))
+     (displayln "NATIVE-MODULE-OK " actual))) '("core/binary-relation" "table/expression" "t/performance/execution-paths/reference"))
 (def (statistic samples fraction)
   (list-ref (list-sort < samples)
             (- (quotient (* (length samples) fraction) 100) 1)))
@@ -78,7 +78,7 @@
     (list projection closure distances (map lookup distances))))
 (def (probe name pairs width demand primary?)
   (matched name
-    (lambda () (demand (expression native-paths-reference-prototype pairs width)))
+    (lambda () (demand (expression execution-paths-reference-prototype pairs width)))
     (lambda () (demand (expression gerbil-ascent-table-expression-prototype pairs width)))
     (lambda (left right) (unless (equal? left right) (error "distance rows changed results" name)))
     1 primary?))
@@ -95,6 +95,8 @@
   (add 'complete-degree-31-32 (source 32 31) 32 slots #t)
   (add 'complete-degree-48-64 (source 64 48) 64 slots #t)
   (add 'complete-degree-63-64 (source 64 63) 64 slots #t)
+  (add 'complete-degree-96-128 (source 128 96) 128 slots #f)
+  (add 'complete-degree-127-128 (source 128 127) 128 slots #f)
   (add 'closure-fanout-32 (source 32 31) 32 (lambda (e) (.ref e 'closure-pairs)) #t)
   (add 'distance-fanout-32 (source 32 31) 32 distances #f)
   (add 'distance-then-closure-32 (source 32 31) 32

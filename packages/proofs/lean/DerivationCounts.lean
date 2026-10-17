@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std
 /-! Unit natural annotations count combinations of child proof trees, then
-sum distinct alternatives. Native graph completeness is a separate premise;
+sum distinct alternatives. Scheme graph completeness is a separate premise;
 these laws do not identify all-tree semantics with minimum-depth provenance. -/
 namespace Ascent.DerivationCounts
 def body : List Nat → Nat

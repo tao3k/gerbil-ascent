@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std
 
-/-! Abstract edge insertion and SCC quotient concretization. Native parent
+/-! Abstract edge insertion and SCC quotient concretization. Scheme parent
 links, component hash tables, budget arithmetic and row encoding are separate
 refinement obligations, exercised by native/TLC controls, not proved here. -/
 namespace Ascent.TransitiveComponents
@@ -102,7 +102,7 @@ theorem difference_exact (targets present : N → Prop) (source target : N) :
   simp [missing, not_or]
 
 -- Any weight function has the same sum once the admitted component list is
--- equal. Native sizes and bitmap encoding are separate refinement premises.
+-- equal. Scheme sizes and bitmap encoding are separate refinement premises.
 theorem difference_weighted (nodes : List N) (targets present : N → Prop)
     (source : N) (weight : N → Nat) [DecidablePred targets] [DecidablePred present]
     [DecidableEq N] :

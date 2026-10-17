@@ -19,8 +19,8 @@ import DescriptorScope
 import FiniteHeight
 import FiniteOperators
 import LexicalLowering
-import NativeGraphWorklist
-import NativeBitmapWorklist
+import GraphWorklist
+import BitmapWorklist
 import PositiveNonmembership
 import RecursiveLowering
 import StratifiedNegation

@@ -65,7 +65,7 @@ impl ModuleValue {
         if let Some(graph) = self.graph.get() {
             return Ok(graph.clone());
         }
-        let graph = Arc::new(ObjectGraph::read_native(&graph)?);
+        let graph = Arc::new(ObjectGraph::read_scheme(&graph)?);
         let _ = self.graph.set(graph.clone());
         Ok(graph)
     }
@@ -119,7 +119,7 @@ fn list(graph: &ObjectGraph, mut item: GraphItem) -> Result<Vec<GraphItem>> {
     }
 }
 pub fn rows(value: &Data, identity: u64) -> Result<Vec<Row>> {
-    let graph = ObjectGraph::read_native(value.field("value")?)?;
+    let graph = ObjectGraph::read_scheme(value.field("value")?)?;
     list(&graph, graph.root.clone())?
         .into_iter()
         .map(|row| {
@@ -215,7 +215,7 @@ impl Evidence {
         query: &str,
         limits: &gerbil_ascent::ProvenanceLimits,
         cancel: &Cancellation,
-    ) -> Result<native::NativeProvenance> {
+    ) -> Result<native::SchemeProvenance> {
         self.inner.provenance(handle, query, limits, cancel)
     }
     pub fn program(&self) -> Result<gerbil_ascent::Program> {

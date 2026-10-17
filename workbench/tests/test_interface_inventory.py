@@ -10,10 +10,10 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from ascent_workbench.native_tests import API_FILES, ROOT, inventory, qualification_inputs
+from ascent_workbench.interface_tests import API_FILES, ROOT, inventory, qualification_inputs
 
 
-class NativeInventory(unittest.TestCase):
+class InterfaceInventory(unittest.TestCase):
     def test_unittest_warnings_do_not_hide_outcomes_or_admit_missing_results(self):
         import runpy
         parse=runpy.run_path(str(ROOT/'workbench/engine_tests/run_suite.py'))['parse_outcomes']
@@ -66,9 +66,9 @@ class NativeInventory(unittest.TestCase):
             sha=hashlib.sha256(b'original').hexdigest()
             receipt={'schema':'ascent.rust-build.v1','sourceRoot':str(source.parent),
                      'sourceInputs':{'program.ss':sha},'runtimeInputs':{str(resource):sha}}
-            with patch('ascent_workbench.native_tests.ROOT',root), \
-                 patch('ascent_workbench.native_tests.compiled_inputs',return_value=receipt), \
-                 patch('ascent_workbench.native_tests.importlib.util.find_spec',return_value=SimpleNamespace(origin=str(extension))):
+            with patch('ascent_workbench.interface_tests.ROOT',root), \
+                 patch('ascent_workbench.interface_tests.compiled_inputs',return_value=receipt), \
+                 patch('ascent_workbench.interface_tests.importlib.util.find_spec',return_value=SimpleNamespace(origin=str(extension))):
                 self.assertIn(str(resource),qualification_inputs([]))
                 for changed in (source,resource):
                     changed.write_bytes(b'modified')

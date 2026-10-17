@@ -34,7 +34,7 @@ pub(super) fn scalar_in(value: &Data, ty: Type, pool: &[Value]) -> Result<Value>
                     .cloned()
                     .ok_or_else(|| invalid("unknown owned value pool entry")),
                 "graph" => {
-                    let graph = crate::ObjectGraph::read_native(item)?;
+                    let graph = crate::ObjectGraph::read_scheme(item)?;
                     let identity = crate::allocate_source_identity()?;
                     crate::FrozenValue::new(identity, identity, graph).map(Value::Object)
                 }

@@ -13,8 +13,8 @@ suite invokes Gerbil once per module to release source expansion contexts; a
 single all-source process exhausted the unchanged 1 GiB heap during validation. They do not prepare
 an alternate library, fingerprint the toolchain or link a test executable.
 
-=t/native/= contains the separate compiled qualification machinery:
-=t/native/qualification.ss= prepares the library and immutable executable
+=t/harness/= contains the separate compiled qualification machinery:
+=t/harness/qualification.ss= prepares the library and immutable executable
 for =just test-native= and =just test-native-suite=. =std/make= owns compilation
 and currentness. Native actor scheduling applies only to this explicit gate.
 Just invokes Scheme processes directly, with module deadlines and verdict checks.
@@ -23,14 +23,14 @@ The Python package is separate model-provider and paper-data IO; Scheme
 There is no project-owned general test runner or forwarding gxtest adapter.
 
 * Compilation and isolation
-Explicit native qualification invokes =t/native/qualification.ss= through =gerbil env gxi= so native Gerbil selects the
+Explicit native qualification invokes =t/harness/qualification.ss= through =gerbil env gxi= so native Gerbil selects the
 project dependency environment before resolving build imports. An explicit
 =GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
 =gerbil deps --install= into the project's =.gerbil/= directory; this was the
 first failure in the remote Scheme jobs for commit =53e6691=.
 
 Production and selected =*-test.ss= modules compile through the test entrypoint into
-=.cache/ascent/native-library/lib=. Native =gxtest= directly loads the compiled
+=.cache/ascent/compiled-library/lib=. Native =gxtest= directly loads the compiled
 =.ssi= test module and executes the original exported Suites and Cases.
 The compiled library comes before the checkout in =GERBIL_LOADPATH=; otherwise
 source modules can be interpreted and invalidate performance comparisons.
@@ -162,7 +162,7 @@ candidate/reasoning object lock and the subsequent six-Suite qualification.
 
 * Names and executable reuse
 
-The project-owned =t/native/= directory contains compiled artifact qualification. =qualification.ss= prepares explicit compiled qualification,
+The project-owned =t/harness/= directory contains compiled artifact qualification. =qualification.ss= prepares explicit compiled qualification,
 =native-registry.ss= freezes Suite bindings, =compile-entry.ss= compiles the
 entry, =artifact-admission.ss= binds source and executable identities, and
 =module-process.ss= validates module process receipts. Model-specific study

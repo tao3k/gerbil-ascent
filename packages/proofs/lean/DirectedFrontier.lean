@@ -4,7 +4,7 @@ import TransitiveComponents
 
 /-! Directed closure uses a latent reflexive preorder. Public UF rows restrict
 it to active endpoints; strict trrel rows expose off-diagonal reach and only
-explicitly supplied self edges. Native SCC/hash/index extraction is separate. -/
+explicitly supplied self edges. Scheme SCC/hash/index extraction is separate. -/
 namespace Ascent.DirectedFrontier
 variable {N : Type}
 
@@ -84,7 +84,7 @@ theorem uf_emitted_exact (state : State N) (a b x y : N) :
     · exact False.elim (fresh old)
     · exact ⟨candidate, fresh⟩
 
-/-- Native UF emits missing predecessor/successor rectangles plus newly
+/-- Scheme UF emits missing predecessor/successor rectangles plus newly
 activated endpoint diagonals. Latent self reach is not a visible old row. -/
 theorem uf_emitted_decomposition (state : State N) (a b x y : N) :
     ufEmitted state a b x y ↔

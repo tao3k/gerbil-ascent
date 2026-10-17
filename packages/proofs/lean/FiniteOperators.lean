@@ -199,7 +199,7 @@ theorem least_parameter_included {α : Type}
   intro y hy
   exact hs y (steps s y hy)
 
-/- Native union admission computes an inflationary step. Its closed models
+/- Scheme union admission computes an inflationary step. Its closed models
    are exactly the closed models of the original positive step. -/
 theorem inflationary_closed_iff {α : Type}
     (step : Relation α → Relation α) (s : Relation α) :

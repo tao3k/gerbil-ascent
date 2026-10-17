@@ -1,4 +1,4 @@
-//! Native inference and generation-scoped result authority.
+//! Scheme inference and generation-scoped result authority.
 use super::{Engine, check, id, input, invoke};
 use gerbil_ascent::{
     Cancellation, Data, Error, FactLimits, Limits, ObjectInput, Program, Relation, Result, Type,
@@ -47,7 +47,7 @@ impl Drop for State {
         self.close();
     }
 }
-/// Native session with one owner-serialized operation stream.
+/// Scheme session with one owner-serialized operation stream.
 #[derive(Clone)]
 pub struct Evidence(Arc<State>);
 impl Evidence {
@@ -93,7 +93,7 @@ impl Evidence {
     pub fn is_closed(&self) -> bool {
         self.0.closed.load(Ordering::Acquire) || self.0.engine.is_closed()
     }
-    /// Native export projection; unsupported callback semantics stay in Scheme.
+    /// Scheme export projection; unsupported callback semantics stay in Scheme.
     /// # Errors
     /// Rejects closed owners.
     pub fn projection(&self) -> Result<Data> {
@@ -237,7 +237,7 @@ impl Evidence {
             return Err(crate::failure("invalid result handle"));
         }
         let admitted = invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
                 ("result", Data::from(handle)),
@@ -262,7 +262,7 @@ impl Evidence {
     }
     /// Replace native sources transactionally using their retained native values.
     /// # Errors
-    /// Native type/resource failures preserve the previously committed generation.
+    /// Scheme type/resource failures preserve the previously committed generation.
     pub fn replace(
         &self,
         sources: BTreeMap<String, Vec<Vec<ObjectInput>>>,
@@ -365,7 +365,7 @@ impl Evidence {
     }
     fn release(&self, handle: u64) -> Result<()> {
         invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
                 ("result", Data::from(handle)),
@@ -380,7 +380,7 @@ impl Evidence {
     pub fn explain(&self, handle: u64, query: &str) -> Result<Explanation> {
         self.check()?;
         let value = invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
                 ("result", Data::from(handle)),
@@ -405,7 +405,7 @@ impl Evidence {
         query: &str,
         limits: &gerbil_ascent::ProvenanceLimits,
         cancellation: &Cancellation,
-    ) -> Result<NativeProvenance> {
+    ) -> Result<SchemeProvenance> {
         let control = crate::control::Control::new(
             &Limits {
                 timeout: limits.timeout,
@@ -440,7 +440,7 @@ impl Evidence {
         control: &crate::control::Control,
     ) -> Result<u64> {
         let scope = self.0.engine.invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
                 ("executionControl", control.id()),
@@ -468,7 +468,7 @@ impl Evidence {
         session: gerbil_ascent::SourceSession,
         generation: u64,
         fingerprint: String,
-    ) -> Result<NativeProvenance> {
+    ) -> Result<SchemeProvenance> {
         let session = Arc::new(Mutex::new(Some(session)));
         let mut proofs = self.0.proofs.lock().map_err(|_| Error::Closed)?;
         proofs.retain(|scope| {
@@ -477,7 +477,7 @@ impl Evidence {
                 .is_some_and(|s| s.lock().is_ok_and(|s| s.is_some()))
         });
         proofs.push(Arc::downgrade(&session));
-        Ok(NativeProvenance {
+        Ok(SchemeProvenance {
             owner: self.clone(),
             generation,
             proof: Some(proof),
@@ -566,7 +566,7 @@ impl Evidence {
         control: &crate::control::Control,
     ) -> Result<Vec<gerbil_ascent::Row>> {
         let native = self.0.engine.invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
                 ("executionControl", control.id()),
@@ -594,7 +594,7 @@ impl Evidence {
                             "graph" => gerbil_ascent::FrozenValue::new(
                                 0,
                                 0,
-                                gerbil_ascent::ObjectGraph::read_native(value)?,
+                                gerbil_ascent::ObjectGraph::read_scheme(value)?,
                             )
                             .map(gerbil_ascent::Value::Object),
                             "boolean" => Ok(gerbil_ascent::Value::Boolean(value.boolean()?)),
@@ -612,11 +612,11 @@ impl Evidence {
         generation: u64,
         query: &str,
         cancel: &Cancellation,
-    ) -> Result<NativeProvenance> {
+    ) -> Result<SchemeProvenance> {
         if cancel.is_canceled() {
             return Err(Error::Canceled);
         }
-        Ok(NativeProvenance {
+        Ok(SchemeProvenance {
             owner: self.clone(),
             generation,
             proof: None,
@@ -685,13 +685,13 @@ impl EvidenceResult {
             Ok(())
         }
     }
-    /// Native graph observation of one result relation.
+    /// Scheme graph observation of one result relation.
     /// # Errors
     /// Rejects stale, released or unknown results/relations.
     pub fn rows(&self, relation: &str) -> Result<Data> {
         self.check()?;
         invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.owner.0.handle)),
                 ("result", Data::from(self.0.handle)),
@@ -708,7 +708,7 @@ impl EvidenceResult {
     ) -> Result<ObjectInput> {
         self.check()?;
         let value = self.0.owner.0.engine.invoke(
-            "native-result",
+            "owned-result",
             [
                 ("handle", Data::from(self.0.owner.0.handle)),
                 ("result", Data::from(self.0.handle)),
@@ -790,7 +790,7 @@ impl Drop for Explanation {
 }
 
 /// Checked derivation bound to native source authority, independent of the source result lease.
-pub struct NativeProvenance {
+pub struct SchemeProvenance {
     owner: Evidence,
     generation: u64,
     proof: Option<gerbil_ascent::Provenance>,
@@ -799,7 +799,7 @@ pub struct NativeProvenance {
     session: Option<Arc<Mutex<Option<gerbil_ascent::SourceSession>>>>,
     closed: AtomicBool,
 }
-impl NativeProvenance {
+impl SchemeProvenance {
     fn check(&self) -> Result<()> {
         let control = crate::control::Control::new(&Limits::default(), &Cancellation::default())?;
         self.check_controlled(&control)
@@ -906,7 +906,7 @@ impl NativeProvenance {
     }
 }
 
-impl Drop for NativeProvenance {
+impl Drop for SchemeProvenance {
     fn drop(&mut self) {
         self.close();
     }

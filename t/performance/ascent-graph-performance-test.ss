@@ -4,7 +4,7 @@
 
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-graph-performance-test)
 
 ;;; Include the frozen implementation in this compilation unit so both paths

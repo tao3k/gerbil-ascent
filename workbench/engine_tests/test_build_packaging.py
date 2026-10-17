@@ -12,7 +12,7 @@ from unittest.mock import patch
 from ascent.build import PackageManifest
 
 
-class NativeArtifactPackaging(unittest.TestCase):
+class ArtifactPackaging(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

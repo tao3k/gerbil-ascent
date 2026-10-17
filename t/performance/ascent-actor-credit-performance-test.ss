@@ -6,9 +6,9 @@
         (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round!)
         :gerbil-ascent/t/performance/actor-credit/fixture
         (only-in :gerbil-ascent/t/performance/component-index/fixture component-index-normalize))
-(import (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+(import (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-actor-credit-performance-test)
-(def (require-native!)
+(def (require-compiled!)
   (unless (getenv "ASCENT_TEST_LIBRARY" #f)
     (error "matched performance samples require compiled native qualification"))
   (assert-native-library!))
@@ -22,7 +22,7 @@
 (def ascent-actor-credit-performance-test
   (test-suite "Compiled ascent-actor-credit matched measurements"
     (test-case "matched stream and recursive actor costs check every sample"
-      (require-native!)
+      (require-compiled!)
       (let ((request (credit-request)) (truth (credit-truth)))
         (for-each
          (lambda (mode)

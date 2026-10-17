@@ -111,7 +111,7 @@ def SelectedBranch (start target blocked : Scope → Vertex → Prop)
     (edge : Vertex → Vertex → Prop) (k : Nat) (scope : Scope) (s t : Vertex) :=
   start scope s ∧ target scope t ∧ Admitted edge blocked k scope s t
 theorem query_trace_complete
-    (h : ScopedComposition.NativeAnswer candidate required member (SelectedBranch start target blocked edge k) s t)
+    (h : ScopedComposition.ScopedAnswer candidate required member (SelectedBranch start target blocked edge k) s t)
     (hg : required g) : ∃ scope n, n ≤ k ∧
       Trace candidate required member (SelectedBranch start target blocked edge k) edge g scope s t n := by
   have answer := ScopedComposition.no_missing_iff_answer.mp h

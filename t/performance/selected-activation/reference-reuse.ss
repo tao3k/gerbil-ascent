@@ -6,13 +6,13 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/performance/selected-activation/reference-selection gerbil-ascent-update-selection
                  gerbil-ascent-update-active-plans))
-(export gerbil-ascent-prepare-native-reuse gerbil-ascent-reuse-active-rules
+(export gerbil-ascent-prepare-session-reuse gerbil-ascent-reuse-active-rules
         gerbil-ascent-activate-rules
-        native-reuse? native-reuse-result native-reuse-affected)
+        session-reuse? session-reuse-result session-reuse-affected)
 
 ;;; Only completed native snapshots may seed an update. The capsule is private
 ;;; to this module; checked Session owns the previous and prospective inputs.
-;; native-reuse
+;; session-reuse
 ;; : (forall (r a) (-> r a (NativeReuse r a)))
 ;; : (-> EvaluationResult AffectedRelations NativeReuse)
 ;; | doc m%
@@ -21,13 +21,13 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (make-native-reuse completed affected)
+;;     (make-session-reuse completed affected)
 ;;     ;; => an internal capsule after completed-result admission
 ;;     ```
 ;;   %
-(defstruct native-reuse (result affected))
+(defstruct session-reuse (result affected))
 
-;; gerbil-ascent-prepare-native-reuse
+;; gerbil-ascent-prepare-session-reuse
 ;; : (forall (p r a c) (-> p p r a (Maybe c)))
 ;; : (-> SourceSnapshot Program EvaluationResult Analysis (Maybe NativeReuse))
 ;; | doc m%
@@ -37,14 +37,14 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)
+;;     (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)
 ;;     ;; => a private reuse capsule, or #f for unsupported callbacks/providers
 ;;     ```
 ;;   %
-(def (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)
+(def (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)
   (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
   (let (affected (gerbil-ascent-update-selection previous candidate analysis))
-    (and affected (make-native-reuse completed affected))))
+    (and affected (make-session-reuse completed affected))))
 
 ;; gerbil-ascent-activate-rules
 ;; : (forall (a r) (-> a (Vector [r])))
@@ -90,4 +90,4 @@
   (if (not reuse)
     full-active-by-stratum
     (gerbil-ascent-update-active-plans
-     full-active-by-stratum (native-reuse-affected reuse))))
+     full-active-by-stratum (session-reuse-affected reuse))))

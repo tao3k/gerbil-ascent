@@ -3,7 +3,7 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
+(import (only-in :gerbil-ascent/t/performance/library assert-native-library!)
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :asp-gerbil-scheme/benchmark-api

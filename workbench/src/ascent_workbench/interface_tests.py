@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Run independent native consumers with a fresh process per test file."""
+"""Run independent compiled consumers with a fresh process per test file."""
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import importlib.util
@@ -28,7 +28,7 @@ API_FILES = (
 def inventory(directory: Path) -> list[tuple[str, Path]]:
     files = sorted(directory.glob("test_*.py"))
     if not files or any(not (directory / name).is_file() for name in API_FILES):
-        raise ValueError("incomplete native consumer inventory")
+        raise ValueError("incomplete compiled consumer inventory")
     # Complete UF exports are the longest consumer (24s in the qualified Linux
     # baseline). Start that work before the short consumers rather than leaving
     # it in the serial tail. Keep the same complete inventory and global real-
@@ -70,10 +70,10 @@ def main() -> int:
     directory = ROOT / "workbench/engine_tests"
     tasks = inventory(directory)
     files = [path for _, path in tasks]
-    output = ROOT / ".cache/ascent/native-consumers" / uuid.uuid4().hex
+    output = ROOT / ".cache/ascent/interface-consumers" / uuid.uuid4().hex
     output.mkdir(parents=True)
     inputs = qualification_inputs(files)
-    forward_output(sys.stdout.buffer, f"NATIVE-INPUTS-OK files={len(inputs)}\n".encode(),
+    forward_output(sys.stdout.buffer, f"INTERFACE-INPUTS-OK files={len(inputs)}\n".encode(),
                    min(5, deadline - time.monotonic()))
     cancelled = threading.Event()
     previous_term = signal.signal(signal.SIGTERM, lambda _signum, _frame: cancelled.set())
@@ -85,7 +85,7 @@ def main() -> int:
         if cancelled.is_set() or time.monotonic() >= deadline:
             raise TimeoutError(f"{label}: matrix cancelled or deadline exceeded before launch")
         with (output / f"{label}.out").open("wb") as log:
-            # Native runtime shutdown is terminal. Threads only coordinate
+            # Scheme runtime shutdown is terminal. Threads only coordinate
             # independent processes; no VM is reused across files or backends.
             child = subprocess.Popen([sys.executable, "-u", "-m", "unittest", "discover",
                 "-s", str(directory), "-p", path.name, "-v"],
@@ -115,7 +115,7 @@ def main() -> int:
                 selector.close()
                 child.stdout.close()
         with output_lock:
-            forward_output(sys.stdout.buffer, f"NATIVE-CONSUMER {label} exit={code}\n".encode(),
+            forward_output(sys.stdout.buffer, f"INTERFACE-CONSUMER {label} exit={code}\n".encode(),
                            min(5, deadline - time.monotonic()))
         return label, code
 

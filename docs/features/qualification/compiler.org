@@ -301,7 +301,7 @@ Cold AOT preparation remains a separate optimization responsibility.
 
 * Single-module native carrier qualification (2026-10-05)
 
-The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-study-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the
 diagnostic's omitted =ASCENT_PERFORMANCE_MODULES= variable still reproduced
 the five-second failure. Separate import probes completed the native library
 preflight and located substantial startup work in the gxtest CLI dependency
@@ -325,7 +325,7 @@ Current Session protocol checks belong to Quint, where =GenerationCutoff=
 configures finite enumeration only. Native carrier qualification does not
 establish an unbounded protocol theorem.
 
-The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-study-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
 the newly added replacement-ownership Case lacked two closing parentheses,
 so the full Scheme and native differential preparations could not read that
 module. The repair preserves every assertion and closes the =check-fresh=
@@ -339,7 +339,7 @@ The earlier receipt keeps its original snapshot and scope. The follow-up binds
 hashes remain unchanged. Final GitHub CI must independently qualify the
 submitted descendant of this repair snapshot.
 
-The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/integrated.json][merged qualification]] retains the incoming append row-spine Case and
+The [[file:../../../.cache/ascent/archived-runs/docs/evidence/scheme-study-entry-20261005/integrated.json][merged qualification]] retains the incoming append row-spine Case and
 LeanPoo-backed source-certificate package. All 16 Session Cases pass with exit
 0 in 38 seconds of execution under the same bounds. =just
 check-nonmembership-formal= builds =AscentProof= and =AscentProofTests=
@@ -446,7 +446,7 @@ Production modules, compiled test Suites, reference modules and AOT objects
 now use the standard active package library, =$GERBIL_PATH/lib=. The default
 workspace prefix is =.gerbil=. A caller selecting another prefix selects the
 same library for every Just recipe and the native builder; it does not create
-a second production output tree. =.cache/ascent/native-library= retains only
+a second production output tree. =.cache/ascent/compiled-library= retains only
 qualification metadata, its advisory lock and executable entries.
 
 The package build and native preparation both delegate dependency freshness to
@@ -544,7 +544,7 @@ command deadline while still completing BYODS assertions. The scoped group
 corpus completed in approximately one second; no stopped Case or semantic
 mismatch preceded the deadline. This is a failed aggregate qualification receipt.
 
-The existing compiled-performance runner is now =t/native/test.ss=.
+The existing compiled-performance runner is now =t/harness/test.ss=.
 It supports source directories and explicit compiled modules. Directory file
 selection preserves native GxTest's flat =*-test.ss= boundary; each native
 GxTest child still owns import validation, exported Suite/Case discovery,

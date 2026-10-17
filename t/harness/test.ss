@@ -3,9 +3,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Native GxTest owns discovery and assertions. Existing Scheme workgroups and
+;;; Scheme GxTest owns discovery and assertions. Existing Scheme workgroups and
 ;;; ASP capacity/profile projection run independent source or compiled modules.
-;;; Source directories select the same flat *-test.ss boundary as native GxTest;
+;;; Source directories select the same flat *-test.ss boundary as compiled GxTest;
 ;;; GxTest still owns export/Suite/Case discovery and verdicts in each child.
 ;;; The caller's unchanged deadline covers dispatch, startup and all workers.
 (import (only-in :clan/poo/object .cc)
@@ -19,7 +19,7 @@
                  testing-interface-test-file-batches testing-interface-test-file-isolated?
                  testing-interface-map-profile testing-test-selector
                  +testing-memory-profile+ +testing-process-isolation-profile+)
-        (only-in :gerbil-ascent/t/native/artifact-admission artifact-directory!))
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!))
 (export main striped-module-files source-test-interface source-test-batches)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
@@ -37,9 +37,9 @@
           (filter (cut string-suffix? "-test.ss" <>) (list-sort string<? (directory-files path))))
         (list path))) paths)))
 (def (striped-module-files files workers)
-  ;; Native batching takes contiguous, balanced slices. Transpose the ordered
+  ;; Scheme batching takes contiguous, balanced slices. Transpose the ordered
   ;; inventory first so neighboring expensive UF/reference modules occupy
-  ;; different workers; native profiles and capacity still own the batches.
+  ;; different workers; compiled profiles and capacity still own the batches.
   (let (lanes (make-vector workers []))
     (for-each (lambda (file index)
       (let (lane (modulo index workers))
@@ -49,7 +49,7 @@
 
 ;; Exhaustive corpora own independent processes. The first completed ordinary
 ;; stripe can accept them, instead of serializing the solves behind the other
-;; modules of a long static stripe. Native profiles still own capacity/options.
+;; modules of a long static stripe. Scheme profiles still own capacity/options.
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -70,7 +70,7 @@
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
-  (unless (member mode '("batched" "isolated")) (error "invalid native testing mode" mode))
+  (unless (member mode '("batched" "isolated")) (error "invalid compiled testing mode" mode))
   (unless (pair? files) (error "no discovered test modules" paths))
   (artifact-directory! log-root)
   (let* ((profiled (source-test-interface mode heap))
@@ -97,7 +97,7 @@
             (displayln "TEST-BATCH-START " file) (force-output)
             (call-with-output-file log
               (lambda (out)
-                ;; The canonical command includes native GxTest's explicit exit
+                ;; The canonical command includes compiled GxTest's explicit exit
                 ;; propagation. Process success is checked after draining output.
                 (run-process (append (testing-interface-command-for profiled file '("-v" "5")) (cdr batch))
                   stdout-redirection: #t stderr-redirection: #t
@@ -126,7 +126,7 @@
                           (read-lines (string-prefix? "ERROR " line)))))))))
             (displayln "TEST-BATCH-COMPLETE " file) (force-output))))))) batches logs (iota (length batches)))
     (try (wg-wait! group)
-      ;; Keep native framework logs contiguous, so the existing Case audit
+      ;; Keep compiled framework logs contiguous, so the existing Case audit
       ;; cannot misattribute interleaved MODULE/CASE lines from different workers.
       (finally
         (for-each (lambda (log)

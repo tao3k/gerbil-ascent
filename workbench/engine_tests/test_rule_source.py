@@ -19,7 +19,7 @@ RULES = """(ascent-fragment
   ((usable X Y) <-- (path X Y) (not (bad Y))))"""
 
 
-class NativeRuleSourceTests(unittest.TestCase):
+class RuleSourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         library = None if os.environ.get("ASCENT_ENGINE_BACKEND") == "api" else os.environ.get(

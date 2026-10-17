@@ -97,7 +97,7 @@ fn registered_call_module_retains_export_locations_and_caller_value_authority() 
             .graph()
             .unwrap();
         assert!(
-            matches!(&gerbil_ascent::ObjectGraph::read_native(&answer).unwrap().root,gerbil_ascent::GraphItem::Number(n) if n==wanted)
+            matches!(&gerbil_ascent::ObjectGraph::read_scheme(&answer).unwrap().root,gerbil_ascent::GraphItem::Number(n) if n==wanted)
         );
     }
     let echo = caller

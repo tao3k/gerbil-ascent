@@ -3,7 +3,7 @@
 import Std
 
 /-! A fixed ordered inventory gives every demand set one matching input.
-Native lexicographic sorting implements this inventory without enumerating the
+Scheme lexicographic sorting implements this inventory without enumerating the
 column powerset. These laws do not extract the native sorter or matching search. -/
 namespace Ascent.CanonicalIndex
 variable {K P : Type} [DecidableEq K]

@@ -16,7 +16,7 @@
                  relational-op-fix relational-op-fragment
                  relational-op-function relational-op-apply))
 
-(export scheme-native-integration-test)
+(export scheme-runtime-integration-test)
 
 (def (same-rows? actual expected)
   (and (= (length actual) (length expected))
@@ -165,7 +165,7 @@
    (rule (best ?root ?value)
      (weighted ?root ?value))))
 
-(def scheme-native-integration-test
+(def scheme-runtime-integration-test
   (test-suite "native Scheme combined language lifecycle"
     (test-case "views, negation, reduction and lattice survive withdrawal"
       (let* ((edges (edge-source))

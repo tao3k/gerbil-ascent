@@ -10,7 +10,7 @@ fn truth(source: &str) {
     ));
 }
 #[test]
-fn original_typed_nested_closures_normalize_to_native_recursive_rules() {
+fn original_typed_nested_closures_normalize_to_scheme_recursive_rules() {
     truth(
         r"
       (def calls 0)

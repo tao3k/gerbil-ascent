@@ -173,7 +173,7 @@ impl ObjectGraph {
     /// This reads data only; no Scheme forms or procedures are evaluated.
     /// # Errors
     /// Rejects malformed nodes, invalid scalar encodings and dangling references.
-    pub fn read_native(value: &crate::Data) -> crate::Result<Self> {
+    pub fn read_scheme(value: &crate::Data) -> crate::Result<Self> {
         let entries = value.field("nodes")?.list()?;
         if entries.len() > 65_536 {
             return Err(crate::Error::StateLimit);
@@ -181,13 +181,13 @@ impl ObjectGraph {
         let mut nodes = BTreeMap::new();
         for entry in entries {
             let id = entry.field("id")?.index()?;
-            let node = native_node(entry)?;
+            let node = scheme_node(entry)?;
             if nodes.insert(id, node).is_some() {
                 return Err(crate::invalid_data("duplicate native graph identity"));
             }
         }
         let graph = Self {
-            root: native_item(value.field("root")?)?,
+            root: scheme_item(value.field("root")?)?,
             nodes: Arc::new(nodes),
         };
         graph.validate_references()?;
@@ -222,7 +222,7 @@ impl ObjectGraph {
 impl ObjectGraph {
     /// Encode an owned graph for the native value adapter; this transports data only.
     #[must_use]
-    pub fn to_native(&self) -> crate::Data {
+    pub fn to_scheme(&self) -> crate::Data {
         use crate::Data;
         fn item(v: &GraphItem) -> Data {
             match v {
@@ -307,7 +307,7 @@ impl ObjectGraph {
     }
 }
 
-fn native_item(value: &crate::Data) -> crate::Result<GraphItem> {
+fn scheme_item(value: &crate::Data) -> crate::Result<GraphItem> {
     if let Some(id) = value.get("ref") {
         return Ok(GraphItem::Reference(id.index()?));
     }
@@ -327,7 +327,7 @@ fn native_item(value: &crate::Data) -> crate::Result<GraphItem> {
     })
 }
 
-fn native_node(entry: &crate::Data) -> crate::Result<ObjectNode> {
+fn scheme_node(entry: &crate::Data) -> crate::Result<ObjectNode> {
     Ok(match entry.field("type")?.text()? {
         "string" => ObjectNode::Text(entry.field("value")?.text()?.into()),
         "symbol" => ObjectNode::Symbol {
@@ -335,15 +335,15 @@ fn native_node(entry: &crate::Data) -> crate::Result<ObjectNode> {
             interned: entry.field("interned")?.boolean()?,
         },
         "pair" => ObjectNode::Pair(
-            native_item(entry.field("car")?)?,
-            native_item(entry.field("cdr")?)?,
+            scheme_item(entry.field("car")?)?,
+            scheme_item(entry.field("cdr")?)?,
         ),
         "vector" => ObjectNode::Vector(
             entry
                 .field("items")?
                 .list()?
                 .iter()
-                .map(native_item)
+                .map(scheme_item)
                 .collect::<crate::Result<_>>()?,
         ),
         "u8vector" => ObjectNode::Bytes(
@@ -364,7 +364,7 @@ fn native_node(entry: &crate::Data) -> crate::Result<ObjectNode> {
                     if v.len() != 2 {
                         return Err(crate::invalid_data("native table pair"));
                     }
-                    Ok((native_item(&v[0])?, native_item(&v[1])?))
+                    Ok((scheme_item(&v[0])?, scheme_item(&v[1])?))
                 })
                 .collect::<crate::Result<_>>()?,
         ),

@@ -8,12 +8,12 @@
         :gerbil-ascent/t/qualification/ascent-index-entry-test
         :gerbil-ascent/t/qualification/ascent-positive-components-test
         :gerbil-ascent/t/qualification/ascent-actor-session-test
-        :gerbil-ascent/t/qualification/scheme-native-integration-test)
+        :gerbil-ascent/t/qualification/scheme-runtime-integration-test)
 (export main)
 (def (main)
   (let* ((suites (list ascent-positive-plan-test ascent-expression-plan-test
                       ascent-index-entry-test ascent-positive-components-test
-                      ascent-actor-session-test scheme-native-integration-test))
+                      ascent-actor-session-test scheme-runtime-integration-test))
          (modules (map (lambda (suite) (TestModule (TestObject-info suite) (list suite) [] void void)) suites))
          (harness (TestHarness "Atom projection consumers" (TestConfig verbosity: 5 capture-output?: #f) modules))
          (result (test-run! harness)))

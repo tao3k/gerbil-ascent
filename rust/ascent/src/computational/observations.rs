@@ -2,7 +2,7 @@
 use super::ComputationalEvidence;
 use crate::{Data, Result, evidence_store::put, invalid_data as invalid};
 use std::collections::BTreeMap;
-/// Native observation request. Source and candidate are checked against the private receipt.
+/// Scheme observation request. Source and candidate are checked against the private receipt.
 pub struct ObservationRequest<'a> {
     pub source: &'a Data,
     pub candidate: &'a Data,

@@ -48,7 +48,7 @@ medians show no stable gain. The result supports a bounded local claim
 about cold construction for many strata, not a general solve-time speedup.
 The original scenario thresholds remain unchanged. For the compared
 =a97762d= head, the remote =scheme=, =oracle (byods)=,
-=oracle (other)= and =native-and-oracle= checks completed successfully
+=oracle (other)= and =runtime-and-oracle= checks completed successfully
 on 2026-10-04. Later PR commits require their own qualification.
 
 * Reproduction

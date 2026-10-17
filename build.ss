@@ -13,7 +13,6 @@
                  asp-gerbil-scheme-library-package-prototype))
 
 
-
 (def gerbil-ascent-library-modules
   '("core/ordered-pair-set"
     "core/binary-relation"
@@ -150,18 +149,6 @@
   @ asp-gerbil-scheme-library-package-prototype)
  (spec gerbil-ascent-build-spec)
  (modules gerbil-ascent-library-modules)
- (native-options-resolver
-  (lambda ()
-    (let ((compiler (getenv "CC" #f)) (flags (getenv "CFLAGS" #f)))
-      ;; This SDK strips cc/ld options from phi tasks but retains the native
-      ;; compiler command. Give that command its required shared-library mode.
-      (append (if compiler
-                ["-cc" (string-append compiler " " (or flags "")
-                  (cond-expand
-                    (darwin " -bundle -Wl,-undefined,dynamic_lookup")
-                    (else " -shared -fPIC")))]
-                [])
-              (if flags ["-cc-options" flags] [])))))
  (extra-spec
   (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
          (c-options (string-append "-fPIC -I" c-dir))
@@ -188,25 +175,6 @@
       optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
     main))
 
-;; Linux's gsc -link may regenerate shared static C from imported Scheme.
-;; Two executable jobs in one make queue can read/write that same header.
-;; Keep module compilation parallel, but drain it before linking each product.
-;; std/make owns each phase's currentness, compiler options and final barrier.
-(def (executable-build-item? spec)
-  (and (pair? spec)
-       (memq (car spec) '(exe: static-exe: optimized-exe: optimized-static-exe:))))
-(def build-modules
-  (let ()
-    (defbuild-script (filter (lambda (spec) (not (executable-build-item? spec)))
-                            (gerbil-ascent-build-spec))
-      optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-    main))
-(def (build-executable spec args)
-  (let ()
-    (defbuild-script (list spec)
-      optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-    (apply main args)))
-
 (def (main . args)
   (let* ((build? (or (null? args) (equal? (car args) "compile")))
          (root (path-directory (this-source-file)))
@@ -226,15 +194,5 @@
           (begin
             (clean-compiled-resources! (path-expand "lib/gerbil-ascent" (gerbil-path)) modules)
             (build-library "clean")))))
-    (if build?
-      (begin
-        (apply build-modules args)
-        (displayln "BUILD-MODULES-DRAINED") (force-output)
-        (for-each
-         (lambda (spec)
-           (build-executable spec args)
-           (displayln "BUILD-EXECUTABLE-COMPLETE " (cadr spec)) (force-output))
-         (filter executable-build-item? (gerbil-ascent-build-spec))))
-      ;; Preserve the complete native spec/meta/clean interface verbatim.
-      (apply build-library args))
+    (apply build-library args)
     (when build? (artifact-receipt! root modules before))))

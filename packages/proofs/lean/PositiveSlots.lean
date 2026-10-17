@@ -7,7 +7,7 @@ Dense first-occurrence lowering and the callback-free in-place slot matcher.
 Frames outside the known prefix may contain arbitrary stale values. Failure
 keeps partial fresh writes, as in core/positive-plan.ss; it does not roll back.
 The total frame function abstracts a sufficiently large native vector. Finite vector matching and head observation are now related to this model.
-Native hash-map identity, actual compiled plan decoding and lawful native
+Scheme hash-map identity, actual compiled plan decoding and lawful native
 scalar equality remain representation obligations.
 -/
 

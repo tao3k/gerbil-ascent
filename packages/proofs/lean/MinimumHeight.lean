@@ -1,7 +1,7 @@
 /-
 SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-Z19 minimum-height certificate characterization. Native relaxation, source
+Z19 minimum-height certificate characterization. Scheme relaxation, source
 identity and decoded rule/premise IDs remain representation obligations.
 -/
 import ComponentClosure

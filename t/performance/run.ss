@@ -9,7 +9,7 @@
         :std/encoding/json
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!)
-        (only-in :gerbil-ascent/t/native/artifact-admission
+        (only-in :gerbil-ascent/t/harness/artifact-admission
                  artifact-sources artifact-matching-sources? artifact-directory!)
         "studies.ss")
 (export main build-study! resolve-study-arguments)
@@ -22,8 +22,8 @@
     (initialize-native-build-core-capacity!)
     (make (study-modules study)
       srcdir: (current-directory) libdir: library
-      build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
-    (when (study-native? study)
+      build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
+    (when (study-compiled? study)
       (compile-exe (study-entry study)
         [output-dir: library output-file: binary parallel: #t
          verbose: #t invoke-gsc: #t static: #t])
@@ -46,7 +46,7 @@
          (receipts (if actor?
                      (path-expand (string-append ".cache/ascent/actor-" baseline "/" run-id))
                      directory))
-         (binary (path-expand "native-entry" directory))
+         (binary (path-expand "study-entry" directory))
          (sources (artifact-sources))
          (scenarios (if (and actor? (equal? lane "stream")) '("stream")
                       (study-scenarios study))))
@@ -64,7 +64,7 @@
       (for-each (lambda (scenario)
         (let* ((receipt (path-expand (string-append scenario (study-receipt-suffix study)) receipts))
                (arguments (resolve-study-arguments study scenario library receipt baseline))
-               (command (if (study-native? study)
+               (command (if (study-compiled? study)
                           (cons binary (cons "-:max-heap=1G,debug=q" arguments))
                           (append ["gxi" "-:max-heap=1G,debug=q"
                             "-e" "(add-load-path! (path-expand \"lib\" (gerbil-path)))"

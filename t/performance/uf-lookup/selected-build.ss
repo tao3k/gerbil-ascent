@@ -6,7 +6,7 @@
         (only-in :std/misc/process run-process)
         (only-in :std/misc/ports read-all-as-string)
         (only-in :std/string/misc string-subst)
-        (only-in :gerbil-ascent/t/native/artifact-admission artifact-digest artifact-directory!)
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-digest artifact-directory!)
         :std/encoding/json)
 (export main selected-contract)
 

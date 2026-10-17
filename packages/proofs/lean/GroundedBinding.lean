@@ -6,7 +6,7 @@ import SnapshotClosure
 
 /-! Construct finite ground rules from actual successful ordinary binder paths.
 The admitted row universe is frozen independently of database membership.
-Native scalar/plan decoding and SCC ownership remain separate obligations. -/
+Scheme scalar/plan decoding and SCC ownership remain separate obligations. -/
 namespace Ascent.GroundedBinding
 open AtomicBinding ComponentClosure
 variable {Key Value : Type} [DecidableEq Value]
@@ -353,7 +353,7 @@ theorem snapshot_rounds_spec (domainRows : Key → List (List Value))
 
 /-- The compiled indexed result reaches the least model using a constructed
 finite stabilization witness; no result soundness, closure or stability is
-supplied as a premise. Native iteration/publication extraction stays separate. -/
+supplied as a premise. Scheme iteration/publication extraction stays separate. -/
 theorem snapshot_indexed_least (domainRows : Key → List (List Value))
     (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
     (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)

@@ -16,7 +16,7 @@ This matrix defines the scope of design closure. An implemented interface,
 a semantic argument, a passing discriminator and measured application benefit
 are separate obligations. A row closes only the claim stated in that row.
 The [[file:scheme-closure-contract.org][closure contract]] supplies the semantic limits; the
-[[file:native-library-acceptance.org][Library acceptance contract]] supplies the general execution gates.
+[[file:library-acceptance.org][Library acceptance contract]] supplies the general execution gates.
 Historical receipts bind their own sources and do not certify later commits.
 
 * Current closure plan (2026-10-06)
@@ -50,7 +50,7 @@ progress failures remain historical rejected results in their own receipts.
 | C5 | General arithmetic/lattice recursion | Binding safety does not imply termination; exhausted bounds fail and cannot publish completed rows | [[file:../program/scheme-checked.ss][scalar operations]], [[file:../t/qualification/scheme-closure-contract-test.ss][closure discriminator]] | Bounded successor returns 0..4; unbounded successor and one-key max fail with exact budget errors |
 | C6 | Retained source lifecycle | Positive insertion reuse; checked replacement/withdrawal invalidate affected native components and atomically publish; opaque providers/callbacks fully recompute | [[file:scheme-session-deletion-design.org][native deletion]], [[file:../t/qualification/scheme-session-deletion-test.ss][qualification]] | 64 graphs and 192 withdrawals against matrix closure and fresh native solve; failed publication rolls back; independent fixture selects 2 of 3 native plans |
 | C7 | Finite evidence and Why-Not | Replay checks exact program/query/snapshot; ground absence requires a completed finite closed model; bounded/unsupported is not absence | [[file:../t/qualification/ascent-finite-evidence-test.ss][finite evidence]], [[file:../t/qualification/ascent-positive-nonmembership-test.ss][nonmembership]] | Tampered binding and exhausted verification bounds reject; founded witness is not all provenance |
-| C8 | Native execution and byte binding | Scheme owns Case verdicts, prediction projection, DSL semantics and artifact admission; the Python package owns separate provider byte IO | [[file:../t/model/study.ss][native entry]], [[file:../t/native/artifact-admission.ss][native artifact binding]], [[file:../python/README.org][IO package]] | Thirteen native Suites including artifact failure controls and the original timeout lifecycle; explicit exit status, MODULE-OK/HARNESS-OK/final OK, 120s module bounds |
+| C8 | Native execution and byte binding | Scheme owns Case verdicts, prediction projection, DSL semantics and artifact admission; the Python package owns separate provider byte IO | [[file:../t/model/study.ss][native entry]], [[file:../t/harness/artifact-admission.ss][native artifact binding]], [[file:../python/README.org][IO package]] | Thirteen native Suites including artifact failure controls and the original timeout lifecycle; explicit exit status, MODULE-OK/HARNESS-OK/final OK, 120s module bounds |
 
 C4's finite universe argument applies to fixed sources, mappings and selection
 constants. It does not extend to C5's integer generation. A finite lattice key
@@ -315,7 +315,7 @@ are checked again after execution. Python owns process supervision; Scheme
 owns every test assertion, callback and verdict. Builds retain their separate
 real-output/CPU-progress supervision and have no total 180-second deadline.
 
-The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-native-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
+The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-study-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
 four injected failure controls and integrated proof check. Startup admission,
 native semantic conformance, proof-model validity and measured application
 benefit remain separate evidence. The research/proof sequence above continues

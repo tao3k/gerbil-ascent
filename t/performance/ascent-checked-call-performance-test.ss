@@ -6,7 +6,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-compute relational-operator-literal)
-        (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+        (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-checked-call-performance-test)
 
 ;;; Frozen calling convention from a97762d, compiled with the same native

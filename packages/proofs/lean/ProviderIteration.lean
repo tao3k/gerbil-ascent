@@ -7,7 +7,7 @@ import FiniteHeight
 /-! Abstract join/injection and merged-snapshot positive iteration. Laws are
 semantic Provider obligations, not inferred from Scheme procedure shapes.
 The abstract state need not be a powerset; gamma need not preserve joins.
-Delta may overlap old facts. Native extraction and scheduling remain separate. -/
+Delta may overlap old facts. Scheme extraction and scheduling remain separate. -/
 namespace Ascent.ProviderIteration
 
 structure CompleteJoin (State : Type) where

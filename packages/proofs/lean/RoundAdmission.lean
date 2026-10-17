@@ -76,7 +76,7 @@ theorem completed_build_hit (slot : Slot α) (identity : Nat) (plan : α) :
 end Ascent.ComponentPlanCache
 
 /-! Ordered index extension models bucket membership with an arbitrary Boolean
-key predicate. Native reversal traverses only the admitted batch; old row roots
+key predicate. Scheme reversal traverses only the admitted batch; old row roots
 are retained. This does not refine native hash storage, mutation or mutexes. -/
 namespace Ascent.ComponentIndex
 

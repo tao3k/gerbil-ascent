@@ -489,7 +489,7 @@ theorem arrow_encoding_injective (input output : FiniteShape) (f g : Value input
 
 end FiniteShape
 
-/-- Abstract descriptor signatures. Native scalar/domain-list interpretation
+/-- Abstract descriptor signatures. Scheme scalar/domain-list interpretation
     and compiler translation still need their own representation relation. -/
 inductive FiniteSignature where
   | relation (distinctAtoms arity : Nat)

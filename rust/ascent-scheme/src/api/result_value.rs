@@ -1,4 +1,4 @@
-//! Native result cells retain the exact source generation and owning result.
+//! Scheme result cells retain the exact source generation and owning result.
 use super::session::EvidenceResult;
 use gerbil_ascent::{ObjectInput, Result};
 

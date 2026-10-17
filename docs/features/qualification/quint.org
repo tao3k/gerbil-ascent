@@ -11,7 +11,7 @@ verification entry point; no second test runner is introduced.
 
 The native Evidence DSL, source/result/explanation lifecycle and retained-owner
 admission extension is documented in
-[[file:native-evidence-protocols.org][Native Evidence DSL protocol qualification]]. Its new models use the same
+[[file:evidence-protocols.org][Native Evidence DSL protocol qualification]]. Its new models use the same
 checker entry point and add real Python/native API trajectory correspondence;
 model file counts do not establish current qualification of the full inventory.
 
@@ -50,7 +50,7 @@ property-specific defect controls. Sources live under =packages/proofs/quint=.
 | Component scheduling | ReadyComponents, ActorRound | 8 |
 | Actor capacity and lifecycle | ActorTestPool, ActorRoundCredits, ActorSession | 4 |
 | Oracle transport | OracleTransport | 4 |
-| Session publication | NativeSessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | 14 |
+| Session publication | SessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | 14 |
 | Total | 18 modules | 93 |
 
 * Transition and property correspondence

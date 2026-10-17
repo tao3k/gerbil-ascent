@@ -248,7 +248,7 @@ circuits. =SourceUpdateFrame.source_frame= / =completed_reuse= retain
 =readsMatch= and completed-fixed-point premises. Rejection and old-snapshot
 checks discriminate the publication contract modeled by
 =SessionTransaction.AtomicSnapshot= and
-=NativeSessionPublication.CommittedSnapshot= / =NoPrematurePublication=.
+=SessionPublication.CommittedSnapshot= / =NoPrematurePublication=.
 Those unchanged formal results do not establish native heap refinement.
 
 This finite canonical-Set workflow does not establish production-scale or

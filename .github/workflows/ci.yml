@@ -73,23 +73,23 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Restore content-bound native artifacts
+      - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
-            .cache/ascent/native-library
+            .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just check-policy
       - name: Qualify compiled performance contracts and benchmarks
         if: ${{ matrix.lane == 'performance' }}
         run: |
           set -o pipefail
-          just test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization performance-uf-compact-query performance-uf-selector-init performance-uf-owner-plans 2>&1 | tee /tmp/ascent-native-qualification.out
-          grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-native-qualification.out
-          if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-native-qualification.out; then
+          just test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization performance-uf-compact-query performance-uf-selector-init performance-uf-owner-plans 2>&1 | tee /tmp/ascent-compiled-qualification.out
+          grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-compiled-qualification.out
+          if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-compiled-qualification.out; then
             echo 'Production modules were compiled again after the package build.' >&2
             exit 1
           fi
@@ -97,8 +97,8 @@ jobs:
         if: ${{ matrix.lane == 'semantics' }}
         id: full_scheme
         run: |
-          mkdir -p .cache/ascent/native-crashes
-          sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/native-crashes/core.%e.%p"
+          mkdir -p .cache/ascent/runtime-crashes
+          sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/runtime-crashes/core.%e.%p"
           ulimit -c unlimited
           just prepare-test-library
           # Retain the acceptance deadline independently of live-output supervision.
@@ -109,32 +109,32 @@ jobs:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
           PYTHONPATH: workbench/src
         run: python3 -m unittest discover -s workbench/source_tests -v
-      - name: Extract native crash backtraces
+      - name: Extract compiled crash backtraces
         if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
-        run: bash tools/ci/capture-native-crashes.sh .cache/ascent/native-crashes
-      - name: Preserve native cores and complete test batch logs
+        run: bash tools/ci/capture-runtime-crashes.sh .cache/ascent/runtime-crashes
+      - name: Preserve compiled cores and complete test batch logs
         if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: native-crashes-${{ github.sha }}-${{ github.run_attempt }}
+          name: runtime-crashes-${{ github.sha }}-${{ github.run_attempt }}
           path: |
-            .cache/ascent/native-crashes
+            .cache/ascent/runtime-crashes
             .cache/ascent/test-modules
           include-hidden-files: true
           retention-days: 30
       - name: Qualify runtime source view loading
         if: ${{ matrix.lane == 'semantics' }}
         run: just check-source-views
-      - name: Build native DSL closure entry
+      - name: Build compiled DSL closure entry
         if: ${{ matrix.lane == 'semantics' }}
         run: just build-dsl-closure
-      - name: Qualify native DSL closure
+      - name: Qualify compiled DSL closure
         if: ${{ matrix.lane == 'semantics' }}
         run: just check-dsl-closure
-      - name: Measure native retained replacement against fresh evaluation
+      - name: Measure compiled retained replacement against fresh evaluation
         if: ${{ matrix.lane == 'semantics' }}
         run: just check-retained-benefit
-      - name: Qualify actual native compiler source closure
+      - name: Qualify actual compiled compiler source closure
         if: ${{ matrix.lane == 'semantics' }}
         run: just check-model-source-closure
   rust-pyo3:
@@ -186,14 +186,14 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Restore content-bound native artifacts
+      - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
-            .cache/ascent/native-library
+            .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just build
       - name: Record Rust and Python compiler identity
@@ -257,7 +257,7 @@ jobs:
           ASCENT_ENGINE_WIRE: ${{ github.workspace }}/.cache/ascent/movie-wire.json
         run: |
           GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
-          .cache/ascent/python-runtime/bin/python -m ascent_workbench.native_tests
+          .cache/ascent/python-runtime/bin/python -m ascent_workbench.interface_tests
       - name: Publish the qualified Python wheel for downstream consumers
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -327,14 +327,14 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Restore content-bound native artifacts
+      - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
-            .cache/ascent/native-library
+            .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just build
       - name: Qualify runtime source view loading
@@ -344,7 +344,7 @@ jobs:
         run: |
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
-      - name: Build native retained, arity and BYODS differential entry
+      - name: Build compiled retained, arity and BYODS differential entry
         run: just build-dsl-closure
       - name: Compare with Rust Ascent
         run: |
@@ -394,7 +394,7 @@ jobs:
           PYTHONPATH=workbench/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
           cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
-          timeout 180s .cache/ascent/native-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
+          timeout 180s .cache/ascent/compiled-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
           rust/ascent-oracle/target/release/examples/steensgaard_data_truth "$dataset" .cache/ascent/steensgaard-rust-partition.tsv .cache/ascent/steensgaard-partition.tsv
       - name: Verify pinned complete Polonius input identity
         if: matrix.shard == 'byods-scale'
@@ -465,7 +465,7 @@ jobs:
         run: |
           .cache/ascent/python-projects/bin/python -c 'from importlib.metadata import distribution; from ascent import Engine; from ascent_workbench import formal; from pathlib import Path; library = distribution("gerbil-ascent"); consumer = distribution("ascent-workbench"); assert not any(str(p).startswith("ascent_workbench/") for p in library.files); assert not any(str(p).startswith("ascent/") for p in consumer.files); assert any(r.startswith("gerbil-ascent") for r in consumer.requires); assert not any("ascent-workbench" in r for r in library.requires or []); assert formal.ROOT == Path.cwd()'
           .cache/ascent/python-projects/bin/ascent-workbench --help
-  native-and-oracle:
+  runtime-and-oracle:
     if: ${{ always() }}
     needs: [scheme, rust-pyo3, oracle, formal]
     runs-on: ubuntu-latest

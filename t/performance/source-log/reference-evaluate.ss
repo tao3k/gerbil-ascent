@@ -19,9 +19,9 @@
                  gerbil-ascent-emit-heads!)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
-        (only-in :gerbil-ascent/t/performance/source-log/reference-reuse gerbil-ascent-prepare-native-reuse
-                 gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules native-reuse?
-                 native-reuse-result native-reuse-affected)
+        (only-in :gerbil-ascent/t/performance/source-log/reference-reuse gerbil-ascent-prepare-session-reuse
+                 gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules session-reuse?
+                 session-reuse-result session-reuse-affected)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
@@ -65,7 +65,7 @@
                                       analysis schema measure-rule-times?)
   (gerbil-ascent-make-engine
    candidate #t analysis schema measure-rule-times? #f
-   (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)))
+   (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)))
 
 ;; gerbil-ascent-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
@@ -241,11 +241,11 @@
       ;; Source admission above uses the real prospective input and budgets.
       ;; Seed only independent completed components; never seed affected SCCs.
       (when reuse
-        (unless (native-reuse? reuse) (error "invalid native reuse capsule"))
+        (unless (session-reuse? reuse) (error "invalid native reuse capsule"))
         (let seed ((index 0))
           (when (< index count)
-            (unless (vector-ref (native-reuse-affected reuse) index)
-              (let* ((rows ((.ref (native-reuse-result reuse) 'rows-of) (vector-ref names index)))
+            (unless (vector-ref (session-reuse-affected reuse) index)
+              (let* ((rows ((.ref (session-reuse-result reuse) 'rows-of) (vector-ref names index)))
                      (base (vector-ref all index))
                      (check (vector-ref field-checkers index))
                      ;; Set admission already populated this source membership.
@@ -300,7 +300,7 @@
              (active-by-stratum
               (if reuse
                 (gerbil-ascent-activate-selected-rules analysis
-                 (native-reuse-affected reuse))
+                 (session-reuse-affected reuse))
                 (gerbil-ascent-activate-rules analysis)))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (lattice-feeds-relation?
@@ -771,7 +771,7 @@
                      (vector-map (lambda (rows) (reverse rows)) all)))
                 (observation
                  (gerbil-ascent-result-observation
-                  (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
+                  (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (set! last-result
              (.o (relation-names (vector->list names))
                  (finished complete?)

@@ -14,9 +14,9 @@
                            gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension)
           (gerbil-ascent-trrel-uf-state scan-state)
           (gerbil-ascent-trrel-uf-extension scan-extend)))
-(import (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
+(import (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-trrel-uf-performance-test)
-(def (require-native!)
+(def (require-compiled!)
   (unless (getenv "ASCENT_TEST_LIBRARY" #f)
     (error "matched performance samples require compiled native qualification"))
   (assert-native-library!))
@@ -54,7 +54,7 @@
 (def ascent-trrel-uf-performance-test
   (test-suite "Compiled ascent-trrel-uf matched measurements"
     (test-case "every timing and allocation sample matches independent chain/cycle truth"
-      (require-native!)
+      (require-compiled!)
       (for-each (lambda (cycle?)
         (let ((expected (truth cycle? 32)) (mode (if cycle? 'cycle 'dag)))
           (for-each (lambda (pair)

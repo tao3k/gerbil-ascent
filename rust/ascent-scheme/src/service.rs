@@ -149,19 +149,19 @@ fn release_abandoned(runtime: &Runtime, request: &Data, value: &Data) {
                     .zip(value.get("resultHandle"))
                     .map(|(owner, handle)| {
                         Data::object([
-                            ("operation", Data::from("native-result")),
+                            ("operation", Data::from("owned-result")),
                             ("handle", owner.clone()),
                             ("result", handle.clone()),
                             ("action", Data::from("release")),
                         ])
                     })
             }
-            "native-result" => request
+            "owned-result" => request
                 .get("handle")
                 .zip(value.get("explanationHandle"))
                 .map(|(owner, handle)| {
                     Data::object([
-                        ("operation", Data::from("native-result")),
+                        ("operation", Data::from("owned-result")),
                         ("handle", owner.clone()),
                         ("result", handle.clone()),
                         ("action", Data::from("release")),

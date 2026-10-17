@@ -13,7 +13,7 @@
                  relational-program-replace-source!
                  relational-program-query))
 
-(export scheme-native-reduction-test)
+(export scheme-runtime-reduction-test)
 
 (def (reduced-program)
   (relational-program
@@ -36,7 +36,7 @@
    (rule (best ?key ?value) (input ?key ?value))
    (limits 16 16 32)))
 
-(def scheme-native-reduction-test
+(def scheme-runtime-reduction-test
   (test-suite "checked reduction and lattice semantics"
     (test-case "count and sum group by an already bound key"
       (let (solution (relational-solve

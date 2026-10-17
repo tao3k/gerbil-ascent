@@ -8,7 +8,7 @@
         :std/encoding/json
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!)
-        (only-in :gerbil-ascent/t/native/artifact-admission
+        (only-in :gerbil-ascent/t/harness/artifact-admission
                  artifact-sources artifact-matching-sources? artifact-directory!)
         "reference-studies.ss")
 (export main)

@@ -11,7 +11,7 @@ BASE=ROOT/'.cache/ascent/factor-pilot'
 SNAP=BASE/'snapshot'
 def sha(b):return hashlib.sha256(b).hexdigest()
 def save(p,x):p.write_text(json.dumps(x,ensure_ascii=False,indent=2)+'\n')
-class Native:
+class SchemeEngine:
  def __init__(self):
   env=os.environ.copy();env['GERBIL_PATH']=str(SNAP/'.gerbil');env['GERBIL_LOADPATH']=str(SNAP/'.gerbil/lib');env['LIBRARY_PATH']=subprocess.check_output(['brew','--prefix','openssl@3'],text=True).strip()+'/lib'
   for k in ('CC','CFLAGS','CPPFLAGS','LDFLAGS','CPATH','C_INCLUDE_PATH','CPLUS_INCLUDE_PATH','NIX_CFLAGS_COMPILE','NIX_LDFLAGS','DEVELOPER_DIR','SDKROOT'):env.pop(k,None)
@@ -53,7 +53,7 @@ def freeze():
  save(BASE/'frozen-plan.json',plan);(BASE/'frozen-plan.sha256').write_text(sha((BASE/'frozen-plan.json').read_bytes())+'\n')
  return plan
 def qualification():
- native=Native();obs=[]
+ native=SchemeEngine();obs=[]
  try:
   native.call(op='init',arm='A',edges=[],identity='oracle-control')
   control,_=native.call(op='grade',durations=[1,2,3],weights=[3,2,1],order=[0,1,2])
@@ -102,7 +102,7 @@ def run(plan):
  assert json.loads((BASE/'qualification.json').read_text())['passed']
  key=provider_key();paid=BASE/'paid';paid.mkdir(exist_ok=False);records=[]
  for item in plan['order']:
-  c=next(c for c in plan['cases'] if c['id']==item['case']);arm=item['arm'];began=time.monotonic();native=Native();init,_=native.call(op='init',arm=arm,edges=c['edges'],identity=c['id']);startup=time.monotonic()-began
+  c=next(c for c in plan['cases'] if c['id']==item['case']);arm=item['arm'];began=time.monotonic();native=SchemeEngine();init,_=native.call(op='init',arm=arm,edges=c['edges'],identity=c['id']);startup=time.monotonic()-began
   seen=set()
   try:
    for phase in range(2):

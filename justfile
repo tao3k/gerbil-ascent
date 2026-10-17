@@ -21,12 +21,12 @@ gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '
 package_library := gerbil_package_prefix + '/lib'
 
 # Compilation is bounded by real inactivity, not optimized-build wall time.
-# Runtime scenarios retain their separate fixed deadlines in the native runner.
+# Runtime scenarios retain their separate fixed deadlines in the compiled runner.
 build_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision --cpu-progress --'
 test_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
-test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/native-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
+test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/compiled-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
 
 default:
     @just --list
@@ -53,7 +53,7 @@ performance-uf-selected:
     {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/performance/uf-lookup/selected-build.ss "$study" "{{ package_library }}"
     GERBIL_LOADPATH="$study/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 90s {{ gxi_command }} -:max-heap=3G,debug=q :gerbil-ascent/t/performance/uf-lookup/runner all "$study/receipts" "$study/contract.sexp"
 
-# Runtime source loading is a separate gate from compiled native qualification.
+# Runtime source loading is a separate gate from compiled compiled qualification.
 check-source-views:
     just _check-source-views
 
@@ -84,7 +84,7 @@ _test-file path heap='2G':
         test_args=(-v 5 "$test_module")
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     elif [[ -d "$test_module" ]]; then
-        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/native/test.ss batched "{{ heap }}")
+        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss batched "{{ heap }}")
         test_args=("$test_module")
     else
         runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
@@ -93,21 +93,21 @@ _test-file path heap='2G':
     inactivity="${inactivity%s}"
     {{ test_supervisor }} --startup-seconds "$inactivity" --idle-seconds "$inactivity" -- "${runner[@]}" "${test_args[@]}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-    awk -f "{{ justfile_directory() }}/t/native/assert-cases.awk" "$output_file"
+    awk -f "{{ justfile_directory() }}/t/harness/assert-cases.awk" "$output_file"
     if [[ -d "$test_module" ]]; then grep -F 'MODULE-OK ' "$output_file" >/dev/null; else grep -Fx "MODULE-OK $test_module" "$output_file" >/dev/null; fi
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
     grep -x 'OK' "$output_file" >/dev/null
     printf '[ascent-test] PASS %s (%ss)\n' "{{ path }}" "$((SECONDS - started))"
 
-# Native GxTest owns every Suite; the Scheme pool uses GERBIL_BUILD_CORES for directories.
+# Scheme GxTest owns every Suite; the Scheme pool uses GERBIL_BUILD_CORES for directories.
 test heap='2G': prepare-test-library
     ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just test-file t/qualification "{{ heap }}"
 
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:
-    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/native/build.ss library
+    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/harness/build.ss library
 
-# Native performance Suites use the declared Gerbil testing isolation profile.
+# Scheme performance Suites use the declared Gerbil testing isolation profile.
 test-performance-contracts: prepare-test-library
     #!/usr/bin/env bash
     set -euo pipefail
@@ -118,9 +118,9 @@ test-performance-contracts: prepare-test-library
     for name in ascent-withdrawal-support-performance ascent-uf-plan-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
         modules+=("$library/$name-test.ssi")
     done
-    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q t/native/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
+    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q t/harness/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
-    awk -f t/native/assert-cases.awk "$output"
+    awk -f t/harness/assert-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq "${#modules[@]}"
     grep -F 'HARNESS-OK' "$output" >/dev/null
     grep -x 'OK' "$output" >/dev/null
@@ -162,15 +162,15 @@ performance-actor-admission baseline='admission' lane='qualification': prepare-t
 performance-index-projection: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss index-projection "{{ package_library }}"
 
-# Complete fresh-engine expression execution, matched natively.
+# Complete fresh-engine expression execution, matched directly.
 performance-expression-plan: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss expression-plan "{{ package_library }}"
 
-# Complete positive proof production and independent replay, matched natively.
+# Complete positive proof production and independent replay, matched directly.
 performance-proof-replay: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss proof-replay "{{ package_library }}"
 
-# Cold typed-expression compilation with matched native semantic checks.
+# Cold typed-expression compilation with matched compiled semantic checks.
 performance-typed-domain: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss typed-domain "{{ package_library }}"
 
@@ -186,7 +186,7 @@ performance-temporal-projection: prepare-test-library
 performance-uf-commit: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss uf-commit "{{ package_library }}"
 
-# Matched cold slot compilation and native traversal with shape controls.
+# Matched cold slot compilation and compiled traversal with shape controls.
 performance-slot-projection: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss slot-projection "{{ package_library }}"
 
@@ -212,7 +212,7 @@ performance-component-scope: prepare-test-library
 performance-strata-preflight: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss strata-preflight "{{ package_library }}"
 
-# Paired ordered index build/extension/lookup and complete native solve control.
+# Paired ordered index build/extension/lookup and complete compiled solve control.
 performance-index-build: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss index-build "{{ package_library }}"
 
@@ -220,43 +220,43 @@ performance-index-build: prepare-test-library
 performance-source-log: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss source-log "{{ package_library }}"
 
-# Paired native selected frames and complete dependency updates/append lifecycle.
+# Paired compiled selected frames and complete dependency updates/append lifecycle.
 performance-selected-activation: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss selected-activation "{{ package_library }}"
 
-# Paired native storage batch preflight and complete retained-engine updates.
+# Paired compiled storage batch preflight and complete retained-engine updates.
 performance-storage-batch: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss storage-batch "{{ package_library }}"
 
-# Paired native curried index build, extension and prefix/full reads.
+# Paired compiled curried index build, extension and prefix/full reads.
 performance-index-sharing: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss index-sharing "{{ package_library }}"
 
-# Paired native engine-owned physical index entries and complete indexed solves.
+# Paired compiled engine-owned physical index entries and complete indexed solves.
 performance-index-entry: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss index-entry "{{ package_library }}"
 
-# Paired native general callbacks, ordered pattern bindings and complete solves.
+# Paired compiled general callbacks, ordered pattern bindings and complete solves.
 performance-rule-bindings: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss rule-bindings "{{ package_library }}"
 
-# Paired native finite evidence generation and verification.
+# Paired compiled finite evidence generation and verification.
 performance-finite-replay: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss finite-replay "{{ package_library }}"
 
-# Paired native inert traversal and complete certificate verification.
+# Paired compiled inert traversal and complete certificate verification.
 performance-bounded-datum: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss bounded-datum "{{ package_library }}"
 
-# Paired native complete-provenance generation.
+# Paired compiled complete-provenance generation.
 performance-provenance-index: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss provenance-index "{{ package_library }}"
 
-# Paired native source-selection over compiled declaration dependencies.
+# Paired compiled source-selection over compiled declaration dependencies.
 performance-update-dependencies: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss update-dependencies "{{ package_library }}"
 
-# Paired native index construction, extension and evaluated-key lookup.
+# Paired compiled index construction, extension and evaluated-key lookup.
 performance-scalar-index: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss scalar-index "{{ package_library }}"
 
@@ -346,10 +346,10 @@ check-scoped-witness-conformance: prepare-quint
     cd packages/proofs/lean && lake build ScopedWitness && lake env lean --run ScopedWitness.lean ../../../.cache/ascent/scoped-witness-conformance/quint.json ../../../t/qualification/fixtures/scoped-witness/conformance.json
 
 # Library-maintainer gate; no Quint toolchain is required by Python consumers.
-check-native-evidence-conformance: prepare-quint
-    mkdir -p .cache/ascent/native-evidence-conformance
-    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/NativeEvidenceLifecycle.qnt::NativeEvidenceLifecycle conformance .exit > .cache/ascent/native-evidence-conformance/quint.json
-    cmp .cache/ascent/native-evidence-conformance/quint.json t/qualification/fixtures/native-evidence/conformance.json
+check-evidence-conformance: prepare-quint
+    mkdir -p .cache/ascent/evidence-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/EvidenceLifecycle.qnt::EvidenceLifecycle conformance .exit > .cache/ascent/evidence-conformance/quint.json
+    cmp .cache/ascent/evidence-conformance/quint.json t/qualification/fixtures/evidence-lifecycle/conformance.json
 
 check-lean-proofs:
     #!/usr/bin/env bash
@@ -431,7 +431,7 @@ _operator-change-probe:
     test "$(grep -c '^SAMPLE ' "$output_file")" -eq 60
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
 
-# Exact-set gate and matched exploratory timing for native retained updates.
+# Exact-set gate and matched exploratory timing for compiled retained updates.
 operator-retained-probe: prepare-test-library
     {{ test_library_environment }} just _operator-retained-probe
 
@@ -458,7 +458,7 @@ binding-benchmark: prepare-test-library
 strata-benchmark: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/reference-run.ss strata "{{ package_library }}"
 
-# Run one unchanged SS fixture through the native qualification harness.
+# Run one unchanged SS fixture through the compiled qualification harness.
 performance-scenario name: prepare-test-library
     {{ test_library_environment }} just _performance-scenario "{{ name }}"
 
@@ -493,14 +493,14 @@ _performance:
     trap 'rm -f "$output"' EXIT
     timeout "${ASCENT_GXTEST_TIMEOUT:-180s}" {{ gxi_command }} -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/performance/ascent-scenario-performance-test.ss t/performance/ascent-binary-program-performance-test.ss t/performance/ascent-shortest-candidates-performance-test.ss 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
-    awk -f t/native/assert-cases.awk "$output"
+    awk -f t/harness/assert-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq 3
     grep -F 'HARNESS-OK' "$output" >/dev/null
     grep -x 'OK' "$output" >/dev/null
 
 check-model-source-closure:
-    {{ gxi_command }} t/native/artifact-admission.ss check
-    {{ test_library_environment }} timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --source-closure
+    {{ gxi_command }} t/harness/artifact-admission.ss check
+    {{ test_library_environment }} timeout 120s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --source-closure
 
 ascent-pairs:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-binary-program-pairs.ss
@@ -521,7 +521,7 @@ byods-lattice-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
 
 byods-lattice-session-rows:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
 
 byods-lattice-scale-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
@@ -589,32 +589,32 @@ index-lattice-rows:
 index-lattice-rows-alist:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss lattice alist
 
-_oracle-native name *flags:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle {{ name }} {{ flags }}
+_oracle-scheme name *flags:
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle {{ name }} {{ flags }}
 
 eqrel-rows:
-    @just _oracle-native eqrel-program
+    @just _oracle-scheme eqrel-program
 
 eqrel-scale-rows:
-    @just _oracle-native eqrel-program scale
+    @just _oracle-scheme eqrel-program scale
 
 eqrel-default-rows:
-    @just _oracle-native eqrel-program default
+    @just _oracle-scheme eqrel-program default
 
 trrel-rows:
-    @just _oracle-native eqrel-program trrel
+    @just _oracle-scheme eqrel-program trrel
 
 trrel-scale-rows:
-    @just _oracle-native eqrel-program trrel scale
+    @just _oracle-scheme eqrel-program trrel scale
 
 trrel-uf-rows:
-    @just _oracle-native eqrel-program trrel-uf
+    @just _oracle-scheme eqrel-program trrel-uf
 
 trrel-uf-scale-rows:
-    @just _oracle-native eqrel-program trrel-uf scale
+    @just _oracle-scheme eqrel-program trrel-uf scale
 
 byods-query-rows:
-    @just _oracle-native byods-query
+    @just _oracle-scheme byods-query
 
 typed-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-typed-program-output.ss
@@ -629,7 +629,7 @@ scc-order-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
 
 arity-repetition-rows:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
 
 clause-composition-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
@@ -662,21 +662,21 @@ divisibility-lattice-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
 
 multi-source-session-rows:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
 
 byods-session-rows:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
-# Verify the immutable paper input envelope before the native complete count.
+# Verify the immutable paper input envelope before the compiled complete count.
 steensgaard-data directory='.cache/ascent/paper-data/steensgaard':
     @PYTHONPATH="{{ justfile_directory() }}/workbench/src:{{ justfile_directory() }}/python/src" python3 -m ascent_workbench.paper_source "{{ directory }}" t/fixtures/paper-inputs/openjdk-source.json
-    @just _oracle-native steensgaard-data "{{ directory }}" 440438706
+    @just _oracle-scheme steensgaard-data "{{ directory }}" 440438706
 
 steensgaard-rows:
-    @just _oracle-native steensgaard
+    @just _oracle-scheme steensgaard
 
 grouped-eqrel-session-rows:
-    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
 oracle: build-dsl-closure
     #!/usr/bin/env bash
@@ -761,28 +761,28 @@ build-dsl-closure:
         export PATH="$GERBIL_PATH/bin:$PATH"
         compiler=({{ gxi_command }})
     fi
-    "${compiler[@]}" -:max-heap=3G,debug=q t/native/build.ss dsl
-    {{ gxi_command }} t/native/artifact-admission.ss finalize
+    "${compiler[@]}" -:max-heap=3G,debug=q t/harness/build.ss dsl
+    {{ gxi_command }} t/harness/artifact-admission.ss finalize
 
 # Counterbalanced measurements with independent Scheme truth; no speed threshold.
 check-retained-benefit:
     #!/usr/bin/env bash
     set -euo pipefail
-    {{ gxi_command }} t/native/artifact-admission.ss check
-    timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
+    {{ gxi_command }} t/harness/artifact-admission.ss check
+    timeout 120s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
 
 # Run every known DSL Suite through std/test in one AOT process.
 check-dsl-closure:
     #!/usr/bin/env bash
     set -euo pipefail
-    {{ gxi_command }} t/native/artifact-admission.ss check
-    test -x .cache/ascent/native-library/dsl-closure
+    {{ gxi_command }} t/harness/artifact-admission.ss check
+    test -x .cache/ascent/compiled-library/dsl-closure
     mkdir -p .cache/ascent/tmp
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
     trap 'rm -f "$output_file"' EXIT
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} 2>&1 | tee "$output_file"
+    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-    awk -f t/native/assert-cases.awk "$output_file"
+    awk -f t/harness/assert-cases.awk "$output_file"
     test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 15
     test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 1
     test "$(grep -cx 'OK' "$output_file")" -eq 1

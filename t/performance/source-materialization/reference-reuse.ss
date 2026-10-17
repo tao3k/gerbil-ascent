@@ -8,14 +8,14 @@
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key)
         (only-in :gerbil-ascent/t/performance/source-materialization/reference-selection gerbil-ascent-update-selection
                  gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans))
-(export gerbil-ascent-prepare-native-reuse gerbil-ascent-reuse-active-rules
+(export gerbil-ascent-prepare-session-reuse gerbil-ascent-reuse-active-rules
         gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
-        native-reuse? native-reuse-result native-reuse-affected
-        gerbil-ascent-seed-native-reuse! make-closure-seed-state)
+        session-reuse? session-reuse-result session-reuse-affected
+        gerbil-ascent-seed-session-reuse! make-closure-seed-state)
 
 ;;; Only completed native snapshots may seed an update. The capsule is private
 ;;; to this module; checked Session owns the previous and prospective inputs.
-;; native-reuse
+;; session-reuse
 ;; : (forall (r a) (-> r a (NativeReuse r a)))
 ;; : (-> EvaluationResult AffectedRelations NativeReuse)
 ;; | doc m%
@@ -24,13 +24,13 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (make-native-reuse completed affected)
+;;     (make-session-reuse completed affected)
 ;;     ;; => an internal capsule after completed-result admission
 ;;     ```
 ;;   %
-(defstruct native-reuse (result affected))
+(defstruct session-reuse (result affected))
 
-;; gerbil-ascent-prepare-native-reuse
+;; gerbil-ascent-prepare-session-reuse
 ;; : (forall (p r a c) (-> p p r a (Maybe c)))
 ;; : (-> SourceSnapshot Program EvaluationResult Analysis (Maybe NativeReuse))
 ;; | doc m%
@@ -40,14 +40,14 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)
+;;     (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)
 ;;     ;; => a private reuse capsule, or #f for unsupported callbacks/providers
 ;;     ```
 ;;   %
-(def (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)
+(def (gerbil-ascent-prepare-session-reuse previous candidate completed analysis)
   (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
   (let (affected (gerbil-ascent-update-selection previous candidate analysis))
-    (and affected (make-native-reuse completed affected))))
+    (and affected (make-session-reuse completed affected))))
 
 ;; gerbil-ascent-activate-rules
 ;; : (forall (a r) (-> a (Vector [r])))
@@ -101,7 +101,7 @@
   (if (not reuse)
     full-active-by-stratum
     (gerbil-ascent-update-active-plans
-     full-active-by-stratum (native-reuse-affected reuse))))
+     full-active-by-stratum (session-reuse-affected reuse))))
 
 ;;; A private frame groups buffers owned by the prospective engine. Neither
 ;;; the completed result nor the cached analysis retains this mutable frame.
@@ -110,7 +110,7 @@
 ;; : (-> AllRows Membership DeltaRows AllSizes DeltaSizes LatticeRows ClosureSeedState)
 (defstruct closure-seed-state (all seen delta all-size delta-size lattice-rows))
 
-;; gerbil-ascent-seed-native-reuse!
+;; gerbil-ascent-seed-session-reuse!
 ;; : (forall (r s b) (-> r s b Nat Nat Nat Nat))
 ;; : (-> NativeReuse Schema ClosureSeedState Nat Nat Nat Nat)
 ;; | doc m%
@@ -121,11 +121,11 @@
 ;;     # Examples
 ;;
 ;;     ```scheme
-;;     (gerbil-ascent-seed-native-reuse! reuse schema buffers 4 20 24)
+;;     (gerbil-ascent-seed-session-reuse! reuse schema buffers 4 20 24)
 ;;     ;; => the derived count seeded from independent completed components
 ;;     ```
 ;;   %
-(def (gerbil-ascent-seed-native-reuse! reuse schema buffers
+(def (gerbil-ascent-seed-session-reuse! reuse schema buffers
                                       source-materialized-count derived-limit output-limit)
   (let ((names (vector-ref schema 1))
         (arity (vector-ref schema 2))
@@ -140,11 +140,11 @@
         (count (vector-length (vector-ref schema 1)))
         (derived-count 0))
     (when reuse
-      (unless (native-reuse? reuse) (error "invalid native reuse capsule"))
+      (unless (session-reuse? reuse) (error "invalid native reuse capsule"))
       (let seed ((index 0))
         (when (< index count)
-          (unless (vector-ref (native-reuse-affected reuse) index)
-            (let* ((rows ((.ref (native-reuse-result reuse) 'rows-of) (vector-ref names index)))
+          (unless (vector-ref (session-reuse-affected reuse) index)
+            (let* ((rows ((.ref (session-reuse-result reuse) 'rows-of) (vector-ref names index)))
                    (base (vector-ref all index))
                    (check (vector-ref field-checkers index))
                    ;; Set admission already populated this source membership.

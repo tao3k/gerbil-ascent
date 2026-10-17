@@ -22,10 +22,10 @@
     (artifact-directory! root)
     (try
      (current-directory root)
-     (artifact-directory! (path-expand ".cache/ascent/native-library"))
+     (artifact-directory! (path-expand ".cache/ascent/compiled-library"))
      (for-each (lambda (name) (put name "fixture bytes\n"))
                '("fixture.ss" "justfile"))
-     (put ".cache/ascent/native-library/dsl-closure" "fixture executable bytes")
+     (put ".cache/ascent/compiled-library/dsl-closure" "fixture executable bytes")
      (setenv "ASCENT_DSL_BUILD_TOKEN" "test-owner")
      (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (- (time->seconds (current-time)) 181)))
      (thunk)
@@ -139,7 +139,7 @@
     (test-case "completed build beyond 180 seconds is accepted"
       (with-artifact-fixture (lambda ()
         (stage) (artifact-main "finalize") (artifact-main "check")
-        (let (receipt (artifact-read-json ".cache/ascent/native-library/dsl-closure.json"))
+        (let (receipt (artifact-read-json ".cache/ascent/compiled-library/dsl-closure.json"))
           (check (>= (hash-ref receipt "buildElapsedSeconds") 181) => #t)))))
     (test-case "staged failed compiler cannot be accepted"
       (with-artifact-fixture (lambda () (stage) (check (rejected? (lambda () (artifact-main "check"))) => #t))))
@@ -166,10 +166,10 @@
         (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
     (test-case "changed binary cannot publish or be used"
       (with-artifact-fixture (lambda ()
-        (stage) (put ".cache/ascent/native-library/dsl-closure" "changed binary")
+        (stage) (put ".cache/ascent/compiled-library/dsl-closure" "changed binary")
         (check (rejected? (lambda () (artifact-main "finalize"))) => #t)
         (stage) (artifact-main "finalize")
-        (put ".cache/ascent/native-library/dsl-closure" "changed again")
+        (put ".cache/ascent/compiled-library/dsl-closure" "changed again")
         (check (rejected? (lambda () (artifact-main "check"))) => #t))))
     (test-case "future build identity cannot freeze"
       (with-artifact-fixture (lambda ()

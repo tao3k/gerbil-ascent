@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import LatticeProjection
 
-/-! Native pending-table/event-roster representation contract. Only effective
+/-! Scheme pending-table/event-roster representation contract. Only effective
 writes enter this ledger; join evaluation and the decision to write are external.
 Hash lookup must refine the functional table and field equality below. -/
 namespace Ascent.PendingKeys

@@ -14,7 +14,7 @@ def Covered (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
 def Missing (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
     (member : Group → Scope → Prop) (branch : Scope → Vertex → Vertex → Prop) (g : Group) (s t : Vertex) :=
   candidate s t ∧ required g ∧ ¬ Covered candidate required member branch g s t
-def NativeAnswer (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
+def ScopedAnswer (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
     (member : Group → Scope → Prop) (branch : Scope → Vertex → Vertex → Prop) (s t : Vertex) :=
   candidate s t ∧ ¬ ∃ g, Missing candidate required member branch g s t
 def Answer (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
@@ -22,7 +22,7 @@ def Answer (candidate : Vertex → Vertex → Prop) (required : Group → Prop)
   candidate s t ∧ ∀ g, required g → ∃ scope, member g scope ∧ branch scope s t
 
 -- Stratified relational division is AND over required groups, OR over members.
-theorem no_missing_iff_answer : NativeAnswer candidate required member branch s t ↔
+theorem no_missing_iff_answer : ScopedAnswer candidate required member branch s t ↔
     Answer candidate required member branch s t := by
   classical
   constructor
@@ -104,8 +104,8 @@ instance (id : Nat) (g : Fin 2) (s t : Fin 4) :
     Decidable (Missing (candidate id) (required id) (member id) (branch id) g s t) := by
   unfold Missing; infer_instance
 instance (id : Nat) (s t : Fin 4) :
-    Decidable (NativeAnswer (candidate id) (required id) (member id) (branch id) s t) := by
-  unfold NativeAnswer; infer_instance
+    Decidable (ScopedAnswer (candidate id) (required id) (member id) (branch id) s t) := by
+  unfold ScopedAnswer; infer_instance
 
 set_option maxRecDepth 4096 in
 theorem finite_witness : ∀ id : Fin 512, ∀ g scope : Fin 2,
@@ -121,7 +121,7 @@ theorem finite_missing : ∀ id : Fin 512, ∀ g : Fin 2,
     Missing (candidate id.val) (required id.val) (member id.val) (branch id.val) g 0 3 := by decide
 set_option maxRecDepth 4096 in
 theorem finite_native_answer : ∀ id : Fin 512, (grade id.val)[4]? = some 1 ↔
-    NativeAnswer (candidate id.val) (required id.val) (member id.val) (branch id.val) 0 3 := by decide
+    ScopedAnswer (candidate id.val) (required id.val) (member id.val) (branch id.val) 0 3 := by decide
 theorem finite_answer (id : Fin 512) : (grade id.val)[4]? = some 1 ↔
     Answer (candidate id.val) (required id.val) (member id.val) (branch id.val) 0 3 :=
   (finite_native_answer id).trans no_missing_iff_answer

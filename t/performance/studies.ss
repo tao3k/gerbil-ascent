@@ -1,9 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-;;; Declaration only: compile inputs, native entry and fixed scenario arguments.
+;;; Declaration only: compile inputs, compiled entry and fixed scenario arguments.
 (export (struct-out study) performance-studies find-study)
-(defstruct study (name modules entry scenarios native? arguments keep-going? receipt-suffix) final: #t)
+(defstruct study (name modules entry scenarios compiled? arguments keep-going? receipt-suffix) final: #t)
 (def performance-studies
   (list
     (make-study 'uf-owner-plans
@@ -51,8 +51,8 @@
       "t/performance/source-cut-benchmark.ss" '("untouched" "wide-batch" "small")
       #f '(scenario receipt) #f "-final.sexp")
     (make-study 'actor-admission
-      '("program/actor-round" "t/performance/actor-admission/reference" "t/performance/actor-coordinator/reference" "t/performance/actor-admission-benchmark" "t/performance/actor-admission-native")
-      "t/performance/actor-admission-native.ss" '("wide" "backlog" "small")
+      '("program/actor-round" "t/performance/actor-admission/reference" "t/performance/actor-coordinator/reference" "t/performance/actor-admission-benchmark" "t/performance/actor-admission-entry")
+      "t/performance/actor-admission-entry.ss" '("wide" "backlog" "small")
       #t '(scenario library receipt baseline) #f ".sexp")
     (make-study 'index-projection
       '("table/funs" "table/access" "t/performance/index-projection/reference-funs" "t/performance/index-projection/reference-access" "t/performance/index-projection-benchmark")

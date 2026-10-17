@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-// Finite two-support premise plus one residual. Native proof validity is separate.
+// Finite two-support premise plus one residual. Scheme proof validity is separate.
 module SharedPremiseReuse {
   pure def bit(id: int, place: int): bool = (id / place) % 2 == 1
   pure def premise(id: int): bool =

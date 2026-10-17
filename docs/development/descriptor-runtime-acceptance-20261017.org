@@ -108,6 +108,14 @@ build passed all 175 jobs in 55.6 seconds. Guard recorded exit 0, direct-child
 reaping and zero additional helper threads. This supersedes the earlier warm
 build as local evidence for the corrected library invocation.
 
+The subsequent =1a2dac9= run passed complete Lean/Quint qualification and all
+runtime, semantic and performance jobs. The later Python inventory test failed
+because it still asserted 56 models / 377 obligations. The corrected test keeps
+those exact assertions for the original inventory, additionally requires
+57 models / 383 obligations overall, and checks the cache model's six controls
+and exact counterexample properties/exits. No model or expected failure is
+removed to satisfy the test.
+
 Remote acceptance belongs to the current pushed commit's complete CI run in
 [[https://github.com/tao3k/gerbil-ascent/pull/1][PR #1]]. Local passes, previous commits' green runs and this report do not
 by themselves establish current-head remote acceptance.

@@ -25,9 +25,12 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        self.assertEqual(len(plans), 56)
-        self.assertEqual(sum(map(len, plans.values())), 377)
-        self.assertEqual(sum(len(v) for k, v in plans.items()
+        original = {name: items for name, items in plans.items() if name != "CachePublication"}
+        self.assertEqual(len(original), 56)
+        self.assertEqual(sum(map(len, original.values())), 377)
+        self.assertEqual(len(plans), 57)
+        self.assertEqual(sum(map(len, plans.values())), 383)
+        self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)
         self.assertEqual(set(o.name for o in plans["TrajectoryEvidenceChain"]),
@@ -40,6 +43,17 @@ class FormalTests(unittest.TestCase):
                           "publish-unreviewed", "publish-stale",
                           "ignore-counterexample", "select-action",
                           "ignore-rule-revision", "same-count-replacement"})
+        cache = {o.name: o for o in plans["CachePublication"]}
+        self.assertEqual(set(cache), {"correct", "late-revoke", "early-publish",
+                                      "mask-error", "mask-witness", "skip-witness"})
+        self.assertEqual(cache["correct"].expected, 0)
+        for name, invariant in (("late-revoke", "RevokedAliases"),
+                                ("early-publish", "CompletePublication"),
+                                ("mask-error", "ErrorIdentity"),
+                                ("mask-witness", "ErrorIdentity"),
+                                ("skip-witness", "CompletePublication")):
+            self.assertEqual(cache[name].expected, 12)
+            self.assertEqual(cache[name].property, invariant)
         delta = {o.name: o for o in plans["DeltaClosure"]}
         self.assertEqual(set(delta), {"correct", "drop", "early", "allold", "overlap"})
         for name, invariant in (("drop", "Complete"), ("early", "Complete"),

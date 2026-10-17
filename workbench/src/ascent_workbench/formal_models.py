@@ -186,7 +186,7 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                                   'GroupedQueryExact FrozenPlanExact CompleteKeyExact '
                                   'TinyOwnerExact RoutedPointExact PointMemberExact '
                                   'CompactQueryExact CompactRangeExact CompactFallbackExact '
-                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact'},
+                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact OwnerWorkspaceReuseExact'},
  'RectangleCompaction': {'constants': 'Mutation = "none"',
                          'invariants': 'OrderedExact WeightedCount IndependentReaders'},
  'RectangleExport': {'constants': 'Mutation = "none"',
@@ -339,7 +339,8 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
                  ('borrow', 'FrozenExact', 12),
                  ('retire', 'FrozenExact', 12),
                  ('reject', 'RejectedStable', 12)),
- 'WeightedExport': (('route-share', 'SharedAxisRouteExact', 12),
+ 'WeightedExport': (('owner-buffer-stale', 'OwnerWorkspaceReuseExact', 12),
+                    ('route-share', 'SharedAxisRouteExact', 12),
                     ('owner-occurrence', 'OwnerConstructionExact', 12),
                     ('owner-representative', 'OwnerConstructionExact', 12),
                     ('owner-plan-order', 'OwnerConstructionExact', 12),

@@ -27,6 +27,18 @@ class UFOwnerPlanTests(unittest.TestCase):
                                       ([0, 2], [1, False]), ([1, 1], [False, 0]),
                                       ([1, 2, 1], [0, False, 0])]:
                     cases.append([axes, list(owners), columns, keys, indexed])
+        # Many unrelated descriptors force the sparse gather/sort branch.
+        sparse_axes = [[i // 2, 128 + i] for i in range(64)]
+        for key in range(32):
+            for column in (1, 2):
+                for indexed in (False, True):
+                    cases.append([sparse_axes, list(range(64)), [column], [key], indexed])
+        # Dense and sparse keys interleave within one frozen plan table.
+        mixed_axes = [[-1, -2 if i < 12 else -3, i // 2, 128 + i] for i in range(24)]
+        for key in (-1, -2, -3, 0, 1):
+            for column in (1, 2):
+                for indexed in (False, True):
+                    cases.append([mixed_axes, list(range(24)), [column], [key], indexed])
         source = ROOT / 'core/relation-view.ss'
         digest = hashlib.sha256(source.read_bytes()).hexdigest()
         cache = ROOT / '.cache/ascent/uf-owner-oracle'

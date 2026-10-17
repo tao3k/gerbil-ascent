@@ -250,6 +250,22 @@ module WeightedExport {
         val axes = List(List((0,10),(0,11),(1,12)),List((0,20),(1,21)))
         PublishOwnerPlan(axes,ds,key) == DirectOwnerPlan(axes,ds,key)
       }))
+  pure def FillOwnerSlots(entries: List[(int,int)], before: int -> List[int]): int -> List[int] =
+    entries.foldl(before,(slots,e) => slots.set(e._1,List(e._2)))
+  pure def PublishOwnerSlots(ds: List[int], slots: int -> List[int]): List[(int,int)] =
+    ds.foldl((0,List()),(acc,_) => (acc._1 + 1,
+      if (slots.get(acc._1).length() > 0) acc._2.append((acc._1,slots.get(acc._1).nth(0))) else acc._2))._2
+  val OwnerWorkspaceReuseExact = q.phase != "new" implies {
+    val axes = List(List((0,10),(1,11)),List((0,20),(2,21)),List((1,30),(2,31)))
+    val ds = List(0,1,2,0)
+    val empty = Map(0 -> List(),1 -> List(),2 -> List(),3 -> List())
+    Set((0,1),(1,2),(2,0)).forall(pairKeys => {
+      val old = FillOwnerSlots(GatherOwnerPlan(axes,ds,pairKeys._1),empty)
+      val cleared = if (Mutation == "owner-buffer-stale") old else empty
+      val after = FillOwnerSlots(GatherOwnerPlan(axes,ds,pairKeys._2),cleared)
+      PublishOwnerSlots(ds,after) == DirectOwnerPlan(axes,ds,pairKeys._2)
+    })
+  }
   type State = {blocks: List[Block], held: List[Row], public: List[Row], sibling: List[Row],
     count: int, phase: str, retired: bool, mutated: bool, ready: Set[int], reads: int -> List[Row]}
   var q: State

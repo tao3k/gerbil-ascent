@@ -104,6 +104,24 @@
         (let (rows (gerbil-ascent-view-rows view '(2) '(0)))
           (set-car! (cddr (car rows)) 99)
           (check-equal? (gerbil-ascent-view-rows view) all))))
+    (test-case "ordinal workspace reuse cannot publish an earlier key's owners"
+      (let* ((axes '((0 1) (0 2) (1 2)))
+             (view (gerbil-ascent-rectangle-view
+               (map (lambda (owner ordinal)
+                 (let (axis (list-ref axes owner)) (make-rectangle (list ordinal) axis axis)))
+                 '(0 1 2 0) '(0 1 2 3)) 16 16 #t))
+             (all (gerbil-ascent-view-rows view)))
+        ;; Every key has a different proper subset of owners. Whichever hash
+        ;; key is published first, stale ordinal slots corrupt a later plan.
+        (for-each (lambda (key)
+          (let (expected (filter (lambda (row) (= (caddr row) key)) all))
+            (check-equal? (gerbil-ascent-view-rows view '(2) (list key)) expected)
+            (for-each (lambda (visit)
+              (let (actual [])
+                (visit view '(2) (list key) (lambda (prefix left right)
+                  (set! actual (cons (append prefix (list left right)) actual))))
+                (check-equal? (reverse! actual) expected)))
+              (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!)))) '(0 1 2))))
     (test-case "shared routes publish the first stored representative of equal keys"
       (let* ((stored (string-copy "key")) (equal-copy (string-copy "key"))
              (a (list stored equal-copy 1)) (b (list (string-copy "key") 2))

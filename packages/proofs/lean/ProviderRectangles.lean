@@ -1188,3 +1188,36 @@ theorem self_axis_owner_route [DecidableEq α] (rs : List (Rectangle α)) (key :
     have tail := ih (fun q h => self q (by simp [h]))
     simp only [List.filter_cons, head, tail]
 end Ascent.ProviderRectangles
+
+namespace Ascent.ProviderRectangles
+/-- Dense plan construction borrows one bounded ordinal workspace. Clear the
+published extent before reusing it; no slot is retained in a frozen plan. -/
+def publishOwnerSlots (width : Nat) (slots : Nat → Option α) : List α :=
+  (List.range width).filterMap slots
+
+def clearOwnerSlots (width : Nat) (slots : Nat → Option α) : Nat → Option α :=
+  fun i => if i < width then none else slots i
+
+theorem cleared_owner_slots_empty (width : Nat) (slots : Nat → Option α) :
+    publishOwnerSlots width (clearOwnerSlots width slots) = [] := by
+  apply List.filterMap_eq_nil_iff.mpr
+  intro i member
+  simp [clearOwnerSlots, List.mem_range.mp member]
+
+/-- A fresh key's covered slots fully determine its ordered publication,
+regardless of the former workspace contents outside that bounded extent. -/
+theorem owner_slot_publication (width : Nat) (actual expected : Nat → Option α)
+    (written : ∀ i, i < width → actual i = expected i) :
+    publishOwnerSlots width actual = publishOwnerSlots width expected := by
+  have agree : ∀ (indices : List Nat),
+      (∀ i ∈ indices, actual i = expected i) →
+      indices.filterMap actual = indices.filterMap expected := by
+    intro indices
+    induction indices with
+    | nil => intro _; rfl
+    | cons i rest ih =>
+      intro same
+      simp only [List.filterMap_cons, same i (by simp),
+        ih (fun j member => same j (by simp [member]))]
+  exact agree (List.range width) (fun i member => written i (List.mem_range.mp member))
+end Ascent.ProviderRectangles

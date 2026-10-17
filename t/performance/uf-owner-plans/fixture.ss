@@ -11,6 +11,8 @@
          (owners (case scenario ((small) 1) ((tiny) 2) (else 64)))
          (axes (map (lambda (owner)
            (case scenario
+             ((sparse-routing) (cons (quotient owner 2)
+                                (map (lambda (i) (+ size i (* owner size))) (iota (- size 1)))))
              ((sparse sparse-lifecycle) (cons 0 (map (lambda (i) (+ 1 i (* owner size))) (iota (- size 1)))))
              ((disjoint) (map (lambda (i) (+ i (* owner size))) (iota size)))
              (else (iota size)))) (iota owners)))

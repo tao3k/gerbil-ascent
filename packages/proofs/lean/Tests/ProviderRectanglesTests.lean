@@ -207,3 +207,6 @@ example : (orderedOwnerOccurrences [[2, 0], [1]]).map (fun i => i + 10) = [10, 1
 #print axioms owner_occurrence_count
 
 #print axioms Ascent.ProviderRectangles.self_axis_owner_route
+
+#print axioms Ascent.ProviderRectangles.cleared_owner_slots_empty
+#print axioms Ascent.ProviderRectangles.owner_slot_publication

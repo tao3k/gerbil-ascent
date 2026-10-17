@@ -9,7 +9,7 @@
     (make-study 'uf-owner-plans
       '("core/relation-view" "t/performance/uf-owner-plans/reference-relation-view" "t/performance/uf-owner-plans/fixture" "t/performance/paired-study" "t/performance/uf-owner-plans/runner")
       "t/performance/uf-owner-plans/runner.ss"
-      '("sparse" "reused" "dense" "sparse-lifecycle" "reused-lifecycle" "dense-lifecycle" "asymmetric" "disjoint" "small" "tiny" "unindexed")
+      '("sparse" "reused" "dense" "sparse-lifecycle" "reused-lifecycle" "dense-lifecycle" "sparse-routing" "asymmetric" "disjoint" "small" "tiny" "unindexed")
       #t '(scenario receipt) #t ".ss")
     (make-study 'uf-selector-init
       '("core/relation-view" "t/performance/uf-selector-init/reference-relation-view" "t/performance/uf-selector-init/fixture" "t/performance/paired-study" "t/performance/uf-selector-init/runner")

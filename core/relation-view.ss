@@ -511,29 +511,50 @@
 ;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 ;; Multiple right owners publish ordered descriptor selections once. Each plan
 ;; spine is owned by construction and borrows immutable bucket references.
-(def (ordered-right-plans routes uniform?)
+(def (ordered-right-plans routes blocks uniform?)
   (and routes uniform?
-    ;; Decide whether a plan is needed before binding its tables. Immutable
-    ;; bindings keep every member insertion out of mutable closure boxes.
     (hash-find (lambda (_ hits) (pair? (cdr hits)))
       (vector-ref routes (- (vector-length routes) 1)))
-    (let (plans (make-hash-table))
+    (let ((plans (make-hash-table)) (width (length blocks)) (workspace #f))
       (hash-for-each (lambda (value hits)
+          ;; Bucket membership and ordinals are already frozen. The lexical
+          ;; publisher selects a representation once, before visiting entries.
+          (defrule (owner-selections publish!)
+            (for-each (lambda (hit)
+              (with (([singleton . bucket] hit))
+                (for-each (lambda (entry)
+                  (publish! (car entry) (cdr entry) singleton))
+                  (rectangle-bucket-blocks bucket)))) hits))
         (when (pair? (cdr hits))
-          ;; Routes already partition exact owner occurrences and retain the
-          ;; first stored singleton. Visit only owners of this shared key;
-          ;; unique values in the same component require no plan work.
-          (let (selected (with-list-builder (emit!)
-                 (for-each (lambda (hit)
-                   (with (([singleton . bucket] hit))
-                     (for-each (lambda (entry)
-                       (emit! (make-rectangle-selection (car entry) (cdr entry) singleton)))
-                       (rectangle-bucket-blocks bucket)))) hits)))
-            ;; Only fresh selection spines are sorted. Borrowed bucket blocks,
-            ;; captured member lists and their duplicate occurrences stay intact.
+          (let* ((count (foldl (lambda (hit n) (+ n (rectangle-bucket-count (cdr hit)))) 0 hits))
+                 ;; An ordinal scan avoids sorting dense/repeated-owner plans.
+                 ;; Sparse keys retain gather/sort instead of scanning the cut.
+                 (dense? (>= (* count (integer-length count)) width))
+                 (selected
+                  (if dense?
+                    (let ()
+                      (defrule (place! ordinal block singleton)
+                        (vector-set! workspace ordinal (make-rectangle-selection ordinal block singleton)))
+                      (unless workspace (set! workspace (make-vector width #f)))
+                      (owner-selections place!)
+                      (with-list-builder (emit!)
+                        (let publish ((ordinal 0))
+                          (when (< ordinal width)
+                            (let (entry (vector-ref workspace ordinal))
+                              (when entry
+                                ;; Clear every occupied slot before the next
+                                ;; key; no scratch escapes in the frozen plan.
+                                (vector-set! workspace ordinal #f)
+                                (emit! entry)))
+                            (publish (+ ordinal 1))))))
+                    (with-list-builder (emit!)
+                      (defrule (collect! ordinal block singleton)
+                        (emit! (make-rectangle-selection ordinal block singleton)))
+                      (owner-selections collect!)))))
             (hash-put! plans value
-              (list-sort! (lambda (a b) (< (rectangle-selection-ordinal a)
-                                         (rectangle-selection-ordinal b))) selected)))))
+              (if dense? selected
+                (list-sort! (lambda (a b) (< (rectangle-selection-ordinal a)
+                                           (rectangle-selection-ordinal b))) selected))))))
         (vector-ref routes (- (vector-length routes) 1)))
       plans)))
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
@@ -553,7 +574,7 @@
          ;; Complete keys bind every coordinate once. Reuse the existing
          ;; membership schema and borrow owner hits without query state.
          (complete-columns (and routes uniform? (or query-columns (iota (vector-length routes)))))
-         (right-plans (and (not small?) (ordered-right-plans routes uniform?)))
+         (right-plans (and (not small?) (ordered-right-plans routes blocks uniform?)))
          ;; A self-component cut has the same owner axis on both sides.
          ;; Its frozen descriptor plan can serve either endpoint unchanged.
          (left-plans (and self? right-plans)))

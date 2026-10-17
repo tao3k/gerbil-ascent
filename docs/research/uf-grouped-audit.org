@@ -80,3 +80,43 @@ Initial native-link environment failures and the sandbox ps refusal are retained
 only completed native runs are accepted. The fixed binary uses the SDK's native
 compiler and OpenSSL library path. Public PR qualification must identify the
 exact tested SHA separately from any later concurrent commit.
+
+* Accepted source tests and owner-plan follow-up
+
+The copied local prefix initially contained 123 compiled semantic-test interfaces
+from a different worktree state. The first complete-directory attempt timed out
+at 180 seconds before admitting a Case; it remains rejected. Removing only those
+copied generated test products, retaining every source module and the same
+prepared support library, produced 170 modules / 1361 Cases in 139 seconds.
+The four-file startup control and the focused 14-Case UF query module also pass.
+Linux CI at 722d016 independently passed the complete entry in 148 seconds,
+plus source consumers, runtime source views and native DSL/retained/closure checks.
+The failed performance lane did not cancel or skip those semantic checks.
+
+At that exact SHA, compact-query grouped passed with CPU 493 -> 428 microseconds,
+18/20 wins and allocation 1148544 -> 1050240 bytes. The later owner-plan reused
+and reused-lifecycle controls failed their original 0.80 CPU targets. These are
+separate failures, retained in ci-performance-722-first.log; no CI rerun is used
+to replace that result.
+
+The authorized integration includes the existing owner-plan constructor repair:
+for k selected descriptors among n captured descriptors, dense selections
+(k * integer-length(k) >= n) publish through an n-slot ordinal workspace;
+sparse selections retain gather/sort. Every occupied slot is cleared before
+reuse for another key. Only immutable descriptor selections enter the frozen
+plan; the workspace never becomes query state. This removes dense repeated
+sorting while preserving owner occurrences, stored representatives and order.
+
+The 11 original owner-plan scenarios retain their exact fixture behavior and
+contract bytes. One sparse-routing control is added. Local runs pass all 12
+original-policy scenarios; their process inventories include unrelated work, so
+these timings are exploratory and excluded from isolated performance claims.
+Exact-head CI on its dedicated performance runner is the final measurement gate.
+
+The integration adds a stale-workspace native regression and expands the Python
+independent ordered-product oracle to 742 inputs across three Scheme consumers.
+Lean proves bounded slot clearing and ordered publication independence. Quint
+checks workspace reuse and requires owner-buffer-stale to violate exactly
+OwnerWorkspaceReuseExact with exit 12. These local checks and all five formal
+registry tests pass. The complete current-head Lean/Quint corpus remains required
+in CI; a focused model pass is not a full-system or native extraction proof.

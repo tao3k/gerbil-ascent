@@ -5,6 +5,7 @@ mod facts;
 mod kernels;
 mod lattice;
 mod matching;
+mod policy;
 mod values;
 pub(crate) use budget::Budget;
 pub use budget::{Cancellation, Limits};

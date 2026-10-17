@@ -12,7 +12,7 @@ require LeanPoo from git
 
 @[default_target]
 lean_lib AscentProof where
-  roots := #[`RayonPublication, `AccountingAbstraction, `EvidenceInteraction, `ClosedDslLowering, `Trajectory, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
+  roots := #[`ExecutionPolicy, `ExecutionRendering, `ScheduledExecution, `CompiledCertificate, `PhysicalBuckets, `RayonPublication, `AccountingAbstraction, `EvidenceInteraction, `ClosedDslLowering, `Trajectory, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FiniteFlowPacking, `PoloniusInitialization, `ProviderRectangles, `ProviderRouting, `CurriedDictionary, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
              `ScopedWitness, `BranchScopedWitness, `ScopedComposition, `ScopedReachabilityMask, `ScopedQuery, `MovieCastQuery, `MaterializedMovieQuery, `RetainedInference, `DomainEvidence, `FeedbackConformance, `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `BitmapWorklist, `GraphWorklist,

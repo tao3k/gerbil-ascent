@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 module ReadyComponents {
+  import ExecutionPolicy.* from "./ExecutionPolicy"
   const Tasks: Set[int]
   const Capacity: int
   const Mutation: str
@@ -12,7 +13,7 @@ module ReadyComponents {
   action init = q' = {queued: Tasks, active: Set(), done: Set(), stopped: false, returned: false, badDispatch: false,
     offered: Set(), waiting: Set(), merged: Set(), snapshot: Tasks.mapBy(_ => Set())}
   action Dispatch(t: int): bool = all {not(q.stopped), not(q.returned), q.queued.contains(t), q.active.size() < Capacity,
-    Pred(t).subseteq(q.done) or Mutation == "prerequisite",
+    component_ready(Pred(t).exclude(q.done).size()) or Mutation == "prerequisite",
     q' = {...q, badDispatch: q.badDispatch or not(Pred(t).subseteq(q.done)), queued: q.queued.exclude(Set(t)), active: q.active.union(Set(t)),
       snapshot: q.snapshot.set(t, if (Mutation == "snapshot") Set() else q.merged)}}
   action Offer(t: int): bool = all {not(q.returned), q.active.exclude(q.offered).contains(t),
@@ -24,7 +25,9 @@ module ReadyComponents {
     q' = {...q, active: q.active.exclude(Set(t)), done: q.done.union(Set(t)),
       merged: if (q.stopped or Mutation == "tail") q.merged else q.merged.union(Set((t,"tail")))}}
   action Cancel = all {not(q.returned), not(q.stopped), q' = {...q, stopped: true}}
-  action Return = all {not(q.returned), (q.active == Set() and (q.stopped or q.queued == Set())) or Mutation == "early", q' = {...q, returned: true}}
+  action Return = all {not(q.returned), (q.active == Set() and (q.stopped or
+    joined_round(Tasks.size() - q.queued.size(),q.done.size(),q.active.size(),q.queued.size(),q.stopped,true)))
+    or Mutation == "early", q' = {...q, returned: true}}
   action taskStep = {nondet t = Tasks.oneOf(); any {Dispatch(t), Offer(t), Merge(t), Complete(t)}}
   action step = any {Cancel, Return, taskStep}
   val Partition = all {q.queued.union(q.active).union(q.done) == Tasks, q.queued.intersect(q.active) == Set(), q.queued.intersect(q.done) == Set(), q.active.intersect(q.done) == Set()}

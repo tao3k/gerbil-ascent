@@ -1,4 +1,5 @@
 //! Rust-owned storage/index kernels and Rayon scheduling for Scheme AOT rules.
+use super::policy;
 use super::values::Row;
 use super::{Bindings, Budget, Cancellation, Cell, Fact, FactSet, Limits, Pattern};
 use crate::{
@@ -190,17 +191,20 @@ impl Batch {
         pivot: Option<usize>,
         budget: &Budget,
     ) -> Self {
-        let index = if pivot == Some(step) {
+        let index = if policy::delta_lane(step, pivot.unwrap_or(0), pivot.is_some()) {
             &store.delta[atom.relation]
         } else {
             &store.all[atom.relation]
         };
         // A Set witness belongs to its first fresh body occurrence. Lattice
         // refinements are not set insertion: preserve their existing traversal.
-        let excluded = pivot
-            .filter(|pivot| step < *pivot)
-            .filter(|_| store.lattices[atom.relation].is_none())
-            .map(|_| &store.delta[atom.relation]);
+        let excluded = policy::old_lane(
+            step,
+            pivot.unwrap_or(0),
+            pivot.is_some(),
+            store.lattices[atom.relation].is_none(),
+        )
+        .then_some(&store.delta[atom.relation]);
         let extend = |bindings: &[Bindings]| join_group(index, atom, bindings, budget, excluded);
         #[cfg(feature = "rayon")]
         if store.parallel && self.0.len() >= TASK_ROWS * 2 {
@@ -578,13 +582,21 @@ impl Round<'_> {
             .collect();
         let apply = |(rule, pivot): &(&Rule, Option<usize>)| {
             kernel(rule, &self.store, *pivot, self.budget);
+            1_usize
         };
         #[cfg(feature = "rayon")]
-        if self.store.parallel {
-            tasks.par_iter().for_each(apply);
-            return self;
+        let completed = if self.store.parallel {
+            tasks.par_iter().map(apply).sum()
+        } else {
+            tasks.iter().map(apply).sum()
+        };
+        #[cfg(not(feature = "rayon"))]
+        let completed = tasks.iter().map(apply).sum();
+        if !policy::joined_round(tasks.len(), completed, 0, 0, false, true) {
+            self.budget.evaluation_error(crate::Error::Evaluation(
+                "execution completion certificate rejected".into(),
+            ));
         }
-        tasks.iter().for_each(apply);
         self
     }
     fn publish(mut self) -> Self {
@@ -626,7 +638,9 @@ impl Round<'_> {
         };
         #[cfg(not(feature = "rayon"))]
         let admitted: usize = tasks.into_iter().map(|task| task.commit(self.budget)).sum();
-        self.done = admitted == 0 || !self.budget.poll();
+        // Keep the original polling boundary: zero admissions are checked by
+        // the outer budget.result() before a stratum can return successfully.
+        self.done = !policy::round_continue(admitted, admitted == 0 || self.budget.poll());
         self.first = false;
         self
     }
@@ -926,3 +940,7 @@ fn decode_rows(
 #[cfg(test)]
 #[path = "../../tests/unit/delta.rs"]
 mod delta_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/physical_index.rs"]
+mod physical_index_tests;

@@ -35,6 +35,8 @@
     "program/planning"
     "core/ordered-call"
     "core/expression-plan"
+    "core/execution-policy"
+    "core/positive-certificate"
     "core/positive-plan"
     "program/index"
     "program/scheme-checked"

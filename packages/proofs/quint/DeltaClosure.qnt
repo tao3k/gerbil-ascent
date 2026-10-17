@@ -3,6 +3,7 @@
 // Frozen-round semantics with independently scheduled tasks. No fairness claim:
 // partial/failed executions may stop, but can never publish complete answers.
 module DeltaClosure {
+  import ExecutionPolicy.* from "./ExecutionPolicy"
   const Mutation: str
   pure val Nodes = Set(0,1)
   pure val Pairs = tuples(Nodes,Nodes)
@@ -23,13 +24,17 @@ module DeltaClosure {
       complete:false, failed:false, first:true, oldWork:0, duplicate:false, visibleP:Set(), visibleQ:Set()} }
   pure def Witnesses(rows: Set[(int,int)]): Set[(int,int,int)] =
     Triples.filter(t => rows.contains((t._1,t._2)) and rows.contains((t._2,t._3)))
+  def Lane(position: int, pivot: int, row: (int,int)): bool =
+    if (delta_lane(position, pivot, true)) s.dq.contains(row)
+    else if (old_lane(position, pivot, true, Mutation != "overlap"))
+      s.q.contains(row) and not(s.dq.contains(row))
+    else s.q.contains(row)
   action Dispatch(task: int): bool = all {not(s.complete), not(s.failed), s.queued.contains(task),
     s' = {...s, queued:s.queued.exclude(Set(task)), active:s.active.union(Set(task))}}
   action Finish(task: int): bool = {
     val witnesses = Witnesses(s.q)
-    val left = witnesses.filter(t => s.dq.contains((t._1,t._2)))
-    val right = witnesses.filter(t => s.dq.contains((t._2,t._3)) and
-      (Mutation == "overlap" or not(s.dq.contains((t._1,t._2)))))
+    val left = witnesses.filter(t => Lane(0,0,(t._1,t._2)) and Lane(1,0,(t._2,t._3)))
+    val right = witnesses.filter(t => Lane(0,1,(t._1,t._2)) and Lane(1,1,(t._2,t._3)))
     val selected = if (s.first or Mutation == "allold") witnesses else left.union(right)
     val outputs = if (task == 0) s.edges else if (task == 1) selected.map(t => (t._1,t._3)) else s.p
     all {not(s.complete), not(s.failed), s.active.contains(task),
@@ -46,7 +51,7 @@ module DeltaClosure {
     val nextQ = s.q.union(s.nq)
     val scheduled = (if (s.nq != Set()) Set(1) else Set()).union(
       if (s.np != Set() and Mutation != "drop") Set(2) else Set())
-    val closed = s.np == Set() and s.nq == Set()
+    val closed = not(round_continue(s.np.size() + s.nq.size(), true))
     all {not(s.complete), not(s.failed), s.queued == Set(), s.active == Set(),
       s' = {...s, p:nextP, q:nextQ, dp:s.np, dq:s.nq, np:Set(), nq:Set(), first:false,
         complete:closed or (Mutation == "drop" and scheduled == Set()),

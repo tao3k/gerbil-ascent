@@ -101,6 +101,9 @@ impl Graph {
             .map(|rule| RuleAdmission::new(&program, &names, &mut values).admit(rule))
             .collect::<Result<Vec<_>>>()?;
         let indexes = prepare_indexes(&mut rules, program.relations.len());
+        if !super::certificate::check(&program, &rules, &indexes, &values) {
+            return Err(invalid("positive compiler certificate rejected"));
+        }
         let strata = stratify(&program.relations, &rules)?;
         Ok(Self {
             program,

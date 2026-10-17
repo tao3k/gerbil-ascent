@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
+        (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-actor-complete gerbil-ascent-joined-round)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
@@ -112,7 +113,7 @@
                       ;; The sentinel and spine belong to this coordinator alone.
                       (pending (cons #f (map values tasks)))
                       (assigned (make-hash-table-eq))
-                      (active (make-hash-table-eq)) (active-count 0)
+                      (active (make-hash-table-eq)) (active-count 0) (completed-count 0)
                       (workers []) (idle []) (awaiting #f) (failed? #f) (failure #f))
                   (def (stop! exception)
                     (unless failed? (set! failure exception) (set! failed? #t))
@@ -204,13 +205,15 @@
                                        (set! idle (cons worker idle))
                                        (if (and (pair? payload) (eq? (car payload) 'failed))
                                          (stop! (cdr payload))
-                                         (unless failed?
-                                           (when (and (pair? payload) (eq? (car payload) 'finished))
+                                         (when (gerbil-ascent-actor-complete failed?
+                                                 (and (pair? payload) (eq? (car payload) 'finished)))
+                                           (begin
                                              (unless (null? (cdr payload))
                                                (when (canceled?) (error "ASCENT actor round canceled"))
                                                (for-each (lambda (candidate) (merge (car candidate) (cdr candidate)))
                                                          (cdr payload))))
-                                           (completed! task))))))))))
+                                           (completed! task)
+                                           (set! completed-count (+ completed-count 1)))))))))))
                              (else (void)))
                            (loop))))))
                   (try
@@ -219,6 +222,11 @@
                          ((pair? (cdr pending)) (error "ASCENT ready task dependency deadlock")))
                    (finally
                     (for-each (lambda (entry) (thread-send (car entry) 'stop)) workers)
-                    (for-each (lambda (entry) (thread-join! (cdr entry))) workers))))))))))
+                    (for-each (lambda (entry) (thread-join! (cdr entry))) workers)
+                    (unless failed?
+                      (unless (and (= active-count (hash-length active))
+                                   (gerbil-ascent-joined-round (hash-length assigned) completed-count
+                                     active-count (length (cdr pending)) failed? #t))
+                        (error "ASCENT actor completion certificate rejected"))))))))))))
     (if (and (pair? result) (eq? (car result) 'failed))
       (raise (cdr result)) result)))

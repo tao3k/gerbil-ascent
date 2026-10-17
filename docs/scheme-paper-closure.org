@@ -5,6 +5,12 @@
 #+DATE: 2026-10-05
 #+STATUS: built-in engineering baseline qualified; full workload replication remains open
 
+The [[file:development/execution-correspondence-20261017.org][2026-10-17 execution correspondence update]] connects shared checked
+decisions to actual compiler admission, index traversal and Actor/Rayon owners.
+It records the exact remaining extraction and representation edges. Do not
+upgrade this inventory to universal source refinement merely because those
+runtime controls and the complete CI pass.
+
 * Current engineering acceptance and new-paper research (2026-10-09)
 
 The built-in BYODS Provider/frontier/shared-index engineering baseline is

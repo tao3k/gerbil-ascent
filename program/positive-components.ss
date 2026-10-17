@@ -5,6 +5,7 @@
 ;;; Only the coordinator owns global unique-row charging, ready admission and
 ;;; completed frontiers. Planning and one worker's local closure have owners.
 (import "component-plan.ss"
+        (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-component-ready)
         (only-in :std/iter for/fold in-list)
         (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
@@ -70,7 +71,7 @@
            (vector-set! sizes index (+ 1 (vector-ref sizes index))))))
      canceled?
      (lambda (component)
-       (and (zero? (vector-ref remaining (positive-component-id component)))
+       (and (gerbil-ascent-component-ready (vector-ref remaining (positive-component-id component)))
             (begin
               (vector-set! snapshots (positive-component-id component)
                 (gerbil-ascent-component-snapshot component frontier sizes)) #t)))

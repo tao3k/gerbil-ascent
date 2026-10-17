@@ -4,6 +4,14 @@
 #+DATE: 2026-10-04
 #+STATUS: lexical, recursive and finite-signature kernels proved; native refinement open
 
+The [[file:development/execution-correspondence-20261017.org][executable correspondence update]] adds admission checks over real positive
+compiler descriptors, Lean-generated Scheme/Rust/Quint control decisions,
+operational bucket construction laws and terminal execution ledgers. Its explicit
+remaining boundaries supersede any interpretation that these additions alone
+constitute whole-executable refinement. In particular, generated-file equality
+is checked in formal CI, while handwritten checker decoding and specialized
+matcher extraction remain distinct proof obligations.
+
 The current [[file:scheme-actor-runtime-design.org][actor runtime decision]] adds scheduling, cancellation and
 publication obligations to the refinement plan. =AtomicBinding.lean= specifies
 ordinary association-list variable/literal/wildcard binding on equal-arity rows,

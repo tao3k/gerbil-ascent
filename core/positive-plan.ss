@@ -5,6 +5,8 @@
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "ordered-call.ss" dispatch-ordered-call)
+        (only-in "positive-certificate.ss" gerbil-ascent-positive-certificate?)
+        (only-in "execution-policy.ss" gerbil-ascent-old-lane gerbil-ascent-delta-lane)
         (only-in "relation-view.ss" relation-view? gerbil-ascent-for-each-row
                  gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts)
         (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
@@ -206,8 +208,11 @@
                (map (lambda (head)
                       (let (terms (map (lambda (term) (lower term #t)) (vector-ref head 1)))
                         (vector head terms (compile-parts-output terms)))) heads)))
-        (vector outputs (compile-action-segments actions) count pure?
-                (length (filter (lambda (action) (vector? (vector-ref action 0))) actions)))))))
+        (let (plan (vector outputs (compile-action-segments actions) count pure?
+                    (length (filter (lambda (action) (vector? (vector-ref action 0))) actions))))
+          (when (and pure? (not (gerbil-ascent-positive-certificate? heads body plan)))
+            (error "ASCENT positive compiler certificate rejected"))
+          plan)))))
 
 ;;; Return the ordered callback prefix and its atom suffix as separate values.
 ;;; Structural recursion constructs only the detached prefix, without mutation.
@@ -366,19 +371,22 @@
                (or (= delta-at -1)
                    (and (<= 0 delta-at) (< delta-at (vector-ref plan 4)))))
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
-  (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
-                        frame
-                        delta-at 0 rows-access emit-row! checkpoint! parts-access old-rows-access))
+  ;; Decode Option<Nat> once for the entire traversal, not at every join
+  ;; continuation. Generated policies retain primitive hot loops.
+  (let (has-pivot? (>= delta-at 0))
+    (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
+                          frame (if has-pivot? delta-at 0) has-pivot?
+                          0 rows-access emit-row! checkpoint! parts-access old-rows-access)))
 
 ;;; PartsAccess is private exact canonical selection, synchronous and complete.
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint! parts-access old-rows-access)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth)
-    (visit-positive-atoms! (cdr atoms) heads frame delta-at next-depth
+    (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
                           rows-access emit-row! checkpoint! parts-access old-rows-access))
   (defrule (accept matched?)
     (begin
@@ -393,16 +401,17 @@
      (case (vector-ref action 0)
        ((callbacks) (when ((vector-ref action 1) frame) (resume depth)))
        (else
-        (let (old? (and old-rows-access (< depth delta-at)))
+        (let* ((delta? (gerbil-ascent-delta-lane depth pivot has-pivot?))
+               (old? (gerbil-ascent-old-lane depth pivot has-pivot? (and old-rows-access #t))))
         (unless (and (not old?) parts-access
-                  (parts-access (vector-ref action 0) frame (= depth delta-at) (vector-ref action 2)
+                  (parts-access (vector-ref action 0) frame delta? (vector-ref action 2)
                     (lambda (prefix left right)
                       (accept ((or (vector-ref action 4) (vector-ref action 3))
                                prefix left right frame)))))
           (let (rows (if old?
                       (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
                       (rows-access (vector-ref action 0) frame
-                                   (= depth delta-at) (vector-ref action 2))))
+                                   delta? (vector-ref action 2))))
             (cond
               ((or (pair? rows) (null? rows))
                (let candidates ((remaining rows))

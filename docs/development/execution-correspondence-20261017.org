@@ -1,0 +1,207 @@
+#+title: Executable semi-naive correspondence
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Requirement and scope
+
+The reference is Section 4 of [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent: Seamless Deductive Inference via Macros]].
+Its positive evaluation uses dependency components, indexes on known columns,
+and total/delta/new partitions. Correctness and work avoidance are separate
+obligations. Actor mailboxes, Rayon publication and resource refusal additionally
+need implementation-specific obligations; they are not results established by
+the paper.
+
+This change connects executable control decisions to checked Lean definitions,
+validates actual positive compiler descriptors before admission, and derives
+lookup coverage from bucket construction and extension. It does not claim a
+machine-checked theorem for the complete Scheme or Rust executable. In
+particular, a successful finite trace, source digest, or green CI is not a proof
+that arbitrary host code refines the model.
+
+* Executed definitions
+
+=packages/proofs/lean/ExecutionPolicy.lean= defines a small typed predicate
+syntax, its denotation, and Scheme, Rust and Quint renderers. Its checked-in
+outputs are:
+
+- =core/execution-policy.ss=;
+- =rust/ascent/src/execution/policy.rs=;
+- =packages/proofs/quint/ExecutionPolicy.qnt=.
+
+Formal CI checks Lean and then regenerates all three outputs, comparing their
+complete contents. This is an executable definition check, rather than a hash
+allowlist. Scheme and Rust import these files directly; Quint imports the same
+rendered decisions into =DeltaClosure= and =ReadyComponents=.
+
+=ExecutionRendering.lean= independently tokenizes and parses the emitted
+prefix/infix expressions and kernel-checks that every installed body recovers
+the original typed AST. The resulting theorems quantify over arbitrary numeric
+and Boolean environments. This is translation validation of a finite code
+artifact, not finite input sampling. It also checks parameter coverage and
+uniqueness. Unsupported comparison operators and changed operators are retained
+as rejection controls. No =native_decide= or additional axiom is used.
+
+| Decision | Actual call site | Unbounded property |
+|----------+------------------+--------------------|
+| old/delta lane | =visit-positive-atoms!=; =Batch::join= | Lanes are disjoint; old requires a prior occurrence and Set semantics |
+| readable index key | =gerbil-ascent-positive-certificate?= | A nonliteral key reads a slot strictly below the prior atom prefix |
+| Actor completion | Actor owner =done= handling | Failed or unfinished outcomes cannot release dependencies |
+| component readiness | =gerbil-ascent-run-positive-components!= | The remaining predecessor count must be zero |
+| continue round | =Round::publish= | Refused execution cannot continue; zero admissions stop iteration |
+| joined round | Actor after monitor joins; Rayon after task reduction | Success requires all assigned tasks complete, no active or pending tasks, and joined workers |
+
+Scheme policies expand hygienically, binding each argument exactly once before
+branching. This preserves the eager argument boundary without adding a
+cross-module call per join continuation. The actual side-effect-order and
+once-only argument controls exercise the expanded code. Rust uses inline
+functions. The no-pivot sentinel in Scheme is normalized once per traversal to a nonnegative number plus an
+explicit =has-pivot= flag. Rust's =Option<usize>= uses the same representation.
+Lattices retain their existing overlapping refinement behavior. Set-only
+first-fresh exclusion is never applied to lattice refinement.
+
+* Actual descriptor admission
+
+=core/positive-certificate.ss= checks callback-free compiled descriptors before
+they enter the positive-plan cache. An independently owned symbol map checks
+first-occurrence slot assignment; it does not consume the compiler's slot hash.
+The check streams over terms and uses one vector for nonempty column selection,
+avoiding repeated list scans and reconstructed action spines.
+Checks cover source atom identity, every fresh/bound/literal/wildcard action,
+ordered and repeated index columns, prior-prefix key readability, head slot
+projection, frame extent and delta atom extent. Failure raises an error; it is
+not accepted by falling back to a partially checked descriptor.
+
+=rust/ascent/src/graph/certificate.rs= independently compares the admitted
+positive graph with the original typed declarations. It checks dense variable
+assignment, decoded literals, relation identity, key positions, the actual
+physical index address, head projection and frame extent. Other clause fragments
+retain typed admission; skipping them does not grant a positive-Set certificate.
+
+=CompiledCertificate.lean= proves that acceptance of a decoded descriptor gives
+the canonical actions and readable keys, and composes acceptance with the
+existing finite-vector execution theorem. The checkers deliberately execute only
+at metadata admission, not on every candidate row or hash lookup.
+
+The composed =accepted_source_binding= theorem relates an accepted descriptor's
+finite-vector Boolean result directly to ordinary association-list source
+binding. =constructed_bucket_binding= and =constructed_scheme_bucket_binding=
+then prove that actual append/prepend constructor semantics preserve the entire
+ordinary binding output sequence, including order and duplicate occurrences,
+without an =IndexExact= premise.
+
+* Physical indexes
+
+=PhysicalBuckets.lean= starts with an empty bucket function and models the
+actual update operations: Scheme prepends each row, reversing fresh buckets
+after build; Rust appends each row. Induction over arbitrary row batches proves
+exact filtered lookup, complete extension, preservation of duplicate
+occurrences, and isolation of unrelated keys. It does not assume =IndexExact=
+as an input premise.
+
+The executable controls use the real physical constructors and lookups, with
+scalar, empty, reordered and repeated-column keys. They compare every result
+with an independent projection/filter and verify that extending an index does
+not mutate a previously returned bucket. Existing delta tests check same-size
+version replacement, cancellation while constructing old lanes, and nonlinear
+recursion before head deduplication. Rust additionally checks set insertion
+refusal of an already admitted row.
+
+* Scheduling, failure and evidence
+
+The Actor owner counts successful completions only after the final tail has
+merged and the completion callback has returned. Before successful return,
+all monitors are joined and the generated predicate checks assigned/completed
+counts, active membership and pending work. Failure retains the original
+stop, credit refusal, drain and first-exception behavior.
+
+Rayon reduces one completion for each returned task before publication. A
+completion certificate mismatch records an evaluation error. The outer
+=budget.result()= still runs before each round and after each stratum, including
+a zero-admission final round. Stopping iteration therefore cannot turn budget
+exhaustion, cancellation or an evaluation error into a completed result.
+Failed Actor tasks occupy a separate drained count in the trace model and
+never count as successfully delivered completions. A successful balanced
+terminal certificate implies zero drained tasks.
+No per-row polling interval, resource bound, provenance support rule or
+publication permission is relaxed.
+
+=ScheduledExecution.lean= proves ledger balance for arbitrary-length
+dispatch/completion/refusal/drain traces, persistent refusal, and the exact terminal
+certificate. Quint continues to require counterexamples for dropped dependency
+work, early completion, old-only joins, overlapping pivots, missing tails and
+premature dependency admission. These bounded protocol controls complement,
+rather than replace, the unbounded theorems.
+
+* Explicit remaining proof boundaries
+
+The following are still obligations for an end-to-end source refinement theorem:
+
+1. Mechanically relate the handwritten descriptor checkers and Scheme/Rust
+   descriptor decoding to =CompiledCertificate.accept=. Runtime rejection and
+   mutation controls do not prove that correspondence by themselves.
+2. Relate the specialized Scheme parts matchers and mutable hash/index cache
+   implementation to the operational bucket and slot semantics, including UF
+   views and custom Provider representations.
+3. Extract actual SCC construction/head projection and mailbox/publication
+   transitions into the component/trace semantics. Shared guards and terminal
+   ledgers close decision drift and detect incomplete execution; they do not
+   prove every intermediate host action.
+4. Target compilation and primitive semantics remain trusted: the independent
+   parser proves denotation of installed policy expressions, while function
+   headers, actual argument wiring, Gambit, Rust/LLVM, lawful scalar equality,
+   hash get/update coherence and Rayon/mailbox primitives are representation
+   boundaries. This is narrower than trusting an arbitrary renderer, but it
+   does not verify these host implementations.
+
+Broader paper coverage remains tracked in [[file:../scheme-paper-closure.org][the paper closure inventory]]:
+user lattice/Provider laws, host termination, additional language constructs,
+and matched whole-application experiments need their own executable evidence.
+They must not be inferred from the positive finite Set fragment.
+
+* Local acceptance and retained failures
+
+The frozen implementation was checked on macOS with the existing released
+Gerbil/Gambit SDK (Gerbil =1cfb032=, Gambit =ea114fc=). No upstream source or
+release was changed for this work. Each Scheme VM retains one execution thread;
+Rust-owned execution uses Rayon. Rust Ascent remains a development-only oracle.
+
+| Gate | Result | Boundary |
+|------+--------+----------|
+| Complete Scheme qualification | 171 modules, 1371 Cases; 142 seconds | Original 180-second deadline, 2 GiB heap, four workers |
+| Rust/PyO3 runtime | 94 tests across seven suites; strict Clippy passed | Separate Scheme archive staging in the stale local prefix was not accepted; fresh CI must check that crate |
+| Lean | Complete 168-job build passed; 33 added theorems | The remaining source refinement obligations above still apply |
+| Quint | 56 models, 377 obligations passed | 70 positive checks and 307 required counterexamples, original exploration bounds |
+| Generated policy source | All three complete files matched regeneration | Scheme, Rust and Quint artifacts checked after Lean succeeds |
+| Existing compiled performance contracts | Ten modules, 21 Cases; 35.252 seconds | Original 120-second deadline and 2 GiB heap; supplemental CI benchmarks remain separate gates |
+| Measurement isolation | 112 compiler-process audit samples; no interference | No speedup claim is inferred from the contract verdict |
+| Actual compiler source mutation | Rejected with exit 70 | Changing the first fresh slot is rejected before cache admission |
+| Actual Actor source mutation | Rejected with exit 70 | Changing the final finished payload to stopped cannot silently lose the tail and report success |
+
+The source mutations were compiled and exercised in isolated temporary module
+directories. The compiler produced =ASCENT positive compiler certificate
+rejected=; the Actor produced =ASCENT actor completion certificate rejected=.
+These controls exercise production admission hooks, rather than only calling
+the checker predicates directly. They remain falsification controls, not a
+replacement for the missing source-equivalence proofs.
+
+Two earlier candidates exhausted the unchanged 180-second Scheme deadline.
+Those failures remain failures. The first descriptor checker repeatedly scanned
+lists for indexed columns; a 100-plan diagnostic at arity 1024 measured 0.112262
+CPU seconds against 0.005216 for the unchanged compiler control. Streaming
+validation and a single column vector reduced that diagnostic to 0.005463.
+These process CPU observations identify a metadata regression; they are not a
+statistically admitted application speedup experiment.
+
+The final implementation also normalizes the pivot once per traversal and uses
+hygienic policy expansion with eager, once-only argument bindings. The complete
+Scheme suite subsequently passed within the original bound. An unchanged
+compiler/Actor/component control passed 171 modules and 1370 Cases in 141
+seconds; differing host conditions and the additional candidate Case preclude a
+whole-suite speedup claim. Resource polling, refusal propagation, provenance
+support and performance thresholds were not weakened to obtain acceptance.
+
+Current-commit remote CI must independently accept all Scheme semantic and
+performance jobs, Rust/PyO3 including the fresh Scheme archive, oracle jobs,
+repository policy and formal checks. The PR acceptance section records the
+actual commit and run URL after submission; historical green runs do not admit
+this change.

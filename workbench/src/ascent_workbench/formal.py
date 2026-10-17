@@ -321,6 +321,19 @@ def main() -> int:
                 code, output = lean.result()
                 if code:
                     raise RuntimeError("Lean failed: " + output)
+            # Compare generated executable definitions, not source digests or
+            # captured test outputs. Runtime and Quint import these exact files.
+            for language, target in (
+                ("scheme", "core/execution-policy.ss"),
+                ("rust", "rust/ascent/src/execution/policy.rs"),
+                ("quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
+            ):
+                code, source = runner.run(
+                    ["lake", "env", "lean", "--run", "ExecutionPolicy.lean", language],
+                    "execution-policy-" + language, ROOT / "packages/proofs/lean")
+                if code or source != (ROOT / target).read_text():
+                    raise RuntimeError("execution policy rendering differs: " + target)
+                print("EXECUTION-POLICY-OK " + target, flush=True)
             print("ALL-FORMAL-CHECK-OK", flush=True)
         else:
             results = runner.quint_checks(models)

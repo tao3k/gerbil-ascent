@@ -130,6 +130,12 @@ impl Data {
         self.hash_into(&mut hash);
         format!("{:x}", hash.finalize())
     }
+    pub(crate) fn digest_slice(values: &[Self]) -> String {
+        let mut hash = Sha256::new();
+        hash.update(b"ascent.data.v1\0");
+        Self::hash_list(values, &mut hash);
+        format!("{:x}", hash.finalize())
+    }
     fn hash_into(&self, hash: &mut Sha256) {
         match self {
             Self::Null => hash.update([0]),

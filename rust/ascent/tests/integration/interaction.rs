@@ -223,6 +223,37 @@ fn trajectory_exploration_is_read_only_and_open_world() {
         ("modelIdentity", "model".into()),
     ]);
     ledger.append(attempt).unwrap();
+    let context = ledger.context().unwrap();
+    assert!(ledger.exploration_current(&context).unwrap());
+    let mut other = gerbil_ascent::Trajectory::new(&engine, "task", "source-a").unwrap();
+    other.append(Data::object([
+        ("id", "attempt-1".into()),
+        ("kind", "attempt".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input-b".into()),
+    ])).unwrap();
+    assert_eq!(other.context().unwrap().field("eventCount").unwrap(),
+               context.field("eventCount").unwrap());
+    assert_ne!(other.context().unwrap().field("prefixIdentity").unwrap(),
+               context.field("prefixIdentity").unwrap());
+    let prefix = context.field("prefixIdentity").unwrap().text().unwrap();
+    assert_eq!(prefix.len(), 64);
+    assert_eq!(ledger.explore(&Data::object([
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input-a".into()),
+    ])).unwrap().field("prefixIdentity").unwrap(), &Data::from(prefix));
+    let mut forged = context.clone();
+    if let Data::Map(fields) = &mut forged {
+        fields.insert("prefixIdentity".into(), "different-content".into());
+    }
+    assert!(!ledger.exploration_current(&forged).unwrap());
+    assert_eq!(context.field("actionSelected").unwrap(), &Data::Bool(false));
+    let observed = &context.field("attempts").unwrap().list().unwrap()[0];
+    assert_eq!(observed.field("earlierEvent").unwrap(), &Data::from("attempt-1"));
+    assert!(observed.get("resultReference").is_none());
     let candidate = Data::object([
         ("questionIdentity", "question".into()),
         ("operationIdentity", "test".into()),
@@ -326,6 +357,8 @@ fn trajectory_exploration_reference_requires_current_successful_review() {
     for recorded in ledger.snapshot().unwrap().field("events").unwrap().list().unwrap() {
         other.append(recorded.clone()).unwrap();
     }
+    assert_eq!(ledger.context().unwrap().field("prefixIdentity").unwrap(),
+               other.context().unwrap().field("prefixIdentity").unwrap());
     assert!(!other.exploration_current(&reviewed_packet).unwrap());
     let mismatched = Data::object([
         ("questionIdentity", "question".into()),

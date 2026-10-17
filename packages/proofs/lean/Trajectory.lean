@@ -70,6 +70,123 @@ theorem invalidation_starts_new_cost_epoch (s : Ledger) :
 
 theorem current_evidence_is_reusable (s : Ledger) : reusable (evidence s) := rfl
 
+/- The observation API carries no preferred next operation. A known comparison
+   and an idea absent from the packet are both choices made by the agent. -/
+inductive Observation where
+  | comparable | changedPremise | unknownPremise | historical | checkedResult
+  deriving DecidableEq, Repr
+
+inductive AgentChoice where
+  | revisit (attempt : Nat)
+  | novel (identity : String)
+  deriving DecidableEq, Repr
+
+structure ReasoningState where
+  observations : List Observation := []
+  agentChoice : Option AgentChoice := none
+  deriving DecidableEq, Repr
+
+def observe (s : ReasoningState) (fact : Observation) : ReasoningState :=
+  { s with observations := fact :: s.observations }
+
+def choose (s : ReasoningState) (choice : AgentChoice) : ReasoningState :=
+  { s with agentChoice := some choice }
+
+theorem observation_does_not_choose (s : ReasoningState) (fact : Observation) :
+    (observe s fact).agentChoice = s.agentChoice := rfl
+
+theorem any_choice_remains_available (s : ReasoningState)
+    (fact : Observation) (choice : AgentChoice) :
+    (choose (observe s fact) choice).agentChoice = some choice := rfl
+
+theorem observation_cannot_override_choice (s : ReasoningState)
+    (fact : Observation) (choice : AgentChoice) :
+    (observe (choose s choice) fact).agentChoice = some choice := rfl
+
+structure PrefixBinding where
+  eventCount : Nat
+  contentIdentity : String
+  snapshotIdentity : String
+  deriving DecidableEq, Repr
+
+def prefixCurrent (packet : PrefixBinding) (count : Nat)
+    (contentIdentity snapshotIdentity : String) : Bool :=
+  packet.eventCount == count && packet.contentIdentity == contentIdentity &&
+    packet.snapshotIdentity == snapshotIdentity
+
+theorem current_prefix_requires_content_identity (packet : PrefixBinding)
+    (count : Nat) (contentIdentity snapshotIdentity : String)
+    (h : prefixCurrent packet count contentIdentity snapshotIdentity = true) :
+    packet.contentIdentity = contentIdentity := by
+  simp [prefixCurrent] at h
+  exact h.1.2
+
+theorem current_prefix_requires_snapshot_identity (packet : PrefixBinding)
+    (count : Nat) (contentIdentity snapshotIdentity : String)
+    (h : prefixCurrent packet count contentIdentity snapshotIdentity = true) :
+    packet.snapshotIdentity = snapshotIdentity := by
+  simp [prefixCurrent] at h
+  exact h.2
+
+example : prefixCurrent ⟨1, "old-content", "snapshot"⟩ 1 "new-content" "snapshot" = false := by decide
+example : prefixCurrent ⟨1, "content", "old-snapshot"⟩ 1 "content" "new-snapshot" = false := by decide
+
+/- A revised comparison rule has its own evidence lifecycle. An independent
+   reviewer supplies `supported`; this type does not grade the rule itself. -/
+structure Counterexample where
+  id : Nat
+  digest : String
+  deriving DecidableEq, Repr
+
+structure RuleRevision where
+  source : Nat := 0
+  counterexamples : List Counterexample := []
+  draftSource : Option Nat := none
+  ruleRevision : Nat := 0
+  reviewedRevision : Option Nat := none
+  reviewedExamples : Option (List Counterexample) := none
+  supported : Bool := false
+  published : Bool := false
+  deriving DecidableEq, Repr
+
+def recordCounterexample (s : RuleRevision) (item : Counterexample) : RuleRevision :=
+  { s with counterexamples := s.counterexamples ++ [item], published := false }
+
+def draftRule (s : RuleRevision) : RuleRevision :=
+  { s with draftSource := some s.source, ruleRevision := s.ruleRevision + 1, reviewedRevision := none, reviewedExamples := none, supported := false, published := false }
+
+def reviewRule (s : RuleRevision) (supported : Bool) : RuleRevision :=
+  { s with reviewedRevision := some s.ruleRevision, reviewedExamples := some s.counterexamples, supported := supported, published := false }
+
+def publishRule (s : RuleRevision) : RuleRevision :=
+  if s.draftSource == some s.source ∧
+     s.reviewedRevision == some s.ruleRevision ∧
+     s.reviewedExamples == some s.counterexamples ∧ s.supported then
+    { s with published := true }
+  else { s with published := false }
+
+def invalidateRule (s : RuleRevision) : RuleRevision :=
+  { s with source := s.source + 1, published := false }
+
+theorem counterexample_is_retained (s : RuleRevision) (item : Counterexample) :
+    (recordCounterexample s item).counterexamples = s.counterexamples ++ [item] := rfl
+
+theorem counterexample_revokes_publication (s : RuleRevision) (item : Counterexample) :
+    (recordCounterexample s item).published = false := rfl
+
+theorem invalidation_revokes_rule (s : RuleRevision) :
+    (invalidateRule s).published = false := rfl
+
+theorem publication_requires_current_review (s : RuleRevision)
+    (h : (publishRule s).published = true) :
+    s.draftSource = some s.source ∧
+    s.reviewedRevision = some s.ruleRevision ∧
+    s.reviewedExamples = some s.counterexamples ∧ s.supported = true := by
+  unfold publishRule at h
+  split at h <;> simp_all
+
+example : (publishRule ({ source := 1, draftSource := some 1, ruleRevision := 1, reviewedRevision := some 1, counterexamples := [{ id := 7, digest := "new" }], reviewedExamples := some [{ id := 7, digest := "old" }], supported := true } : RuleRevision)).published = false := by decide
+
 example : (verify (call (call {} 80) 30)).first = some 110 := by decide
 example : (call (verify (call (call {} 80) 30)) 50).first = some 110 := by decide
 end Ascent.Trajectory

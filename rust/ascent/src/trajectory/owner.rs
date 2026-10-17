@@ -223,7 +223,8 @@ impl Trajectory {
         ) && *packet.field("ownerIdentity")?.natural()? == self.handle.into()
             && packet.field("sourceIdentity")?.text()? == self.state.source
             && *packet.field("generation")?.natural()? == self.state.generation.into()
-            && *packet.field("eventCount")?.natural()? == self.state.events.len().into())
+            && *packet.field("eventCount")?.natural()? == self.state.events.len().into()
+            && packet.field("prefixIdentity")?.text()? == Data::digest_slice(&self.state.events))
     }
     /// # Errors
     /// Rejects a closed engine; repeated closure returns the same detached observation.

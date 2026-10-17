@@ -36,15 +36,19 @@ class TrajectoryIntegration(unittest.TestCase):
             context = trajectory.context()
             self.assertTrue(trajectory.exploration_current(context))
             self.assertEqual(set(context), {'schema', 'sourceIdentity', 'generation',
-                                            'eventCount', 'ownerIdentity', 'attempts',
+                                            'eventCount', 'prefixIdentity', 'ownerIdentity', 'attempts',
                                             'executionAuthorized', 'actionSelected'})
+            self.assertEqual(len(context['prefixIdentity']), 64)
+            self.assertFalse(trajectory.exploration_current(
+                dict(context, prefixIdentity='different-content')))
             self.assertEqual(context['attempts'][0]['earlierEvent'], 'event:1')
             self.assertNotIn('resultReference', context['attempts'][0])
             self.assertFalse(context['actionSelected'])
             packet = trajectory.explore(candidate)
             self.assertEqual(set(packet), {'schema', 'sourceIdentity', 'generation',
-                                           'eventCount', 'ownerIdentity', 'comparisons',
+                                           'eventCount', 'prefixIdentity', 'ownerIdentity', 'comparisons',
                                            'executionAuthorized', 'actionSelected'})
+            self.assertEqual(packet['prefixIdentity'], context['prefixIdentity'])
             self.assertEqual(set(packet['comparisons'][0]),
                              {'earlierEvent', 'relation', 'changedPremises',
                               'unknownPremises', 'currentEvidenceReference'})

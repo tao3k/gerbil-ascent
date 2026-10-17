@@ -25,14 +25,21 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        self.assertEqual(len(plans), 55)
-        self.assertEqual(sum(map(len, plans.values())), 363)
+        self.assertEqual(len(plans), 56)
+        self.assertEqual(sum(map(len, plans.values())), 376)
         self.assertEqual(sum(len(v) for k, v in plans.items()
-                             if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain"}), 348)
+                             if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
+                                          "TrajectoryRuleEvolution"}), 348)
         self.assertEqual(set(o.name for o in plans["TrajectoryEvidenceChain"]),
                          {"correct", "guess-equal", "skip-check", "drop-history",
                           "stale-packet", "stale-result", "wrong-contract", "write",
-                          "close-options", "authorize"})
+                          "close-options", "authorize", "force-next",
+                          "context-leaks-result", "same-count-prefix"})
+        self.assertEqual(set(o.name for o in plans["TrajectoryRuleEvolution"]),
+                         {"correct", "future-leak", "late-snapshot", "erase-counterexample",
+                          "publish-unreviewed", "publish-stale",
+                          "ignore-counterexample", "select-action",
+                          "ignore-rule-revision", "same-count-replacement"})
         delta = {o.name: o for o in plans["DeltaClosure"]}
         self.assertEqual(set(delta), {"correct", "drop", "early", "allold", "overlap"})
         for name, invariant in (("drop", "Complete"), ("early", "Complete"),
@@ -56,7 +63,8 @@ class FormalTests(unittest.TestCase):
         self.assertIn("GenerationCutoff = 4", plans["NativeSessionPublication"][0].configuration.constants)
 
     def test_trajectory_faults_are_checked_as_state_invariants(self):
-        for model in ("TrajectoryExploration", "TrajectoryEvidenceChain"):
+        for model in ("TrajectoryExploration", "TrajectoryEvidenceChain",
+                      "TrajectoryRuleEvolution"):
             for fault in obligations(configuration(model, {}))[1:]:
                 with self.subTest(model=model, fault=fault.name):
                     self.assertEqual(fault.expected, 12)

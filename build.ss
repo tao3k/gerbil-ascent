@@ -175,11 +175,24 @@
             "-cc-options" ,c-options "-ld-options" ,library-link-options)
       (exe: "interface/develop" bin: "ascent-develop")))))
 (export gerbil-ascent-library-modules main)
-(def build-library
-  (let ()
-    (defbuild-script (gerbil-ascent-build-spec)
+(def (build-library . args)
+  (def (run spec)
+    (defbuild-script spec
       optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-    main))
+    (apply main args))
+  (def spec (gerbil-ascent-build-spec))
+  (def (executable? target)
+    (and (pair? target) (eq? (car target) exe:)))
+  (if (or (null? args) (equal? (car args) "compile"))
+    (begin
+      (run (filter (lambda (target) (not (executable? target))) spec))
+      ;; gsc -link regenerates shared dependency C files. Each standard make
+      ;; call drains its pending jobs before the next executable starts.
+      (for-each (lambda (target)
+                  (displayln "... link target " (cadr target))
+                  (run [target]))
+                (filter executable? spec)))
+    (run spec)))
 
 (def (main . args)
   (let* ((build? (or (null? args) (equal? (car args) "compile")))

@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/encoding/json "../native/artifact-admission"
+(import :std/test :std/encoding/json "../harness/artifact-admission"
         (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
         (only-in :gerbil-ascent/bindings/artifact record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))

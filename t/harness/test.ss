@@ -47,9 +47,9 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; Exhaustive corpora own independent processes. The first completed ordinary
-;; stripe can accept them, instead of serializing the solves behind the other
-;; modules of a long static stripe. Scheme profiles still own capacity/options.
+;; Exhaustive corpora own independent processes. Queue them first so their
+;; solves overlap ordinary source preparation instead of waiting for a whole
+;; stripe to finish. Scheme profiles still own capacity and runtime options.
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -64,8 +64,8 @@
     (if (string=? mode "batched")
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (append (striped-module-files compatible (testing-interface-worker-count (length files)))
-                isolated))
+        (append isolated
+                (striped-module-files compatible (testing-interface-worker-count (length files)))))
       files)))
 (def (main mode heap . paths)
   (let* ((files (module-files paths))

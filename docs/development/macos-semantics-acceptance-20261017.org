@@ -1,0 +1,63 @@
+#+title: macOS source semantic test scheduling
+
+* Scope and unchanged acceptance
+
+The default source semantic runner retains 171 modules, 1379 Cases, 12 workers
+on the observed macOS host, 14 batches, a 180-second complete-run deadline,
+and a 2G per-child heap limit. GxTest still discovers and executes every
+Suite and Case. No runtime, cancellation, resource-limit, provenance, compiler,
+SDK, or upstream code is changed.
+
+* Diagnosis
+
+The earlier 3bb7b4d run exceeded its original deadline. Its complete logs are
+retained; it is not a successful semantic acceptance. GxTest prepares all
+modules in a batch before emitting its harness and Case logs, so an empty
+worker log is not evidence of a deadlock.
+
+A bounded load-only diagnostic used the same 14 batches and 12-worker
+capacity. It measured source import and exported Suite construction without
+executing Cases. The slowest batch took approximately 54 seconds. This is
+substantial preparation work, but does not itself account for the original
+180-second expiry. These diagnostic processes are not semantic acceptance.
+
+The isolated exhaustive corpora were queued after the 12 ordinary stripes.
+The earlier batch log creation times show candidate-flow dispatched after
+148.92 seconds and semi-naive after 163.40 seconds. The semi-naive Case only
+started around 165.77 seconds into that run. Its remaining budget therefore
+included almost none of the complete-run deadline. Source preparation,
+ordinary Cases, and the exhaustive solves formed a long critical path.
+
+* Minimal correction
+
+Queue the already isolated exhaustive batches before the ordinary stripes.
+Their solves can overlap ordinary source preparation. The two exhaustive
+batches, ordinary stripe membership, process isolation, runtime options,
+worker capacity, and all assertions remain intact. The existing scheduling
+Case now checks exact exhaustive-first order, complete inventory, unchanged
+ordinary stripes and identical runtime options; it continues to check fully
+isolated mode separately.
+
+This is a test scheduling correction, not evidence of a runtime parallel
+speedup or reduced compiler work. Compilation and source preparation remain
+visible costs. The runner does not extend its deadline or discard slow Cases.
+
+* Acceptance evidence
+
+The first complete candidate run passed all 171 modules and 1379 Cases in
+79 seconds, exit 0, with the original 12-worker and 180-second configuration.
+The Case inventory matches the preceding successful Linux CI exactly. Both
+exhaustive workers were dispatched at the start of the run.
+
+A second control uses a fresh isolated source checkout and package prefix,
+retaining only declared dependencies and the same released SDK. All ASCENT
+dynamic, static and executable artifacts were removed from that copied prefix
+before building. This control separates cold build preparation from the same
+bounded full semantic run, and avoids treating diagnostic cache warming as
+proof of acceptance. The first cold control passed all 171 modules and 1379 Cases in 164 seconds,
+exit 0, within the unchanged 180-second limit. Production build took 270.861
+seconds and the complete test preparation command took 54.881 seconds
+(including 51.541 seconds inside the test-library builder). Both exhaustive
+batches were dispatched at the beginning; the Case inventory matches the
+preceding successful Linux CI exactly. Test preparation rebuilt no production
+modules. Exact-head full CI is recorded in PR #1 after the push.

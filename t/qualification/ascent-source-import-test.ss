@@ -57,7 +57,10 @@
                          (striped-module-files (list-sort string<? normal)
                            (testing-interface-worker-count (length files))))))
         (check-equal? (list-sort string<? (apply append batches)) files)
-        (check-equal? batches (append baseline (map list heavy)))
+        ;; The independent exhaustive jobs must start before ordinary stripes.
+        ;; Otherwise the original deadline can expire before either gets CPU.
+        (check-equal? batches (append (map list heavy) baseline))
+        (check-equal? (list (car batches) (cadr batches)) (map list heavy))
         (for-each (lambda (file)
           (check-equal? (testing-interface-runtime-options-for profiled file)
                         (testing-interface-runtime-options-for profiled (car normal)))) heavy)

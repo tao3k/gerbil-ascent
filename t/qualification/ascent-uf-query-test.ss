@@ -17,6 +17,48 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "unindexed scan preserves callback failure identity and stored values"
+      (let* ((token (list 'stored)) (axis (list #f token))
+             (view (gerbil-ascent-rectangle-view
+                     (list (make-rectangle '(g) axis axis)
+                           (make-rectangle '(g) axis axis)) 8 8 #f)))
+        (check-consumers view '(0 1 0) '(g #f g))
+        (for-each (lambda (visit)
+          (let ((failure (list 'stop)) (caught #f) (seen []))
+            (with-exception-catcher
+              (lambda (error) (set! caught error))
+              (lambda ()
+                (visit view '(0 1 0) '(g #f g)
+                  (lambda (prefix left right)
+                    (set! seen (cons (append prefix (list left right)) seen))
+                    (when (pair? right)
+                      (check (eq? right token) => #t)
+                      (raise failure))))))
+            (check (eq? caught failure) => #t)
+            (check-equal? (reverse seen) (list '(g #f #f) (list 'g #f token)))))
+          (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
+    (test-case "unindexed scan retains global key admission and per-block range order"
+      (let (view (gerbil-ascent-rectangle-view
+                  (list (make-rectangle '(g) '(1) '(3))
+                        (make-rectangle [] '(1) '(3))) 2 4 #f))
+        (for-each (lambda (visit)
+          (let (seen [])
+            (check-exception
+              (visit view '(2) '(3) (lambda (row) (set! seen (cons row seen)))) exception?)
+            (check-equal? (reverse seen) '((g 1 3))))
+          (for-each (lambda (key)
+            (let (calls 0)
+              (check-exception (visit view '(2) key
+                (lambda (_row) (set! calls (+ calls 1)))) exception?)
+              (check calls => 0)))
+            (list [] '(3 extra) '(3 . tail))))
+          (list
+            (lambda (view columns key emit!)
+              (gerbil-ascent-visit-view-parts! view columns key
+                (lambda (prefix left right) (emit! (append prefix (list left right))))))
+            (lambda (view columns key emit!)
+              (gerbil-ascent-for-each-row emit! (gerbil-ascent-view-select view columns key)))))
+        (check-exception (gerbil-ascent-view-rows view '(2) '(3)) exception?)))
     (test-case "partial grouped probes preserve stored singletons and unbound axes"
       (let* ((tokens (map (lambda (_) (list 'stored)) (iota 65)))
              (blocks (map (lambda (group token)

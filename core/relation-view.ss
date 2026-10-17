@@ -307,18 +307,26 @@
      (let (binding (vector-ref bindings coordinate))
        (and (or (not binding) (equal? value (car binding)))
             (matches-bound-prefix? rest bindings (+ coordinate 1)))))))
+(defrule (select-members-by-column members coordinate columns key probe retain)
+  (let find ((remaining columns) (values key))
+    (cond ((null? remaining) members)
+          ((= (car remaining) coordinate)
+           (let (present (probe (car values)))
+             (if (and present (matches-coordinate? (car present) coordinate columns key))
+               (retain present) [])))
+          (else (find (cdr remaining) (cdr values))))))
+(def (selected-scan-members members coordinate columns key)
+  (defrule (probe value) (member value members))
+  (defrule (retain present) (list (car present)))
+  (select-members-by-column members coordinate columns key probe retain))
 (def (selected-members members coordinate columns key routes)
+  (defrule (probe value)
+    (if routes (captured-member routes members coordinate value) (member value members)))
+  (defrule (retain present) (if routes present (list (car present))))
   (if (and (rectangle-query? routes) (rectangle-query-bindings routes))
     (let (binding (vector-ref (rectangle-query-bindings routes) coordinate))
       (if binding (or (captured-member routes members coordinate (car binding)) []) members))
-    (let find ((remaining columns) (values key))
-    (cond ((null? remaining) members)
-          ((= (car remaining) coordinate)
-           (let (present (if routes (captured-member routes members coordinate (car values))
-                                    (member (car values) members)))
-             (if (and present (matches-coordinate? (car present) coordinate columns key))
-               (if routes present (list (car present))) [])))
-          (else (find (cdr remaining) (cdr values)))))))
+    (select-members-by-column members coordinate columns key probe retain)))
 (def (visit-right-members prefix left rights consume)
   (unless (null? rights)
     (consume prefix left (car rights))
@@ -380,20 +388,33 @@
                     (else (lambda (prefix a b) (consume (append prefix (list a b))))))))
       (visit-left-members prefix (rectangle-left block) (rectangle-right block) write))) blocks))
 ;; : (-> Rectangle Columns Key PartVisitor Void)
-(def (visit-rectangle-parts block columns key consume (routes #f) (expand visit-left-members))
-  (let (offset (length (rectangle-prefix block)))
-    (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
-      (error "invalid ASCENT UF view column")))
-  (visit-admitted-rectangle-parts block columns key consume routes expand))
-(def (visit-admitted-rectangle-parts block columns key consume routes (expand visit-left-members))
-  (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
-    (when (if (and (rectangle-query? routes) (rectangle-query-bindings routes))
-            (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
-            (andmap (lambda (column value)
-                      (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
-      (let ((lefts (selected-members (rectangle-left block) offset columns key routes))
-            (rights (selected-members (rectangle-right block) (+ offset 1) columns key routes)))
-        (expand prefix lefts rights consume)))))
+(defrule (define-checked-rectangle-visitor name admitted)
+  (def (name block columns key consume (routes #f) (expand visit-left-members))
+    (let (offset (length (rectangle-prefix block)))
+      (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
+        (error "invalid ASCENT UF view column")))
+    (admitted block columns key consume routes expand)))
+(defrule (define-admitted-rectangle-visitor name routed?)
+  (def (name block columns key consume routes (expand visit-left-members))
+    (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+      (when (if (and routed? (rectangle-query? routes) (rectangle-query-bindings routes))
+              (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
+              (andmap (lambda (column value)
+                        (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
+        (let ((lefts (if routed?
+                       (selected-members (rectangle-left block) offset columns key routes)
+                       (selected-scan-members (rectangle-left block) offset columns key)))
+              (rights (if routed?
+                        (selected-members (rectangle-right block) (+ offset 1) columns key routes)
+                        (selected-scan-members (rectangle-right block) (+ offset 1) columns key))))
+          (expand prefix lefts rights consume))))))
+;; Both visitors share the complete check/expansion syntax. The scan instance
+;; statically excludes route types and owner lookup without changing equality,
+;; duplicate constraints, stored representatives or callback order.
+(define-admitted-rectangle-visitor visit-admitted-rectangle-parts #t)
+(define-admitted-rectangle-visitor visit-admitted-scan-rectangle-parts #f)
+(define-checked-rectangle-visitor visit-rectangle-parts visit-admitted-rectangle-parts)
+(define-checked-rectangle-visitor visit-scan-rectangle-parts visit-admitted-scan-rectangle-parts)
 ;; Build once from owned spines. Each component contributes its members once
 ;; per coordinate; the buckets retain descriptor references, never pair tuples.
 ;; Readers only inspect these private tables after construction.
@@ -808,24 +829,33 @@
   ;; checked protocol. Frozen two-axis plans replace wide temporary owner
   ;; indexes when available; tiny cuts need no query initialization.
   (def (visit-products columns key consume admitted? expand)
-    (unless (or (visit-indexed-axis columns key consume expand)
-                (visit-compact-query columns key consume expand))
-      (let* ((compiled? (and routes uniform? (not small?) (pair? columns) (pair? (cdr columns))))
-             (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
-        (when (or (not compiled?) bindings)
-          (unless (visit-bound-plans bindings consume expand)
-            (let* ((candidates (if bindings (routed-rectangles routes blocks columns key uniform? bindings)
-                                (selected columns key)))
-                   (query (and routes (pair? columns)
-                            (or scan-route (make-rectangle-query routes #f bindings
-                              (or (null? candidates) (null? (cdr candidates)) (null? (cddr candidates))))))))
-            ;; Keep the optional-argument visitor binding lexical. A dynamic
-            ;; procedure alias requires generic argument packing on every block.
-            (defrule (visit-blocks visit)
-              (for-each (lambda (block) (visit block columns key consume query expand)) candidates))
-            (if (or admitted? (and routes uniform?))
-              (visit-blocks visit-admitted-rectangle-parts)
-              (visit-blocks visit-rectangle-parts))))))))
+    ;; A cut without routes cannot use any indexed publisher. Preserve the
+    ;; original per-block admission and arguments while bypassing pure route
+    ;; probes; do not route an unindexed query through the indexed dispatcher.
+    (defrule (scan-blocks visit)
+      (for-each (lambda (block) (visit block columns key consume #f expand)) blocks))
+    (if (not routes)
+      (if admitted?
+        (scan-blocks visit-admitted-scan-rectangle-parts)
+        (scan-blocks visit-scan-rectangle-parts))
+      (unless (or (visit-indexed-axis columns key consume expand)
+                  (visit-compact-query columns key consume expand))
+        (let* ((compiled? (and routes uniform? (not small?) (pair? columns) (pair? (cdr columns))))
+               (bindings (and compiled? (compile-rectangle-bindings (vector-length routes) columns key))))
+          (when (or (not compiled?) bindings)
+            (unless (visit-bound-plans bindings consume expand)
+              (let* ((candidates (if bindings (routed-rectangles routes blocks columns key uniform? bindings)
+                                  (selected columns key)))
+                     (query (and routes (pair? columns)
+                              (or scan-route (make-rectangle-query routes #f bindings
+                                (or (null? candidates) (null? (cdr candidates)) (null? (cddr candidates))))))))
+              ;; Keep the optional-argument visitor binding lexical. A dynamic
+              ;; procedure alias requires generic argument packing on every block.
+              (defrule (visit-blocks visit)
+                (for-each (lambda (block) (visit block columns key consume query expand)) candidates))
+              (if (or admitted? (and routes uniform?))
+                (visit-blocks visit-admitted-rectangle-parts)
+                (visit-blocks visit-rectangle-parts)))))))))
   (def (visit-selected columns key consume admitted? (expand visit-left-members))
     (unless (visit-complete-key columns key consume)
       (visit-products columns key consume admitted? expand)))
@@ -842,8 +872,16 @@
   ;; then expand each admitted product directly into one owned list builder.
   ;; No row callback or intermediate public tuple runs inside the product.
   (def (materialize-selected columns key)
-    (defrule (materialize compact? group left right)
+    (defrule (with-product-collector collect! collect-product body ...)
       (with-list-builder (collect!)
+        (def (collect-product prefix lefts rights _consume)
+          (match prefix
+            ([] (collect-rectangle-product a b lefts rights collect! (list a b)))
+            ([g] (collect-rectangle-product a b lefts rights collect! (list g a b)))
+            (else (collect-rectangle-product a b lefts rights collect! (append prefix (list a b))))))
+        body ...))
+    (defrule (materialize compact? group left right)
+      (with-product-collector collect! collect-product
         ;; Select the publisher once from the captured schema; no match
         ;; continuation is constructed for each emitted scalar pair.
         (def collect-point
@@ -851,14 +889,16 @@
             (if (= (vector-length routes) 2)
               (lambda (_prefix a b) (collect! (list a b)))
               (lambda (prefix a b) (collect! (list (car prefix) a b))))))
-        (def (collect-product prefix lefts rights _consume)
-          (match prefix
-            ([] (collect-rectangle-product a b lefts rights collect! (list a b)))
-            ([g] (collect-rectangle-product a b lefts rights collect! (list g a b)))
-            (else (collect-rectangle-product a b lefts rights collect! (append prefix (list a b))))))
         (unless (and compact? (visit-compact-bindings group left right #f collect-product collect-point))
           (visit-products columns key #f #f collect-product))))
     (cond
+      ;; Unindexed materialization uses the checked scanner and the same
+      ;; collector directly. No indexed predicate or publisher can apply.
+      ((not routes)
+       (validate-key! columns key)
+       (with-product-collector collect! collect-product
+         (for-each (lambda (block)
+           (visit-scan-rectangle-parts block columns key #f #f collect-product)) blocks)))
       ((compact-query? columns)
        (with-compact-bindings (- (vector-length routes) 2) columns key group left right
          (if (and group (= (vector-length routes) 3)

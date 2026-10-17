@@ -83,6 +83,29 @@ Earlier upstream bootstrap failures and failures of the added recovery contract
 remain in their original records. The related upstream CI was stopped. This
 change does not depend on those patches and did not publish an SDK.
 
+* Subsequent point-publication control
+
+The English documentation revision =4f30b4d= failed the unchanged Linux
+=uf-selector-init / wide= gate in run =39002766435=: 6019 to 5939 CPU
+microseconds and 10 wins in 20 pairs. The contract still requires a CPU ratio
+of at most 9/10 and at least 16 wins. Result and allocation checks passed;
+both arms allocated 99712 bytes. This failure is preserved, not retried or
+reclassified as a pass.
+
+The subsequent candidate specializes fully bound point intersections to two
+immutable cursors and a callback. The general traversal retains bindings,
+consumer, and expansion arguments. Callback order and per-point publication
+boundaries remain unchanged. An independent regression covers sparse ordinals,
+duplicate descriptors, stored-value identity, nested reads, callback exceptions,
+and complete subsequent reads.
+
+On the original macOS Release, the candidate passed complete Scheme semantics:
+170 modules and 1365 Cases in 61 seconds within the unchanged 180-second/2G
+limits. All 16 original selector-init scenarios passed. Wide measured 3400 to
+2365 CPU microseconds against its frozen reference, with 20 wins and equal
+99712-byte allocation. The test-library build reported =production-rebuilt=0=.
+This macOS result does not replace Linux qualification of the final revision.
+
 * Complete runtime qualification
 
 Runtime revision =47a97ba34eb34ff476463a07d94bf406fc07399c= passed all nine

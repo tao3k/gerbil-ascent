@@ -635,21 +635,40 @@
   ;; Intersect immutable descriptor plans with invocation-local list cursors.
   ;; Equal ordinals identify the same captured descriptor, not equal values
   ;; from unrelated owners. No owner table or query record is constructed.
-  (def (visit-plan-intersection left right bindings consume expand point)
+  ;; Fully bound endpoints publish one stored pair per matching descriptor.
+  ;; Keep only the immutable cursors and callback live across this hot loop.
+  (def (visit-point-plan-intersection left right point)
+    (when (and (pair? left) (pair? right))
+      (let ((a (car left)) (b (car right)))
+        (using (a :- rectangle-selection)
+          (using (b :- rectangle-selection)
+            (cond
+              ((< a.ordinal b.ordinal)
+               (visit-point-plan-intersection (cdr left) right point))
+              ((> a.ordinal b.ordinal)
+               (visit-point-plan-intersection left (cdr right) point))
+              (else
+               (point (rectangle-prefix a.block) (car a.members) (car b.members))
+               (visit-point-plan-intersection (cdr left) (cdr right) point))))))))
+  (def (visit-product-plan-intersection left right bindings consume expand point)
     (when (and (pair? left) (pair? right))
       (let ((a (car left)) (b (car right)))
        (using (a :- rectangle-selection)
         (using (b :- rectangle-selection)
           (cond
             ((< a.ordinal b.ordinal)
-             (visit-plan-intersection (cdr left) right bindings consume expand point))
+             (visit-product-plan-intersection (cdr left) right bindings consume expand point))
             ((> a.ordinal b.ordinal)
-             (visit-plan-intersection left (cdr right) bindings consume expand point))
+             (visit-product-plan-intersection left (cdr right) bindings consume expand point))
             (else
              (when (or (not bindings) (matches-bound-prefix? (rectangle-prefix a.block) bindings 0))
                (if point (point (rectangle-prefix a.block) (car a.members) (car b.members))
                  (expand (rectangle-prefix a.block) a.members b.members consume)))
-             (visit-plan-intersection (cdr left) (cdr right) bindings consume expand point))))))))
+             (visit-product-plan-intersection (cdr left) (cdr right) bindings consume expand point))))))))
+  (def (visit-plan-intersection left right bindings consume expand point)
+    (if (and point (not bindings))
+      (visit-point-plan-intersection left right point)
+      (visit-product-plan-intersection left right bindings consume expand point)))
   (def (visit-bound-plans bindings consume expand)
     (and left-plans bindings
       (let* ((offset (- (vector-length bindings) 2))

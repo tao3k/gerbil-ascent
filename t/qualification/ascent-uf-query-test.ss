@@ -221,6 +221,47 @@
           '((1 2 0) (1 2 0) (1 2 0) (1 2) (1 2 0) (0 1 0) (1 2 0)))
         (check-consumers view '(2 0 1 2 1) '(#f 7 #f #f #f))
         (check-consumers view '(1 1) '(#f 1))))
+    (test-case "point intersections preserve sparse ordinals stored values and callback boundaries"
+      (let* ((lefts (map (lambda (_) (list 'left)) (iota 16)))
+             (rights (map (lambda (_) (list 'right)) (iota 16)))
+             (blocks (map (lambda (group left right)
+                            (let (axis (append
+                                         (if (= (modulo group 3) 1) [] (list left))
+                                         (if (= (modulo group 4) 1) [] (list right))
+                                         (iota 8)))
+                              (make-rectangle (list group) axis axis)))
+                          (iota 16) lefts rights))
+             (sizes (map (lambda (group)
+                           (+ 8 (if (= (modulo group 3) 1) 0 1)
+                                (if (= (modulo group 4) 1) 0 1))) (iota 16)))
+             (all-blocks (append blocks (list (list-ref blocks 6))))
+             (view (gerbil-ascent-rectangle-view all-blocks
+                     (foldl (lambda (size total) (+ total (* size size))) 100 sizes)
+                     (foldl (lambda (size total) (+ total (* 2 size))) 20 sizes) #t))
+             (groups (append (filter (lambda (group)
+                                       (and (not (= (modulo group 3) 1))
+                                            (not (= (modulo group 4) 1)))) (iota 16)) '(6)))
+             (expected (map (lambda (group) (list group '(left) '(right))) groups))
+             (columns (apply append (make-list 8 '(1 2))))
+             (key (apply append (make-list 8 '((left) (right))))))
+        (for-each (lambda (visit)
+          (let ((seen []) (nested? #f) (calls 0))
+            (visit view columns key
+              (lambda (prefix left right)
+                (check (eq? left (list-ref lefts (car prefix))) => #t)
+                (check (eq? right (list-ref rights (car prefix))) => #t)
+                (unless nested?
+                  (set! nested? #t)
+                  (check-equal? (part-rows visit view '(2 1) '((right) (left))) expected))
+                (set! seen (cons (list (car prefix) left right) seen))))
+            (check-equal? (reverse seen) expected)
+            (check-exception (visit view columns key
+              (lambda (_prefix _left _right)
+                (set! calls (+ calls 1))
+                (when (= calls 3) (error "stop point publication")))) exception?)
+            (check-equal? calls 3)
+            (check-equal? (part-rows visit view columns key) expected)))
+          (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
     (test-case "nested query plans and public mutations do not affect the captured cut"
       (let* ((axis '(0 1 2))
              (view (gerbil-ascent-rectangle-view

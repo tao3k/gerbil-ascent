@@ -14,8 +14,9 @@ The preceding accepted cold control took 270.861 seconds for production and
 54.881 seconds for the complete test preparation command. These are distinct
 phases; preparation is outside the unchanged 180-second semantic deadline.
 
-The old production log contains 141 module compilations, with no repeated
-module. However, executable object jobs are not merely harmless duplicate
+The old production log contains 139 distinct source-module compilation
+actions plus two executable-compilation messages. Each source module is
+compiled once; the executable messages describe their separate stub/link phase. However, executable object jobs are not merely harmless duplicate
 queue entries: a GSC invocation trace confirms 203 actual object compilations
 for 107 distinct static C files. The two executable links regenerate shared
 C, resulting in 96 repeated object compilations. The old split between all
@@ -70,5 +71,9 @@ The first unchanged-input warm production build exits successfully with zero
 GSC invocations. The candidate's first complete test preparation takes 53.870
 seconds (48.862 seconds inside the builder), exits successfully, and reports
 production-rebuilt=0. It is not reported as a preparation speedup. The final
-macOS semantic inventory and exact pushed-commit CI results are recorded in
-the PR acceptance section after execution; no pending run is treated as green.
+macOS semantic run passes all 171 modules and 1379 Cases in 172.388 seconds
+of command wall time, exit 0, retaining the original default 12 workers, 2G
+children and independent 180-second deadline. The complete module/Case
+inventory equals the preceding accepted run. Exact pushed-commit CI results
+are recorded in the PR acceptance section after execution; no pending run is
+treated as green.

@@ -141,3 +141,59 @@ wheel data missing, and a later publication must retain its ownership proof.
 Runtime identity verification and every original interface test remain mandatory.
 No application source or verifier is weakened, no Cargo clean/retry is used, and
 the earlier mismatched wheel failure remains part of the audit record.
+
+* Retained current-head failures and partial-axis follow-up
+
+CI at 1c4c212 passed complete Scheme semantics (170 modules /1363 Cases in
+161 seconds) and every performance study, but its ASP gate rejected an extra
+build-script helper function. The independent da0dda4 correction keeps source
+watching in the existing Cargo entrypoint; no ASP rule is disabled.
+
+CI at da0dda4 retains a different performance failure: selector-init partial
+8897 ->9827 microseconds, allocation unchanged at 50988672 bytes. Complete
+Scheme semantics also reached the unchanged 180-second directory deadline.
+Its live module trace shows candidate-flow starting only after about 150
+seconds at the end of a static batch; semi-naive completed independently.
+Neither failure is replaced by rerunning the same commit.
+
+The partial-axis follow-up reuses the existing bounded stored-member probe
+after a group has selected a descriptor. A partial product receives exactly one
+stored representative on its bound axis, through a private detached singleton;
+the unbound axis and descriptor ordering remain unchanged. Complete scalar
+points retain their existing path. This replaces a walk over unrelated owners
+sharing the value, and does not add a persistent query cache. A temporary
+work-counter control returns the same 262144 rows while reducing actual
+captured-owner probes from 66560 to zero. Instrumentation does not enter the
+production source or CPU/allocation benchmark binary. The new native regression
+checks false values, equal-but-distinct stored representatives, head and tail
+values, duplicate descriptors, both partial axes, nested reads, detached rows,
+conflicts and a trailing invalid coordinate.
+
+The native source-test profile now isolates both exhaustive corpora so the first completed
+ordinary stripe can accept them, without a long within-stripe predecessor. Native capacity still owns the worker
+count. Every discovered file remains exactly once, runtime options and heap
+bounds are unchanged, and the 180-second directory deadline is retained. The
+source-import regression verifies exact coverage, independent singleton batches,
+unchanged compatible groups and matching runtime options.
+
+The concurrently committed 1ed8aa2 switches the general GxTest wrapper to real
+inactivity supervision. That task's files are preserved. CI explicitly prepares
+the test library before placing the complete source corpus under the original
+180-second total deadline, with 180-second inactivity and 2G per VM. Thus this
+acceptance does not use the changed general-wrapper timeout meaning to pass.
+
+The fixed local selector-init candidate passes all original 16 scenarios:
+partial CPU 11448 ->11176 microseconds, allocation 50988672 ->51086976 bytes.
+The private singleton costs 98304 bytes per sample (48 bytes per query, about
+0.193 percent of the partial workload), within the unchanged allocation gate.
+This is a local control, not a replacement for final exact-head Linux CI.
+The focused UF query module passes all 15 Cases.
+
+A local priority-first dispatch experiment reached the original 180-second
+limit and is rejected (partial-full-semantics.log). A native sample retains a
+worker inside Gambit dynamic loading / dyld mapping / fcntl; it does not prove
+a semantic assertion failure or certify a cache root cause. That experiment
+also deferred two whole ordinary stripes. The final dispatch retains the
+existing ordinary-stripe priority and queues both isolated corpora for released
+workers; only the candidate-flow isolation is added. The exact final dispatch
+requires complete CI qualification; no local timeout is counted as a pass.

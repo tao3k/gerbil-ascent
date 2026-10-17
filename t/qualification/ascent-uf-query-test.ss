@@ -17,6 +17,28 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "partial grouped probes preserve stored singletons and unbound axes"
+      (let* ((tokens (map (lambda (_) (list 'stored)) (iota 65)))
+             (blocks (map (lambda (group token)
+                            (let (axis (list #f token 2 3 4 5 6 7 8 9))
+                              (make-rectangle (list group) axis axis)))
+                       (iota 65) tokens))
+             (view (gerbil-ascent-rectangle-view
+                     (append blocks (list (list-ref blocks 7))) 6600 1320 #t)))
+        (for-each (lambda (value)
+                    (check-consumers view '(0 1 0) (list 7 value 7))
+                    (check-consumers view '(0 2 0) (list 7 value 7)))
+          (list #f (list 'stored) 3 9 'absent))
+        (let (rows (gerbil-ascent-view-rows view '(0 1 0) (list 7 (list 'stored) 7)))
+          (check (length rows) => 20)
+          (for-each (lambda (row) (check (eq? (cadr row) (list-ref tokens 7)) => #t)) rows)
+          (set-car! (cdar rows) 'detached)
+          (check-consumers view '(0 1 0) (list 7 (list 'stored) 7)))
+        (gerbil-ascent-visit-view-parts! view '(0 1 0) '(7 3 7)
+          (lambda (_prefix _left _right)
+            (check-equal? (length (gerbil-ascent-view-rows view '(0 2 0) '(8 9 8))) 10)))
+        (check-consumers view '(0 1 0) '(7 3 8))
+        (check-exception (gerbil-ascent-view-rows view '(0 1 0 3) '(7 3 8 0)) exception?)))
     (test-case "complete compact keys preserve duplicate owners and stored representatives"
       (let* ((first (list 'stored)) (second (list 'stored))
              (blocks (list (make-rectangle '(same) (list #f first 2) '(#f 9))

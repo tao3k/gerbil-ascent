@@ -699,7 +699,12 @@
           (defrule (axis binding members coordinate)
             (if binding
               (if scalar? (captured-point-member routes members coordinate (car binding))
-                (captured-owner-member (or (hash-get (vector-ref routes coordinate) (car binding)) []) members))
+                ;; A group has already selected this descriptor. Reuse the
+                ;; bounded member probe instead of walking every unrelated
+                ;; owner sharing the value. Expansion needs exactly one stored
+                ;; representative, so detach only this private singleton spine.
+                (let (selected (captured-point-member routes members coordinate (car binding)))
+                  (and selected (list (car selected)))))
               members))
           (let ((a (axis left block.left 1)) (b (axis right block.right 2)))
             (when (and a b)

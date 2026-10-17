@@ -47,17 +47,18 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; The exhaustive multi-runtime corpus owns one independent process. Keep it
-;; outside static stripes so a completed short stripe can accept that work;
-;; otherwise its 3072 solves serialize with the existing candidate-flow corpus.
-;; The upstream profile still owns process isolation, options and capacity.
+;; Exhaustive corpora own independent processes. The first completed ordinary
+;; stripe can accept them, instead of serializing the solves behind the other
+;; modules of a long static stripe. Native profiles still own capacity/options.
 (def (source-test-interface mode heap)
-  (testing-interface-map-profile
+  (foldl (lambda (name testing)
+    (testing-interface-map-profile testing
+      (testing-test-selector 'contains name)
+      +testing-process-isolation-profile+))
    (testing-interface profiles:
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
-   (testing-test-selector 'contains "ascent-semi-naive-test.")
-   +testing-process-isolation-profile+))
+   '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
 (def (source-test-batches profiled files mode)
   (testing-interface-test-file-batches profiled
     (if (string=? mode "batched")

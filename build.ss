@@ -175,23 +175,24 @@
             "-cc-options" ,c-options "-ld-options" ,library-link-options)
       (exe: "interface/develop" bin: "ascent-develop")))))
 (export gerbil-ascent-library-modules main)
-(def (build-library . args)
+(def (build-library spec . args)
   (def (run spec)
     (defbuild-script spec
       optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
     (apply main args))
-  (def spec (gerbil-ascent-build-spec))
   (def (executable? target)
     (and (pair? target) (eq? (car target) exe:)))
   (if (or (null? args) (equal? (car args) "compile"))
-    (begin
-      (run (filter (lambda (target) (not (executable? target))) spec))
-      ;; gsc -link regenerates shared dependency C files. Each standard make
-      ;; call drains its pending jobs before the next executable starts.
+    (let ((libraries (filter (lambda (target) (not (executable? target))) spec))
+          (executables (filter executable? spec)))
+      ;; Including the first executable lets std/make reuse each module's
+      ;; generated C/object for both its dynamic bundle and the static link.
+      ;; One executable per call still prevents competing gsc -link writers.
+      (run (append libraries (if (pair? executables) [(car executables)] [])))
       (for-each (lambda (target)
                   (displayln "... link target " (cadr target))
                   (run [target]))
-                (filter executable? spec)))
+                (if (pair? executables) (cdr executables) [])))
     (run spec)))
 
 (def (main . args)
@@ -199,7 +200,8 @@
          (root (path-directory (this-source-file)))
          (modules (append gerbil-ascent-library-modules
                           '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
-         (before (and build? (source-snapshot root modules))))
+         (before (and build? (source-snapshot root modules)))
+         (spec (gerbil-ascent-build-spec)))
     (add-load-path! (path-expand "lib" (gerbil-path)))
     (when build?
       (let (invalidated (artifact-invalidated-modules root modules before))
@@ -209,9 +211,9 @@
             (make-clean
               (filter (lambda (spec)
                         (member (if (string? spec) spec (cadr spec)) invalidated))
-                      (gerbil-ascent-build-spec)) srcdir: root))
+                      spec) srcdir: root))
           (begin
             (clean-compiled-resources! (path-expand "lib/gerbil-ascent" (gerbil-path)) modules)
-            (build-library "clean")))))
-    (apply build-library args)
+            (build-library spec "clean")))))
+    (apply build-library spec args)
     (when build? (artifact-receipt! root modules before))))

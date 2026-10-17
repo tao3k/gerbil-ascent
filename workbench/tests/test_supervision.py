@@ -91,6 +91,15 @@ class SeparateStreams(unittest.TestCase):
         self.assertEqual(result.stdout, b'')
         self.assertEqual(result.stderr, b'0\n1\n2\n3\n4\n5\n')
 
+    def test_total_wall_time_does_not_replace_real_inactivity(self):
+        advancing = self.run_child("import time\nfor i in range(6):\n"
+                                   " print(i, flush=True); time.sleep(.2)\n")
+        self.assertEqual(advancing.returncode, 0, advancing.stderr)
+        self.assertEqual(advancing.stdout, b'0\n1\n2\n3\n4\n5\n')
+        stalled = self.run_child("import time; print('started', flush=True); time.sleep(2)")
+        self.assertEqual(stalled.returncode, 124, stalled.stderr)
+        self.assertIn(b'no command output', stalled.stderr)
+
     def test_stalled_child_is_rejected_and_failure_propagates(self):
         stalled = self.run_child('import time; time.sleep(2)')
         self.assertEqual(stalled.returncode, 124, stalled.stderr)

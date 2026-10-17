@@ -23,6 +23,7 @@ package_library := gerbil_package_prefix + '/lib'
 # Compilation is bounded by real inactivity, not optimized-build wall time.
 # Runtime scenarios retain their separate fixed deadlines in the native runner.
 build_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision --cpu-progress --'
+test_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/native-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
@@ -88,7 +89,9 @@ _test-file path heap='2G':
     else
         runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
     fi
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" "${test_args[@]}" 2>&1 | tee "$output_file"
+    inactivity="${ASCENT_GXTEST_TIMEOUT:-120s}"
+    inactivity="${inactivity%s}"
+    {{ test_supervisor }} --startup-seconds "$inactivity" --idle-seconds "$inactivity" -- "${runner[@]}" "${test_args[@]}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/t/native/assert-cases.awk" "$output_file"
     if [[ -d "$test_module" ]]; then grep -F 'MODULE-OK ' "$output_file" >/dev/null; else grep -Fx "MODULE-OK $test_module" "$output_file" >/dev/null; fi

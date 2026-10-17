@@ -1,28 +1,6 @@
 //! Freeze Library-owned source bytes through the shared upstream package owner.
 use gerbil_scheme_python::{ResourceTree, build_source_root, stage_source_inventory};
-use std::{
-    env, fs, io,
-    path::{Path, PathBuf},
-};
-
-fn watch_source(path: &Path) -> io::Result<()> {
-    println!("cargo:rerun-if-changed={}", path.display());
-    let kind = fs::symlink_metadata(path)?.file_type();
-    if kind.is_dir() {
-        let mut entries = fs::read_dir(path)?
-            .map(|entry| entry.map(|item| item.path()))
-            .collect::<io::Result<Vec<_>>>()?;
-        entries.sort();
-        for entry in entries {
-            watch_source(&entry)?;
-        }
-    } else if !kind.is_file() {
-        return Err(io::Error::other(
-            "source inventory contains a symlink or special file",
-        ));
-    }
-    Ok(())
-}
+use std::{env, fs, io, path::PathBuf};
 
 fn main() {
     if env::var_os("CARGO_FEATURE_RUST_RUNTIME").is_none() {
@@ -94,7 +72,22 @@ fn main() {
         ),
     ];
     for (path, _) in directories.iter().chain(&files) {
-        watch_source(path).expect("watch complete source inventory");
+        let mut pending = vec![path.clone()];
+        while let Some(input) = pending.pop() {
+            println!("cargo:rerun-if-changed={}", input.display());
+            let kind = fs::symlink_metadata(&input).expect("source inventory input").file_type();
+            if kind.is_dir() {
+                let mut entries = fs::read_dir(&input)
+                    .expect("source inventory directory")
+                    .map(|entry| entry.map(|item| item.path()))
+                    .collect::<io::Result<Vec<_>>>()
+                    .expect("source inventory entries");
+                entries.sort();
+                pending.extend(entries.into_iter().rev());
+            } else if !kind.is_file() {
+                panic!("source inventory contains a symlink or special file");
+            }
+        }
     }
     let trees = directories
         .iter()

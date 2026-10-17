@@ -189,4 +189,158 @@ example : (publishRule ({ source := 1, draftSource := some 1, ruleRevision := 1,
 
 example : (verify (call (call {} 80) 30)).first = some 110 := by decide
 example : (call (verify (call (call {} 80) 30)) 50).first = some 110 := by decide
+
+/- A progressive read binds its complete view identity. These laws constrain
+   admission of observations, not which hypothesis an Agent may investigate. -/
+structure ProgressiveView where
+  owner : String
+  source : String
+  prefixId : String
+  receipt : Option String
+  deriving DecidableEq, Repr
+
+def sameView (observed current : ProgressiveView) : Bool :=
+  observed.owner == current.owner && observed.source == current.source &&
+    observed.prefixId == current.prefixId
+
+def currentResult (observed current : ProgressiveView)
+    (receiptAvailable independentlyReviewed : Bool) : Bool :=
+  sameView observed current && observed.receipt.isSome &&
+    observed.receipt == current.receipt &&
+    receiptAvailable && independentlyReviewed
+
+theorem current_result_requires_same_view (observed current : ProgressiveView)
+    (available reviewed : Bool)
+    (h : currentResult observed current available reviewed = true) :
+    sameView observed current = true := by
+  simp [currentResult] at h
+  exact h.1.1.1.1
+
+theorem missing_receipt_cannot_be_current (observed current : ProgressiveView)
+    (reviewed : Bool) :
+    currentResult observed current false reviewed = false := by
+  simp [currentResult]
+
+theorem absent_receipt_identity_cannot_be_current
+    (observed current : ProgressiveView) (available reviewed : Bool)
+    (h : observed.receipt = none) :
+    currentResult observed current available reviewed = false := by
+  simp [currentResult, h]
+
+theorem unreviewed_receipt_cannot_be_current (observed current : ProgressiveView)
+    (available : Bool) :
+    currentResult observed current available false = false := by
+  simp [currentResult]
+
+theorem same_count_changed_content_is_stale (owner source oldContent newContent : String)
+    (h : oldContent ≠ newContent) :
+    sameView ⟨owner, source, oldContent, none⟩
+      ⟨owner, source, newContent, none⟩ = false := by
+  simp [sameView, h]
+
+structure ProgressiveAccess where
+  focusAvailable : Bool := true
+  exactAvailable : Bool := true
+  selected : Option AgentChoice := none
+  deriving DecidableEq, Repr
+
+def briefAccess (s : ProgressiveAccess) : ProgressiveAccess := s
+def focusRead (s : ProgressiveAccess) : ProgressiveAccess := s
+def exactRead (s : ProgressiveAccess) : ProgressiveAccess := s
+def clueQueryRead (s : ProgressiveAccess) : ProgressiveAccess := s
+
+theorem brief_keeps_open_reads (s : ProgressiveAccess) :
+    (briefAccess s).focusAvailable = s.focusAvailable ∧
+    (briefAccess s).exactAvailable = s.exactAvailable := by
+  simp [briefAccess]
+
+theorem reads_do_not_select (s : ProgressiveAccess) :
+    (briefAccess s).selected = s.selected ∧
+    (focusRead s).selected = s.selected ∧
+    (exactRead s).selected = s.selected := by
+  simp [briefAccess, focusRead, exactRead]
+
+theorem focused_clue_read_does_not_select (s : ProgressiveAccess) :
+    (clueQueryRead (focusRead s)).selected = s.selected := by
+  simp [clueQueryRead, focusRead]
+
+/- Agent clues remain distinct from admitted observations. Scope changes what
+   is queried, not which hypotheses the Agent is permitted to formulate. -/
+inductive ClueRole where
+  | observation
+  | hypothesis
+  deriving DecidableEq, Repr
+
+structure ScopedClue where
+  role : ClueRole
+  admitted : Bool
+  receiptAvailable : Bool
+  contentIdentity : String
+  receiptContentIdentity : String
+  near : Bool
+  deriving DecidableEq, Repr
+
+inductive QueryScope where
+  | narrow
+  | wide
+  deriving DecidableEq, Repr
+
+def clueSupports (clue : ScopedClue) (scope : QueryScope) : Bool :=
+  (clue.role == .observation) && clue.admitted && clue.receiptAvailable &&
+    (clue.contentIdentity == clue.receiptContentIdentity) &&
+    (clue.near || scope == .wide)
+
+structure SourceBoundClue where
+  clue : ScopedClue
+  sourceIdentity : String
+  deriving DecidableEq, Repr
+
+def sourceBoundSupport (clue : SourceBoundClue) (currentSource : String)
+    (scope : QueryScope) : Bool :=
+  (clue.sourceIdentity == currentSource) && clueSupports clue.clue scope
+
+theorem replaced_source_cannot_inherit_clue_support (clue : SourceBoundClue)
+    (currentSource : String) (scope : QueryScope)
+    (h : clue.sourceIdentity ≠ currentSource) :
+    sourceBoundSupport clue currentSource scope = false := by
+  simp [sourceBoundSupport, h]
+
+theorem hypothesis_is_not_admitted_support (clue : ScopedClue)
+    (h : clue.role = .hypothesis) (scope : QueryScope) :
+    clueSupports clue scope = false := by
+  simp [clueSupports, h]
+
+theorem lost_receipt_is_not_current_support (clue : ScopedClue)
+    (h : clue.receiptAvailable = false) (scope : QueryScope) :
+    clueSupports clue scope = false := by
+  simp [clueSupports, h]
+
+theorem changed_content_cannot_inherit_receipt (clue : ScopedClue)
+    (h : clue.contentIdentity ≠ clue.receiptContentIdentity)
+    (scope : QueryScope) : clueSupports clue scope = false := by
+  simp [clueSupports, h]
+
+theorem widening_preserves_positive_support (clue : ScopedClue)
+    (h : clueSupports clue .narrow = true) :
+    clueSupports clue .wide = true := by
+  simp [clueSupports] at h ⊢
+  exact h.1
+
+structure ConflictPair where
+  positive : ScopedClue
+  negative : ScopedClue
+  deriving DecidableEq, Repr
+
+def conflictView (pair : ConflictPair) (scope : QueryScope) : Bool × Bool :=
+  (clueSupports pair.positive scope, clueSupports pair.negative scope)
+
+theorem widening_retains_both_sides (pair : ConflictPair)
+    (h : conflictView pair .narrow = (true, true)) :
+    conflictView pair .wide = (true, true) := by
+  have hp : clueSupports pair.positive .narrow = true := by
+    simpa [conflictView] using congrArg Prod.fst h
+  have hn : clueSupports pair.negative .narrow = true := by
+    simpa [conflictView] using congrArg Prod.snd h
+  simp [conflictView, widening_preserves_positive_support pair.positive hp,
+    widening_preserves_positive_support pair.negative hn]
 end Ascent.Trajectory

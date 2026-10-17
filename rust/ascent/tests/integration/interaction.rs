@@ -304,6 +304,96 @@ fn trajectory_exploration_is_read_only_and_open_world() {
 }
 
 #[test]
+fn trajectory_brief_reports_bound_changes_without_attempt_payloads() {
+    let engine = Engine::new(1).unwrap();
+    let mut ledger = gerbil_ascent::Trajectory::new(&engine, "task", "source-a").unwrap();
+    let first = ledger.brief(None).unwrap();
+    assert_eq!(first.field("readSurfaces").unwrap(),
+        &list([Data::from("context"), Data::from("explore"), Data::from("focus"),
+            Data::from("exact-prefix"), Data::from("snapshot")]));
+    assert_eq!(first.field("status").unwrap(), &Data::from("unread"));
+    assert!(first.get("attempts").is_none());
+    assert!(first.get("comparisons").is_none());
+    assert!(ledger.exploration_current(&first).unwrap());
+    assert_eq!(
+        ledger.brief(Some(&first)).unwrap().field("status").unwrap(),
+        &Data::from("unchanged")
+    );
+    ledger.append(Data::object([
+        ("id", "attempt-1".into()),
+        ("kind", "attempt".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("questionIdentity", "question".into()),
+        ("operationIdentity", "test".into()),
+        ("inputIdentity", "input".into()),
+    ])).unwrap();
+    let changed = ledger.brief(Some(&first)).unwrap();
+    assert_eq!(changed.field("status").unwrap(), &Data::from("changed"));
+    assert_eq!(changed.field("changeKinds").unwrap(), &list([Data::from("attempt")]));
+    assert!(changed.get("attempts").is_none());
+    let mut forged = changed.clone();
+    let Data::Map(fields) = &mut forged else { unreachable!() };
+    fields.insert("prefixIdentity".into(), "wrong".into());
+    assert!(ledger.brief(Some(&forged)).is_err());
+    let foreign = gerbil_ascent::Trajectory::new(&engine, "other", "source-a").unwrap();
+    assert!(foreign.brief(Some(&changed)).is_err());
+    ledger.append(Data::object([
+        ("id", "replace".into()),
+        ("kind", "invalidate".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("nextSourceIdentity", "source-b".into()),
+    ])).unwrap();
+    let replaced = ledger.brief(Some(&changed)).unwrap();
+    assert!(replaced.field("changeKinds").unwrap().list().unwrap()
+        .contains(&Data::from("source-replacement")));
+}
+
+#[test]
+fn trajectory_focus_and_exact_prefix_bind_caller_selected_reads() {
+    let engine = Engine::new(1).unwrap();
+    let mut ledger = gerbil_ascent::Trajectory::new(&engine, "task", "source-a").unwrap();
+    let candidate = Data::object([
+        ("questionIdentity", "q".into()),
+        ("operationIdentity", "probe".into()),
+        ("inputIdentity", "input".into()),
+    ]);
+    let first = ledger.focus(&candidate, None).unwrap();
+    for (id, question) in [("other", "other"), ("matching", "q")] {
+        ledger.append(Data::object([
+            ("id", id.into()), ("kind", "attempt".into()),
+            ("sourceIdentity", "source-a".into()),
+            ("questionIdentity", question.into()),
+            ("operationIdentity", "probe".into()),
+            ("inputIdentity", "input".into()),
+        ])).unwrap();
+    }
+    let changed = ledger.focus(&candidate, Some(&first)).unwrap();
+    assert_eq!(changed.field("status").unwrap(), &Data::from("changed"));
+    assert_eq!(changed.field("comparisons").unwrap().list().unwrap().len(), 1);
+    assert_eq!(changed.field("actionSelected").unwrap(), &Data::Bool(false));
+    let prefix = changed.field("prefixIdentity").unwrap().text().unwrap();
+    let exact = ledger.exact_prefix(2, prefix).unwrap();
+    assert_eq!(exact.field("events").unwrap().list().unwrap().len(), 2);
+    assert!(ledger.exploration_current(&exact).unwrap());
+    assert!(ledger.exact_prefix(2, "wrong").is_err());
+    let wrong = Data::object([
+        ("questionIdentity", "other".into()),
+        ("operationIdentity", "probe".into()),
+        ("inputIdentity", "input".into()),
+    ]);
+    assert!(ledger.focus(&wrong, Some(&changed)).is_err());
+    ledger.append(Data::object([
+        ("id", "replace".into()), ("kind", "invalidate".into()),
+        ("sourceIdentity", "source-a".into()),
+        ("nextSourceIdentity", "source-b".into()),
+    ])).unwrap();
+    let historical = ledger.exact_prefix(2, prefix).unwrap();
+    assert_eq!(historical.field("sourceIdentity").unwrap(), &Data::from("source-a"));
+    assert_eq!(historical.field("generation").unwrap(), &Data::from(0usize));
+    assert!(!ledger.exploration_current(&historical).unwrap());
+}
+
+#[test]
 fn trajectory_exploration_reference_requires_current_successful_review() {
     let engine = Engine::new(1).unwrap();
     let mut ledger = gerbil_ascent::Trajectory::new(&engine, "task", "source").unwrap();

@@ -24,6 +24,71 @@ class TrajectoryIntegration(unittest.TestCase):
     def tearDownClass(cls):
         cls.engine.close()
 
+    def test_progressive_brief_does_not_replay_attempts(self):
+        with Trajectory(self.engine, 'progressive', 'source-a') as trajectory:
+            first = trajectory.brief()
+            self.assertEqual(first['readSurfaces'],
+                             ['context', 'explore', 'focus', 'exact-prefix', 'snapshot'])
+            self.assertEqual(first['status'], 'unread')
+            self.assertEqual(first['changeKinds'], [])
+            self.assertNotIn('attempts', first)
+            self.assertNotIn('comparisons', first)
+            self.assertNotIn('currentEvidenceReference', first)
+            self.assertTrue(trajectory.exploration_current(first))
+
+            unchanged = trajectory.brief(first)
+            self.assertEqual(unchanged['status'], 'unchanged')
+            self.assertEqual(unchanged['changeKinds'], [])
+            trajectory.append('attempt', questionIdentity='question',
+                              operationIdentity='probe', inputIdentity='input')
+            self.assertFalse(trajectory.exploration_current(first))
+            changed = trajectory.brief(first)
+            self.assertEqual(changed['status'], 'changed')
+            self.assertEqual(changed['changeKinds'], ['attempt'])
+            self.assertNotIn('attempts', changed)
+            self.assertEqual(len(trajectory.context()['attempts']), 1)
+            self.assertEqual(len(trajectory.explore(dict(questionIdentity='question',
+                operationIdentity='probe', inputIdentity='input'))['comparisons']), 1)
+
+            trajectory.invalidate('source-b')
+            replaced = trajectory.brief(changed)
+            self.assertEqual(replaced['status'], 'changed')
+            self.assertIn('source-replacement', replaced['changeKinds'])
+            with self.assertRaises(EngineError):
+                trajectory.brief(dict(changed, prefixIdentity='different-content'))
+            with Trajectory(self.engine, 'foreign', 'source-b') as foreign:
+                with self.assertRaises(EngineError):
+                    foreign.brief(changed)
+
+    def test_progressive_focus_and_exact_prefix(self):
+        with Trajectory(self.engine, 'focused', 'source-a') as trajectory:
+            candidate = dict(questionIdentity='q', operationIdentity='probe',
+                             inputIdentity='input')
+            first = trajectory.focus(candidate)
+            trajectory.append('attempt', questionIdentity='other',
+                              operationIdentity='probe', inputIdentity='input')
+            unchanged = trajectory.focus(candidate, first)
+            self.assertEqual(unchanged['status'], 'unchanged')
+            self.assertEqual(unchanged['comparisons'], [])
+            trajectory.append('attempt', questionIdentity='q',
+                              operationIdentity='probe', inputIdentity='input')
+            changed = trajectory.focus(candidate, unchanged)
+            self.assertEqual(changed['status'], 'changed')
+            self.assertEqual(len(changed['comparisons']), 1)
+            exact = trajectory.exact_prefix(changed['eventCount'], changed['prefixIdentity'])
+            self.assertEqual(len(exact['events']), 2)
+            self.assertFalse(exact['executionAuthorized'])
+            with self.assertRaises(EngineError):
+                trajectory.exact_prefix(changed['eventCount'], 'wrong')
+            with self.assertRaises(EngineError):
+                trajectory.focus(dict(candidate, questionIdentity='other'), changed)
+            trajectory.invalidate('source-b')
+            historical = trajectory.exact_prefix(changed['eventCount'],
+                                                 changed['prefixIdentity'])
+            self.assertEqual(historical['sourceIdentity'], 'source-a')
+            self.assertEqual(historical['generation'], 0)
+            self.assertFalse(trajectory.exploration_current(historical))
+
     def test_exploration_packet_preserves_open_choice_and_source_history(self):
         with Trajectory(self.engine, 'exploration', 'source-a') as trajectory:
             before = trajectory.snapshot()['eventCount']

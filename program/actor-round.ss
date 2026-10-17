@@ -222,11 +222,12 @@
                          ((pair? (cdr pending)) (error "ASCENT ready task dependency deadlock")))
                    (finally
                     (for-each (lambda (entry) (thread-send (car entry) 'stop)) workers)
-                    (for-each (lambda (entry) (thread-join! (cdr entry))) workers)
-                    (unless failed?
-                      (unless (and (= active-count (hash-length active))
-                                   (gerbil-ascent-joined-round (hash-length assigned) completed-count
-                                     active-count (length (cdr pending)) failed? #t))
-                        (error "ASCENT actor completion certificate rejected"))))))))))))
+                    (for-each (lambda (entry) (thread-join! (cdr entry))) workers)))
+                  ;; Certify only a normal return. Cleanup must preserve the
+                  ;; original exception, including dependency deadlock.
+                  (unless (and (= active-count (hash-length active))
+                               (gerbil-ascent-joined-round (hash-length assigned) completed-count
+                                 active-count (length (cdr pending)) failed? #t))
+                    (error "ASCENT actor completion certificate rejected")))))))))
     (if (and (pair? result) (eq? (car result) 'failed))
       (raise (cdr result)) result)))

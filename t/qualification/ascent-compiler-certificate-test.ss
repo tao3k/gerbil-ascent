@@ -5,6 +5,7 @@
         :gerbil-ascent/core/positive-plan
         :gerbil-ascent/core/positive-certificate
         :gerbil-ascent/core/execution-policy
+        :gerbil-ascent/program/actor-round
         :gerbil-ascent/table/access :gerbil-ascent/table/provider)
 (export ascent-compiler-certificate-test)
 
@@ -69,6 +70,29 @@
         (set! observed [])
         (check-equal? (gerbil-ascent-joined-round 1 1 (argument 'active 0) 0 #f #t) #t)
         (check-equal? observed '(active))))
+    (test-case "terminal certification preserves the original failure after cleanup"
+      (check-equal?
+        (with-catch (lambda (failure) (error-message failure))
+          (lambda ()
+            (gerbil-ascent-run-actor-round! (vector 'blocked) '(a) 2
+              (lambda (_ emit! checkpoint!) (error "should not dispatch"))
+              (lambda (_ row) (void)) (lambda () #f) (lambda (_) #f))))
+        "ASCENT ready task dependency deadlock")
+      (check-equal?
+        (with-catch (lambda (failure) (error-message failure))
+          (lambda ()
+            (gerbil-ascent-run-actor-round! (vector 'canceled) '(a) 2
+              (lambda (_ emit! checkpoint!) (error "should not dispatch"))
+              (lambda (_ row) (void)) (lambda () #t))))
+        "ASCENT actor round canceled")
+      (let (failure (vector 'completion-callback-failure))
+        (check-equal? (eq?
+          (with-catch (lambda (caught) caught)
+            (lambda ()
+              (gerbil-ascent-run-actor-round! (vector 'callback) '(a) 1
+                (lambda (_ emit! checkpoint!) (emit! 'r '(1)))
+                (lambda (_ row) (void)) (lambda () #f) (lambda (_) #t)
+                (lambda (_) (raise failure))))) failure) #t)))
     (test-case "shared control decisions keep failure distinct from completion"
       (check-equal? (gerbil-ascent-actor-complete #t #t) #f)
       (check-equal? (gerbil-ascent-actor-complete #f #f) #f)

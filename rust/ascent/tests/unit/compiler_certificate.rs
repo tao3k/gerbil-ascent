@@ -80,8 +80,8 @@ fn actual_positive_descriptors_are_checked_independently() {
 
 #[test]
 fn generated_term_decoder_keeps_constructors_and_head_scope() {
-    use crate::graph::descriptor_stream::check_terms;
     use crate::Value;
+    use crate::graph::descriptor_stream::check_terms;
     use std::collections::HashMap;
 
     let mut values = crate::execution::Values::default();
@@ -149,4 +149,37 @@ fn generated_term_decoder_keeps_constructors_and_head_scope() {
         &mut names,
         false
     ));
+}
+
+#[test]
+fn generated_key_gate_requires_the_exact_prior_columns_without_mutation() {
+    use crate::Value;
+    use crate::graph::descriptor_stream::check_keys;
+    use std::collections::HashMap;
+
+    let names = HashMap::from([(40, 0)]);
+    let original = names.clone();
+    let source = [
+        Term::Variable(40),
+        Term::Variable(71),
+        Term::Variable(71),
+        Term::Literal(Value::from(7_i64)),
+        Term::Wildcard,
+    ];
+    assert!(check_keys(&source, &[0, 3], &names));
+    for corrupt in [
+        vec![],
+        vec![0],
+        vec![3, 0],
+        vec![0, 0, 3],
+        vec![0, 1, 3],
+        vec![0, 2, 3],
+        vec![0, 3, 4],
+        vec![0, 5],
+    ] {
+        assert!(!check_keys(&source, &corrupt, &names));
+    }
+    assert_eq!(names, original);
+    assert!(check_keys(&[], &[], &names));
+    assert!(!check_keys(&[], &[0], &names));
 }

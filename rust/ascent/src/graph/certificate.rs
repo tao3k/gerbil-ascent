@@ -1,8 +1,8 @@
 //! Independent translation validation of the callback-free positive fragment.
 //! This runs once at graph admission, never in the join or lookup loop.
-use super::descriptor_stream::check_terms;
+use super::descriptor_stream::{check_keys, check_terms};
 use super::{Atom, Clause, Rule};
-use crate::{Program, Term, execution::Values};
+use crate::{Program, execution::Values};
 use std::collections::HashMap;
 
 fn atom(
@@ -21,17 +21,7 @@ fn atom(
     }
     // Only names from *previous* atoms can supply lookup keys. A repeated
     // variable first introduced in this atom must not read a stale frame slot.
-    let keys: Vec<_> = source
-        .terms
-        .iter()
-        .enumerate()
-        .filter_map(|(column, term)| match term {
-            Term::Literal(_) => Some(column),
-            Term::Variable(name) if names.contains_key(name) => Some(column),
-            _ => None,
-        })
-        .collect();
-    if !head && actual.keys != keys {
+    if !head && !check_keys(&source.terms, &actual.keys, names) {
         return false;
     }
     check_terms(&source.terms, &actual.terms, values, names, head)

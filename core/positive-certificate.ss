@@ -7,8 +7,8 @@
 ;;; Stream over actual descriptors and build a column view only when indexed.
 ;;; Host callbacks keep their separate admission protocol. This certificate
 ;;; covers the callback-free positive fragment.
-(import (only-in "execution-policy.ss" gerbil-ascent-readable-key)
-        (only-in "descriptor-stream.ss" gerbil-ascent-certificate-terms!))
+(import (only-in "descriptor-stream.ss" gerbil-ascent-certificate-terms!
+                 gerbil-ascent-certificate-keys?))
 (export gerbil-ascent-positive-certificate?)
 
 ;; : (-> Heads Body PositivePlan Boolean)
@@ -33,22 +33,12 @@
           (require (and (eq? (vector-ref clause 0) 'atom)
                         (vector? action) (= (vector-length action) 5)))
           (let* ((atom (vector-ref clause 1)) (terms (vector-ref atom 1))
-                 (columns (vector-ref atom 2)) (prior count)
+                 (columns (vector-ref atom 2))
                  (slotted (vector-ref action 1)) (keys (vector-ref action 2)))
             (require (eq? (vector-ref action 0) atom))
-            (check-terms! terms slotted #f)
-            (require (and (list? columns) (list? keys) (= (length columns) (length keys))))
-            (unless (null? columns)
-              (let* ((view (list->vector slotted)) (width (vector-length view)))
-                (for-each
-                  (lambda (column key)
-                    (require (and (exact-integer? column) (<= 0 column) (< column width)))
-                    (let (selected (vector-ref view column))
-                      (require (equal? key selected))
-                      (require (gerbil-ascent-readable-key
-                                 (if (eq? (car selected) 'bound) (cdr selected) 0) prior
-                                 (eq? (car selected) 'literal) (eq? (car selected) 'bound)))))
-                  columns keys))))) body actions)
+            ;; Keys observe the independent map before this atom introduces slots.
+            (require (gerbil-ascent-certificate-keys? terms columns keys slots))
+            (check-terms! terms slotted #f))) body actions)
       (for-each
         (lambda (head output)
           (require (and (vector? output) (= (vector-length output) 3)

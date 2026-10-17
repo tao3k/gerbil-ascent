@@ -18,3 +18,12 @@ pub(super) fn check_terms(source: &[Term], actual: &[Pattern], values: &Values, 
         }).is_some()
     })
 }
+
+#[rustfmt::skip]
+pub(super) fn check_keys(source: &[Term], actual: &[usize], names: &HashMap<u32, usize>) -> bool {
+    source.iter().enumerate().filter_map(|(column, term)| match term {
+        Term::Literal(_) => Some(column),
+        Term::Variable(name) if names.contains_key(name) => Some(column),
+        _ => None,
+    }).eq(actual.iter().copied())
+}

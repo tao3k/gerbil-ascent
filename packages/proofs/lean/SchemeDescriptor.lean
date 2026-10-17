@@ -52,4 +52,41 @@ theorem source_decoder_exact [DecidableEq Value] (source : Source Value)
     simp [schemeStep, executeOne, term, decodeFor, decode, checkOne, lowerMap]
   all_goals split <;> simp_all
 
+/-- Decode with the source at each position; wildcard payloads cannot be erased
+before equality is checked. Mismatched stream lengths have no decoded image. -/
+def decodeStream [DecidableEq Value] :
+    List (Source Value) → List (Datum Value) → Option (List (EncodedAction Value))
+  | [], [] => some []
+  | source :: sources, actual :: actions =>
+      (decodeStream sources actions).map (decodeFor source actual :: ·)
+  | _, _ => none
+
+def checkStream [DecidableEq Value] (head : Bool) :
+    List (Source Value) → List (Datum Value) → Symbols → Option Symbols
+  | [], [], symbols => some symbols
+  | source :: sources, actual :: actions, symbols =>
+      (schemeStep variableCode head source actual symbols).bind
+        (fun next => checkStream head sources actions next)
+  | _, _, _ => none
+
+/-- Contextual decoding commutes with the complete term loop, including failed
+prefixes, malformed lengths and head-scope rejection, for arbitrary streams. -/
+theorem stream_decoder_exact [DecidableEq Value] (sources : List (Source Value))
+    (actions : List (Datum Value)) (symbols : Symbols) (head : Bool) :
+    checkStream head sources actions symbols =
+      (decodeStream sources actions).bind (fun decoded =>
+        execute variableCode head (sources.map term) decoded symbols) := by
+  induction sources generalizing actions symbols with
+  | nil => cases actions <;> rfl
+  | cons source sources ih =>
+      cases actions with
+      | nil => rfl
+      | cons actual actions =>
+          simp only [checkStream, decodeStream, List.map_cons, source_decoder_exact]
+          cases step : executeOne variableCode head (term source) (decodeFor source actual) symbols with
+          | none => cases decodeStream sources actions <;> simp [step, execute]
+          | some next =>
+              rw [Option.bind_some, ih]
+              cases decodeStream sources actions <;> simp [step, execute]
+
 end Ascent.SchemeDescriptor

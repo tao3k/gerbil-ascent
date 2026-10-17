@@ -814,6 +814,11 @@
         (unless (and compact? (visit-compact-bindings group left right #f collect-product collect-point))
           (visit-products columns key #f #f collect-product))))
     (cond
+      ((compact-query? columns)
+       (with-compact-bindings (- (vector-length routes) 2) columns key group left right
+         (if (and group (= (vector-length routes) 3)
+                  (not (hash-get (vector-ref routes 0) (car group)))) []
+           (materialize #t group left right)) []))
       ((and complete-columns (equal? columns complete-columns))
        (validate-key! columns key)
        (with-list-builder (collect!)
@@ -823,11 +828,6 @@
                ([] (collect! (list left right)))
                ([group] (collect! (list group left right)))
                (else (collect! (append prefix (list left right)))))))))
-      ((compact-query? columns)
-       (with-compact-bindings (- (vector-length routes) 2) columns key group left right
-         (if (and group (= (vector-length routes) 3)
-                  (not (hash-get (vector-ref routes 0) (car group)))) []
-           (materialize #t group left right)) []))
       (else (validate-key! columns key) (materialize #f #f #f #f))))
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)

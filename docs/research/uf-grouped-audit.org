@@ -1,0 +1,82 @@
+#+title: UF complete-key dispatch and independent Scheme CI qualification
+
+* Failure and scope
+
+Linux CI 38945117936 at bdfaa72 rejected the existing compact-query grouped
+control: median CPU 1045 -> 1221 microseconds per eight-consumer sample,
+with 1148544 bytes in both arms. The unchanged gate is ratio <= 1.10 plus
+20 microseconds; its failure is retained. It ran before complete Scheme
+qualification, so the later semantic steps were skipped, not passed.
+
+The affected materializer checked canonical complete columns before its
+compact-layout admission. Thus an ordered complete key bypassed the compact
+publisher already used for repeated and reordered keys. It re-entered general
+route selection, bucket costing and validation instead of the captured group's
+single-descriptor publisher. This control had no structural improvement over
+its reference on that route. A timing sample alone cannot attribute the entire
+Linux regression to a particular compiler layout or GC event.
+
+* Implementation and work accounting
+
+Select compact layouts first. Their existing checked admission validates the
+complete key before publication, preserves first bound key tails, and checks
+invalid later coordinates even after conflicts or absent groups. The existing
+owner publisher retains stored representatives, captured descriptor ordering,
+empty axes and duplicate owner occurrences. Tiny, mixed and wider layouts keep
+their established fallback. No new query cache, evaluator, namespace or builder
+is added.
+
+On an instrumented fixed source, the unchanged grouped input returned 2048 rows
+in both arms. Actual routed-rectangles calls fell from 2048 to zero. Temporary
+counters were excluded from production source and the native timing binaries.
+On uninstrumented native binaries, allocation fell by 98304 bytes per sample,
+exactly 48 bytes for each of 2048 queries.
+
+* Fixed native control
+
+The local fixed source is based on b88d7c6, with only this materializer dispatch,
+two semantic Cases and CI lane separation overlaid. Concurrent uncommitted
+owner-plan and Trajectory changes are excluded. Both complete 16-scenario
+compact-query studies passed their original contracts on macOS:
+
+| Input/source | Reference CPU us | Candidate CPU us | Reference bytes | Candidate bytes |
+|--------------+------------------+------------------+-----------------+-----------------|
+| Before dispatch change, grouped | 658 | 666 | 1148544 | 1148544 |
+| After dispatch change, grouped | 658 | 486 | 1148544 | 1050240 |
+| After dispatch change, point-tail | 1122 | 977 | 1148544 | 1050240 |
+| After dispatch change, point-absent | 719 | 539 | 755328 | 657024 |
+
+The macOS pre-change control did not reproduce the Linux gate failure. It is
+not used to erase that failure or to substitute for exact-head Linux CI.
+These are frozen-view query CPU/allocation measurements, not full evaluator
+or Actor/Rayon wall-clock speedups. All contract files, scenario counts,
+20 alternating CPU pairs, 20 admissions, five allocation pairs, natural GC,
+90-second study budgets and allocation policies are unchanged.
+
+The two added semantic Cases compare all public consumers with independent
+full-row filtering. They cover complete compact keys with equal-but-distinct
+stored representatives, duplicate owners, false values, absent groups, empty
+axes, detached rows, nested readers and malformed keys before absent groups.
+Full Scheme qualification retains its existing corpus and 180-second deadline.
+
+* Independent CI lanes
+
+Scheme is a two-entry matrix: semantics and performance. Both depend only on
+repository hygiene; fail-fast is false. The semantic lane includes complete
+standard Scheme tests, independent source consumers and the original native
+source/DSL/closure qualifications. The performance lane retains every original
+performance command and production-rebuild rejection. Each lane uses a distinct
+content-bound native artifact cache key.
+
+A performance failure cannot cancel or skip the semantic lane. The existing
+always-run native-and-oracle job still requires the combined Scheme matrix,
+Rust/PyO3, all oracle shards and formal qualification to succeed. This preserves
+failure admission rather than masking a failed benchmark with successful tests.
+
+* Evidence
+
+Raw attempts and source-bound receipts are in .cache/ascent/uf-grouped-audit/.
+Initial native-link environment failures and the sandbox ps refusal are retained;
+only completed native runs are accepted. The fixed binary uses the SDK's native
+compiler and OpenSSL library path. Public PR qualification must identify the
+exact tested SHA separately from any later concurrent commit.

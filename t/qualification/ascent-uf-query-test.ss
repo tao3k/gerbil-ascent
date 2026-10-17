@@ -17,6 +17,32 @@
       (list gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!))))
 (def ascent-uf-query-test
   (test-suite "Invocation-owned grouped and composite UF queries"
+    (test-case "complete compact keys preserve duplicate owners and stored representatives"
+      (let* ((first (list 'stored)) (second (list 'stored))
+             (blocks (list (make-rectangle '(same) (list #f first 2) '(#f 9))
+                           (make-rectangle '(#f) '(2 3) '(#f 9))
+                           (make-rectangle (list 'same) (list second 2) '(#f 9))
+                           (make-rectangle '(empty) [] '(9))))
+             (view (gerbil-ascent-rectangle-view blocks 14 15 #t)))
+        (for-each (lambda (row) (check-consumers view '(0 1 2) row))
+          (append (gerbil-ascent-view-rows view)
+                  (list (list 'same (list 'stored) 9) '(missing 2 9) '(empty 2 9)
+                        '(same 99 9) '(same 2 99))))
+        (let (rows (gerbil-ascent-view-rows view '(0 1 2) (list 'same (list 'stored) 9)))
+          (check (eq? (cadar rows) first) => #t)
+          (check (eq? (cadadr rows) second) => #t)
+          (set-car! (cdar rows) 'detached)
+          (check-consumers view '(0 1 2) (list 'same (list 'stored) 9)))
+        (gerbil-ascent-visit-view-parts! view '(0 1 2) '(same #f 9)
+          (lambda (_prefix _left _right) (check-consumers view '(0 1 2) '(#f 2 #f))))))
+    (test-case "complete compact key admission rejects malformed keys before an absent group"
+      (let (view (gerbil-ascent-rectangle-view
+                  (map (lambda (group) (make-rectangle (list group) '(#f 2) '(3 4)))
+                    '(a b c)) 12 12 #t))
+        (for-each (lambda (key)
+          (check-exception (gerbil-ascent-view-rows view '(0 1 2) key) exception?))
+          (list [] '(missing) '(missing 2) '(missing 2 3 extra) '(missing 2 . 3)))
+        (check-consumers view '(0 1 2) '(missing 2 3))))
     (test-case "compact layouts retain interleaved prefix owners and all range obligations"
       (let* ((p '(same)) (q (list 'same)) (token (list 'stored))
              (a (list #f token 2)) (b '(2 3))

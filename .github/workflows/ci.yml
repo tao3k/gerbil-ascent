@@ -23,6 +23,10 @@ jobs:
   scheme:
     needs: repository-hygiene
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [semantics, performance]
     timeout-minutes: 120
     env:
       GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
@@ -76,10 +80,11 @@ jobs:
             .cache/ascent/native-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just check-policy
       - name: Qualify compiled performance contracts and benchmarks
+        if: ${{ matrix.lane == 'performance' }}
         run: |
           set -o pipefail
           just test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization performance-uf-compact-query performance-uf-selector-init performance-uf-owner-plans 2>&1 | tee /tmp/ascent-native-qualification.out
@@ -89,6 +94,7 @@ jobs:
             exit 1
           fi
       - name: Qualify complete standard Gerbil source tests
+        if: ${{ matrix.lane == 'semantics' }}
         id: full_scheme
         run: |
           mkdir -p .cache/ascent/native-crashes
@@ -96,6 +102,7 @@ jobs:
           ulimit -c unlimited
           GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify independent Scheme source consumers
+        if: ${{ matrix.lane == 'semantics' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
           PYTHONPATH: workbench/src
@@ -114,14 +121,19 @@ jobs:
           include-hidden-files: true
           retention-days: 30
       - name: Qualify runtime source view loading
+        if: ${{ matrix.lane == 'semantics' }}
         run: just check-source-views
       - name: Build native DSL closure entry
+        if: ${{ matrix.lane == 'semantics' }}
         run: just build-dsl-closure
       - name: Qualify native DSL closure
+        if: ${{ matrix.lane == 'semantics' }}
         run: just check-dsl-closure
       - name: Measure native retained replacement against fresh evaluation
+        if: ${{ matrix.lane == 'semantics' }}
         run: just check-retained-benefit
       - name: Qualify actual native compiler source closure
+        if: ${{ matrix.lane == 'semantics' }}
         run: just check-model-source-closure
   rust-pyo3:
     needs: repository-hygiene

@@ -200,16 +200,25 @@ jobs:
           { rustc -Vv; python3 --version; } > "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
           cat "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
           printf 'compiler=%s\n' "$(sha256sum "$RUNNER_TEMP/ascent-rust-python-toolchain.txt" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
-      - name: Restore Rust dependency and compilation cache
+      - name: Restore Rust dependency downloads
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            rust/target
-          key: ascent-cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', '**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '.github/workflows/ci.yml') }}
+          key: ascent-cargo-downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust/Cargo.lock') }}
           restore-keys: |
-            ascent-cargo-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/Cargo.lock') }}-
+            ascent-cargo-downloads-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore source-bound Rust and Python products
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          # Cargo may skip its publisher on a cache hit. Restore the matching
+          # source inventory and ownership marker with the embedded manifest.
+          path: |
+            rust/target
+            python/src/ascent/_sources
+            python/src/ascent/.gerbil-resources.json
+          key: ascent-cargo-products-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ github.sha }}
       - name: Prepare shared Python build environment and protocol tools
         run: |
           just prepare-quint

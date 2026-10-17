@@ -120,3 +120,24 @@ checks workspace reuse and requires owner-buffer-stale to violate exactly
 OwnerWorkspaceReuseExact with exit 12. These local checks and all five formal
 registry tests pass. The complete current-head Lean/Quint corpus remains required
 in CI; a focused model pass is not a full-system or native extraction proof.
+
+* Cargo cache and wheel source identity
+
+The intervening aa12353 CI failed before its Python interface corpus:
+runtime_identity rejected _sources/rust/ascent/src/data.rs/source.bin. The wheel
+step reused a release product in 0.08 seconds while the shared staged source
+inventory had been refreshed by other Cargo feature/profile invocations. Its
+cache allowed a source-key miss to restore a different commit's rust/target.
+Overlapping jobs can save artifacts newer than the next checkout's source mtimes;
+Cargo's timestamp freshness therefore cannot establish this cache's source identity.
+
+Rust dependency downloads now have a separate reusable cache. Project products
+have no prefix restore key and bind the exact immutable checkout revision plus
+recorded Rust/Python compiler and SDK identities. This covers all tracked inputs
+without duplicating the library-owned source inventory in workflow globs.
+The target tree, frozen Python _sources data and .gerbil-resources.json ownership
+marker are cached together: a skipped Cargo publisher must not leave the matching
+wheel data missing, and a later publication must retain its ownership proof.
+Runtime identity verification and every original interface test remain mandatory.
+No application source or verifier is weakened, no Cargo clean/retry is used, and
+the earlier mismatched wheel failure remains part of the audit record.

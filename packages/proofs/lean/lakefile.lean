@@ -5,14 +5,15 @@ open Lake DSL
 
 package «gerbil-ascent-proof» where
   version := v!"0.1.0"
+  weakLeanArgs := #["-j2", "-M1024", "-T10000000"]
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"
-  @ "247d1d6094b6af1bb873f69564b271bc978730ed"
+  @ "6aae50a9867c12191abb2180fdf031b3a8f55060"
 
 @[default_target]
 lean_lib AscentProof where
-  roots := #[`ExecutionPolicy, `ExecutionRendering, `ScheduledExecution, `CompiledCertificate, `PhysicalBuckets, `RayonPublication, `AccountingAbstraction, `EvidenceInteraction, `ClosedDslLowering, `Trajectory, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
+  roots := #[`DescriptorStream, `DescriptorKernel, `SchemeDescriptor, `RustDescriptor, `CachePublication, `ActorEnvelope, `SccState, `ExecutionPolicy, `ExecutionRendering, `ScheduledExecution, `CompiledCertificate, `PhysicalBuckets, `RayonPublication, `AccountingAbstraction, `EvidenceInteraction, `ClosedDslLowering, `Trajectory, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FiniteFlowPacking, `PoloniusInitialization, `ProviderRectangles, `ProviderRouting, `CurriedDictionary, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
              `ScopedWitness, `BranchScopedWitness, `ScopedComposition, `ScopedReachabilityMask, `ScopedQuery, `MovieCastQuery, `MaterializedMovieQuery, `RetainedInference, `DomainEvidence, `FeedbackConformance, `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `BitmapWorklist, `GraphWorklist,

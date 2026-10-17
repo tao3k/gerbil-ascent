@@ -7,6 +7,8 @@
 (import (only-in :std/iter for for/fold in-vector in-range)
         (only-in :std/list/list-builder with-list-builder)
         :gerbil-ascent/core/relation-view
+        (only-in :gerbil-ascent/core/index-publication
+                 gerbil-ascent-index-rebuild! gerbil-ascent-index-extend!)
         (only-in :gerbil-ascent/table/index-sharing gerbil-ascent-index-sharing-layout
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
@@ -373,18 +375,18 @@
                     (if (and (physical-index-entry-version entry)
                              (= (physical-index-entry-version entry) version))
                       (physical-index-entry-lookup entry)
-                      (let* ((members (and (not permutation)
-                                          (not (gerbil-ascent-canonical-hash-index-provider? provider))
-                                          (build-provider-row-witness rows columns)))
-                             (built (if permutation
-                                   (gerbil-ascent-shared-index-build rows permutation)
-                                   (gerbil-ascent-physical-index-build provider rows columns))))
+                      (gerbil-ascent-index-rebuild! entry version
+                        (and (not permutation)
+                             (not (gerbil-ascent-canonical-hash-index-provider? provider))
+                             (build-provider-row-witness rows columns))
+                        (if permutation
+                            (gerbil-ascent-shared-index-build rows permutation)
+                            (gerbil-ascent-physical-index-build provider rows columns))
                         ;; Failed builds keep the old version and lookup. Publish
                         ;; both only after the provider has returned successfully.
-                        (physical-index-entry-lookup-set! entry built)
-                        (physical-index-entry-witness-set! entry members)
-                        (physical-index-entry-version-set! entry version)
-                        built))))
+                        physical-index-entry-lookup-set!
+                        physical-index-entry-witness-set!
+                        physical-index-entry-version-set!))))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
               (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
@@ -427,15 +429,15 @@
                    ;; A provider may mutate its lookup before raising. Revoke
                    ;; the old version before dispatch so failure forces rebuild
                    ;; from still-committed rows on the next read.
-                   (physical-index-entry-version-set! entry #f)
-                   (let (extended (if (physical-index-entry-shared? entry)
-                                   (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)
-                                   (gerbil-ascent-physical-index-extend!
-                                    provider (physical-index-entry-lookup entry) rows columns)))
-                     (physical-index-entry-lookup-set! entry extended)
+                   (gerbil-ascent-index-extend! entry (+ version 1)
+                     (if (physical-index-entry-shared? entry)
+                         (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)
+                         (gerbil-ascent-physical-index-extend!
+                          provider (physical-index-entry-lookup entry) rows columns))
                      (when (physical-index-entry-witness entry)
                        (extend-provider-row-witness!
                         (physical-index-entry-witness entry) rows columns))
-                     (physical-index-entry-version-set! entry (+ version 1)))))
+                     physical-index-entry-lookup-set!
+                     physical-index-entry-version-set!)))
                cache)))))
     (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows)))

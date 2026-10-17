@@ -1,10 +1,8 @@
 //! Independent translation validation of the callback-free positive fragment.
 //! This runs once at graph admission, never in the join or lookup loop.
+use super::descriptor_stream::check_terms;
 use super::{Atom, Clause, Rule};
-use crate::{
-    Program, Term,
-    execution::{Pattern, Values},
-};
+use crate::{Program, Term, execution::Values};
 use std::collections::HashMap;
 
 fn atom(
@@ -36,27 +34,7 @@ fn atom(
     if !head && actual.keys != keys {
         return false;
     }
-    source
-        .terms
-        .iter()
-        .zip(actual.terms.iter())
-        .all(|(source, actual)| match (source, actual) {
-            (Term::Wildcard, Pattern::Wildcard) => true,
-            (Term::Literal(wanted), Pattern::Literal(cell)) => values.scalar(*cell) == wanted,
-            (Term::Variable(name), Pattern::Variable(slot)) => {
-                let index = match names.get(name).copied() {
-                    Some(index) => index,
-                    None if !head => {
-                        let index = names.len();
-                        names.insert(*name, index);
-                        index
-                    }
-                    None => return false,
-                };
-                index == *slot as usize
-            }
-            _ => false,
-        })
+    check_terms(&source.terms, &actual.terms, values, names, head)
 }
 
 pub(super) fn check(

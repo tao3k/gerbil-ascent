@@ -1,0 +1,116 @@
+#+title: Descriptor and runtime correspondence acceptance
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Scope and admission boundary
+
+This follows [[file:execution-correspondence-20261017.org][the executable semi-naive correspondence report]].
+The production changes replace duplicated term-checking branches with emitted
+Scheme and Rust procedures, and emit the actual cache publication, Actor wire
+and Tarjan discovery-state macros. These artifacts are imported by production
+code. Formal qualification regenerates their complete contents after checking
+Lean; it does not accept hashes or previously successful test receipts.
+
+This is not complete source refinement. The attempted full source-parser proofs
+were rejected; their failed sources and logs remain under
+=.cache/ascent/source-refinement/rejected-parser/=. They are not enrolled in the
+proved module inventory. No =sorry=, new axiom, =native_decide=, increased proof
+budget or successful test sample substitutes for those missing proofs.
+
+* Checked statements and actual implementation changes
+
+| Area | Unbounded checked statement | Production connection | Remaining source boundary |
+|------+-----------------------------+-----------------------+---------------------------|
+| Scheme slots | =DescriptorStream.stream_exact= and =DescriptorKernel.emitted_loop_exact= preserve the full first-occurrence map and reject every unequal action stream | =core/positive-certificate.ss= calls the emitted =core/descriptor-stream.ss=; its handwritten variable loop is removed | Emitted-text semantics, outer atom/key/header checking and host representation decoding |
+| Scheme values | =SchemeDescriptor.source_decoder_exact= preserves literal and wildcard payload equality, including mismatched wildcard payload rejection | The emitted procedure uses original pair tags and =equal?=, without transporting values through JSON | Faithfulness of the host pair, exact-integer, equality and symbol-map primitives |
+| Rust patterns | =RustDescriptor.stream_exact= checks the tag-erased compiler output using the checker's own prior map; =head_exact= rejects new head slots | =graph/certificate.rs= calls emitted =graph/descriptor_stream.rs=; its handwritten term loop is removed | Text rendering and =Values::scalar= representation; relation/index/metadata wrappers remain handwritten |
+| Mutable cache publication | =CachePublication.extend_program_exact= and =rebuild_program_exact= interpret the emitted instruction order, preserve exact errors and revoke versions after aliased mutation fails | =program/index.ss= uses emitted scoped macros; the version write remains last | Macro expansion, actual field/setter wiring, mutable Provider/hash representation, UF views and retained aliases |
+| Actor wire | =ActorEnvelope.decode_encode= and =decode_exact= preserve all five fields and arbitrary payloads | All owner-directed sends and the owner receive pattern use emitted macros | Actual mailbox delivery, complete owner-handler traces and publication/provenance callbacks |
+| SCC discovery | =SccState.discovery_exact= classifies unseen, completed and every discovery index; index zero stays active | Tarjan's advance branch uses the emitted macro | Full lowlink/stack invariants, SCC partition/order, head projection and predecessor extraction |
+
+The compiler admission hooks, Actor credits, checkpoints, cancellation decisions,
+resource charges and provenance publication rules retain their existing
+semantics. The generated macros preserve evaluation order and add no runtime
+controller or serialization layer. Rust Ascent remains a development dependency;
+Rayon remains the default. Scheme VM ownership and the one-thread-per-VM
+restriction are unchanged.
+
+* LeanPoo Guard integration
+
+The declared LeanPoo dependency is fixed to published revision
+=6aae50a9867c12191abb2180fdf031b3a8f55060=. The adapter imports its existing
+=tools/process_guard.py= directly and compares the installed file with that
+committed source before executing it. The upstream Guard source digest is
+=8a97a64c9e6f954a37835df58dc2fd63b27ff692e888a71e937cb48c116e6f0a=.
+No upstream source, branch or release is modified.
+
+The temporary 8 GiB aggregate ceiling and the duplicated local Lean process
+supervisor are removed. =just check-lean-file= and =just check-lean-proofs= use
+the same LeanPoo collection/cleanup implementation as formal source rendering.
+The adapter keeps compiler stdout separate from diagnostics and receipts.
+Each receipt records the exact command, dependency identity, original child
+status, CPU/wall time, rusage RSS, direct-child reaping and additional helper
+threads. The rusage number is diagnostic information, not a claimed aggregate
+process-group allocation measurement.
+
+Focused checks retain a 30-second deadline, =-j2=, =-M1024= and =-T10000000=.
+The complete library phase retains a 180-second deadline. Dependency restoration
+is a separate bounded metadata operation. An optional caller worker ceiling can
+only reduce detected Quint concurrency; it changes no model, exploration bound
+or obligation. Local full formal checks use two Quint workers.
+
+The real process controls cover recursion that ignores TERM, an exited leader
+whose descendant retains stdout, exact nonzero status/output, output-sink
+failure, and nested outer cancellation. Cancellation first lets the adapter
+clean its compiler group before ending the adapter. The nested cancellation
+fixture waits for actual compiler readiness, so import latency cannot masquerade
+as a cleanup failure. No timer/reader helper thread is introduced by collection.
+Deliberately detached process sessions remain outside the upstream group
+contract and require their own supervisor.
+
+* Acceptance evidence
+
+The isolated source snapshot starts from the existing PR head and overlays only
+this task's files. Concurrent trajectory/clue-query changes are excluded.
+The existing released SDK is used; no compiler or upstream SDK repair is part
+of this change.
+
+| Check | Result and evidence boundary |
+|-------+------------------------------|
+| Complete Scheme qualification | 171 modules, 1376 Cases passed; 267 seconds wall time on the local 12-worker run. Existing 2 GiB heaps and harness timeout settings are unchanged; this is not an absolute 180-second whole-run claim |
+| Actual descriptor/cache/wire/SCC controls | 11 Cases in =ascent-compiler-certificate-test.ss=, included in the complete inventory |
+| Lean | Complete 175-job inventory passed with the pinned LeanPoo Guard; the rejected source-parser assemblies are excluded and remain open |
+| Quint | 57 models, 383 obligations: 71 positive checks and 312 required counterexamples; the new cache model contributes one positive check and five mandatory failures |
+| Guard lifecycle | Four upstream process-Guard regressions and ten ASCENT adapter/worker/cancellation regressions |
+| Rust/PyO3 and Clippy | 95 tests across seven suites passed; strict Clippy passed. The matching Scheme archive and built wheel remain exact-head CI gates |
+| Performance | Original performance gates and thresholds remain unchanged; exact-head CI is required. No speedup is claimed from the source refactoring or local test duration |
+
+An early Rust candidate was rejected by the existing ASP owner-import gate;
+the test import was corrected through its crate path. That failure was not
+suppressed. Parser memory/recursion failures and the first nested-cancellation
+fixture's startup race are retained as failures, not acceptance evidence.
+
+Local protocol exploration uses the driver's default generation bounds. CI
+repeats the complete inventory with its declared generation cutoff of four.
+Neither the worker ceiling nor the Guard changes those bounds.
+
+Remote acceptance belongs to the current pushed commit's complete CI run in
+[[https://github.com/tao3k/gerbil-ascent/pull/1][PR #1]]. Local passes, previous commits' green runs and this report do not
+by themselves establish current-head remote acceptance.
+
+* Open obligations
+
+1. Close emitted Scheme/Rust text semantics and complete checker/decoder
+   equivalence with =CompiledCertificate.accept=, including outer descriptors
+   and actual argument/field wiring. The current unbounded stream proofs are
+   materially narrower than that claim.
+2. Refine actual mutable index/hash/UF implementations and Provider laws,
+   including shared aliases, retained views and callback behavior, beyond the
+   checked publication protocol.
+3. Prove the complete iterative Tarjan and component/head/dependency projection
+   correspondence. Discovery-cell classification is only one branch of it.
+4. Refine complete Actor and Rayon message/publication traces, cancellation and
+   accounting, including provenance callback failure identity and reordering.
+5. Retain explicit compiler, memory, primitive equality/hash and concurrency
+   assumptions. The broader Ascent paper coverage remains in the
+   [[file:../scheme-paper-closure.org][paper closure inventory]]; these changes do not establish all of it.

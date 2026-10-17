@@ -7,7 +7,8 @@
 ;;; Stream over actual descriptors and build a column view only when indexed.
 ;;; Host callbacks keep their separate admission protocol. This certificate
 ;;; covers the callback-free positive fragment.
-(import (only-in "execution-policy.ss" gerbil-ascent-readable-key))
+(import (only-in "execution-policy.ss" gerbil-ascent-readable-key)
+        (only-in "descriptor-stream.ss" gerbil-ascent-certificate-terms!))
 (export gerbil-ascent-positive-certificate?)
 
 ;; : (-> Heads Body PositivePlan Boolean)
@@ -17,22 +18,9 @@
     (def slots (make-hash-table-eq))
     (def count 0)
     (def (check-terms! sources actions head?)
-      (require (and (list? actions) (= (length sources) (length actions))))
-      (for-each
-        (lambda (source action)
-          (require (pair? action))
-          (case (car source)
-            ((literal wildcard) (require (equal? source action)))
-            ((variable)
-             (let (slot (hash-get slots (cdr source)))
-               (cond
-                 (slot (require (and (eq? (car action) 'bound) (eqv? (cdr action) slot))))
-                 (head? (reject #f))
-                 (else
-                  (require (and (eq? (car action) 'fresh) (eqv? (cdr action) count)))
-                  (hash-put! slots (cdr source) count)
-                  (set! count (+ count 1))))))
-            (else (reject #f)))) sources actions))
+      (let (next (gerbil-ascent-certificate-terms! sources actions slots count head?))
+        (require next)
+        (set! count next)))
     (require (and (vector? plan) (= (vector-length plan) 5)
                   (eq? (vector-ref plan 3) #t)
                   (exact-integer? (vector-ref plan 2))

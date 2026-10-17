@@ -351,11 +351,16 @@ check-evidence-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/EvidenceLifecycle.qnt::EvidenceLifecycle conformance .exit > .cache/ascent/evidence-conformance/quint.json
     cmp .cache/ascent/evidence-conformance/quint.json t/qualification/fixtures/evidence-lifecycle/conformance.json
 
-check-lean-proofs:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd packages/proofs/lean
-    lake -v build AscentProof AscentProofTests
+# Restore the declared dependency before importing its process Guard.
+prepare-lean:
+    cd packages/proofs/lean && timeout --kill-after=3s 30s lake update LeanPoo
+
+# Run each focused check through the locked LeanPoo process Guard.
+check-lean-file file: prepare-lean
+    cd packages/proofs/lean && PYTHONPATH="{{justfile_directory()}}/workbench/src" python3 -m ascent_workbench.lean_guard file "{{file}}"
+
+check-lean-proofs: prepare-lean
+    cd packages/proofs/lean && PYTHONPATH="{{justfile_directory()}}/workbench/src" python3 -m ascent_workbench.lean_guard build
 
 # Install the locked Quint tool and checksum-pinned compiler/checker backend once.
 prepare-quint:
@@ -363,7 +368,7 @@ prepare-quint:
 
 # Lean kernel checking and exhaustive Quint protocol exploration are independent.
 # Both parent exit statuses are required; cached model results are never reused.
-check-formal: prepare-quint
+check-formal: prepare-lean prepare-quint
     PYTHONPATH=workbench/src:python/src python3 -m ascent_workbench.formal all
 
 check-nonmembership-formal: check-lean-proofs

@@ -515,3 +515,17 @@ FAULTS['RayonPublication'] = (
     ('digest', 'CompletionExact', 12),
     ('uncapped', 'Bounded', 12),
 )
+
+# Physical cache macro microsteps and mandatory rejection controls.
+MODEL_ORDER += ('CachePublication',)
+CONFIGURATIONS['CachePublication'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+# Third tuple field: TLC invariant-violation exit code, not a step bound.
+FAULTS['CachePublication'] = (
+    ('late-revoke', 'RevokedAliases', 12),
+    ('early-publish', 'CompletePublication', 12),
+    ('mask-error', 'ErrorIdentity', 12),
+    ('mask-witness', 'ErrorIdentity', 12),
+    ('skip-witness', 'CompletePublication', 12),
+)

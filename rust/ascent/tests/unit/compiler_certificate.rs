@@ -77,3 +77,76 @@ fn actual_positive_descriptors_are_checked_independently() {
         &corrupt.values
     ));
 }
+
+#[test]
+fn generated_term_decoder_keeps_constructors_and_head_scope() {
+    use crate::graph::descriptor_stream::check_terms;
+    use crate::Value;
+    use std::collections::HashMap;
+
+    let mut values = crate::execution::Values::default();
+    let seven = values.intern(&Value::from(7_i64));
+    let eight = values.intern(&Value::from(8_i64));
+    let mut names = HashMap::new();
+    let terms = [
+        Term::Variable(40),
+        Term::Variable(40),
+        Term::Literal(Value::from(7_i64)),
+        Term::Wildcard,
+    ];
+    assert!(check_terms(
+        &terms,
+        &[
+            Pattern::Variable(0),
+            Pattern::Variable(0),
+            Pattern::Literal(seven),
+            Pattern::Wildcard
+        ],
+        &values,
+        &mut names,
+        false,
+    ));
+    assert_eq!(names.get(&40), Some(&0));
+    for pattern in [
+        Pattern::Variable(0),
+        Pattern::Literal(eight),
+        Pattern::Wildcard,
+    ] {
+        assert!(!check_terms(
+            &[Term::Literal(Value::from(7_i64))],
+            &[pattern],
+            &values,
+            &mut names,
+            false
+        ));
+    }
+    assert!(!check_terms(
+        &[Term::Wildcard],
+        &[Pattern::Variable(0)],
+        &values,
+        &mut names,
+        false
+    ));
+    assert!(!check_terms(
+        &[Term::Variable(71)],
+        &[Pattern::Variable(1)],
+        &values,
+        &mut names,
+        true
+    ));
+    assert!(!names.contains_key(&71));
+    assert!(check_terms(
+        &[Term::Variable(40)],
+        &[Pattern::Variable(0)],
+        &values,
+        &mut names,
+        true
+    ));
+    assert!(!check_terms(
+        &[Term::Variable(40)],
+        &[],
+        &values,
+        &mut names,
+        false
+    ));
+}

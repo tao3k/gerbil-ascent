@@ -4,6 +4,11 @@
 (import :std/test
         :gerbil-ascent/core/positive-plan
         :gerbil-ascent/core/positive-certificate
+        :gerbil-ascent/core/descriptor-stream
+        :gerbil-ascent/core/index-publication
+        :gerbil-ascent/core/actor-envelope
+        :gerbil-ascent/core/scc-state
+        :gerbil-ascent/core/dependency-graph
         :gerbil-ascent/core/execution-policy
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/table/access :gerbil-ascent/table/provider)
@@ -40,6 +45,72 @@
             (lambda (p) (vector-set! p 2 2))
             (lambda (p) (vector-set! p 2 3.0))
             (lambda (p) (vector-set! p 4 1))))))
+    (test-case "generated decoder preserves slot zero, constructor tags and wildcard payloads"
+      (let (slots (make-hash-table-eq))
+        (check-equal? (gerbil-ascent-certificate-terms! [] [] slots 0 #f) 0)
+        (check-equal? (gerbil-ascent-certificate-terms! '((variable . x)) '((fresh . 0)) slots 0 #f) 1)
+        (check-equal? (gerbil-ascent-certificate-terms! '((variable . x)) '((bound . 0)) slots 1 #t) 1)
+        (for-each (lambda (action)
+          (check-equal? (gerbil-ascent-certificate-terms! '((variable . x)) (list action) slots 1 #f) #f))
+          '((fresh . 0) (bound . 0.0) (bound . -1) (bound . 1) (literal . 0) malformed))
+        (check-equal? (gerbil-ascent-certificate-terms! '((variable . y)) '((fresh . 1)) slots 1 #t) #f)
+        (check-equal? (hash-get slots 'y) #f)
+        (check-equal? (gerbil-ascent-certificate-terms! '((wildcard . token)) '((wildcard . token)) slots 1 #f) 1)
+        (check-equal? (gerbil-ascent-certificate-terms! '((wildcard . token)) '((wildcard . other)) slots 1 #f) #f)
+        (check-equal? (gerbil-ascent-certificate-terms! '((variable . x)) '((bound . 0) . broken) slots 1 #f) #f)))
+    (test-case "cache source macros preserve order, hygiene and exact provider failures"
+      (let ((entry (vector 3 'old 'members)) (events []) (failure (vector 'provider-failure))
+            (owner 'outer-owner) (built 'outer-built) (members 'outer-members))
+        (def (lookup! item value) (set! events (cons 'lookup events)) (vector-set! item 1 value))
+        (def (witness! item value) (set! events (cons 'witness events)) (vector-set! item 2 value))
+        (def (version! item value) (set! events (cons value events)) (vector-set! item 0 value))
+        (check-equal? (gerbil-ascent-index-rebuild! entry 4
+          (begin (set! events (cons members events)) 'new-members)
+          (begin (set! events (cons built events)) 'new-lookup)
+          lookup! witness! version!) 'new-lookup)
+        (check-equal? (reverse events) '(outer-members outer-built lookup witness 4))
+        (check-equal? owner 'outer-owner)
+        (set! events [])
+        (check-equal? (eq? (with-catch (lambda (caught) caught) (lambda ()
+          (gerbil-ascent-index-rebuild! entry 5 'staged (raise failure) lookup! witness! version!))) failure) #t)
+        (check-equal? events [])
+        (check-equal? entry '#(4 new-lookup new-members))
+        (check-equal? (eq? (with-catch (lambda (caught) caught) (lambda ()
+          (gerbil-ascent-index-extend! entry (begin (error "must not publish"))
+            (begin (vector-set! entry 1 'mutated) (raise failure))
+            (error "must not extend witness") lookup! version!))) failure) #t)
+        (check-equal? entry '#(#f mutated new-members))
+        (check-equal? (reverse events) '(#f))
+        (set! events [])
+        (check-equal? (eq? (with-catch (lambda (caught) caught) (lambda ()
+          (gerbil-ascent-index-extend! entry (error "must not publish") 'extended
+            (begin (vector-set! entry 2 'changed-members) (raise failure)) lookup! version!))) failure) #t)
+        (check-equal? entry '#(#f extended changed-members))
+        (check-equal? (reverse events) '(#f lookup))))
+    (test-case "Actor envelope preserves every field and payload identity"
+      (let ((key (vector 'key)) (task (vector 'task)) (payload (vector 'stopped)))
+        (gerbil-ascent-send-round! (current-thread) 'done key (current-thread) task payload)
+        (gerbil-ascent-match-round! (thread-receive)
+          ([kind received-key worker received-task received-payload]
+            (begin (check-equal? kind 'done)
+            (check-equal? (eq? key received-key) #t)
+            (check-equal? (eq? worker (current-thread)) #t)
+            (check-equal? (eq? task received-task) #t)
+            (check-equal? (eq? payload received-payload) #t)))
+          (else (error "valid envelope rejected")))
+        (check-equal? (gerbil-ascent-match-round! '(done key worker task)
+          ([_ _ _ _ _] 'accepted) (else 'malformed)) 'malformed)))
+    (test-case "SCC discovery zero is on stack and each branch evaluates only once"
+      (let ((observed []) (known 'outer-known))
+        (check-equal? (gerbil-ascent-scc-state
+          (begin (set! observed (cons 'read observed)) 0) (known)
+          (error "zero must not be unseen") (error "zero must not be completed")
+          (begin (set! observed (cons known observed)) 'active)) 'active)
+        (check-equal? known 'outer-known)
+        (check-equal? (reverse observed) '(read 0))
+        (check-equal? (gerbil-ascent-scc-state #f (index) 'enter (error "completed") (error "active")) 'enter)
+        (check-equal? (gerbil-ascent-scc-state #t (index) (error "unseen") 'stay (error "active")) 'stay)
+        (check-equal? (gerbil-ascent-graph-components '#((1) (0 2) (3) (2))) '((0 1) (2 3)))))
     (test-case "row-local repeated variables cannot be lookup keys"
       (let* ((atom (vector 0 '((variable . x) (variable . x)) '(1) [] []))
              (head (vector 0 '((variable . x)))))

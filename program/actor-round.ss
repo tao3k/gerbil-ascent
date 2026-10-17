@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-actor-complete gerbil-ascent-joined-round)
+        (only-in :gerbil-ascent/core/actor-envelope gerbil-ascent-send-round! gerbil-ascent-match-round!)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
@@ -60,7 +61,7 @@
       (lambda ()
          (let ((batch []) (size 0) (ticks 0))
            (def (request! kind payload)
-             (thread-send owner [kind key (current-thread) task payload])
+             (gerbil-ascent-send-round! owner kind key (current-thread) task payload)
              (unless (eq? (thread-receive) 'credit) (stop 'stopped)))
            (def (flush!)
              (unless (zero? size)
@@ -140,7 +141,7 @@
                                  (match (thread-receive)
                                    (['task task]
                                     (let (result (run-task owner key task execute))
-                                      (thread-send owner ['done key (current-thread) task result]))
+                                      (gerbil-ascent-send-round! owner 'done key (current-thread) task result))
                                     (loop))
                                    ('stop 'finished))))))
                            (monitor
@@ -148,7 +149,7 @@
                              (lambda ()
                                (let (result (with-catch (lambda (exception) (cons 'failed exception))
                                                (lambda () (thread-join! worker))))
-                                 (thread-send owner ['exited key worker #f result]))))))
+                                 (gerbil-ascent-send-round! owner 'exited key worker #f result))))))
                       (set! workers (cons (cons worker monitor) workers))
                       worker))
                   (def (start! task)
@@ -177,7 +178,7 @@
                                (let (task (take-ready!))
                                  (when task (start! task) (admit))))))
                          (unless (zero? active-count)
-                           (match (thread-receive)
+                           (gerbil-ascent-match-round! (thread-receive)
                              ([kind received-key worker task payload]
                               (when (eq? received-key key)
                                 (let (assignment (hash-get active worker))

@@ -7,6 +7,7 @@
 ;;; Numeric specialization boundary: IDs and discovery indices are bounded
 ;;; by vector-length, including the final count sentinel. Checked fx operations
 ;;; apply only to these dense traversal counters, never to caller edge labels.
+(import (only-in "scc-state.ss" gerbil-ascent-scc-state))
 (export gerbil-ascent-graph-components gerbil-ascent-graph-close!)
 
 (defstruct graph-frame (node remaining parent) final: #t)
@@ -99,10 +100,10 @@
       (with ([neighbor . rest] remaining)
         (set! frame.remaining rest)
         (let (index (vector-ref indices neighbor))
-          (cond
-           ((not index) (enter neighbor frame))
-           ((eq? index #t) frame)
-           (else (lower! node index) frame)))))
+          (gerbil-ascent-scc-state index (known)
+            (enter neighbor frame)
+            frame
+            (begin (lower! node known) frame)))))
     (def (leave node parent)
       (finish node)
       (when parent

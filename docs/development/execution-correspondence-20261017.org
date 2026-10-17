@@ -238,3 +238,9 @@ observed 55 concurrent compiler processes. Its exit 70 and interference receipt
 are retained; it is not an admitted performance result. Standard library
 construction and the current-commit CI performance lane must accept the repair
 without adding an overlay exception or relaxing a threshold.
+
+* Subsequent descriptor and runtime work
+
+The [[file:descriptor-runtime-acceptance-20261017.org][descriptor/runtime acceptance report]] records the next implementation batch,
+its LeanPoo Guard integration, and the source-refinement obligations that remain
+open. The historical acceptance and failures above retain their original scope.

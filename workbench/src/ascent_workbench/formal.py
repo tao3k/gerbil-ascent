@@ -157,6 +157,9 @@ def validate_output(obligation: Obligation, code: int, output: str) -> None:
 
 
 def capacity(heap_mib: int = 1024) -> int:
+    ceiling = os.environ.get("ASCENT_FORMAL_WORKERS")
+    if ceiling is not None and (not ceiling.isdecimal() or int(ceiling) < 1):
+        raise ValueError("ASCENT_FORMAL_WORKERS must be a positive integer")
     cpu = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1)
     quota = Path("/sys/fs/cgroup/cpu.max")
     if quota.exists():
@@ -169,7 +172,9 @@ def capacity(heap_mib: int = 1024) -> int:
     if path.exists() and path.read_text().strip().isdecimal():
         memory = min(memory, int(path.read_text()))
     # A 1 GiB TLC heap plus native overhead; leave room for Lean and the OS.
-    return max(1, min(cpu, max(1, (memory - 2 * 1024**3) // ((heap_mib + 256) * 1024**2))))
+    detected = max(1, min(cpu, max(1, (memory - 2 * 1024**3) // ((heap_mib + 256) * 1024**2))))
+    # A caller may reduce concurrency without changing any model or obligation.
+    return detected if ceiling is None else min(detected, int(ceiling))
 
 
 class Runner:
@@ -189,17 +194,35 @@ class Runner:
 
     def run(self, argv: list[str], label: str, cwd: Path = ROOT) -> tuple[int, str]:
         path = self.output / f"{label}.out"
-        with path.open("w") as log:
+        guarded = bool(argv and Path(argv[0]).name == "lake")
+        if guarded:
+            adapter = [sys.executable, str(ROOT / "workbench/src/ascent_workbench/lean_guard.py")]
+            if argv[1:] == ["-v", "build", "AscentProof", "AscentProofTests"]:
+                argv = [*adapter, "build"]
+            elif len(argv) == 6 and argv[1:4] == ["env", "lean", "--run"]:
+                argv = [*adapter, "render", *argv[4:]]
+            else:
+                raise ValueError("unsupported Lean invocation; use the source-owned Guard adapter")
+        errors = self.output / f"{label}.stderr.out"
+        with path.open("w") as log, errors.open("w") as diagnostics:
             child = subprocess.Popen(argv, cwd=cwd, env=self.environment, stdout=log,
-                                     stderr=subprocess.STDOUT, start_new_session=True)
+                                     stderr=diagnostics if guarded else subprocess.STDOUT,
+                                     start_new_session=True)
             try:
                 code = child.wait(timeout=max(0, self.deadline - time.monotonic()))
             except BaseException:
                 if child.poll() is None:
-                    os.killpg(child.pid, signal.SIGKILL)
-                    child.wait()
+                    # The LeanPoo adapter owns a nested compiler group. Give its
+                    # finally cleanup a chance to reap that group before killing
+                    # the adapter itself, as in LeanPoo's phase supervisor.
+                    os.killpg(child.pid, signal.SIGTERM)
+                    try:
+                        child.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        os.killpg(child.pid, signal.SIGKILL)
+                        child.wait()
                 raise
-        return code, path.read_text()
+        return code, path.read_text() + (errors.read_text() if code and guarded else "")
 
     def start_compiler(self) -> int:
         with socket.socket() as probe:
@@ -315,6 +338,12 @@ def main() -> int:
     runner = Runner()
     try:
         if args.mode == "all":
+            code, output = runner.run(
+                [sys.executable, "-m", "unittest", "discover", "-s", "packages/proofs/tests",
+                 "-p", "test_lean_guard.py"], "lean-guard-tests")
+            if code:
+                raise RuntimeError("LeanPoo Guard regressions failed: " + output)
+            print("LEAN-GUARD-TESTS-OK", flush=True)
             with ThreadPoolExecutor(max_workers=1) as independent:
                 lean = independent.submit(runner.run, ["lake", "-v", "build", "AscentProof", "AscentProofTests"], "lean", ROOT / "packages/proofs/lean")
                 results = runner.quint_checks(models)
@@ -323,14 +352,19 @@ def main() -> int:
                     raise RuntimeError("Lean failed: " + output)
             # Compare generated executable definitions, not source digests or
             # captured test outputs. Runtime and Quint import these exact files.
-            for language, target in (
-                ("scheme", "core/execution-policy.ss"),
-                ("rust", "rust/ascent/src/execution/policy.rs"),
-                ("quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
+            for script, language, target in (
+                ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
+                ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
+                ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
+                ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
+                ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),
+                ("RenderCache.lean", "scheme", "core/index-publication.ss"),
+                ("RenderActor.lean", "scheme", "core/actor-envelope.ss"),
+                ("RenderScc.lean", "scheme", "core/scc-state.ss"),
             ):
                 code, source = runner.run(
-                    ["lake", "env", "lean", "--run", "ExecutionPolicy.lean", language],
-                    "execution-policy-" + language, ROOT / "packages/proofs/lean")
+                    ["lake", "env", "lean", "--run", script, language],
+                    Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 if code or source != (ROOT / target).read_text():
                     raise RuntimeError("execution policy rendering differs: " + target)
                 print("EXECUTION-POLICY-OK " + target, flush=True)

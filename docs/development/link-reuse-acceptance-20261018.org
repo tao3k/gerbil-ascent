@@ -1074,7 +1074,7 @@ with 168 of 173 modules and 1383 of 1401 Cases completed. That failure remains
 negative evidence; the previous runner's pass does not replace it.
 
 The allocation failure is reproducible with the existing pinned Release:
-= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.ss =
+= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.scm =
 retains an 8,000,000-byte bytevector, collects, then drops it and collects inside
 =##exec-stats=. The observed corrected estimate is -7,999,776 bytes with one GC;
 the independent raw snapshots also decrease (68,851,608 to 60,854,072 in the
@@ -1106,3 +1106,10 @@ including path-bearing generated sources; equal byte counts do not establish
 equal compiler work. Zero recorded block-I/O counters do not prove absence of
 I/O. The negative allocator observations prevent complete allocation-cost
 admission. No causal fix for that wall-time regression is claimed here.
+
+The standalone Gambit diagnostic uses a =.scm= fixture with ordinary =define=,
+not an ASCENT =.ss= module. An initial =.ss= placement unnecessarily changed
+the broad Scheme product-cache key, even though no production compiler consumes
+that fixture. The correction avoids this newly introduced invalidation without
+excluding any actual Scheme module from the key. It does not explain or resolve
+the earlier 19.41 percent regression. Both published CI revisions are retained.

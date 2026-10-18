@@ -190,7 +190,7 @@ def main():
         # Preserve an untimed SDK counter diagnostic alongside the workload.
         # It does not substitute for full cost or semantic acceptance.
         with (output / 'sdk-allocation-counter.log').open('w') as probe_log:
-            checked(['gxi', '-:debug=q', 'workbench/tests/fixtures/sdk-allocation-counter.ss'],
+            checked(['gxi', '-:debug=q', 'workbench/tests/fixtures/sdk-allocation-counter.scm'],
                     cwd=root, env=env, stdout=probe_log, stderr=subprocess.STDOUT, timeout=10)
         try:
             # This replaces the previous performance-library setup, not any

@@ -1266,3 +1266,50 @@ from 0.967444 to 1.185326 CPU seconds. This supports investigating environment
 variance; it does not certify that all of the earlier 19.41 percent difference
 is noise. No performance resolution is recorded. A separate uninstrumented
 same-revision study retains the required four controls.
+
+
+** Same-source variance and a separate cache-restoration defect
+
+Uninstrumented experiment 39146806746 uses 46a46bbe for both labels and retains
+all four controls. Cold builds take 223.498, 195.466, 162.144 and 175.304 seconds;
+preparation takes 383.648, 361.776, 354.174 and 348.283 seconds. Warm preparation
+takes 38.868, 43.482, 47.291 and 29.957 seconds. Identical source therefore
+produces a nominal cold improvement of 10.33 percent and a nominal warm
+regression of 31.89 percent under the same unchanged admission calculation.
+These are not version effects. The experiment fails its original gate and
+retains both older unresolved runs. This establishes substantial run variance,
+not a statistical attribution of all of the earlier 19.41 percent to noise.
+
+A different, repairable integration defect appears in exact-head CI logs:
+restoring the exact compiled-artifact key still compiles production modules.
+For example c9d50c7f's Scheme semantics job restores ascent-compiled-v2 and
+records 428 distinct module compile starts across its phases. DF is not
+scheduling a module twice. Fresh checkout source timestamps are newer than
+restored outputs, so its native timestamp checks correctly request compilation.
+
+An existing-Release probe with one unchanged source digest records one compile
+on a cold build, one after changing only the source mtime, and zero on the next
+unchanged build. A second probe restores an archive: restoring only outputs
+causes one compile, while restoring the matching source and output timestamps
+causes zero. This is a call-count characterization, not a timing speed claim.
+No compiler, SDK or build.ss change is required.
+
+The existing application cache now carries its matching tracked Scheme/C
+sources alongside products. The exact key includes Git index paths, blob IDs
+and modes, actual source-byte hashes, toolchain identity and existing job/lane
+separation. Before build, both the raw byte fingerprint and Git diff must match
+the requested checkout. Version manifests and generated/untracked sources are
+not restored. There are no fallback keys, synthetic source timestamps, new
+build tasks or skipped native builds. Source receipts, all std/make dependency
+checks and every semantic/performance gate still run. A first successful cold
+CI must save this v3 payload; a separately retained successful-run replay is
+required to validate cross-run restoration rather than infer reuse from a
+cache-hit message.
+
+Lean models the actual direct-input timestamp comparison from std/make:
+newer checkout timestamps request work even for equal bytes; matching restored
+source timestamps do not force that rebuild. Quint retains the original
+controls and rejects outputs-only restoration and stale-source restoration.
+This closes neither the complete native dependency graph nor the compiler,
+allocator or host decoder source. Cold build variance remains separate from
+the avoidable work caused by restoring mismatched timestamp generations.

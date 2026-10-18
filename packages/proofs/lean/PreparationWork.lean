@@ -277,6 +277,20 @@ theorem changed_input_requires_work (stored requested : CompileKey)
 theorem missing_output_requires_work (stored requested : CompileKey) :
     reuse stored requested false = false := by simp [reuse]
 
+-- std/make's build? compares every direct input timestamp with its outputs.
+-- An exact cache key does not prevent a fresh checkout timestamp from making
+-- the same bytes newer. Restoring the matching source/product snapshot keeps
+-- that native check effective; changed bytes still fail the Git admission.
+def directInputNewer (source output : Nat) : Bool := decide (output < source)
+
+theorem fresh_checkout_requires_rebuild (cached checkout output : Nat)
+    (_previous : cached ≤ output) (fresh : output < checkout) :
+    directInputNewer checkout output = true := by simp [directInputNewer, fresh]
+
+theorem restored_source_avoids_timestamp_rebuild (cached output : Nat)
+    (compiled : cached ≤ output) : directInputNewer cached output = false := by
+  simp [directInputNewer]; omega
+
 -- A CI cache entry is not just its compiled interfaces. The existing producer
 -- guard reads the payload and content receipt before native make can reuse it.
 -- Presence is necessary, never sufficient: reuse still requires the exact key.
@@ -443,6 +457,8 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms isolated_entries_preserved
 #print axioms changed_input_requires_work
 #print axioms missing_output_requires_work
+#print axioms fresh_checkout_requires_rebuild
+#print axioms restored_source_avoids_timestamp_rebuild
 #print axioms missing_payload_requires_work
 #print axioms missing_receipt_requires_work
 #print axioms bundle_requires_current_inputs

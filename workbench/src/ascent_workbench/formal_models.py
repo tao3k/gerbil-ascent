@@ -614,7 +614,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact AllocationNotNested CompilerCpuPartition CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
     ('key-by-generated-manifest', 'ContentKeyExact', 12),
@@ -627,6 +627,8 @@ FAULTS['PreparationWork'] = (
     ('forget-import', 'ImportsExact', 12),
     ('sum-nested', 'AllocationNotNested', 12),
     ('sum-helper-cpu', 'CompilerCpuPartition', 12),
+    ('restore-outputs-only', 'RestoredSourceClock', 12),
+    ('restore-stale-source', 'RestoredSourceCurrent', 12),
     ('publish-partial', 'Complete', 12),
     ('ignore-generation', 'Current', 12),
     ('clamp-counter', 'OrderedCounter', 12),

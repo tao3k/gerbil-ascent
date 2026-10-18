@@ -21,6 +21,8 @@ class FormalTests(unittest.TestCase):
             "hide-job": "JobsExact", "forget-import": "ImportsExact",
             "sum-nested": "AllocationNotNested", "publish-partial": "Complete",
             "sum-helper-cpu": "CompilerCpuPartition",
+            "restore-outputs-only": "RestoredSourceClock",
+            "restore-stale-source": "RestoredSourceCurrent",
             "ignore-generation": "Current", "clamp-counter": "OrderedCounter",
             "ignore-negative-raw": "OrderedCounter",
             "bootstrap-inventory": "InventoryDataOnly",

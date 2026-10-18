@@ -8,7 +8,7 @@ module PreparationWork {
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, rawStart: int, rawFinish: int, inventoryDeclarations: int,
-                gscCpu: int, helperCpu: int, residualCpu: int,
+                gscCpu: int, helperCpu: int, residualCpu: int, sourceStamp: int, sourceRestored: bool,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
@@ -16,7 +16,7 @@ module PreparationWork {
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, rawStart: 0, rawFinish: 0, inventoryDeclarations: 0,
-    gscCpu: 0, helperCpu: 0, residualCpu: 0,
+    gscCpu: 0, helperCpu: 0, residualCpu: 0, sourceStamp: 0, sourceRestored: false,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
@@ -44,9 +44,19 @@ module PreparationWork {
   action CompileSourceSuite = all {any {Mutation == "compile-source-suite", Mutation == "compile-source-consumer"},
     q' = {...q, compiledSourceCarriers: q.compiledSourceCarriers + 1, published: false}}
   action CacheOutput = all {q.finished,
-    q' = {...q, cacheReady: true, payloadPresent: true, receiptPresent: true, cacheGeneration: q.inputGeneration}}
+    q' = {...q, cacheReady: true, payloadPresent: true, receiptPresent: true, cacheGeneration: q.inputGeneration,
+      sourceStamp: 0, sourceRestored: false}}
+  // A compiled snapshot has source stamp 0 and product stamp 1. Fresh Git
+  // checkout changes only the source stamp, not the indexed content identity.
+  action FreshCheckout = all {q.cacheReady,
+    q' = {...q, sourceStamp: 2, sourceRestored: false}}
+  action RestoreSource = all {q.cacheReady,
+    q.cacheGeneration == q.inputGeneration or Mutation == "restore-stale-source",
+    q' = {...q, sourceRestored: true,
+      sourceStamp: if (Mutation == "restore-outputs-only") 2 else 0}}
   action ChangeInput = all {q.inputGeneration < 2,
-    q' = {...q, inputGeneration: q.inputGeneration + 1, requestKeyGeneration: q.inputGeneration + 1, current: false, published: false}}
+    q' = {...q, inputGeneration: q.inputGeneration + 1, requestKeyGeneration: q.inputGeneration + 1,
+      sourceRestored: false, current: false, published: false}}
   action ChangeCommit = all {q.commitGeneration < 2,
     q' = {...q, commitGeneration: q.commitGeneration + 1,
       requestKeyGeneration: if (Mutation == "key-by-commit") q.requestKeyGeneration + 1 else q.requestKeyGeneration}}
@@ -96,7 +106,7 @@ module PreparationWork {
       (Mutation == "ignore-negative-raw" and q.rawStart < 0),
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
-    CacheOutput, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
+    CacheOutput, FreshCheckout, RestoreSource, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CounterNegative, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val DemandedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "requested")
@@ -107,6 +117,8 @@ module PreparationWork {
   val ImportsExact = q.observedImports == q.imports
   val AllocationNotNested = q.reportedAllocation == q.outerAllocation
   val CompilerCpuPartition = q.residualCpu >= 0 and q.helperCpu + q.residualCpu == q.gscCpu
+  val RestoredSourceClock = q.sourceRestored implies q.sourceStamp <= 1
+  val RestoredSourceCurrent = q.sourceRestored implies q.cacheGeneration == q.inputGeneration
   val CompilerWorkComplete = q.published implies (q.failedJobs == 0 and q.changedInputs == 0)
   val Complete = q.published implies q.finished
   val Current = q.published implies q.current

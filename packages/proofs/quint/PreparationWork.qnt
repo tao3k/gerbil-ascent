@@ -81,6 +81,8 @@ module PreparationWork {
   // Preserve the signed observation; never coerce it to an allocation saving.
   action CounterDecrease = q' = {...q, rawStart: 8, rawFinish: 0,
     counterValid: false, published: false}
+  action CounterNegative = q' = {...q, rawStart: -8, rawFinish: -4,
+    counterValid: false, published: false}
   action CompilerFails = q' = {...q, failedJobs: 1, published: false}
   action CompilerInputChanges = q' = {...q, changedInputs: 1, published: false}
   action Publish = all {
@@ -90,11 +92,12 @@ module PreparationWork {
       0, true),
     q.finished or Mutation == "publish-partial",
     q.current or Mutation == "ignore-generation",
-    q.counterValid or Mutation == "clamp-counter",
+    q.counterValid or Mutation == "clamp-counter" or
+      (Mutation == "ignore-negative-raw" and q.rawStart < 0),
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
-    Allocate, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
+    Allocate, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CounterNegative, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val DemandedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "requested")
   val CachedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "cached")
@@ -107,7 +110,7 @@ module PreparationWork {
   val CompilerWorkComplete = q.published implies (q.failedJobs == 0 and q.changedInputs == 0)
   val Complete = q.published implies q.finished
   val Current = q.published implies q.current
-  val OrderedCounter = q.published implies (q.counterValid and q.rawStart <= q.rawFinish)
+  val OrderedCounter = q.published implies (q.counterValid and q.rawStart >= 0 and q.rawStart <= q.rawFinish)
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
   val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration

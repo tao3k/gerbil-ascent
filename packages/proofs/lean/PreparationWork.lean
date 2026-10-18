@@ -404,11 +404,15 @@ theorem negative_estimate_iff (start finish frame correction : Int) :
 
 -- A raw decrease cannot become admitted by a positive corrected estimate.
 def allocationObservationValid (rawStart rawFinish corrected : Int) : Bool :=
-  decide (rawStart ≤ rawFinish ∧ 0 ≤ corrected)
+  decide (0 ≤ rawStart ∧ rawStart ≤ rawFinish ∧ 0 ≤ corrected)
 
 theorem raw_counter_drop_rejected (start finish corrected : Int)
     (decreased : finish < start) :
     allocationObservationValid start finish corrected = false := by
+  simp [allocationObservationValid]; omega
+
+theorem negative_raw_counter_rejected (start finish corrected : Int)
+    (negative : start < 0) : allocationObservationValid start finish corrected = false := by
   simp [allocationObservationValid]; omega
 
 -- CPU/work bounds do not establish wall bounds: queue/IO/descheduling time
@@ -454,4 +458,5 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms still_release_can_decrease_counter
 #print axioms negative_estimate_iff
 #print axioms raw_counter_drop_rejected
+#print axioms negative_raw_counter_rejected
 end Ascent.PreparationWork

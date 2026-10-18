@@ -129,6 +129,21 @@ class PreparationWorkTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'version mismatch'):
                 summarize(root)
 
+    def test_negative_raw_endpoints_are_preserved_and_rejected_even_when_rising(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            # Exact event retained from the failed macOS compiler-work run.
+            (root / 'build-imports.sexp').write_text(
+                '(import-work-v3 8 1 "poo-pattern-support.ssi" '
+                '1792342124896016 1792342124896029 1000000 '
+                '880 0 4999 999 0 0 0 -93032752 -93029504)\n')
+            phase = summarize(root)['phases']['build']
+            row, = phase['negative_raw_counters']
+            self.assertEqual((row['raw_counter_start'], row['raw_counter_end']), (-93032752, -93029504))
+            self.assertFalse(row['raw_counter_decreased'])
+            self.assertEqual(row['sdk_allocated_bytes'], 880)
+            self.assertFalse(phase['observations_complete'])
+
     def test_failed_compiler_keeps_exact_inputs_and_exit(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

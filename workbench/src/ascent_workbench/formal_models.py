@@ -630,6 +630,7 @@ FAULTS['PreparationWork'] = (
     ('publish-partial', 'Complete', 12),
     ('ignore-generation', 'Current', 12),
     ('clamp-counter', 'OrderedCounter', 12),
+    ('ignore-negative-raw', 'OrderedCounter', 12),
     ('bootstrap-inventory', 'InventoryDataOnly', 12),
     ('eager-catalog', 'OnlyDemandedCompilation', 12),
     ('compile-source-suite', 'SourceCarriersRemainSource', 12),

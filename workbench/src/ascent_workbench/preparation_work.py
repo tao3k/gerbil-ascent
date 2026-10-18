@@ -139,7 +139,7 @@ def summarize(directory):
     phases = {}
     pattern = re.compile(r'\(import-work(-v3)? ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
                          r'([0-9]+) ([0-9]+) ([0-9]+) (-?[0-9]+) ([0-9]+) '
-                         r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?\)')
+                         r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)(?: (-?[0-9]+) (-?[0-9]+))?\)')
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
         for record in records:
@@ -191,6 +191,7 @@ def summarize(directory):
                                 'raw_counter_start': int(raw_start) if raw_start is not None else None,
                                 'raw_counter_end': int(raw_end) if raw_end is not None else None,
                                 'raw_counter_decreased': raw_start is not None and int(raw_end) < int(raw_start),
+                                'raw_counter_negative': raw_start is not None and min(int(raw_start), int(raw_end)) < 0,
                                 'cpu_ns': int(user) + int(system),
                                 'gc_cpu_ns': int(gcuser) + int(gcsys), 'gc_wall_ns': int(gcwall)})
         phases[phase] = {
@@ -209,7 +210,8 @@ def summarize(directory):
             'observations_complete': preparation_observation_complete(
                 sum(r['exit_code'] != 0 for r in records),
                 sum(not r['inputs_current'] for r in records),
-                sum(r['sdk_allocated_bytes'] < 0 or r['raw_counter_decreased'] for r in imports), trace.exists()),
+                sum(r['sdk_allocated_bytes'] < 0 or r['raw_counter_decreased'] or r['raw_counter_negative']
+                    for r in imports), trace.exists()),
             'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
             # GSC RUSAGE_CHILDREN includes nested SDK helpers and native C/link
             # children. These are a subset, never an additive second cost.
@@ -224,6 +226,7 @@ def summarize(directory):
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
             'raw_counter_decreases': [r for r in imports if r['raw_counter_decreased']],
+            'negative_raw_counters': [r for r in imports if r['raw_counter_negative']],
             'negative_sdk_allocation_estimates': [r for r in imports if r['sdk_allocated_bytes'] < 0],
             'largest_inclusive_imports': sorted(imports,
                 key=lambda r: r['sdk_allocated_bytes'], reverse=True)[:12],

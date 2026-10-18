@@ -1223,3 +1223,46 @@ costs without assuming a version regression. Its timings remain diagnostic,
 and source semantics retain three workers, a 240-second runtime limit and
 all existing Cases. Twelve-thread Rust/PyO3 acceptance remains independent.
 No performance threshold, cancellation, resource or provenance rule changes.
+
+
+** Retained first-control compiler costs and signed endpoint decoder repair
+
+Work experiment 39146265938 retains its first complete cold/prepare/warm
+control. It stops at summary decoding, so it is not a four-control work study.
+The decoder incorrectly required nonnegative raw SDK endpoints. An intact
+record reports -93,032,752 to -93,029,504 with a positive corrected estimate of
+880 bytes. Signed parsing now retains that event while rejecting its use as
+allocation evidence. Neither endpoint is clamped, discarded or counted as a
+saving. Lean and Quint explicitly reject even increasing negative endpoints.
+The failed remote run remains failed; its retained bytes are replayed locally,
+without repeating compilation to replace the failure.
+
+The first preparation control has exactly 253 runtime SCM inputs, 253 phase-0
+inputs and 83 phase-1 inputs: 589 distinct inputs, with no repeated input path.
+These belong to 251 test-support modules and the two artifact/inventory support
+modules. All 589 GSC processes dispatch an observed native C/dynamic-link helper.
+Their inclusive GSC CPU is 653.535935 seconds, of which 547.491334 seconds
+(83.77 percent) are helper child CPU. The remaining 106.044601 seconds include
+GSC frontend and observer overhead. These are process-work observations, not
+source-refinement proofs or additive wall-time components. Exact SCM inputs
+consume 17,624,206 bytes and helper C inputs consume 161,255,886 bytes.
+
+Preparation wall time is 387.560746 seconds in this instrumented control,
+including 48.218444 seconds of dependency projection and 330.170402 seconds of
+make. Warm preparation starts no GSC or SDK helper process, changes no retained
+test output, and spends 41.038652 of 47.305641 seconds in dependency projection;
+make takes 0.423790 seconds. Both phases have zero foreign-compiler observations
+and audit errors. Negative raw endpoints (135 build, 5 prepare) and decreasing
+counters still reject complete allocation-cost admission.
+
+At fa3f080e, main CI 39146270550 passes all ten jobs. Its tested merge tree
+matches the head tree a8d4d79fc7bcc7e7e9f5ac9bd980398cd58e3721. The independent
+macOS run 39146270642 passes 173 modules and 1401 Cases with three workers and
+the unchanged 240-second runtime limit: preparation 364.796200 seconds and
+runtime 164.996896 seconds. This is not an improvement over 46a46bbe: the
+Scheme/Rust workload is unchanged, yet these separate runners have materially
+different timings. The independent fixed 2-GiB hashing reference also changes
+from 0.967444 to 1.185326 CPU seconds. This supports investigating environment
+variance; it does not certify that all of the earlier 19.41 percent difference
+is noise. No performance resolution is recorded. A separate uninstrumented
+same-revision study retains the required four controls.

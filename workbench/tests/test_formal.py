@@ -22,6 +22,7 @@ class FormalTests(unittest.TestCase):
             "sum-nested": "AllocationNotNested", "publish-partial": "Complete",
             "sum-helper-cpu": "CompilerCpuPartition",
             "ignore-generation": "Current", "clamp-counter": "OrderedCounter",
+            "ignore-negative-raw": "OrderedCounter",
             "bootstrap-inventory": "InventoryDataOnly",
             "eager-catalog": "OnlyDemandedCompilation",
             "compile-source-suite": "SourceCarriersRemainSource",

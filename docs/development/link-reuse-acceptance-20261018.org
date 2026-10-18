@@ -330,8 +330,8 @@ original exit status; changed input bytes also fail the diagnostic compiler.
 
 PreparationWork.lean checks additive compiler-job/input work, ordered
 allocation subtraction, nested double-counting and the independence of wait
-time from reduced work. Its bridge-removal theorem is conditional on the
-observed unchanged jobs and removed phases, not a compiler source theorem.
+time from reduced work. Its removal theorem concerns two observed records, not two processes per
+module or per logical compile-file job; those units must remain distinct.
 PreparationWork.qnt checks observation coverage/currentness and six required
 fault counterexamples. These checks do not prove the observer/decoder, SDK
 expander, C compiler or allocator correct. Their source refinement and a
@@ -364,3 +364,16 @@ an isolated compiler-job-count effect; it is not a normalization, an excuse
 to accept the candidate, or a retrospective root-cause proof for 39084120171.
 The three-worker source Suite on that head still times out at 180.133 seconds
 with zero observed foreign compilers. Both failures remain acceptance failures.
+
+The first two work-only dispatches (39095491596 and 39095493824) are invalid
+comparisons: both stop in baseline build with exit 70 because the observer's
+GERBIL_GSC directory has no gambuild-C sibling. This is a downstream observer
+calling error, not an SDK defect or a performance result. The adapter now
+executes the unchanged SDK helper at its original path, retaining its sibling
+resolution and cache identity, and records external helper calls separately.
+A full module pipeline smoke test produces two dynamic artifacts, observes
+three GSC invocations and one external helper, then loads the compiled module
+and checks its exported answer. This also demonstrates why 257 logical
+compile-file jobs cannot be reported as 257 GSC/native compiler invocations.
+The original failed logs and artifacts remain retained. No result from either
+failed dispatch qualifies the historical or current performance comparison.

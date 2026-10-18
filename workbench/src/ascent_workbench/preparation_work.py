@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import resource
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -45,10 +46,17 @@ def file_input(path):
             'sha256': hashlib.sha256(data).hexdigest()}
 
 
-def execute_gsc(arguments):
+def execute_gsc(arguments, helper=False):
     inputs = []
+    if helper:
+        operation = arguments[0].upper()
+        names = shlex.split(os.environ.get(f'BUILD_{operation}_INPUT_FILENAMES_PARAM', ''))
+        metadata = os.environ.get(f'BUILD_{operation}_META_INFO_FILE_PARAM')
+        if metadata:
+            names.append(metadata)
+        inputs = [file_input(Path(name)) for name in dict.fromkeys(names) if Path(name).is_file()]
     option_value = False
-    for arg in arguments:
+    for arg in ([] if helper else arguments):
         if option_value:
             option_value = False
         elif arg in {'-o', '-cc-options', '-ld-options', '-prelude', '-postlude', '-e', '-target', '-cc'}:
@@ -57,10 +65,12 @@ def execute_gsc(arguments):
             inputs.append(file_input(Path(arg)))
     started = time.monotonic_ns()
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
-    result = subprocess.run([os.environ['ASCENT_REAL_GSC'], *arguments])
+    command = str(Path(os.environ['ASCENT_REAL_GSC']).parent / 'gambuild-C') if helper else os.environ['ASCENT_REAL_GSC']
+    result = subprocess.run([command, *arguments])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     current = all(Path(row['path']).is_file() and file_input(Path(row['path'])) == row for row in inputs)
-    record = {'schema': 'ascent.gsc-work.v1', 'pid': os.getpid(), 'arguments': arguments,
+    record = {'schema': 'ascent.compiler-work.v1', 'kind': 'sdk-helper' if helper else 'gsc',
+              'pid': os.getpid(), 'arguments': arguments,
               'inputs': inputs, 'exit_code': result.returncode, 'inputs_current': current,
               'wall_ns': time.monotonic_ns() - started,
               'user_seconds': after.ru_utime - before.ru_utime,
@@ -82,6 +92,8 @@ def summarize(directory):
                          r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)\)')
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
+        gsc = [r for r in records if r['kind'] == 'gsc']
+        helpers = [r for r in records if r['kind'] == 'sdk-helper']
         imports = []
         trace = directory / f'{phase}-imports.sexp'
         if trace.exists():
@@ -99,12 +111,14 @@ def summarize(directory):
                                 'allocator_counter_before': before, 'allocator_counter_after': after,
                                 'allocator_counter_delta_bytes': after - before})
         phases[phase] = {
-            'gsc_invocations': len(records),
-            'gsc_input_bytes': sum(x['bytes'] for r in records for x in r['inputs']),
-            'gsc_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in records),
-            'gsc_major_faults': sum(r['major_faults'] for r in records),
-            'gsc_failed': sum(r['exit_code'] != 0 for r in records),
-            'gsc_changed_inputs': sum(not r['inputs_current'] for r in records),
+            'gsc_invocations': len(gsc),
+            'gsc_input_bytes': sum(x['bytes'] for r in gsc for x in r['inputs']),
+            'gsc_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in gsc),
+            'gsc_major_faults': sum(r['major_faults'] for r in gsc),
+            'gsc_failed': sum(r['exit_code'] != 0 for r in gsc),
+            'gsc_changed_inputs': sum(not r['inputs_current'] for r in gsc),
+            'external_sdk_helper_invocations': len(helpers),
+            'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
@@ -128,7 +142,16 @@ def install(directory, real_gxi, real_gsc):
     gxi.write_text(f'#!{sys.executable}\nimport os,sys\na=sys.argv[1:]\n'
                    'r=[]\nwhile a and a[0].startswith("-:"): r.append(a.pop(0))\n'
                    f'os.execv({str(real_gxi)!r}, [{str(real_gxi)!r}, *r, "-e", {IMPORT_HOOK!r}, *a])\n')
-    for path in (gsc, gxi):
+    # Gerbil derives the bundle helper from GERBIL_GSC's directory. Execute
+    # the original path, rather than symlinking its script: its $0 locates
+    # sibling reuse helpers and participates in the SDK's cache identity.
+    original_helper = real_gsc.parent / 'gambuild-C'
+    if not original_helper.is_file():
+        raise FileNotFoundError(original_helper)
+    helper = directory / 'gambuild-C'
+    helper.write_text(f'#!{sys.executable}\nimport runpy,sys\nsys.argv.insert(1,"--sdk-helper")\n'
+                     f'runpy.run_path({str(entry)!r}, run_name="__main__")\n')
+    for path in (gsc, gxi, helper):
         path.chmod(0o755)
     return {'GERBIL_GSC': str(gsc), 'ASCENT_REAL_GSC': str(real_gsc),
             'ASCENT_GSC_WORK_DIRECTORY': str(directory / 'gsc-records'),
@@ -136,4 +159,5 @@ def install(directory, real_gxi, real_gsc):
 
 
 if __name__ == '__main__':
-    sys.exit(execute_gsc(sys.argv[1:]))
+    helper = sys.argv[1:2] == ['--sdk-helper']
+    sys.exit(execute_gsc(sys.argv[2:] if helper else sys.argv[1:], helper))

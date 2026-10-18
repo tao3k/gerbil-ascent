@@ -48,10 +48,10 @@ theorem total_append (xs ys : List Work) :
   | nil => simp [total, Work.plus]
   | cons x xs ih => simp [total, ih, Work.plus, Nat.add_assoc]
 
--- The repair removes one independent module's two GSC phases, retaining
--- every other job. This is a conditional work theorem, not a claim that
--- an arbitrary bridge has two phases or that its latency is constant.
-theorem removed_bridge_work (before after : List Work) (phase0 phase1 : Nat) :
+-- Removing two observed GSC records retains every other record. A module
+-- or logical compile-file job must not be assumed to correspond to two GSC
+-- invocations; the actual SDK pipeline can use several processes per job.
+theorem removed_two_observations (before after : List Work) (phase0 phase1 : Nat) :
     (total (before ++ [⟨1, phase0⟩, ⟨1, phase1⟩] ++ after)).jobs =
       (total (before ++ after)).jobs + 2 ∧
     (total (before ++ [⟨1, phase0⟩, ⟨1, phase1⟩] ++ after)).inputBytes =
@@ -81,7 +81,7 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 
 #print axioms total_append
 #print axioms inactive_dependency_no_work
-#print axioms removed_bridge_work
+#print axioms removed_two_observations
 #print axioms ordered_allocation_snapshots
 #print axioms nested_inclusive_double_counts
 #print axioms decreasing_counter_rejected

@@ -9,10 +9,24 @@ import sys
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import summarize
+from ascent_workbench.preparation_work import install, summarize
 
 
 class PreparationWorkTests(unittest.TestCase):
+    def test_sdk_helper_keeps_original_sibling_directory_and_exit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sdk = root / 'sdk'
+            sdk.mkdir()
+            helper = sdk / 'gambuild-C'
+            helper.write_text('#!/bin/sh\nprintf "%s\\n" "$0" "$1"\nexit 9\n')
+            helper.chmod(0o755)
+            observer = root / 'observer'
+            env = dict(os.environ, **install(observer, sdk / 'gxi', sdk / 'gsc'))
+            process = subprocess.run([str(observer / 'gambuild-C'), 'dyn'], env=env, capture_output=True, text=True)
+            self.assertEqual(process.returncode, 9)
+            self.assertEqual(process.stdout.splitlines(), [str(helper), 'dyn'])
+
     def test_nested_process_allocations_are_not_added(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

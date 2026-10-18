@@ -15,4 +15,4 @@ python-source = "src"
 no-default-features = true
 features = ["rust-runtime", "rayon", "extension-module"]
 python-packages = ["ascent"]
-include = ["ascent/__init__.py", "ascent/clue_query_rules.ss"]
+include = ["ascent/__init__.py", "ascent/clue_query_rules.ss", "ascent/checkpoint_rules.ss"]

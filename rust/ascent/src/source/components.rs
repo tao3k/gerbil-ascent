@@ -32,6 +32,14 @@ impl Scope {
     }
 }
 impl EvidenceProgram {
+    /// Select registry dependencies without interpreting source declarations.
+    /// This is not source admission; callers must still validate the selected scopes.
+    /// # Errors
+    /// Rejects duplicate identities, missing dependencies and dependency cycles.
+    pub fn component_dependencies(components: &[Component], entry: &str) -> Result<Vec<String>> {
+        let index = component_index(components)?;
+        dependency_ids(entry, &index)
+    }
     /// Validate selected component scopes before exposing a callable owner.
     /// # Errors
     /// Rejects unknown/cyclic dependencies, hidden imports and ambiguous bindings.
@@ -43,8 +51,7 @@ impl EvidenceProgram {
     /// Rejects cycles, hidden imports and ambiguous selected bindings.
     pub fn component_ids(components: &[Component], entry: &str) -> Result<Vec<String>> {
         let index = component_index(components)?;
-        let mut scopes = BTreeMap::new();
-        visit(entry, &index, &mut BTreeSet::new(), &mut scopes)?;
+        let scopes = selected_scopes(entry, &index)?;
         for id in scopes.keys() {
             environment(id, &index, &scopes)?;
         }
@@ -59,10 +66,23 @@ impl EvidenceProgram {
         constructor: Option<&str>,
     ) -> Result<Self> {
         let index = component_index(components)?;
-        let mut scopes = BTreeMap::new();
-        visit(entry, &index, &mut BTreeSet::new(), &mut scopes)?;
+        let scopes = selected_scopes(entry, &index)?;
         linked_entry(entry, constructor, &index, &scopes)
     }
+}
+fn dependency_ids(entry: &str, index: &BTreeMap<String, &Component>) -> Result<Vec<String>> {
+    let mut selected = BTreeSet::new();
+    visit(entry, index, &mut BTreeSet::new(), &mut selected)?;
+    Ok(selected.into_iter().collect())
+}
+fn selected_scopes(
+    entry: &str,
+    index: &BTreeMap<String, &Component>,
+) -> Result<BTreeMap<String, Scope>> {
+    dependency_ids(entry, index)?
+        .into_iter()
+        .map(|id| Ok((id.clone(), Scope::read(index[&id])?)))
+        .collect()
 }
 fn component_index(components: &[Component]) -> Result<BTreeMap<String, &Component>> {
     let mut index = BTreeMap::new();
@@ -77,9 +97,9 @@ fn visit(
     id: &str,
     index: &BTreeMap<String, &Component>,
     stack: &mut BTreeSet<String>,
-    scopes: &mut BTreeMap<String, Scope>,
+    selected: &mut BTreeSet<String>,
 ) -> Result<()> {
-    if scopes.contains_key(id) {
+    if selected.contains(id) {
         return Ok(());
     }
     if !stack.insert(id.to_owned()) {
@@ -89,9 +109,9 @@ fn visit(
         .get(id)
         .ok_or_else(|| invalid("unknown Evidence component"))?;
     for dependency in &component.dependencies {
-        visit(&dependency.component, index, stack, scopes)?;
+        visit(&dependency.component, index, stack, selected)?;
     }
-    scopes.insert(id.to_owned(), Scope::read(component)?);
+    selected.insert(id.to_owned());
     stack.remove(id);
     Ok(())
 }

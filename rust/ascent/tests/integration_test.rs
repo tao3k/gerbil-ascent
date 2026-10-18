@@ -29,3 +29,6 @@ mod interaction;
 mod clues;
 #[path = "integration/evidence_definitions.rs"]
 mod evidence_definitions;
+
+#[path = "integration/evidence_checkpoint.rs"]
+mod evidence_checkpoint;

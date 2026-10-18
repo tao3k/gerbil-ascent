@@ -13,13 +13,17 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-fn components(manifest: &Data, sources: &Data) -> gerbil_ascent::Result<Vec<Component>> {
+fn components(
+    manifest: &Data,
+    sources: &Data,
+    entry: &str,
+) -> gerbil_ascent::Result<Vec<Component>> {
     if manifest.field("schema")?.text()? != "ascent.evidence-components.v1" {
         return Err(gerbil_ascent::Error::InvalidProgram(
             "component manifest schema".into(),
         ));
     }
-    manifest
+    let components = manifest
         .field("components")?
         .list()?
         .iter()
@@ -27,7 +31,12 @@ fn components(manifest: &Data, sources: &Data) -> gerbil_ascent::Result<Vec<Comp
             let file = item.field("source")?.text()?;
             Ok(Component {
                 id: item.field("id")?.text()?.to_owned(),
-                source: sources.field(file)?.text()?.to_owned(),
+                source: sources
+                    .get(file)
+                    .map(Data::text)
+                    .transpose()?
+                    .unwrap_or_default()
+                    .to_owned(),
                 exports: item.get("exports").map(names).transpose()?,
                 dependencies: item
                     .field("dependencies")?
@@ -42,7 +51,15 @@ fn components(manifest: &Data, sources: &Data) -> gerbil_ascent::Result<Vec<Comp
                     .collect::<gerbil_ascent::Result<_>>()?,
             })
         })
-        .collect()
+        .collect::<gerbil_ascent::Result<Vec<_>>>()?;
+    let selected = EvidenceProgram::component_dependencies(&components, entry)?;
+    for item in manifest.field("components")?.list()? {
+        let id = item.field("id")?.text()?;
+        if selected.iter().any(|selected| selected == id) {
+            sources.field(item.field("source")?.text()?)?.text()?;
+        }
+    }
+    Ok(components)
 }
 fn names(value: &Data) -> gerbil_ascent::Result<Vec<String>> {
     value
@@ -73,8 +90,8 @@ impl Components {
             ));
         }
         engine.0.admit_source().map_err(error)?;
-        let components =
-            components(&packets::read(manifest)?, &packets::read(sources)?).map_err(error)?;
+        let components = components(&packets::read(manifest)?, &packets::read(sources)?, entry)
+            .map_err(error)?;
         let loaded = manifest
             .py()
             .detach(|| EvidenceProgram::component_ids(&components, entry))

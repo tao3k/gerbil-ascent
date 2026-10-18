@@ -901,3 +901,33 @@ fn computed_symbol_heads_and_number_predicates_preserve_values() {
     session.close();
     engine.shutdown();
 }
+#[test]
+fn registry_dependency_discovery_is_not_source_admission() {
+    use gerbil_ascent::{Component, EvidenceProgram};
+    let mut components = vec![
+        Component {
+            id: "chosen".into(),
+            source: "(".into(),
+            exports: None,
+            dependencies: vec![],
+        },
+        Component {
+            id: "unselected".into(),
+            source: "(".into(),
+            exports: None,
+            dependencies: vec![],
+        },
+    ];
+    assert_eq!(
+        EvidenceProgram::component_dependencies(&components, "chosen").unwrap(),
+        vec!["chosen"]
+    );
+    assert!(EvidenceProgram::component_ids(&components, "chosen").is_err());
+    components[0].source =
+        "(define-evidence (make) (sources) (outputs checked) (relation checked (x) '((1))))".into();
+    assert_eq!(
+        EvidenceProgram::component_ids(&components, "chosen").unwrap(),
+        vec!["chosen"]
+    );
+    assert!(EvidenceProgram::read_components(&components, "chosen", Some("make")).is_ok());
+}

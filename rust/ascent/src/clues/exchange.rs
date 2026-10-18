@@ -35,6 +35,7 @@ pub struct ClueExchange {
     pub(super) engine: Engine,
     pub(super) facts: BTreeMap<String, Vec<Row>>,
     pub(super) identity: String,
+    pub(super) read_contract: String,
     session: SourceSession,
 }
 
@@ -115,7 +116,20 @@ impl ClueExchange {
         let inputs = supplied
             .map()?
             .iter()
-            .map(|(name, value)| Ok((name.clone(), rows(value)?)))
+            .map(|(name, value)| {
+                let rows = value
+                    .list()?
+                    .iter()
+                    .map(|row| {
+                        row.list()?
+                            .iter()
+                            .map(|cell| crate::catalog::scalar(cell, crate::Type::Any))
+                            .collect::<Result<Vec<_>>>()
+                            .map(Row::from)
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                Ok((name.clone(), rows))
+            })
             .collect::<Result<_>>()?;
         let projected = evaluate(&mut projection, inputs, limits, cancel)?;
         let mut facts = projection_facts(&projected)?;
@@ -134,6 +148,15 @@ impl ClueExchange {
             ("rules", RULES.into()),
         ])
         .digest();
+        let read_contract = Data::object([
+            (
+                "declarations",
+                Data::List(sources.iter().map(|v| Data::from(*v)).collect()),
+            ),
+            ("constructor", constructor.into()),
+            ("rules", RULES.into()),
+        ])
+        .digest();
         let session = engine.open_evidence_sources(
             &[RULES],
             Some("make-clue-query-evidence"),
@@ -143,6 +166,7 @@ impl ClueExchange {
             engine: engine.clone(),
             facts,
             identity,
+            read_contract,
             session,
         })
     }
@@ -268,6 +292,11 @@ impl ClueExchange {
         }
         let identity =
             Data::List(vec![self.identity.clone().into(), other.identity.into()]).digest();
+        let read_contract = Data::List(vec![
+            self.read_contract.clone().into(),
+            other.read_contract.into(),
+        ])
+        .digest();
         for name in ["clue", "factor", "link", "attested"] {
             self.facts
                 .entry(name.into())
@@ -275,6 +304,7 @@ impl ClueExchange {
                 .extend(other.facts[name].iter().cloned());
         }
         self.identity = identity;
+        self.read_contract = read_contract;
         Ok(())
     }
 

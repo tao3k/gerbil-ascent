@@ -1,6 +1,236 @@
 use gerbil_ascent::{Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr};
 use gerbil_ascent::{ClueProjection, ClueSelector};
 
+#[test]
+fn clues_projection_accepts_typed_observations_without_truthiness_coercion() {
+    let source = "(define-evidence (project)
+      (sources observed) (outputs clue factor link)
+      (relation observed (flag count))
+      (relation clue (id digest claim polarity role source))
+      (relation factor (id digest name value))
+      (relation link (claim target label id digest))
+      ((clue (lit \"id\") (lit \"sha\") (lit \"claim\") (lit \"support\")
+             (lit \"observation\") (lit \"receipt\")) <-- (observed (lit #f) (lit 1))))";
+    let engine = Engine::new(std::thread::available_parallelism().unwrap().get()).unwrap();
+    for (flag, expected) in [
+        (Data::Bool(false), 1),
+        (Data::from(0usize), 0),
+        (Data::from("false"), 0),
+    ] {
+        let supplied = Data::object([(
+            "observed",
+            Data::List(vec![Data::List(vec![flag, Data::from(1usize)])]),
+        )]);
+        let mut owner = ClueExchange::new(
+            &engine,
+            ClueProjection {
+                sources: &[source],
+                constructor: "project",
+                supplied: &supplied,
+                attestations: &Data::object([("receipt", "sha".into())]),
+            },
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            owner
+                .inventory()
+                .unwrap()
+                .field("claims")
+                .unwrap()
+                .list()
+                .unwrap()
+                .len(),
+            expected
+        );
+        owner.close();
+    }
+}
+
+#[test]
+fn clues_checkpoint_only_restores_declared_query_in_a_new_owner() {
+    let engine = Engine::new(1).unwrap();
+    let mut owner = exchange(&engine);
+    let first = owner
+        .slice_selected(
+            ClueSelector {
+                sources: &[PROJECTION],
+                constructor: "select",
+            },
+            &Data::object([("bindings", list(&[&["mechanism", "old"]]))]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    owner.close();
+    let request = Data::object([("checkpoint", at(&first, &["checkpoint"]).clone())]);
+    let mut owner = exchange(&engine);
+    let resumed = owner
+        .slice(&request, &Limits::default(), &Cancellation::default())
+        .unwrap();
+    assert_eq!(at(&resumed, &["brief", "mode"]), &Data::from("incremental"));
+    assert_eq!(rows(&resumed, &["brief", "families"]), []);
+    assert_eq!(
+        at(&resumed, &["brief", "delta", "added"]),
+        &Data::from(0usize)
+    );
+    assert_eq!(
+        at(&resumed, &["brief", "executionAuthorized"]),
+        &Data::from(false)
+    );
+
+    let mut supplied = facts().map().unwrap().clone();
+    let mut clues = supplied["clue"].list().unwrap().to_vec();
+    clues.push(
+        list(&[&[
+            "added",
+            "sha",
+            "newly-discovered",
+            "support",
+            "observation",
+            "receipt",
+        ]])
+        .list()
+        .unwrap()[0]
+            .clone(),
+    );
+    supplied.insert("clue".into(), Data::List(clues));
+    supplied.insert(
+        "factor".into(),
+        list(&[
+            &["known", "sha", "mechanism", "old"],
+            &["added", "sha", "mechanism", "old"],
+        ]),
+    );
+    let mut changed = ClueExchange::new(
+        &engine,
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &Data::Map(supplied),
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
+        &Limits::default(),
+        &Cancellation::default(),
+    )
+    .unwrap();
+    let refreshed = changed
+        .slice(&request, &Limits::default(), &Cancellation::default())
+        .unwrap();
+    assert_eq!(at(&refreshed, &["brief", "mode"]), &Data::from("refresh"));
+    assert_eq!(
+        at(&refreshed, &["brief", "counts", "support"]),
+        &Data::from(1usize)
+    );
+    assert_eq!(
+        at(&refreshed, &["brief", "counts", "counter"]),
+        &Data::from(1usize)
+    );
+    let claims = rows(&refreshed, &["brief", "families"])
+        .iter()
+        .map(|family| family.field("claim").unwrap().text().unwrap())
+        .collect::<Vec<_>>();
+    assert!(claims.contains(&"newly-discovered"));
+}
+
+#[test]
+fn clues_checkpoint_query_is_overridable_and_its_digest_is_checked() {
+    let engine = Engine::new(1).unwrap();
+    let mut owner = exchange(&engine);
+    let first = owner
+        .slice_selected(
+            ClueSelector {
+                sources: &[PROJECTION],
+                constructor: "select",
+            },
+            &Data::object([("bindings", list(&[&["mechanism", "old"]]))]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    let checkpoint = at(&first, &["checkpoint"]).clone();
+    let explicit = owner
+        .slice(
+            &Data::object([
+                ("checkpoint", checkpoint.clone()),
+                (
+                    "questions",
+                    Data::List(vec!["outside-original-scope".into()]),
+                ),
+            ]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(at(&explicit, &["brief", "mode"]), &Data::from("rescope"));
+    assert_eq!(
+        rows(&explicit, &["brief", "families"])[0]
+            .field("claim")
+            .unwrap(),
+        &Data::from("outside-original-scope")
+    );
+    let other = owner
+        .slice(
+            &Data::object([
+                ("checkpoint", checkpoint.clone()),
+                ("bindings", list(&[&["mechanism", "unseen"]])),
+            ]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(
+        at(&other, &["brief", "counts", "counter"]),
+        &Data::from(0usize)
+    );
+
+    let mut body = checkpoint.field("body").unwrap().map().unwrap().clone();
+    body.insert(
+        "query".into(),
+        Data::object([("questions", Data::List(vec!["forged".into()]))]),
+    );
+    let forged = Data::object([
+        ("body", Data::Map(body)),
+        ("digest", checkpoint.field("digest").unwrap().clone()),
+    ]);
+    assert!(
+        owner
+            .slice(
+                &Data::object([("checkpoint", forged)]),
+                &Limits::default(),
+                &Cancellation::default()
+            )
+            .is_err()
+    );
+
+    let mut body = checkpoint.field("body").unwrap().map().unwrap().clone();
+    body.remove("query");
+    let body = Data::Map(body);
+    let incomplete = Data::object([("digest", body.digest().into()), ("body", body)]);
+    assert!(
+        owner
+            .slice(
+                &Data::object([("checkpoint", incomplete.clone())]),
+                &Limits::default(),
+                &Cancellation::default()
+            )
+            .is_err()
+    );
+    assert!(
+        owner
+            .slice(
+                &Data::object([
+                    ("checkpoint", incomplete),
+                    ("questions", Data::List(vec!["old-is-unexplored".into()]))
+                ]),
+                &Limits::default(),
+                &Cancellation::default()
+            )
+            .is_ok()
+    );
+}
+
 pub(super) const PROJECTION: &str = r"
 (define-evidence (project)
  (sources clue factor link) (outputs clue factor link)
@@ -62,6 +292,83 @@ fn exchange(engine: &Engine) -> ClueExchange {
         &Cancellation::default(),
     )
     .unwrap()
+}
+
+#[test]
+fn clues_unrelated_updates_keep_reads_but_changed_contracts_do_not() {
+    let engine = Engine::new(1).unwrap();
+    let limits = Limits::default();
+    let cancel = Cancellation::default();
+    let mut first = exchange(&engine);
+    let read = first
+        .slice(
+            &Data::object([("questions", Data::List(vec!["old-is-unexplored".into()]))]),
+            &limits,
+            &cancel,
+        )
+        .unwrap();
+    let checkpoint = at(&read, &["checkpoint"]).clone();
+    let mut input = facts().map().unwrap().clone();
+    let mut clues = input["clue"].list().unwrap().to_vec();
+    clues.push(Data::List(vec![
+        "elsewhere".into(),
+        "sha".into(),
+        "outside-scope".into(),
+        "support".into(),
+        "observation".into(),
+        "receipt".into(),
+    ]));
+    input.insert("clue".into(), Data::List(clues));
+    let mut updated = ClueExchange::new(
+        &engine,
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &Data::Map(input),
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
+        &limits,
+        &cancel,
+    )
+    .unwrap();
+    let request = Data::object([("checkpoint", checkpoint.clone())]);
+    let refreshed = updated.slice(&request, &limits, &cancel).unwrap();
+    assert_eq!(at(&refreshed, &["brief", "mode"]), &Data::from("refresh"));
+    assert!(rows(&refreshed, &["brief", "families"]).is_empty());
+    assert_eq!(
+        at(&refreshed, &["brief", "delta", "added"]),
+        &Data::from(0usize)
+    );
+    let changed_rules = format!("{PROJECTION}\n; different declaration identity\n");
+    let mut changed = ClueExchange::new(
+        &engine,
+        ClueProjection {
+            sources: &[&changed_rules],
+            constructor: "project",
+            supplied: &facts(),
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
+        &limits,
+        &cancel,
+    )
+    .unwrap();
+    let reset = changed.slice(&request, &limits, &cancel).unwrap();
+    assert_eq!(at(&reset, &["brief", "mode"]), &Data::from("reset"));
+    assert!(!rows(&reset, &["brief", "families"]).is_empty());
+    let mut legacy = checkpoint.map().unwrap().clone();
+    let mut body = legacy["body"].map().unwrap().clone();
+    body.remove("readContractIdentity");
+    let body = Data::Map(body);
+    legacy.insert("digest".into(), body.digest().into());
+    legacy.insert("body".into(), body);
+    let reset = updated
+        .slice(
+            &Data::object([("checkpoint", Data::Map(legacy))]),
+            &limits,
+            &cancel,
+        )
+        .unwrap();
+    assert_eq!(at(&reset, &["brief", "mode"]), &Data::from("reset"));
 }
 
 // Association and applicability are caller-owned DSL, not host heuristics.
@@ -497,11 +804,15 @@ fn folded_reads_advance_per_family_and_rescoping_keeps_acknowledged_details() {
         .slice(&Data::Map(widen.clone()), &limits, &cancel)
         .unwrap();
     assert_eq!(rows(&repeated, &["brief", "families"]), []);
-    // A source change still resets acknowledgement; history is not current evidence.
+    // Changed evidence is rederived; unrelated fully displayed families stay read.
     let mut changed = anchored_exchange(&engine, "changed");
     let reset = changed.slice(&Data::Map(widen), &limits, &cancel).unwrap();
-    assert_eq!(at(&reset, &["brief", "mode"]), &Data::from("reset"));
-    assert_eq!(rows(&reset, &["brief", "families"]).len(), 2);
+    assert_eq!(at(&reset, &["brief", "mode"]), &Data::from("refresh"));
+    assert_eq!(rows(&reset, &["brief", "families"]).len(), 1);
+    assert_eq!(
+        at(&rows(&reset, &["brief", "families"])[0], &["claim"]),
+        &Data::from("header")
+    );
 }
 
 #[test]

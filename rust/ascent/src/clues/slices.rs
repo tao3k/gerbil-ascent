@@ -15,9 +15,39 @@ fn reference(source: &str, claim: &str, items: &Data) -> Data {
         ("contentIdentity", items.digest().into()),
     ])
 }
+fn request_fields(request: &Data) -> Result<&BTreeMap<String, Data>> {
+    let fields = request.map()?;
+    if fields.keys().any(|k| {
+        !matches!(
+            k.as_str(),
+            "questions" | "expand" | "checkpoint" | "displayBytes" | "bindings"
+        )
+    }) {
+        return Err(invalid("unknown slice request field"));
+    }
+    Ok(fields)
+}
+
+fn saved_query(checkpoint: Option<&Data>) -> Result<Option<&Data>> {
+    let Some(checkpoint) = checkpoint else {
+        return Ok(None);
+    };
+    if checkpoint == &Data::List(Vec::new()) {
+        return Ok(None);
+    }
+    let body = checkpoint.field("body")?;
+    if body.digest() != checkpoint.field("digest")?.text()? {
+        return Err(invalid("slice checkpoint content changed"));
+    }
+    if body.field("schema")?.text()? != "clue-slice.v1" {
+        return Err(invalid("unsupported slice checkpoint"));
+    }
+    Ok(body.map()?.get("query"))
+}
 fn prior(
     checkpoint: Option<&Data>,
     source: &str,
+    contract: &str,
     anchor: &str,
 ) -> Result<(Vec<Row>, Vec<Row>, &'static str)> {
     let Some(checkpoint) = checkpoint else {
@@ -33,7 +63,15 @@ fn prior(
     if body.field("schema")?.text()? != "clue-slice.v1" {
         return Err(invalid("unsupported slice checkpoint"));
     }
-    if body.field("sourceIdentity")?.text()? != source {
+    let source_changed = body.field("sourceIdentity")?.text()? != source;
+    if source_changed
+        && body
+            .map()?
+            .get("readContractIdentity")
+            .map(Data::text)
+            .transpose()?
+            != Some(contract)
+    {
         return Ok((Vec::new(), Vec::new(), "reset"));
     }
     let previous = rows(body.field("items")?)?;
@@ -44,7 +82,9 @@ fn prior(
     if relations.iter().any(|r| r.len() != 3) {
         return Err(invalid("slice checkpoint relation arity"));
     }
-    let mode = if body.field("anchorIdentity")?.text()? == anchor {
+    let mode = if source_changed {
+        "refresh"
+    } else if body.field("anchorIdentity")?.text()? == anchor {
         "incremental"
     } else {
         "rescope"
@@ -63,26 +103,62 @@ impl ClueExchange {
         limits: &Limits,
         cancel: &Cancellation,
     ) -> Result<Data> {
-        self.slice_bound(request, None, limits, cancel)
+        let fields = request_fields(request)?;
+        if !fields.contains_key("questions") {
+            if let Some(query) = saved_query(fields.get("checkpoint"))? {
+                let mut resumed = query.map()?.clone();
+                resumed.extend(fields.clone());
+                if let Some(selection) = resumed.remove("selection") {
+                    let sources = selection
+                        .field("sources")?
+                        .list()?
+                        .iter()
+                        .map(Data::text)
+                        .collect::<Result<Vec<_>>>()?;
+                    return self.slice_selected(
+                        ClueSelector {
+                            sources: &sources,
+                            constructor: selection.field("constructor")?.text()?,
+                        },
+                        &Data::Map(resumed),
+                        limits,
+                        cancel,
+                    );
+                }
+                let mut query = resumed.clone();
+                query.remove("checkpoint");
+                return self.slice_bound(
+                    &Data::Map(resumed),
+                    None,
+                    Data::Map(query),
+                    limits,
+                    cancel,
+                );
+            }
+            if fields.contains_key("checkpoint")
+                && !fields.contains_key("bindings")
+                && !fields.contains_key("expand")
+            {
+                return Err(invalid(
+                    "checkpoint has no resumable query declaration; provide an explicit query",
+                ));
+            }
+        }
+        let mut query = fields.clone();
+        query.remove("checkpoint");
+        self.slice_bound(request, None, Data::Map(query), limits, cancel)
     }
 
     fn slice_bound(
         &mut self,
         request: &Data,
         selection: Option<Data>,
+        query: Data,
         limits: &Limits,
         cancel: &Cancellation,
     ) -> Result<Data> {
         self.check()?;
-        let fields = request.map()?;
-        if fields.keys().any(|k| {
-            !matches!(
-                k.as_str(),
-                "questions" | "expand" | "checkpoint" | "displayBytes" | "bindings"
-            )
-        }) {
-            return Err(invalid("unknown slice request field"));
-        }
+        let fields = request_fields(request)?;
         let claims = |name: &str| -> Result<Vec<String>> {
             fields.get(name).map_or(Ok(Vec::new()), |v| {
                 v.list()?
@@ -114,7 +190,8 @@ impl ClueExchange {
             ),
         ])
         .digest();
-        let (previous, previous_relations, mode) = prior(checkpoint, &self.identity, &anchor)?;
+        let (previous, previous_relations, mode) =
+            prior(checkpoint, &self.identity, &self.read_contract, &anchor)?;
         let mut facts = self.facts.clone();
         facts.insert(
             "question".into(),
@@ -138,12 +215,14 @@ impl ClueExchange {
             limits,
             cancel,
             source: &self.identity,
+            read_contract: &self.read_contract,
             anchor: &anchor,
             mode,
             scope_data,
             items: &items,
             answers: &answers,
             selection,
+            query,
             previous: &previous,
             previous_relations: &previous_relations,
             display_bytes,
@@ -164,9 +243,20 @@ impl ClueExchange {
             sources,
             constructor,
         } = selector;
-        let bindings = request.field("bindings")?;
+        let fields = request_fields(request)?;
+        let mut inherited = saved_query(fields.get("checkpoint"))?
+            .map(Data::map)
+            .transpose()?
+            .cloned()
+            .unwrap_or_default();
+        inherited.remove("selection");
+        inherited.extend(fields.clone());
+        let bindings = inherited
+            .entry("bindings".into())
+            .or_insert_with(|| Data::List(Vec::new()))
+            .clone();
         let mut selection = self
-            .select(selector, bindings, limits, cancel)?
+            .select(selector, &bindings, limits, cancel)?
             .map()?
             .clone();
         let questions = selection
@@ -190,12 +280,25 @@ impl ClueExchange {
                     Data::List(sources.iter().map(|s| Data::from(*s)).collect()),
                 ),
                 ("constructor", constructor.into()),
-                ("bindings", bindings.clone()),
+                ("bindings", bindings),
             ])
             .digest()
             .into(),
         );
-        let mut request = request.map()?.clone();
+        let mut query = inherited.clone();
+        query.remove("checkpoint");
+        query.remove("questions");
+        query.insert(
+            "selection".into(),
+            Data::object([
+                (
+                    "sources",
+                    Data::List(sources.iter().map(|s| Data::from(*s)).collect()),
+                ),
+                ("constructor", constructor.into()),
+            ]),
+        );
+        let mut request = inherited;
         request.insert(
             "questions".into(),
             Data::List(questions.into_iter().map(Data::from).collect()),
@@ -203,6 +306,7 @@ impl ClueExchange {
         self.slice_bound(
             &Data::Map(request),
             Some(Data::Map(selection)),
+            Data::Map(query),
             limits,
             cancel,
         )
@@ -214,12 +318,14 @@ struct SliceView<'a> {
     limits: &'a Limits,
     cancel: &'a Cancellation,
     source: &'a str,
+    read_contract: &'a str,
     anchor: &'a str,
     mode: &'a str,
     scope_data: Data,
     items: &'a Data,
     answers: &'a BTreeMap<String, Vec<Row>>,
     selection: Option<Data>,
+    query: Data,
     previous: &'a [Row],
     previous_relations: &'a [Row],
     display_bytes: usize,
@@ -485,8 +591,10 @@ fn render_slice(view: SliceView<'_>) -> Result<Data> {
     let body = Data::object([
         ("schema", "clue-slice.v1".into()),
         ("sourceIdentity", view.source.into()),
+        ("readContractIdentity", view.read_contract.into()),
         ("anchorIdentity", view.anchor.into()),
         ("items", data_rows(&acknowledged["acknowledged"])?),
+        ("query", view.query),
         (
             "relations",
             data_rows(&acknowledged["acknowledged_relation"])?,

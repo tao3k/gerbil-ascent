@@ -71,6 +71,27 @@ This is byte/identity transport, not inference. Scheme owns the association from
 that source to observations; registration alone cannot supply an absent witness,
 promote hypotheses or establish native admission.
 
+** Evidence checkpoint and recovery
+
+Checkpoint is a core evidence contract, with the same architectural standing as
+registration. It is not a cache-directory marker, progress counter, read cursor
+or execution permit. The [[file:features/evidence-checkpoint.org][checkpoint contract]] separates immutable history,
+current support, material availability and observed execution completion.
+
+The existing Session derives checkpoint projections from registered Scheme
+facts. Host adapters attest bytes, receipt custody and process observations;
+they neither invent applicability rules nor turn a missing cache into lost
+progress. Recovery replays committed evidence, not actions. Domain-specific
+requirements and dependencies remain downstream declarations. No second
+workflow scheduler, mutable truth ledger or mandatory Agent route is introduced.
+
+Read recovery retains the caller's declarative query as well as acknowledged
+units. A token-only continuation re-evaluates that query through Session on
+current facts; it never freezes resolved claims or invents a missing anchor.
+Explicit query changes remain caller-owned. An absent field is not an explicit
+empty field. This distinction belongs to the Library's query protocol, not to a
+downstream Python navigation script or an instruction telling an Agent its path.
+
 * Acceptance rule
 
 Advance one usable native lifecycle across admission, solve, source updates,

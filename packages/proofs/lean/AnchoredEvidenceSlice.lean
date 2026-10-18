@@ -127,6 +127,23 @@ theorem widening_preserves_evidence {Factor Chain Witness : Type}
   exact ⟨c, ⟨hc, f, includes f hf, ha⟩, hw⟩
 
 def added {α : Type} (before now : α → Prop) (x : α) := now x ∧ ¬ before x
+
+-- A read acknowledgement is not support: it only avoids re-presenting an
+-- identical current unit under the same reading contract.
+def refreshedRead {α : Type} (sameContract : Prop) (before current : α → Prop)
+    (unit : α) : Prop := sameContract ∧ before unit ∧ current unit
+
+theorem unchanged_unit_keeps_read {α : Type} (before current : α → Prop)
+    (unit : α) (read : before unit) (present : current unit) :
+    refreshedRead True before current unit := ⟨True.intro, read, present⟩
+
+theorem withdrawn_unit_is_not_current_read {α : Type} (sameContract : Prop)
+    (before current : α → Prop) (unit : α) (absent : ¬ current unit) :
+    ¬ refreshedRead sameContract before current unit := fun h => absent h.2.2
+
+theorem changed_read_contract_cannot_reuse_acknowledgement {α : Type}
+    (before current : α → Prop) (unit : α) :
+    ¬ refreshedRead False before current unit := fun h => h.1
 def removed {α : Type} (before now : α → Prop) (x : α) := before x ∧ ¬ now x
 def retained {α : Type} (before now : α → Prop) (x : α) := now x ∧ before x
 
@@ -210,5 +227,37 @@ theorem grouped_reference_cannot_acknowledge {α : Type}
     (scope before shown inline : α → Prop) (x : α)
     (h : groupedReference scope before shown inline x) :
     ¬ readSeen before shown x := h.1.2
+
+/- Retain query intent, not a frozen answer or a prescribed investigation. -/
+def restoreQuery {Q : Type} (saved requested : Option Q) : Option Q :=
+  requested.orElse fun _ => saved
+
+theorem checkpoint_only_restores_query {Q : Type} (q : Q) :
+    restoreQuery (some q) none = some q := rfl
+
+theorem explicit_query_owns_scope {Q : Type} (saved : Option Q) (q : Q) :
+    restoreQuery saved (some q) = some q := rfl
+
+theorem missing_query_is_not_invented {Q : Type} :
+    restoreQuery (none : Option Q) none = none := rfl
+
+theorem query_override_composes {Q : Type} (saved a b : Option Q) :
+    restoreQuery (restoreQuery saved a) b = restoreQuery saved (restoreQuery a b) := by
+  cases b <;> cases a <;> rfl
+
+def resumedAnswer {Q F A : Type} (derive : Q → F → A)
+    (saved requested : Option Q) (current : F) : Option A :=
+  (restoreQuery saved requested).map fun q => derive q current
+
+theorem recovery_reevaluates_current_facts {Q F A : Type}
+    (derive : Q → F → A) (q : Q) (current : F) :
+    resumedAnswer derive (some q) none current = some (derive q current) := rfl
+
+theorem changed_answer_is_not_a_frozen_replay {Q F A : Type}
+    (derive : Q → F → A) (q : Q) (before current : F)
+    (changed : derive q before ≠ derive q current) :
+    resumedAnswer derive (some q) none current ≠ some (derive q before) := by
+  intro replay
+  exact changed (Option.some.inj replay).symm
 
 end Ascent.AnchoredEvidenceSlice

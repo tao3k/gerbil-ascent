@@ -658,3 +658,42 @@ FAULTS['ArchiveWork'] = (
     ('hide-unknown', 'ReceiptComplete', 12),
     ('link-shared', 'PrivateOutputStable', 12),
 )
+
+# Checkpoint is an evidence projection, not a scheduler or native admission.
+MODEL_ORDER += ('EvidenceCheckpoint',)
+CONFIGURATIONS['EvidenceCheckpoint'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['EvidenceCheckpoint'] = (
+    ('invent-enumeration', 'EnumerationGrounded', 12),
+    ('ignore-enumeration-scope', 'EnumerationGrounded', 12),
+    ('omit-enumeration-member', 'EnumerationGrounded', 12),
+    ('count-duplicate-progress', 'ProgressIsCompletionCount', 12),
+    ('heartbeat-progress', 'ProgressIsCompletionCount', 12),
+    ('extend-terminal', 'TerminalImmutable', 12),
+    ('ignore-missing-binding', 'ExactSupport', 12),
+    ('ignore-command', 'ExactSupport', 12),
+    ('skip-closure', 'ExactSupport', 12),
+    ('erase-history', 'History', 12),
+    ('stale-cut', 'ExactSupport', 12),
+    ('guess-exit', 'AvailableAndSettled', 12),
+    ('recovery-authorizes', 'NoAuthority', 12),
+    ('force-choice', 'OpenChoice', 12),
+)
+
+# Declarative read resumption is not a stored answer or a prescribed path.
+MODEL_ORDER += ('ClueQueryResume',)
+CONFIGURATIONS['ClueQueryResume'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['ClueQueryResume'] = (
+    ('replay-all', 'ExactReads', 12),
+    ('reuse-changed-contract', 'ExactReads', 12),
+    ('keep-removed-read', 'ExactReads', 12),
+    ('drop-query', 'Restored', 12),
+    ('freeze-results', 'CurrentFacts', 12),
+    ('guess-missing', 'MissingIsUnknown', 12),
+    ('pin-caller', 'CallerOwnsScope', 12),
+    ('authorize-resume', 'NoAuthority', 12),
+    ('erase-history', 'History', 12),
+)

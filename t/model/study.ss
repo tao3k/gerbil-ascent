@@ -50,6 +50,7 @@
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-grouped-eqrel-session-output (main grouped-eqrel-session-main)) grouped-eqrel-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-lattice-session-output (main byods-lattice-session-main)) byods-lattice-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-arity-repetition-output (main arity-repetition-main)) arity-repetition-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-lattice-session-output (main lattice-session-main)) lattice-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-integrated-corpus-output (main integrated-corpus-main)) integrated-corpus-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-eqrel-program-output
                            (main eqrel-program-main)) eqrel-program-main))
@@ -92,6 +93,7 @@
        ((grouped-eqrel-session) (grouped-eqrel-session-main))
        ((byods-lattice-session) (byods-lattice-session-main))
        ((arity-repetition) (arity-repetition-main))
+       ((lattice-session) (lattice-session-main))
        ((integrated-corpus) (integrated-corpus-main))
        (else (error "unknown native differential fixture" name)))
      (exit 0))

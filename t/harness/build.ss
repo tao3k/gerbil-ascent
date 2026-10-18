@@ -181,6 +181,7 @@
            "t/qualification/ascent-grouped-eqrel-session-output.ss"
            "t/qualification/ascent-byods-lattice-session-output.ss"
            "t/qualification/ascent-arity-repetition-output.ss"
+           "t/qualification/ascent-lattice-session-output.ss"
            "t/qualification/ascent-integrated-corpus-output.ss"
            "t/qualification/ascent-eqrel-program-output.ss"
            "t/qualification/ascent-byods-query-output.ss"

@@ -1119,3 +1119,30 @@ the newly added diagnostic passed a list to a variadic command wrapper and
 raised TypeError. No semantic runtime result exists for that attempt. The
 mandatory diagnostic call is removed; the fixed-SDK probe remains a standalone
 reproduction command rather than a prerequisite for every semantic run.
+
+** Completed 240-second observations and an independent oracle failure
+
+At aa8a1b29, the macOS three-worker run completed all 173 modules and 1401
+Cases: preparation 258.470 seconds, runtime 161.742 seconds, no foreign
+compilers or audit errors. The subsequently shared revision 88b4aa5e completed
+the same module/Case counts: preparation 299.726 seconds, runtime 152.070
+seconds, again without foreign compilers or audit errors. Both runtimes are
+below the former 180-second deadline. These are separate runner observations,
+not evidence that increasing the deadline improves performance or that the
+preparation/cold-build regressions are resolved.
+
+The aa8a1b29 full CI retained a different failure: the interpreted lattice
+Session corpus reached its unchanged 120-second deadline after 135,168 output
+bytes. The later shared revision's oracle pass is not a replacement for this
+failure. Like the existing composed corpus, the identical lattice fixture is
+now imported into the existing compiled dsl-closure oracle dispatcher. The
+514 recursive graph cases, direct/mixed source-update corpora, wide retained
+Session cases, independent Rust Ascent expectations, snapshot checks and
+120-second runtime deadline are unchanged. This moves fixture compilation
+into the already separate DSL preparation phase; it is not reduced solver work.
+The production loading interface and source Suite execution remain unchanged.
+
+The formal inventory unit guard also now classifies the two concurrently
+committed EvidenceCheckpoint and ClueQueryResume models as additions. Its
+historical 56-model, 377-obligation and 349-obligation assertions remain exact;
+no original proof scope or counterexample expectation is reduced.

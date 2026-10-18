@@ -571,7 +571,7 @@ mutual-corpus-rows:
     @timeout 120s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-mutual-program-output.ss
 
 lattice-session-corpus-rows:
-    @timeout 120s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-session-output.ss
+    @timeout 120s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle lattice-session
 
 lattice-negation-rows:
     @timeout 120s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-negation-output.ss

@@ -11,6 +11,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
         (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches)
+        (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
                  testing-interface-runtime-options-for))
@@ -18,6 +19,11 @@
 
 (def ascent-source-import-test
   (test-suite "Source fixtures retain the native production module identity"
+    (test-case "source support follows demand and refreshes cached fixtures"
+      (check-equal? (preparation-support-roots #t '("unrelated-driver") '("requested") '("cached"))
+                    '("requested" "cached"))
+      (check-equal? (preparation-support-roots #f '("base") '("requested") '("cached"))
+                    '("base" "requested" "cached")))
     (test-case "late source fixture imports preserve existing and future native Sessions"
       (let* ((program (gerbil-ascent-program
                        (list (gerbil-ascent-relation 'input 1 '((1)))) [] 8 8 8))

@@ -367,6 +367,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
+                ("ExecutionPolicy.lean", "preparation-support", "packages/proofs/quint/PreparationSupport.qnt"),
                 ("ExecutionPolicy.lean", "preparation-cargo-cache", ".github/workflows/ci.yml"),
                 ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
                 ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),

@@ -966,3 +966,28 @@ Local control validation uses the existing SDK-built archive and the pinned
 SDK Rust libraries. It does not constitute a successful current-head cold
 package build or full CI acceptance. Both interrupted cold-package drafts
 and the initial stress-fixture directory-creation failure are retained.
+
+** Demand-based source qualification preparation
+
+The source-Suite lane previously selected every non-test source under
+=t/qualification= as a compiler root, including unrelated oracle output drivers.
+It now selects the original production carriers, explicit dynamic dependencies
+and previously compiled fixtures requiring ABI refresh. Every Suite remains a
+projection root; Gerbil supplies its transitive dependencies. The performance
+lane retains its original base carriers and gates. This semantic-preparation
+change must not be presented as a fix for historical performance-lane timing.
+
+Lean proves requested/cached roots are retained, unrelated uncached roots are
+excluded from source qualification, and compiled consumers retain their base.
+The exact Scheme selection and Quint support function are rendered from Lean.
+PreparationWork uses that function and checks omitted-demand/cached-root fault
+controls in addition to the original observation and cache controls.
+
+The isolated library-only SDK build completed with 101 actual native object
+compilations, 210 matched start/complete observations, no observer errors and
+an accepted receipt. Its seven controls passed with twelve test threads.
+This is one real construction receipt, not a matched cold-build speed claim;
+local concurrent compiler activity prevents latency qualification. Full
+semantic, cross-configuration reuse and current-head CI receipts follow
+separately. SDK compiler internals and allocator correctness remain outside
+these policy proofs.

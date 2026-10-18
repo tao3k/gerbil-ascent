@@ -3,6 +3,7 @@
 // Observer protocol. This does not model the SDK compiler or allocator.
 module PreparationWork {
   import PreparationPolicy.* from "./PreparationPolicy"
+  import PreparationSupport.* from "./PreparationSupport"
   const Mutation: str
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
@@ -33,7 +34,10 @@ module PreparationWork {
       observedJobs: if (Mutation == "hide-job") q.observedJobs else q.observedJobs + 1,
       published: false}}
   // Compilation is demanded by the native import graph, not directory size.
-  action UnrequestedGsc = all {Mutation == "eager-catalog",
+  val SelectedSupport = support_roots(Mutation != "eager-catalog", List("unrelated-driver"),
+    if (Mutation == "drop-demanded-support") List() else List("requested"),
+    if (Mutation == "drop-cached-support") List() else List("cached"))
+  action UnrequestedGsc = all {SelectedSupport.foldl(false, (found, root) => found or root == "unrelated-driver"),
     q' = {...q, unrequestedJobs: q.unrequestedJobs + 1, published: false}}
   action CompileSourceSuite = all {any {Mutation == "compile-source-suite", Mutation == "compile-source-consumer"},
     q' = {...q, compiledSourceCarriers: q.compiledSourceCarriers + 1, published: false}}
@@ -83,6 +87,8 @@ module PreparationWork {
     CacheOutput, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
+  val DemandedSupportRetained = SelectedSupport.foldl(false, (found, root) => found or root == "requested")
+  val CachedSupportRetained = SelectedSupport.foldl(false, (found, root) => found or root == "cached")
   val UnadmittedCatalogPresent = (q.rootsProjected and not(q.productionAdmitted)) implies q.forcedCatalogRoots == 1
   val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs

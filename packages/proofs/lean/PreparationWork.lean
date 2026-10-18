@@ -91,7 +91,39 @@ def rootsSchemeSource : String :=
   "  (append (if production-current?\n" ++
   "            (filter (lambda (module) (not (member module production))) modules)\n" ++
   "            modules)\n" ++
-  "          tests source-consumers))\n"
+  "          tests source-consumers))\n" ++
+  "(def (preparation-support-roots source-suites? base requested cached)\n" ++
+  "  (append (if source-suites? [] base) requested cached))\n"
+
+-- Source Suites name their own imports. CLI-only fixture drivers are not
+-- implicit roots. Previously compiled fixtures still need ABI refresh.
+def supportRoots (sourceSuites : Bool) (base requested cached : List String) : List String :=
+  (if sourceSuites then [] else base) ++ requested ++ cached
+
+def supportQuintSource : String :=
+  "// Generated from PreparationWork.lean; formal CI checks exact source.\n" ++
+  "module PreparationSupport {\n" ++
+  "  pure def support_roots(source_suites: bool, base: List[str], requested: List[str], cached: List[str]): List[str] =\n" ++
+  "    (if (source_suites) List() else base).concat(requested).concat(cached)\n}\n"
+
+theorem requested_support_retained (sourceSuites : Bool) (base requested cached : List String)
+    (path : String) (present : path ∈ requested) :
+    path ∈ supportRoots sourceSuites base requested cached := by
+  cases sourceSuites <;> simp [supportRoots, present]
+
+theorem cached_support_retained (sourceSuites : Bool) (base requested cached : List String)
+    (path : String) (present : path ∈ cached) :
+    path ∈ supportRoots sourceSuites base requested cached := by
+  cases sourceSuites <;> simp [supportRoots, present]
+
+theorem source_roots_exclude_unrequested_catalog (base requested cached : List String)
+    (path : String) (unrequested : path ∉ requested) (uncached : path ∉ cached) :
+    path ∉ supportRoots true base requested cached := by
+  simp [supportRoots, unrequested, uncached]
+
+theorem compiled_base_retained (base requested cached : List String)
+    (path : String) (present : path ∈ base) :
+    path ∈ supportRoots false base requested cached := by simp [supportRoots, present]
 
 theorem explicit_test_root_retained (production modules tests consumers : List String)
     (current : Bool) (root : String) (present : root ∈ tests) :

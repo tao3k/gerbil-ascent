@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots)
+(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
 ;; BEGIN GENERATED PREPARATION SOURCE
 ;; Generated from PreparationWork.lean; formal CI compares this region.
 (def (preparation-retained-source? source source-suites? source-consumers)
@@ -16,6 +16,8 @@
             (filter (lambda (module) (not (member module production))) modules)
             modules)
           tests source-consumers))
+(def (preparation-support-roots source-suites? base requested cached)
+  (append (if source-suites? [] base) requested cached))
 ;; END GENERATED PREPARATION ROOTS
 
 (def (performance-scenario-files)

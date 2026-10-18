@@ -30,6 +30,8 @@ class FormalTests(unittest.TestCase):
             "prune-unadmitted-catalog": "UnadmittedCatalogPresent",
             "batch-source-roots": "BoundedSourceEntries",
             "retain-source-roots": "ExitedVmReleasesEntries",
+            "drop-demanded-support": "DemandedSupportRetained",
+            "drop-cached-support": "CachedSupportRetained",
         })
         self.assertTrue(all(controls[name].expected == 12 for name in faults))
 

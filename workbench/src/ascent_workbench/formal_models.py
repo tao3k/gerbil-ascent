@@ -614,7 +614,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact AllocationNotNested CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
     ('key-by-generated-manifest', 'ContentKeyExact', 12),
@@ -638,6 +638,8 @@ FAULTS['PreparationWork'] = (
     ('prune-unadmitted-catalog', 'UnadmittedCatalogPresent', 12),
     ('batch-source-roots', 'BoundedSourceEntries', 12),
     ('retain-source-roots', 'ExitedVmReleasesEntries', 12),
+    ('drop-demanded-support', 'DemandedSupportRetained', 12),
+    ('drop-cached-support', 'CachedSupportRetained', 12),
 )
 
 # Actual upstream archive observations, stable across Cargo configurations.

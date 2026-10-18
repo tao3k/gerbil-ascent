@@ -69,20 +69,14 @@
          (inventory-seconds (build-elapsed started))
          (production-before (map production-output-time gerbil-ascent-library-modules))
          (modules
-          (append gerbil-ascent-library-modules test-library-base
-            (preparation-selected-dependencies tests test-library-dependencies))))
-    ;; Source qualification retains its complete fixture catalog. Performance
-    ;; consumers request their actual import closure, rather than compiling all
-    ;; unrelated qualification drivers and frozen reference evaluators.
-    (let (support
-          (map (lambda (name) (string-append "t/qualification/" (path-strip-extension name)))
-               (list-sort string<?
-                 (filter (lambda (name)
-                           (and (string-suffix? ".ss" name)
-                                (not (string-suffix? "-test.ss" name))))
-                         (if source-suites? (directory-files "t/qualification") [])))))
-      (set! modules (delete-duplicates/hash
-                      (append modules support (cached-support-modules)) from-end?: #t)))
+          (delete-duplicates/hash
+            (append gerbil-ascent-library-modules
+              (preparation-support-roots source-suites? test-library-base
+                (preparation-selected-dependencies tests test-library-dependencies)
+                (cached-support-modules))) from-end?: #t)))
+    ;; Every source Suite remains a projection root. Gerbil supplies its actual
+    ;; imports; unrelated oracle/CLI drivers are not an implicit fixture catalog.
+    ;; Retain cached fixtures so make refreshes their production ABI when stale.
     ;; Reuse ASP's projection of Gerbil contexts, including phases and preludes.
     ;; std/make still owns scheduling, dependency timestamps and invalidation.
     ;; Source Suites remain source inputs to GxTest; only their dependencies

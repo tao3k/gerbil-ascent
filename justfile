@@ -565,7 +565,7 @@ lattice-set-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-set-output.ss
 
 integrated-corpus-rows:
-    @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-integrated-corpus-output.ss
+    @timeout 90s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle integrated-corpus
 
 mutual-corpus-rows:
     @timeout 120s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-mutual-program-output.ss

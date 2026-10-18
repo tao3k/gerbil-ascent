@@ -1026,3 +1026,34 @@ classic linker is used only for the local diagnostic qualification; no upstream
 changes or test-budget increases are introduced. A cross-configuration SDK
 receipt independently records 101 cached native objects, zero object compiler
 starts and complete source revalidation. Packaging and observation costs remain.
+
+** Retained negative results and remaining preparation obligation
+
+At revision =166d003d=, the isolated macOS three-worker job rejected the
+180-second runtime gate: 135 of 173 module completions and 1051 Case completions
+were observed, with no foreign compilers or audit errors. Preparation took
+394.775 seconds (projection 47.165 seconds, make 338.771 seconds), despite
+253 compiled support modules versus 301 in the earlier =3b8a3b6e= run.
+The earlier 272.328-second preparation and 110.240-second runtime are historical
+controls from a different runner instance. This reduction of 48 compiler inputs
+therefore does not close the wall-time regression or the 180-second obligation.
+The fixed-namespace SDK object reuse and policy proofs are separate results.
+
+After preserving the shared-process failures, process-isolated qualification
+passed all 51 native binding tests in 45.179 seconds with twelve concurrent
+processes, zero retries and zero skipped tests. It also passed the explicit
+192-call, twelve-thread shared-owner Case. Strict build-helper Clippy and the
+original ASP source-layout gate pass after the build-only crate refactor.
+
+Linux's 12-thread oracle lane exposed an interpreted composed-corpus driver
+hitting its original 90-second deadline. The identical driver is now mounted
+in the existing compiled =dsl-closure --oracle= entry. Its 778 cases,
+256-case chunks, three Session phases, independent Rust Ascent comparison and
+90-second deadline are retained. No solver or expected rows were changed.
+
+The stalled disposable executable build was traced to four copied, day-old
+existence-based compiler lock files in its private dependency seed. The
+installed compiler's =compile-obj= retry loop waits while those files exist.
+Removing only those files in the disposable prefix immediately resumed native
+compiler jobs. The original workspace and upstream compiler were untouched.
+The raw lock inventory and earlier interrupted runs remain diagnostic evidence.

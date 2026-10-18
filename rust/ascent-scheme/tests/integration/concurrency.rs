@@ -1,5 +1,5 @@
 //! Shared-VM requests remain concurrent within one process, below its unchanged quota.
-use ascent_scheme::Engine;
+use crate::support::Engine;
 use gerbil_ascent::{GraphItem, ObjectInput};
 use std::sync::Barrier;
 
@@ -19,10 +19,8 @@ fn twelve_callers_share_one_vm_owner_without_losing_results() {
                     let value = module
                         .call("answer", &[ObjectInput::Integer(number.into())], None)
                         .unwrap();
-                    assert_eq!(
-                        value.graph().unwrap().root,
-                        GraphItem::Number((number + 1).to_string())
-                    );
+                    assert!(matches!(&value.graph().unwrap().root,
+                        GraphItem::Number(observed) if observed == &(number + 1).to_string()));
                 }
             });
         }

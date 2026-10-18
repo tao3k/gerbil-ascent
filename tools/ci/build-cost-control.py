@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Paired cold builds on one dedicated runner; no application output reuse."""
+"""Isolated build controls and independent macOS semantic diagnostics."""
 import argparse
 import hashlib
 import json
@@ -32,24 +32,54 @@ def reference_cpu():
             'cpu_seconds': time.process_time() - cpu}
 
 
-def measure(tree, command, log, env):
+def measure(tree, command, log, env, *, semantic_diagnostics=False):
     stop = threading.Event()
     foreign = []
     audit_errors = []
+    process_samples = []
+    progress_samples = []
+    wall_started = None
+    log_offset = 0
+    pending_line = ''
 
     def audit_once():
         rows = []
-        for line in subprocess.check_output(['ps', '-axo', 'pid=,ppid=,comm='], text=True).splitlines():
-            parts = line.strip().split(None, 2)
-            if len(parts) == 3:
-                rows.append((int(parts[0]), int(parts[1]), parts[2]))
+        columns = 'pid=,ppid=,time=,rss=,comm=' if semantic_diagnostics else 'pid=,ppid=,comm='
+        for line in subprocess.check_output(['ps', '-axo', columns], text=True).splitlines():
+            parts = line.strip().split(None, 4 if semantic_diagnostics else 2)
+            if len(parts) == (5 if semantic_diagnostics else 3):
+                rows.append((int(parts[0]), int(parts[1]), parts[-1], parts[2:-1]))
         owned = {os.getpid()}
         for _ in range(16):
-            owned.update(pid for pid, parent, _ in rows if parent in owned)
-        for pid, _, name in rows:
+            owned.update(pid for pid, parent, _, _ in rows if parent in owned)
+        for pid, _, name, _ in rows:
             base = Path(name).name
             if pid not in owned and (base in COMPILERS or base.startswith('gcc-')):
                 foreign.append({'pid': pid, 'command': name})
+        if semantic_diagnostics and wall_started is not None:
+            # Preserve live SELF CPU counters before timeout can kill un-reaped
+            # descendants. RUSAGE_CHILDREN alone omits those processes.
+            process_samples.append({'observed_seconds': time.monotonic() - wall_started,
+                'processes': [{'pid': pid, 'ppid': parent, 'command': name,
+                               'self_cpu_time': metrics[0], 'rss_kib': int(metrics[1])}
+                              for pid, parent, name, metrics in rows
+                              if pid in owned and Path(name).name in
+                              COMPILERS | {'gerbil', 'gxtest', 'timeout', 'just'}]})
+            observe_progress()
+
+    def observe_progress():
+        nonlocal log_offset, pending_line
+        if not log.exists():
+            return
+        with log.open() as stream:
+            stream.seek(log_offset)
+            chunk = stream.read()
+            log_offset = stream.tell()
+        lines = (pending_line + chunk).split('\n')
+        pending_line = lines.pop()
+        elapsed = time.monotonic() - wall_started
+        progress_samples.extend({'observed_seconds': elapsed, 'line': line}
+                                for line in lines if line.startswith('TEST-'))
 
     def audit():
         try:
@@ -64,6 +94,7 @@ def measure(tree, command, log, env):
     reference = reference_cpu()
     usage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
     start = time.monotonic()
+    wall_started = start
     try:
         with log.open('w') as output:
             result = subprocess.run(command, cwd=tree, env=env, stdout=output, stderr=subprocess.STDOUT)
@@ -71,12 +102,22 @@ def measure(tree, command, log, env):
     finally:
         stop.set()
         thread.join()
+        if semantic_diagnostics:
+            try:
+                observe_progress()
+            except Exception as error:
+                audit_errors.append(repr(error))
     usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = {'command': command, 'wall_seconds': wall, 'exit_code': result.returncode,
                'foreign_compilers': foreign, 'audit_errors': audit_errors, 'reference': reference,
                'child_usage_delta': {name: getattr(usage_after, name) - getattr(usage_before, name)
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
                                                   'ru_nvcsw', 'ru_nivcsw', 'ru_inblock', 'ru_oublock']}}
+    if semantic_diagnostics:
+        receipt['live_process_samples'] = process_samples
+        receipt['progress_samples'] = progress_samples
+        receipt['diagnostic_resolution_seconds'] = 1
+        receipt['child_usage_scope'] = 'reaped children only; not total descendant CPU on timeout'
     text = log.read_text()
     receipt['builder_phases'] = {name: float(value) for name, value in re.findall(
         r'BUILD-TEST-LIBRARY-PHASE ([a-z-]+) wall-seconds=([.0-9]+)', text)}
@@ -108,13 +149,39 @@ def test_outputs(tree):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--baseline', required=True)
-    parser.add_argument('--candidate', required=True)
+    parser.add_argument('--baseline')
+    parser.add_argument('--candidate')
+    parser.add_argument('--semantics-only', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     root = Path.cwd()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    if args.semantics_only:
+        if args.baseline or args.candidate:
+            parser.error('--semantics-only does not accept build comparison revisions')
+        env = os.environ.copy()
+        env['GERBIL_PATH'] = str(root / '.gerbil')
+        env['GERBIL_LOADPATH'] = str(root / '.gerbil/lib')
+        env['GERBIL_BUILD_CORES'] = '3'
+        env['ASCENT_GXTEST_TIMEOUT'] = '180s'
+        env.pop('ASCENT_TEST_LIBRARY', None)
+        (output / 'inputs.json').write_text(json.dumps({
+            'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+            'cores': 3, 'deadline_seconds': 180, 'child_heap': '2G',
+            'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
+                                       'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
+        try:
+            measure(root, ['timeout', '180s', 'just', 'test-file', 't/qualification', '2G'],
+                    output / 'candidate-semantics.log', env, semantic_diagnostics=True)
+        finally:
+            batches = root / '.cache/ascent/test-modules'
+            if batches.exists():
+                shutil.copytree(batches, output / 'semantic-batches')
+        print('MACOS-THREE-WORKER-SEMANTICS-OK', flush=True)
+        return
+    if not args.baseline or not args.candidate:
+        parser.error('build comparisons require --baseline and --candidate')
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
@@ -201,26 +268,7 @@ def main():
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)
         # Retain logs and receipts; free generated prefixes before the next pair.
-        if index != 2:
-            shutil.rmtree(tree)
-    # Run semantics only after every timing interval, on the retained candidate.
-    tree = output / '2-candidate'
-    env = os.environ.copy()
-    env['GERBIL_PATH'] = str(tree / '.gerbil')
-    env['GERBIL_LOADPATH'] = str(tree / '.gerbil/lib')
-    env['ASCENT_GXTEST_TIMEOUT'] = '180s'
-    env.pop('GERBIL_BUILD_CORES', None)
-    env.pop('ASCENT_TEST_LIBRARY', None)
-    try:
-        receipt['macos_semantics'] = measure(
-            tree, ['timeout', '180s', 'just', 'test-file', 't/qualification', '2G'],
-            output / 'candidate-semantics.log', env)
-        (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
-    finally:
-        batches = tree / '.cache/ascent/test-modules'
-        if batches.exists():
-            shutil.copytree(batches, output / 'semantic-batches')
-    shutil.rmtree(tree)
+        shutil.rmtree(tree)
     print('BUILD-COST-CONTROL-OK', flush=True)
 
 

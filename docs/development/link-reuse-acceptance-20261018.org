@@ -133,3 +133,54 @@ currentness/expansion work that remains even after fixing the missing-library
 dependencies. These instrumented shared-host timings are not speedup evidence.
 Native process disk-byte samples were partial; they do not establish an I/O
 bottleneck or a unique cause for the historical first control.
+
+* Three-worker macOS source semantics: open acceptance
+
+Commit 3712be2 passed all nine original CI jobs. Its additional three-worker
+macOS source run reached the unchanged 180-second deadline (exit 124), with
+475 completed Cases and 56 completed modules recorded before termination.
+Commit 658ce25 also passed all nine original CI jobs; its three-worker run
+reached the same deadline, with 1141 completed Cases and 146 completed modules.
+Neither partial result is complete semantic acceptance. The failed runs remain
+in Actions 39088480174 and 39088917891, including every retained batch log.
+
+The two additional fixed ABBA groups also remain distinct evidence:
+
+| Candidate | Baseline cold preparation mean (s) | Candidate mean (s) | Change |
+|-----------+------------------------------------+--------------------+--------|
+| 3712be2   |                            99.2875 |           104.6325 |  +5.4% |
+| 658ce25   |                            85.5235 |            68.9735 | -19.4% |
+
+Candidate warm preparations changed zero compiled outputs in both groups.
+Cold compiler-work diagnostics nevertheless counted 257 baseline jobs and
+259 candidate jobs: the shared reference adds two cold compiler invocations.
+Its benefit is removal of four unnecessary warm invocations, not a reduction
+in cold compiler work. The faster cold group does not close either negative
+cold result or identify the unique cause of the historical 40.3% increase.
+
+A shared-host native investigation observed object/MOP calls, late movable-GC
+scanning and dynamic-library loading. A separate source-import hook confirmed
+that GxTest imports each entire compatible batch before executing its Cases.
+Three workers currently produce two isolated exhaustive batches and three
+ordinary batches. Later ordinary batches therefore begin preparation only
+when an exhaustive batch releases a worker. These instrumented local timings
+are excluded from performance admission: unrelated Lean/Scheme activity and
+host memory pressure were observed. They identify paths to investigate, not
+a validated single root cause or an accepted optimization.
+
+The user explicitly retained three workers, the 180-second deadline and 2G
+per-child heaps. That source-semantic check now runs as an independent macOS
+job, without a dependency on build-cost acceptance. The diagnostic receipt
+samples live descendant SELF CPU counters and RSS, and timestamps observed
+batch/Case output at one-second resolution. Observation time is not the exact
+Case event time. On timeout, RUSAGE_CHILDREN covers reaped children only;
+it must not be presented as total descendant CPU or evidence of I/O waiting.
+
+Concurrent feature commit 070cc8e changed the runtime and test inventory.
+The fixed 957e0de comparison correctly rejected that unmatched program in
+Actions 39090409116. The next comparison freezes 070cc8e as the baseline;
+its runtime and workload must match the candidate under the existing strict
+path and binary-input checks. This starts a new control series, preserving
+all earlier negative observations. No runtime source is added to the allowed
+comparison changes. No SDK, evaluator, cancellation, provenance, resource
+limit or performance threshold changes in this diagnostic follow-up.

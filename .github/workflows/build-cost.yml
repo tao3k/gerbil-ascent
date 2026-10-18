@@ -18,7 +18,7 @@ on:
     inputs:
       baseline:
         description: Baseline commit for the fixed ABBA control
-        default: 957e0de4a7c07cbb12b7a076e0016d827d176692
+        default: 070cc8e946e58d89c8858b12b4e75cc18f42b6de
         required: true
 permissions:
   contents: read
@@ -53,7 +53,7 @@ jobs:
           test ! -e .gerbil/lib/gerbil-ascent
       - name: Fixed ABBA cold build and test preparation
         env:
-          BASELINE: ${{ inputs.baseline || '957e0de4a7c07cbb12b7a076e0016d827d176692' }}
+          BASELINE: ${{ inputs.baseline || '070cc8e946e58d89c8858b12b4e75cc18f42b6de' }}
           CANDIDATE: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost"
@@ -63,4 +63,41 @@ jobs:
         with:
           name: macos-build-cost-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/build-cost
+          include-hidden-files: true
+
+  macos-semantics:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      GERBIL_BUILD_CORES: "3"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Install released SDK prerequisites
+        run: |
+          brew update
+          brew install gcc just openssl@3 zlib sqlite coreutils pkg-config
+          command -v gcc-16
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Install unchanged immutable SDK
+        env:
+          GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
+        run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Build current Scheme package and test support
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          just check-policy
+          just prepare-test-library
+      - name: Qualify complete source semantics with three workers
+        run: python3 tools/ci/build-cost-control.py --semantics-only --output "$RUNNER_TEMP/macos-semantics"
+      - name: Preserve semantic diagnostics and every batch log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-semantics-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/macos-semantics
           include-hidden-files: true

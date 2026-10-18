@@ -109,11 +109,36 @@ def groupingArgument : SourceGrouping → String
   | .batched => "batched"
   | .perModule => "isolated"
 
-def sourceGrouping : SourceGrouping := .perModule
+def sourceGrouping : SourceGrouping := .batched
 
 def runnerRecipeSource : String :=
   "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
+
+-- The implementation composes the existing native partitioner twice. It
+-- neither adds workers nor invents option-compatibility rules. Native graph
+-- and grouping correctness remain premises, not claimed SDK refinements.
+def groupsSchemeSource : String :=
+  "(def (preparation-refined-batches profiled compatible)\n" ++
+  "  (apply append\n" ++
+  "    (map (cut testing-interface-test-file-batches profiled <>)\n" ++
+  "      (testing-interface-test-file-batches profiled\n" ++
+  "        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))\n"
+
+def refineBatches (split : List String → List (List String))
+    (groups : List (List String)) : List (List String) := groups.flatMap split
+
+theorem refined_entries_preserved (split : List String → List (List String))
+    (groups : List (List String))
+    (coverage : ∀ group ∈ groups, (split group).flatten = group) :
+    (refineBatches split groups).flatten = groups.flatten := by
+  induction groups with
+  | nil => simp [refineBatches]
+  | cons group groups ih =>
+    have first := coverage group (by simp)
+    have rest := ih (by intro g h; exact coverage g (by simp [h]))
+    simp only [refineBatches, List.flatMap_cons, List.flatten_append, List.flatten_cons] at *
+    rw [first, rest]
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -217,6 +242,7 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms source_dependencies_retained
 #print axioms explicit_source_not_compiled
 #print axioms demanded_work_le_catalog
+#print axioms refined_entries_preserved
 #print axioms isolated_entry_peak_le_batched
 #print axioms one_entry_per_isolated_batch
 #print axioms isolated_process_starts

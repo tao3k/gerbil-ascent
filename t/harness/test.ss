@@ -59,14 +59,23 @@
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
    '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
+;; Refine the native capacity groups once more before queueing them. This
+;; retains native option compatibility and avoids one full stripe pinning a
+;; worker after the isolated exhaustive jobs finish. Capacity still owns both
+;; divisions; there is no project batch-size or extra worker setting.
+;; BEGIN GENERATED PREPARATION GROUPS
+(def (preparation-refined-batches profiled compatible)
+  (apply append
+    (map (cut testing-interface-test-file-batches profiled <>)
+      (testing-interface-test-file-batches profiled
+        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))
+;; END GENERATED PREPARATION GROUPS
 (def (source-test-batches profiled files mode)
-  (testing-interface-test-file-batches profiled
-    (if (string=? mode "batched")
-      (let-values (((isolated compatible)
-                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (append isolated
-                (striped-module-files compatible (testing-interface-worker-count (length files)))))
-      files)))
+  (if (string=? mode "batched")
+    (let-values (((isolated compatible)
+                  (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
+      (append (map list isolated) (preparation-refined-batches profiled compatible)))
+    (testing-interface-test-file-batches profiled files)))
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))

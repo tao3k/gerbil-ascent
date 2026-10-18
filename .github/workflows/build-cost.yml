@@ -8,6 +8,8 @@ on:
       - build-modules.ss
       - justfile
       - t/harness/build.ss
+      - t/harness/test.ss
+      - t/qualification/ascent-source-import-test.ss
       - bindings/build-entry.ss
       - bindings/artifact.ss
       - t/harness/library-spec.ss

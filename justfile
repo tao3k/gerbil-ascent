@@ -85,7 +85,7 @@ _test-file path heap='2G':
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     elif [[ -d "$test_module" ]]; then
         # BEGIN GENERATED PREPARATION RUNNER
-        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss isolated "{{ heap }}")
+        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss batched "{{ heap }}")
         # END GENERATED PREPARATION RUNNER
         test_args=("$test_module")
     else

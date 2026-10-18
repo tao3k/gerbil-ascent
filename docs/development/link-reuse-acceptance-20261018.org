@@ -635,3 +635,45 @@ unprepared root. No SDK or upstream compiler change was needed.
 Current-head remote full CI and clean-host timing are still required. The
 original ab3d5e2 gate also rejects the unrelated preserved efcec55 change set
 before timing; this mismatch is retained rather than allowlisted away.
+
+* Failed per-entry experiment and capacity-derived refinement
+
+The complete 05b5d3a CI passed Linux source semantics (173 modules and 1,399
+Cases), compiled DSL semantics, the full original Scheme performance gates,
+formal verification and all three independent oracle jobs. The separate
+three-core macOS experiment failed: preparation took 385.315 seconds
+(projection 44.616, make 334.854), and runtime exhausted 180.206 seconds after
+only 672 Cases in 83 modules. No foreign compiler or audit error was observed.
+Peak observed RSS fell to 700 MiB, but the additional VM starts and repeated
+module loading reduced throughput. Memory reduction is not acceptance.
+
+The source runner therefore returns to compatible native batches, refined
+once by that same native grouping API before enqueueing in the existing pool.
+For 171 ordinary entries and three workers, the native partition is composed
+twice to produce nine batches of 19 entries; the two exhaustive isolated
+modules keep their existing profiles. There is no additional worker or
+batch-size setting. All native option compatibility rules and child limits
+are retained. This amortizes imports while providing more queueing units than
+the three original long-lived stripes. It is a measured hypothesis, not a
+proven timing improvement.
+
+Lean renders the actual composition and proves entry preservation conditional
+on the native grouping coverage contract. The earlier per-entry memory bound
+is retained as an explicit failed tradeoff, not presented as the chosen
+throughput policy. Quint checks a finite two-entry batch lifecycle and rejects
+oversized and retained batches. Native grouping implementation equivalence,
+SDK allocation and hardware latency remain outside this proof. The comparison
+scope adds only these preparation-runner/control paths; the unrelated efcec55
+paths remain rejected by the original gate.
+
+Compiler-work reconciliation for 89ad617 accounts for every changed GSC call:
+259 baseline calls minus 151 unrequested calls plus two observed library-spec
+calls equals 110 candidate calls. Both baseline controls have identical input
+inventories, as do both candidate controls. Actual input bytes are retained;
+this does not derive exclusive allocation totals from inclusive counters.
+
+The local full source-import control encountered an already stale reference
+interface in the existing development prefix. Both grouping controls passed,
+but that run is retained as failed; it is not substituted for clean-prefix
+CI. The native grouping projection independently preserves inventories of
+0, 1, 2, 3, 7, 37, 171 and 173 entries at the selected core capacities.

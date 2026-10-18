@@ -38,11 +38,11 @@ module PreparationWork {
   action Reuse = all {q.cacheReady,
     q.cacheGeneration == q.inputGeneration or Mutation == "reuse-stale-input",
     q' = {...q, staleReuse: q.staleReuse or q.cacheGeneration != q.inputGeneration}}
-  // Models one child VM. ActorTestPool separately checks the capacity-3 pool.
+  // Models one two-entry child batch (finite instance). ActorTestPool separately checks the capacity-3 pool.
   // Suite completion does not evict Gerbil's retained module contexts; VM exit does.
   action StartSourceVm = all {not(q.sourceVmActive), q.sourceStarts < 2,
     q' = {...q, sourceVmActive: true, sourceStarts: q.sourceStarts + 1,
-      retainedEntryRoots: if (Mutation == "batch-source-roots") 2 else 1}}
+      retainedEntryRoots: if (Mutation == "batch-source-roots") 3 else 2}}
   action ExitSourceVm = all {q.sourceVmActive,
     q' = {...q, sourceVmActive: false,
       retainedEntryRoots: if (Mutation == "retain-source-roots") q.retainedEntryRoots else 0}}
@@ -69,6 +69,6 @@ module PreparationWork {
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
   val ReuseCurrentInputs = not(q.staleReuse)
-  val OneSourceEntryPerVm = q.retainedEntryRoots <= 1
+  val BoundedSourceEntries = q.retainedEntryRoots <= 2
   val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0
 }

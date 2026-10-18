@@ -59,7 +59,13 @@
         (check-equal? (list-sort string<? (apply append batches)) files)
         ;; The independent exhaustive jobs must start before ordinary stripes.
         ;; Otherwise the original deadline can expire before either gets CPU.
-        (check-equal? batches (append (map list heavy) baseline))
+        (check-equal? batches (append (map list heavy)
+          (apply append (map (cut testing-interface-test-file-batches profiled <>) baseline))))
+        (let* ((workers (testing-interface-worker-count (length normal)))
+               (ordinary (cddr batches))
+               (bound (ceiling (/ (length normal) (* workers workers)))))
+          (check-equal? (<= (length ordinary) (* workers workers)) #t)
+          (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))
         (check-equal? (list (car batches) (cadr batches)) (map list heavy))
         (for-each (lambda (file)
           (check-equal? (testing-interface-runtime-options-for profiled file)

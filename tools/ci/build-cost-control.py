@@ -214,7 +214,7 @@ def main():
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss',
                't/performance/ascent-scenario-performance-test.ss',
-               't/harness/build.ss',
+               't/harness/build.ss', 't/harness/test.ss', 't/qualification/ascent-source-import-test.ss',
                'docs/development/link-reuse-acceptance-20261018.org',
                't/qualification/ascent-support-study-output.ss',
                't/qualification/ascent-steensgaard-test.ss',

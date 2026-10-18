@@ -20,7 +20,7 @@ class FormalTests(unittest.TestCase):
             "compile-source-suite": "SourceCarriersRemainSource",
             "compile-source-consumer": "SourceCarriersRemainSource",
             "reuse-stale-input": "ReuseCurrentInputs",
-            "batch-source-roots": "OneSourceEntryPerVm",
+            "batch-source-roots": "BoundedSourceEntries",
             "retain-source-roots": "ExitedVmReleasesEntries",
         })
         self.assertTrue(all(controls[name].expected == 12 for name in faults))

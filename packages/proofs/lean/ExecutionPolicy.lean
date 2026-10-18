@@ -262,6 +262,7 @@ def main (args : List String) : IO Unit := do
   | ["preparation-selection"] => IO.print Ascent.PreparationWork.selectionSchemeSource
   | ["preparation-import"] => IO.print Ascent.PreparationWork.inventoryImportSchemeSource
   | ["preparation-source"] => IO.print Ascent.PreparationWork.sourceSchemeSource
+  | ["preparation-roots"] => IO.print Ascent.PreparationWork.rootsSchemeSource
   | ["preparation-groups"] => IO.print Ascent.PreparationWork.groupsSchemeSource
   | ["preparation-runner"] => IO.print Ascent.PreparationWork.runnerRecipeSource
   | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")

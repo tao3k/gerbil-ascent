@@ -11,7 +11,7 @@ namespace Ascent.PreparationWork
 -- Importing build.ss evaluates its PackageSpec declaration even when the
 -- consumer only requests its module list. The separate data module has no
 -- such declaration. Source controls read that module with Gerbil's reader
--- and require exactly an export and a quoted string-list binding.
+-- and accept only quoted inventory data and its canonical four-entry append.
 inductive InventorySource where
   | moduleData
   | buildEntry
@@ -22,7 +22,7 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-modules)\n"
+  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧
@@ -78,6 +78,44 @@ theorem explicit_source_not_compiled (path : String) (sourceConsumers : List Str
     (source : path ∈ sourceConsumers) (sourceSuites : Bool) :
     retainedSource sourceSuites sourceConsumers path = false := by simp [retainedSource, source]
 
+-- Production carriers already belong to make. Forcing every producer from
+-- source is not necessary to project consumer dependencies. This selects only
+-- explicit roots; SDK import/compile closure remains a separate premise.
+def projectionRoots (production modules tests consumers : List String)
+    (productionCurrent : Bool) : List String :=
+  (if productionCurrent then modules.filter (fun m => !production.contains m) else modules) ++
+    tests ++ consumers
+
+def rootsSchemeSource : String :=
+  "(def (preparation-projection-roots production modules tests source-consumers production-current?)\n" ++
+  "  (append (if production-current?\n" ++
+  "            (filter (lambda (module) (not (member module production))) modules)\n" ++
+  "            modules)\n" ++
+  "          tests source-consumers))\n"
+
+theorem explicit_test_root_retained (production modules tests consumers : List String)
+    (current : Bool) (root : String) (present : root ∈ tests) :
+    root ∈ projectionRoots production modules tests consumers current := by
+  cases current <;> simp [projectionRoots, present]
+
+theorem explicit_source_root_retained (production modules tests consumers : List String)
+    (current : Bool) (root : String) (present : root ∈ consumers) :
+    root ∈ projectionRoots production modules tests consumers current := by
+  cases current <;> simp [projectionRoots, present]
+
+theorem support_root_retained (production modules tests consumers : List String)
+    (current : Bool) (root : String) (present : root ∈ modules) (support : root ∉ production) :
+    root ∈ projectionRoots production modules tests consumers current := by
+  cases current <;> simp [projectionRoots, present, support]
+
+theorem unadmitted_catalog_revisited (production modules tests consumers : List String) :
+    projectionRoots production modules tests consumers false = modules ++ tests ++ consumers := rfl
+
+-- The caller appends the complete original carrier list to the projected
+-- dependencies. Root filtering must never be reused as a compiler input filter.
+theorem declared_carrier_retained (modules projected : List String) (root : String)
+    (present : root ∈ modules) : root ∈ modules ++ projected := by simp [present]
+
 -- Weights come from concrete compiler/expander events, not a fixed number of
 -- native invocations per module. A graph projection removes work only for
 -- modules outside the demand closure. SDK graph completeness remains a premise.
@@ -96,6 +134,24 @@ theorem demanded_work_le_catalog (weight : String → Nat) (needed : String → 
       omega
     · simp [List.filter_cons, h, sourceWork]
       omega
+
+theorem sourceWork_append (weight : String → Nat) (left right : List String) :
+    sourceWork weight (left ++ right) = sourceWork weight left + sourceWork weight right := by
+  induction left with
+  | nil => simp [sourceWork]
+  | cons x xs ih => simp [sourceWork, ih, Nat.add_assoc]
+
+-- Bounds explicit root requests only. Transitive expansion, cache state,
+-- allocation and hardware latency do not have a fixed per-root cost here.
+theorem projection_root_work_le_full (weight : String → Nat)
+    (production modules tests consumers : List String) (current : Bool) :
+    sourceWork weight (projectionRoots production modules tests consumers current) ≤
+      sourceWork weight (modules ++ tests ++ consumers) := by
+  cases current
+  · simp [projectionRoots]
+  · simp only [projectionRoots, Bool.true_eq, ↓reduceIte, sourceWork_append]
+    have bound := demanded_work_le_catalog weight (fun m => !production.contains m) modules
+    omega
 
 -- gxtest imports every requested entry before running the harness. Its native
 -- module registry retains the expanded contexts through VM exit. Isolating
@@ -171,6 +227,8 @@ theorem isolated_entries_preserved (entries : List String) :
 -- participate in reuse. This is a cost precondition, not a claim that the SDK
 -- timestamp cache or the untyped receipt decoder has been source-refined.
 structure CompileKey where
+  -- Exact expanded compiler-input digest, including generated timestamps.
+  -- This is not a DSL digest or a byte count; the observer retains the bytes.
   source : String
   dependencies : String
   sdk : String
@@ -236,6 +294,13 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
     (enough : saved ≤ work) (delay : saved < wait) :
     work < work - saved + wait := by omega
 
+#print axioms explicit_test_root_retained
+#print axioms explicit_source_root_retained
+#print axioms support_root_retained
+#print axioms unadmitted_catalog_revisited
+#print axioms declared_carrier_retained
+#print axioms sourceWork_append
+#print axioms projection_root_work_le_full
 #print axioms total_append
 #print axioms performance_carriers_retained
 #print axioms source_suite_not_compiled

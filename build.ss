@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in "build-modules.ss" gerbil-ascent-library-modules)
+(import (only-in "build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
         (only-in :std/build-script defbuild-script)
         (only-in :std/make make-clean)
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
@@ -71,8 +71,7 @@
 (def (main . args)
   (let* ((build? (or (null? args) (equal? (car args) "compile")))
          (root (path-directory (this-source-file)))
-         (modules (append gerbil-ascent-library-modules
-                          '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
+         (modules gerbil-ascent-build-input-modules)
          (before (and build? (source-snapshot root modules)))
          (spec (gerbil-ascent-build-spec)))
     (add-load-path! (path-expand "lib" (gerbil-path)))

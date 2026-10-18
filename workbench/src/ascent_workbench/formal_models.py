@@ -614,7 +614,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs BoundedSourceEntries ExitedVmReleasesEntries',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent',
 }
 FAULTS['PreparationWork'] = (
     ('hide-job', 'JobsExact', 12),
@@ -628,6 +628,8 @@ FAULTS['PreparationWork'] = (
     ('compile-source-suite', 'SourceCarriersRemainSource', 12),
     ('compile-source-consumer', 'SourceCarriersRemainSource', 12),
     ('reuse-stale-input', 'ReuseCurrentInputs', 12),
+    ('expand-producer-catalog', 'OnlyConsumerRoots', 12),
+    ('prune-unadmitted-catalog', 'UnadmittedCatalogPresent', 12),
     ('batch-source-roots', 'BoundedSourceEntries', 12),
     ('retain-source-roots', 'ExitedVmReleasesEntries', 12),
 )

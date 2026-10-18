@@ -10,13 +10,14 @@
         (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
+        (only-in "../../bindings/artifact.ss" artifact-invalidated-modules)
         (only-in :std/string/path path-default-extension)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
 ;; BEGIN GENERATED PREPARATION IMPORT
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
@@ -86,9 +87,17 @@
     ;; std/make still owns scheduling, dependency timestamps and invalidation.
     ;; Source Suites remain source inputs to GxTest; only their dependencies
     ;; are compiled here. Preparation time is reported separately in CI.
-    (let ((phase (current-jiffy)) (roots (append modules tests source-consumers)))
+    (let* ((phase (current-jiffy))
+           (production-current?
+             (null? (artifact-invalidated-modules (current-directory) gerbil-ascent-build-input-modules)))
+           (roots (preparation-projection-roots gerbil-ascent-library-modules
+                    modules tests source-consumers production-current?)))
+      (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
       ;; Source-only consumers have no compiled interfaces. Do not traverse a
       ;; whole interface graph only to reject it and expand the same roots.
+      ;; Production remains in make's carrier list. Project consumer dependencies
+      ;; without forcing the entire already declared production catalog from
+      ;; source again. Gerbil owns interface loading and dependency expansion.
       ;; Prepare through Gerbil once, then use ASP's resident-context projection.
       (add-load-path! (current-directory))
       (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)

@@ -519,7 +519,7 @@ The existing preparation entry compiled every non-Suite qualification source
 for thirteen performance consumers. The pinned ASP v0.1.2.2 import projection
 identifies 204 required sources for the complete fresh-prefix performance
 roots: production catalog, base modules, declared dynamic dependencies and
-all thirteen consumers and their thirteen dynamically loaded scenario scripts.
+all thirteen compiled consumers and fifteen dynamically loaded scenario scripts.
 Seventy-four qualification support sources are outside
 this closure. Projecting the historical 259 GSC records onto that exact graph
 identifies 151 calls on unrequested support sources in each ABBA control.
@@ -677,3 +677,77 @@ interface in the existing development prefix. Both grouping controls passed,
 but that run is retained as failed; it is not substituted for clean-prefix
 CI. The native grouping projection independently preserves inventories of
 0, 1, 2, 3, 7, 37, 171 and 173 entries at the selected core capacities.
+
+* Complete three-core runtime and remaining preparation regression
+
+The first be22b6a three-core qualification passed without a retry: 173 source
+modules and 1,399 Cases completed in 157.416 seconds, exit zero, with three
+workers, eleven batches, original 180-second deadline and 2G child heaps.
+No Suite interfaces were generated, and both process audits were clean.
+Full source preparation still cost 419.943 seconds (projection 40.687, make
+373.196); this is not a preparation optimization. Peak observed child RSS
+was 1,268.781 MiB. The earlier 700 MiB per-entry run did not complete the same
+workload and cannot establish a complete-workload memory saving.
+
+The exact be22b6a fixed-parent timing comparison against e1fa92a rejected all
+three phases: build +2.255%, cold preparation +4.668%, warm preparation
++14.911%. All four samples have zero changed warm outputs and clean process
+audits. The earlier efcec55-to-05b5d3a cold/warm improvements do not override
+these failures. The original comparison still rejects unrelated concurrent
+paths and the historical regression ledger remains unresolved.
+
+The next fix removes an unnecessary root acquisition step: the complete
+production catalog already remains in the std/make carrier list, but the
+projection imported every producer explicitly from source as well. It now
+projects only explicit consumers, dynamic/base dependencies and retained
+support. Gerbil can load production dependencies through its native interface
+resolution; std/make still checks every production carrier and owns freshness.
+No private cache or parser is added, and the source snapshot still covers the
+whole preparation. Explicitly requested consumers remain roots even if their
+names also occur in the production catalog.
+
+Independent native projections return 204 versus 166 performance graph nodes
+but the exact same 189 compilation carriers. The complete semantic projection
+also preserves all 438 compilation carriers (611 to 608 graph nodes). The compiler input list is not
+the root filter. Lean renders that filter and proves preservation of explicit
+consumers and non-production support roots; existing compiler carriers are
+retained. Quint adds a forced-catalog-expansion counterexample. These checks
+remain conditional on the native SDK graph contract, not an SDK source proof.
+
+The expanded input snapshots also expose a real cache-identity distinction:
+repeated builds of unchanged response-projection source produced equal-size
+expanded files with different module timestamp constants. Byte counts alone
+do not identify compiler inputs. CompileKey.source denotes the exact expanded
+input digest, including metadata. Raw bytes and signed allocator observations
+are retained; neither timestamps nor negative estimates are normalized away.
+
+The preparation correction also fixes an earlier report count: there are
+thirteen compiled performance consumers and fifteen dynamic scenario scripts.
+The shared directory-derived scenario selection itself has never been reduced.
+The concurrent 8341fe36 Rust decoder and test-organization changes are preserved.
+
+The fast path is conditional on the existing content admission:
+artifact-invalidated-modules must return an empty change set for the complete
+production input inventory, current SDK/root and actual library digest.
+Otherwise every original root is still expanded, so restored timestamps or a
+missing/corrupt receipt cannot suppress source validation. The two canonical
+inventories now share the existing build-modules data file; build.ss uses the
+same four source-only ABI entries without duplicating them in the test tool.
+No PackageSpec is constructed by this data import. The artifact control also
+checks actual rejection of an unadmitted malformed producer.
+
+A second demand correction removes t/harness/test from the unconditional
+performance base. None of the compiled performance consumers or dynamic
+scenario scripts imports this source-semantics scheduler. The final performance
+carrier list has 188 entries instead of 189; that scheduler is the only
+removed entry. Source qualification still discovers it through its real
+importing Suite and retains all 438 semantic compilation carriers. The
+root-filter-only experiment above preserved 189 entries before this separate
+unused-carrier removal. The final performance graph has 165 nodes.
+
+Lean additionally bounds explicit root-request work and proves the complete
+fallback for an unadmitted catalog. This does not bound total transitive
+expansion, allocator work or wall time. Quint retains every earlier control
+and checks both unnecessary producer expansion and erroneous pruning before
+admission, for fifteen fault controls in total. The new functional controls
+keep the original standalone artifact Case count and all original limits.

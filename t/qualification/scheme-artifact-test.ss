@@ -4,8 +4,8 @@
 (import :std/test :std/encoding/json "../harness/artifact-admission"
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
         (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
-        (only-in "../harness/library-spec.ss" preparation-retained-source?)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+        (only-in "../harness/library-spec.ss" preparation-retained-source? preparation-projection-roots)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
@@ -50,6 +50,15 @@
 (def scheme-artifact-test
   (test-suite "Scheme native artifact publication"
     (test-case "source qualification retains every dependency and loads Suites as source"
+      (check (preparation-projection-roots '("program/a" "program/b")
+                '("program/a" "fixture" "program/b") '("suite") '("scenario.ss") #t)
+             => '("fixture" "suite" "scenario.ss"))
+      ;; Explicit consumers remain roots even when they are production modules.
+      (check (preparation-projection-roots '("program/a") '("program/a")
+                '("program/a") '("program/a.ss") #t)
+             => '("program/a" "program/a.ss"))
+      (check (preparation-projection-roots '("program/a") '("program/a" "fixture")
+                '("suite") [] #f) => '("program/a" "fixture" "suite"))
       (for-each (lambda (source)
           (check (preparation-retained-source? source #f []) => #t)
           (check (preparation-retained-source? source #t []) => (not (string-suffix? "-test.ss" source)))
@@ -66,6 +75,11 @@
         (put "unrequested.ss" "(\n")
         (let (closure (asp-gerbil-scheme-native-import-closure (current-directory) '("entry")))
           (check (list-sort string<? closure) => '("entry.ss" "leaf.ss"))
+          ;; A missing/stale admission must still revisit a corrupt producer.
+          (check (rejected? (lambda ()
+                    (asp-gerbil-scheme-native-import-closure (current-directory)
+                      (preparation-projection-roots '("unrequested") '("unrequested" "entry") [] [] #f))))
+                 => #t)
           (call-with-asp-gerbil-scheme-prepared-source-graph
            (lambda ()
              (check (list-sort string<?
@@ -79,18 +93,25 @@
       (let (declared
             (call-with-input-file "build-modules.ss"
               (lambda (port)
-                (check (read port) => '(export gerbil-ascent-library-modules))
+                (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules))
                 (let (form (read port))
+                  (check (read port) =>
+                    '(def gerbil-ascent-build-input-modules
+                       (append gerbil-ascent-library-modules
+                         '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop"))))
                   (check (eof-object? (read port)) => #t)
                   (match form
                     (['def 'gerbil-ascent-library-modules ['quote modules]] modules)
                     (_ (error "build module inventory must be quoted data" form)))))))
         (check (and (list? declared) (andmap string? declared)) => #t)
         (check declared => gerbil-ascent-library-modules))
+      (check gerbil-ascent-build-input-modules =>
+        (append gerbil-ascent-library-modules
+          '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
       (let (imports
             (call-with-input-file "t/harness/build.ss"
               (lambda (port) (read-line port) (read port))))
-        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
                             (cdr imports)) #t) => #t)
         (check (and (member '(only-in "../../build.ss" gerbil-ascent-library-modules)
                             (cdr imports)) #t) => #f)))

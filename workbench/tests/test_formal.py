@@ -20,6 +20,8 @@ class FormalTests(unittest.TestCase):
             "compile-source-suite": "SourceCarriersRemainSource",
             "compile-source-consumer": "SourceCarriersRemainSource",
             "reuse-stale-input": "ReuseCurrentInputs",
+            "expand-producer-catalog": "OnlyConsumerRoots",
+            "prune-unadmitted-catalog": "UnadmittedCatalogPresent",
             "batch-source-roots": "BoundedSourceEntries",
             "retain-source-roots": "ExitedVmReleasesEntries",
         })

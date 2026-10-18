@@ -2,13 +2,21 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source?)
+(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots)
 ;; BEGIN GENERATED PREPARATION SOURCE
 ;; Generated from PreparationWork.lean; formal CI compares this region.
 (def (preparation-retained-source? source source-suites? source-consumers)
   (and (not (member source source-consumers))
        (or (not source-suites?) (not (string-suffix? "-test.ss" source)))))
 ;; END GENERATED PREPARATION SOURCE
+
+;; BEGIN GENERATED PREPARATION ROOTS
+(def (preparation-projection-roots production modules tests source-consumers production-current?)
+  (append (if production-current?
+            (filter (lambda (module) (not (member module production))) modules)
+            modules)
+          tests source-consumers))
+;; END GENERATED PREPARATION ROOTS
 
 (def (performance-scenario-files)
   (let (selected (getenv "ASCENT_SS_SCENARIO" #f))
@@ -39,7 +47,7 @@
 (def test-library-base
   '("t/performance/library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/harness/artifact-admission" "t/harness/test" "t/model/response-projection"))
+                            "t/harness/artifact-admission" "t/model/response-projection"))
 (def test-library-dependencies
   '(
     (("t/qualification/scheme-artifact-test.ss") "bindings/artifact" "build-modules")

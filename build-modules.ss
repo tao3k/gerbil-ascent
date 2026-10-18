@@ -1,7 +1,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Build-time module data; importing this list does not construct PackageSpec.
-(export gerbil-ascent-library-modules)
+(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
 
 (def gerbil-ascent-library-modules
   '("core/ordered-pair-set"
@@ -141,3 +141,8 @@
     "evidence/module"
     "t/qualification/evidence-api-module"
     "interface/engine-api"))
+
+;; Canonical production source admission includes the source-only ABI entries.
+(def gerbil-ascent-build-input-modules
+  (append gerbil-ascent-library-modules
+    '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))

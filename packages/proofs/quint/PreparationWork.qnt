@@ -8,16 +8,21 @@ module PreparationWork {
                 outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool,
-                sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int}
+                sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false,
-    sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0}
+    sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
+  action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}
+  action ProjectRoots = q' = {...q, rootsProjected: true,
+    forcedCatalogRoots: if (q.productionAdmitted) {
+      if (Mutation == "expand-producer-catalog") 1 else 0
+    } else { if (Mutation == "prune-unadmitted-catalog") 0 else 1 }}
   action Import = all {q.imports < 2,
     q' = {...q, imports: q.imports + 1,
       observedImports: if (Mutation == "forget-import") q.observedImports else q.observedImports + 1,
@@ -56,9 +61,11 @@ module PreparationWork {
     q.current or Mutation == "ignore-generation",
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
-  action step = any {ReadInventory, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
+  action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, Finish, ChangeSource, CounterDecrease, Publish}
+  val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
+  val UnadmittedCatalogPresent = (q.rootsProjected and not(q.productionAdmitted)) implies q.forcedCatalogRoots == 1
   val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports

@@ -617,6 +617,7 @@ CONFIGURATIONS['PreparationWork'] = {
     'invariants': 'JobsExact ImportsExact AllocationNotNested CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent',
 }
 FAULTS['PreparationWork'] = (
+    ('key-by-generated-manifest', 'ContentKeyExact', 12),
     ('key-by-commit', 'ContentKeyExact', 12),
     ('reuse-missing-payload', 'CompleteCacheBundle', 12),
     ('reuse-missing-receipt', 'CompleteCacheBundle', 12),
@@ -637,4 +638,21 @@ FAULTS['PreparationWork'] = (
     ('prune-unadmitted-catalog', 'UnadmittedCatalogPresent', 12),
     ('batch-source-roots', 'BoundedSourceEntries', 12),
     ('retain-source-roots', 'ExitedVmReleasesEntries', 12),
+)
+
+# Actual upstream archive observations, stable across Cargo configurations.
+MODEL_ORDER += ('ArchiveWork',)
+CONFIGURATIONS['ArchiveWork'] = {
+    'constants': 'Mutation = "none"',
+    'invariants': 'LeaseExclusive NativeCostExact ProfilesShareWork SourceCurrent ReceiptComplete PrivateOutputStable',
+}
+FAULTS['ArchiveWork'] = (
+    ('omit-lease', 'LeaseExclusive', 12),
+    ('split-by-profile', 'ProfilesShareWork', 12),
+    ('count-hit-as-work', 'NativeCostExact', 12),
+    ('ignore-source', 'SourceCurrent', 12),
+    ('hide-pending', 'ReceiptComplete', 12),
+    ('hide-failure', 'ReceiptComplete', 12),
+    ('hide-unknown', 'ReceiptComplete', 12),
+    ('link-shared', 'PrivateOutputStable', 12),
 )

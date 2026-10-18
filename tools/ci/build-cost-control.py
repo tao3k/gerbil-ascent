@@ -160,10 +160,14 @@ def main():
     parser.add_argument('--baseline')
     parser.add_argument('--candidate')
     parser.add_argument('--semantics-only', action='store_true')
+    parser.add_argument('--semantic-preparation', action='store_true',
+                        help='measure source-Suite preparation instead of the original performance lane')
     parser.add_argument('--work-only', action='store_true',
                         help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.semantic_preparation and args.semantics_only:
+        parser.error('--semantic-preparation is a comparison mode, not a semantic runtime mode')
     if args.work_only and args.semantics_only:
         parser.error('work observations and full semantics are independent modes')
     root = Path.cwd()
@@ -253,6 +257,8 @@ def main():
                'sdk_receipt': json.loads(manifest.read_text()),
                'sdk_binaries': {name: digest(Path(os.environ['GERBIL_HOME']) / 'bin' / name)
                                 for name in ['gxi', 'gsc']}, 'controls': []}
+    preparation = ['just', 'prepare-semantic-library' if args.semantic_preparation else 'prepare-test-library']
+    receipt['preparation_command'] = preparation
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(
@@ -285,7 +291,7 @@ def main():
             shutil.copy2(observer / 'gxi', tree / '.gerbil/bin/gxi')
         phases = {}
         for phase, command in [('build', ['just', 'check-policy']),
-                               ('prepare', ['just', 'prepare-test-library'])]:
+                               ('prepare', preparation)]:
             if args.work_only:
                 phase_trace = observer / phase
                 phase_trace.mkdir()
@@ -298,7 +304,7 @@ def main():
             phase_trace.mkdir()
             env['ASCENT_GSC_WORK_DIRECTORY'] = str(phase_trace)
             env['ASCENT_IMPORT_TRACE'] = str(observer / 'prepare-warm-imports.sexp')
-        phases['prepare-warm'] = measure(tree, ['just', 'prepare-test-library'],
+        phases['prepare-warm'] = measure(tree, preparation,
                                          output / f'{name}-prepare-warm.log', env)
         after_warm = test_outputs(tree)
         changed_outputs = sorted(path for path in before_warm.keys() | after_warm.keys()

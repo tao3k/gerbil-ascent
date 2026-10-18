@@ -267,8 +267,122 @@ def quintSource : String :=
     s!"  pure def {d.name}({String.intercalate ", " params}): bool = {Ascent.ExecutionPolicy.quint d.body}\n") ++ "}\n"
 end Ascent.PreparationPolicy
 
+/-! Actual upstream archive event decoding and receipt admission. The Rust
+consumer and Quint protocol import these exact generated decisions. Compiler
+operation durations are worker observations, not a serial latency prediction. -/
+namespace Ascent.ArchivePolicy
+open Ascent.ExecutionPolicy
+
+def cacheLevels : Nat := 4
+def cacheNamespace : String := "ascent-program-v1"
+def sharedTarget (path : List String) : List String := (path.reverse.drop cacheLevels).reverse
+
+theorem profiles_select_same_target (target : List String) (profile package otherProfile otherPackage : String) :
+    sharedTarget (target ++ [profile, "build", package, "out"]) =
+      sharedTarget (target ++ [otherProfile, "build", otherPackage, "out"]) := by
+  simp [sharedTarget, cacheLevels, List.reverse_append]
+
+def rules : List (String × Bool × Bool × Nat) :=
+  [("start", false, false, 0), ("start", false, true, 0),
+   ("complete", true, false, 1), ("complete", true, true, 1),
+   ("cached", false, false, 2), ("cached", false, true, 2),
+   ("failed", true, false, 3), ("failed", true, true, 3),
+   ("complete", false, true, 4)]
+
+def decode (state : String) (timed plan : Bool) : Option Nat :=
+  (rules.find? (fun r => r.1 == state && r.2.1 == timed && r.2.2.1 == plan)).map (·.2.2.2)
+
+def decodePhase (state : String) (timed : Bool) (phase : String) : Option Nat :=
+  decode state timed (phase == "program-plan")
+
+theorem phase_decoder_exact (state : String) (timed : Bool) (phase : String) :
+    decodePhase state timed phase = decode state timed (phase == "program-plan") := rfl
+
+theorem cached_is_not_compiled (plan : Bool) : decode "cached" false plan = some 2 := by
+  cases plan <;> decide
+
+theorem untimed_worker_complete_rejected : decode "complete" false false = none := by decide
+
+theorem unknown_event_rejected (timed plan : Bool) : decode "unknown" timed plan = none := by
+  cases timed <;> cases plan <;> decide
+
+def compilationUnits (phase : String) (kind : Nat) : Nat :=
+  if phase == "native-object" && kind == 0 then 1 else 0
+
+theorem cache_hit_has_no_compilation (phase : String) : compilationUnits phase 2 = 0 := by
+  simp [compilationUnits]
+
+theorem native_start_has_one_compilation : compilationUnits "native-object" 0 = 1 := by decide
+
+def admission : Predicate :=
+  .both (.flag "builder_ok") (.both (.flag "graph_ok")
+    (.both (.equal "starts" "completed") (.both (.equal "pending" .zero)
+      (.both (.equal "failed" .zero) (.both (.equal "invalid" .zero)
+        (.both (.equal "changed" .zero) (.less .zero "sources")))))))
+
+theorem complete_exact (numbers : String → Nat) (flags : String → Bool) :
+    eval numbers flags admission = true ↔
+      flags "builder_ok" = true ∧ flags "graph_ok" = true ∧
+      numbers "starts" = numbers "completed" ∧ numbers "pending" = 0 ∧
+      numbers "failed" = 0 ∧ numbers "invalid" = 0 ∧ numbers "changed" = 0 ∧
+      0 < numbers "sources" := by
+  simp [admission, eval, Number.value]
+  intro _ _ _ _ _ _ _
+  exact ⟨of_decide_eq_true, fun h => decide_eq_true h⟩
+
+theorem changed_source_rejected (numbers : String → Nat) (flags : String → Bool)
+    (changed : numbers "changed" ≠ 0) : eval numbers flags admission = false := by
+  simp [admission, eval, Number.value, changed]
+
+def fields := ["starts", "completed", "pending", "failed", "invalid", "changed", "sources"]
+def flags := ["builder_ok", "graph_ok"]
+def number : Number → String
+  | .zero => "0"
+  | .variable name => "m." ++ name
+
+def rustBody : Predicate → String
+  | .flag name => "m." ++ name
+  | .less a b => number a ++ " < " ++ number b
+  | .equal a b => number a ++ " == " ++ number b
+  | .both a b => rustBody a ++ " && " ++ rustBody b
+  | .either a b => "(" ++ rustBody a ++ " || " ++ rustBody b ++ ")"
+  | .negate a => "!(" ++ rustBody a ++ ")"
+
+def rustSource : String :=
+  "// Generated from ExecutionPolicy.lean (ArchivePolicy); formal CI checks exact source.\n" ++
+  s!"pub const CACHE_PARENT_LEVELS: usize = {cacheLevels};\npub const CACHE_NAMESPACE: &str = \"{cacheNamespace}\";\n" ++
+  "#[derive(Default)]\npub struct Metrics {\n" ++
+  String.join (fields.map (fun f => s!"    pub {f}: usize,\n")) ++
+  String.join (flags.map (fun f => s!"    pub {f}: bool,\n")) ++ "}\n" ++
+  "#[rustfmt::skip]\npub fn decode(state: &str, timed: bool, phase: &str) -> Option<usize> {\n    match (state, timed, phase == \"program-plan\") {\n" ++
+  String.join ((rules.map (·.2.2.2)).eraseDups.map (fun kind =>
+    let members := rules.filter (fun r => r.2.2.2 == kind)
+    let patterns := (members.map (fun r => (r.1, r.2.1))).eraseDups.map (fun (state, timed) =>
+      let plans := (members.filter (fun r => r.1 == state && r.2.1 == timed)).map (·.2.2.1)
+      let pattern := if plans.contains false && plans.contains true then "_"
+        else String.intercalate " | " (plans.map (fun p => s!"{p}"))
+      s!"(\"{state}\", {timed}, {pattern})")
+    s!"        {String.intercalate " | " patterns} => Some({kind}),\n")) ++
+  "        _ => None,\n    }\n}\n#[rustfmt::skip]\npub fn compilation_units(phase: &str, kind: usize) -> usize {\n    usize::from(phase == \"native-object\" && kind == 0)\n}\n#[rustfmt::skip]\npub fn complete(m: &Metrics) -> bool {\n    " ++ rustBody admission ++ "\n}\n"
+
+def quintSource : String :=
+  "// Generated from ExecutionPolicy.lean (ArchivePolicy); formal CI checks exact source.\nmodule ArchivePolicy {\n" ++
+  "  pure def archive_complete(" ++ String.intercalate ", "
+    (fields.map (· ++ ": int") ++ flags.map (· ++ ": bool")) ++ "): bool = " ++
+    Ascent.ExecutionPolicy.quint admission ++ "\n}\n"
+
+def ciSource : String :=
+  "      - name: Restore compiler-owned archive work across Cargo configurations\n        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0\n        with:\n          path: rust/target/" ++ cacheNamespace ++
+  "\n          # No source-different fallback; the upstream builder still checks every object fingerprint.\n          key: " ++ cacheNamespace ++
+  "-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', 'rust/Cargo.toml', 'rust/Cargo.lock', 'rust/ascent-scheme/build.rs', 'rust/ascent-scheme/build_support/**', 'bindings/**', 'gerbil.pkg', '.github/workflows/ci.yml', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '!rust/target/**', '!python/src/ascent/_sources/**') }}\n"
+
+end Ascent.ArchivePolicy
+
 def main (args : List String) : IO Unit := do
   match args with
+  | ["archive-rust"] => IO.print Ascent.ArchivePolicy.rustSource
+  | ["archive-cache"] => IO.print Ascent.ArchivePolicy.ciSource
+  | ["archive-quint"] => IO.print Ascent.ArchivePolicy.quintSource
   | ["scheme"] => IO.print Ascent.ExecutionPolicy.schemeSource
   | ["rust"] => IO.print Ascent.ExecutionPolicy.rustSource
   | ["quint"] => IO.print Ascent.ExecutionPolicy.quintSource

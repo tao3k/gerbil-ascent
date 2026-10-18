@@ -269,6 +269,12 @@ theorem bundle_requires_current_inputs (stored requested : CompileKey)
 -- namespace keeps toolchain/platform identity; its suffix hashes input bytes.
 def cargoIdentity (inputs : CompileKey) (_commit : String) : CompileKey := inputs
 
+-- The unused package version manifest is a CLI output, not a compiler source.
+def cargoSourceIdentity (inputs : CompileKey) (_versionManifest : String) : CompileKey := inputs
+
+theorem generated_manifest_does_not_invalidate (inputs : CompileKey) (before after : String) :
+    cargoSourceIdentity inputs before = cargoSourceIdentity inputs after := rfl
+
 theorem equal_content_cross_commit_key (inputs : CompileKey) (before after : String) :
     cargoIdentity inputs before = cargoIdentity inputs after := rfl
 
@@ -279,7 +285,7 @@ theorem changed_content_cross_commit_rejected (stored requested : CompileKey)
 
 -- Exact CI key source. Generated resources are outputs, never key inputs.
 def cargoCacheSchemeSource : String :=
-  "          key: ascent-cargo-products-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', 'rust/Cargo.lock', '.cargo/**', 'python/pyproject.toml', 'python/src/ascent/**', '**/*.ss', 'bindings/**', 'gerbil.pkg', 'justfile', '.github/workflows/ci.yml', '!rust/**/target/**', '!.gerbil/**', '!.ci/**', '!.cache/**', '!python/src/ascent/_sources/**', '!python/src/ascent/.gerbil-resources.json') }}\n"
+  "          key: ascent-cargo-products-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', 'rust/Cargo.lock', '.cargo/**', 'python/pyproject.toml', 'python/src/ascent/**', '**/*.ss', 'bindings/**', 'gerbil.pkg', 'justfile', '.github/workflows/ci.yml', '!manifest.ss', '!rust/**/target/**', '!.gerbil/**', '!.ci/**', '!.cache/**', '!python/src/ascent/_sources/**', '!python/src/ascent/.gerbil-resources.json') }}\n"
 
 structure Work where
   jobs : Nat := 0

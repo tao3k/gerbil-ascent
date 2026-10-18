@@ -353,6 +353,9 @@ def main() -> int:
             # Compare generated executable definitions, not source digests or
             # captured test outputs. Runtime and Quint import these exact files.
             for script, language, target in (
+                ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
+                ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-scheme/build_support/policy.rs"),
+                ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
@@ -375,7 +378,13 @@ def main() -> int:
                     ["lake", "env", "lean", "--run", script, language],
                     Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache"}:
+                if language == "archive-cache":
+                    begin = "      # BEGIN GENERATED ARCHIVE CACHE\n"
+                    end = "      # END GENERATED ARCHIVE CACHE\n"
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate archive cache region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache"}:
                     region = language.removeprefix("preparation-").upper()
                     prefix = "        #" if language == "preparation-runner" else "          #" if language == "preparation-cargo-cache" else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',

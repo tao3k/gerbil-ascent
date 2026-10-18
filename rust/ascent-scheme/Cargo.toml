@@ -17,10 +17,15 @@ rayon = ["gerbil-ascent/rayon"]
 
 [build-dependencies]
 gerbil-scheme-aot-build.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
 
 [dev-dependencies]
 num-rational.workspace = true
 asp-rust.workspace = true
+gerbil-scheme-aot-build.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

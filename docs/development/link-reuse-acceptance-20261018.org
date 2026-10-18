@@ -889,3 +889,80 @@ not clamped. SDK allocation snapshots, observer/decoder equivalence, fresh
 checkout mtime invalidation and wait/I/O attribution still require source-bound
 receipts. The new cache namespace first needs a cold seed; no warm restore
 speedup is claimed by this correction.
+
+* Observed archive construction and cross-configuration ownership
+
+The ASCENT Scheme build now calls the pinned upstream
+=build_program_archive_observed=. The same upstream operation observer measures
+bridge preparation, library graph staging, private publication and
+source identity. It retains the original compiler error on failure. The SDK
+continues to own Scheme graph interpretation, compiler options, fingerprints,
+parallel native commands and archive packaging.
+
+Cargo configurations previously staged the same program under distinct
+OUT_DIR paths. The SDK fingerprint includes staged paths, so its existing
+object cache could not reuse those objects across configurations. The program
+now has one target-local graph/object directory under an OS file lease. Native
+objects still pass the SDK fingerprint check on each invocation. The completed
+archive is copied to each consumer's private OUT_DIR before releasing the
+lease. Rustc therefore never links a mutable shared archive. Generated version
+manifests are excluded from the Cargo product key: their Git labels are not
+ASCENT compiler inputs. The package's declared source inventory supplies raw
+Cargo dependencies, including newly added source directories.
+
+Compiler outputs are observed but are not dependencies of their own Cargo
+producer. External package and SDK inputs remain watched. Watching the shared
+manifest or self-produced SCM would create a rebuild feedback loop. Actual
+inputs are hashed with a bounded streaming buffer, generated Scheme inputs are
+retained by digest, and all inputs are rechecked before a receipt is admitted.
+A cache hit means no object compiler execution; fingerprint reads, lease wait,
+source observation and publication still have costs. Parallel worker times and
+the inclusive module-C parent interval are not added into elapsed time.
+
+Lean generates the event decoder, compilation-unit classification, receipt
+admission, cache namespace and CI cache region. It proves rejection of changed
+inputs, malformed terminal events and incomplete observations, as well as
+profile-independent target selection. Quint checks lease ownership, exact
+native compilation accounting, cross-profile reuse, current inputs and detached
+publication, with eight fault controls. PreparationWork retains its earlier
+controls and adds generated-manifest invalidation. These are executable policy
+and lifecycle correspondences, not a proof of the GCC optimizer or Rust/OS
+implementation.
+
+Build-time controls cover interleaved compiler workers, cache hits, malformed
+or missing events, failed builders, source mutation/removal, real file-lock
+exclusion, detached archive copies and generated-output watch exclusion. An
+initial isolated draft called the complete executable package builder for every
+configuration and ceased producing compiler children. Its native stack sample
+and interrupted failure are retained. The corrected caller prepares only the complete declared library inventory
+and the AOT entry through shared std/make state. It does not invoke the package
+executable builder: those CLI/shared-library link targets are not dependencies
+of the AOT consumer. The ordinary package CI still validates those targets. Build processes use the
+selected gxi explicitly with closed stdin. No upstream changes or increased
+limits were used; the draft sample alone does not establish an upstream defect.
+
+The optional ABBA experiment can now select semantic preparation explicitly.
+The original performance-preparation route, historical failures, admission
+ledger and thresholds remain unchanged. Both lanes retain three selected cores.
+Current-commit CI and matched experiment receipts are reported separately.
+
+** Concurrent test execution
+
+The CI Rust harness uses =RUST_TEST_THREADS=12=, including Rust/PyO3 semantics
+and archive controls. A single-threaded Gambit VM is an ownership constraint
+on that VM; it does not require serializing independent tests or VM owners.
+The existing three-worker Scheme qualification and its 180-second deadline
+remain unchanged. Performance measurement isolation does not authorize
+reducing semantic-test concurrency.
+
+The archive controls also start twelve independent processes behind a common
+barrier. They contend on the real file lease and publish an SDK-built archive
+eight times each, checking private archive digests outside the lease. A
+separate twelve-thread observer test submits 768 start/complete pairs and
+checks exact event and compilation-unit accounting. These are concurrency
+controls, not end-to-end runtime speed measurements.
+
+Local control validation uses the existing SDK-built archive and the pinned
+SDK Rust libraries. It does not constitute a successful current-head cold
+package build or full CI acceptance. Both interrupted cold-package drafts
+and the initial stress-fixture directory-creation failure are retained.

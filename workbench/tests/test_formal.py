@@ -13,6 +13,7 @@ class FormalTests(unittest.TestCase):
         faults = {name: item.property for name, item in controls.items() if name != "correct"}
         self.assertEqual(faults, {
             "key-by-commit": "ContentKeyExact",
+            "key-by-generated-manifest": "ContentKeyExact",
             "reuse-missing-payload": "CompleteCacheBundle",
             "reuse-missing-receipt": "CompleteCacheBundle",
             "hide-compiler-failure": "CompilerWorkComplete",
@@ -31,6 +32,17 @@ class FormalTests(unittest.TestCase):
             "retain-source-roots": "ExitedVmReleasesEntries",
         })
         self.assertTrue(all(controls[name].expected == 12 for name in faults))
+
+    def test_archive_work_retains_source_lease_cache_and_cost_controls(self):
+        controls = {item.name: item for item in obligations(configuration("ArchiveWork", {}))}
+        self.assertEqual(controls["correct"].expected, 0)
+        self.assertEqual({name: item.property for name, item in controls.items() if name != "correct"}, {
+            "omit-lease": "LeaseExclusive", "split-by-profile": "ProfilesShareWork",
+            "count-hit-as-work": "NativeCostExact", "ignore-source": "SourceCurrent",
+            "hide-pending": "ReceiptComplete", "hide-failure": "ReceiptComplete",
+            "hide-unknown": "ReceiptComplete", "link-shared": "PrivateOutputStable",
+        })
+        self.assertTrue(all(item.expected == 12 for name, item in controls.items() if name != "correct"))
 
     def test_zero_exit_without_exhaustive_conclusion_is_rejected(self):
         correct = Obligation("correct", configuration("EvidenceInteraction", {}))
@@ -51,11 +63,11 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         original = {name: items for name, items in plans.items()
-                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork"}}
+                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)
         self.assertEqual(set(plans) - set(original),
-                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork"})
+                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork"})
         self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)

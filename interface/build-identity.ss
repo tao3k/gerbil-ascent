@@ -1,7 +1,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Build-only inventory, reusing the original artifact hashing owner.
-(import (only-in "../bindings/artifact.ss" artifact-file-sha256))
+(import (only-in "../bindings/artifact.ss" artifact-file-sha256)
+        (only-in "../build-modules.ss" gerbil-ascent-build-input-modules))
 (def (collect-files directory accept emit)
   (when (file-exists? directory)
     (for-each (lambda (name)
@@ -33,6 +34,15 @@
   (def (source path)
     (set! sources (cons (cons (substring path (+ (string-length root) 1) (string-length path))
                              (artifact-file-sha256 path)) sources)))
+  ;; The declared source inventory covers new package directories too. Never
+  ;; watch compiler outputs as inputs to their own Cargo producer.
+  (for-each (lambda (module)
+              (let* ((path (path-expand (string-append module ".ss") root))
+                     (directory (path-directory path)))
+                (displayln "cargo:rerun-if-changed=" path)
+                (unless (equal? directory (path-expand "./" root))
+                  (displayln "cargo:rerun-if-changed=" directory))))
+            gerbil-ascent-build-input-modules)
   ;; Cargo watches source inputs only, never our generated .oN/archive outputs.
   (for-each (lambda (directory)
               (let (path (path-expand directory root))

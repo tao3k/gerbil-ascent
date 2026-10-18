@@ -105,6 +105,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ascent-build"
+version = "0.1.0"
+dependencies = [
+ "gerbil-scheme-aot-build",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "ascent-c-abi"
 version = "0.1.0"
 dependencies = [
@@ -130,6 +139,7 @@ dependencies = [
 name = "ascent-scheme"
 version = "0.1.0"
 dependencies = [
+ "ascent-build",
  "asp-rust",
  "gerbil-ascent",
  "gerbil-scheme",

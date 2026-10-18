@@ -16,9 +16,7 @@ default = ["rayon"]
 rayon = ["gerbil-ascent/rayon"]
 
 [build-dependencies]
-gerbil-scheme-aot-build.workspace = true
-serde_json.workspace = true
-sha2.workspace = true
+ascent-build = { path = "../ascent-build" }
 
 [dev-dependencies]
 num-rational.workspace = true
@@ -33,6 +31,10 @@ unsafe_op_in_unsafe_fn = "deny"
 [lints.clippy]
 all = "warn"
 pedantic = "warn"
+
+[[test]]
+name = "archive_build"
+path = "tests/integration/archive.rs"
 
 [[bench]]
 name = "hybrid_benchmark"

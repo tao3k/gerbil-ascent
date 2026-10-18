@@ -16,8 +16,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Build the consumer archive using the pinned upstream compiler.
+/// # Errors
+/// Preserves compiler failures and rejects incomplete or changed-input observations.
 pub fn build() -> Result<(), String> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("missing package directory")?)
         .join("../..")
         .canonicalize()
         .map_err(|e| e.to_string())?;
@@ -35,9 +38,9 @@ pub fn build() -> Result<(), String> {
         shared.wait_ns,
     )?;
     let result = construct(&root, &out, &shared, &observer);
-    let observed = observer.finish(result.is_ok());
+    let admission = observer.finish(result.is_ok());
     // Retain the compiler's original error even when the receipt also rejects.
-    result.and(observed)
+    result.and(admission)
 }
 fn construct(
     root: &Path,
@@ -112,5 +115,4 @@ fn inputs(root: &std::path::Path) {
             workspace.join(source).display()
         );
     }
-    println!("cargo:rerun-if-changed=build_support");
 }

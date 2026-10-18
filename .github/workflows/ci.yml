@@ -244,7 +244,7 @@ jobs:
         with:
           path: rust/target/ascent-program-v1
           # No source-different fallback; the upstream builder still checks every object fingerprint.
-          key: ascent-program-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', 'rust/Cargo.toml', 'rust/Cargo.lock', 'rust/ascent-scheme/build.rs', 'rust/ascent-scheme/build_support/**', 'bindings/**', 'gerbil.pkg', '.github/workflows/ci.yml', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '!rust/target/**', '!python/src/ascent/_sources/**') }}
+          key: ascent-program-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', 'rust/Cargo.toml', 'rust/Cargo.lock', 'rust/ascent-scheme/build.rs', 'rust/ascent-build/**', 'bindings/**', 'gerbil.pkg', '.github/workflows/ci.yml', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '!rust/target/**', '!python/src/ascent/_sources/**') }}
       # END GENERATED ARCHIVE CACHE
       - name: Prepare shared Python build environment and protocol tools
         id: build_prerequisites
@@ -268,11 +268,20 @@ jobs:
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo check --locked --manifest-path rust/Cargo.toml -p ascent-python --no-default-features --features scheme-runtime,rayon
+      - name: Install pinned process-isolated Rust test runner
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        run: |
+          archive="$RUNNER_TEMP/cargo-nextest.tar.gz"
+          curl --fail --location --retry 3 --output "$archive" https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.140/cargo-nextest-0.9.140-x86_64-unknown-linux-gnu.tar.gz
+          printf '4ee9aaa0d0171a985a5d0eb735b87355894c1c455972e9674fb9fdbd1387c9a3  %s\n' "$archive" | sha256sum --check
+          mkdir -p .cache/ascent/tools/nextest
+          tar -xzf "$archive" -C .cache/ascent/tools/nextest
+          echo "$PWD/.cache/ascent/tools/nextest" >> "$GITHUB_PATH"
       - name: Qualify complete Scheme binding semantics and archive controls
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme
+        run: gerbil env cargo nextest run --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0
       - name: Preserve actual archive work and generated compiler inputs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

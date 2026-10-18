@@ -1,5 +1,5 @@
 [workspace]
-members = ["ascent", "ascent-python", "ascent-scheme", "ascent-c-abi"]
+members = ["ascent-build", "ascent", "ascent-python", "ascent-scheme", "ascent-c-abi"]
 exclude = ["ascent-oracle"]
 resolver = "3"
 

@@ -54,7 +54,11 @@ pub fn run() {
     for client in 0..CLIENTS {
         children.0.push(
             Command::new(std::env::current_exe().unwrap())
-                .args(["--exact", "concurrent_archive_publishers", "--nocapture"])
+                .args([
+                    "--exact",
+                    "concurrent_archive_publishers",
+                    "--nocapture",
+                ])
                 .env(ROOT_ENV, &root)
                 .env("ASCENT_ARCHIVE_TEST_CLIENT", client.to_string())
                 .stdin(Stdio::null())

@@ -995,3 +995,34 @@ these policy proofs.
 CI executes the complete =ascent-scheme= test inventory with twelve harness
 threads, including the VM lifecycle and original interface tests; compiling
 that inventory with =--no-run= is no longer used as semantic acceptance.
+
+** Full concurrent binding qualification
+
+Running the complete binding inventory exposed the process-wide module-owner
+quota tests: two Cases intentionally occupy all 64 owner slots. Those tests
+cannot share one VM with unrelated Cases without changing the resource model.
+CI therefore uses pinned nextest 0.9.140 with twelve concurrent test processes
+and zero retries. Each process retains one VM owner thread and the original
+64-slot limit and operation deadlines. A separate twelve-thread Case exercises
+192 requests against one shared owner below that quota. Rust/PyO3 workspace
+Cases continue using twelve harness threads.
+
+The build adapter is a build-only crate, =ascent-build=, so the Cargo build.rs
+and root test harness remain thin, as required by the existing ASP gate. The
+compiler/archive algorithm remains upstream. The generated decoder/cache
+regions track their new source paths exactly.
+
+The first complete local Rust/PyO3 workspace run passed 114 tests (including
+88 integration Cases) with twelve test threads. The shared-process Scheme
+binding run retained its 30 passes and 11 failures. The local three-worker
+Scheme source run reached the unchanged 180-second deadline and is incomplete;
+it is not accepted as a pass. Its preparation was concurrent with compilation
+and is not timing evidence.
+
+A later local native test link failed before execution. The retained macOS
+crash report identifies stack exhaustion in Apple's linker dead-strip
+=AtomFileConsolidator::markLive= recursion, not a Scheme runtime crash. The
+classic linker is used only for the local diagnostic qualification; no upstream
+changes or test-budget increases are introduced. A cross-configuration SDK
+receipt independently records 101 cached native objects, zero object compiler
+starts and complete source revalidation. Packaging and observation costs remain.

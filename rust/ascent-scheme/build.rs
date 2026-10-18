@@ -1,5 +1,4 @@
-//! Reuse the upstream compiler and its observed, fingerprinted archive builder.
-mod build_support;
+//! The upstream compiler owns graph and archive construction.
 fn main() {
-    build_support::build().expect("prepare ASCENT Scheme archive");
+    ascent_build::build().expect("prepare ASCENT Scheme archive");
 }

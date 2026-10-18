@@ -16,3 +16,6 @@ mod typed;
 
 #[path = "integration/projection.rs"]
 mod projection;
+
+#[path = "integration/concurrency.rs"]
+mod concurrency;

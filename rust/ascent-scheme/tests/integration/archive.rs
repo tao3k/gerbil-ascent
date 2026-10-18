@@ -1,15 +1,15 @@
 //! Build-time controls do not enter a Gambit VM.
-#[path = "../build_support/cache.rs"]
+#[path = "../../../ascent-build/src/cache.rs"]
 mod cache;
-#[path = "../build_support/input.rs"]
+#[path = "../../../ascent-build/src/input.rs"]
 mod input;
-#[path = "../build_support/ledger.rs"]
+#[path = "../../../ascent-build/src/ledger.rs"]
 mod ledger;
-#[path = "../build_support/observer.rs"]
+#[path = "../../../ascent-build/src/observer.rs"]
 mod observer;
-#[path = "../build_support/policy.rs"]
+#[path = "../../../ascent-build/src/policy.rs"]
 mod policy;
-#[path = "support/archive_stress.rs"]
+#[path = "../support/archive_stress.rs"]
 mod stress;
 
 use gerbil_scheme_aot_build::{

@@ -354,7 +354,7 @@ def main() -> int:
             # captured test outputs. Runtime and Quint import these exact files.
             for script, language, target in (
                 ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
-                ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-scheme/build_support/policy.rs"),
+                ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),

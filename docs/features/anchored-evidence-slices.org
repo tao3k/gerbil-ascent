@@ -148,7 +148,7 @@ These checks qualify a reference contract only. Production DSL binding, compact
 native slices and cold Grok first-associated-query acceptance remain separate
 obligations; this document does not claim those complete paths have passed.
 
-The native integration tests in =rust/ascent/tests/integration/clues.rs= bind
+The native integration tests in =rust/ascent/tests/integration/clues/= bind
 the existing =read_selected= operation to a caller-declared factor association
 and applicability rule. The first read preserves both polarities, distinct
 receipts and a boundary reference without unrelated witnesses. Separate cases

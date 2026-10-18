@@ -59,7 +59,7 @@ View rows are read directly, not serialized into a fake Clue factor named row.
 
 * Qualification Map
 
-- =rust/ascent/tests/integration/clues.rs=: source matching, counterevidence,
+- =rust/ascent/tests/integration/clues/=: source matching, counterevidence,
   unknowns, open factor vocabulary, alternative caller selector, atomic failed
   batches, composition collisions, cancellation recovery and closed ownership.
 - =workbench/engine_tests/test_clue_exchange.py=: installed default-wheel API,

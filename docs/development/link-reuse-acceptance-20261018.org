@@ -295,14 +295,25 @@ receipt did not collect per-task CPU, allocation or faults. Its interleaved
 human-readable compiler log is not a reliable exact invocation counter.
 The historical failure remains unresolved; no later faster group clears it.
 
-There is one concrete unnecessary compiler target in that change:
-scheme-artifact-test requested bindings/build-entry, although it only needed
-the output-admission helpers. Those helpers now live in the existing artifact
-module. Their bodies are byte-for-byte unchanged, including digest rejection
-and the unsupported-SDK behavior. The CLI returns to its interpreter entry
-role, and test preparation no longer requests its compilation. The complete
-artifact Suite passes locally through GxTest with the relocated compiled
-helper. This identifies removable source work, not the full 40.3% root cause.
+The initial bridge-target hypothesis is rejected for this preparation lane.
+After removing interleaved supervisor messages, every original prepare log
+contains the same 257 distinct compile-file jobs, with no differing job paths.
+This reconstruction is not a complete process census, but it disproves the
+claim that these logs show two extra bridge jobs. scheme-artifact-test is a
+consumer of the separate compiled DSL lane; it is absent from the performance
+consumers selected by prepare-test-library. Removing its declared dependency
+does not reduce this lane's compiler jobs. The helper ownership move retains
+identical bodies and passes all 18 artifact Cases, but is not a measured
+preparation performance fix. The 40.3% failure remains open.
+
+The actual dependency selector is now a Lean-rendered region in the existing
+harness, with exact rendering checked by formal CI. The Lean model proves
+that removing an inactive dependency leaves the selected sequence unchanged,
+for arbitrary dependency/test lists. This prevents applying the conditional
+two-phase removal theorem to an unselected declaration. It preserves the
+previous order and flattening algorithm and introduces no extra module. The
+Scheme compiler/library primitives and surrounding make/decoder are still
+outside a complete source-refinement proof.
 
 The work-only diagnostic uses disposable-prefix observers and the same
 commands, SDK, ABBA order and process supervisor. It records every GSC
@@ -342,3 +353,14 @@ execution. The observer retains negative deltas and rejects allocation
 qualification after the complete diagnostic group. It never clamps them to
 zero or claims the earlier staged statistics establish an allocator bound.
 No SDK or upstream source is modified.
+
+The prior exact-head control 39094480095 (ab3d5e2 versus 28823c5) also rejects:
+prepare totals are 164,658,395,251 versus 190,941,144,291 ns (+15.96%),
+and warm totals are 18,774,240,875 versus 26,418,953,750 ns (+40.72%).
+Every warm-output change set is empty and the native program inputs match.
+The fixed 2 GiB SHA reference itself reports CPU times from 0.933 to 1.316
+seconds within the group. This is evidence that raw timing variation is not
+an isolated compiler-job-count effect; it is not a normalization, an excuse
+to accept the candidate, or a retrospective root-cause proof for 39084120171.
+The three-worker source Suite on that head still times out at 180.133 seconds
+with zero observed foreign compilers. Both failures remain acceptance failures.

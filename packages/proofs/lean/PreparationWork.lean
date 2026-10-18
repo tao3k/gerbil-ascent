@@ -8,6 +8,28 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
+abbrev Dependency := List String × List String
+def requested (tests : List String) (entry : Dependency) : Bool :=
+  entry.1.any tests.contains
+def selected (tests : List String) (entries : List Dependency) : List String :=
+  (entries.filter (requested tests)).flatMap Prod.snd
+
+-- A declared dependency has no cost effect in a lane that does not request it.
+-- In particular scheme-artifact-test is absent from prepare-test-library's
+-- performance consumers. Deleting its bridge entry cannot explain that lane.
+theorem inactive_dependency_no_work (tests : List String)
+    (before after : List Dependency) (entry : Dependency)
+    (inactive : requested tests entry = false) :
+    selected tests (before ++ entry :: after) = selected tests (before ++ after) := by
+  simp [selected, List.filter_append, inactive]
+
+def selectionSchemeSource : String :=
+  ";; Generated from PreparationWork.lean; formal CI compares this region.\n" ++
+  "(def (preparation-selected-dependencies tests entries)\n" ++
+  "  (apply append\n" ++
+  "    (map cdr\n" ++
+  "      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))\n"
+
 structure Work where
   jobs : Nat := 0
   inputBytes : Nat := 0
@@ -58,6 +80,7 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
     work < work - saved + wait := by omega
 
 #print axioms total_append
+#print axioms inactive_dependency_no_work
 #print axioms removed_bridge_work
 #print axioms ordered_allocation_snapshots
 #print axioms nested_inclusive_double_counts

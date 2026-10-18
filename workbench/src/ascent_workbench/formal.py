@@ -358,6 +358,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
                 ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),
+                ("ExecutionPolicy.lean", "preparation-selection", "t/harness/build.ss"),
                 ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
                 ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),
                 ("RenderCache.lean", "scheme", "core/index-publication.ss"),
@@ -367,7 +368,14 @@ def main() -> int:
                 code, source = runner.run(
                     ["lake", "env", "lean", "--run", script, language],
                     Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
-                if code or source != (ROOT / target).read_text():
+                expected = (ROOT / target).read_text()
+                if language == "preparation-selection":
+                    begin, end = (';; BEGIN GENERATED PREPARATION SELECTION\n',
+                                  ';; END GENERATED PREPARATION SELECTION\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate generated preparation selection')
+                    expected = expected.split(begin)[1].split(end)[0]
+                if code or source != expected:
                     raise RuntimeError("execution policy rendering differs: " + target)
                 print("EXECUTION-POLICY-OK " + target, flush=True)
             print("ALL-FORMAL-CHECK-OK", flush=True)

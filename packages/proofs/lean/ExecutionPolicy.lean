@@ -1,6 +1,7 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std
+import PreparationWork
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -258,4 +259,5 @@ def main (args : List String) : IO Unit := do
   | ["quint"] => IO.print Ascent.ExecutionPolicy.quintSource
   | ["preparation-python"] => IO.print Ascent.PreparationPolicy.pythonSource
   | ["preparation-quint"] => IO.print Ascent.PreparationPolicy.quintSource
-  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python or preparation-quint")
+  | ["preparation-selection"] => IO.print Ascent.PreparationWork.selectionSchemeSource
+  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint or preparation-selection")

@@ -45,15 +45,20 @@
            (collect (path-strip-extension module))))))
     (for (tree '("t/qualification" "t/performance")) (visit tree))))
 
+;; BEGIN GENERATED PREPARATION SELECTION
+;; Generated from PreparationWork.lean; formal CI compares this region.
+(def (preparation-selected-dependencies tests entries)
+  (apply append
+    (map cdr
+      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))
+;; END GENERATED PREPARATION SELECTION
+
 (def (prepare-test-library! (tests []))
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (modules
           (append gerbil-ascent-library-modules test-library-base
-            (apply append
-              (map cdr
-                (filter (lambda (entry) (ormap (cut member <> tests) (car entry)))
-                  test-library-dependencies))))))
+            (preparation-selected-dependencies tests test-library-dependencies))))
     ;; AOT links the complete fixture/reference closure. These support modules
     ;; previously resolved from source in gxtest; source loading is not a compiled
     ;; carrier dependency. Scheme make still owns dependency order/currentness.

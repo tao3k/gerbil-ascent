@@ -1,4 +1,5 @@
 use gerbil_ascent::{Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr};
+use gerbil_ascent::{ClueProjection, ClueSelector};
 
 pub(super) const PROJECTION: &str = r"
 (define-evidence (project)
@@ -51,10 +52,12 @@ fn facts() -> Data {
 fn exchange(engine: &Engine) -> ClueExchange {
     ClueExchange::new(
         engine,
-        &[PROJECTION],
-        "project",
-        &facts(),
-        &Data::object([("receipt", "sha".into())]),
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &facts(),
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
         &Limits::default(),
         &Cancellation::default(),
     )
@@ -88,10 +91,12 @@ fn wide_scope_pages_without_acknowledging_grouped_references() {
     let cancel = Cancellation::default();
     let mut owner = ClueExchange::new(
         &engine,
-        &[PROJECTION],
-        "project",
-        &input,
-        &Data::object([("receipt", "sha".into())]),
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &input,
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
         &limits,
         &cancel,
     )
@@ -149,10 +154,26 @@ fn shared_selection_schema_preserves_caller_query_and_source_immutability() {
       (relation question (claim))
       ((question C) <-- (clue I D C _ _ _) (factor I D N V) (binding N V)))";
     let explicit = owner
-        .select(&[PROJECTION], "select", &bindings, &limits, &cancel)
+        .select(
+            ClueSelector {
+                sources: &[PROJECTION],
+                constructor: "select",
+            },
+            &bindings,
+            &limits,
+            &cancel,
+        )
         .unwrap();
     let shared = owner
-        .select(&[source], "shared-select", &bindings, &limits, &cancel)
+        .select(
+            ClueSelector {
+                sources: &[source],
+                constructor: "shared-select",
+            },
+            &bindings,
+            &limits,
+            &cancel,
+        )
         .unwrap();
     assert_eq!(shared, explicit);
     let invalid = source.replace(
@@ -161,12 +182,28 @@ fn shared_selection_schema_preserves_caller_query_and_source_immutability() {
     );
     assert!(
         owner
-            .select(&[&invalid], "shared-select", &bindings, &limits, &cancel)
+            .select(
+                ClueSelector {
+                    sources: &[&invalid],
+                    constructor: "shared-select"
+                },
+                &bindings,
+                &limits,
+                &cancel
+            )
             .is_err()
     );
     assert_eq!(
         owner
-            .select(&[source], "shared-select", &bindings, &limits, &cancel)
+            .select(
+                ClueSelector {
+                    sources: &[source],
+                    constructor: "shared-select"
+                },
+                &bindings,
+                &limits,
+                &cancel
+            )
             .unwrap(),
         explicit
     );
@@ -218,14 +255,16 @@ pub(super) fn anchored_exchange(engine: &Engine, condition: &str) -> ClueExchang
     ]);
     ClueExchange::new(
         engine,
-        &[PROJECTION],
-        "project",
-        &input,
-        &Data::object([
-            ("trace-a", "a".into()),
-            ("trace-b", "b".into()),
-            ("trace-c", "c".into()),
-        ]),
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &input,
+            attestations: &Data::object([
+                ("trace-a", "a".into()),
+                ("trace-b", "b".into()),
+                ("trace-c", "c".into()),
+            ]),
+        },
         &Limits::default(),
         &Cancellation::default(),
     )
@@ -239,8 +278,10 @@ fn clues_first_associated_query_returns_both_witnesses_and_trace_without_unrelat
     // This is the first read: no inventory, catalog or prior selector call.
     let result = owner
         .read_selected(
-            &[ANCHORED_SELECTOR],
-            "anchored",
+            ClueSelector {
+                sources: &[ANCHORED_SELECTOR],
+                constructor: "anchored",
+            },
             &list(&[&["mechanism", "publication"]]),
             &Limits::default(),
             &Cancellation::default(),
@@ -254,8 +295,8 @@ fn clues_first_associated_query_returns_both_witnesses_and_trace_without_unrelat
     assert_eq!(counter[0].list().unwrap()[0], Data::from("header"));
     assert_eq!(support[0].list().unwrap()[3], Data::from("trace-a"));
     assert_eq!(counter[0].list().unwrap()[3], Data::from("trace-b"));
-    assert!(!support[0].list().unwrap()[4].text().unwrap().is_empty());
-    assert!(!counter[0].list().unwrap()[4].text().unwrap().is_empty());
+    assert_ne!(support[0].list().unwrap()[4].text().unwrap(), "");
+    assert_ne!(counter[0].list().unwrap()[4].text().unwrap(), "");
     assert_eq!(at(&result, &["conflict"]), &list(&[&["header"]]));
     assert_eq!(rows(&result, &["neighbor"]).len(), 1);
     assert_eq!(at(&result, &["unknown"]), &list(&[]));
@@ -283,8 +324,10 @@ fn clues_unmapped_and_inapplicable_are_distinct_declared_gaps_not_absence() {
         let mut owner = anchored_exchange(&engine, condition);
         let result = owner
             .read_selected(
-                &[ANCHORED_SELECTOR],
-                "anchored",
+                ClueSelector {
+                    sources: &[ANCHORED_SELECTOR],
+                    constructor: "anchored",
+                },
                 &list(&[&["mechanism", mechanism]]),
                 &Limits::default(),
                 &Cancellation::default(),
@@ -299,13 +342,16 @@ fn clues_unmapped_and_inapplicable_are_distinct_declared_gaps_not_absence() {
 
 #[test]
 fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
+    let selector = ClueSelector {
+        sources: &[ANCHORED_SELECTOR],
+        constructor: "anchored",
+    };
     let engine = Engine::new(1).unwrap();
     let mut owner = anchored_exchange(&engine, "current");
     let request = Data::object([("bindings", list(&[&["mechanism", "publication"]]))]);
     let first = owner
         .slice_selected(
-            &[ANCHORED_SELECTOR],
-            "anchored",
+            selector,
             &request,
             &Limits::default(),
             &Cancellation::default(),
@@ -328,14 +374,13 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
     repeated.insert("checkpoint".into(), at(&first, &["checkpoint"]).clone());
     let unchanged = owner
         .slice_selected(
-            &[ANCHORED_SELECTOR],
-            "anchored",
+            selector,
             &Data::Map(repeated.clone()),
             &Limits::default(),
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(rows(&unchanged, &["brief", "families"]).is_empty());
+    assert_eq!(rows(&unchanged, &["brief", "families"]), []);
     assert_eq!(
         at(&unchanged, &["brief", "delta", "added"]),
         &Data::from(0usize)
@@ -345,8 +390,7 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
     small.insert("displayBytes".into(), capacity.into());
     let collapsed = owner
         .slice_selected(
-            &[ANCHORED_SELECTOR],
-            "anchored",
+            selector,
             &Data::Map(small),
             &Limits::default(),
             &Cancellation::default(),
@@ -369,8 +413,7 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
     );
     let expanded = owner
         .slice_selected(
-            &[ANCHORED_SELECTOR],
-            "anchored",
+            selector,
             &Data::Map(repeated),
             &Limits::default(),
             &Cancellation::default(),
@@ -389,8 +432,7 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
     assert!(
         owner
             .slice_selected(
-                &[ANCHORED_SELECTOR],
-                "anchored",
+                selector,
                 &Data::Map(invalid),
                 &Limits::default(),
                 &Cancellation::default()
@@ -425,7 +467,7 @@ fn folded_reads_advance_per_family_and_rescoping_keeps_acknowledged_details() {
     assert_eq!(at(brief, &["presentationComplete"]), &Data::Bool(false));
     let first_claim = shown[0].field("claim").unwrap().clone();
     let checkpoint = at(&first, &["checkpoint"]).clone();
-    assert!(!rows(&checkpoint, &["body", "items"]).is_empty());
+    assert_ne!(rows(&checkpoint, &["body", "items"]), []);
     paged.insert("checkpoint".into(), checkpoint);
     let second = owner.slice(&Data::Map(paged), &limits, &cancel).unwrap();
     let second_brief = at(&second, &["brief"]);
@@ -444,7 +486,7 @@ fn folded_reads_advance_per_family_and_rescoping_keeps_acknowledged_details() {
     let smaller = owner.slice(&Data::Map(shrink), &limits, &cancel).unwrap();
     let smaller_brief = at(&smaller, &["brief"]);
     assert_eq!(at(smaller_brief, &["mode"]), &Data::from("rescope"));
-    assert!(rows(smaller_brief, &["families"]).is_empty());
+    assert_eq!(rows(smaller_brief, &["families"]), []);
     assert_eq!(
         at(smaller_brief, &["delta", "removed"]),
         &Data::from(0usize)
@@ -454,7 +496,7 @@ fn folded_reads_advance_per_family_and_rescoping_keeps_acknowledged_details() {
     let repeated = owner
         .slice(&Data::Map(widen.clone()), &limits, &cancel)
         .unwrap();
-    assert!(rows(&repeated, &["brief", "families"]).is_empty());
+    assert_eq!(rows(&repeated, &["brief", "families"]), []);
     // A source change still resets acknowledgement; history is not current evidence.
     let mut changed = anchored_exchange(&engine, "changed");
     let reset = changed.slice(&Data::Map(widen), &limits, &cancel).unwrap();
@@ -483,8 +525,10 @@ fn clues_model_authored_relational_query_joins_edges_receipts_and_counterwitness
     "#;
     let result = owner
         .slice_selected(
-            &[declaration],
-            "query",
+            ClueSelector {
+                sources: &[declaration],
+                constructor: "query",
+            },
             &Data::object([("bindings", Data::List(vec![]))]),
             &Limits::default(),
             &Cancellation::default(),
@@ -519,10 +563,12 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
     );
     let mut owner = ClueExchange::new(
         &engine,
-        &[PROJECTION],
-        "project",
-        &Data::Map(supplied),
-        &Data::object([("receipt", "sha".into())]),
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &Data::Map(supplied),
+            attestations: &Data::object([("receipt", "sha".into())]),
+        },
         &limits,
         &cancel,
     )
@@ -535,9 +581,13 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
       ((question C) <-- (clue I D C _ _ _) (attested I D _))
       ((trace C A B) <-- (clue I D C _ _ _) (attested I D _)
         (factor I D _ A) (factor I D _ B)))";
+    let selector = ClueSelector {
+        sources: &[source],
+        constructor: "query",
+    };
     let request = Data::object([("bindings", Data::List(vec![]))]);
     let first = owner
-        .slice_selected(&[source], "query", &request, &limits, &cancel)
+        .slice_selected(selector, &request, &limits, &cancel)
         .unwrap();
     let brief = at(&first, &["brief"]);
     assert_eq!(rows(brief, &["families"]).len(), 1);
@@ -550,7 +600,7 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
         .unwrap()
         .clone();
     let raw = owner
-        .select(&[source], "query", &Data::List(vec![]), &limits, &cancel)
+        .select(selector, &Data::List(vec![]), &limits, &cancel)
         .unwrap();
     assert_eq!(
         at(&reference, &["contentIdentity"]).text().unwrap(),
@@ -563,16 +613,10 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
         (2 * clue_sexpr(&raw).len() + 8192).into(),
     );
     let second = owner
-        .slice_selected(
-            &[source],
-            "query",
-            &Data::Map(expanded.clone()),
-            &limits,
-            &cancel,
-        )
+        .slice_selected(selector, &Data::Map(expanded.clone()), &limits, &cancel)
         .unwrap();
     let expanded_brief = at(&second, &["brief"]);
-    assert!(rows(expanded_brief, &["families"]).is_empty());
+    assert_eq!(rows(expanded_brief, &["families"]), []);
     assert_eq!(
         at(expanded_brief, &["association", "trace"]),
         at(&raw, &["trace"])
@@ -584,12 +628,12 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
     expanded.insert("checkpoint".into(), at(&second, &["checkpoint"]).clone());
     expanded.insert("displayBytes".into(), 8192usize.into());
     let repeated = owner
-        .slice_selected(&[source], "query", &Data::Map(expanded), &limits, &cancel)
+        .slice_selected(selector, &Data::Map(expanded), &limits, &cancel)
         .unwrap();
     let unchanged = at(&repeated, &["brief"]);
-    assert!(rows(unchanged, &["families"]).is_empty());
+    assert_eq!(rows(unchanged, &["families"]), []);
     assert_eq!(rows(unchanged, &["retainedRelations"]).len(), 1);
-    assert!(rows(unchanged, &["deferredRelations"]).is_empty());
+    assert_eq!(rows(unchanged, &["deferredRelations"]), []);
     assert!(
         !at(unchanged, &["association"])
             .map()
@@ -611,7 +655,7 @@ fn clues_observation_counter_and_unknown_are_distinct() {
         )
         .unwrap();
     assert_eq!(rows(&result, &["counterevidence"]).len(), 1);
-    assert!(rows(&result, &["support"]).is_empty());
+    assert_eq!(rows(&result, &["support"]), []);
     assert_eq!(at(&result, &["unknown"]), &list(&[&["novel"]]));
     assert!(clue_sexpr(&result).contains("not-same-cause"));
 }
@@ -621,10 +665,12 @@ fn clues_source_mismatch_is_rejected() {
     assert!(
         ClueExchange::new(
             &engine,
-            &[PROJECTION],
-            "project",
-            &facts(),
-            &Data::object([("receipt", "other".into())]),
+            ClueProjection {
+                sources: &[PROJECTION],
+                constructor: "project",
+                supplied: &facts(),
+                attestations: &Data::object([("receipt", "other".into())])
+            },
             &Limits::default(),
             &Cancellation::default()
         )
@@ -645,8 +691,10 @@ fn clues_novel_hypothesis_selects_without_promotion_or_closed_vocabulary() {
     owner.submit(&Data::List(vec![hint.clone()])).unwrap();
     let selected = owner
         .select(
-            &[PROJECTION],
-            "select",
+            ClueSelector {
+                sources: &[PROJECTION],
+                constructor: "select",
+            },
             &list(&[&["unlisted-factor", "unlisted-value"]]),
             &Limits::default(),
             &Cancellation::default(),
@@ -660,7 +708,7 @@ fn clues_novel_hypothesis_selects_without_promotion_or_closed_vocabulary() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(rows(&result, &["support"]).is_empty());
+    assert_eq!(rows(&result, &["support"]), []);
     assert_eq!(rows(&result, &["conditional"]).len(), 1);
     assert_eq!(at(&result, &["unknown"]), &list(&[&["novel"]]));
     assert!(owner.submit(&Data::List(vec![hint])).is_err());
@@ -683,7 +731,7 @@ fn clues_failed_batch_does_not_partially_publish() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(rows(&result, &["conditional"]).is_empty());
+    assert_eq!(rows(&result, &["conditional"]), []);
 }
 
 #[test]

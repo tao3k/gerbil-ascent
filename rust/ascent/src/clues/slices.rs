@@ -1,108 +1,19 @@
 //! Presentation over Scheme-derived items; no relevance or set-difference policy.
-use super::{ClueExchange, RULES, data_rows, evaluate, invalid, rows};
+use super::cells::text;
+use super::{ClueExchange, ClueSelector, RULES, data_rows, evaluate, invalid, rows};
+use super::{
+    deferred::DeferredRelations,
+    family::{counts, family},
+};
 use crate::{Cancellation, Data, FactLimits, Limits, Result, Row, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
-fn text(row: &Data, n: usize) -> Result<&str> {
-    row.list()?
-        .get(n)
-        .ok_or_else(|| invalid("slice item arity"))?
-        .text()
-}
 fn reference(source: &str, claim: &str, items: &Data) -> Data {
     Data::object([
         ("claim", claim.into()),
         ("sourceIdentity", source.into()),
         ("contentIdentity", items.digest().into()),
     ])
-}
-fn family(source: &str, claim: &str, items: &[Data]) -> Result<Data> {
-    let mut observations = Vec::new();
-    let mut hypotheses = Vec::new();
-    let mut factors: BTreeMap<String, BTreeMap<String, Vec<Data>>> = BTreeMap::new();
-    let mut links = Vec::new();
-    let mut conflict = false;
-    let mut unknown = false;
-    for row in items {
-        match text(row, 0)? {
-            "factor" => factors
-                .entry(text(row, 2)?.into())
-                .or_default()
-                .entry(text(row, 4)?.into())
-                .or_default()
-                .push(text(row, 5)?.into()),
-            "link" => links.push(Data::object([
-                ("claim", text(row, 4)?.into()),
-                ("relation", text(row, 5)?.into()),
-                ("witness", text(row, 2)?.into()),
-            ])),
-            "conflict" => conflict = true,
-            "unknown" => unknown = true,
-            _ => {}
-        }
-    }
-    for row in items {
-        let kind = text(row, 0)?;
-        if !matches!(kind, "support" | "counter" | "hypothesis") {
-            continue;
-        }
-        let fs = factors.remove(text(row, 2)?).unwrap_or_default();
-        let mut witness = BTreeMap::from([
-            ("id".into(), text(row, 2)?.into()),
-            ("digest".into(), text(row, 3)?.into()),
-            (
-                "polarity".into(),
-                (if kind == "hypothesis" {
-                    text(row, 4)?
-                } else {
-                    kind
-                })
-                .into(),
-            ),
-            (
-                "factors".into(),
-                Data::Map(fs.into_iter().map(|(k, v)| (k, Data::List(v))).collect()),
-            ),
-        ]);
-        if kind == "hypothesis" {
-            witness.insert("source".into(), text(row, 5)?.into());
-            hypotheses.push(Data::Map(witness));
-        } else {
-            witness.insert("source".into(), text(row, 4)?.into());
-            witness.insert("receipt".into(), text(row, 5)?.into());
-            observations.push(Data::Map(witness));
-        }
-    }
-    Ok(Data::object([
-        ("claim", claim.into()),
-        ("observations", Data::List(observations)),
-        ("hypotheses", Data::List(hypotheses)),
-        ("links", Data::List(links)),
-        ("conflict", conflict.into()),
-        ("unknown", unknown.into()),
-        (
-            "reference",
-            reference(source, claim, &Data::List(items.to_vec())),
-        ),
-    ]))
-}
-fn counts(items: &[Data]) -> Result<Data> {
-    let mut positive = 0usize;
-    let mut negative = 0usize;
-    let mut hypotheses = 0usize;
-    for row in items {
-        match text(row, 0)? {
-            "support" => positive += 1,
-            "counter" => negative += 1,
-            "hypothesis" => hypotheses += 1,
-            _ => {}
-        }
-    }
-    Ok(Data::object([
-        ("support", positive.into()),
-        ("counter", negative.into()),
-        ("hypotheses", hypotheses.into()),
-    ]))
 }
 fn prior(
     checkpoint: Option<&Data>,
@@ -244,15 +155,18 @@ impl ClueExchange {
     /// Missing association output, malformed declarations and partial runs are errors.
     pub fn slice_selected(
         &mut self,
-        sources: &[&str],
-        constructor: &str,
+        selector: ClueSelector<'_>,
         request: &Data,
         limits: &Limits,
         cancel: &Cancellation,
     ) -> Result<Data> {
+        let ClueSelector {
+            sources,
+            constructor,
+        } = selector;
         let bindings = request.field("bindings")?;
         let mut selection = self
-            .select(sources, constructor, bindings, limits, cancel)?
+            .select(selector, bindings, limits, cancel)?
             .map()?
             .clone();
         let questions = selection
@@ -376,7 +290,7 @@ fn present_relations(
     brief: &mut BTreeMap<String, Data>,
     display_bytes: usize,
 ) -> Result<Vec<Row>> {
-    let mut deferred = brief["deferredRelations"].list()?.to_vec();
+    let mut deferred = DeferredRelations::new(brief["deferredRelations"].list()?.to_vec());
     let mut shown = Vec::new();
     for row in data_rows(pending)?.list()? {
         let name = text(row, 1)?;
@@ -384,20 +298,16 @@ fn present_relations(
             shown.extend(rows(&Data::List(vec![row.clone()]))?);
             continue;
         }
-        let summary = deferred
-            .iter()
-            .find(|s| s.field("relation").and_then(Data::text).ok() == Some(name))
-            .ok_or_else(|| invalid("missing relation summary"))?
-            .clone();
-        deferred.retain(|s| s != &summary);
+        let summary = deferred.summary(name)?;
+        deferred.remove(&summary);
         association.insert(name.into(), traces[name].clone());
         brief.insert("association".into(), Data::Map(association.clone()));
-        brief.insert("deferredRelations".into(), Data::List(deferred.clone()));
+        brief.insert("deferredRelations".into(), deferred.data());
         if super::clue_sexpr(&Data::Map(brief.clone())).len() > display_bytes {
             association.remove(name);
             deferred.push(summary);
             brief.insert("association".into(), Data::Map(association.clone()));
-            brief.insert("deferredRelations".into(), Data::List(deferred.clone()));
+            brief.insert("deferredRelations".into(), deferred.data());
         } else {
             shown.extend(rows(&Data::List(vec![row.clone()]))?);
         }
@@ -422,22 +332,22 @@ fn prepare_relations(
     for name in traces.keys() {
         association.remove(name);
     }
-    let mut deferred = relation_summaries(source, traces, &pending["pending_relation"])?;
+    let mut deferred = DeferredRelations::new(relation_summaries(
+        source,
+        traces,
+        &pending["pending_relation"],
+    )?);
     for row in data_rows(&pending["pending_relation"])?.list()? {
         let name = text(row, 1)?;
-        let summary = deferred
-            .iter()
-            .find(|s| s.field("relation").and_then(Data::text).ok() == Some(name))
-            .ok_or_else(|| invalid("missing relation summary"))?
-            .clone();
+        let summary = deferred.summary(name)?;
         let raw = Data::object([(name, traces[name].clone())]);
         // Inline tiny/empty results when a reference would be the larger encoding.
         if super::clue_sexpr(&raw).len() <= super::clue_sexpr(&summary).len() {
             association.insert(name.into(), traces[name].clone());
-            deferred.retain(|s| s != &summary);
+            deferred.remove(&summary);
         }
     }
-    brief.insert("deferredRelations".into(), Data::List(deferred));
+    brief.insert("deferredRelations".into(), deferred.data());
     brief.insert(
         "retainedRelations".into(),
         Data::List(relation_summaries(

@@ -1,6 +1,8 @@
 //! Transport only: clue semantics and declarative evaluation belong to the Library.
 use super::{Owner, error, packets};
-use gerbil_ascent::{Cancellation, ClueExchange as Exchange, SourceSession, clue_sexpr};
+use gerbil_ascent::{
+    Cancellation, ClueExchange as Exchange, ClueProjection, ClueSelector, SourceSession, clue_sexpr,
+};
 use pyo3::{
     Bound, IntoPyObject, Py, PyAny, PyResult, Python, exceptions::PyRuntimeError, pyclass,
     pymethods, types::PyAnyMethods,
@@ -48,10 +50,12 @@ impl ClueExchange {
         py.detach(|| {
             Exchange::new(
                 &engine.0,
-                &sources.iter().map(String::as_str).collect::<Vec<_>>(),
-                constructor,
-                &facts,
-                &attestations,
+                ClueProjection {
+                    sources: &sources.iter().map(String::as_str).collect::<Vec<_>>(),
+                    constructor,
+                    supplied: &facts,
+                    attestations: &attestations,
+                },
                 &SourceSession::default_limits(),
                 &Cancellation::default(),
             )
@@ -103,8 +107,10 @@ impl ClueExchange {
                     .lock()
                     .map_err(|_| "Clue exchange lock poisoned".to_string())?
                     .select(
-                        &sources.iter().map(String::as_str).collect::<Vec<_>>(),
-                        constructor,
+                        ClueSelector {
+                            sources: &sources.iter().map(String::as_str).collect::<Vec<_>>(),
+                            constructor,
+                        },
                         &bindings,
                         &SourceSession::default_limits(),
                         &Cancellation::default(),
@@ -148,8 +154,10 @@ impl ClueExchange {
                     .lock()
                     .map_err(|_| "Clue exchange lock poisoned".to_string())?
                     .slice_selected(
-                        &sources.iter().map(String::as_str).collect::<Vec<_>>(),
-                        constructor,
+                        ClueSelector {
+                            sources: &sources.iter().map(String::as_str).collect::<Vec<_>>(),
+                            constructor,
+                        },
                         &request,
                         &SourceSession::default_limits(),
                         &Cancellation::default(),
@@ -186,8 +194,10 @@ impl ClueExchange {
                     .lock()
                     .map_err(|_| "Clue exchange lock poisoned".to_string())?
                     .read_selected(
-                        &sources.iter().map(String::as_str).collect::<Vec<_>>(),
-                        constructor,
+                        ClueSelector {
+                            sources: &sources.iter().map(String::as_str).collect::<Vec<_>>(),
+                            constructor,
+                        },
                         &bindings,
                         &SourceSession::default_limits(),
                         &Cancellation::default(),
@@ -217,10 +227,12 @@ impl ClueExchange {
         py.detach(|| {
             let other = Exchange::new(
                 &engine.0,
-                &sources.iter().map(String::as_str).collect::<Vec<_>>(),
-                constructor,
-                &facts,
-                &attestations,
+                ClueProjection {
+                    sources: &sources.iter().map(String::as_str).collect::<Vec<_>>(),
+                    constructor,
+                    supplied: &facts,
+                    attestations: &attestations,
+                },
                 &SourceSession::default_limits(),
                 &Cancellation::default(),
             )

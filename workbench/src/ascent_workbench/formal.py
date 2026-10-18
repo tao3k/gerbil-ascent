@@ -364,6 +364,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
+                ("ExecutionPolicy.lean", "preparation-cargo-cache", ".github/workflows/ci.yml"),
                 ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
                 ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),
                 ("RenderCache.lean", "scheme", "core/index-publication.ss"),
@@ -374,9 +375,9 @@ def main() -> int:
                     ["lake", "env", "lean", "--run", script, language],
                     Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots"}:
+                if language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache"}:
                     region = language.removeprefix("preparation-").upper()
-                    prefix = "        #" if language == "preparation-runner" else ";;"
+                    prefix = "        #" if language == "preparation-runner" else "          #" if language == "preparation-cargo-cache" else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',
                                   f'{prefix} END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

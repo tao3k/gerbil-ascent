@@ -2,7 +2,7 @@
 //! The supported boundary is finite typed sets and stratified negation.
 mod catalog;
 mod clues;
-pub use clues::{ClueExchange, clue_sexpr, read_clue_request};
+pub use clues::{ClueExchange, ClueProjection, ClueSelector, clue_sexpr, read_clue_request};
 mod computational;
 mod data;
 mod derivations;

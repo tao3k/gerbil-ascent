@@ -233,7 +233,9 @@ jobs:
             rust/target
             python/src/ascent/_sources
             python/src/ascent/.gerbil-resources.json
-          key: ascent-cargo-products-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ github.sha }}
+          # BEGIN GENERATED PREPARATION CARGO-CACHE
+          key: ascent-cargo-products-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', 'rust/Cargo.lock', '.cargo/**', 'python/pyproject.toml', 'python/src/ascent/**', '**/*.ss', 'bindings/**', 'gerbil.pkg', 'justfile', '.github/workflows/ci.yml', '!rust/**/target/**', '!.gerbil/**', '!.ci/**', '!.cache/**', '!python/src/ascent/_sources/**', '!python/src/ascent/.gerbil-resources.json') }}
+          # END GENERATED PREPARATION CARGO-CACHE
       - name: Prepare shared Python build environment and protocol tools
         id: build_prerequisites
         run: |

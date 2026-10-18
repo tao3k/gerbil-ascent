@@ -2,6 +2,7 @@ use super::exchange::{PROJECTION, anchored_exchange, at, list, rows};
 use gerbil_ascent::{
     Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr, read_clue_request,
 };
+use gerbil_ascent::{ClueProjection, ClueSelector};
 
 const CONJUNCTIVE_SELECTOR: &str = r"(define-evidence (query)
       (sources clue factor binding)
@@ -64,8 +65,10 @@ fn factor_conjunction_keeps_witness_identity_and_explains_incompatible_anchors()
     let cancel = Cancellation::default();
     let matched = owner
         .select(
-            &[selector],
-            "query",
+            ClueSelector {
+                sources: &[selector],
+                constructor: "query",
+            },
             &list(&[&["mechanism", "publication"], &["condition", "current"]]),
             &limits,
             &cancel,
@@ -81,8 +84,10 @@ fn factor_conjunction_keeps_witness_identity_and_explains_incompatible_anchors()
     // An unknown value is a gap, not evidence of absence.
     let split = owner
         .select(
-            &[selector],
-            "query",
+            ClueSelector {
+                sources: &[selector],
+                constructor: "query",
+            },
             &list(&[
                 &["mechanism", "publication"],
                 &["condition", "current"],
@@ -117,18 +122,22 @@ fn factor_conjunction_keeps_witness_identity_and_explains_incompatible_anchors()
     ]);
     let split_owner = ClueExchange::new(
         &engine,
-        &[PROJECTION],
-        "project",
-        &input,
-        &Data::object([("ra", "x".into()), ("rb", "y".into())]),
+        ClueProjection {
+            sources: &[PROJECTION],
+            constructor: "project",
+            supplied: &input,
+            attestations: &Data::object([("ra", "x".into()), ("rb", "y".into())]),
+        },
         &limits,
         &cancel,
     )
     .unwrap();
     let split = split_owner
         .select(
-            &[selector],
-            "query",
+            ClueSelector {
+                sources: &[selector],
+                constructor: "query",
+            },
             &list(&[&["mechanism", "publication"], &["condition", "current"]]),
             &limits,
             &cancel,

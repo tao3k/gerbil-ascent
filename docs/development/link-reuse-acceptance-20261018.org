@@ -844,3 +844,48 @@ availability remain separate. The versioned cache starts cold; no wall-time
 improvement from a future warm restore is claimed without its own receipt.
 The preceding uninstrumented ABBA measurements concern 04553345, not this
 additional cache configuration correction.
+
+* Clue lint repair and content-bound Cargo cache
+
+The 4c856086 CI run retained two independent failures: the Clue ASP source
+style gate and twelve Clippy empty-container assertions. The repair introduces
+named projection/selector arguments and separates projection validation,
+request decoding, hypothesis staging, family collection and deferred lookup.
+Python call signatures stay unchanged. Hypotheses are still published only
+after the complete submission validates. Deferred summaries retain their
+original display order; an indexed lookup removes every equal summary, and
+rollback appends exactly as before. A regression checks both behaviors.
+No lint allowance, resource budget or performance threshold was changed.
+
+The Rust product cache used github.sha without a restore prefix, so an
+otherwise identical input set could never reuse products across commits.
+The v3 key uses platform, Rust/Python compiler fingerprint, released SDK
+fingerprint and explicit source/configuration content. It has no fallback
+from different source content. The generated source inventory and ownership
+receipt travel with Cargo products; Cargo and the existing resource publisher
+still validate their own freshness. Generated outputs are excluded from the
+key. A missing product continues to require work.
+
+Lean now renders the actual CI key line and proves commit labels do not alter
+content identity. Quint adds an independent commit transition and a twentieth
+negative control which incorrectly changes the key on commit alone. These
+checks connect the configured identity policy to source. They do not prove
+Cargo's fingerprint implementation or the SDK compiler correct.
+
+At 4c856086, isolated three-core macOS semantics completed 173 modules and
+1400 Cases in 105.404445291 seconds, below the unchanged 180-second deadline.
+Preparation took 257.662540916 seconds: projection 24.283255 seconds and make
+229.375416 seconds. The audit reported no foreign compiler and no compiled
+source suites. Earlier preparation values of 225.77699025 and 292.588780
+seconds remain recorded. Different hosted machines and cache states prevent
+attributing these differences to one source change.
+
+Preparation closure remains incomplete. Warm controls with zero GSC work
+show that repeated compilation alone cannot explain all elapsed variation.
+Generated compiler timestamps can change expanded-input digests even when
+sizes agree; that observation alone does not explain the historical 40.3%
+or 33.12% regression. Negative corrected allocation estimates remain rejected,
+not clamped. SDK allocation snapshots, observer/decoder equivalence, fresh
+checkout mtime invalidation and wait/I/O attribution still require source-bound
+receipts. The new cache namespace first needs a cold seed; no warm restore
+speedup is claimed by this correction.

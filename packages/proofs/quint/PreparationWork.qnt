@@ -8,14 +8,14 @@ module PreparationWork {
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
-                inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
+                inputGeneration: int, commitGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
-    inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
+    inputGeneration: 0, commitGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
@@ -40,7 +40,10 @@ module PreparationWork {
   action CacheOutput = all {q.finished,
     q' = {...q, cacheReady: true, payloadPresent: true, receiptPresent: true, cacheGeneration: q.inputGeneration}}
   action ChangeInput = all {q.inputGeneration < 2,
-    q' = {...q, inputGeneration: q.inputGeneration + 1, current: false, published: false}}
+    q' = {...q, inputGeneration: q.inputGeneration + 1, requestKeyGeneration: q.inputGeneration + 1, current: false, published: false}}
+  action ChangeCommit = all {q.commitGeneration < 2,
+    q' = {...q, commitGeneration: q.commitGeneration + 1,
+      requestKeyGeneration: if (Mutation == "key-by-commit") q.requestKeyGeneration + 1 else q.requestKeyGeneration}}
   action DropPayload = q' = {...q, payloadPresent: false}
   action DropReceipt = q' = {...q, receiptPresent: false}
   action Reuse = all {q.cacheReady,
@@ -74,7 +77,7 @@ module PreparationWork {
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
-    CacheOutput, DropPayload, DropReceipt, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
+    CacheOutput, DropPayload, DropReceipt, ChangeInput, ChangeCommit, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val UnadmittedCatalogPresent = (q.rootsProjected and not(q.productionAdmitted)) implies q.forcedCatalogRoots == 1
@@ -88,6 +91,7 @@ module PreparationWork {
   val OrderedCounter = q.published implies q.counterValid
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
+  val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration
   val CompleteCacheBundle = not(q.incompleteReuse)
   val ReuseCurrentInputs = not(q.staleReuse)
   val BoundedSourceEntries = q.retainedEntryRoots <= 2

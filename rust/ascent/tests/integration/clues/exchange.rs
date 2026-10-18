@@ -1,35 +1,6 @@
-use gerbil_ascent::{
-    Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr, read_clue_request,
-};
+use gerbil_ascent::{Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr};
 
-#[test]
-fn scheme_request_reuses_the_bounded_reader_and_never_evaluates_forms() {
-    let expected = Data::object([
-        ("bindings", list(&[&["arbitrary-factor", "new-hypothesis"]])),
-        ("expand", Data::List(vec!["unknown-claim".into()])),
-        ("checkpoint", "clue-read:opaque".into()),
-    ]);
-    assert_eq!(read_clue_request(&clue_sexpr(&expected)).unwrap(), expected);
-    assert_eq!(
-        read_clue_request("((questions (\"a\" \"b\")))").unwrap(),
-        Data::object([("questions", Data::List(vec!["a".into(), "b".into()]))])
-    );
-    for rejected in [
-        "((checkpoint \"a\") (checkpoint \"b\"))",
-        "((unknownField \"value\"))",
-        "((bindings (system \"command\")))",
-        "(begin (display \"not data\"))",
-        "((bindings ())) ((expand ()))",
-        "((questions 2))",
-        "((bindings ((\"name\"))))",
-        "((displayBytes 0))",
-        "((constructor \"ignored\"))",
-    ] {
-        assert!(read_clue_request(rejected).is_err(), "{rejected}");
-    }
-}
-
-const PROJECTION: &str = r#"
+pub(super) const PROJECTION: &str = r"
 (define-evidence (project)
  (sources clue factor link) (outputs clue factor link)
  (relation clue (id digest claim polarity role source))
@@ -42,9 +13,9 @@ const PROJECTION: &str = r#"
  (relation binding (name value))
  (relation question (claim))
  ((question C) <-- (clue I D C _ _ _) (factor I D N V) (binding N V)))
-"#;
+";
 
-fn list(rows: &[&[&str]]) -> Data {
+pub(super) fn list(rows: &[&[&str]]) -> Data {
     Data::List(
         rows.iter()
             .map(|r| Data::List(r.iter().map(|v| (*v).into()).collect()))
@@ -142,18 +113,15 @@ fn wide_scope_pages_without_acknowledging_grouped_references() {
         let result = owner
             .slice(&Data::Map(request.clone()), &limits, &cancel)
             .unwrap();
-        let brief = result.field("brief").unwrap();
+        let brief = at(&result, &["brief"]);
         assert!(clue_sexpr(brief).len() <= 8192);
         grouped |= brief.map().unwrap().contains_key("deferredScope");
-        let page = brief.field("families").unwrap().list().unwrap();
+        let page = rows(brief, &["families"]);
         for family in page {
-            assert!(seen.insert(family.field("claim").unwrap().text().unwrap().to_owned()));
-            assert_eq!(
-                family.field("observations").unwrap().list().unwrap().len(),
-                2
-            );
+            assert!(seen.insert(at(family, &["claim"]).text().unwrap().to_owned()));
+            assert_eq!(rows(family, &["observations"]).len(), 2);
         }
-        if brief.field("presentationComplete").unwrap() == &Data::Bool(true) {
+        if at(brief, &["presentationComplete"]) == &Data::Bool(true) {
             complete = true;
             break;
         }
@@ -161,10 +129,7 @@ fn wide_scope_pages_without_acknowledging_grouped_references() {
             !page.is_empty(),
             "a complete family fits but the read made no progress"
         );
-        request.insert(
-            "checkpoint".into(),
-            result.field("checkpoint").unwrap().clone(),
-        );
+        request.insert("checkpoint".into(), at(&result, &["checkpoint"]).clone());
     }
     assert!(grouped);
     assert!(complete);
@@ -178,11 +143,11 @@ fn shared_selection_schema_preserves_caller_query_and_source_immutability() {
     let limits = Limits::default();
     let cancel = Cancellation::default();
     let bindings = list(&[&["mechanism", "old"]]);
-    let source = r#"(define-evidence (shared-select)
+    let source = r"(define-evidence (shared-select)
       (sources clue factor binding) (outputs question)
       (include clue-selection-schema)
       (relation question (claim))
-      ((question C) <-- (clue I D C _ _ _) (factor I D N V) (binding N V)))"#;
+      ((question C) <-- (clue I D C _ _ _) (factor I D N V) (binding N V)))";
     let explicit = owner
         .select(&[PROJECTION], "select", &bindings, &limits, &cancel)
         .unwrap();
@@ -229,130 +194,7 @@ const ANCHORED_SELECTOR: &str = r#"
  ((applicability_gap C) <-- (associated C) (not (applicable C))))
 "#;
 
-#[test]
-fn factor_conjunction_keeps_witness_identity_and_explains_incompatible_anchors() {
-    let engine = Engine::new(1).unwrap();
-    let owner = anchored_exchange(&engine, "current");
-    let selector = r#"(define-evidence (query)
-      (sources clue factor binding)
-      (outputs question matched unknown_binding conjunction_gap)
-      (include clue-selection-schema)
-      (relation question (claim))
-      (relation matched (claim id digest role))
-      (relation missing (id digest))
-      (relation witnessed (id digest name value))
-      (relation has_binding (name))
-      (relation has_match (name value))
-      (relation matched_binding (name value))
-      (relation unknown_binding (name value))
-      (relation conjunction_gap (name value))
-      ((has_binding N) <-- (binding N _))
-      ((witnessed I D N V) <-- (factor I D N V) (binding N V))
-      ((missing I D) <-- (clue I D _ _ _ _) (binding N V)
-        (not (witnessed I D N V)))
-      ((matched C I D R) <-- (has_binding _) (clue I D C _ R _)
-        (not (missing I D)))
-      ((question C) <-- (matched C _ _ _))
-      ((has_match N V) <-- (clue I D _ _ _ _) (factor I D N V) (binding N V))
-      ((unknown_binding N V) <-- (binding N V) (not (has_match N V)))
-      ((matched_binding N V) <-- (matched _ I D _) (factor I D N V) (binding N V))
-      ((conjunction_gap N V) <-- (has_match N V) (not (matched_binding N V))))"#;
-    let limits = Limits::default();
-    let cancel = Cancellation::default();
-    let matched = owner
-        .select(
-            &[selector],
-            "query",
-            &list(&[&["mechanism", "publication"], &["condition", "current"]]),
-            &limits,
-            &cancel,
-        )
-        .unwrap();
-    assert_eq!(matched.field("question").unwrap(), &list(&[&["header"]]));
-    assert_eq!(
-        matched.field("matched").unwrap(),
-        &list(&[&["header", "yes", "a", "observation"]])
-    );
-    assert_eq!(matched.field("unknown_binding").unwrap(), &list(&[]));
-    assert_eq!(matched.field("conjunction_gap").unwrap(), &list(&[]));
-    // An unknown value is a gap, not evidence of absence.
-    let split = owner
-        .select(
-            &[selector],
-            "query",
-            &list(&[
-                &["mechanism", "publication"],
-                &["condition", "current"],
-                &["condition", "missing"],
-            ]),
-            &limits,
-            &cancel,
-        )
-        .unwrap();
-    assert_eq!(split.field("question").unwrap(), &list(&[]));
-    assert_eq!(
-        split.field("unknown_binding").unwrap(),
-        &list(&[&["condition", "missing"]])
-    );
-    assert_eq!(
-        split
-            .field("conjunction_gap")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        2
-    );
-    let input = Data::object([
-        (
-            "clue",
-            list(&[
-                &["a", "x", "same", "support", "observation", "ra"],
-                &["b", "y", "same", "counter", "observation", "rb"],
-            ]),
-        ),
-        (
-            "factor",
-            list(&[
-                &["a", "x", "mechanism", "publication"],
-                &["b", "y", "condition", "current"],
-            ]),
-        ),
-        ("link", list(&[])),
-    ]);
-    let split_owner = ClueExchange::new(
-        &engine,
-        &[PROJECTION],
-        "project",
-        &input,
-        &Data::object([("ra", "x".into()), ("rb", "y".into())]),
-        &limits,
-        &cancel,
-    )
-    .unwrap();
-    let split = split_owner
-        .select(
-            &[selector],
-            "query",
-            &list(&[&["mechanism", "publication"], &["condition", "current"]]),
-            &limits,
-            &cancel,
-        )
-        .unwrap();
-    assert_eq!(split.field("question").unwrap(), &list(&[]));
-    assert_eq!(split.field("unknown_binding").unwrap(), &list(&[]));
-    assert_eq!(
-        split
-            .field("conjunction_gap")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        2
-    );
-}
-
-fn anchored_exchange(engine: &Engine, condition: &str) -> ClueExchange {
+pub(super) fn anchored_exchange(engine: &Engine, condition: &str) -> ClueExchange {
     let input = Data::object([
         (
             "clue",
@@ -404,8 +246,8 @@ fn clues_first_associated_query_returns_both_witnesses_and_trace_without_unrelat
             &Cancellation::default(),
         )
         .unwrap();
-    let support = result.field("support").unwrap().list().unwrap();
-    let counter = result.field("counterevidence").unwrap().list().unwrap();
+    let support = rows(&result, &["support"]);
+    let counter = rows(&result, &["counterevidence"]);
     assert_eq!(support.len(), 1);
     assert_eq!(counter.len(), 1);
     assert_eq!(support[0].list().unwrap()[0], Data::from("header"));
@@ -414,25 +256,11 @@ fn clues_first_associated_query_returns_both_witnesses_and_trace_without_unrelat
     assert_eq!(counter[0].list().unwrap()[3], Data::from("trace-b"));
     assert!(!support[0].list().unwrap()[4].text().unwrap().is_empty());
     assert!(!counter[0].list().unwrap()[4].text().unwrap().is_empty());
-    assert_eq!(result.field("conflict").unwrap(), &list(&[&["header"]]));
-    assert_eq!(result.field("neighbor").unwrap().list().unwrap().len(), 1);
-    assert_eq!(result.field("unknown").unwrap(), &list(&[]));
-    assert_eq!(
-        result
-            .field("selection")
-            .unwrap()
-            .field("association_gap")
-            .unwrap(),
-        &list(&[])
-    );
-    assert_eq!(
-        result
-            .field("selection")
-            .unwrap()
-            .field("applicability_gap")
-            .unwrap(),
-        &list(&[])
-    );
+    assert_eq!(at(&result, &["conflict"]), &list(&[&["header"]]));
+    assert_eq!(rows(&result, &["neighbor"]).len(), 1);
+    assert_eq!(at(&result, &["unknown"]), &list(&[]));
+    assert_eq!(at(&result, &["selection", "association_gap"]), &list(&[]));
+    assert_eq!(at(&result, &["selection", "applicability_gap"]), &list(&[]));
 }
 
 #[test]
@@ -462,13 +290,10 @@ fn clues_unmapped_and_inapplicable_are_distinct_declared_gaps_not_absence() {
                 &Cancellation::default(),
             )
             .unwrap();
-        assert_eq!(
-            result.field("selection").unwrap().field(gap).unwrap(),
-            &expected
-        );
-        assert_eq!(result.field("support").unwrap(), &list(&[]));
-        assert_eq!(result.field("counterevidence").unwrap(), &list(&[]));
-        assert_eq!(result.field("unknown").unwrap(), &list(&[]));
+        assert_eq!(at(&result, &["selection"]).field(gap).unwrap(), &expected);
+        assert_eq!(at(&result, &["support"]), &list(&[]));
+        assert_eq!(at(&result, &["counterevidence"]), &list(&[]));
+        assert_eq!(at(&result, &["unknown"]), &list(&[]));
     }
 }
 
@@ -486,18 +311,12 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
             &Cancellation::default(),
         )
         .unwrap();
-    let brief = first.field("brief").unwrap();
+    let brief = at(&first, &["brief"]);
+    assert_eq!(at(brief, &["counts", "support"]), &Data::from(1usize));
+    assert_eq!(at(brief, &["counts", "counter"]), &Data::from(1usize));
+    assert_eq!(rows(brief, &["families"]).len(), 1);
     assert_eq!(
-        brief.field("counts").unwrap().field("support").unwrap(),
-        &Data::from(1usize)
-    );
-    assert_eq!(
-        brief.field("counts").unwrap().field("counter").unwrap(),
-        &Data::from(1usize)
-    );
-    assert_eq!(brief.field("families").unwrap().list().unwrap().len(), 1);
-    assert_eq!(
-        brief.field("families").unwrap().list().unwrap()[0]
+        rows(brief, &["families"])[0]
             .field("observations")
             .unwrap()
             .list()
@@ -506,10 +325,7 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
         2
     );
     let mut repeated = request.map().unwrap().clone();
-    repeated.insert(
-        "checkpoint".into(),
-        first.field("checkpoint").unwrap().clone(),
-    );
+    repeated.insert("checkpoint".into(), at(&first, &["checkpoint"]).clone());
     let unchanged = owner
         .slice_selected(
             &[ANCHORED_SELECTOR],
@@ -519,24 +335,9 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(
-        unchanged
-            .field("brief")
-            .unwrap()
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    assert!(rows(&unchanged, &["brief", "families"]).is_empty());
     assert_eq!(
-        unchanged
-            .field("brief")
-            .unwrap()
-            .field("delta")
-            .unwrap()
-            .field("added")
-            .unwrap(),
+        at(&unchanged, &["brief", "delta", "added"]),
         &Data::from(0usize)
     );
     let capacity = clue_sexpr(brief).len() - 1;
@@ -552,35 +353,16 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
         )
         .unwrap();
     assert_eq!(
-        collapsed
-            .field("brief")
-            .unwrap()
-            .field("presentationComplete")
-            .unwrap(),
+        at(&collapsed, &["brief", "presentationComplete"]),
         &Data::Bool(false)
     );
     assert_eq!(
-        collapsed
-            .field("checkpoint")
-            .unwrap()
-            .field("body")
-            .unwrap()
-            .field("items")
-            .unwrap(),
+        at(&collapsed, &["checkpoint", "body", "items"]),
         &Data::List(vec![])
     );
-    let summary = &collapsed
-        .field("brief")
-        .unwrap()
-        .field("deferred")
-        .unwrap()
-        .list()
-        .unwrap()[0];
-    assert_eq!(
-        summary.field("counts").unwrap().field("counter").unwrap(),
-        &Data::from(1usize)
-    );
-    assert!(clue_sexpr(collapsed.field("brief").unwrap()).len() <= capacity);
+    let summary = &rows(&collapsed, &["brief", "deferred"])[0];
+    assert_eq!(at(summary, &["counts", "counter"]), &Data::from(1usize));
+    assert!(clue_sexpr(at(&collapsed, &["brief"])).len() <= capacity);
     repeated.insert(
         "expand".into(),
         Data::List(vec!["unrelated".into(), "new-claim".into()]),
@@ -594,34 +376,13 @@ fn clues_slice_first_hit_delta_collapse_and_expansion_remain_source_bound() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert_eq!(
-        expanded.field("brief").unwrap().field("mode").unwrap(),
-        &Data::from("rescope")
-    );
-    assert_eq!(
-        expanded
-            .field("brief")
-            .unwrap()
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        2
-    );
+    assert_eq!(at(&expanded, &["brief", "mode"]), &Data::from("rescope"));
+    assert_eq!(rows(&expanded, &["brief", "families"]).len(), 2);
     let mut invalid = request.map().unwrap().clone();
     invalid.insert(
         "checkpoint".into(),
         Data::object([
-            (
-                "body",
-                first
-                    .field("checkpoint")
-                    .unwrap()
-                    .field("body")
-                    .unwrap()
-                    .clone(),
-            ),
+            ("body", at(&first, &["checkpoint", "body"]).clone()),
             ("digest", "changed".into()),
         ]),
     );
@@ -652,104 +413,53 @@ fn folded_reads_advance_per_family_and_rescoping_keeps_acknowledged_details() {
     let mut paged = all.map().unwrap().clone();
     paged.insert(
         "displayBytes".into(),
-        (clue_sexpr(full.field("brief").unwrap()).len() - 1).into(),
+        (clue_sexpr(at(&full, &["brief"])).len() - 1).into(),
     );
     let first = owner
         .slice(&Data::Map(paged.clone()), &limits, &cancel)
         .unwrap();
-    let brief = first.field("brief").unwrap();
-    let shown = brief.field("families").unwrap().list().unwrap();
+    let brief = at(&first, &["brief"]);
+    let shown = rows(brief, &["families"]);
     assert_eq!(shown.len(), 1);
-    assert_eq!(brief.field("deferred").unwrap().list().unwrap().len(), 1);
-    assert_eq!(
-        brief.field("presentationComplete").unwrap(),
-        &Data::Bool(false)
-    );
+    assert_eq!(rows(brief, &["deferred"]).len(), 1);
+    assert_eq!(at(brief, &["presentationComplete"]), &Data::Bool(false));
     let first_claim = shown[0].field("claim").unwrap().clone();
-    let checkpoint = first.field("checkpoint").unwrap().clone();
-    assert!(
-        !checkpoint
-            .field("body")
-            .unwrap()
-            .field("items")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    let checkpoint = at(&first, &["checkpoint"]).clone();
+    assert!(!rows(&checkpoint, &["body", "items"]).is_empty());
     paged.insert("checkpoint".into(), checkpoint);
     let second = owner.slice(&Data::Map(paged), &limits, &cancel).unwrap();
-    let second_brief = second.field("brief").unwrap();
-    let newly_shown = second_brief.field("families").unwrap().list().unwrap();
+    let second_brief = at(&second, &["brief"]);
+    let newly_shown = rows(second_brief, &["families"]);
     assert_eq!(newly_shown.len(), 1);
     assert_ne!(newly_shown[0].field("claim").unwrap(), &first_claim);
     assert_eq!(
-        second_brief.field("presentationComplete").unwrap(),
+        at(second_brief, &["presentationComplete"]),
         &Data::Bool(true)
     );
     let mut shrink = Data::object([("questions", Data::List(vec![first_claim]))])
         .map()
         .unwrap()
         .clone();
-    shrink.insert(
-        "checkpoint".into(),
-        second.field("checkpoint").unwrap().clone(),
-    );
+    shrink.insert("checkpoint".into(), at(&second, &["checkpoint"]).clone());
     let smaller = owner.slice(&Data::Map(shrink), &limits, &cancel).unwrap();
-    let smaller_brief = smaller.field("brief").unwrap();
-    assert_eq!(smaller_brief.field("mode").unwrap(), &Data::from("rescope"));
-    assert!(
-        smaller_brief
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    let smaller_brief = at(&smaller, &["brief"]);
+    assert_eq!(at(smaller_brief, &["mode"]), &Data::from("rescope"));
+    assert!(rows(smaller_brief, &["families"]).is_empty());
     assert_eq!(
-        smaller_brief
-            .field("delta")
-            .unwrap()
-            .field("removed")
-            .unwrap(),
+        at(smaller_brief, &["delta", "removed"]),
         &Data::from(0usize)
     );
     let mut widen = all.map().unwrap().clone();
-    widen.insert(
-        "checkpoint".into(),
-        smaller.field("checkpoint").unwrap().clone(),
-    );
+    widen.insert("checkpoint".into(), at(&smaller, &["checkpoint"]).clone());
     let repeated = owner
         .slice(&Data::Map(widen.clone()), &limits, &cancel)
         .unwrap();
-    assert!(
-        repeated
-            .field("brief")
-            .unwrap()
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    assert!(rows(&repeated, &["brief", "families"]).is_empty());
     // A source change still resets acknowledgement; history is not current evidence.
     let mut changed = anchored_exchange(&engine, "changed");
     let reset = changed.slice(&Data::Map(widen), &limits, &cancel).unwrap();
-    assert_eq!(
-        reset.field("brief").unwrap().field("mode").unwrap(),
-        &Data::from("reset")
-    );
-    assert_eq!(
-        reset
-            .field("brief")
-            .unwrap()
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        2
-    );
+    assert_eq!(at(&reset, &["brief", "mode"]), &Data::from("reset"));
+    assert_eq!(rows(&reset, &["brief", "families"]).len(), 2);
 }
 
 #[test]
@@ -780,23 +490,10 @@ fn clues_model_authored_relational_query_joins_edges_receipts_and_counterwitness
             &Cancellation::default(),
         )
         .unwrap();
-    let brief = result.field("brief").unwrap();
-    assert_eq!(brief.field("families").unwrap().list().unwrap().len(), 1);
-    assert_eq!(
-        brief
-            .field("association")
-            .unwrap()
-            .field("trace")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        1
-    );
-    assert_eq!(
-        brief.field("counts").unwrap().field("counter").unwrap(),
-        &Data::from(1usize)
-    );
+    let brief = at(&result, &["brief"]);
+    assert_eq!(rows(brief, &["families"]).len(), 1);
+    assert_eq!(rows(brief, &["association", "trace"]).len(), 1);
+    assert_eq!(at(brief, &["counts", "counter"]), &Data::from(1usize));
 }
 
 #[test]
@@ -830,39 +527,25 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
         &cancel,
     )
     .unwrap();
-    let source = r#"(define-evidence (query)
+    let source = r"(define-evidence (query)
       (sources clue factor attested) (outputs question trace)
       (include clue-selection-schema)
       (relation question (claim))
       (relation trace (claim left right))
       ((question C) <-- (clue I D C _ _ _) (attested I D _))
       ((trace C A B) <-- (clue I D C _ _ _) (attested I D _)
-        (factor I D _ A) (factor I D _ B)))"#;
+        (factor I D _ A) (factor I D _ B)))";
     let request = Data::object([("bindings", Data::List(vec![]))]);
     let first = owner
         .slice_selected(&[source], "query", &request, &limits, &cancel)
         .unwrap();
-    let brief = first.field("brief").unwrap();
-    assert_eq!(brief.field("families").unwrap().list().unwrap().len(), 1);
-    assert_eq!(
-        brief
-            .field("deferredRelations")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        1
-    );
-    assert_eq!(
-        brief.field("counts").unwrap().field("counter").unwrap(),
-        &Data::from(1usize)
-    );
-    assert_eq!(
-        brief.field("presentationComplete").unwrap(),
-        &Data::Bool(false)
-    );
+    let brief = at(&first, &["brief"]);
+    assert_eq!(rows(brief, &["families"]).len(), 1);
+    assert_eq!(rows(brief, &["deferredRelations"]).len(), 1);
+    assert_eq!(at(brief, &["counts", "counter"]), &Data::from(1usize));
+    assert_eq!(at(brief, &["presentationComplete"]), &Data::Bool(false));
     assert!(clue_sexpr(brief).len() <= 8192);
-    let reference = brief.field("deferredRelations").unwrap().list().unwrap()[0]
+    let reference = rows(brief, &["deferredRelations"])[0]
         .field("reference")
         .unwrap()
         .clone();
@@ -870,14 +553,11 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
         .select(&[source], "query", &Data::List(vec![]), &limits, &cancel)
         .unwrap();
     assert_eq!(
-        reference.field("contentIdentity").unwrap().text().unwrap(),
-        raw.field("trace").unwrap().digest()
+        at(&reference, &["contentIdentity"]).text().unwrap(),
+        at(&raw, &["trace"]).digest()
     );
     let mut expanded = request.map().unwrap().clone();
-    expanded.insert(
-        "checkpoint".into(),
-        first.field("checkpoint").unwrap().clone(),
-    );
+    expanded.insert("checkpoint".into(), at(&first, &["checkpoint"]).clone());
     expanded.insert(
         "displayBytes".into(),
         (2 * clue_sexpr(&raw).len() + 8192).into(),
@@ -891,73 +571,32 @@ fn clues_derived_relations_fold_and_reuse_the_same_read_checkpoint() {
             &cancel,
         )
         .unwrap();
-    let expanded_brief = second.field("brief").unwrap();
-    assert!(
-        expanded_brief
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
+    let expanded_brief = at(&second, &["brief"]);
+    assert!(rows(expanded_brief, &["families"]).is_empty());
+    assert_eq!(
+        at(expanded_brief, &["association", "trace"]),
+        at(&raw, &["trace"])
     );
     assert_eq!(
-        expanded_brief
-            .field("association")
-            .unwrap()
-            .field("trace")
-            .unwrap(),
-        raw.field("trace").unwrap()
-    );
-    assert_eq!(
-        expanded_brief.field("presentationComplete").unwrap(),
+        at(expanded_brief, &["presentationComplete"]),
         &Data::Bool(true)
     );
-    expanded.insert(
-        "checkpoint".into(),
-        second.field("checkpoint").unwrap().clone(),
-    );
+    expanded.insert("checkpoint".into(), at(&second, &["checkpoint"]).clone());
     expanded.insert("displayBytes".into(), 8192usize.into());
     let repeated = owner
         .slice_selected(&[source], "query", &Data::Map(expanded), &limits, &cancel)
         .unwrap();
-    let unchanged = repeated.field("brief").unwrap();
+    let unchanged = at(&repeated, &["brief"]);
+    assert!(rows(unchanged, &["families"]).is_empty());
+    assert_eq!(rows(unchanged, &["retainedRelations"]).len(), 1);
+    assert!(rows(unchanged, &["deferredRelations"]).is_empty());
     assert!(
-        unchanged
-            .field("families")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
-    assert_eq!(
-        unchanged
-            .field("retainedRelations")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        1
-    );
-    assert!(
-        unchanged
-            .field("deferredRelations")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
-    assert!(
-        !unchanged
-            .field("association")
-            .unwrap()
+        !at(unchanged, &["association"])
             .map()
             .unwrap()
             .contains_key("trace")
     );
-    assert_eq!(
-        unchanged.field("counts").unwrap(),
-        brief.field("counts").unwrap()
-    );
+    assert_eq!(at(unchanged, &["counts"]), at(brief, &["counts"]));
 }
 
 #[test]
@@ -971,17 +610,9 @@ fn clues_observation_counter_and_unknown_are_distinct() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert_eq!(
-        result
-            .field("counterevidence")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        1
-    );
-    assert!(result.field("support").unwrap().list().unwrap().is_empty());
-    assert_eq!(result.field("unknown").unwrap(), &list(&[&["novel"]]));
+    assert_eq!(rows(&result, &["counterevidence"]).len(), 1);
+    assert!(rows(&result, &["support"]).is_empty());
+    assert_eq!(at(&result, &["unknown"]), &list(&[&["novel"]]));
     assert!(clue_sexpr(&result).contains("not-same-cause"));
 }
 #[test]
@@ -1021,7 +652,7 @@ fn clues_novel_hypothesis_selects_without_promotion_or_closed_vocabulary() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert_eq!(selected.field("question").unwrap(), &list(&[&["novel"]]));
+    assert_eq!(at(&selected, &["question"]), &list(&[&["novel"]]));
     let result = owner
         .read(
             &["novel".into()],
@@ -1029,12 +660,9 @@ fn clues_novel_hypothesis_selects_without_promotion_or_closed_vocabulary() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(result.field("support").unwrap().list().unwrap().is_empty());
-    assert_eq!(
-        result.field("conditional").unwrap().list().unwrap().len(),
-        1
-    );
-    assert_eq!(result.field("unknown").unwrap(), &list(&[&["novel"]]));
+    assert!(rows(&result, &["support"]).is_empty());
+    assert_eq!(rows(&result, &["conditional"]).len(), 1);
+    assert_eq!(at(&result, &["unknown"]), &list(&[&["novel"]]));
     assert!(owner.submit(&Data::List(vec![hint])).is_err());
 }
 #[test]
@@ -1055,14 +683,7 @@ fn clues_failed_batch_does_not_partially_publish() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert!(
-        result
-            .field("conditional")
-            .unwrap()
-            .list()
-            .unwrap()
-            .is_empty()
-    );
+    assert!(rows(&result, &["conditional"]).is_empty());
 }
 
 #[test]
@@ -1084,15 +705,7 @@ fn clues_collision_cancellation_and_close_do_not_create_authority() {
             &Cancellation::default(),
         )
         .unwrap();
-    assert_eq!(
-        result
-            .field("counterevidence")
-            .unwrap()
-            .list()
-            .unwrap()
-            .len(),
-        1
-    );
+    assert_eq!(rows(&result, &["counterevidence"]).len(), 1);
     owner.close();
     assert!(
         owner
@@ -1105,4 +718,13 @@ fn clues_collision_cancellation_and_close_do_not_create_authority() {
     );
     assert!(owner.inventory().is_err());
     assert!(owner.submit(&Data::List(vec![])).is_err());
+}
+
+pub(super) fn at<'a>(value: &'a Data, path: &[&str]) -> &'a Data {
+    path.iter()
+        .fold(value, |value, key| value.field(key).unwrap())
+}
+
+pub(super) fn rows<'a>(value: &'a Data, path: &[&str]) -> &'a [Data] {
+    at(value, path).list().unwrap()
 }

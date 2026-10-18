@@ -459,14 +459,14 @@ pub fn read_clue_request(source: &str) -> Result<Data> {
     };
     let mut request = std::collections::BTreeMap::new();
     for field in fields {
-        let Datum::List(mut pair) = field else {
+        let Datum::List(pair) = field else {
             return Err(invalid("Clue request key/value pair required"));
         };
-        if pair.len() != 2 {
-            return Err(invalid("Clue request key/value pair required"));
-        }
-        let data = value(pair.pop().unwrap())?;
-        let (Datum::Atom(key) | Datum::Text(key)) = pair.pop().unwrap() else {
+        let [name, datum]: [Datum; 2] = pair
+            .try_into()
+            .map_err(|_| invalid("Clue request key/value pair required"))?;
+        let data = value(datum)?;
+        let (Datum::Atom(key) | Datum::Text(key)) = name else {
             return Err(invalid("Clue request field name required"));
         };
         if !matches!(

@@ -1057,3 +1057,52 @@ installed compiler's =compile-obj= retry loop waits while those files exist.
 Removing only those files in the disposable prefix immediately resumed native
 compiler jobs. The original workspace and upstream compiler were untouched.
 The raw lock inventory and earlier interrupted runs remain diagnostic evidence.
+
+** SDK allocation diagnosis and authorized 240-second observation
+
+The user explicitly authorized a 240-second macOS source-semantic deadline on
+2026-10-18. Only the three-worker runtime deadline changes; preparation remains
+separately timed. Twelve-way Rust/PyO3 and Scheme binding concurrency, child
+heaps, cancellation, resource limits, provenance, fixture deadlines and the
+LeanPoo Guard remain unchanged. A pass at 240 seconds does not resolve the
+retained 180-second failures or historical latency regressions.
+
+Revision 144ed6e5 passed the complete main CI, including all 51 process-isolated
+Scheme binding tests with twelve concurrent processes. Its separate macOS
+three-worker run took 231.027 seconds to prepare and reached 180.067 seconds
+with 168 of 173 modules and 1383 of 1401 Cases completed. That failure remains
+negative evidence; the previous runner's pass does not replace it.
+
+The allocation failure is reproducible with the existing pinned Release:
+= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.ss =
+retains an 8,000,000-byte bytevector, collects, then drops it and collects inside
+=##exec-stats=. The observed corrected estimate is -7,999,776 bytes with one GC;
+the independent raw snapshots also decrease (68,851,608 to 60,854,072 in the
+local probe). These absolute snapshots include startup and observer work.
+
+At pinned Gambit ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f,
+=lib/mem.c:7521= adds current =occupied_words_still= to processor accounting;
+=determine_occupied_words= recomputes that occupancy after collection.
+=lib/_repl.scm:5278= subtracts frame and statistics-structure corrections from
+the counter difference. Releasing previously allocated still objects can
+therefore decrease the reported counter. This is not negative allocation or
+an allocation saving. No upstream code was changed.
+
+Work trace v3 retains raw counter endpoints beside the original corrected
+estimate. Either a raw decrease or a negative corrected estimate rejects
+complete cost admission. Legacy trace v2 remains readable for historical
+receipts; malformed mixed-version events are rejected. Nested inclusive
+intervals are never summed. The signed arithmetic and rejection conditions are
+represented in Lean and the existing Quint decreasing-counter control. This
+is a correspondence to the cited formula, not a proof of the C allocator,
+collector, expansion engine or Python decoder source.
+
+The retained matched experiment still rejects the 19.41 percent cold-build
+regression. Its separate instrumented controls each execute 490 GSC calls and
+consume 240,762,807 input bytes; the production cold-build entry files are
+unchanged between those controls. GSC CPU totals are 274.96, 320.90, 303.66 and
+281.31 seconds in ABBA order. The retained input hashes differ across runs,
+including path-bearing generated sources; equal byte counts do not establish
+equal compiler work. Zero recorded block-I/O counters do not prove absence of
+I/O. The negative allocator observations prevent complete allocation-cost
+admission. No causal fix for that wall-time regression is claimed here.

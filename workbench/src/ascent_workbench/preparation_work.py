@@ -28,18 +28,23 @@ IMPORT_HOOK = r'''(import :gerbil/expander)
    (lambda args
     (let* ((level (depth)) (started (current-jiffy))
            (cached (and (hash-get registry (car args)) #t))
+           (allocation (make-f64vector 2))
+           (sampled (##get-bytes-allocated! allocation 0))
            (stats (##exec-stats
                     (lambda ()
                       (parameterize ((depth (+ level 1))) (apply original args))))))
+      (##get-bytes-allocated! allocation 1)
       (def (stat key) (cdr (assq key stats)))
       (def (ns key) (inexact->exact (floor (* (stat key) 1000000000))))
       (mutex-lock! lock)
-      (write (list 'import-work level (if cached 1 0)
+      (write (list 'import-work-v3 level (if cached 1 0)
                    (if (string? (car args)) (car args) (object->string (car args)))
                    started (current-jiffy) (jiffies-per-second)
                    (stat 'bytes-allocated) (stat 'nb-gcs)
                    (ns 'user-time) (ns 'sys-time)
-                   (ns 'gc-user-time) (ns 'gc-sys-time) (ns 'gc-real-time)) port)
+                   (ns 'gc-user-time) (ns 'gc-sys-time) (ns 'gc-real-time)
+                   (inexact->exact (f64vector-ref allocation 0))
+                   (inexact->exact (f64vector-ref allocation 1))) port)
       (newline port) (force-output port)
       (mutex-unlock! lock)
       (stat 'result)))))'''
@@ -107,9 +112,9 @@ def summarize(directory):
     """Fail closed on truncated events. Never sum nested allocation snapshots."""
     from ascent_workbench.preparation_policy import preparation_observation_complete
     phases = {}
-    pattern = re.compile(r'\(import-work ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
+    pattern = re.compile(r'\(import-work(-v3)? ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
                          r'([0-9]+) ([0-9]+) ([0-9]+) (-?[0-9]+) ([0-9]+) '
-                         r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)\)')
+                         r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?\)')
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
         for record in records:
@@ -127,7 +132,9 @@ def summarize(directory):
                 match = pattern.fullmatch(line)
                 if not match:
                     raise ValueError('incomplete or unsupported import work event')
-                depth, cached, path, start, end, hz, allocated, gcs, user, system, gcuser, gcsys, gcwall = match.groups()
+                version, depth, cached, path, start, end, hz, allocated, gcs, user, system, gcuser, gcsys, gcwall, raw_start, raw_end = match.groups()
+                if bool(version) != (raw_start is not None):
+                    raise ValueError("allocation snapshot version mismatch")
                 start, end, hz = map(int, (start, end, hz))
                 if not hz or end < start:
                     raise ValueError('unordered compiler time snapshots')
@@ -135,6 +142,9 @@ def summarize(directory):
                                 'direct_registry_hit': cached == '1',
                                 'wall_ns': (end - start) * 10**9 // hz,
                                 'sdk_allocated_bytes': int(allocated), 'gc_count': int(gcs),
+                                'raw_counter_start': int(raw_start) if raw_start is not None else None,
+                                'raw_counter_end': int(raw_end) if raw_end is not None else None,
+                                'raw_counter_decreased': raw_start is not None and int(raw_end) < int(raw_start),
                                 'cpu_ns': int(user) + int(system),
                                 'gc_cpu_ns': int(gcuser) + int(gcsys), 'gc_wall_ns': int(gcwall)})
         phases[phase] = {
@@ -150,11 +160,12 @@ def summarize(directory):
             'observations_complete': preparation_observation_complete(
                 sum(r['exit_code'] != 0 for r in records),
                 sum(not r['inputs_current'] for r in records),
-                sum(r['sdk_allocated_bytes'] < 0 for r in imports), trace.exists()),
+                sum(r['sdk_allocated_bytes'] < 0 or r['raw_counter_decreased'] for r in imports), trace.exists()),
             'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
+            'raw_counter_decreases': [r for r in imports if r['raw_counter_decreased']],
             'negative_sdk_allocation_estimates': [r for r in imports if r['sdk_allocated_bytes'] < 0],
             'largest_inclusive_imports': sorted(imports,
                 key=lambda r: r['sdk_allocated_bytes'], reverse=True)[:12],
@@ -162,9 +173,9 @@ def summarize(directory):
                 key=lambda r: r['gc_cpu_ns'], reverse=True)[:12],
             'slowest_imports': sorted(imports,
                 key=lambda r: r['wall_ns'], reverse=True)[:12],
-            'allocation_scope': 'SDK exec-stats corrected inclusive estimates; nested bytes/GC/CPU are not summed',
+            'allocation_scope': 'SDK signed inclusive occupancy-based estimates, not cumulative allocation; raw snapshots include observer work; nested intervals are not summed',
         }
-    return {'schema': 'ascent.preparation-work.v2', 'phases': phases,
+    return {'schema': 'ascent.preparation-work.v3', 'phases': phases,
             'latency_admitted': False, 'compiler_allocator_source_refinement': False}
 
 

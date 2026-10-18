@@ -180,13 +180,18 @@ def main():
         env['GERBIL_PATH'] = str(root / '.gerbil')
         env['GERBIL_LOADPATH'] = str(root / '.gerbil/lib')
         env['GERBIL_BUILD_CORES'] = '3'
-        env['ASCENT_GXTEST_TIMEOUT'] = '180s'
+        env['ASCENT_GXTEST_TIMEOUT'] = '240s'
         env.pop('ASCENT_TEST_LIBRARY', None)
         (output / 'inputs.json').write_text(json.dumps({
             'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-            'cores': 3, 'deadline_seconds': 180, 'child_heap': '2G',
+            'cores': 3, 'deadline_seconds': 240, 'child_heap': '2G',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
+        # Preserve an untimed SDK counter diagnostic alongside the workload.
+        # It does not substitute for full cost or semantic acceptance.
+        with (output / 'sdk-allocation-counter.log').open('w') as probe_log:
+            checked(['gxi', '-:debug=q', 'workbench/tests/fixtures/sdk-allocation-counter.ss'],
+                    cwd=root, env=env, stdout=probe_log, stderr=subprocess.STDOUT, timeout=10)
         try:
             # This replaces the previous performance-library setup, not any
             # source Suite execution. Retain its complete cost separately so
@@ -201,7 +206,7 @@ def main():
                 {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
             if suite_interfaces:
                 raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
-            measure(root, ['timeout', '180s', 'just', 'test-file', 't/qualification', '2G'],
+            measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
                     output / 'candidate-semantics.log', env, semantic_diagnostics=True)
         finally:
             batches = root / '.cache/ascent/test-modules'

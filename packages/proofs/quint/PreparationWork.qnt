@@ -7,14 +7,14 @@ module PreparationWork {
   const Mutation: str
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
-                outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
+                outerAllocation: int, reportedAllocation: int, rawStart: int, rawFinish: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
-    outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
+    outerAllocation: 0, reportedAllocation: 0, rawStart: 0, rawFinish: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
@@ -71,7 +71,10 @@ module PreparationWork {
     reportedAllocation: if (Mutation == "sum-nested") 6 else 4, published: false}
   action Finish = all {q.jobs == 2, q.imports == 2, q' = {...q, finished: true}}
   action ChangeSource = q' = {...q, current: false, published: false}
-  action CounterDecrease = q' = {...q, counterValid: false, published: false}
+  // Current SDK counters can fall when a GC releases earlier still objects.
+  // Preserve the signed observation; never coerce it to an allocation saving.
+  action CounterDecrease = q' = {...q, rawStart: 8, rawFinish: 0,
+    counterValid: false, published: false}
   action CompilerFails = q' = {...q, failedJobs: 1, published: false}
   action CompilerInputChanges = q' = {...q, changedInputs: 1, published: false}
   action Publish = all {
@@ -97,7 +100,7 @@ module PreparationWork {
   val CompilerWorkComplete = q.published implies (q.failedJobs == 0 and q.changedInputs == 0)
   val Complete = q.published implies q.finished
   val Current = q.published implies q.current
-  val OrderedCounter = q.published implies q.counterValid
+  val OrderedCounter = q.published implies (q.counterValid and q.rawStart <= q.rawFinish)
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
   val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration

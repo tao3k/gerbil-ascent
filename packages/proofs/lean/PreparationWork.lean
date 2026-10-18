@@ -362,6 +362,34 @@ theorem nested_inclusive_double_counts (outer inner : Nat) (positive : 0 < inner
 theorem decreasing_counter_rejected (start finish : Nat) (decreased : finish < start) :
     decide (start ≤ finish) = false := by simp; omega
 
+-- The pinned SDK's mem.c ___bytes_allocated adds current still-object
+-- occupancy to processor accounting. _repl.scm ##exec-stats then subtracts
+-- the interpreted frame and statistics-vector corrections. This signed
+-- arithmetic models that formula, not a cumulative allocator event counter.
+def sdkCounter (processorAccounting stillOccupancy : Int) : Int :=
+  processorAccounting + stillOccupancy
+
+def sdkEstimate (start finish frameCorrection structureCorrection : Int) : Int :=
+  finish - start - (frameCorrection + structureCorrection)
+
+theorem still_release_can_decrease_counter (accounting still growth : Int)
+    (released : growth < still) :
+    sdkCounter (accounting + growth) 0 < sdkCounter accounting still := by
+  simp only [sdkCounter]; omega
+
+theorem negative_estimate_iff (start finish frame correction : Int) :
+    sdkEstimate start finish frame correction < 0 ↔ finish - start < frame + correction := by
+  simp only [sdkEstimate]; omega
+
+-- A raw decrease cannot become admitted by a positive corrected estimate.
+def allocationObservationValid (rawStart rawFinish corrected : Int) : Bool :=
+  decide (rawStart ≤ rawFinish ∧ 0 ≤ corrected)
+
+theorem raw_counter_drop_rejected (start finish corrected : Int)
+    (decreased : finish < start) :
+    allocationObservationValid start finish corrected = false := by
+  simp [allocationObservationValid]; omega
+
 -- CPU/work bounds do not establish wall bounds: queue/IO/descheduling time
 -- is an independent nonnegative component and is not silently set to zero.
 theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
@@ -400,4 +428,7 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms nested_inclusive_double_counts
 #print axioms decreasing_counter_rejected
 #print axioms work_reduction_does_not_bound_wait
+#print axioms still_release_can_decrease_counter
+#print axioms negative_estimate_iff
+#print axioms raw_counter_drop_rejected
 end Ascent.PreparationWork

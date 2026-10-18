@@ -70,6 +70,19 @@ class PreparationWorkTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 summarize(root)
 
+    def test_raw_counter_drop_rejects_even_positive_corrected_estimate(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            trace = root / 'prepare-imports.sexp'
+            trace.write_text('(import-work-v3 0 0 "gc.ss" 1 2 100 20 1 1 1 0 0 0 8000 100)\n')
+            phase = summarize(root)['phases']['prepare']
+            self.assertEqual(len(phase['raw_counter_decreases']), 1)
+            self.assertFalse(phase['observations_complete'])
+            self.assertEqual(phase['negative_sdk_allocation_estimates'], [])
+            trace.write_text('(import-work-v3 0 0 "gc.ss" 1 2 100 20 1 1 1 0 0 0)\n')
+            with self.assertRaisesRegex(ValueError, 'version mismatch'):
+                summarize(root)
+
     def test_failed_compiler_keeps_exact_inputs_and_exit(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

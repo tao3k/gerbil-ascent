@@ -174,7 +174,7 @@ fn evidence_checkpoint_omitted_declarations_do_not_become_empty_success() {
     inputs.insert("binding".into(), vec![]);
     inputs.insert("current_binding".into(), vec![]);
     let result = evaluate(&mut session(), inputs);
-    assert!(result["reusable"].is_empty());
+    assert_eq!(result["reusable"], []);
     assert_eq!(result["enumeration_gap"].len(), 3);
 
     let mut inputs = facts();
@@ -239,7 +239,7 @@ fn evidence_checkpoint_accepted_contracts_keep_separate_input_obligations() {
     let result = evaluate(&mut session(), inputs);
     assert!(result["applicable"].contains(&row(&["build", "b"])));
     assert!(result["applicable"].contains(&row(&["build", "other"])));
-    assert!(result["binding_gap"].is_empty());
+    assert_eq!(result["binding_gap"], []);
 }
 
 #[test]
@@ -289,10 +289,10 @@ fn evidence_checkpoint_cleanup_and_unknown_exit_are_not_lost_progress() {
     let result = evaluate(&mut session(), inputs);
     assert_eq!(result["historical_complete"].len(), 3);
     assert_eq!(result["applicable"].len(), 3);
-    assert!(result["reusable"].is_empty());
+    assert_eq!(result["reusable"], []);
     assert_eq!(result["material_gap"], vec![row(&["build", "b", "binary"])]);
     assert_eq!(result["completion_gap"].len(), 3);
-    assert!(result["unclosed"].is_empty());
+    assert_eq!(result["unclosed"], []);
 }
 
 #[test]
@@ -361,7 +361,7 @@ fn evidence_checkpoint_new_failure_does_not_erase_an_applicable_pass() {
         .push(witness("failed-test"));
     let result = evaluate(&mut session(), inputs);
     assert_eq!(result["applicable"].len(), 3);
-    assert!(result["unclosed"].is_empty());
+    assert_eq!(result["unclosed"], []);
     assert!(!result.contains_key("next"));
     assert!(!result.contains_key("execution_authorized"));
 }
@@ -397,7 +397,8 @@ fn evidence_checkpoint_matches_independent_closure_for_every_three_node_dag() {
                             "c",
                             1,
                             0,
-                            edges.iter().filter(|(c, _)| *c == i).count() as i64,
+                            i64::try_from(edges.iter().filter(|(c, _)| *c == i).count())
+                                .expect("three-node degree fits i64"),
                         )
                     })
                     .collect(),
@@ -493,7 +494,7 @@ fn evidence_checkpoint_domain_names_outcomes_and_projection_remain_caller_owned(
         vec![row(&["new-open-research-obligation", "witness"])]
     );
     inputs.insert("completed_outcome".into(), vec![]);
-    assert!(evaluate(&mut owner, inputs)["applicable"].is_empty());
+    assert_eq!(evaluate(&mut owner, inputs)["applicable"], []);
 
     // Caller extension uses ordinary Scheme relations, not a new callback API.
     let extension = "(define-evidence (custom-checkpoint)
@@ -517,5 +518,5 @@ fn evidence_checkpoint_domain_names_outcomes_and_projection_remain_caller_owned(
         result["open_research"],
         vec![row(&["arbitrary-hypothesis"])]
     );
-    assert!(result["reusable"].is_empty());
+    assert_eq!(result["reusable"], []);
 }

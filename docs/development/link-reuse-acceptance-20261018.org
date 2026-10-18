@@ -1146,3 +1146,24 @@ The formal inventory unit guard also now classifies the two concurrently
 committed EvidenceCheckpoint and ClueQueryResume models as additions. Its
 historical 56-model, 377-obligation and 349-obligation assertions remain exact;
 no original proof scope or counterexample expectation is reduced.
+
+The shared revision's full CI additionally exposed the existing ASP membership
+and test-leaf size contracts and ten strict Clippy findings. Integration fixes
+index selected component IDs with a BTreeSet, preserve all tests while splitting
+the exchange suite into focused modules, retain exact empty/nonempty assertions,
+and check the finite corpus degree conversion. No feature behavior, accepted
+rows, resource limits or lint settings are weakened. These failures and the
+independent oracle timeout remain recorded separately.
+
+The existing macOS job can also be dispatched directly without an ABBA baseline;
+a supplied baseline still selects only the on-demand experiment. This reuses
+the same three-worker semantic job and 240-second deadline for exact-revision
+qualification without manufacturing an unrelated ABBA experiment.
+
+After these corrections, the isolated current workspace passes all 131
+Rust/PyO3 tests at twelve threads (including all 105 integration Cases and
+both ASP gates). Strict workspace Clippy passes with =-D warnings=. The
+exchange suite retains all 17 original test names. The new helper extraction
+preserves request inheritance, selector validation, error order and checkpoint
+content; its existing semantic Cases remain the qualification, not a new
+source-equivalence proof. Full exact-head CI remains a separate requirement.

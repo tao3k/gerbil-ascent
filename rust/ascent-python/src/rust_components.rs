@@ -8,6 +8,7 @@ use pyo3::{
     pyclass, pymethods,
     types::{PyDict, PyTuple, PyTupleMethods},
 };
+use std::collections::BTreeSet;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -52,10 +53,12 @@ fn components(
             })
         })
         .collect::<gerbil_ascent::Result<Vec<_>>>()?;
-    let selected = EvidenceProgram::component_dependencies(&components, entry)?;
+    let selected: BTreeSet<_> = EvidenceProgram::component_dependencies(&components, entry)?
+        .into_iter()
+        .collect();
     for item in manifest.field("components")?.list()? {
         let id = item.field("id")?.text()?;
-        if selected.iter().any(|selected| selected == id) {
+        if selected.contains(id) {
             sources.field(item.field("source")?.text()?)?.text()?;
         }
     }

@@ -243,14 +243,7 @@ impl ClueExchange {
             sources,
             constructor,
         } = selector;
-        let fields = request_fields(request)?;
-        let mut inherited = saved_query(fields.get("checkpoint"))?
-            .map(Data::map)
-            .transpose()?
-            .cloned()
-            .unwrap_or_default();
-        inherited.remove("selection");
-        inherited.extend(fields.clone());
+        let mut inherited = inherited_request(request)?;
         let bindings = inherited
             .entry("bindings".into())
             .or_insert_with(|| Data::List(Vec::new()))
@@ -259,18 +252,7 @@ impl ClueExchange {
             .select(selector, &bindings, limits, cancel)?
             .map()?
             .clone();
-        let questions = selection
-            .get("question")
-            .ok_or_else(|| invalid("selector requires question"))?
-            .list()?
-            .iter()
-            .map(|row| {
-                if row.list()?.len() != 1 {
-                    return Err(invalid("selector question arity"));
-                }
-                Ok(text(row, 0)?.to_owned())
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let questions = selector_questions(&selection)?;
         selection.insert(
             "selectorIdentity".into(),
             Data::object([
@@ -311,6 +293,33 @@ impl ClueExchange {
             cancel,
         )
     }
+}
+
+fn inherited_request(request: &Data) -> Result<BTreeMap<String, Data>> {
+    let fields = request_fields(request)?;
+    let mut inherited = saved_query(fields.get("checkpoint"))?
+        .map(Data::map)
+        .transpose()?
+        .cloned()
+        .unwrap_or_default();
+    inherited.remove("selection");
+    inherited.extend(fields.clone());
+    Ok(inherited)
+}
+
+fn selector_questions(selection: &BTreeMap<String, Data>) -> Result<Vec<String>> {
+    selection
+        .get("question")
+        .ok_or_else(|| invalid("selector requires question"))?
+        .list()?
+        .iter()
+        .map(|row| {
+            if row.list()?.len() != 1 {
+                return Err(invalid("selector question arity"));
+            }
+            Ok(text(row, 0)?.to_owned())
+        })
+        .collect::<Result<Vec<_>>>()
 }
 
 struct SliceView<'a> {

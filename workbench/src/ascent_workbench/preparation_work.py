@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Compiler work observations, separate from uninstrumented latency controls.
 
-GSC input bytes and invocations are exact observations. Import allocation is
-process-wide and inclusive; nested imports must never be summed as exclusive
-allocator costs. This does not verify the SDK compiler or allocator.
+GSC input bytes and invocations are exact observations. Import statistics use
+the SDK's existing time primitive and its frame/structure corrections. Nested
+intervals remain inclusive and must not be added as exclusive allocator/GC
+costs. This does not verify the SDK compiler or allocator.
 """
 import hashlib
 import json
@@ -27,17 +28,22 @@ IMPORT_HOOK = r'''(import :gerbil/expander)
    (lambda args
     (let* ((level (depth)) (started (current-jiffy))
            (cached (and (hash-get registry (car args)) #t))
-           (before (f64vector-ref (##process-statistics) 7))
-           (result (parameterize ((depth (+ level 1))) (apply original args))))
+           (stats (##exec-stats
+                    (lambda ()
+                      (parameterize ((depth (+ level 1))) (apply original args))))))
+      (def (stat key) (cdr (assq key stats)))
+      (def (ns key) (inexact->exact (floor (* (stat key) 1000000000))))
       (mutex-lock! lock)
-      (write (list 'import-cost level (if cached 1 0)
+      (write (list 'import-work level (if cached 1 0)
                    (if (string? (car args)) (car args) (object->string (car args)))
                    started (current-jiffy) (jiffies-per-second)
-                   (inexact->exact before)
-                   (inexact->exact (f64vector-ref (##process-statistics) 7))) port)
+                   (stat 'bytes-allocated) (stat 'nb-gcs)
+                   (ns 'user-time) (ns 'sys-time)
+                   (ns 'gc-user-time) (ns 'gc-sys-time) (ns 'gc-real-time)) port)
       (newline port) (force-output port)
       (mutex-unlock! lock)
-      result))))'''
+      (stat 'result)))))'''
+
 
 
 def file_input(path):
@@ -88,7 +94,8 @@ def execute_gsc(arguments, helper=False):
 def summarize(directory):
     """Fail closed on truncated events. Never sum nested allocation snapshots."""
     phases = {}
-    pattern = re.compile(r'\(import-cost ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
+    pattern = re.compile(r'\(import-work ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
+                         r'([0-9]+) ([0-9]+) ([0-9]+) (-?[0-9]+) ([0-9]+) '
                          r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)\)')
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
@@ -101,15 +108,16 @@ def summarize(directory):
                 match = pattern.fullmatch(line)
                 if not match:
                     raise ValueError('incomplete or unsupported import work event')
-                depth, cached, path, start, end, hz, before, after = match.groups()
-                start, end, hz, before, after = map(int, (start, end, hz, before, after))
+                depth, cached, path, start, end, hz, allocated, gcs, user, system, gcuser, gcsys, gcwall = match.groups()
+                start, end, hz = map(int, (start, end, hz))
                 if not hz or end < start:
                     raise ValueError('unordered compiler time snapshots')
                 imports.append({'depth': int(depth), 'path': json.loads(path),
                                 'direct_registry_hit': cached == '1',
                                 'wall_ns': (end - start) * 10**9 // hz,
-                                'allocator_counter_before': before, 'allocator_counter_after': after,
-                                'allocator_counter_delta_bytes': after - before})
+                                'sdk_allocated_bytes': int(allocated), 'gc_count': int(gcs),
+                                'cpu_ns': int(user) + int(system),
+                                'gc_cpu_ns': int(gcuser) + int(gcsys), 'gc_wall_ns': int(gcwall)})
         phases[phase] = {
             'gsc_invocations': len(gsc),
             'gsc_input_bytes': sum(x['bytes'] for r in gsc for x in r['inputs']),
@@ -122,10 +130,14 @@ def summarize(directory):
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
-            'allocator_counter_decreases': [r for r in imports if r['allocator_counter_delta_bytes'] < 0],
+            'negative_sdk_allocation_estimates': [r for r in imports if r['sdk_allocated_bytes'] < 0],
             'largest_inclusive_imports': sorted(imports,
-                key=lambda r: r['allocator_counter_delta_bytes'], reverse=True)[:12],
-            'allocation_scope': 'inclusive SDK counter snapshots, not exact allocation; nested bytes are not summed',
+                key=lambda r: r['sdk_allocated_bytes'], reverse=True)[:12],
+            'largest_gc_imports': sorted(imports,
+                key=lambda r: r['gc_cpu_ns'], reverse=True)[:12],
+            'slowest_imports': sorted(imports,
+                key=lambda r: r['wall_ns'], reverse=True)[:12],
+            'allocation_scope': 'SDK exec-stats corrected inclusive estimates; nested bytes/GC/CPU are not summed',
         }
     return {'schema': 'ascent.preparation-work.v1', 'phases': phases,
             'latency_admitted': False, 'compiler_allocator_source_refinement': False}

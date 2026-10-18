@@ -386,3 +386,16 @@ source-keyed cache save, so consumer checks can run even if the Rust job is
 already red. Every original check, failure status, timeout and aggregate
 requirement remains required; no continue-on-error or severity waiver is used.
 A failed wheel/interface cannot authorize the downstream consumer job.
+
+The follow-up allocation reader reuses the existing ##exec-stats primitive
+used by Gambit's time implementation, rather than subtracting raw counter
+reads in the interpreter callback. The pinned _repl.scm applies interpreted
+thunk-frame and statistics-structure corrections, and reports CPU, GC CPU,
+GC wall time and collection counts. The observer keeps all intervals inclusive.
+Even that SDK-corrected estimate can be negative: the real full-module smoke
+records -28,238,680 bytes with four collections during gerbil/builtin.ssxi.ss.
+Thus neither reader establishes an exact cumulative allocator bound. The new
+reader preserves signed estimates and rejects allocation qualification when
+negative; it does not clamp, take absolute values or discard failed samples.
+GC and CPU intervals remain separately available for diagnosis. The complete
+module compile still records three GSC calls and one SDK helper successfully.

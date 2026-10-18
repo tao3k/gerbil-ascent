@@ -325,9 +325,9 @@ def main():
             (observer / 'summary.json').write_text(json.dumps(work, indent=2) + '\n')
             receipt['controls'][-1]['work'] = work
             for phase, observations in work['phases'].items():
-                if not observations['import_observer_ran'] or observations['allocator_counter_decreases']:
+                if not observations['import_observer_ran'] or observations['negative_sdk_allocation_estimates']:
                     work_violations.append({'control': name, 'phase': phase,
-                                            'error': 'missing import observations or decreasing allocator counter'})
+                                            'error': 'missing import observations or negative SDK allocation estimate'})
         (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)

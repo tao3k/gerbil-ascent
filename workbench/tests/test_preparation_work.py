@@ -31,20 +31,21 @@ class PreparationWorkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / 'prepare-imports.sexp').write_text(
-                '(import-cost 1 1 "child.ss" 2 3 100 20 40)\n'
-                '(import-cost 0 0 "parent.ss" 1 4 100 10 50)\n')
+                '(import-work 1 1 "child.ss" 2 3 100 20 0 10 5 0 0 0)\n'
+                '(import-work 0 0 "parent.ss" 1 4 100 40 1 20 10 2 1 3)\n')
             result = summarize(root)
             phase = result['phases']['prepare']
             self.assertEqual(phase['import_requests'], 2)
             self.assertEqual(phase['direct_registry_hits'], 1)
-            self.assertEqual(phase['largest_inclusive_imports'][0]['allocator_counter_delta_bytes'], 40)
+            self.assertEqual(phase['largest_inclusive_imports'][0]['sdk_allocated_bytes'], 40)
+            self.assertEqual(phase['largest_gc_imports'][0]['gc_cpu_ns'], 3)
             self.assertNotIn('total_allocated_bytes', phase)
             self.assertFalse(result['latency_admitted'])
             self.assertFalse(result['compiler_allocator_source_refinement'])
-            (root / 'prepare-imports.sexp').write_text('(import-cost 0 0 "gc.ss" 1 2 100 20 10)\n')
-            decreased = summarize(root)['phases']['prepare']['allocator_counter_decreases']
-            self.assertEqual(decreased[0]['allocator_counter_delta_bytes'], -10)
-            (root / 'prepare-imports.sexp').write_text('(import-cost 0 "unfinished')
+            (root / 'prepare-imports.sexp').write_text('(import-work 0 0 "gc.ss" 1 2 100 -10 0 1 1 0 0 0)\n')
+            decreased = summarize(root)['phases']['prepare']['negative_sdk_allocation_estimates']
+            self.assertEqual(decreased[0]['sdk_allocated_bytes'], -10)
+            (root / 'prepare-imports.sexp').write_text('(import-work 0 "unfinished')
             with self.assertRaises(ValueError):
                 summarize(root)
 

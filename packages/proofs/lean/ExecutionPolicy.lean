@@ -159,9 +159,103 @@ def quintSource : String :=
 
 end Ascent.ExecutionPolicy
 
+/-! The executable admission decision, not a model of elapsed-time prediction.
+Nanosecond totals are observations. Missing phase-cost observations and unresolved
+negative controls prevent admission even when a later observation is faster.
+The existing predicate AST is rendered into the actual Python and Quint code.
+Host timing, process attribution and compiler implementations remain boundaries. -/
+namespace Ascent.PreparationPolicy
+open Ascent.ExecutionPolicy
+
+def nonRegression : Predicate := .negate (.less "baseline_ns" "candidate_ns")
+def latchFailure : Predicate := .either (.flag "prior_failure") (.flag "new_failure")
+def admission : Predicate := .both (.flag "matched")
+  (.both (.flag "complete") (.both (.flag "cost_accounted")
+    (.both (.equal "warm_rebuilds" .zero)
+      (.both (.equal "unresolved" .zero) nonRegression))))
+
+theorem non_regression_exact (numbers : String → Nat) (flags : String → Bool) :
+    eval numbers flags nonRegression = true ↔ numbers "candidate_ns" ≤ numbers "baseline_ns" := by
+  by_cases h : numbers "baseline_ns" < numbers "candidate_ns"
+  · have denied := Nat.not_le_of_gt h
+    simp [nonRegression, eval, Number.value, h, denied]
+  · have allowed := Nat.le_of_not_gt h
+    simp [nonRegression, eval, Number.value, h, allowed]
+
+theorem regression_rejected (numbers : String → Nat) (flags : String → Bool)
+    (worse : numbers "baseline_ns" < numbers "candidate_ns") :
+    eval numbers flags admission = false := by
+  simp [admission, nonRegression, eval, Number.value, worse]
+
+theorem unresolved_rejected (numbers : String → Nat) (flags : String → Bool)
+    (pending : numbers "unresolved" ≠ 0) : eval numbers flags admission = false := by
+  simp [admission, eval, Number.value, pending]
+
+theorem faster_does_not_clear_failure (numbers : String → Nat) (flags : String → Bool)
+    (prior : flags "prior_failure" = true) : eval numbers flags latchFailure = true := by
+  simp [latchFailure, eval, prior]
+
+theorem accepted_current_complete_accounted (numbers : String → Nat) (flags : String → Bool)
+    (accepted : eval numbers flags admission = true) :
+    flags "matched" = true ∧ flags "complete" = true ∧ flags "cost_accounted" = true ∧
+    numbers "warm_rebuilds" = 0 ∧ numbers "unresolved" = 0 ∧
+    numbers "candidate_ns" ≤ numbers "baseline_ns" := by
+  by_cases h : numbers "baseline_ns" < numbers "candidate_ns"
+  · simp [admission, nonRegression, eval, Number.value, h] at accepted
+  · have allowed := Nat.le_of_not_gt h
+    simpa [admission, nonRegression, eval, Number.value, h, allowed] using accepted
+
+
+def failedAfter (prior : Bool) : List Bool → Bool
+  | [] => prior
+  | next :: rest => failedAfter (prior || next) rest
+
+theorem arbitrary_later_observations_preserve_failure (observations : List Bool) :
+    failedAfter true observations = true := by
+  induction observations with
+  | nil => rfl
+  | cons next rest ih => simpa [failedAfter] using ih
+
+
+def definitions : List Definition := [
+  ⟨"preparation_non_regression", ["baseline_ns", "candidate_ns"], [], nonRegression⟩,
+  ⟨"preparation_latch_failure", [], ["prior_failure", "new_failure"], latchFailure⟩,
+  ⟨"preparation_admitted", ["baseline_ns", "candidate_ns", "warm_rebuilds", "unresolved"],
+     ["matched", "complete", "cost_accounted"], admission⟩]
+
+def pythonNumber : Number → String
+  | .zero => "0"
+  | .variable name => name
+
+def python : Predicate → String
+  | .flag name => name
+  | .less left right => s!"({pythonNumber left} < {pythonNumber right})"
+  | .equal left right => s!"({pythonNumber left} == {pythonNumber right})"
+  | .both left right => s!"({python left} and {python right})"
+  | .either left right => s!"({python left} or {python right})"
+  | .negate value => s!"(not {python value})"
+
+def pythonSource : String :=
+  "# SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++
+  "# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n" ++
+  "# Generated from ExecutionPolicy.lean (PreparationPolicy); formal CI checks exact rendering.\n" ++
+  String.join (definitions.map fun d =>
+    s!"\ndef {d.name}({String.intercalate ", " (d.numbers ++ d.flags)}):\n    return {python d.body}\n")
+
+def quintSource : String :=
+  "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++
+  "// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n" ++
+  "// Generated from ExecutionPolicy.lean (PreparationPolicy); formal CI checks exact rendering.\nmodule PreparationPolicy {\n" ++
+  String.join (definitions.map fun d =>
+    let params := d.numbers.map (fun n => n ++ ": int") ++ d.flags.map (fun n => n ++ ": bool")
+    s!"  pure def {d.name}({String.intercalate ", " params}): bool = {Ascent.ExecutionPolicy.quint d.body}\n") ++ "}\n"
+end Ascent.PreparationPolicy
+
 def main (args : List String) : IO Unit := do
   match args with
   | ["scheme"] => IO.print Ascent.ExecutionPolicy.schemeSource
   | ["rust"] => IO.print Ascent.ExecutionPolicy.rustSource
   | ["quint"] => IO.print Ascent.ExecutionPolicy.quintSource
-  | _ => throw (IO.userError "expected scheme, rust or quint")
+  | ["preparation-python"] => IO.print Ascent.PreparationPolicy.pythonSource
+  | ["preparation-quint"] => IO.print Ascent.PreparationPolicy.quintSource
+  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python or preparation-quint")

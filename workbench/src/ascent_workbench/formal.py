@@ -356,6 +356,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
+                ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
+                ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),
                 ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
                 ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),
                 ("RenderCache.lean", "scheme", "core/index-publication.ss"),

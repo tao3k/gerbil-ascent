@@ -10,8 +10,12 @@ import resource
 import re
 import shutil
 import subprocess
+import sys
 import threading
 import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'workbench/src'))
+from ascent_workbench.preparation_admission import qualify
 
 COMPILERS = {'gxi', 'gsc', 'gcc', 'clang', 'clang++', 'cc1', 'cc1plus', 'rustc', 'lean', 'lake', 'cargo'}
 
@@ -93,11 +97,13 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
     thread.start()
     reference = reference_cpu()
     usage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    start_ns = time.monotonic_ns()
     start = time.monotonic()
     wall_started = start
     try:
         with log.open('w') as output:
             result = subprocess.run(command, cwd=tree, env=env, stdout=output, stderr=subprocess.STDOUT)
+        wall_ns = time.monotonic_ns() - start_ns
         wall = time.monotonic() - start
     finally:
         stop.set()
@@ -108,7 +114,7 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
             except Exception as error:
                 audit_errors.append(repr(error))
     usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
-    receipt = {'command': command, 'wall_seconds': wall, 'exit_code': result.returncode,
+    receipt = {'command': command, 'wall_seconds': wall, 'wall_nanoseconds': wall_ns, 'exit_code': result.returncode,
                'foreign_compilers': foreign, 'audit_errors': audit_errors, 'reference': reference,
                'child_usage_delta': {name: getattr(usage_after, name) - getattr(usage_before, name)
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
@@ -186,7 +192,7 @@ def main():
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
     allowed = {'build.ss', 'bindings/build-entry.ss', 't/qualification/scheme-artifact-test.ss',
-               'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml',
+               'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss',
                'docs/development/link-reuse-acceptance-20261018.org',
                't/qualification/ascent-support-study-output.ss',
@@ -194,7 +200,17 @@ def main():
                't/qualification/ascent-steensgaard-reference.ss',
                't/performance/ascent-steensgaard-performance-test.ss',
                'workbench/src/ascent_workbench/supervision.py',
-               'workbench/tests/test_supervision.py'}
+               'workbench/tests/test_supervision.py',
+               'packages/proofs/lean/ExecutionPolicy.lean',
+               'packages/proofs/quint/PreparationPolicy.qnt',
+               'packages/proofs/quint/PreparationAdmission.qnt',
+               'workbench/src/ascent_workbench/preparation_policy.py',
+               'workbench/src/ascent_workbench/preparation_admission.py',
+               'workbench/src/ascent_workbench/formal.py',
+               'workbench/src/ascent_workbench/formal_models.py',
+               'workbench/tests/test_formal.py',
+               'workbench/tests/test_preparation_admission.py',
+               't/qualification/fixtures/preparation/unresolved.json'}
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}')
     dependencies = root / '.gerbil'
@@ -269,7 +285,16 @@ def main():
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)
         # Retain logs and receipts; free generated prefixes before the next pair.
         shutil.rmtree(tree)
-    print('BUILD-COST-CONTROL-OK', flush=True)
+    ledger_path = root / 't/qualification/fixtures/preparation/unresolved.json'
+    ledger = json.loads(ledger_path.read_text())
+    receipt['regression_ledger_sha256'] = digest(ledger_path)
+    receipt['performance_admission'] = qualify(receipt['controls'], ledger)
+    (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
+    print('BUILD-COST-MEASUREMENTS-COMPLETE', flush=True)
+    if not receipt['performance_admission']['admitted']:
+        raise RuntimeError('preparation performance not admitted: ' +
+                           json.dumps(receipt['performance_admission'], sort_keys=True))
+    print('BUILD-COST-ADMISSION-OK', flush=True)
 
 
 if __name__ == '__main__':

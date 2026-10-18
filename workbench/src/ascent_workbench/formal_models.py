@@ -592,3 +592,18 @@ FAULTS['TrajectoryClueScope'] = (
     ('misattribute-counter', 'CorrectReferences', 12),
     ('inherit-old-receipt', 'ObservationAuthority', 12),
 )
+
+# Build preparation admission uses the same generated predicate as CI.
+MODEL_ORDER += ('PreparationAdmission',)
+CONFIGURATIONS['PreparationAdmission'] = {
+    'constants': 'Mutation = "none"',
+    'invariants': 'RetainedFailures NonRegression CurrentSource Complete Accounted WarmCurrent NoUnresolved',
+}
+FAULTS['PreparationAdmission'] = (
+    ('drop-history', 'RetainedFailures', 12),
+    ('ignore-regression', 'NonRegression', 12),
+    ('ignore-source', 'CurrentSource', 12),
+    ('accept-incomplete', 'Complete', 12),
+    ('ignore-work', 'Accounted', 12),
+    ('ignore-warm', 'WarmCurrent', 12),
+)

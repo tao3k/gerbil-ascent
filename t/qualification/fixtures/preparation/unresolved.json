@@ -1,0 +1,42 @@
+{
+  "schema": "ascent.preparation-regressions.v1",
+  "quantization": "Legacy JSON seconds floored to nanoseconds; less than one nanosecond per sample. Original controls remain authoritative.",
+  "records": [
+    {
+      "run": 39084120171,
+      "identities": {
+        "baseline": "ea42371b57b7c76d0298d4c374283afbeb69f644",
+        "candidate": "02fcb88b789176a001a82c99344cb64696e9f0e0"
+      },
+      "baseline_ns": [
+        74031426874,
+        94559847332
+      ],
+      "candidate_ns": [
+        124445442833,
+        112027216749
+      ],
+      "resolution": null,
+      "source_receipt_sha256": "d8b4cf10a80ab01a65494464a502dfe2f3d8e2f4d5c62af4c5b065195f033519",
+      "artifact_name": "macos-build-cost-7eae84ac8e6690403fcda8a998d6985bc0a62d4d-1"
+    },
+    {
+      "run": 39088480174,
+      "identities": {
+        "baseline": "957e0de4a7c07cbb12b7a076e0016d827d176692",
+        "candidate": "3712be21ee0d034a7ee8acfaf79634342646de3a"
+      },
+      "baseline_ns": [
+        93838011166,
+        104736663000
+      ],
+      "candidate_ns": [
+        116784516416,
+        92479742624
+      ],
+      "resolution": null,
+      "source_receipt_sha256": "229d949f488c1ff6f43ccaa0e555a750bc0c1a03ef6b6fc370ada34df406e216",
+      "artifact_name": "macos-build-cost-71fac459dd161936d9e47add88989d97752a17fe-1"
+    }
+  ]
+}

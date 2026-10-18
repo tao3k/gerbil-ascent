@@ -13,12 +13,16 @@ on:
       - workbench/src/ascent_workbench/supervision.py
       - workbench/tests/test_supervision.py
       - tools/ci/build-cost-control.py
+      - workbench/src/ascent_workbench/preparation_*.py
+      - packages/proofs/lean/ExecutionPolicy.lean
+      - packages/proofs/quint/Preparation*.qnt
+      - t/qualification/fixtures/preparation/**
       - .github/workflows/build-cost.yml
   workflow_dispatch:
     inputs:
       baseline:
         description: Baseline commit for the fixed ABBA control
-        default: 070cc8e946e58d89c8858b12b4e75cc18f42b6de
+        default: ab3d5e23fa7ed32e1f76c16c2628b7573be31f80
         required: true
 permissions:
   contents: read
@@ -53,7 +57,7 @@ jobs:
           test ! -e .gerbil/lib/gerbil-ascent
       - name: Fixed ABBA cold build and test preparation
         env:
-          BASELINE: ${{ inputs.baseline || '070cc8e946e58d89c8858b12b4e75cc18f42b6de' }}
+          BASELINE: ${{ inputs.baseline || 'ab3d5e23fa7ed32e1f76c16c2628b7573be31f80' }}
           CANDIDATE: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost"

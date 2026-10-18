@@ -231,7 +231,7 @@ jobs:
       - name: Qualify Rust workspace semantics
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo test --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- --test-threads=1
+        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- --test-threads=1
       - name: Enforce strict workspace Clippy
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
@@ -420,7 +420,7 @@ jobs:
           jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' t/fixtures/paper-inputs/polonius-reference.json > .cache/ascent/polonius-output.sha256
           sha256sum --check .cache/ascent/polonius-output.sha256
   formal:
-    needs: rust-pyo3
+    needs: repository-hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -439,6 +439,16 @@ jobs:
           just check-formal
       - name: Compare Quint and Lean outputs with the Scheme conformance corpus
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
+  python-consumers:
+    needs: rust-pyo3
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install independent Python consumer prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-cffi python3-venv
       - name: Restore the producer wheel and matching runtime resources
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -467,7 +477,7 @@ jobs:
           .cache/ascent/python-projects/bin/ascent-workbench --help
   runtime-and-oracle:
     if: ${{ always() }}
-    needs: [scheme, rust-pyo3, oracle, formal]
+    needs: [scheme, rust-pyo3, oracle, formal, python-consumers]
     runs-on: ubuntu-latest
     steps:
       - name: Require all independent qualification jobs
@@ -476,8 +486,10 @@ jobs:
           RUST_PYO3_RESULT: ${{ needs.rust-pyo3.result }}
           ORACLE_RESULT: ${{ needs.oracle.result }}
           FORMAL_RESULT: ${{ needs.formal.result }}
+          PYTHON_CONSUMERS_RESULT: ${{ needs.python-consumers.result }}
         run: |
           test "$SCHEME_RESULT" = success
           test "$RUST_PYO3_RESULT" = success
           test "$ORACLE_RESULT" = success
           test "$FORMAL_RESULT" = success
+          test "$PYTHON_CONSUMERS_RESULT" = success

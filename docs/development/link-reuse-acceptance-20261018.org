@@ -184,3 +184,93 @@ path and binary-input checks. This starts a new control series, preserving
 all earlier negative observations. No runtime source is added to the allowed
 comparison changes. No SDK, evaluator, cancellation, provenance, resource
 limit or performance threshold changes in this diagnostic follow-up.
+
+* Admission workflow gap and executable cost policy
+
+The earlier build-cost job did not check relative preparation regressions.
+It checked experiment isolation, matching inputs and currentness, then printed
+CONTROL-OK even for the historical 40.3% preparation increase. Reporting those
+conditions as complete performance acceptance was incorrect. A subsequent
+faster series cannot discharge that failure.
+
+ExecutionPolicy.lean now defines the preparation-admission predicates over
+unbounded natural-number observed costs. Theorems establish rejection of any
+strict increase, rejection of unresolved failures, current/complete/accounted
+admission, and preservation of a failure across arbitrary later observations.
+The actual Python decisions and the Quint predicates are generated from that
+same predicate AST. Formal CI regenerates and compares both files exactly.
+PreparationAdmission explores the protocol with six required counterexamples:
+dropped failure history, ignored regression, stale inputs, incomplete controls,
+missing cost observations and ignored warm rebuilds. These are admission laws;
+they neither predict wall time nor prove the host language/compiler correct.
+
+The collector now emits native integer monotonic nanoseconds. The projector
+uses both baseline and both candidate samples in the fixed ABBA order, compares
+complete phase totals without floating-point ratios, and retains failures
+across phases. It does not add a timing allowance. Existing runtime performance
+thresholds, semantic deadlines and heap limits remain unchanged. Cost coverage
+here means command wall/CPU receipts; it does not mean compiler, expander or
+allocator source-work refinement has been proved.
+
+The committed regression ledger retains Actions 39084120171 and 39088480174,
+including the original source identities and both observations per arm. Legacy
+seconds are floored to nanoseconds with less than one nanosecond error per
+sample. Original raw controls remain authoritative. A later faster group does
+not resolve either entry. Source-bound resolution certificates are not yet
+implemented; arbitrary resolution flags are rejected. Accordingly, current
+performance completion remains unqualified rather than being reported green.
+
+A replay of the real 070cc8e/eddf4f9 ABBA receipts demonstrates the difference:
+all three phase means were lower (build 19.2%, preparation 10.8%, warm 5.7%),
+yet the new admission rejects completion while the historical failures remain
+unresolved. The empty-history control admits those same observations. This is
+a check of the real receipt projection, not a newly selected timing run or a
+claim that the unchanged production code became faster.
+
+Formal CI is independent of Rust/PyO3 execution. The independent Python
+consumer checks retain their exact producer wheel and now run separately after
+that producer. The aggregate gate still requires formal, Python consumers,
+Scheme, Rust/PyO3 and all oracle shards. A Rust failure can no longer suppress
+the Lean/Quint model checks.
+
+Remaining gaps are explicit: complete compiler/expander/allocation work traces,
+source refinement of receipt collection/decoding, verified regression-resolution
+certificates, and the three-worker macOS runtime regression itself. No abstract
+model or bounded model-check result closes those source obligations. The new
+policy blocks unsupported completion claims while that work remains open.
+
+The next native-program control base is ab3d5e2. It contains the Rust
+owner-layout correction over 7341569: clues/mod.rs declares and exports the
+owner, while exchange.rs retains the implementation. Private sibling access
+remains inside this owner. The relative include resolves to the same Scheme
+DSL file. After normalizing owner visibility and that relative path, the
+implementation body is byte-for-byte unchanged. No performance effect is
+attributed to this move.
+The historical failure ledger remains unchanged by this baseline update.
+
+The independent three-worker source runs on eddf4f9 and 7341569 both timed out:
+180.301 and 180.254 seconds, respectively. They recorded 350/38 and 815/104
+completed Cases/modules. Neither is complete acceptance. Live process samples
+from the first run account for at least 338.73 CPU seconds and a sampled peak
+aggregate RSS of 2,970,480 KiB; these are lower-bound/sampled observations, not
+an I/O diagnosis or a proof of a single root cause.
+
+A separate staged diagnostic over thirty small graph inputs allocated about
+475.6 MB during public declaration construction, versus 4.9 MB during evaluation
+and 4.4 MB during independent oracle checks. Method-level probes observed 56
+Term, 21 Atom, six Rule, six Relation and one Program admission calls per
+constructed sample, for both empty and full graph inputs. Term and Atom layers
+accounted for about 6.7 MB and 5.2 MB of exclusive admission allocation in the
+full graph sample. Selected probe source files match the current implementation;
+these instrumented, staged observations are not complete-suite acceptance or
+an unbounded allocation/source-refinement proof. They identify a concrete
+construction/validation path for the remaining cost model and optimization.
+
+The owner-layout repair compiles and all 85 Rust integration tests pass locally
+with provider-protocol/artifacts and default Rayon enabled. The 12 Clue tests
+also passed separately. The ASP gate no longer reports the duplicate owner or
+implementation-in-mod.rs violations, but it still fails on the existing Clue
+API/complexity/membership diagnostics. No diagnostic severity or gate is waived.
+The workspace CI uses --no-fail-fast so that a failing library test does not
+prevent the remaining Rust test targets from running. This local integration
+result is not full Scheme, Python, formal or performance acceptance.

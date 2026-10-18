@@ -255,9 +255,10 @@ from the first run account for at least 338.73 CPU seconds and a sampled peak
 aggregate RSS of 2,970,480 KiB; these are lower-bound/sampled observations, not
 an I/O diagnosis or a proof of a single root cause.
 
-A separate staged diagnostic over thirty small graph inputs allocated about
-475.6 MB during public declaration construction, versus 4.9 MB during evaluation
-and 4.4 MB during independent oracle checks. Method-level probes observed 56
+A separate staged diagnostic over thirty small graph inputs reported about
+475.6 MB through Gambit statistics during public declaration construction,
+versus 4.9 MB during evaluation and 4.4 MB during independent oracle checks.
+These are SDK counter observations, not exact allocator event counts. Method-level probes observed 56
 Term, 21 Atom, six Rule, six Relation and one Program admission calls per
 constructed sample, for both empty and full graph inputs. Term and Atom layers
 accounted for about 6.7 MB and 5.2 MB of exclusive admission allocation in the
@@ -283,3 +284,61 @@ SDK, or resource budget. Both focused checks and the complete guarded Lean
 build pass locally (178 jobs, 51.60 seconds, zero additional helper threads).
 This repairs proof execution coverage; it does not resolve preparation costs
 or establish source refinement of the measurement collector.
+
+* Source work diagnosis and bridge target removal
+
+The original 39084120171 artifact is retained in full. Its prepare intervals
+were 74.031/94.560 seconds for the baseline and 124.445/112.027 for the
+candidate. Most of the difference is inside make: 69.976/89.458 versus
+117.757/106.025 seconds. Source inventory alone does not explain it. That
+receipt did not collect per-task CPU, allocation or faults. Its interleaved
+human-readable compiler log is not a reliable exact invocation counter.
+The historical failure remains unresolved; no later faster group clears it.
+
+There is one concrete unnecessary compiler target in that change:
+scheme-artifact-test requested bindings/build-entry, although it only needed
+the output-admission helpers. Those helpers now live in the existing artifact
+module. Their bodies are byte-for-byte unchanged, including digest rejection
+and the unsupported-SDK behavior. The CLI returns to its interpreter entry
+role, and test preparation no longer requests its compilation. The complete
+artifact Suite passes locally through GxTest with the relocated compiled
+helper. This identifies removable source work, not the full 40.3% root cause.
+
+The work-only diagnostic uses disposable-prefix observers and the same
+commands, SDK, ABBA order and process supervisor. It records every GSC
+invocation separately with actual input hashes/bytes, exit, child CPU, RSS,
+faults and block IO. The public expander import hook records ordered timing
+and allocator snapshots for actual source/interface import requests, including
+direct registry hits under the fixed SDK. These
+snapshots are process-wide and inclusive, including observer overhead;
+nested or concurrent imports must not be added as exclusive allocation.
+Instrumentation timings never enter the ordinary latency admission. Malformed
+traces fail decoding; absent import observers are explicitly marked unobserved.
+Compiler failures keep their
+original exit status; changed input bytes also fail the diagnostic compiler.
+
+PreparationWork.lean checks additive compiler-job/input work, ordered
+allocation subtraction, nested double-counting and the independence of wait
+time from reduced work. Its bridge-removal theorem is conditional on the
+observed unchanged jobs and removed phases, not a compiler source theorem.
+PreparationWork.qnt checks observation coverage/currentness and six required
+fault counterexamples. These checks do not prove the observer/decoder, SDK
+expander, C compiler or allocator correct. Their source refinement and a
+complete allocator/cost bound remain open. They are not used to certify a
+wall-time improvement.
+
+Workflow dispatch can select work-only mode and an explicit historical
+candidate. Ordinary PR runs retain the original uninstrumented wall gate and
+the independent three-worker/180-second source Suite. No timeout, heap,
+performance threshold, cancellation or provenance behavior changes.
+
+A bounded observer smoke test exposed a decreasing SDK counter: an import
+reported 151,027,128 before and 149,841,056 after. The exact ea114fc sources
+implement statistics slot 7 using ___bytes_allocated; its occupied-byte term
+includes both heap and stack pointers. It is not an independently verified
+monotonic allocation-event counter. The released interpreter reports one VM
+processor, so this observation is not evidence of accidental multi-processor
+execution. The observer retains negative deltas and rejects allocation
+qualification after the complete diagnostic group. It never clamps them to
+zero or claims the earlier staged statistics establish an allocator bound.
+No SDK or upstream source is modified.

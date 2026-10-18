@@ -27,7 +27,7 @@
                             "t/harness/artifact-admission" "t/harness/test" "t/model/response-projection"))
 (def test-library-dependencies
   '(
-    (("t/qualification/scheme-artifact-test.ss") "bindings/artifact" "bindings/build-entry")
+    (("t/qualification/scheme-artifact-test.ss") "bindings/artifact")
     (("t/performance/ascent-uf-plan-performance-test.ss")
       "t/performance/uf-plan/reference-relation-view" "t/performance/uf-plan/fixture"
       "t/performance/uf-membership/reference-relation-view" "t/performance/uf-membership/fixture"

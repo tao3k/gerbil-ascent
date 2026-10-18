@@ -607,3 +607,18 @@ FAULTS['PreparationAdmission'] = (
     ('ignore-work', 'Accounted', 12),
     ('ignore-warm', 'WarmCurrent', 12),
 )
+
+# Observation coverage is distinct from compiler/allocator source refinement.
+MODEL_ORDER += ('PreparationWork',)
+CONFIGURATIONS['PreparationWork'] = {
+    'constants': 'Mutation = "none"',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter',
+}
+FAULTS['PreparationWork'] = (
+    ('hide-job', 'JobsExact', 12),
+    ('forget-import', 'ImportsExact', 12),
+    ('sum-nested', 'AllocationNotNested', 12),
+    ('publish-partial', 'Complete', 12),
+    ('ignore-generation', 'Current', 12),
+    ('clamp-counter', 'OrderedCounter', 12),
+)

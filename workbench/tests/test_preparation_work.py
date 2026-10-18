@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+from ascent_workbench.preparation_work import summarize
+
+
+class PreparationWorkTests(unittest.TestCase):
+    def test_nested_process_allocations_are_not_added(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'prepare-imports.sexp').write_text(
+                '(import-cost 1 1 "child.ss" 2 3 100 20 40)\n'
+                '(import-cost 0 0 "parent.ss" 1 4 100 10 50)\n')
+            result = summarize(root)
+            phase = result['phases']['prepare']
+            self.assertEqual(phase['import_requests'], 2)
+            self.assertEqual(phase['direct_registry_hits'], 1)
+            self.assertEqual(phase['largest_inclusive_imports'][0]['allocator_counter_delta_bytes'], 40)
+            self.assertNotIn('total_allocated_bytes', phase)
+            self.assertFalse(result['latency_admitted'])
+            self.assertFalse(result['compiler_allocator_source_refinement'])
+            (root / 'prepare-imports.sexp').write_text('(import-cost 0 0 "gc.ss" 1 2 100 20 10)\n')
+            decreased = summarize(root)['phases']['prepare']['allocator_counter_decreases']
+            self.assertEqual(decreased[0]['allocator_counter_delta_bytes'], -10)
+            (root / 'prepare-imports.sexp').write_text('(import-cost 0 "unfinished')
+            with self.assertRaises(ValueError):
+                summarize(root)
+
+    def test_failed_compiler_keeps_exact_inputs_and_exit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / 'a.scm'
+            source.write_bytes(b'(display "test")\n')
+            output = root / 'previous.c'
+            output.write_bytes(b'old output is not compiler input')
+            real = root / 'compiler'
+            real.write_text(f'#!{sys.executable}\nimport sys\nsys.exit(7)\n')
+            real.chmod(0o755)
+            records = root / 'prepare'
+            records.mkdir()
+            env = os.environ.copy()
+            env.update(ASCENT_REAL_GSC=str(real), ASCENT_GSC_WORK_DIRECTORY=str(records))
+            process = subprocess.run([sys.executable, '-m', 'ascent_workbench.preparation_work',
+                                      '-o', str(output), str(source)], env=env)
+            self.assertEqual(process.returncode, 7)
+            record, = [json.loads(p.read_text()) for p in records.glob('*.json')]
+            self.assertEqual(record['inputs'][0]['sha256'], hashlib.sha256(source.read_bytes()).hexdigest())
+            self.assertEqual(len(record['inputs']), 1)
+            summary = summarize(root)['phases']['prepare']
+            self.assertEqual(summary['gsc_invocations'], 1)
+            self.assertEqual(summary['gsc_failed'], 1)
+            self.assertEqual(summary['gsc_input_bytes'], source.stat().st_size)
+            self.assertFalse(summary['import_observer_ran'])

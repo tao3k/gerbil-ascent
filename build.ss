@@ -5,10 +5,10 @@
 (import (only-in :std/build-script defbuild-script)
         (only-in :std/make make-clean)
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
-        (only-in "bindings/build-entry.ss" observe-compiler-outputs reuse-compiler-outputs!)
         (only-in :std/source this-source-file)
         (only-in :gerbil/runtime/loader add-load-path!)
         (only-in "bindings/artifact.ss"
+                 observe-compiler-outputs reuse-compiler-outputs!
                  source-snapshot artifact-receipt! artifact-invalidated-modules clean-compiled-resources!)
         (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!

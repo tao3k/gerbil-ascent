@@ -16,6 +16,8 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'workbench/src'))
 from ascent_workbench.preparation_admission import qualify
+from ascent_workbench.preparation_work import install as install_work_observers
+from ascent_workbench.preparation_work import summarize as summarize_work
 
 COMPILERS = {'gxi', 'gsc', 'gcc', 'clang', 'clang++', 'cc1', 'cc1plus', 'rustc', 'lean', 'lake', 'cargo'}
 
@@ -158,8 +160,12 @@ def main():
     parser.add_argument('--baseline')
     parser.add_argument('--candidate')
     parser.add_argument('--semantics-only', action='store_true')
+    parser.add_argument('--work-only', action='store_true',
+                        help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.work_only and args.semantics_only:
+        parser.error('work observations and full semantics are independent modes')
     root = Path.cwd()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -191,7 +197,7 @@ def main():
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
-    allowed = {'build.ss', 'bindings/build-entry.ss', 't/qualification/scheme-artifact-test.ss',
+    allowed = {'build.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss',
                'docs/development/link-reuse-acceptance-20261018.org',
@@ -203,14 +209,18 @@ def main():
                'workbench/tests/test_supervision.py',
                'packages/proofs/lean/ExecutionPolicy.lean',
                'packages/proofs/lean/lakefile.lean',
+               'packages/proofs/lean/PreparationWork.lean',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
+               'packages/proofs/quint/PreparationWork.qnt',
                'workbench/src/ascent_workbench/preparation_policy.py',
                'workbench/src/ascent_workbench/preparation_admission.py',
+               'workbench/src/ascent_workbench/preparation_work.py',
                'workbench/src/ascent_workbench/formal.py',
                'workbench/src/ascent_workbench/formal_models.py',
                'workbench/tests/test_formal.py',
                'workbench/tests/test_preparation_admission.py',
+               'workbench/tests/test_preparation_work.py',
                't/qualification/fixtures/preparation/unresolved.json'}
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}')
@@ -223,10 +233,15 @@ def main():
     manifest = Path(os.environ['GERBIL_PREFIX']) / 'gerbil-build-receipt.json'
     capacity = os.environ['GERBIL_BUILD_CORES']
     receipt = {'identities': identities, 'changed_paths': changed, 'order': [], 'cores': capacity,
+               'instrumented_work_only': args.work_only,
                'machine': platform.uname()._asdict(),
                'sdk_receipt': json.loads(manifest.read_text()),
                'sdk_binaries': {name: digest(Path(os.environ['GERBIL_HOME']) / 'bin' / name)
                                 for name in ['gxi', 'gsc']}, 'controls': []}
+    work_violations = []
+    if args.work_only:
+        receipt['work_observer_sha256'] = digest(
+            root / 'workbench/src/ascent_workbench/preparation_work.py')
     (output / 'inputs.json').write_text(json.dumps(receipt, indent=2) + '\n')
     # Fixed ABBA order: four fresh application prefixes; never select a fastest run.
     for index, kind in enumerate(['baseline', 'candidate', 'candidate', 'baseline']):
@@ -245,11 +260,29 @@ def main():
         env['GERBIL_PATH'] = str(tree / '.gerbil')
         for key in ['GERBIL_GSC', 'GERBIL_LOADPATH', 'ASCENT_REAL_GSC', 'ASCENT_GSC_TRACE']:
             env.pop(key, None)
+        if args.work_only:
+            observer = output / f'{name}-work'
+            env.update(install_work_observers(observer,
+                Path(os.environ['GERBIL_HOME']) / 'bin/gxi',
+                Path(os.environ['GERBIL_HOME']) / 'bin/gsc'))
+            # just's exact interpreter invocation and resource supervisor remain
+            # unchanged. Only this disposable prefix gets an observer entry.
+            shutil.copy2(observer / 'gxi', tree / '.gerbil/bin/gxi')
         phases = {}
         for phase, command in [('build', ['just', 'check-policy']),
                                ('prepare', ['just', 'prepare-test-library'])]:
+            if args.work_only:
+                phase_trace = observer / phase
+                phase_trace.mkdir()
+                env['ASCENT_GSC_WORK_DIRECTORY'] = str(phase_trace)
+                env['ASCENT_IMPORT_TRACE'] = str(observer / f'{phase}-imports.sexp')
             phases[phase] = measure(tree, command, output / f'{name}-{phase}.log', env)
         before_warm = test_outputs(tree)
+        if args.work_only:
+            phase_trace = observer / 'prepare-warm'
+            phase_trace.mkdir()
+            env['ASCENT_GSC_WORK_DIRECTORY'] = str(phase_trace)
+            env['ASCENT_IMPORT_TRACE'] = str(observer / 'prepare-warm-imports.sexp')
         phases['prepare-warm'] = measure(tree, ['just', 'prepare-test-library'],
                                          output / f'{name}-prepare-warm.log', env)
         after_warm = test_outputs(tree)
@@ -258,7 +291,12 @@ def main():
         (output / f'{name}-test-outputs.json').write_text(json.dumps(
             {'cold': before_warm, 'warm': after_warm, 'warm_changed': changed_outputs}, indent=2) + '\n')
         if kind == 'candidate' and changed_outputs:
-            raise RuntimeError(f'unchanged candidate preparation rebuilt test outputs: {changed_outputs}')
+            message = f'unchanged candidate preparation rebuilt test outputs: {changed_outputs}'
+            if not args.work_only:
+                raise RuntimeError(message)
+            # Retain the whole diagnostic ABBA group, then fail. The ordinary
+            # wall/currentness gate above still rejects immediately.
+            work_violations.append({'control': name, 'error': message})
         prepared = (output / f'{name}-prepare.log').read_text()
         if 'BUILD-TEST-LIBRARY production-rebuilt=0' not in prepared:
             raise RuntimeError('production recompiled during preparation')
@@ -281,12 +319,28 @@ def main():
                      for paths in [list(support.rglob('*' + suffix))]}
         receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases,
                                     'test_artifacts': inventory, 'warm_changed_outputs': changed_outputs})
+        if args.work_only:
+            work = summarize_work(observer)
+            (observer / 'summary.json').write_text(json.dumps(work, indent=2) + '\n')
+            receipt['controls'][-1]['work'] = work
+            for phase, observations in work['phases'].items():
+                if not observations['import_observer_ran'] or observations['allocator_counter_decreases']:
+                    work_violations.append({'control': name, 'phase': phase,
+                                            'error': 'missing import observations or decreasing allocator counter'})
         (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)
         # Retain logs and receipts; free generated prefixes before the next pair.
         shutil.rmtree(tree)
     ledger_path = root / 't/qualification/fixtures/preparation/unresolved.json'
+    if args.work_only:
+        # This route must not overwrite or qualify uninstrumented wall controls.
+        receipt['work_violations'] = work_violations
+        (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
+        print('BUILD-WORK-OBSERVATIONS-COMPLETE; timings not admitted', flush=True)
+        if work_violations:
+            raise RuntimeError('work observations retain currentness failures: ' + json.dumps(work_violations))
+        return
     ledger = json.loads(ledger_path.read_text())
     receipt['regression_ledger_sha256'] = digest(ledger_path)
     receipt['performance_admission'] = qualify(receipt['controls'], ledger)

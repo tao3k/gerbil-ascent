@@ -5,8 +5,14 @@
 (import :gerbil/expander
         (only-in :gerbil/runtime/loader add-load-path! __find-library-module)
         :std/crypto/digest :std/encoding/hex :std/encoding/json :std/error
-        (only-in :std/io call-with-file-reader))
-(export source-snapshot artifact-receipt! artifact-source-current?
+        (only-in :std/io call-with-file-reader)
+        (only-in :std/list/list-builder with-list-builder))
+(cond-expand
+  (darwin
+   (import (only-in :gerbil/compiler/base current-or-open-compile-executor
+                    compile-executor-output-produced? add-compile-output-job!))))
+(export observe-compiler-outputs reuse-compiler-outputs!
+        source-snapshot artifact-receipt! artifact-source-current?
         artifact-invalidated-modules artifact-changed-modules
         record-compiled-resources! clean-compiled-resources! compiled-resource-error?
         artifact-file-sha256 artifact-directory-reader)
@@ -207,3 +213,41 @@
       (call-with-output-file pending
         (lambda (port) (display (json->string receipt) port) (newline port)))
       (rename-file pending output #t))))
+
+;; Observe only outputs registered by the SDK executor. The returned closure
+;; is consumed after make drains that executor, never while producers run.
+(cond-expand
+  (darwin
+   (def (observe-compiler-outputs)
+     (let (produced? (compile-executor-output-produced? (current-or-open-compile-executor)))
+       (lambda (root)
+         (with-list-builder (collect)
+           (def (visit path)
+             (when (file-exists? path)
+               (if (eq? (file-info-type (file-info path #f)) 'directory)
+                 (for-each (lambda (name) (visit (path-expand name path)))
+                           (directory-files path))
+                 (when (produced? path)
+                   (collect (cons path (artifact-file-sha256 path)))))))
+           (visit (path-expand root))))))
+
+   ;; Each admission is an SDK output job. Consumers wait for the digest check;
+   ;; a changed or missing output fails the executor before its dependent link.
+   ;; Observations belong only to this build call, not a persistent cache.
+   (def (reuse-compiler-outputs! outputs)
+     (for-each
+      (lambda (output)
+        (let ((path (car output)) (digest (cdr output)))
+          (add-compile-output-job! path
+            (lambda ()
+              (unless (equal? digest (artifact-file-sha256 path))
+                (error "compiler output changed between build phases" path)))
+            `(reuse-compiler-output ,path))))
+      outputs)))
+  (else
+   ;; The Linux Release has no producer registry. Preserve its original path;
+   ;; never admit filesystem contents without the SDK producer contract.
+   (def (observe-compiler-outputs) (lambda (_) []))
+   (def (reuse-compiler-outputs! outputs)
+     (unless (null? outputs)
+       (error "SDK does not support compiler output admission" outputs)))))

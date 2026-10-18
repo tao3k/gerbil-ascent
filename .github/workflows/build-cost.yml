@@ -6,6 +6,9 @@ on:
     paths:
       - build.ss
       - bindings/build-entry.ss
+      - bindings/artifact.ss
+      - t/harness/library-spec.ss
+      - t/qualification/scheme-artifact-test.ss
       - t/qualification/ascent-support-study-output.ss
       - t/qualification/ascent-steensgaard-test.ss
       - t/qualification/ascent-steensgaard-reference.ss
@@ -15,6 +18,7 @@ on:
       - tools/ci/build-cost-control.py
       - workbench/src/ascent_workbench/preparation_*.py
       - packages/proofs/lean/ExecutionPolicy.lean
+      - packages/proofs/lean/Preparation*.lean
       - packages/proofs/quint/Preparation*.qnt
       - t/qualification/fixtures/preparation/**
       - .github/workflows/build-cost.yml
@@ -24,6 +28,14 @@ on:
         description: Baseline commit for the fixed ABBA control
         default: ab3d5e23fa7ed32e1f76c16c2628b7573be31f80
         required: true
+      candidate:
+        description: Optional candidate commit for a historical work diagnosis
+        default: ""
+        required: false
+      work_only:
+        description: Instrument work instead of qualifying wall time
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -58,9 +70,12 @@ jobs:
       - name: Fixed ABBA cold build and test preparation
         env:
           BASELINE: ${{ inputs.baseline || 'ab3d5e23fa7ed32e1f76c16c2628b7573be31f80' }}
-          CANDIDATE: ${{ github.event.pull_request.head.sha || github.sha }}
+          CANDIDATE: ${{ inputs.candidate || github.event.pull_request.head.sha || github.sha }}
+          WORK_ONLY: ${{ inputs.work_only || false }}
         run: |
-          python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost"
+          work_args=()
+          if [[ "$WORK_ONLY" == "true" ]]; then work_args=(--work-only); fi
+          python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost" "${work_args[@]}"
       - name: Preserve every control and admission record
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

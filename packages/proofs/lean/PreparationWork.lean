@@ -1,0 +1,66 @@
+-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import Std
+
+/-! Work observations, not a hardware latency model. GSC invocations consume
+concrete hashed inputs. Import allocator snapshots are process-wide/inclusive:
+they cannot be added as if nested imports owned disjoint allocation intervals.
+The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
+namespace Ascent.PreparationWork
+
+structure Work where
+  jobs : Nat := 0
+  inputBytes : Nat := 0
+  deriving DecidableEq, Repr
+
+def Work.plus (a b : Work) : Work :=
+  ⟨a.jobs + b.jobs, a.inputBytes + b.inputBytes⟩
+
+def total : List Work → Work
+  | [] => ⟨0, 0⟩
+  | x :: xs => x.plus (total xs)
+
+theorem total_append (xs ys : List Work) :
+    total (xs ++ ys) = (total xs).plus (total ys) := by
+  induction xs with
+  | nil => simp [total, Work.plus]
+  | cons x xs ih => simp [total, ih, Work.plus, Nat.add_assoc]
+
+-- The repair removes one independent module's two GSC phases, retaining
+-- every other job. This is a conditional work theorem, not a claim that
+-- an arbitrary bridge has two phases or that its latency is constant.
+theorem removed_bridge_work (before after : List Work) (phase0 phase1 : Nat) :
+    (total (before ++ [⟨1, phase0⟩, ⟨1, phase1⟩] ++ after)).jobs =
+      (total (before ++ after)).jobs + 2 ∧
+    (total (before ++ [⟨1, phase0⟩, ⟨1, phase1⟩] ++ after)).inputBytes =
+      (total (before ++ after)).inputBytes + phase0 + phase1 := by
+  simp [total_append, total, Work.plus]
+  omega
+
+-- Snapshot subtraction is valid for ordered observations. Nested inclusive
+-- measurements are not inputs to this telescoping total.
+theorem ordered_allocation_snapshots (start middle finish : Nat)
+    (first : start ≤ middle) (second : middle ≤ finish) :
+    (middle - start) + (finish - middle) = finish - start := by omega
+
+theorem nested_inclusive_double_counts (outer inner : Nat) (positive : 0 < inner) :
+    outer < outer + inner := by omega
+
+-- Nat subtraction would silently turn this invalid interval into zero.
+-- The observed counter must pass ordering before it can enter an allocation sum.
+theorem decreasing_counter_rejected (start finish : Nat) (decreased : finish < start) :
+    decide (start ≤ finish) = false := by simp; omega
+
+-- CPU/work bounds do not establish wall bounds: queue/IO/descheduling time
+-- is an independent nonnegative component and is not silently set to zero.
+theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
+    (enough : saved ≤ work) (delay : saved < wait) :
+    work < work - saved + wait := by omega
+
+#print axioms total_append
+#print axioms removed_bridge_work
+#print axioms ordered_allocation_snapshots
+#print axioms nested_inclusive_double_counts
+#print axioms decreasing_counter_rejected
+#print axioms work_reduction_does_not_bound_wait
+end Ascent.PreparationWork

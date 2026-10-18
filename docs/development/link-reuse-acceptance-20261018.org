@@ -991,3 +991,7 @@ local concurrent compiler activity prevents latency qualification. Full
 semantic, cross-configuration reuse and current-head CI receipts follow
 separately. SDK compiler internals and allocator correctness remain outside
 these policy proofs.
+
+CI executes the complete =ascent-scheme= test inventory with twelve harness
+threads, including the VM lifecycle and original interface tests; compiling
+that inventory with =--no-run= is no longer used as semantic acceptance.

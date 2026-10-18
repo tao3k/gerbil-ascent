@@ -268,16 +268,11 @@ jobs:
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo check --locked --manifest-path rust/Cargo.toml -p ascent-python --no-default-features --features scheme-runtime,rayon
-      - name: Compile the separate Scheme test inventory without VM execution
+      - name: Qualify complete Scheme binding semantics and archive controls
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo test --locked --manifest-path rust/Cargo.toml -p ascent-scheme --no-run
-      - name: Qualify archive observations and detached cross-configuration publication
-        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
-        env:
-          GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo test --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test archive_build
+        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme
       - name: Preserve actual archive work and generated compiler inputs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

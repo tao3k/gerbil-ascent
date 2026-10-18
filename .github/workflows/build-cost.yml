@@ -6,13 +6,17 @@ on:
     paths:
       - build.ss
       - bindings/build-entry.ss
+      - t/qualification/ascent-support-study-output.ss
+      - t/qualification/ascent-steensgaard-test.ss
+      - t/qualification/ascent-steensgaard-reference.ss
+      - t/performance/ascent-steensgaard-performance-test.ss
       - tools/ci/build-cost-control.py
       - .github/workflows/build-cost.yml
   workflow_dispatch:
     inputs:
       baseline:
         description: Baseline commit for the fixed ABBA control
-        default: ea42371b57b7c76d0298d4c374283afbeb69f644
+        default: 957e0de4a7c07cbb12b7a076e0016d827d176692
         required: true
 permissions:
   contents: read
@@ -47,7 +51,7 @@ jobs:
           test ! -e .gerbil/lib/gerbil-ascent
       - name: Fixed ABBA cold build and test preparation
         env:
-          BASELINE: ${{ inputs.baseline || 'ea42371b57b7c76d0298d4c374283afbeb69f644' }}
+          BASELINE: ${{ inputs.baseline || '957e0de4a7c07cbb12b7a076e0016d827d176692' }}
           CANDIDATE: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost"

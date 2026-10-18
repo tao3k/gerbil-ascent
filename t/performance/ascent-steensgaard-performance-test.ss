@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!))
-(import (only-in :gerbil-ascent/t/qualification/ascent-steensgaard-test steensgaard-truth)
+(import (only-in :gerbil-ascent/t/qualification/ascent-steensgaard-reference steensgaard-truth)
         (only-in :gerbil-ascent/t/performance/library assert-native-library!))
 (export ascent-steensgaard-performance-test)
 

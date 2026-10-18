@@ -4,7 +4,7 @@
 
 ;;; Test-only inert candidate transport over the qualified public corpus.
 ;;; Reference and model calls share the qualification's data and native API.
-(import (only-in "./scheme-library-contract-test"
+(import (only-in "./scheme-library-contract-fixture"
                  candidate weights support-phases contract-snapshot
                  study-cases study-repair-seed study-filter-seed)
         (only-in :gerbil-ascent/candidate/program candidate-variable? candidate-language-description)

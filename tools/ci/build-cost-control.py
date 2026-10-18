@@ -7,6 +7,7 @@ import os
 import platform
 from pathlib import Path
 import resource
+import re
 import shutil
 import subprocess
 import threading
@@ -34,22 +35,29 @@ def reference_cpu():
 def measure(tree, command, log, env):
     stop = threading.Event()
     foreign = []
+    audit_errors = []
+
+    def audit_once():
+        rows = []
+        for line in subprocess.check_output(['ps', '-axo', 'pid=,ppid=,comm='], text=True).splitlines():
+            parts = line.strip().split(None, 2)
+            if len(parts) == 3:
+                rows.append((int(parts[0]), int(parts[1]), parts[2]))
+        owned = {os.getpid()}
+        for _ in range(16):
+            owned.update(pid for pid, parent, _ in rows if parent in owned)
+        for pid, _, name in rows:
+            base = Path(name).name
+            if pid not in owned and (base in COMPILERS or base.startswith('gcc-')):
+                foreign.append({'pid': pid, 'command': name})
 
     def audit():
-        while not stop.is_set():
-            rows = []
-            for line in subprocess.check_output(['ps', '-axo', 'pid=,ppid=,comm='], text=True).splitlines():
-                parts = line.strip().split(None, 2)
-                if len(parts) == 3:
-                    rows.append((int(parts[0]), int(parts[1]), parts[2]))
-            owned = {os.getpid()}
-            for _ in range(16):
-                owned.update(pid for pid, parent, _ in rows if parent in owned)
-            for pid, _, name in rows:
-                base = Path(name).name
-                if pid not in owned and (base in COMPILERS or base.startswith('gcc-')):
-                    foreign.append({'pid': pid, 'command': name})
-            stop.wait(1)
+        try:
+            while not stop.is_set():
+                audit_once()
+                stop.wait(1)
+        except Exception as error:
+            audit_errors.append(repr(error))
 
     thread = threading.Thread(target=audit, daemon=True)
     thread.start()
@@ -65,13 +73,20 @@ def measure(tree, command, log, env):
         thread.join()
     usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = {'command': command, 'wall_seconds': wall, 'exit_code': result.returncode,
-               'foreign_compilers': foreign, 'reference': reference,
+               'foreign_compilers': foreign, 'audit_errors': audit_errors, 'reference': reference,
                'child_usage_delta': {name: getattr(usage_after, name) - getattr(usage_before, name)
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
-                                                  'ru_nvcsw', 'ru_nivcsw']}}
+                                                  'ru_nvcsw', 'ru_nivcsw', 'ru_inblock', 'ru_oublock']}}
+    text = log.read_text()
+    receipt['builder_phases'] = {name: float(value) for name, value in re.findall(
+        r'BUILD-TEST-LIBRARY-PHASE ([a-z-]+) wall-seconds=([.0-9]+)', text)}
+    total = re.search(r'BUILD-TEST-LIBRARY-OK wall-seconds=([.0-9]+)', text)
+    if total:
+        receipt['builder_seconds'] = float(total[1])
+        receipt['outside_builder_seconds'] = wall - float(total[1])
     log.with_suffix('.json').write_text(json.dumps(receipt, indent=2) + '\n')
-    if result.returncode or foreign:
-        raise RuntimeError(f'control rejected: {log}; exit={result.returncode}, foreign={len(foreign)}')
+    if result.returncode or foreign or audit_errors:
+        raise RuntimeError(f'control rejected: {log}; exit={result.returncode}, foreign={len(foreign)}, audit_errors={audit_errors}')
     return receipt
 
 
@@ -81,6 +96,14 @@ def digest(path):
         for chunk in iter(lambda: source.read(1024 * 1024), b''):
             result.update(chunk)
     return result.hexdigest()
+
+
+def test_outputs(tree):
+    library = tree / '.gerbil/lib'
+    paths = list((library / 'gerbil-ascent/t').rglob('*'))
+    paths += list((library / 'static').glob('gerbil-ascent__t__*'))
+    return {str(p.relative_to(library)): {'sha256': digest(p), 'mtime_ns': p.stat().st_mtime_ns}
+            for p in paths if p.is_file() and p.suffix in {'.ssi', '.scm', '.o1', '.o'}}
 
 
 def main():
@@ -98,7 +121,11 @@ def main():
     allowed = {'build.ss', 'bindings/build-entry.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml',
                't/harness/library-spec.ss',
-               'docs/development/link-reuse-acceptance-20261018.org'}
+               'docs/development/link-reuse-acceptance-20261018.org',
+               't/qualification/ascent-support-study-output.ss',
+               't/qualification/ascent-steensgaard-test.ss',
+               't/qualification/ascent-steensgaard-reference.ss',
+               't/performance/ascent-steensgaard-performance-test.ss'}
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}')
     dependencies = root / '.gerbil'
@@ -136,6 +163,16 @@ def main():
         for phase, command in [('build', ['just', 'check-policy']),
                                ('prepare', ['just', 'prepare-test-library'])]:
             phases[phase] = measure(tree, command, output / f'{name}-{phase}.log', env)
+        before_warm = test_outputs(tree)
+        phases['prepare-warm'] = measure(tree, ['just', 'prepare-test-library'],
+                                         output / f'{name}-prepare-warm.log', env)
+        after_warm = test_outputs(tree)
+        changed_outputs = sorted(path for path in before_warm.keys() | after_warm.keys()
+                                 if before_warm.get(path) != after_warm.get(path))
+        (output / f'{name}-test-outputs.json').write_text(json.dumps(
+            {'cold': before_warm, 'warm': after_warm, 'warm_changed': changed_outputs}, indent=2) + '\n')
+        if kind == 'candidate' and changed_outputs:
+            raise RuntimeError(f'unchanged candidate preparation rebuilt test outputs: {changed_outputs}')
         prepared = (output / f'{name}-prepare.log').read_text()
         if 'BUILD-TEST-LIBRARY production-rebuilt=0' not in prepared:
             raise RuntimeError('production recompiled during preparation')
@@ -157,12 +194,31 @@ def main():
                      for suffix in ['.ssi', '.scm', '.o1']
                      for paths in [list(support.rglob('*' + suffix))]}
         receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases,
-                                    'test_artifacts': inventory})
+                                    'test_artifacts': inventory, 'warm_changed_outputs': changed_outputs})
         (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)
         # Retain logs and receipts; free generated prefixes before the next pair.
-        shutil.rmtree(tree)
+        if index != 2:
+            shutil.rmtree(tree)
+    # Run semantics only after every timing interval, on the retained candidate.
+    tree = output / '2-candidate'
+    env = os.environ.copy()
+    env['GERBIL_PATH'] = str(tree / '.gerbil')
+    env['GERBIL_LOADPATH'] = str(tree / '.gerbil/lib')
+    env['ASCENT_GXTEST_TIMEOUT'] = '180s'
+    env.pop('GERBIL_BUILD_CORES', None)
+    env.pop('ASCENT_TEST_LIBRARY', None)
+    try:
+        receipt['macos_semantics'] = measure(
+            tree, ['timeout', '180s', 'just', 'test-file', 't/qualification', '2G'],
+            output / 'candidate-semantics.log', env)
+        (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
+    finally:
+        batches = tree / '.cache/ascent/test-modules'
+        if batches.exists():
+            shutil.copytree(batches, output / 'semantic-batches')
+    shutil.rmtree(tree)
     print('BUILD-COST-CONTROL-OK', flush=True)
 
 

@@ -77,3 +77,37 @@ are not new admission thresholds. They distinguish added compiler work from
 CPU speed or waiting changes while preserving the original raw observations.
 The subsequent fixed ABBA control uses the same application data, build commands,
 SDK and dependency-seed policy. No fastest run is selected.
+
+* Preparation dependency currentness investigation
+
+Two consecutive unchanged preparations on the released SDK each rebuilt
+ascent-steensgaard-performance-test and ascent-support-study-output. Their
+imports reached ascent-steensgaard-test and scheme-library-contract-test,
+respectively. These source Suites are intentionally absent from the compiled
+support inventory. The SDK library resolver reports "cannot find library
+module" for both dependencies; std/make treats a missing dependency timestamp
+as requiring a rebuild. This is an application dependency error, not evidence
+of a compiler defect.
+
+The support-study consumer now imports the existing contract fixture directly.
+The independent Steensgaard reference function is moved unchanged to a support
+module shared by the semantic Suite and the performance Suite. Every Case and
+assertion remains intact. A subsequent unchanged preparation emits no compile
+jobs. This closes that repeatable invalidation defect; it does not retrospectively
+explain the entire first 40.3% cold-preparation regression.
+
+The next fixed ABBA control compares against 957e0de, retains the first cold
+preparation, and separately measures unchanged warm preparation. Hashes and
+nanosecond modification times of all test SSI, Scheme, bundle and static-object
+outputs are retained before and after the warm command. A candidate warm rebuild
+fails acceptance. Builder phases, time outside the builder, child CPU, faults,
+context switches and OS block-I/O counters remain raw diagnostics. Darwin zero
+block counters do not demonstrate absence of I/O. Full macOS source semantics
+run after all timing controls, with the existing 180-second deadline and 2G
+child heaps; their runtime does not contaminate the paired timing intervals.
+
+The historical first control lacks per-compiler CPU and I/O traces. Its unique
+cause cannot be recovered by treating a subsequent faster group as a repair.
+Both historical control groups remain evidence, including the negative result.
+No SDK source, production evaluator, resource limit or performance threshold
+changes in this dependency repair.

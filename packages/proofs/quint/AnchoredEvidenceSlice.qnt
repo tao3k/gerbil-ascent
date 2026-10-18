@@ -10,6 +10,7 @@ module AnchoredEvidenceSlice {
     applicable: Set[int], exposed: Set[int], scope: Set[int], prior: Set[int],
     items: Set[int], added: Set[int], removed: Set[int], retained: Set[int],
     current: bool, receipts: bool, conditions: bool, declared: bool, evaluated: bool,
+    sameWitness: bool,
     sufficient: bool, full: bool, acknowledged: bool, queried: bool, hit: bool, visible: Set[int],
     references: Set[int], expandable: Set[int], complete: bool, absent: bool,
     status: str, selectedAction: bool, explorationOpen: bool
@@ -19,6 +20,7 @@ module AnchoredEvidenceSlice {
     applicable: Set(0, 1), exposed: Set(), scope: Set(), prior: Set(),
     items: Set(), added: Set(), removed: Set(), retained: Set(),
     current: true, receipts: true, conditions: true, declared: true, evaluated: true,
+    sameWitness: true,
     sufficient: true, full: true, acknowledged: false, queried: false, hit: false, visible: Set(),
     references: Set(), expandable: Set(), complete: false, absent: false,
     status: "unqueried", selectedAction: false, explorationOpen: true
@@ -32,17 +34,19 @@ module AnchoredEvidenceSlice {
     q' = {...q, exposed: exposed, applicable: applicable, prior: prior}}
   }
   action Gap = {
-    nondet which = Set("source", "receipt", "condition", "declaration", "evaluation", "capacity", "detail").oneOf()
+    nondet which = Set("source", "receipt", "condition", "declaration", "evaluation", "capacity", "detail", "witness").oneOf()
     all {not(q.queried),
     q' = if (which == "source") {...q, current: false}
       else if (which == "receipt") {...q, receipts: false}
       else if (which == "condition") {...q, conditions: false}
       else if (which == "declaration") {...q, declared: false}
       else if (which == "evaluation") {...q, evaluated: false}
+      else if (which == "witness") {...q, sameWitness: false}
       else if (which == "detail") {...q, full: false}
       else {...q, sufficient: false}}
   }
-  def valid(s: State): bool = s.current and s.receipts and s.conditions and s.declared and s.evaluated
+  // Conjunctive anchors are witnessed by one ID/digest, not a claim-level union.
+  def valid(s: State): bool = s.current and s.receipts and s.conditions and s.declared and s.evaluated and s.sameWitness
   def ready(s: State): bool = valid(s) and s.sufficient and seeds(s.exposed, s.applicable).size() > 0
   def outcome(s: State): str =
     if (not(s.current)) "source-gap"
@@ -50,6 +54,7 @@ module AnchoredEvidenceSlice {
     else if (not(s.conditions)) "condition-gap"
     else if (not(s.declared)) "declaration-gap"
     else if (not(s.evaluated)) "evaluation-gap"
+    else if (not(s.sameWitness)) "conjunction-gap"
     else if (s.exposed.size() == 0) "anchor-gap"
     else if (seeds(s.exposed, Set(0, 1)).size() == 0) "association-gap"
     else if (seeds(s.exposed, s.applicable).size() == 0) "applicability-gap"
@@ -63,6 +68,8 @@ module AnchoredEvidenceSlice {
     all {not(q.queried), q' = {...q, queried: true, scope: scoped, items: result,
       hit: if (Mutation == "drop-first-hit") false
         else if (Mutation == "invalid-declaration-hit") ready({...q, declared: true})
+        else if (Mutation == "mix-witnesses") ready({...q, sameWitness: true})
+        else if (Mutation == "index-only-hit") ready({...q, receipts: true})
         else if (Mutation == "invent-hit") true else ready(q),
       visible: shown,
       references: if (Mutation == "wrong-chain") Set(2) else if (valid(q)) scoped else Set(),

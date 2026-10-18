@@ -5,6 +5,72 @@
 #+DATE: 2026-10-04
 #+STATUS: implemented subset specified; research obligations remain explicit
 
+* Evidence-driven progressive discovery
+
+Evidence precedes action projection. A research query returns a bounded,
+traceable evidence window: supporting and opposing observations, applicability
+conditions, unresolved premises and expandable references. It does not choose
+the Agent's next action, rank hypotheses or close the exploration space.
+
+The Agent interprets its task and expresses anchors as Scheme/Datalog relations.
+ASCENT derives their associations and scope in the existing Session and Clue
+exchange. Natural-language similarity is not a hidden Python inference rule.
+Downstream DSL owns domain facts, associations and capability prerequisites;
+Python transports declarations, source identities and checkpoint hints. Do not
+introduce a second navigator, workflow engine or domain-specific Python router.
+
+First-query hit is conditional: registered evidence, a valid association,
+applicable conditions, current source/receipt identities, completed evaluation
+and enough capacity for an honest body or reference must all hold. Failure of a
+premise is an explicit gap, not evidence of absence. Conjunctive conditions must
+join the same observation ID and digest, not unrelated rows sharing a claim.
+
+Scope and display capacity are windows, never search or hypothesis limits.
+Checkpoint acknowledgement covers only completely displayed units; continuation
+reuses those units without suppressing new evidence or arbitrary expansion.
+Invalidated hints cause explicit replay, not loss of durable evidence. Historical
+failure remains conditional on its recorded source and premises, not a permanent
+ban on a research direction. Declared readiness never grants execution authority.
+
+These are Library design obligations. QNT/Lean properties, native implementation
+checks and observable Agent use are separate evidence. None alone establishes
+research efficiency, source repair or downstream native correctness. See
+[[file:features/trajectory-exploration.org][Trajectory exploration]] for the existing interface.
+
+** Evidence-driven registration
+
+Registration is a declarative extension boundary, not a second semantic engine.
+The existing downstream registry binds sources and constructors. Scheme declares
+facts, associations, applicability and optional capability prerequisites; the
+existing Session derives their public projection. Adding a domain record or
+relation should not require editing Python branches or a per-domain command.
+
+Discovery, support, applicability and execution authorization are distinct.
+Loading a declaration establishes none of the latter three by itself. A file
+name, directory scan, Agent submission or capability registration is not an
+attestation. Derived eligibility must retain its source/witness identities and
+missing premises. A replacement invalidates dependent projections and read hints,
+not historical evidence. Withdrawal must remove current support while preserving
+the historical record. Read-only projection must never execute registration hooks.
+
+An optional registered association is replaceable by caller-written predicates.
+Its convenience does not define a closed vocabulary, a mandatory sequence or a
+global route blacklist. Reuse the existing registry and admission mechanisms;
+do not create a parallel plugin manager, DSL interpreter or workflow scheduler.
+
+An Agent adapter may accept the existing Clue request as inert Scheme data,
+decoded by the Library's bounded datum reader. This is a transport representation,
+not another query grammar: registered declarations or caller-written Scheme DSL
+still determine the relations. Do not retain a parallel flag-driven query API or
+compatibility dispatcher. Request decoding must not evaluate forms, execute
+registration hooks or silently accept duplicate/unknown fields.
+
+Adapters may supply verified source-reference metadata to a declaratively named
+input relation, avoiding a second hand-maintained copy of the same references.
+This is byte/identity transport, not inference. Scheme owns the association from
+that source to observations; registration alone cannot supply an absent witness,
+promote hypotheses or establish native admission.
+
 * Acceptance rule
 
 Advance one usable native lifecycle across admission, solve, source updates,

@@ -12,5 +12,6 @@ mod macros;
 mod reader;
 mod recorded;
 mod structural;
+pub(crate) use reader::{Datum, read as read_datum};
 pub use evidence::EvidenceProgram;
 pub use explanation::EvidenceExplanation;

@@ -2,6 +2,35 @@
    the implementation's fidelity to this reference semantics. -/
 namespace Ascent.AnchoredEvidenceSlice
 
+/- Optional factor-conjunction policy. Witness includes observation ID and digest.
+   This is not a restriction on alternative caller-written association rules. -/
+def conjunctiveMatch {Factor Witness : Type} (requested : Factor → Prop)
+    (factor : Witness → Factor → Prop) (w : Witness) :=
+  (∃ f, requested f) ∧ ∀ f, requested f → factor w f
+
+theorem conjunctive_first_query_hit {Factor Witness : Type}
+    (requested : Factor → Prop) (factor : Witness → Factor → Prop) (w : Witness)
+    (nonempty : ∃ f, requested f) (sameWitness : ∀ f, requested f → factor w f) :
+    conjunctiveMatch requested factor w := ⟨nonempty, sameWitness⟩
+
+theorem conjunction_cannot_mix_witnesses {Factor Witness : Type}
+    (requested : Factor → Prop) (factor : Witness → Factor → Prop)
+    (noCommonWitness : ∀ w, ∃ f, requested f ∧ ¬ factor w f) :
+    ¬ ∃ w, conjunctiveMatch requested factor w := by
+  rintro ⟨w, _, allFactors⟩
+  obtain ⟨f, needed, missing⟩ := noCommonWitness w
+  exact missing (allFactors f needed)
+
+theorem empty_anchors_do_not_select_everything {Factor Witness : Type}
+    (factor : Witness → Factor → Prop) (w : Witness) :
+    ¬ conjunctiveMatch (fun _ : Factor => False) factor w := by
+  rintro ⟨⟨_, impossible⟩, _⟩
+  exact impossible
+
+#print axioms conjunctive_first_query_hit
+#print axioms conjunction_cannot_mix_witnesses
+#print axioms empty_anchors_do_not_select_everything
+
 def anchor {Factor Chain : Type} (exposed : Factor → Prop)
     (association : Factor → Chain → Prop) (applicable : Chain → Prop) (c : Chain) :=
   applicable c ∧ ∃ f, exposed f ∧ association f c
@@ -26,6 +55,16 @@ def presented {Factor Chain Witness : Type} (v : Validity) (exposed : Factor →
     (association : Factor → Chain → Prop) (applicable : Chain → Prop)
     (belongs : Chain → Witness → Prop) (w : Witness) :=
   v.ready ∧ slice exposed association applicable belongs w
+
+theorem declaration_without_receipt_cannot_present {Factor Chain Witness : Type}
+    (v : Validity) (exposed : Factor → Prop) (association : Factor → Chain → Prop)
+    (applicable : Chain → Prop) (belongs : Chain → Witness → Prop) (w : Witness)
+    (_registered : v.declarationValid) (missing : ¬ v.receiptBound) :
+    ¬ presented v exposed association applicable belongs w := by
+  intro h
+  exact missing h.1.2.1
+
+#print axioms declaration_without_receipt_cannot_present
 
 theorem first_query_returns_associated_witness {Factor Chain Witness : Type}
     (v : Validity) (exposed : Factor → Prop) (association : Factor → Chain → Prop)

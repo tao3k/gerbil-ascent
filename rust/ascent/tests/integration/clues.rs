@@ -1,4 +1,33 @@
-use gerbil_ascent::{Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr};
+use gerbil_ascent::{
+    Cancellation, ClueExchange, Data, Engine, Limits, clue_sexpr, read_clue_request,
+};
+
+#[test]
+fn scheme_request_reuses_the_bounded_reader_and_never_evaluates_forms() {
+    let expected = Data::object([
+        ("bindings", list(&[&["arbitrary-factor", "new-hypothesis"]])),
+        ("expand", Data::List(vec!["unknown-claim".into()])),
+        ("checkpoint", "clue-read:opaque".into()),
+    ]);
+    assert_eq!(read_clue_request(&clue_sexpr(&expected)).unwrap(), expected);
+    assert_eq!(
+        read_clue_request("((questions (\"a\" \"b\")))").unwrap(),
+        Data::object([("questions", Data::List(vec!["a".into(), "b".into()]))])
+    );
+    for rejected in [
+        "((checkpoint \"a\") (checkpoint \"b\"))",
+        "((unknownField \"value\"))",
+        "((bindings (system \"command\")))",
+        "(begin (display \"not data\"))",
+        "((bindings ())) ((expand ()))",
+        "((questions 2))",
+        "((bindings ((\"name\"))))",
+        "((displayBytes 0))",
+        "((constructor \"ignored\"))",
+    ] {
+        assert!(read_clue_request(rejected).is_err(), "{rejected}");
+    }
+}
 
 const PROJECTION: &str = r#"
 (define-evidence (project)
@@ -199,6 +228,129 @@ const ANCHORED_SELECTOR: &str = r#"
  ((association_gap N V) <-- (binding N V) (not (has_association N V)))
  ((applicability_gap C) <-- (associated C) (not (applicable C))))
 "#;
+
+#[test]
+fn factor_conjunction_keeps_witness_identity_and_explains_incompatible_anchors() {
+    let engine = Engine::new(1).unwrap();
+    let owner = anchored_exchange(&engine, "current");
+    let selector = r#"(define-evidence (query)
+      (sources clue factor binding)
+      (outputs question matched unknown_binding conjunction_gap)
+      (include clue-selection-schema)
+      (relation question (claim))
+      (relation matched (claim id digest role))
+      (relation missing (id digest))
+      (relation witnessed (id digest name value))
+      (relation has_binding (name))
+      (relation has_match (name value))
+      (relation matched_binding (name value))
+      (relation unknown_binding (name value))
+      (relation conjunction_gap (name value))
+      ((has_binding N) <-- (binding N _))
+      ((witnessed I D N V) <-- (factor I D N V) (binding N V))
+      ((missing I D) <-- (clue I D _ _ _ _) (binding N V)
+        (not (witnessed I D N V)))
+      ((matched C I D R) <-- (has_binding _) (clue I D C _ R _)
+        (not (missing I D)))
+      ((question C) <-- (matched C _ _ _))
+      ((has_match N V) <-- (clue I D _ _ _ _) (factor I D N V) (binding N V))
+      ((unknown_binding N V) <-- (binding N V) (not (has_match N V)))
+      ((matched_binding N V) <-- (matched _ I D _) (factor I D N V) (binding N V))
+      ((conjunction_gap N V) <-- (has_match N V) (not (matched_binding N V))))"#;
+    let limits = Limits::default();
+    let cancel = Cancellation::default();
+    let matched = owner
+        .select(
+            &[selector],
+            "query",
+            &list(&[&["mechanism", "publication"], &["condition", "current"]]),
+            &limits,
+            &cancel,
+        )
+        .unwrap();
+    assert_eq!(matched.field("question").unwrap(), &list(&[&["header"]]));
+    assert_eq!(
+        matched.field("matched").unwrap(),
+        &list(&[&["header", "yes", "a", "observation"]])
+    );
+    assert_eq!(matched.field("unknown_binding").unwrap(), &list(&[]));
+    assert_eq!(matched.field("conjunction_gap").unwrap(), &list(&[]));
+    // An unknown value is a gap, not evidence of absence.
+    let split = owner
+        .select(
+            &[selector],
+            "query",
+            &list(&[
+                &["mechanism", "publication"],
+                &["condition", "current"],
+                &["condition", "missing"],
+            ]),
+            &limits,
+            &cancel,
+        )
+        .unwrap();
+    assert_eq!(split.field("question").unwrap(), &list(&[]));
+    assert_eq!(
+        split.field("unknown_binding").unwrap(),
+        &list(&[&["condition", "missing"]])
+    );
+    assert_eq!(
+        split
+            .field("conjunction_gap")
+            .unwrap()
+            .list()
+            .unwrap()
+            .len(),
+        2
+    );
+    let input = Data::object([
+        (
+            "clue",
+            list(&[
+                &["a", "x", "same", "support", "observation", "ra"],
+                &["b", "y", "same", "counter", "observation", "rb"],
+            ]),
+        ),
+        (
+            "factor",
+            list(&[
+                &["a", "x", "mechanism", "publication"],
+                &["b", "y", "condition", "current"],
+            ]),
+        ),
+        ("link", list(&[])),
+    ]);
+    let split_owner = ClueExchange::new(
+        &engine,
+        &[PROJECTION],
+        "project",
+        &input,
+        &Data::object([("ra", "x".into()), ("rb", "y".into())]),
+        &limits,
+        &cancel,
+    )
+    .unwrap();
+    let split = split_owner
+        .select(
+            &[selector],
+            "query",
+            &list(&[&["mechanism", "publication"], &["condition", "current"]]),
+            &limits,
+            &cancel,
+        )
+        .unwrap();
+    assert_eq!(split.field("question").unwrap(), &list(&[]));
+    assert_eq!(split.field("unknown_binding").unwrap(), &list(&[]));
+    assert_eq!(
+        split
+            .field("conjunction_gap")
+            .unwrap()
+            .list()
+            .unwrap()
+            .len(),
+        2
+    );
+}
 
 fn anchored_exchange(engine: &Engine, condition: &str) -> ClueExchange {
     let input = Data::object([

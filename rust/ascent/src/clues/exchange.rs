@@ -429,6 +429,92 @@ impl ClueExchange {
     }
 }
 
+/// Decode the existing Clue request fields using the Library's bounded datum
+/// reader. This transports data, never evaluates a Scheme form or a query rule.
+/// # Errors
+/// Rejects malformed, duplicate, unknown or executable request data.
+pub fn read_clue_request(source: &str) -> Result<Data> {
+    use crate::source::{Datum, read_datum};
+    fn value(datum: Datum) -> Result<Data> {
+        match datum {
+            Datum::Text(text) => Ok(Data::Text(text)),
+            Datum::Atom(text) => match text.as_str() {
+                "#t" => Ok(Data::Bool(true)),
+                "#f" => Ok(Data::Bool(false)),
+                _ => text
+                    .parse()
+                    .map(Data::Integer)
+                    .map_err(|_| invalid("inert Clue request value required")),
+            },
+            Datum::List(items) => items
+                .into_iter()
+                .map(value)
+                .collect::<Result<Vec<_>>>()
+                .map(Data::List),
+            Datum::Vector(_) => Err(invalid("Clue request lists required")),
+        }
+    }
+    let Datum::List(fields) = read_datum(source)? else {
+        return Err(invalid("Clue request association list required"));
+    };
+    let mut request = std::collections::BTreeMap::new();
+    for field in fields {
+        let Datum::List(mut pair) = field else {
+            return Err(invalid("Clue request key/value pair required"));
+        };
+        if pair.len() != 2 {
+            return Err(invalid("Clue request key/value pair required"));
+        }
+        let data = value(pair.pop().unwrap())?;
+        let (Datum::Atom(key) | Datum::Text(key)) = pair.pop().unwrap() else {
+            return Err(invalid("Clue request field name required"));
+        };
+        if !matches!(
+            key.as_str(),
+            "bindings"
+                | "questions"
+                | "expand"
+                | "checkpoint"
+                | "displayBytes"
+                | "selector"
+                | "constructor"
+        ) {
+            return Err(invalid("unknown Clue request field"));
+        }
+        match key.as_str() {
+            "bindings" => {
+                for row in data.list()? {
+                    let pair = row.list()?;
+                    if pair.len() != 2 {
+                        return Err(invalid("binding name/value pair required"));
+                    }
+                    pair[0].text()?;
+                    pair[1].text()?;
+                }
+            }
+            "questions" | "expand" => {
+                for item in data.list()? {
+                    item.text()?;
+                }
+            }
+            "checkpoint" | "selector" | "constructor" => {
+                data.text()?;
+            }
+            "displayBytes" if !matches!(&data, Data::Integer(n) if n > &0.into()) => {
+                return Err(invalid("positive displayBytes required"));
+            }
+            _ => {}
+        }
+        if request.insert(key, data).is_some() {
+            return Err(invalid("duplicate Clue request field"));
+        }
+    }
+    if request.contains_key("constructor") && !request.contains_key("selector") {
+        return Err(invalid("constructor requires a caller-written selector"));
+    }
+    Ok(Data::Map(request))
+}
+
 /// Inert Scheme data rendering for Agent-facing exchange; no executable forms.
 #[must_use]
 pub fn clue_sexpr(value: &Data) -> String {

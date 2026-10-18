@@ -12,6 +12,11 @@ pub(super) struct ClueExchange(Mutex<Exchange>);
 
 #[pymethods]
 impl ClueExchange {
+    #[staticmethod]
+    fn parse_request(source: &str, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let request = gerbil_ascent::read_clue_request(source).map_err(error)?;
+        packets::write(py, &request)
+    }
     fn close(&self) -> PyResult<()> {
         self.0
             .lock()

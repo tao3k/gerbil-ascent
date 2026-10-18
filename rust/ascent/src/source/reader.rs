@@ -10,7 +10,7 @@ pub(crate) enum Datum {
     List(Vec<Self>),
     Vector(Vec<Self>),
 }
-pub(super) fn read(text: &str) -> Result<Datum> {
+pub(crate) fn read(text: &str) -> Result<Datum> {
     if text.len() > 65_536 {
         return Err(invalid("rule source byte bound"));
     }

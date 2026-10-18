@@ -558,6 +558,8 @@ CONFIGURATIONS['AnchoredEvidenceSlice'] = {
     'constants': 'Mutation = "none"', 'invariants': 'Safety',
 }
 FAULTS['AnchoredEvidenceSlice'] = (
+    ('index-only-hit', 'SoundHit', 12),
+    ('mix-witnesses', 'SoundHit', 12),
     ('invalid-declaration-hit', 'SoundHit', 12),
     ('ack-collapsed', 'Acknowledged', 12),
     ('drop-first-hit', 'FirstHit', 12),

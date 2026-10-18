@@ -71,6 +71,8 @@ class FormalTests(unittest.TestCase):
         self.assertTrue(all(o.expected == 12 for name, o in progressive.items() if name != "correct"))
         anchored = {o.name: o for o in plans["AnchoredEvidenceSlice"]}
         self.assertEqual({name: o.property for name, o in anchored.items() if name != "correct"}, {
+            "index-only-hit": "SoundHit",
+            "mix-witnesses": "SoundHit",
             "invalid-declaration-hit": "SoundHit",
             "ack-collapsed": "Acknowledged",
             "drop-first-hit": "FirstHit", "invent-hit": "SoundHit", "dump-graph": "Local",

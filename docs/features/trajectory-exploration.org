@@ -8,6 +8,27 @@ workloads may supply evidence, but the upstream protocol knows none of their
 specialized terms. Its output is an advisory observation packet, not an action
 selection, authorization, or proof-admission decision.
 
+The [[file:../scheme-design-framework.org::*Evidence-driven progressive discovery][design framework]] makes evidence-before-action and evidence-driven
+registration core architectural obligations. A registered association removes
+adapter wiring from ordinary queries, not caller ownership of the query.
+
+=ClueExchange.parse_request= decodes inert Scheme association-list data using
+the existing bounded Library reader. It transports the same =bindings=,
+=questions=, =expand=, =checkpoint= and =displayBytes= request fields; optional
+=selector= and =constructor= carry caller-written DSL. It does not evaluate
+request forms or infer relevance. Unknown/duplicate fields and executable forms
+reject. This allows adapters to remove query flags instead of maintaining two
+public request protocols. A checkpoint is still an explicit read hint, not
+execution permission or a mandatory research direction.
+
+For conjunctive association, downstream rules must match every supplied binding
+on one observation ID/digest, not combine different witnesses of a claim. Empty
+anchors need not select everything. Distinguish individually unknown factors
+from available factors with no common witness. Neither gap is evidence of
+absence or a ban on exploration. Selected claim families retain both polarities
+and boundary references. This policy remains downstream DSL; no mandatory
+Library association or natural-language matching engine is introduced.
+
 The [[file:../trajectory-supervision-feedback.md][supervision feedback review]] records the DSL-first extension boundary and
 how observed Agent failures should be assigned to the owning layer.
 

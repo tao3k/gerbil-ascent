@@ -94,10 +94,16 @@
       ;; source again. Gerbil owns interface loading and dependency expansion.
       ;; Prepare through Gerbil once, then use ASP's resident-context projection.
       (add-load-path! (current-directory))
-      (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
-      (let (closure
-            (call-with-asp-gerbil-scheme-prepared-source-graph
-             (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))
+      (displayln "BUILD-TEST-LIBRARY-PHASE projection-input-admission wall-seconds="
+                 (build-elapsed phase))
+      (let (loading (current-jiffy))
+        (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
+        (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
+                   (build-elapsed loading)))
+      (let* ((projection-started (current-jiffy))
+             (closure
+              (call-with-asp-gerbil-scheme-prepared-source-graph
+               (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots)))))
         (set! modules
           (delete-duplicates/hash
             (append modules
@@ -105,7 +111,9 @@
                 (filter (lambda (source)
                           (and (not (member source tests))
                                (preparation-retained-source? source source-suites? source-consumers))) closure)))
-            from-end?: #t)))
+            from-end?: #t))
+        (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
+                   (build-elapsed projection-started)))
       (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
                  (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]

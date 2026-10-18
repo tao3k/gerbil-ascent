@@ -21,9 +21,14 @@ import time
 IMPORT_HOOK = r'''(import :gerbil/expander)
 (let ((original (current-expander-module-import))
       (registry (eval 'gx#__module-registry))
+      (seen (make-hash-table-eq))
       (depth (make-parameter 0))
       (lock (make-mutex))
       (port (open-output-file [path: (getenv "ASCENT_IMPORT_TRACE") append: #t])))
+  ;; Registry aliases (path/id/library) share context identity. Prime the
+  ;; index before observing; only contexts completed after installation count.
+  (hash-for-each (lambda (_ context)
+                   (when (module-context? context) (hash-put! seen context #t))) registry)
   (current-expander-module-import
    (lambda args
     (let* ((level (depth)) (started (current-jiffy))
@@ -45,7 +50,23 @@ IMPORT_HOOK = r'''(import :gerbil/expander)
                    (ns 'gc-user-time) (ns 'gc-sys-time) (ns 'gc-real-time)
                    (inexact->exact (f64vector-ref allocation 0))
                    (inexact->exact (f64vector-ref allocation 1))) port)
-      (newline port) (force-output port)
+      (newline port)
+      (when (zero? level)
+        (let ((result (stat 'result)))
+          ;; A returned context can be reused after native path normalization
+          ;; even when the raw request was absent from the registry.
+          (write (list 'import-result-work-v1
+                       (if (and (module-context? result) (hash-get seen result)) 1 0)) port)
+          (newline port)
+          (hash-for-each
+           (lambda (_ context)
+             (when (and (module-context? context) (not (hash-get seen context)))
+               (hash-put! seen context #t)
+               (write (list 'module-context-work-v1
+                            (let (path (module-context-path context))
+                              (if (string? path) path (object->string path)))) port)
+               (newline port))) registry)))
+      (force-output port)
       (mutex-unlock! lock)
       (stat 'result)))))'''
 
@@ -172,9 +193,19 @@ def summarize(directory):
             group['input_bytes'] += sum(item['bytes'] for item in record['inputs'])
             group['inclusive_cpu_seconds'] += record['user_seconds'] + record['system_seconds']
         imports = []
+        completed_contexts = []
+        context_results = []
         trace = directory / f'{phase}-imports.sexp'
         if trace.exists():
             for line in trace.read_text().splitlines():
+                context = re.fullmatch(r'\(module-context-work-v1 ("(?:[^"\\]|\\.)*")\)', line)
+                if context:
+                    completed_contexts.append(json.loads(context[1]))
+                    continue
+                result = re.fullmatch(r'\(import-result-work-v1 ([01])\)', line)
+                if result:
+                    context_results.append(result[1] == '1')
+                    continue
                 match = pattern.fullmatch(line)
                 if not match:
                     raise ValueError('incomplete or unsupported import work event')
@@ -194,6 +225,9 @@ def summarize(directory):
                                 'raw_counter_negative': raw_start is not None and min(int(raw_start), int(raw_end)) < 0,
                                 'cpu_ns': int(user) + int(system),
                                 'gc_cpu_ns': int(gcuser) + int(gcsys), 'gc_wall_ns': int(gcwall)})
+        if (completed_contexts and not context_results) or (context_results and
+                len(context_results) != sum(r['depth'] == 0 for r in imports)):
+            raise ValueError('incomplete top-level context observations')
         phases[phase] = {
             'gsc_invocations': len(gsc),
             'compiler_stages': stages,
@@ -225,6 +259,14 @@ def summarize(directory):
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
+            'context_observer_ran': bool(context_results),
+            'top_level_context_reuses': sum(context_results),
+            'completed_module_contexts': completed_contexts,
+            'completed_source_contexts': sum(p.endswith('.ss') for p in completed_contexts),
+            'completed_interface_contexts': sum(p.endswith('.ssi') for p in completed_contexts),
+            'cumulative_allocation_bytes': None,
+            'cumulative_allocation_observed': False,
+            'context_scope': 'new registered context identities at successful top-level import boundaries; aliases deduplicated; failed or unregistered expansions and pre-installation work excluded; not per-macro expansion counts',
             'raw_counter_decreases': [r for r in imports if r['raw_counter_decreased']],
             'negative_raw_counters': [r for r in imports if r['raw_counter_negative']],
             'negative_sdk_allocation_estimates': [r for r in imports if r['sdk_allocated_bytes'] < 0],

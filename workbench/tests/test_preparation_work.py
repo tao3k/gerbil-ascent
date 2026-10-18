@@ -5,11 +5,12 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import install, summarize
+from ascent_workbench.preparation_work import IMPORT_HOOK, install, summarize
 
 
 class PreparationWorkTests(unittest.TestCase):
@@ -200,3 +201,62 @@ class PreparationWorkTests(unittest.TestCase):
                     path.write_text(json.dumps(dict(record, **{key: bad})))
                     result = summarize(root)['phases']['prepare']
                     self.assertFalse(result['observations_complete'])
+
+
+    def test_completed_contexts_are_distinct_from_import_requests_and_allocations(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            trace = root / 'prepare-imports.sexp'
+            trace.write_text(
+                '(import-work-v3 1 1 "nested.ssi" 2 3 100 10 0 1 0 0 0 0 0 10)\n'
+                '(import-work-v3 0 0 "alias" 1 4 100 20 0 2 0 0 0 0 0 20)\n'
+                '(import-result-work-v1 1)\n'
+                '(module-context-work-v1 "completed.ss")\n'
+                '(module-context-work-v1 "completed.ssi")\n')
+            phase = summarize(root)['phases']['prepare']
+            self.assertEqual(phase['import_requests'], 2)
+            self.assertEqual(phase['direct_registry_hits'], 1)
+            self.assertEqual(phase['top_level_context_reuses'], 1)
+            self.assertEqual(phase['completed_source_contexts'], 1)
+            self.assertEqual(phase['completed_interface_contexts'], 1)
+            self.assertIsNone(phase['cumulative_allocation_bytes'])
+            self.assertFalse(phase['cumulative_allocation_observed'])
+            with trace.open('a') as output:
+                output.write('(import-result-work-v1 1)\n')
+            with self.assertRaisesRegex(ValueError, 'top-level context'):
+                summarize(root)
+
+    def test_context_only_or_truncated_context_trace_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            trace = root / 'prepare-imports.sexp'
+            for invalid in ('(module-context-work-v1 "orphan.ss")\n',
+                            '(module-context-work-v1 "unfinished'):
+                trace.write_text(invalid)
+                with self.assertRaises(ValueError):
+                    summarize(root)
+
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_sdk_alias_reuse_and_reload_use_context_identity(self):
+        with tempfile.TemporaryDirectory(prefix='ascent-context-') as folder:
+            root = Path(folder).resolve()
+            module = root / 'observed.ss'
+            module.write_text('(export value)\n(def value 1)\n')
+            observer = root / 'observer.ss'
+            observer.write_text(IMPORT_HOOK)
+            expression = (
+                '(import :gerbil/expander) '
+                f'(import-module {json.dumps(str(module))} #f #f) '
+                f'(import-module {json.dumps(str(root) + "/./observed.ss")} #f #f) '
+                f'(import-module {json.dumps(str(module))} #t #f)')
+            process = subprocess.run(
+                ['gxi', '-:max-heap=1G,debug=q', '-e',
+                 f'(load {json.dumps(str(observer))})', '-e', expression],
+                env=dict(os.environ, ASCENT_IMPORT_TRACE=str(root / 'prepare-imports.sexp')),
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            phase = summarize(root)['phases']['prepare']
+            self.assertEqual(phase['completed_source_contexts'], 2)
+            self.assertEqual(phase['completed_module_contexts'], [str(module), str(module)])
+            self.assertEqual(phase['top_level_context_reuses'], 2)

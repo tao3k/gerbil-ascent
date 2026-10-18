@@ -429,8 +429,41 @@ theorem negative_raw_counter_rejected (start finish corrected : Int)
     (negative : start < 0) : allocationObservationValid start finish corrected = false := by
   simp [allocationObservationValid]; omega
 
+-- The SDK inserts path and id aliases only after core-expand-module-begin
+-- and code assignment. The observer indexes context identity, not registry keys.
+-- This list model specifies that boundary; the SDK hash-table implementation,
+-- failed expansions, and work before observer installation remain premises.
+def completedContexts (before after : List Nat) : List Nat :=
+  (after.filter (fun identity => !before.contains identity)).eraseDups
+
+theorem completed_context_not_preexisting (before after : List Nat) (identity : Nat)
+    (present : identity ∈ completedContexts before after) : identity ∉ before := by
+  have filtered := List.mem_filter.mp (List.mem_eraseDups.mp present)
+  simpa using filtered.2
+
+theorem resident_context_scan_has_no_new_work (contexts : List Nat) :
+    completedContexts contexts contexts = [] := by
+  have empty : contexts.filter (fun identity => !contexts.contains identity) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro identity present
+    simp [present]
+  rw [completedContexts, empty]
+  rfl
+
+-- Even a nonnegative occupancy interval is not a cumulative allocation stream.
+-- Cumulative events are a separate capability, never inferred from its sign.
+inductive AllocationMetric where
+  | occupancyEstimate | cumulativeEvents
+  deriving DecidableEq
+
+def cumulativeAdmitted (metric : AllocationMetric) : Bool :=
+  metric == .cumulativeEvents
+
+theorem occupancy_never_admits_cumulative :
+    cumulativeAdmitted .occupancyEstimate = false := by rfl
+
 -- CPU/work bounds do not establish wall bounds: queue/IO/descheduling time
--- is an independent nonnegative component and is not silently set to zero.
+-- is an independent component.
 theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
     (enough : saved ≤ work) (delay : saved < wait) :
     work < work - saved + wait := by omega
@@ -475,4 +508,8 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms negative_estimate_iff
 #print axioms raw_counter_drop_rejected
 #print axioms negative_raw_counter_rejected
+#print axioms completed_context_not_preexisting
+#print axioms resident_context_scan_has_no_new_work
+#print axioms occupancy_never_admits_cumulative
+
 end Ascent.PreparationWork

@@ -1313,3 +1313,83 @@ controls and rejects outputs-only restoration and stale-source restoration.
 This closes neither the complete native dependency graph nor the compiler,
 allocator or host decoder source. Cold build variance remains separate from
 the avoidable work caused by restoring mismatched timestamp generations.
+
+* Dependency projection: resident graph versus source loading (2026-10-19)
+
+This change diagnoses the remaining preparation cost. It does not claim a
+reduction of the historical roughly 36-second CI projection interval. The
+existing Release, dependency roots, compilation policy, source Suites, and
+native scheduler remain unchanged. The aggregate dependency-projection marker
+is retained. Three child markers distinguish input admission, source-context
+loading, and resident-context projection plus carrier selection. These child
+markers are subdivisions; do not add them to their inclusive parent.
+
+A bounded local probe imported all 173 qualification entry sources through the
+released SDK and called ASP's existing prepared-native-import-closure API.
+It performed no compilation. Loading took 19.345088 seconds, resident projection
+0.117609 seconds, and importing the same entry roots again in that VM took
+0.015637 seconds. The projected closure contained 560 package-local sources.
+These are attribution observations on this host, not matched CI speedups or
+semantic acceptance. Source loading includes native reading, macro expansion,
+interface acquisition, and required macro evaluation; it is not pure expansion.
+
+A separate instrumented probe retained the locally installed cached support
+carriers as roots: 420 supports plus 173 Suites, 593 total. Loading took
+22.630236 seconds, resident projection 0.151302 seconds, and resident root reuse
+0.865201 seconds. It observed 8452 import requests, 3820 source import requests,
+4060 raw-key registry hits, 828 top-level returned-context reuses, and 934 newly
+registered context identities (752 source and 182 interface contexts). This
+local support inventory differs from the earlier CI inventory. It is not a
+paired latency comparison. Observer overhead and retention also preclude using
+these timings as an optimization result.
+
+** Native source correspondence and its boundary
+
+The pinned Gerbil expander/module.ss core-import-module import-source path
+reads the module, acquires its prelude, creates a module context, completes
+core-expand-module-begin, quotes and assigns code, then registers the context
+under its normalized path and module id. Library lookup can add another alias.
+The observer snapshots distinct module-context identities after successful
+outermost imports and primes its identity index before installation. Thus path,
+id and library aliases do not inflate completion counts. A newly registered
+string-path context records a completed module expansion at this boundary;
+it does not count individual macro invocations, failed expansions, or work
+before observer installation. Nested and prelude contexts discovered through
+native recursion are included when they reach this registry boundary.
+
+The returned-context identity is checked before the snapshot update. This
+records native normalized-path reuse even if the raw request key missed.
+A real SDK probe imports a temporary source, imports its /./ path alias, then
+explicitly reloads it. The alias reuses its identity; reloading records another
+identity with the same path. The source probe is now an executable test when
+the released SDK is available. The decoder rejects incomplete outermost
+observations and truncated context records. Old traces retain their explicit
+absence of context observations rather than inventing expansion counts.
+
+The SDK occupancy-based allocation counter remains unsuitable as a cumulative
+allocation stream even when every interval is nonnegative. Summaries now expose
+cumulative_allocation_observed=false and cumulative_allocation_bytes=null.
+No positive interval, cache hit or reduced RSS fills that gap. Lean checks
+identity filtering and empty resident scans, and distinguishes occupancy from
+cumulative event metrics. Quint retains all previous controls and adds an
+occupancy-as-cumulative counterexample. These statements do not prove the
+native hash implementation or the full observer decoder equivalent to Lean.
+
+** Unclosed optimization and proof obligations
+
+The measured expensive operation is acquiring native contexts, not the final
+resident DAG traversal. Removing cached support carriers, replacing source
+Suite discovery with installed interface parsing, or persisting a projected
+graph without complete macro/prelude/dependency invalidation is not justified
+by these measurements. No such shortcut is enabled. SDK allocator event
+telemetry, per-expansion exclusive costs, complete observer/SDK source
+refinement, cross-process context reuse with sound invalidation, and the
+historical 19.41 percent causal attribution remain open. Green acceptance
+cannot discharge these obligations.
+
+Local failure receipts are retained separately: an initial fixture assertion
+compared /var with the SDK-normalized /private/var path; the corrected path
+identity check passes without rerunning the measured import. Initial Lean
+proof errors were repaired under the same Guard budget. A broad Python test
+invocation used an environment without ascent._core and failed; it is not a
+full Python acceptance receipt. The exact-head wheel consumer CI is required.

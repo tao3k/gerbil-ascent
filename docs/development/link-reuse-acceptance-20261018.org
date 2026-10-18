@@ -57,3 +57,23 @@ The Linux Release lacks the producer registry API; it admits no outputs and
 retains its original build path. The same Cases check this fail-closed fallback.
 The remaining seven dependency recompilations need a separate SDK producer
 contract before they can be reused safely through this interface.
+
+
+* First hosted control and diagnostic extension
+
+The first fixed ABBA control on the three-core macOS runner completed without
+observed foreign compilers. Cold build command walls were 167.465, 187.492,
+209.626 and 234.933 seconds. Preparation walls were 74.031, 124.445, 112.027
+and 94.560 seconds. These are retained negative performance evidence: a 1.3%
+mean cold reduction does not establish a stable speedup, and the candidate
+preparation mean is 40.3% higher. Every preparation compiled the same 124
+support modules from the same 259-entry declaration, with production-rebuilt=0.
+The make phase, rather than inventory construction, accounts for the increase.
+
+A diagnostic extension records child process CPU, faults and context switches,
+plus a fixed 2 GiB streaming SHA-256 CPU calibration before each timed phase.
+It also retains support-artifact file counts and byte totals. These observations
+are not new admission thresholds. They distinguish added compiler work from
+CPU speed or waiting changes while preserving the original raw observations.
+The subsequent fixed ABBA control uses the same application data, build commands,
+SDK and dependency-seed policy. No fastest run is selected.

@@ -6,6 +6,7 @@ import json
 import os
 import platform
 from pathlib import Path
+import resource
 import shutil
 import subprocess
 import threading
@@ -16,6 +17,18 @@ COMPILERS = {'gxi', 'gsc', 'gcc', 'clang', 'clang++', 'cc1', 'cc1plus', 'rustc',
 
 def checked(*args, **kwargs):
     return subprocess.run(args, check=True, **kwargs)
+
+
+def reference_cpu():
+    # Fixed streaming input, outside the timed build/preparation interval.
+    block = bytes(1024 * 1024)
+    digest = hashlib.sha256()
+    wall, cpu = time.monotonic(), time.process_time()
+    for _ in range(2048):
+        digest.update(block)
+    return {'bytes': len(block) * 2048, 'sha256': digest.hexdigest(),
+            'wall_seconds': time.monotonic() - wall,
+            'cpu_seconds': time.process_time() - cpu}
 
 
 def measure(tree, command, log, env):
@@ -40,6 +53,8 @@ def measure(tree, command, log, env):
 
     thread = threading.Thread(target=audit, daemon=True)
     thread.start()
+    reference = reference_cpu()
+    usage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
     start = time.monotonic()
     try:
         with log.open('w') as output:
@@ -48,8 +63,12 @@ def measure(tree, command, log, env):
     finally:
         stop.set()
         thread.join()
+    usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = {'command': command, 'wall_seconds': wall, 'exit_code': result.returncode,
-               'foreign_compilers': foreign}
+               'foreign_compilers': foreign, 'reference': reference,
+               'child_usage_delta': {name: getattr(usage_after, name) - getattr(usage_before, name)
+                                     for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
+                                                  'ru_nvcsw', 'ru_nivcsw']}}
     log.with_suffix('.json').write_text(json.dumps(receipt, indent=2) + '\n')
     if result.returncode or foreign:
         raise RuntimeError(f'control rejected: {log}; exit={result.returncode}, foreign={len(foreign)}')
@@ -133,7 +152,12 @@ def main():
         receipt['program'] = program
         (output / f'{name}-library.json').write_text(json.dumps(binding, indent=2) + '\n')
         receipt['order'].append(name)
-        receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases})
+        support = tree / '.gerbil/lib/gerbil-ascent/t'
+        inventory = {suffix: {'files': len(paths), 'bytes': sum(p.stat().st_size for p in paths)}
+                     for suffix in ['.ssi', '.scm', '.o1']
+                     for paths in [list(support.rglob('*' + suffix))]}
+        receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases,
+                                    'test_artifacts': inventory})
         (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)

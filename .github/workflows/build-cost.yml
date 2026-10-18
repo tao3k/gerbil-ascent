@@ -30,7 +30,7 @@ jobs:
       - name: Install released SDK prerequisites
         run: |
           brew update
-          brew install gcc just openssl@3 coreutils pkg-config
+          brew install gcc just openssl@3 zlib sqlite coreutils pkg-config
           command -v gcc-16
           echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
       - name: Install unchanged immutable SDK

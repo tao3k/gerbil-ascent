@@ -51,6 +51,9 @@ result. All controls are preserved; there is no fastest-run selection.
 
 The complete macOS semantic and exact pushed-commit CI results, together with
 the hosted control receipts, are recorded in PR #1 after execution. Compiler
-output re-admission is not a new production source-refinement proof. The
-remaining seven dependency recompilations need a separate SDK producer
+output re-admission is not a new production source-refinement proof.
+
+The Linux Release lacks the producer registry API; it admits no outputs and
+retains its original build path. The same Cases check this fail-closed fallback.
+The remaining seven dependency recompilations need a separate SDK producer
 contract before they can be reused safely through this interface.

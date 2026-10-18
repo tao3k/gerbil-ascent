@@ -13,6 +13,27 @@ from ascent_workbench.preparation_work import install, summarize
 
 
 class PreparationWorkTests(unittest.TestCase):
+    def test_env_shebang_enters_sdk_through_import_observer(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sdk = root / 'sdk'
+            sdk.mkdir()
+            real = sdk / 'gxi'
+            real.write_text(f'#!{sys.executable}\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n')
+            real.chmod(0o755)
+            (sdk / 'gambuild-C').touch()
+            observer = root / 'observer'
+            env = dict(os.environ, **install(observer, real, sdk / 'gsc'))
+            script = root / 'build.ss'
+            script.write_text('#!/usr/bin/env gxi\n')
+            script.chmod(0o755)
+            process = subprocess.run([str(script), 'compile'], env=env,
+                                     check=True, capture_output=True, text=True)
+            arguments = json.loads(process.stdout)
+            self.assertEqual(arguments[0], '-e')
+            self.assertIn('current-expander-module-import', arguments[1])
+            self.assertEqual(arguments[2:], [str(script), 'compile'])
+
     def test_sdk_helper_keeps_original_sibling_directory_and_exit(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

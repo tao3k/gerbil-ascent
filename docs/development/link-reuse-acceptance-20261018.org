@@ -399,3 +399,45 @@ reader preserves signed estimates and rejects allocation qualification when
 negative; it does not clamp, take absolute values or discard failed samples.
 GC and CPU intervals remain separately available for diagnosis. The complete
 module compile still records three GSC calls and one SDK helper successfully.
+
+** Complete work-group observations and entry-point correction
+
+The helper-corrected diagnostic groups 39096423111 (historical pair) and
+39096425255 (current pair) complete all four controls. Their wall times are
+instrumented observations, not latency acceptance. Historical preparation
+starts 257 GSC processes in every control; the candidate has six additional
+import requests (5906 versus 5900). Current preparation starts 259 GSC
+processes in every control and has three fewer candidate import requests
+(5913 versus 5916). Current warm preparation starts zero GSC processes and
+changes no compiled outputs in all four controls. The historical warm route
+still starts four GSC processes and changes eight outputs; this negative
+historical evidence is retained.
+
+For the current preparation pair, all 259 input paths match, 258 input sizes
+match, and the remaining generated input is four bytes smaller. SHA equality
+alone cannot isolate semantic differences: even the two baseline controls
+have only 128 equal generated-input hashes although all sizes match. The
+historical pair likewise has identical path sets, with 248 of 257 sizes equal.
+These observations reject an explanation based on a large added batch of
+GSC jobs. They do not prove equal expansion work, equal native instructions,
+or the cause of the original 40.3 percent wall-time failure.
+
+The current baseline preparation GSC CPU totals are 236.161 and 176.890
+seconds; candidate totals are 235.397 and 222.008 seconds. The baseline
+itself therefore varies substantially for matching source paths and sizes.
+No CPU normalization is applied to the original wall gate, and no later
+faster run discharges the original regression obligation.
+
+These diagnostic groups also reveal a coverage defect: the package builder
+executes build.ss through its env-gxi shebang, outside the explicit package
+prefix interpreter command. Its build-phase import trace is absent. The
+work-only installer now prepends its interpreter directory to PATH as well
+as supplying the compiler adapter. It leaves the SDK gerbil executable and
+native compiler commands intact. The shebang path has its own executable
+regression check. A real released-SDK gerbil build of a fresh package exits
+zero, records 402 import events and two GSC processes through that path. The
+first smoke invocation omitted the release activation GAMBOPT and failed;
+the corrected invocation uses the existing relocation options, without SDK
+changes. Absence of build import coverage still rejects the older groups. This correction changes diagnostic coverage, not production build
+behavior or acceptance thresholds. Full compiler/expander/allocator source
+refinement and causal repair of the original regression remain open.

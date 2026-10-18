@@ -166,6 +166,9 @@ def install(directory, real_gxi, real_gsc):
     for path in (gsc, gxi, helper):
         path.chmod(0o755)
     return {'GERBIL_GSC': str(gsc), 'ASCENT_REAL_GSC': str(real_gsc),
+            # Package builders execute build.ss through /usr/bin/env gxi;
+            # observing only explicit package-prefix gxi calls misses them.
+            'PATH': str(directory) + os.pathsep + os.environ.get('PATH', os.defpath),
             'ASCENT_GSC_WORK_DIRECTORY': str(directory / 'gsc-records'),
             'ASCENT_IMPORT_TRACE': str(directory / 'imports.sexp')}
 

@@ -8,6 +8,9 @@ workloads may supply evidence, but the upstream protocol knows none of their
 specialized terms. Its output is an advisory observation packet, not an action
 selection, authorization, or proof-admission decision.
 
+The [[file:../trajectory-supervision-feedback.md][supervision feedback review]] records the DSL-first extension boundary and
+how observed Agent failures should be assigned to the owning layer.
+
 The purpose is to make retained work available before another expensive
 attempt, leaving more time and context for new hypotheses. An agent may still
 repeat an action intentionally. The protocol must never infer hidden reasoning

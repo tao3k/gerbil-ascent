@@ -63,6 +63,86 @@ fn exchange(engine: &Engine) -> ClueExchange {
 
 // Association and applicability are caller-owned DSL, not host heuristics.
 #[test]
+fn wide_scope_pages_without_acknowledging_grouped_references() {
+    let engine = Engine::new(1).unwrap();
+    let claims = (0..96).map(|i| format!("claim-{i:03}")).collect::<Vec<_>>();
+    let mut witnesses = Vec::new();
+    for claim in &claims {
+        for polarity in ["support", "counter"] {
+            witnesses.push(Data::List(vec![
+                format!("{claim}-{polarity}").into(),
+                "sha".into(),
+                claim.clone().into(),
+                polarity.into(),
+                "observation".into(),
+                "receipt".into(),
+            ]));
+        }
+    }
+    let input = Data::object([
+        ("clue", Data::List(witnesses)),
+        ("factor", Data::List(vec![])),
+        ("link", Data::List(vec![])),
+    ]);
+    let limits = Limits::default();
+    let cancel = Cancellation::default();
+    let mut owner = ClueExchange::new(
+        &engine,
+        &[PROJECTION],
+        "project",
+        &input,
+        &Data::object([("receipt", "sha".into())]),
+        &limits,
+        &cancel,
+    )
+    .unwrap();
+    let mut request = Data::object([
+        (
+            "questions",
+            Data::List(claims.iter().cloned().map(Data::from).collect()),
+        ),
+        ("displayBytes", 8192usize.into()),
+    ])
+    .map()
+    .unwrap()
+    .clone();
+    let mut seen = std::collections::BTreeSet::new();
+    let mut complete = false;
+    let mut grouped = false;
+    for _ in 0..=claims.len() {
+        let result = owner
+            .slice(&Data::Map(request.clone()), &limits, &cancel)
+            .unwrap();
+        let brief = result.field("brief").unwrap();
+        assert!(clue_sexpr(brief).len() <= 8192);
+        grouped |= brief.map().unwrap().contains_key("deferredScope");
+        let page = brief.field("families").unwrap().list().unwrap();
+        for family in page {
+            assert!(seen.insert(family.field("claim").unwrap().text().unwrap().to_owned()));
+            assert_eq!(
+                family.field("observations").unwrap().list().unwrap().len(),
+                2
+            );
+        }
+        if brief.field("presentationComplete").unwrap() == &Data::Bool(true) {
+            complete = true;
+            break;
+        }
+        assert!(
+            !page.is_empty(),
+            "a complete family fits but the read made no progress"
+        );
+        request.insert(
+            "checkpoint".into(),
+            result.field("checkpoint").unwrap().clone(),
+        );
+    }
+    assert!(grouped);
+    assert!(complete);
+    assert_eq!(seen, claims.into_iter().collect());
+}
+
+#[test]
 fn shared_selection_schema_preserves_caller_query_and_source_immutability() {
     let engine = Engine::new(1).unwrap();
     let owner = exchange(&engine);

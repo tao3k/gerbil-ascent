@@ -6,11 +6,11 @@ module ProgressiveEvidenceRead {
   val scopes = Set(Set(), Set(0), Set(1), Set(0, 1))
   type State = {source: int, bound: int, scope: Set[int], lastScope: Set[int],
     seen: Set[int], before: Set[int], visible: Set[int], pending: Set[int],
-    removed: Set[int], sourceMatched: bool, read: bool, open: bool}
+    removed: Set[int], summarized: Set[int], sourceMatched: bool, read: bool, open: bool}
   var q: State
   action init = q' = {source: 0, bound: 0, scope: Set(), lastScope: Set(),
     seen: Set(), before: Set(), visible: Set(), pending: Set(), removed: Set(),
-    sourceMatched: true, read: false, open: true}
+    summarized: Set(), sourceMatched: true, read: false, open: true}
   action Select = {
     nondet scope = scopes.oneOf()
     q' = {...q, scope: scope, read: false}
@@ -26,6 +26,7 @@ module ProgressiveEvidenceRead {
       else before.union(shown)
     q' = {...q, bound: q.source, lastScope: q.scope, seen: after,
       before: before, visible: shown, pending: q.scope.exclude(after),
+      summarized: q.scope.exclude(before.union(shown)),
       removed: if (Mutation == "scope-is-removal") before.exclude(q.scope) else Set(),
       sourceMatched: same, read: true, open: Mutation != "close-exploration"}
   }
@@ -37,7 +38,9 @@ module ProgressiveEvidenceRead {
   val ScopeIsNotRemoval = not(q.read) or q.removed == Set()
   val Progress = not(q.read and q.visible != Set()) or q.seen.size() > q.before.size()
   val HonestPending = not(q.read) or q.pending == q.scope.exclude(q.seen)
+  // A content-bound group reference is presentation, never a read receipt.
+  val SummaryPreservesPending = not(q.read) or q.summarized.subseteq(q.pending)
   val Open = q.open
   val Safety = NoReplay and NoHiddenAcknowledgement and PreserveSeen and SourceBound
-    and ScopeIsNotRemoval and Progress and HonestPending and Open
+    and ScopeIsNotRemoval and Progress and HonestPending and SummaryPreservesPending and Open
 }

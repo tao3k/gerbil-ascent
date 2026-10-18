@@ -150,4 +150,26 @@ theorem outside_scope_is_not_a_pending_removal {α : Type} (scope before now : �
   intro r
   exact h r.1
 
+/- Grouping pending references changes presentation, not source-bound reads. -/
+def groupedReference {α : Type} (scope before shown inline : α → Prop) (x : α) :=
+  readPending scope (readSeen before shown) x ∧ ¬ inline x
+
+theorem pending_reference_partition {α : Type} (scope before shown inline : α → Prop)
+    (x : α) : readPending scope (readSeen before shown) x ↔
+    (readPending scope (readSeen before shown) x ∧ inline x) ∨
+      groupedReference scope before shown inline x := by
+  classical
+  constructor
+  · intro h
+    by_cases hi : inline x
+    · exact Or.inl ⟨h, hi⟩
+    · exact Or.inr ⟨h, hi⟩
+  · intro h
+    exact h.elim And.left And.left
+
+theorem grouped_reference_cannot_acknowledge {α : Type}
+    (scope before shown inline : α → Prop) (x : α)
+    (h : groupedReference scope before shown inline x) :
+    ¬ readSeen before shown x := h.1.2
+
 end Ascent.AnchoredEvidenceSlice

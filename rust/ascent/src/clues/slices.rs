@@ -404,7 +404,10 @@ fn present_relations(
     }
     brief.insert(
         "presentationComplete".into(),
-        (deferred.is_empty() && brief["deferred"].list()?.is_empty()).into(),
+        (deferred.is_empty()
+            && brief["deferred"].list()?.is_empty()
+            && !brief.contains_key("deferredScope"))
+        .into(),
     );
     Ok(shown)
 }
@@ -455,7 +458,7 @@ struct RelationView {
     items: Vec<Row>,
 }
 
-fn relation_view(selection: Option<Data>) -> Result<RelationView> {
+fn relation_view(selection: Option<Data>, source: &str) -> Result<RelationView> {
     let association = selection
         .map(|s| s.map().cloned())
         .transpose()?
@@ -465,9 +468,27 @@ fn relation_view(selection: Option<Data>) -> Result<RelationView> {
         .map(Data::text)
         .transpose()?
         .unwrap_or("");
+    let question_is_wide = if let Some(question) = association.get("question") {
+        let row = Row::from(vec![
+            Value::from(selector),
+            Value::from("question"),
+            Value::from(question.digest().as_str()),
+        ]);
+        let summary = relation_summaries(
+            source,
+            &BTreeMap::from([("question".into(), question.clone())]),
+            &[row],
+        )?;
+        super::clue_sexpr(&Data::object([("question", question.clone())])).len()
+            > super::clue_sexpr(&summary[0]).len()
+    } else {
+        false
+    };
     let traces = association
         .iter()
-        .filter(|(name, _)| !matches!(name.as_str(), "question" | "selectorIdentity"))
+        .filter(|(name, _)| {
+            name.as_str() != "selectorIdentity" && (name.as_str() != "question" || question_is_wide)
+        })
         .map(|(name, value)| (name.clone(), value.clone()))
         .collect::<BTreeMap<_, _>>();
     let items = traces
@@ -506,7 +527,7 @@ fn render_slice(view: SliceView<'_>) -> Result<Data> {
         association,
         traces,
         items: relation_items,
-    } = relation_view(view.selection)?;
+    } = relation_view(view.selection, view.source)?;
     let mut acknowledgements = view.engine.open_evidence_sources(
         &[RULES],
         Some("make-clue-read-acknowledgement"),
@@ -567,6 +588,50 @@ fn render_slice(view: SliceView<'_>) -> Result<Data> {
         ("checkpoint", next),
     ]))
 }
+fn defer_families(
+    source: &str,
+    pending: &[Data],
+    brief: &mut BTreeMap<String, Data>,
+    display_bytes: usize,
+) -> Result<bool> {
+    brief.remove("deferredScope");
+    brief.insert("deferred".into(), Data::List(pending.to_vec()));
+    if super::clue_sexpr(&Data::Map(brief.clone())).len() <= display_bytes {
+        return Ok(true);
+    }
+    // A scope reference replaces only presentation, never the inferred scope
+    // or acknowledgement. Repeating with the checkpoint exposes unseen units.
+    brief.insert("deferred".into(), Data::List(Vec::new()));
+    if !pending.is_empty() {
+        brief.insert(
+            "deferredScope".into(),
+            Data::object([
+                ("sourceIdentity", source.into()),
+                (
+                    "contentIdentity",
+                    Data::List(pending.to_vec()).digest().into(),
+                ),
+                ("claimCount", pending.len().into()),
+            ]),
+        );
+    }
+    if brief["families"].list()?.is_empty()
+        && super::clue_sexpr(&Data::Map(brief.clone())).len() > display_bytes
+        && let Some(scope) = brief.get("scopeReference")
+        && let Ok(claims) = scope.field("claims")
+    {
+        brief.insert(
+            "scopeReference".into(),
+            Data::object([
+                ("sourceIdentity", source.into()),
+                ("contentIdentity", claims.digest().into()),
+                ("claimCount", claims.list()?.len().into()),
+            ]),
+        );
+    }
+    Ok(super::clue_sexpr(&Data::Map(brief.clone())).len() <= display_bytes)
+}
+
 fn present(
     source: &str,
     families: &BTreeMap<String, Vec<Data>>,
@@ -592,15 +657,13 @@ fn present(
     let mut shown = Vec::new();
     let mut deferred = summaries.clone();
     let relations_complete = brief["deferredRelations"].list()?.is_empty();
-    brief.insert("deferred".into(), Data::List(deferred.clone()));
     brief.insert(
         "presentationComplete".into(),
         (deferred.is_empty() && relations_complete).into(),
     );
-    // Reserve honest summaries first; later families cannot crowd out earlier references.
-    if super::clue_sexpr(&Data::Map(brief.clone())).len() > display_bytes {
+    if !defer_families(source, &deferred, brief, display_bytes)? {
         return Err(invalid(
-            "presentation capacity insufficient for traceable family summaries",
+            "presentation capacity insufficient for slice identity and references",
         ));
     }
     for summary in summaries {
@@ -608,16 +671,17 @@ fn present(
         deferred.retain(|s| s != &summary);
         shown.push(family(source, claim, &families[claim])?);
         brief.insert("families".into(), Data::List(shown.clone()));
-        brief.insert("deferred".into(), Data::List(deferred.clone()));
         brief.insert(
             "presentationComplete".into(),
             (deferred.is_empty() && relations_complete).into(),
         );
-        if super::clue_sexpr(&Data::Map(brief.clone())).len() > display_bytes {
+        if !defer_families(source, &deferred, brief, display_bytes)? {
             shown.pop();
             deferred.push(summary);
             brief.insert("families".into(), Data::List(shown.clone()));
-            brief.insert("deferred".into(), Data::List(deferred.clone()));
+            if !defer_families(source, &deferred, brief, display_bytes)? {
+                return Err(invalid("presentation references exceed display capacity"));
+            }
             brief.insert("presentationComplete".into(), false.into());
         }
     }

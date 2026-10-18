@@ -1,0 +1,43 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
+        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/provenance-graph candidate-positive-provenance
+                 positive-provenance-witness positive-provenance-alternatives candidate-verify-positive-provenance)
+        :gerbil-ascent/candidate/provenance-maintenance
+        (prefix-in :gerbil-ascent/t/performance/support-cut/reference old-))
+(export cut-prepare cut-consume cut-verify!)
+(def (cut-prepare old? scenario)
+  (let* ((count (if (eq? scenario 'small) 1 32))
+         (snapshot (reasoning-source-snapshot 'grounded-cut 0
+                     (list (list 's 1 (if (eq? scenario 'restore) '((0) (0)) '((0))))
+                           (list 'next 2 (map (lambda (i) (list i (+ i 1))) (iota count))))))
+         (rows (map list (iota (+ count 1))))
+         (spec (make-reasoning-candidate '((p . 1)) []
+                 (list (vector '(p ?x) '((s ?x)) 10)
+                       (vector '(p ?y) '((p ?x) (next ?x ?y)) 11))
+                 (vector '(p ?x) 12) '(4096 4096 8192)))
+         (graph (candidate-positive-provenance snapshot spec 'program 'complete rows 100000 4096)))
+    (unless (candidate-verify-positive-provenance snapshot spec 'program 'complete rows graph 100000 4096)
+      (error "cut fixture requires complete verified support"))
+    (list old? (positive-provenance-witness graph) (reverse (positive-provenance-alternatives graph))
+          rows (map (lambda (i) (list (list i) (+ i 1))) (iota (+ count 1))))))
+(def (cut-consume prepared scenario)
+  (with ([old? proof edges original original-heights] prepared)
+    (let (state ((if old? old-candidate-make-provenance-maintenance candidate-make-provenance-maintenance) proof edges))
+      (let-values (((tentative preview-rows _) ((if old? old-candidate-provenance-preview-withdraw candidate-provenance-preview-withdraw)
+                                               state '((s 1)))))
+        (let-values (((compact _) ((if old? old-candidate-provenance-compact candidate-provenance-compact)
+                                   (if (eq? scenario 'rejected) state tentative))))
+          (let-values (((heights _) ((if old? old-candidate-provenance-heights candidate-provenance-heights) compact)))
+            (list preview-rows ((if old? old-provenance-maintenance-rows provenance-maintenance-rows) compact)
+                  heights ((if old? old-provenance-maintenance-rows provenance-maintenance-rows) state))))))))
+(def (cut-verify! prepared scenario)
+  (with ([_ _ _ original heights] prepared)
+    (let* ((survives? (eq? scenario 'restore))
+           (accepted? (or survives? (eq? scenario 'rejected)))
+           (expected (list (if survives? original []) (if accepted? original [])
+                           (if accepted? heights []) original)))
+      (unless (equal? (cut-consume prepared scenario) expected)
+        (error "independent grounded withdrawal truth differs" scenario)))))

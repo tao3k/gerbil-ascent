@@ -1,0 +1,142 @@
+#+TITLE: UF scalar frontier publication and weighted component admission
+
+* Shared flow and Gerbil source study
+
+The frozen kernel is byte-identical to =64742af763486f37e4318ed26f83b8bec46e4906=.
+Both kernels consume complete fresh-state input trajectories, sharing the same
+relation-view implementation. This is a UF kernel comparison, not a comparison
+of historical/current whole engines.
+
+Gerbil =1cfb032= =std/struct/dag.ss:31-51= separates visiting state, completed
+attributes and mutation lifetime. =std/list/list.ss:365-376= accumulates owned
+bucket spines and reverses only those spines. =gerbil/runtime/util.ss:366=
+constructs output directly in consumer order. These patterns guide the shared
+admission/publication flow rather than adding a new public dispatch protocol.
+
+One stable target mask now serves scalar publication as well as counting.
+Budget admission finishes before constructing descriptors or changing graph
+state. Dense count admission starts with selected-bit cardinality and adds
+only multi-member root excess, cached once by word. Sparse sources subtract
+selected existing neighbors and their implicit diagonal from one cached target
+mass. Fresh all-singleton axes use their exact cardinality instead of summing
+each root. Acyclic count axes borrow stable adjacency; SCC planning preserves
+its separate ordered selection.
+
+Admitted scalar publication enumerates only missing pairs. A singleton source
+can share a concatenated immutable target-member spine; sources admitting the
+whole target axis reuse that spine within one publication. Multi-member sources
+keep separate target rectangles because merging those rectangles would change
+row order. Dense forward commit reuses one reverse writer per source. Published
+cuts retain persistent members or fully constructed private spines, never
+mutable adjacency, planning masks or excess summaries. Physical descriptor
+units decrease; semantic row multiplicity, count and order remain unchanged.
+
+* Lean, Quint and actual Library correspondence
+
+=TransitiveComponents.lean= proves ordered singleton rectangle concatenation,
+positive selected mass as cardinality plus excess, sparse partition subtraction,
+acyclic-axis disjointness and singleton-axis cardinality. Earlier difference
+and SCC closure laws remain. These laws constrain the transformation; native
+bitmap encoding, ownership and integer caches remain refinement premises.
+
+The finite three-node Quint model checks exact excess mass and sparse mass,
+including the implicit diagonal, alongside existing partition, refusal and
+closure invariants. Thirteen fault controls include omitted heavy excess and
+omitted implicit self mass. Existing =ProviderViews= and =ReaderLifetime=
+models separately check publication/retention lifetimes. Model exhaustiveness
+is bounded to that finite universe.
+
+Native tests compare every scalar frontier's entire ordered row list with the
+frozen kernel, including grouped input, weighted sources, overlapping closure,
+exact-budget refusal/retry and retained views after later SCC mutation.
+Independent Python DFS tests call the actual exported UF module through the
+public Library API, checking full delta sets, uniqueness, weighted counts,
+refusal resource identity and retained publications. API and ABI use fresh
+separate processes and check the UF hash in their producer receipts.
+
+The C ABI verification uses a metadata-preserved physical source snapshot
+including the concurrent naming migration. Its build is owned by native
+=build.ss/std/make=, with the original 120s cap and native machine core count;
+packaging has 15s and API extension construction 45s caps. The snapshot is
+qualified independently of the other task's historical provider receipts.
+Only this UF batch's files are staged. The actual UF source digest must agree
+across native A/B, live source and the Library producer receipt.
+
+* Fixed matched measurement
+
+ASP =make-benchmark-fixture= generates =benchmark.ss=. Twenty alternating
+CPU pairs, five allocation pairs and twenty ASP candidate admissions execute
+eight independent complete trajectories per sample. No state is shared between
+those executions. Natural GC remains inside CPU timing; allocation collections
+are outside the counter interval. All raw samples and native GC counts/CPU are retained. The counters follow Gambit’s process-statistics layout in =lib/_kernel.scm=; total process CPU includes collector time, consistent with the [[https://gambitscheme.org/4.9.7/manual/][Gambit measurement documentation]]. The three
+=scalar/weighted/heavy= targets require CPU <=90% baseline and >=16/20 wins;
+=scalar/heavy= additionally require allocation <=80% baseline +8192 bytes.
+Controls allow CPU <=110% baseline +20us and allocation <=110% +8192 bytes.
+ASP p95 <=999ms; the complete seven-scenario invocation has a 90s watchdog.
+
+The eight-trajectory sample (hot legs exceed about 100ms) was chosen after single/four-trajectory diagnostics
+showed uneven paired wins despite improved medians. Those failed diagnostics
+remain failed: early weighted admission saved only 4%-6%, and the final kernel's
+single-trajectory weighted diagnostic won 15/20 pairs. An intermediate heavy
+candidate also missed the 20% allocation gate. No deadline, ratio or win gate
+was widened. Four-trajectory weighted samples also failed (11/20 wins, 1.9% median CPU improvement). The final grouped measurement includes every invocation and GC,
+with identical input, order and aggregation for both kernels.
+
+Inputs are two 256-edge chains with an existing-endpoint bridge, with one or
+both chains first collapsing nodes 64..192 into a weighted SCC; a 512-edge
+partial SCC; sparse star; four-node cycle; pure 512-edge chain. Expected closure
+masses and component/arc counts are independent chain/SCC arithmetic. Native
+structural validators use compressed inputs; full-size A/B inputs are retained.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" gxi t/performance/uf-frontier/build.ss \
+  "$PWD/.cache/ascent/uf-frontier/lib"
+GERBIL_PATH="$PWD/.gerbil" \
+GERBIL_LOADPATH="$PWD/.cache/ascent/uf-frontier/lib:$PWD/.gerbil/lib" \
+timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/uf-frontier/runner all .cache/ascent/uf-frontier
+just check-lean-proofs
+just check-transitive-components-formal
+just check-provider-views-formal
+#+end_src
+
+All generated logs, failed attempts, physical sources, binaries and receipts
+stay ignored under =.cache/ascent/uf-frontier/=. Measurements below cover native
+per-process user+system CPU and VM allocated bytes, not RSS, cold loading,
+portable wheels, remote CI or whole-engine performance.
+
+* Accepted calibrated measurements
+
+CPU columns divide each sample median by its eight full executions. Allocation
+changes use the same fixed eight-trajectory sample. There are 20 matched CPU
+pairs per scenario, with natural GC; no sample or collection is excluded.
+
+| Trajectory | Baseline CPU us/trajectory | Candidate CPU us/trajectory | CPU reduction | Allocation reduction | Wins |
+|------------+----------------------------+-----------------------------+---------------+----------------------+------|
+| scalar | 25782.875 | 16894.250 | 34.5% | 64.7% | 20/20 |
+| weighted | 18337.375 | 15564.875 | 15.1% | 4.0% | 20/20 |
+| heavy | 19139.500 | 15552.875 | 18.7% | 29.7% | 20/20 |
+| partial | 24793.125 | 21088.250 | 14.9% | 4.4% | 19/20 |
+| sparse | 1180.500 | 1207.250 | -2.3% | 2.3% | 9/20 |
+| small | 8.875 | 9.250 | -4.2% | -2.2% | 3/20 |
+| chain | 19604.250 | 15890.375 | 18.9% | 1.3% | 19/20 |
+
+The three targets win 20/20 pairs. Weighted count samples include 18 collections
+on each kernel across the twenty CPU samples; scalar collections are 37/17 and
+heavy publication 26/18. Sparse CPU rises 2.3%, small rises 4.2%; both stay inside
+the fixed control envelope. All seven contracts pass, final =OK= and exit zero;
+production/reference/fixture/build/runner/contract fingerprints match across
+measurement. These figures qualify the calibrated complete UF trajectories.
+The failed single/four-trajectory gates remain explicit historical negatives.
+
+Final qualification: Lean full 158-job proof build; three-node Quint positive
+exploration (170455 generated /41149 distinct states), all thirteen UF defect
+controls, and existing view/reader models; five native Suites/seventeen Cases;
+four independent Python oracle Cases on each actual API and ABI backend.
+The native Library has 132 source inputs, 127 linked Scheme sources and 1264
+checked loading resources. Its UF input digest matches the exact A/B/live
+source: =3ddf5949f489bf34f30ee8b219c2daab3f15da021b511a7e6d2cd6f11acc52e6=.
+API and ABI receipt checks require that identity. Concurrent interface/build
+changes are included only in the isolated Library snapshot and remain under
+their owner's control; this batch does not claim their current checkout,
+consumer graph, cold-start optimization or remote CI qualification.

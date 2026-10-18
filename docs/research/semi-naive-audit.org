@@ -1,0 +1,180 @@
+#+title: Semi-naive execution: frontier partition, scheduling and completion
+
+* Contract and audit boundary
+
+This audit separates least-fixed-point completeness from avoided join work.
+The production implementation already uses frozen rounds and deltas; an earlier
+informal description of first-call expansion did not establish either property.
+
+The audited paths are program/evaluate.ss (serial and Actor round execution),
+program/component-worker.ss (Actor SCC workspace), and
+rust/ascent/src/execution/kernels.rs (Rust-owned serial/Rayon execution).
+They drain rule work before committing a new frontier. Newly admitted facts feed
+another round; SCC successors are admitted after predecessor completion. No new
+mailbox-based scheduler or Scheme evaluator is introduced.
+
+* Exact delta partition
+
+For a positive Set rule, pivot i reads Old at earlier body occurrences, Delta at
+i, and All at later occurrences. All = Old union Delta. Initial execution is a
+single full traversal. The first fresh occurrence owns each concrete body witness;
+different witnesses may still project to the same fact and require head dedup.
+
+Scheme supplies an optional old-row lane only to already admitted pure,
+canonical Set plans. Exact delta membership is cached by relation/delta version,
+not by count. Actor SCC workers own their own index/cache state. Lazy membership
+allocation leaves linear rules without an extra membership vector. Building
+membership and traversing the old lane checkpoint real work, including excluded
+rows. Failure never publishes a partially built membership cache.
+
+Rust prefix reads exclude exact Delta membership before binding. Delta publication
+now populates that membership using existing query-owned Fact digests and complete
+typed-row equality. Candidate work/cancellation is still charged before filtering.
+Counters used for qualification compile only under cfg(test), including Rayon.
+
+Compact UF views keep their existing parts visitors and overlapping delta
+pivots: they already exclude all-old rule joins, while expanding an old prefix
+would destroy compactness. Disjoint witness ownership is applied to canonical
+Set storage, not claimed for these virtual views. Lattice and observable-callback
+execution retain their existing admission and traversal contracts. A lattice refinement is not ordinary set insertion. These
+paths are regression-tested, not justified by a positive Set theorem. Provenance
+construction and source/replacement ownership are unchanged.
+
+* Completeness and completion
+
+The independent Scheme and Rust oracles implement naive synchronous immediate
+consequences over alists/maps. They import no production matcher, indexes, SCC
+analysis, delta machinery or old evaluator. The fixture contains nonlinear and
+mutual recursion, with the source producer ordered after initially empty consumers.
+It includes every directed three-node graph, including cycles and self-loops,
+with both rule orders on every graph: Scheme workers 1/2/4 and Rust serial plus
+Rayon pools 1/2/4. This is 3072 Scheme and 4096 Rust solve/oracle comparisons.
+
+The runtime completion audit retains the existing full-round/worker-drain barrier.
+Rust rechecks Budget.result before progressing/returning; failed publication is an
+error, not a successful empty round. Scheme marks an invocation finished only
+after its admitted rounds close; cancellation/refusal unwinds the assigned work.
+No timeout, heap bound, source/derived/output limit or provenance limit is widened.
+
+* Formal evidence
+
+SemiNaive.lean adds arbitrary positive-body disjoint partition, first-fresh
+uniqueness and exclusion of all-old witnesses. Disjoint iteration equals naive
+iteration at every natural-number round. Equality of consecutive admitted rounds
+implies closure, and every round is below every seed-containing closed database:
+a settled execution therefore yields the least fixed point. Monotone views and
+Set semantics are explicit premises, not claims about arbitrary host effects.
+
+DeltaClosure.qnt explores out-of-order task dispatch/completion and frozen-round
+commit, frontier exactness, fail-closed resource/cancellation refusal, and complete
+publication. Independent finite transitive closure is the result oracle. Faults
+for omitted rescheduling, premature completion, all-old work and overlapping delta
+ownership must produce counterexamples. The model is finite safety evidence; it
+does not establish native extraction, general liveness or arbitrary lattices.
+
+The formal registry retains all previous 339 obligations and adds five (one
+positive exploration and four required faults), for 53 models / 344 obligations.
+
+* Measurements and receipts
+
+The actual two-occurrence Scheme kernel produces 3 complete body witnesses where
+overlapping delta pivots produce 4. The same two pivots are independently dispatched
+through Actor workers and must also produce 3. A same-size delta replacement checks
+version invalidation, and interruption during old-lane construction must raise.
+
+The Rust complete solve produces 30 successful partial/body matches versus 63,
+and 21 complete body witnesses versus 51 from the independent naive oracle,
+with identical facts; serial and Rayon agree. The late-support regression checks
+all nonlinear provenance alternatives even when the head fact already exists;
+removing one alternative must fail independent provenance verification. These are
+connection/work counts, not an end-to-end wall-clock speedup claim. No isolated
+runtime benchmark was performed while compiler/formal processes were active.
+
+Raw local build/test logs and preserved failed attempts are under
+.cache/ascent/delta-audit/. Final receipt binds source bytes and actual exit codes;
+a partial run, compiler failure or counterexample with the wrong property is not
+accepted. Other tasks' pre-existing changes and concurrent commits are excluded
+from the owned implementation diff.
+
+* Local acceptance results
+
+- Scheme default batched: 170 modules / 1354 Cases, 101 seconds; the earlier
+  isolated run also passed all 170 modules / 1354 Cases. Directory deadline remains 180s,
+  heap remains 2G per test VM; final Case-output audit passed.
+- Rust default runtime workspace: 90 tests, including the three new delta tests;
+  strict all-target Clippy passed, without warnings or waivers.
+- Scheme VM bridge: 43 tests (2 unit / 41 interface integration), using the
+  standard =gerbil env= SDK boundary. The earlier missing-library failure without
+  that boundary is retained, not counted as a pass.
+- Full Lean/Quint: 53 models / 344 exploration obligations, complete=true,
+  284.81 seconds within the original 900-second budget. Registry admission tests
+  retain all prior 339 obligations and check all four new fault/property pairs.
+- Earlier mixed-runtime =--all-features= rejection, restricted dependency-cache
+  write, missing Python >=3.10 selection, style-gate failures, and Scheme
+  directory timeouts remain in their original logs. Final feature selection
+  follows current CI's mutually exclusive runtime combinations; no fallback,
+  lint suppression or runtime-budget increase was added.
+
+* Source-policy qualification
+
+The first clean CI at f620a8b rejected program/evaluate.ss at 1006 effective
+lines, before semantic testing. The existing 1000-line limit is unchanged.
+The repair factors the three identical positive/general dispatches into a local
+Gerbil defrule, keeping generated dispatch and checkpoints inline without a
+per-rule closure. ASP policy then reports zero errors; no waiver was added.
+The initial CI failure remains retained in .cache/ascent/delta-audit/ci-scheme-first.log.
+
+Existing performance/allocation contracts also passed: 10 native modules /
+18 Cases, including compact UF plans, Actor credits, retained replacement,
+source-cut allocation and complete application lifecycles. These controls are
+not an isolated end-to-end parallel speedup benchmark.
+
+The policy repair also passed the complete default Scheme corpus again:
+170 modules / 1354 Cases, with the same 180-second admission deadline.
+
+* Native build ordering
+
+The next Linux CI run at 9604403 failed during gsc -link, before the BYODS
+semantic oracle: the generated engine-api.c linker information was read at EOF
+while the two executable jobs overlapped. The pinned compiler driver has a
+Darwin dependency barrier, but Linux schedules both complete executable jobs
+without that barrier; both can regenerate shared static C from Scheme inputs.
+This identifies an unsafe producer/consumer ordering, not a delta result failure.
+
+The build entry now reuses std/make twice: drain the parallel library-module
+phase, then complete each executable product before starting the next. Compiler
+flags, currentness checks, object compilation and barriers remain upstream-owned.
+The complete spec output is byte-identical; meta/spec/clean still use the
+original complete native build script. No global single-thread setting or CI
+retry was introduced.
+
+A local mutable-workspace attempt completed both products but correctly refused
+its receipt after another task changed sources. That attempt is rejected. A
+fixed 9604403 source export plus the build patch, independent copied dependencies,
+and no application outputs then cold-built successfully with 12 build cores.
+Both products and a source-stable ascent.c-abi-build.v1 receipt were produced.
+Its build.ss SHA-256 matches this change. The missing gxpkg manifest in the first
+export attempt is retained; the accepted control uses the existing just build
+entry with the same ASP policy enabled, without rebuilding upstream sources.
+
+* Complete corpus scheduling
+
+At 31e4564 the clean Linux build and every independent Rust/oracle/formal job
+passed, but the Scheme matrix hit its unchanged 180-second directory deadline.
+The exhaustive delta corpus itself completed. The static stripe containing it
+also owned the existing candidate-flow graph corpus, while the other stripes
+finished at roughly 80--101 seconds and then remained idle. That timed-out run
+is rejected; it is not a semantic assertion failure or a complete matrix pass.
+
+The existing ASP process-isolation profile now gives the exhaustive corpus one
+independent work item. Compatible ordinary files retain their original striped
+batches; the same bounded Scheme workgroup assigns the isolated item when a
+worker becomes available. No test, graph, rule order, runtime thread count,
+heap allowance or global deadline is removed or increased. The new admission
+Case checks exact inventory, unchanged ordinary batches, equal runtime options,
+and full-isolation behavior through the upstream profile API.
+
+A fixed candidate with four workers then passed the complete default entry:
+170 modules / 1355 Cases in 154 seconds, within the original 180 seconds, with
+4 ordinary stripes plus 1 isolated corpus and at most 4 concurrent processes.
+All 3072 Scheme and 4096 Rust graph/oracle comparisons remain required.

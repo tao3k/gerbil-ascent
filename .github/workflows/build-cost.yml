@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+name: Isolated macOS build costs
+on:
+  pull_request:
+    paths:
+      - build.ss
+      - bindings/build-entry.ss
+      - tools/ci/build-cost-control.py
+      - .github/workflows/build-cost.yml
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: Baseline commit for the fixed ABBA control
+        default: ea42371b57b7c76d0298d4c374283afbeb69f644
+        required: true
+permissions:
+  contents: read
+jobs:
+  build-cost:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Install released SDK prerequisites
+        run: |
+          brew update
+          brew install gcc just openssl@3 zlib sqlite coreutils pkg-config
+          command -v gcc-16
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Install unchanged immutable SDK
+        env:
+          GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
+        run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Prepare one declared dependency seed
+        run: |
+          echo "GERBIL_BUILD_CORES=$(sysctl -n hw.logicalcpu)" >> "$GITHUB_ENV"
+          export GERBIL_BUILD_CORES="$(sysctl -n hw.logicalcpu)"
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          test ! -e .gerbil/lib/gerbil-ascent
+      - name: Fixed ABBA cold build and test preparation
+        env:
+          BASELINE: ${{ inputs.baseline || 'ea42371b57b7c76d0298d4c374283afbeb69f644' }}
+          CANDIDATE: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost"
+      - name: Preserve every control and admission record
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-build-cost-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/build-cost
+          include-hidden-files: true

@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 50000us)
+ (target_total . 25000us)
+ (regression_budget . 25000us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Append 10,000 distinct unary source rows and publish the retained fixed point.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-ten-thousand-appends/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-ten-thousand-appends)
+ (optimizationFocus . "specialize the Scheme append method by immutable relation schema and admit a Set batch at the fixed-point boundary")
+ (inputShape . "10,000 sequential distinct unary source rows")
+ (expectedOutcome . "complete source order after one retained run")
+ (expectedRepair . "share the persistent source log, use native reverse! for duplicate filtering, and choose a schema-specific append method")
+ (baseline . "per-row materialization and index version changes")
+ (candidate . "schema-specialized append and one batched fixed-point commit")
+ (measurementPhases candidate-update assert-semantic-gate assert-time-gate)
+ (tags poo ascent incremental performance stdlib))

@@ -1,0 +1,137 @@
+#+title: Canonical reachability keys during SCC commit
+
+* Gerbil source lesson
+
+Gerbil 2591dcd =runtime/hash.ss:590-603= implements =hash->list= by
+allocating a key/value pair and a list cell for every entry. =hash-for-each=
+delegates directly to the table iterator. A detached representation is useful
+when callers consume it; read-only copying into another owned table does not
+require that intermediate list.
+
+The more consequential change is preserving the provider's representation
+invariant rather than repeatedly reconstructing it. Every reach key is a
+current component root, and every relation contains its complete transitive
+closure. Once a cycle has been admitted and its missing rectangles installed,
+every external predecessor of any cycle root already reaches every cycle root,
+including the winner. Merging only invalidates absorbed root keys.
+
+Gerbil =compiler/optimize-base.ss:590-605= uses =hash->list= to produce type
+metadata, rewrites the detached entry values and sorts that output. That
+materialization has an observable purpose. In our SCC commit, temporary entry
+lists were immediately discarded after rebuilding equivalent owned tables.
+The applicable compiler lesson is matching representation lifetime to its
+consumer and admitting transformations through proven structure.
+
+* Production ownership and ordering
+
+=table/trrel-uf.ss= captures cyclic membership through the existing reach table
+before adjacency mutation. It retains predecessor list order, so winner ties,
+member order and concrete frontier order remain stable. The private
+=merge-cycle!= helper owns the SCC commit. It reuses the winner's owned reach
+table: complete closure already contains
+the union of external successors. It deletes absorbed keys using the stable
+cycle list. Other DAG keys remain canonical. The winner also drops
+its self key. A winner with no external successors releases its old backing
+array. Other surviving tables retain their backing capacity; cumulative
+allocation reductions do not imply an equal retained-heap reduction. No hash
+table is changed while its entries are being traversed.
+Observation directly folds group counts without materializing entries.
+
+Output budget preflight remains ahead of all installed-state mutation. Parent
+lookups remain read-only until admission. Rejected operations cannot rewrite
+parents, keys, nodes or adjacency.
+
+* Qualification entry and comparator
+
+Run =just performance-uf-commit=. =reference.ss= is the byte-identical complete
+provider at =08c9c7e54fc66316eddd6e8efde47ab4ef5691f4=. Native compilation uses
+the installed SDK. Generated objects, binaries, logs and receipts live only in
+ignored =.cache/ascent/uf-commit/=. The public ASP =make-benchmark-fixture=
+creates =benchmark.ss= and =benchmark-run/result= owns 50 alternating pairs,
+standard wall/heap diagnostics and contract validation.
+
+Each leg owns independent state. For partial/cycle/DAG/duplicate scenarios,
+chain preparation happens outside the inner measurement. Measured work includes
+closing-edge preflight, concrete emission, SCC commit, structural observation
+and duplicate retry. The lifecycle control measures chain construction as well.
+Checks outside timing compare every ordered frontier, physical counts and
+independently enumerated expected closure; duplicate output is rejected.
+CPU and cumulative allocated-byte deltas are separate from ASP heap occupancy.
+
+Main partial/full SCC scenarios require 20% CPU improvement, 35/50 CPU wins
+and 20% allocation reduction with at most 1 KiB overhead. Controls allow 5%
+plus 20 microseconds CPU and at most 1 KiB extra allocation. These gates are
+fixed before sampling. They do not claim whole-solver or actor throughput.
+
+=ascent-uf-commit-test.ss= enumerates all 512 three-node edge subsets. At every
+prefix it compares exact old/new frontier order and counts, rejects with an
+insufficient budget, checks unchanged structural counts, retries with the
+exact needed budget and checks an empty duplicate frontier. An independent
+Boolean Floyd closure verifies the final concrete relation. Existing provider
+invariants additionally exercise grouped/false keys and multi-step SCC merges.
+
+* Retained negative experiment
+
+Direct iteration alone reduced partial-merge allocation from 4,192,304 to
+2,428,768 bytes, but CPU only changed from 2227 to 2162 microseconds with
+14/20 wins. That exploratory run failed the unchanged 20% CPU gate. Its raw
+receipt and log remain as =partial-direct-iteration.sexp= and
+=direct-iteration.log=. The API factory defaults to 20 samples; the final
+fixture explicitly sets 50. Full DAG rebuilding was subsequently replaced
+by deleting absorbed canonical keys; the CPU gate was not relaxed.
+
+The next experiment removed full DAG reconstruction but retained a union of
+all cycle reach tables. Partial merge passed (2026 -> 310 microseconds), but
+full cycle CPU only changed 5542 -> 5441 and failed the same gate. Its receipt
+and log remain as =cycle-union-copy.sexp= and =union-copy.log=. Complete
+closure also makes that union redundant: the winner already owns every
+external successor. The final implementation retains that table directly.
+
+Retaining the winner table reduced full-cycle CPU only 5506 -> 5015
+microseconds, still failing the 20% gate. The receipt/log remain as
+=cycle-retained-table.sexp= and =retained-table.log=. When all group roots
+collapse, newly implied component arcs have no external target and disappear
+immediately. The final path omits these hash writes after concrete emission
+and releases the winner's obsolete array. Partial merges still install their
+closure changes before removing absorbed keys.
+
+* Local native measurements
+
+All five scenarios pass 50 paired samples with the original gates:
+
+| Scenario | Baseline CPU us | Current CPU us | Baseline bytes | Current bytes | CPU wins |
+|----------+-----------------+----------------+----------------+---------------+----------|
+| partial  | 2075            | 324            | 4192624        | 18560         | 50/50    |
+| cycle    | 5650            | 2984           | 11045376       | 5831728       | 50/50    |
+| lifecycle| 655             | 521            | 1463872        | 1082176       | 46/50    |
+| dag      | 9               | 9              | 2048           | 1888          | 18/50    |
+| duplicate| 11              | 11             | 3296           | 3136          | 21/50    |
+
+Closing-edge CPU improves approximately 84%/47% for partial/full SCCs;
+allocated bytes improve 99.6%/47.2%. The complete 48-node construction control
+improves CPU approximately 20%, allocation 26%. Small controls establish no
+CPU win. This measures this provider on these graph shapes, not full solver
+throughput or an equal reduction in retained heap.
+
+The final qualification also includes an =islands= control: 64 active chain
+nodes close into one SCC while 384 disconnected singleton roots remain in the
+same group. External roots that do not reach the winner skip absorbed-key
+removal entirely. This prevents cycle-size work for unrelated components.
+The original five scenario gates remain unchanged.
+
+The disconnected control passes 50 pairs: CPU =855 -> 606= microseconds,
+allocation =2603664 -> 1101040= bytes, with 48 CPU wins. All original five
+gates also pass after adding the reachability guard. This guard skips roots
+without an edge to the winner, so removal work follows affected predecessors.
+
+Native qualification passes three Suites / 16 Cases with explicit final =OK=
+and exit 0, including the 512 subset exploration and grouped/false/structured
+key traces. The selected production policy audit has zero findings/errors.
+
+Final formatted source repeats all six gates successfully: partial CPU
+=2699 -> 527= microseconds (50 wins), full cycle =7333 -> 3392= (50),
+lifecycle =658 -> 510= (46), islands =854 -> 610= (48). DAG/duplicate controls
+remain =8 -> 8= and =11 -> 11=. Allocation differences remain the same; the
+old partial leg varies by 320 bytes of counter/runtime overhead. Absolute CPU
+varies between runs; paired relative improvement and the unchanged control
+costs are the bounded conclusions.

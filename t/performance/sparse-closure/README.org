@@ -1,0 +1,103 @@
+#+TITLE: Occupied-domain shortest support closure
+
+* Complete production flow
+
+=candidate/closure.ss= previously allocated radix-sized adjacency/marker arrays
+and a radix-sized support vector per active origin. Ordered publication visited
+every origin and every target, including origins without outgoing edges: empty
+domains still paid O(radix^2) selection work.
+
+Source admission now owns structural label uniqueness, occupied node IDs and
+ordered adjacency. After validation, numeric sorting establishes a compact
+offset-to-original-ID vector; the membership table becomes ID-to-offset lookup.
+Edges and shortest-path frontiers use only these dense local offsets. Result
+publication maps offsets back to exact original IDs and walks occupied targets.
+There is no arbitrary density cutoff, environment option or public API addition.
+IDs and pair encoding remain exact integers, including a tested 2^64 radix.
+Frontier depth counts physically admitted nodes and retains native fixnum addition.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:24-29= binds lookup facts to one
+optimizer invocation. =std/list/list-builder.ss:8-21= supplies a local ordered
+head/tail builder. =core/match.ss= provides native pair destructuring. These
+patterns separate source admission, dense traversal and ordered publication;
+hash iteration never orders a published candidate.
+
+Canonical support comparison is unchanged: minimum distance, then numeric
+source-label lexicographic order. Reversed source adjacency and shared reversed
+path tails remain intact. Superseded frontiers cannot expand; reflexive answers
+require nonempty cyclic support. The input cap, occupied-count squared pair cap,
+and complete-closure-before-truncation contract remain unchanged. No early result
+cap exit or zero-edge reflexive proof is introduced.
+
+Storage for graph/index/support owners now follows occupied nodes and edges,
+not radix padding. Publication selection is O(N^2) for N occupied nodes, plus
+sorting and actual support traversal/materialization. Lexicographic tie work,
+POO candidate construction and complete output size remain costs. This is not
+a universal linear-time closure claim.
+
+* Frozen complete A/B
+
+=reference.ss= is byte-identical =candidate/closure.ss= from
+=ac46b6228a88bf13a384dd5fe4eb560af7877c77=, blob
+=313d56b89aa4a7cd43914427c9834f7e3c788c89=. Both arms use the same native POO
+constructors. Timed consumers include input admission, complete shortest-support
+closure, canonical ordered publication and projection of every returned candidate
+field. Independently specified chain pairs, distances, supports and rule kinds
+must match both implementations. Truncation returns ten entries only after full
+closure computation; its projection is correspondingly smaller.
+
+Before first timing: 20 alternating CPU pairs, 20 direct ASP Scheme API admissions,
+five cumulative allocation pairs. Sparse/truncated CPU requires <=90% baseline
+and >=16 wins; dense/small/empty controls permit <=110% CPU +20 us. Allocation
+permits <=110% baseline +8192 bytes. Natural GC is included in CPU; native
+=##get-bytes-allocated!= samples reject negative differences. Arms are sequential,
+with no compilation/tests/policy running alongside CPU measurement.
+
+The initial semantic fixture used radix 65536; the baseline's empty-origin
+target scans stalled and were stopped, with logs retained. Before timing, the
+fixture was reduced to radix 1024; budgets, gates and sample counts stayed fixed.
+The final semantic suite separately qualifies the new implementation at 2^64.
+
+The first production experiment used sparse per-origin hash support tables.
+Its sparse receipt failed the unchanged 16-win gate: 3885 -> 2620 us, 15/20 wins.
+It is retained as =sparse-rejected-hash.*=. The production revision then replaced
+per-origin hash lookup with compact offsets, native vectors and one admission
+mapping. Tests and Policy were rerun before the final measurements. No failed
+arm was rerun unchanged or gate weakened.
+
+| Complete consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|-------------------+------------+------------+-----------+-----------+-----------|
+| 32-node chain, radix 1024 | 3865 | 1982 | 17 | 8556032 | 8365856 |
+| Same closure, truncated publication | 1110 | 92 | 20 | 1096048 | 905616 |
+| Complete 32-node domain control | 2846 | 1857 | 13 | 8306624 | 8365856 |
+| One-edge control | 9 | 11 | 3 | 32784 | 41664 |
+| Empty radix 1024 control | 1041 | 12 | 20 | 26512 | 24464 |
+
+All original gates pass. Sparse/truncated CPU falls 48.7%/91.7%; allocation falls
+2.2%/17.4%. Empty CPU falls 98.8%. The dense control passes, but 13/20 wins
+does not support the same repeated-win claim as the large sparse arms. Small
+CPU rises by 2 us and allocation by 8880 bytes, within the preset tolerances.
+These receipts describe complete Scheme closure consumers on this VM, not
+general solver, native bridge or downstream application performance.
+
+* Native qualification
+
+Official GxTest passes nine Cases in two modules with =HARNESS-OK= and final =OK=.
+The existing closure Suite is unchanged. New qualification compares all 512
+three-node directed graphs, including self edges, at radix 3 and 17 against the
+frozen canonical supports. It checks independently specified complete chain
+truth for all five consumers, exact large IDs, duplicate labels, input/pair
+budgets and out-of-domain rejection. ASP Policy passes the production owner and
+new Suite with zero findings. Build failures and semantic/measurement failures
+remain under ignored =.cache/ascent/sparse-closure/=.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/sparse-closure/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/sparse-closure/runner.ss sparse .cache/ascent/sparse-closure/sparse-final.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/qualification/ascent-sparse-closure-test.ss t/qualification/ascent-closure-candidates-test.ss
+#+end_src
+
+Other fixed arms: =truncated dense small empty=. The native builder checks its
+source closure before/after compilation and explicitly compiles the changed
+production owner. Existing SDK/source/configuration is unchanged. Root build
+needs no new registration for an already owned production module.

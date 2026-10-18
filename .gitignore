@@ -1,3 +1,34 @@
 .gerbil/
+.env
 target/
 manifest.ss
+
+# Execution logs and their sidecars must never be committed.
+*.log
+*.log.license
+.cache/
+.lake/
+
+# Python Project environments and generated package metadata.
+python/.venv/
+python/src/*.egg-info/
+python/build/
+workbench/.venv/
+workbench/src/*.egg-info/
+workbench/build/
+__pycache__/
+*.pyc
+python/src/ascent/_sources/
+python/src/ascent/.gerbil-scheme-python-package.json
+python/src/ascent/.gerbil-resources.json
+
+# Raw execution streams and native build products (CI also checks forced additions).
+*.stdout
+*.stderr
+*.jsonl
+*.dylib
+*.so
+*.o
+*.whl
+*.bundle
+*.tar.gz

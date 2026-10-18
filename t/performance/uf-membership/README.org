@@ -1,0 +1,96 @@
+#+title: Frozen weighted membership and complete delta export
+
+* Architecture
+The existing immutable rectangle routing index also answers membership queries.
+A value hit must name the exact captured member owner; globally present left
+and right values cannot be combined across unrelated rectangles. Mixed schemas
+and nonindexed views keep checked member scans. Very short axes retain bounded
+direct scans. Point queries allocate no reader index or descriptor callback.
+
+Difference export uses this membership protocol only when the older cut carries
+the private final =rectangle-visitors= specialization. Generic/custom visitors
+retain their checked/admitted full-row probe, including cases whose =contains=
+callback disagrees with their parts. Public tuples, outer spines, order, counts
+and historical cuts retain their existing ownership contracts. No tuple cache,
+new environment setting or public structure change is introduced.
+
+The design follows Gerbil's native =std/cache.ss= final carrier specialization
+and =std/list/list-builder.ss= invocation ownership. Pure owner/descriptor scans
+are named tail-recursive functions; row callbacks are absent from point probes.
+
+* Fixed native experiment
+Baseline =0073179d923343519b471021d06f704a7a94bcfd= is copied byte-for-byte in
+=reference-relation-view.ss=, SHA256
+=3dd5ce486a4cf6294aed25645c9fe52944abdcc543b675428eaae94f7c65df94=.
+=just performance-uf-membership= uses the common native study builder and
+=paired-study.ss=, also used by the original weighted study. Both arms and their
+complete dependencies are compiled and linked into the same native executable.
+The original weighted study retains its numerical contract and scenario inputs.
+
+Each sample performs eight complete operations. Membership uses 1024 point
+queries over one 1024-member weighted rectangle. Delta export grows 64-square
+to 128-square axes; grouped delta grows two 32-square to 64-square axes.
+Complete 128-square export, nonindexed 64-member queries, four-member queries
+and absent keys are controls. Construction is outside timing. Full ordered
+answers and independent Cartesian cardinalities are checked before sampling.
+
+There are 20 alternating natural-GC CPU pairs, 20 ASP API admissions and five
+allocation pairs with GC outside the allocation counter. Targets require CPU
+<=90% and >=16/20 paired wins; controls retain <=110% CPU +20us. Allocation is
+<=110% +8192 bytes, ASP p95 <=999ms. The unchanged native build deadline is
+120 seconds; the complete study command has a 90-second deadline. Unique
+ignored run directories bind source bytes and retain every rejection.
+
+Final fixed run =146f89e2-e363-42d2-9d4f-1652db2e1214= passes all seven scenarios:
+
+| Scenario | Baseline CPU us | Candidate CPU us | CPU wins | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+----------+----------------+-----------------|
+| Membership | 73823 | 1388 | 20/20 | 525568 | 1280 |
+| Complete delta | 44902 | 21917 | 20/20 | 67637248 | 26742912 |
+| Grouped delta | 35379 | 13261 | 20/20 | 44045184 | 18879488 |
+| Complete export control | 2323 | 2310 | 8/20 | 18876160 | 18876160 |
+| Nonindexed control | 5571 | 5452 | 17/20 | 525568 | 1280 |
+| Small control | 2 | 2 | 8/20 | 1792 | 1280 |
+| Absent control | 12233 | 197 | 20/20 | 132352 | 1280 |
+
+These are prepared weighted view/query and complete delta materialization costs,
+not end-to-end engine, UF insertion, construction, transport or peak-memory claims.
+The first owner-index implementation reduced CPU but failed allocation because
+of per-row closures; both allocation rejections remain recorded. A dynamic
+optional-argument factory alias lowered to the wrong private constructor entry;
+the fixture now binds each constructor with a scoped =defrule= and preserves
+that failed run. A development duplicate case rejection is also retained.
+
+The independent historical weighted study's grouped 10% target remains rejected
+(14/20 wins despite a lower median). An uncompiled-reference invocation timed
+out at the original 90 seconds and is not evidence of native speedup. Neither
+result is replaced by this different fixed experiment.
+
+* Model and implementation correspondence
+Lean =ProviderRectangles= proves membership equivalence under exact per-owner
+axis indexes and ordered difference equivalence under an exact carrier probe.
+The targeted native Lean build passes seven jobs. These are explicit algorithm
+premises, not a proof of the Scheme compiler or hash implementation.
+
+Quint =WeightedExport= checks owner identity and full ordered difference in
+addition to frozen axes, publication, retirement and independent readers. The
+same 955 generated /433 distinct states pass; all nine named mutants fail,
+including crossing unrelated owners and dropping existing members. Native
+Cases additionally cover prefixes, mixed schemas, false values, custom parts
+and fresh public rows. Python uses an independently computed UF closure through
+actual API/ABI Libraries, checking point queries, complete delta order and
+historical cuts after SCC retirement. Current source hashes must match the
+producer receipt before those tests run.
+
+
+* Final local qualification
+The current actual producer records 132 build inputs and 127 linked Scheme
+sources; its production core digest matches the live source. Native build,
+packaging and API compilation exit zero under the original 120/15/45-second
+gates, with machine-native compiler concurrency and no SDK rebuild.
+API and ABI each pass all four independent weighted UF Cases in 4.716/15 and
+4.142/15 seconds. Complete native source qualification passes 165 modules /
+1310 Cases with zero errors; the nine compiled performance modules pass all
+12 Cases. Logs, receipts, compiler outputs and rejected attempts remain in
+ignored =.cache/= and are excluded from Git. Remote exact-head CI is a separate
+gate; downstream consumers and portable wheels are not qualified here.

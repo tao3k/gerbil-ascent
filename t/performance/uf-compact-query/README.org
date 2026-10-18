@@ -1,0 +1,155 @@
+#+title: Compact UF condition admission and publication
+
+* Scope and source identity
+
+Baseline: =aac1f3d0d688a332d4c77b45d736a02c632b5638=.
+=reference-relation-view.ss= preserves its complete production source bytes.
+The candidate changes one shared frozen-view flow in =core/relation-view.ss=.
+No query cache, environment switch, external scheduler or public API is added.
+
+* Gerbil source correspondence
+
+Gerbil =1cfb032= =core/sugar.ss:933-973= binds admitted values before
+entering their consumer extent. =std/list/list-builder.ss:5-24= owns fresh
+result spines inside the consumer extent. The private
+=with-compact-bindings= rule applies these two boundaries together: validate
+all coordinate ranges, retain first key tails in three lexical slots, reject
+conflicting repeats, then construct the selected consumer. A fixed false key
+is an ordinary key tail; absence uses a separate false slot.
+
+Binary and single-prefix indexed layouts are selected from captured schema,
+not from selector order. Group constraints select the lowest descriptor cost among covered group and
+endpoint routes, borrowing a frozen bucket or ordered axis plan. A group with
+one descriptor publishes directly before costing other axes or constructing a
+traversal closure. Multiple equal-prefix owners retain captured descriptor order. Two unscoped endpoint
+bindings intersect frozen ordinal plans without a vector or prefix checks.
+Sparse multi-owner plans intentionally omit single-owner keys. Missing plans
+therefore use exact frozen owner buckets instead of admitting an empty answer.
+The materializer chooses binary/group scalar publication once; complete
+points and tiny/scan/mixed layouts retain their established flows. Partial
+group queries use the same slots and exact owner membership, with no second
+binding-vector initialization. Absent groups and conflicting conditions return
+before allocating result builders. Every public checked consumer validates
+ranges even after an earlier conflict.
+
+* Fixed native A/B contract
+
+=benchmark.ss= contains CPU, allocation and semantic admission policy.
+=runner.ss= uses the existing ASP benchmark API through =paired-study.ss=;
+=run.ss= and upstream native build scheduling own compilation. The Just recipe
+is one standard native invocation with the unchanged 90-second parent budget.
+No second test/build harness is introduced.
+
+Each scenario has 20 alternating CPU pairs, 20 ASP admissions and five
+allocation pairs, with eight identical consumers per sample. Every natural GC
+remains charged to CPU. Reordered, conflicting and wide planning targets
+require CPU ratio <= 0.90, at least 16 wins, and allocation ratio <= 0.80.
+Controls retain <= 1.10 CPU plus 20 microseconds and <= 1.10 allocation,
+including complete points, partial queries, detached wide rows, single-axis,
+scan, capture, tiny capture and repeated tiny reads. Exact ordered row truth is
+checked independently outside measured intervals.
+
+=wide= consumes all selected pairs through the native checked parts API;
+=wide-rows= materializes the same detached rows. This distinction is necessary
+to report plan initialization separately from obligatory result allocation.
+The initial draft demanding 20% less allocation for wide full-row output
+failed four attempts; its receipts and original contract are retained in
+=.cache/ascent/uf-compact-query=. That draft is not qualified. Earlier UF
+study contracts and their full-row scenarios remain unchanged.
+
+* Retained rejected experiments
+
+The first grouped compact flow scanned every descriptor under a prefix. A
+new fixed control with 64 groups, 32 independent SCCs per group and four
+endpoints per SCC exposed CPU 1,168 -> 6,424 microseconds (5.5x), zero wins.
+It failed the existing control policy. Narrow covered routes repair this
+regression. The initial narrowed flow still allocated 160 extra bytes per
+reordered query, failing its fixed 0.80 allocation ratio. Direct publication
+for a single captured descriptor removes that traversal allocation. All
+failed receipts remain retained; neither gate was weakened.
+
+* Current local measurements
+
+The final local study =20c83d04-ae43-4680-b775-29ae715a4429= passes all 16 scenarios.
+All five UF studies pass 53 scenarios (37 prior controls remain unchanged).
+CPU is median microseconds per eight-consumer sample; bytes are native
+allocation counter deltas, never clamped or adjusted for output size.
+
+| Scenario | Baseline CPU us | Candidate CPU us | Wins / 20 | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+-----------+----------------+-----------------|
+| capture | 22983 | 23380 | 9 | 34980736 | 34980736 |
+| component-query | 1106 | 1022 | 18 | 1672832 | 1377920 |
+| conflict | 385 | 316 | 20 | 788096 | 296576 |
+| grouped | 644 | 636 | 12 | 1148544 | 1148544 |
+| partial-absent | 607 | 429 | 18 | 1279616 | 296576 |
+| partial | 10193 | 10239 | 10 | 51611264 | 50988672 |
+| point-absent | 717 | 715 | 11 | 755328 | 755328 |
+| point-tail | 1094 | 1105 | 10 | 1148544 | 1148544 |
+| reordered | 1259 | 626 | 19 | 1672832 | 1050240 |
+| repeated-small | 12234 | 12088 | 10 | 15206400 | 15206400 |
+| single-axis | 9896 | 10044 | 8 | 50342016 | 50342016 |
+| small | 4 | 3 | 10 | 5376 | 5376 |
+| tiny-capture | 16 | 16 | 13 | 62848 | 62848 |
+| unindexed | 890 | 918 | 6 | 1640064 | 1640064 |
+| wide-rows | 9759 | 8135 | 13 | 25953920 | 25822848 |
+| wide | 4883 | 3303 | 20 | 329088 | 99712 |
+
+Wide parts traversal reduced CPU 32.4% and allocation 69.7%; reordered
+materialization reduced CPU 50.3% and allocation 37.2%; conflicting
+materialization reduced CPU 17.9% and allocation 62.4%. Wide detached rows
+reduced median CPU 16.6%, with 13/20 wins and only 0.5% lower allocation:
+this remains an output control. The independent-component control passes
+with CPU 1,106 -> 1,022 microseconds, 18/20 wins and 17.6% lower allocation.
+Tiny and repeated tiny read/capture allocation is unchanged. These are frozen
+view/query scenarios, not complete evaluator solves.
+
+* Model and implementation correspondence
+
+Lean =compact_slots_acceptance= and =compact_query_refinement= establish that
+three scalar optional bindings admit exactly the complete conditions when
+compilation covers every repeat and retains only grounded values. Existing
+conflict, ordered-filter and ordinal-intersection laws remain applicable.
+=partial_plan_refinement= preserves the independent fallback when a cached
+plan is absent. =narrow_routing_cost=, =narrow_routing_coverage= and
+=narrow_routing_query_refinement= establish that cost selection cannot increase
+the chosen cost or lose accepted rows when every candidate covers the query. This is conditional algorithm refinement, not a proof of the native compiler
+or hash-table implementation.
+
+Quint =Compact= retains first slot values and an explicit conflict bit;
+=CompactQueryExact= checks repeated/reordered/partial queries against full
+row filtering. =CompactRangeExact= rejects a late invalid coordinate after
+an early conflict. =CompactFallbackExact= distinguishes missing cached plans from missing
+endpoints. =CompactNarrowExact= checks route selection with different costs
+and the same complete filter and order. All four new fault variants must be
+rejected, alongside all 18 prior variants. The finite two-descriptor model is separate from larger
+native owner/order regressions.
+
+Native =t/qualification/ascent-uf-query-test.ss= compares materialization,
+row streaming, checked parts and admitted parts against independent ordered
+full-row filtering. New cases include interleaved equal-prefix owners, legal grouped single-owner holes,
+lowest-cost single buckets, ordered multi-owner plans and uncached non-self axes,
+borrowed canonical values, false keys, binary layouts, partial and conflicting
+conditions, and late range errors. Python checks actual compiled API/ABI
+against an independent UF closure, with wide/late-conflict/partial queries and
+held cuts across owner retirement. Python does not schedule Scheme tests.
+
+* Qualification status
+
+Local qualification passes: Lean builds seven jobs; Quint explores 955 states
+(433 distinct) and rejects all 22 fault variants. Native source tests pass
+166 modules / 1,321 cases in 69.04 seconds under the unchanged 180-second
+budget; compiled performance contracts pass ten modules / 17 cases.
+
+The actual Library builds in 78.95 / 120 seconds with native 12-core scheduling.
+Packaging is 0.90 / 15 seconds; API compilation is 1.92 / 45 seconds. API and
+ABI each pass seven independent closure tests in 7.74 and 7.27 seconds under
+15-second parents. All 132 producer input hashes match live sources; 127 linked
+Scheme sources and 1,269 syntax resources are bound in the producer receipt.
+Test support prepares in 82.38 / 120 seconds with production-rebuilt=0. Every
+paired study retains its 90-second parent. Logs and receipts remain ignored
+under =.cache/ascent/uf-compact-query= and are not committed.
+
+Exact-head remote CI is tracked separately after landing. The local physical
+provider includes three peer-owned dirty candidate/Python files; they are
+excluded from this commit and are identified in the sealed source archive.
+No downstream consumer qualification or portable wheel qualification is claimed.

@@ -14,6 +14,9 @@
 
 (export GerbilAscentIndexProviderContract
         gerbil-ascent-hash-index-provider
+        gerbil-ascent-curried-index-provider
+        gerbil-ascent-curried-index-provider?
+        gerbil-ascent-canonical-hash-index-provider?
         gerbil-ascent-index-provider-build
         gerbil-ascent-index-provider-extend!
         gerbil-ascent-index-provider-lookup)
@@ -23,6 +26,8 @@
                                procedure?
                                (lambda (_value _context) [])))
 
+;;; A provider controls physical lookup but cannot change relation semantics;
+;;; build, extend, and lookup slots remain one validated receiver axis.
 (define-type (GerbilAscentIndexProviderContract
               @ PooFlowNativeObjectContract.)
   identity: 'ascent/index-provider
@@ -33,17 +38,87 @@
 
 (def IndexProvider. (.ref GerbilAscentIndexProviderContract 'proto))
 
+;;; Build starts from the evaluator's current immutable row snapshot.
+;;; Physical engine dispatch gives custom receivers fresh column/key list
+;;; headers and row spines. Field values preserve identity and remain shared.
+;;; Validated custom lookup packets are detached before rule callbacks run.
 (.defgeneric (gerbil-ascent-index-provider-build provider rows columns)
   slot: .build-index)
+;;; Extend receives only newly admitted rows, preserving index cache reuse.
 (.defgeneric (gerbil-ascent-index-provider-extend! provider index rows columns)
   slot: .extend-index!)
+;;; Lookup is allowed to return a superset of matching rows because an index
+;;; covers only selected columns. The evaluator checks every term before a
+;;; candidate can contribute to a rule head.
+;;; Candidates must be proper tuples of the relation's admitted arity. The
+;;; engine validates the complete custom lookup batch before matching terms.
+;;; Every candidate must also belong to the snapshot supplied to this index;
+;;; a delta index cannot return an old total-only fact. Keys may overselect
+;;; existing candidates, but indexes cannot introduce new relation facts.
+;;; Failed dispatch or candidate admission revokes the engine cache version;
+;;; the next read rebuilds from committed rows and propagates the original error.
+;;; Lookup must include every snapshot occurrence with the requested key.
+;;; Initial source rows may repeat; enumeration cannot exceed any row's
+;;; admitted occurrence count, including overselected rows. The engine checks
+;;; key coverage and excess duplicate enumeration per all/delta version.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 
-(def gerbil-ascent-hash-index-provider
+;;; The default hash provider preserves row buckets in relation order and
+;;; remains replaceable at declaration time without changing rule syntax.
+(def +canonical-hash-index-provider+
   (validate GerbilAscentIndexProviderContract
             (.o (:: @ IndexProvider.)
                 (.build-index gerbil-ascent-index-build)
                 (.extend-index! gerbil-ascent-index-extend!)
                 (.lookup-index
                  (lambda (index key) (or (hash-get index key) []))))))
+
+(def gerbil-ascent-hash-index-provider +canonical-hash-index-provider+)
+
+;;; Curried sharing is an explicit receiver choice. The ordinary receiver
+;;; keeps its measured representation; an engine using this receiver derives
+;;; compatible logical requirements and owns its curried roots and adapters.
+(def +curried-index-provider+
+  (validate GerbilAscentIndexProviderContract
+            (.o (:: @ IndexProvider.)
+                (.build-index gerbil-ascent-index-build)
+                (.extend-index! gerbil-ascent-index-extend!)
+                (.lookup-index
+                 (lambda (index key) (or (hash-get index key) []))))))
+(def gerbil-ascent-curried-index-provider +curried-index-provider+)
+
+;; gerbil-ascent-curried-index-provider?
+;; : (-> IndexProviderCandidate Boolean)
+;; | doc m%
+;;     Admit only the privately retained curried receiver. Inherited receivers
+;;     remain custom Providers; mutable physical roots belong to each engine.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-curried-index-provider? gerbil-ascent-curried-index-provider)
+;;     ;; => #t
+;;     ```
+;;   %
+(def (gerbil-ascent-curried-index-provider? value)
+  (eq? value +curried-index-provider+))
+
+;;; The exported default can be rebound. Native representation admission uses
+;;; the private, module-initialized receiver, never a caller's new default.
+;; gerbil-ascent-canonical-hash-index-provider?
+;;   : (-> IndexProviderCandidate Boolean)
+;;   | doc m%
+;;       Recognize the privately retained hash receivers validated at module load.
+;;       Rebinding the exported default does not grant native representation.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-canonical-hash-index-provider? gerbil-ascent-hash-index-provider)
+;;       ;; => #t for the original exported default
+;;       ```
+;;     %
+(def (gerbil-ascent-canonical-hash-index-provider? value)
+  (or (eq? value +canonical-hash-index-provider+)
+      (eq? value +curried-index-provider+)))

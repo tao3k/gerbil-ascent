@@ -1,0 +1,199 @@
+#+title: UF complete-key dispatch and independent Scheme CI qualification
+
+* Failure and scope
+
+Linux CI 38945117936 at bdfaa72 rejected the existing compact-query grouped
+control: median CPU 1045 -> 1221 microseconds per eight-consumer sample,
+with 1148544 bytes in both arms. The unchanged gate is ratio <= 1.10 plus
+20 microseconds; its failure is retained. It ran before complete Scheme
+qualification, so the later semantic steps were skipped, not passed.
+
+The affected materializer checked canonical complete columns before its
+compact-layout admission. Thus an ordered complete key bypassed the compact
+publisher already used for repeated and reordered keys. It re-entered general
+route selection, bucket costing and validation instead of the captured group's
+single-descriptor publisher. This control had no structural improvement over
+its reference on that route. A timing sample alone cannot attribute the entire
+Linux regression to a particular compiler layout or GC event.
+
+* Implementation and work accounting
+
+Select compact layouts first. Their existing checked admission validates the
+complete key before publication, preserves first bound key tails, and checks
+invalid later coordinates even after conflicts or absent groups. The existing
+owner publisher retains stored representatives, captured descriptor ordering,
+empty axes and duplicate owner occurrences. Tiny, mixed and wider layouts keep
+their established fallback. No new query cache, evaluator, namespace or builder
+is added.
+
+On an instrumented fixed source, the unchanged grouped input returned 2048 rows
+in both arms. Actual routed-rectangles calls fell from 2048 to zero. Temporary
+counters were excluded from production source and the native timing binaries.
+On uninstrumented native binaries, allocation fell by 98304 bytes per sample,
+exactly 48 bytes for each of 2048 queries.
+
+* Fixed native control
+
+The local fixed source is based on b88d7c6, with only this materializer dispatch,
+two semantic Cases and CI lane separation overlaid. Concurrent uncommitted
+owner-plan and Trajectory changes are excluded. Both complete 16-scenario
+compact-query studies passed their original contracts on macOS:
+
+| Input/source | Reference CPU us | Candidate CPU us | Reference bytes | Candidate bytes |
+|--------------+------------------+------------------+-----------------+-----------------|
+| Before dispatch change, grouped | 658 | 666 | 1148544 | 1148544 |
+| After dispatch change, grouped | 658 | 486 | 1148544 | 1050240 |
+| After dispatch change, point-tail | 1122 | 977 | 1148544 | 1050240 |
+| After dispatch change, point-absent | 719 | 539 | 755328 | 657024 |
+
+The macOS pre-change control did not reproduce the Linux gate failure. It is
+not used to erase that failure or to substitute for exact-head Linux CI.
+These are frozen-view query CPU/allocation measurements, not full evaluator
+or Actor/Rayon wall-clock speedups. All contract files, scenario counts,
+20 alternating CPU pairs, 20 admissions, five allocation pairs, natural GC,
+90-second study budgets and allocation policies are unchanged.
+
+The two added semantic Cases compare all public consumers with independent
+full-row filtering. They cover complete compact keys with equal-but-distinct
+stored representatives, duplicate owners, false values, absent groups, empty
+axes, detached rows, nested readers and malformed keys before absent groups.
+Full Scheme qualification retains its existing corpus and 180-second deadline.
+
+* Independent CI lanes
+
+Scheme is a two-entry matrix: semantics and performance. Both depend only on
+repository hygiene; fail-fast is false. The semantic lane includes complete
+standard Scheme tests, independent source consumers and the original native
+source/DSL/closure qualifications. The performance lane retains every original
+performance command and production-rebuild rejection. Each lane uses a distinct
+content-bound native artifact cache key.
+
+A performance failure cannot cancel or skip the semantic lane. The existing
+always-run native-and-oracle job still requires the combined Scheme matrix,
+Rust/PyO3, all oracle shards and formal qualification to succeed. This preserves
+failure admission rather than masking a failed benchmark with successful tests.
+
+* Evidence
+
+Raw attempts and source-bound receipts are in .cache/ascent/uf-grouped-audit/.
+Initial native-link environment failures and the sandbox ps refusal are retained;
+only completed native runs are accepted. The fixed binary uses the SDK's native
+compiler and OpenSSL library path. Public PR qualification must identify the
+exact tested SHA separately from any later concurrent commit.
+
+* Accepted source tests and owner-plan follow-up
+
+The copied local prefix initially contained 123 compiled semantic-test interfaces
+from a different worktree state. The first complete-directory attempt timed out
+at 180 seconds before admitting a Case; it remains rejected. Removing only those
+copied generated test products, retaining every source module and the same
+prepared support library, produced 170 modules / 1361 Cases in 139 seconds.
+The four-file startup control and the focused 14-Case UF query module also pass.
+Linux CI at 722d016 independently passed the complete entry in 148 seconds,
+plus source consumers, runtime source views and native DSL/retained/closure checks.
+The failed performance lane did not cancel or skip those semantic checks.
+
+At that exact SHA, compact-query grouped passed with CPU 493 -> 428 microseconds,
+18/20 wins and allocation 1148544 -> 1050240 bytes. The later owner-plan reused
+and reused-lifecycle controls failed their original 0.80 CPU targets. These are
+separate failures, retained in ci-performance-722-first.log; no CI rerun is used
+to replace that result.
+
+The authorized integration includes the existing owner-plan constructor repair:
+for k selected descriptors among n captured descriptors, dense selections
+(k * integer-length(k) >= n) publish through an n-slot ordinal workspace;
+sparse selections retain gather/sort. Every occupied slot is cleared before
+reuse for another key. Only immutable descriptor selections enter the frozen
+plan; the workspace never becomes query state. This removes dense repeated
+sorting while preserving owner occurrences, stored representatives and order.
+
+The 11 original owner-plan scenarios retain their exact fixture behavior and
+contract bytes. One sparse-routing control is added. Local runs pass all 12
+original-policy scenarios; their process inventories include unrelated work, so
+these timings are exploratory and excluded from isolated performance claims.
+Exact-head CI on its dedicated performance runner is the final measurement gate.
+
+The integration adds a stale-workspace native regression and expands the Python
+independent ordered-product oracle to 742 inputs across three Scheme consumers.
+Lean proves bounded slot clearing and ordered publication independence. Quint
+checks workspace reuse and requires owner-buffer-stale to violate exactly
+OwnerWorkspaceReuseExact with exit 12. These local checks and all five formal
+registry tests pass. The complete current-head Lean/Quint corpus remains required
+in CI; a focused model pass is not a full-system or native extraction proof.
+
+* Cargo cache and wheel source identity
+
+The intervening aa12353 CI failed before its Python interface corpus:
+runtime_identity rejected _sources/rust/ascent/src/data.rs/source.bin. The wheel
+step reused a release product in 0.08 seconds while the shared staged source
+inventory had been refreshed by other Cargo feature/profile invocations. Its
+cache allowed a source-key miss to restore a different commit's rust/target.
+Overlapping jobs can save artifacts newer than the next checkout's source mtimes;
+Cargo's timestamp freshness therefore cannot establish this cache's source identity.
+
+Rust dependency downloads now have a separate reusable cache. Project products
+have no prefix restore key and bind the exact immutable checkout revision plus
+recorded Rust/Python compiler and SDK identities. This covers all tracked inputs
+without duplicating the library-owned source inventory in workflow globs.
+The target tree, frozen Python _sources data and .gerbil-resources.json ownership
+marker are cached together: a skipped Cargo publisher must not leave the matching
+wheel data missing, and a later publication must retain its ownership proof.
+Runtime identity verification and every original interface test remain mandatory.
+No application source or verifier is weakened, no Cargo clean/retry is used, and
+the earlier mismatched wheel failure remains part of the audit record.
+
+* Retained current-head failures and partial-axis follow-up
+
+CI at 1c4c212 passed complete Scheme semantics (170 modules /1363 Cases in
+161 seconds) and every performance study, but its ASP gate rejected an extra
+build-script helper function. The independent da0dda4 correction keeps source
+watching in the existing Cargo entrypoint; no ASP rule is disabled.
+
+CI at da0dda4 retains a different performance failure: selector-init partial
+8897 ->9827 microseconds, allocation unchanged at 50988672 bytes. Complete
+Scheme semantics also reached the unchanged 180-second directory deadline.
+Its live module trace shows candidate-flow starting only after about 150
+seconds at the end of a static batch; semi-naive completed independently.
+Neither failure is replaced by rerunning the same commit.
+
+The partial-axis follow-up reuses the existing bounded stored-member probe
+after a group has selected a descriptor. A partial product receives exactly one
+stored representative on its bound axis, through a private detached singleton;
+the unbound axis and descriptor ordering remain unchanged. Complete scalar
+points retain their existing path. This replaces a walk over unrelated owners
+sharing the value, and does not add a persistent query cache. A temporary
+work-counter control returns the same 262144 rows while reducing actual
+captured-owner probes from 66560 to zero. Instrumentation does not enter the
+production source or CPU/allocation benchmark binary. The new native regression
+checks false values, equal-but-distinct stored representatives, head and tail
+values, duplicate descriptors, both partial axes, nested reads, detached rows,
+conflicts and a trailing invalid coordinate.
+
+The native source-test profile now isolates both exhaustive corpora so the first completed
+ordinary stripe can accept them, without a long within-stripe predecessor. Native capacity still owns the worker
+count. Every discovered file remains exactly once, runtime options and heap
+bounds are unchanged, and the 180-second directory deadline is retained. The
+source-import regression verifies exact coverage, independent singleton batches,
+unchanged compatible groups and matching runtime options.
+
+The concurrently committed 1ed8aa2 switches the general GxTest wrapper to real
+inactivity supervision. That task's files are preserved. CI explicitly prepares
+the test library before placing the complete source corpus under the original
+180-second total deadline, with 180-second inactivity and 2G per VM. Thus this
+acceptance does not use the changed general-wrapper timeout meaning to pass.
+
+The fixed local selector-init candidate passes all original 16 scenarios:
+partial CPU 11448 ->11176 microseconds, allocation 50988672 ->51086976 bytes.
+The private singleton costs 98304 bytes per sample (48 bytes per query, about
+0.193 percent of the partial workload), within the unchanged allocation gate.
+This is a local control, not a replacement for final exact-head Linux CI.
+The focused UF query module passes all 15 Cases.
+
+A local priority-first dispatch experiment reached the original 180-second
+limit and is rejected (partial-full-semantics.log). A native sample retains a
+worker inside Gambit dynamic loading / dyld mapping / fcntl; it does not prove
+a semantic assertion failure or certify a cache root cause. That experiment
+also deferred two whole ordinary stripes. The final dispatch retains the
+existing ordinary-stripe priority and queues both isolated corpora for released
+workers; only the candidate-flow isolation is added. The exact final dispatch
+requires complete CI qualification; no local timeout is counted as a pass.

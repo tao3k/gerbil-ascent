@@ -1,0 +1,8 @@
+[package]
+name = "ascent-vm-diagnostic-build"
+version = "0.1.0"
+edition = "2024"
+publish = false
+[workspace]
+[build-dependencies]
+gerbil-scheme-aot-build = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "2c82b845c141ce68147cf74cb5a4ec680c6ffb07" }

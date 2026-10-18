@@ -1,0 +1,90 @@
+#+title: Native actor admission and round worker lifetime
+
+* Entry revision
+
+The measurements below describe the earlier gxi-hosted native-library runner.
+The current recipe builds a static executable and isolates allocation samples
+in fresh processes. [[file:../actor-coordinator/README.org][Coordinator qualification]] records direct A/B
+against the pushed pool implementation, rejected measurements and entry-context
+limits. =just performance-actor-admission= retains the original three scenarios;
+=just performance-actor-admission coordinator stream= runs the stream experiment.
+
+* Production change and upstream study
+
+=program/actor-round.ss= owns a private pending spine, identity admission index,
+active-worker index and a lazily created pool bounded by the explicit =jobs=
+argument. Pending removal unlinks private cells without changing caller lists.
+A task identity is admitted once; equal but distinct tasks remain independent.
+Workers and joining monitors live for one round, rather than one task. Only
+the coordinator admits tasks, observes dependency completion and merges rows.
+
+Installed Gerbil =2591dcd= provides the concrete patterns:
+- =std/make.ss:230-232,292-298,350-358=: capacity comes from settings; workers
+  repeatedly consume work, then the owner closes admission and joins them.
+- =gerbil/compiler/optimize-base.ss:582-604=: mutate freshly owned pairs while
+  preserving published inputs; hash tables belong to the environment owner.
+- =gerbil/runtime/error.ss:67-73=: exception handling captures a continuation
+  and transfers control through it. ASCENT shares one continuation between
+  worker exception handling and refused credit instead of capturing it twice.
+
+Task batch/counter state is fresh for each execution. The existing 32-row
+credit and 64-tick checkpoint limits remain. Refused credit exits through the
+continuation even when execute installs an exception handler; dynamic cleanup
+still runs. A done message is accepted only for the current worker/task/key
+assignment. Reuse follows that completion, including the final credited batch.
+A joining monitor detects unexpected worker exit. Failure stops admission,
+drains assigned tasks and retains the first exception. Round cleanup stops
+and joins every worker, including idle workers. Caller mailboxes remain private.
+
+* Matched qualification
+
+=just performance-actor-admission= compiles both kernels to the same private
+native library and verifies both module resolutions. =reference.ss= is an exact
+copy of =program/actor-round.ss= at
+=6b4295189eb11b527a7ce3d22b5f2ceb78bbe2d6=, without module redirects or source
+changes. Each side executes a complete actor round and sorts its merged rows
+against independent =iota= truth. Both receive the same tasks and capacity.
+
+Wide means 1024 tasks and capacity 2; backlog means 1024 tasks and capacity 64
+(to stress the active assignment index); small means 4 tasks and capacity 2,
+repeated 20 times per sample. These are explicit benchmark capacities, not
+production defaults. CPU and allocation use separate lanes of 50 alternating
+pairs. Warmup/initial GC are outside CPU timing; natural collection is inside.
+The table below retains historical last-GC snapshot observations (field 16).
+Later actor measurements produced negative deltas with that endpoint; these
+byte values are not current allocation qualification. The current runner uses
+field 7/9 and fresh native children as documented in coordinator qualification.
+
+Gates declared before the first sample: wide/backlog require >=15% less CPU,
+>=20% less allocation and >=35/50 CPU wins. Small permits at most 5% + 15 us
+CPU overhead and 2 KiB extra allocation. Gates were not relaxed.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Wide | 5579 | 1188 | 190506976 | 146552176 | 39/50 |
+| Backlog | 5744 | 1146 | 191675088 | 144436528 | 39/50 |
+| Small | 8.05 | 7.90 | 85274.4 | 77242.4 | 18/50 |
+
+The historical run passed semantic pairs and its then-used gates. The installed VM has
+one processor. This qualifies complete-round coordination/allocation for these
+fixtures; it does not establish multicore speedup, general solver throughput,
+wall-clock speed or deployment behavior. The SDK was not rebuilt or changed.
+
+* Rejected intermediate candidates
+
+Private queue/index only: wide CPU 4669 -> 1711 us, allocation 188377056 ->
+188506000 bytes, 30/50 CPU wins. It failed allocation and stability gates.
+Adding worker reuse with the original two continuation captures: wide CPU
+4801 -> 995 us, allocation 190506976 -> 156351216 bytes, 41/50 wins. It failed
+the 20% allocation gate. Both receipts remain in ignored =.cache/=.
+
+An intermediate private-exception stop marker passed numerical gates, but code
+review found it could be swallowed by execute's exception handler. It was
+replaced by the shared continuation; only the final implementation above is
+qualified. Native Cases explicitly check refusal bypasses task handlers while
+unwinding cleanup, reuse/capacity bounds, joined workers, exact failure identity,
+unexpected exit, dependency blocking, task aliases, streams, cancellation,
+closure truth, session lifecycle and mailbox isolation. The existing TLA credit
+model abstracts task completion, not pooled-thread join or worker identity reuse.
+
+Logs and raw sample receipts belong to =.cache/ascent/actor-admission/=.

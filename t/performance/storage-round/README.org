@@ -1,0 +1,114 @@
+#+title: Complete custom storage round and readiness qualification
+
+* Source study and ownership
+
+The complete evaluator and workspace freeze
+=252706d119b798072f521a9321e42111804a9f9f=. The reference evaluator changes
+only import locations and imports its frozen workspace. Storage dispatch and
+source initialization are shared current helpers, preserving canonical provider
+identity and private owner types. The reference passes no readiness summary;
+it retains individual owner scans and its original workspace eligibility.
+This comparison qualifies the complete evaluator/workspace change with shared
+helpers, not a historical binary of all dependencies at the baseline commit.
+
+Installed Gerbil =1cfb032= supplies the primary source patterns:
+=src/std/struct/lru.ss:19-32,45-67= uses private final records and typed =using=
+projections for affected-owner mutation; =src/std/make.ss:296-304,350-363=
+reports successful dependency completion after owner work and keeps the
+coordinator completion barrier separate. =src/std/list/list-builder.ss:5-24=
+provides ordered selection and =src/std/iter/macros.ss:289-297= native folds.
+
+Each stateful storage owner attaches to one engine-local readiness summary.
+Its phase transition maintains an unready count and a pending-owner list.
+Repeated extensions do not repeatedly register an already pending owner.
+Pending-to-failed preserves the replay requirement. Individual source admission
+restores its owner after publication; complete round admission restores touched
+owners only after every required row/index/view commit succeeds. Zero unready
+owners clears the list. Engine preflight is constant-time, including cached
+reads and source appends, without a global registry or new environment option.
+
+Custom storage with exact native hash indexes now uses the same retained
+frontier and invocation write set as native storage. Ordered commit covers old
+deltas plus actual writes; successful custom source publication registers newly
+nonempty deltas. Custom callbacks retain copied row spines, all/pending aliasing,
+duplicate order, field and budget checks. A derived/custom index retains full
+version traversal. Single-relation engines retain direct traversal. Native
+build scheduling remains upstream =std/make=; no upstream compiler is rebuilt.
+
+* Fixed admission before measurements
+
+The native ASP fixture API generates =benchmark.ss=. Every scenario compares
+complete relation names, sizes, rows, completion, path and rule count against
+independent expected truth in every leg. One fixed 90-second invocation runs
+all eight scenarios. There are 20 alternating process-CPU pairs with natural
+GC, 20 separate ASP consumer admissions and five alternating allocation pairs.
+Allocation collection occurs before each allocation leg, outside its counters;
+negative allocation deltas reject. Target CPU requires at most 90% of baseline
+and at least 16/20 wins. Controls allow 110% plus 20 microseconds. Allocation
+allows 110% plus 8192 bytes. ASP p95 must be at most 999ms (500ms target plus
+499ms budget). No failed control is dropped or combined with another attempt.
+
+| Scenario | Complete work | Gate |
+|----------+---------------+------|
+| wide | 128 custom recursion steps, 512 empty custom owners | target |
+| retained | 64 custom source appends/runs, 256 cached reads, 512 empty owners | target |
+| mixed | 64 custom steps and native UF publication, 384 mixed empty owners | target |
+| cold | declaration, analysis, custom one-step execution | control |
+| small | warm analysis, custom one-step execution | control |
+| dense | 32 input rows, 40 custom multihead destinations | control |
+| index | 16 custom steps with a derived custom index | control |
+| native | native UF closure with 512 empty view owners | control |
+
+Readiness tests include no-output callbacks, multiple pending/failed owners,
+individual admission with stale registration, isolated engine summaries,
+timeout cuts, later source frontier membership, immutable old snapshots,
+callback row poisoning and complete custom-index callback traces.
+
+* Reproduction and evidence
+
+Compile through =gxi t/performance/storage-round/build.ss "$PWD/.gerbil/lib"=
+with the repository's native compiler environment, then =just build=.
+Run the Suite with =gxi :gerbil/tools/gxtest -v 5
+t/qualification/ascent-storage-round-test.ss=. Require final =OK= and no
+ERROR/FAIL, because the native harness can return exit zero after a Case error.
+Run =gxi -:max-heap=3G,debug=q
+:gerbil-ascent/t/performance/storage-round/runner all
+.cache/ascent/storage-round/= under =timeout 90s= with the canonical package
+library. Logs and probes remain ignored under =.cache/ascent/storage-round/=.
+Final samples follow root native build and stable source/SSI fingerprints.
+Raw rejected attempts remain rejected. Remote CI is a separate gate.
+
+* Qualified complete-engine results
+
+All eight scenarios pass in one fixed 90-second invocation after native root
+build, with stable 57-entry source/SSI/contract fingerprints. CPU figures are
+paired process-CPU medians in microseconds; allocation figures are separate
+VM allocation medians in bytes. The control wins are descriptive, with no
+minimum-win gate. Every ASP receipt passes its original 20-sample p95 gate.
+
+| Scenario | Baseline CPU | Candidate CPU | Wins | Baseline bytes | Candidate bytes |
+|----------+--------------+---------------+------+----------------+-----------------|
+| wide | 2571 | 581 | 20/20 | 2865704 | 2911376 |
+| retained | 3908 | 1308 | 20/20 | 6786896 | 6562504 |
+| mixed | 3884 | 1786 | 20/20 | 7350120 | 4959976 |
+| cold | 2596 | 2611 | 10/20 | 8020064 | 8029152 |
+| small | 15 | 18 | 1/20 | 47824 | 56912 |
+| dense | 1011 | 1037 | 5/20 | 5320624 | 5346144 |
+| index | 33 | 33 | 11/20 | 147552 | 148304 |
+| native | 7288 | 7271 | 7/20 | 8369848 | 8346440 |
+
+The three target CPU reductions are 77.4%, 66.5% and 54.0%. Retained/mixed
+allocation falls 3.3% /32.5%; wide allocation adds 1.6%. Small execution adds
+3us and 9088 bytes; dense execution adds 26us and 25520 bytes. These retained
+costs pass the fixed absolute/relative gates. Native control timing is mixed;
+its small median difference is not a separate speedup claim. This evidence
+does not qualify historical storage helpers, remote CI or multicore scaling.
+
+Eleven native Suites pass 138 Cases with final =OK= and no ERROR/FAIL. ASP
+source Policy passes all four production owners plus their macro source witness
+with zero findings. Initial fixture construction failed with a POO recursive
+slot expression, and an initial macro witness had invalid syntax. Their logs
+are preserved as failed tests, not performance admissions. The fixed A/B had
+one admitted attempt. Prior exact-head CI at =252706d= failed during source
+Suite execution with Session POO contract validation errors; these local
+receipts do not establish or resolve its root cause.

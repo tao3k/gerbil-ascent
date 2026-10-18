@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Minimum positive proof heights over maintained support
+#+DATE: 2026-10-10
+
+* API and ownership
+
+=candidate-withdrawal-heights= takes a withdrawal owner and optional positive
+visit budget (default 100000). Its POO result contains =observation= (detached
+source and rows), =heights= (ordered =(row height)= entries), and =visits=.
+The computation and observation capture use the same native owner mutex.
+Held observations remain tied to their source generation after later cuts.
+Budget failure publishes no table and changes neither generation nor support.
+
+Low-level =candidate-provenance-heights= operates only on retained admitted
+positive support. Sources and candidate facts have height zero. A grounded rule
+has one plus the maximum child height; an empty rule body has height one.
+Missing height means infinity. Self/mutual recursion cannot create a finite
+annotation without a founded alternative. All alternatives are relaxed until a
+whole scan makes no improvement, including improvements to already known rows.
+Query output follows root order; private support IDs do not escape.
+
+Deletion can increase a shortest height. Consequently this optional read starts
+from an empty private table at each current cut. Compaction keeps the same
+height result. Ordinary withdrawal does not run height relaxation. This is a
+bounded finite graph transfer, not an incremental cached annotation engine.
+Edge, inspected premise, live-node completeness and output-root visits consume
+the budget. Native hash allocation and row payload copying are not charged CPU
+or byte limits. The scan algorithm can be expensive; its hard visit budget
+rejects rather than returning a truncated result marked complete.
+
+* Research and evidence boundaries
+
+[[file:../../research/agent-inference/proof-height.org][proof height method reading]] supplies min/max annotation relaxation. Existing all-tree
+natural derivation counts retain their separate semantics: recursive counts
+can diverge while minimum founded height remains finite.
+
+Lean =MinimumHeight= proves the certificate characterization: all-alternative
+fixed-point inequalities give a lower bound on every finite proof; an attained
+height is therefore minimal. A source-free self-loop has no finite proof.
+Native relaxation/table attainment and grounded ID decoding are not extracted
+into Lean. Quint =MinimumHeight= explores finite source cuts, private relaxation
+and publication; first-witness, stale-table, early-publication, self-cycle and
+minimum-instead-of-maximum body faults must each fail.
+
+Native controls force the long alternative to be visited before a shorter
+one, test exact and insufficient work budgets, and compare 64 graphs and their
+first occurrence cuts to independent shortest nonempty walks. Owner controls
+check generation binding, held lazy observations, detached pairs, source-free
+cycles, candidate facts and conjunctive maximum height. The new Suites can be
+selected with native =gerbil test -r 'height-test|height-conjunction-test'=; no test scheduler is added.
+
+Proof-fragment navigation, proof-rule receipts, compiled Souffle annotations,
+DOOP/DaCapo workloads, shared height caches and signed/negative derivations remain
+outside this transfer. No paper workload speedup or full paper replication is
+claimed.
+
+* Local qualification receipts
+
+The final compiled graph Suite passes 14 Cases (28s); withdrawal Suites pass
+19 Cases (39s), including all new height controls. Lean builds all 148 jobs;
+Quint explores 6617 generated / 1430 distinct states and detects all five fault
+variants. Source policy has zero errors (42 findings in the shared checkout).
+
+The first complete nine-module performance gate hit its unchanged 120s deadline
+while other repository C/Rust builds were active. Its seven completed modules
+and unfinished change-plan/lifecycle transcripts are retained. The scoped
+lifecycle gate passes in 116s; seven change-plan shapes pass, and its unfinished
+fix shape passes all 50 pairs in isolation. One scoped launch lacked the required
+native build-manifest environment and was rejected before sampling. None of
+these failures is converted into a pass.
+
+A final complete nine-module run passes module/Case audit, final OK and exit 0
+under the original 120s deadline. No timeout, sample count, heap, CPU or allocation
+threshold is widened. This closes local qualification; remote qualification is
+separate and must bind to the delivered Git revision.

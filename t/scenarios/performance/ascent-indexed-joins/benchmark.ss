@@ -7,7 +7,7 @@
  (target_total . 1000us)
  (regression_budget . 1000us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Evaluate the declared two-hop program over a 50-edge chain with bound-column index access.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-indexed-joins/benchmark.ss")

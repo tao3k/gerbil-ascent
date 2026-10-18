@@ -1,0 +1,100 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :clan/poo/object :gerbil-ascent/program/objects :gerbil-ascent/core/relation-view
+        (only-in :gerbil-ascent/table/interface gerbil-ascent-eqrel-storage-provider
+                 gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state
+                 gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze)
+
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
+        (prefix-in :gerbil-ascent/t/performance/uf-reuse/reference-evaluate old-)
+        (prefix-in :gerbil-ascent/t/performance/uf-reuse/reference-storage old-storage-)
+        (prefix-in :gerbil-ascent/table/storage storage-))
+(export ui-program ui-prepare ui-consume ui-expected ui-project ui-check-truth)
+(def (size scenario) (case scenario ((sparse retained packed initial adjacent) 64) ((grouped eqrel) 16) ((large) 600) (else 1)))
+(def (star n) (map (lambda (i) (list 0 i)) (iota n 1)))
+(def (source scenario)
+  (case scenario
+    ((sparse retained initial) (apply append (make-list 8 (star 64))))
+    ((adjacent) (append (star 64) (make-list 300 '(0 1))))
+    ((grouped) (apply append (map (lambda (g)
+                (map (cut cons g <>) (apply append (make-list 32 (star 16))))) (iota 16))))
+    ((eqrel) (map (lambda (i) (list i (+ i 1))) (iota 16)))
+    (else (star (size scenario)))))
+(def (ui-program scenario)
+  (gerbil-ascent-program
+    (list (gerbil-ascent-relation 'reach (if (eq? scenario 'grouped) 3 2) (source scenario)
+            gerbil-ascent-hash-index-provider
+            (if (eq? scenario 'eqrel) gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-uf-storage-provider)))
+    [] 200000 200000 200000))
+(def (ui-project result)
+  (list (.ref result 'finished) (.ref result 'relation-names) ((.ref result 'relation-sizes))
+        ((.ref result 'rows-of) 'reach) (.ref result 'evaluation-path) (.ref result 'active-rule-count)))
+(def (wanted scenario)
+  (let* ((n (size scenario))
+         (rows (append (map (lambda (i) (list 0 i)) (iota (+ n 1)))
+                       (map (lambda (i) (list i i)) (iota n 1)))))
+    (case scenario
+      ((grouped) (apply append (map (lambda (g) (map (cut cons g <>) rows)) (iota 16))))
+      ((eqrel) (apply append (map (lambda (a) (map (cut list a <>) (iota 17))) (iota 17))))
+      ((retained) (append rows (apply append (map (lambda (a)
+          (map (cut list a <>) (iota (- 73 (max 65 a)) (max 65 a)))) (cons 0 (iota 9 64))))))
+      (else rows))))
+(def (ui-check-truth result scenario)
+  (let ((truth (wanted scenario))
+        (seen (list->hash-table (map (cut cons <> #t) (list-ref result 3)))))
+    (unless (and (car result) (equal? (cadr result) '(reach))
+                 (equal? (list-ref result 2) (list (cons 'reach (length truth))))
+                 (= (length (list-ref result 3)) (length truth))
+                 (= (hash-length seen) (length truth))
+                 (andmap (cut hash-get seen <>) truth))
+      (error "UF independent closure mismatch" scenario))))
+(def (ui-prepare old? scenario)
+  (if (eq? scenario 'capture)
+    (let ((state ((if old? gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-state)))
+          (insert! (if old? gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-insert!)))
+      (for-each (lambda (i) (insert! state (list 0 i) 2000000)
+                           (insert! state (list i 0) 2000000)) (iota 1024 1))
+      (vector state))
+    (let (program (ui-program scenario))
+      ((if old? old-gerbil-ascent-make-engine gerbil-ascent-make-engine) program #t)
+      (vector program))))
+(def (ui-consume state scenario old?)
+  (cond
+    ((eq? scenario 'initial)
+      ;; Qualify initial batch admission separately. Complete engine A/B below
+      ;; shares canonical live storage to preserve provider/type identity.
+      (let* ((provider (if old? old-storage-gerbil-ascent-trrel-uf-storage-provider
+                              storage-gerbil-ascent-trrel-uf-storage-provider))
+             (owner ((if old? old-storage-gerbil-ascent-storage-engine-state
+                              storage-gerbil-ascent-storage-engine-state) provider))
+             (seen 0)
+             (count ((if old? old-storage-gerbil-ascent-storage-initialize-uf!
+                              storage-gerbil-ascent-storage-initialize-uf!) owner (source scenario)
+                      (lambda (_) (set! seen (+ seen 1))) 0 200000)))
+        ((if old? old-storage-gerbil-ascent-storage-admit-state! storage-gerbil-ascent-storage-admit-state!) owner)
+        (let (view ((if old? old-storage-gerbil-ascent-storage-freeze-view
+                            storage-gerbil-ascent-storage-freeze-view) owner #f))
+          (unless (= seen 512) (error "UF source occurrence count differs" seen))
+          (list count (relation-view-count view) seen))))
+    ((eq? scenario 'capture)
+    (let (freeze (if old? (lambda (raw) (gerbil-ascent-trrel-uf-freeze raw #f))
+                           (lambda (raw) (gerbil-ascent-trrel-uf-freeze raw #f))))
+      (map (lambda (_) (let (view (freeze (vector-ref state 0)))
+                        (list (relation-view-count view) (relation-view-units view)))) (iota 64))))
+    (else (let* ((program (if (eq? scenario 'cold) (ui-program scenario) (vector-ref state 0)))
+           (engine ((if old? old-gerbil-ascent-make-engine gerbil-ascent-make-engine) program #t))
+           (run (.ref engine '.run)))
+      (run)
+      (when (eq? scenario 'retained)
+        (for-each (lambda (i) ((.ref engine '.append-source!) 'reach (list i (+ i 1)))
+                            (ui-project (run))) (iota 8 64)))
+      (let (result (run))
+        (map (lambda (_) (ui-project result)) (iota (if (memq scenario '(cold small)) 1 3))))))))
+(def (ui-expected state scenario)
+  (cond ((eq? scenario 'initial) '(129 129 512))
+        ((eq? scenario 'capture) (make-list 64 '(1050625 1026)))
+        (else
+    (let (result (ui-consume state scenario #t))
+      (for-each (cut ui-check-truth <> scenario) result) result))))

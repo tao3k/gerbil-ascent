@@ -1,0 +1,94 @@
+#+title: Built-in Set rule output admission
+
+The evaluator recognizes the exact built-in Set storage Provider and admits
+its head row directly. Its extension function is exactly =(list row)=;
+the candidate avoids that temporary list and the callback/iteration overhead.
+Both field validations, membership checks, row order and global budgets remain
+in their original order. Custom Provider extensions and lattice joins retain
+their existing paths.
+
+The compiled frozen evaluator is committed =0330692:program/evaluate.ss=,
+with only the two export names changed and relative imports relocated. Both
+implementations share identical current dependencies and compiler options.
+=just set-emit-benchmark= records source hashes before building in a private
+library directory. This is a whole-solve comparison, including construction,
+rule execution and result snapshots, not just an admission kernel.
+
+The exploratory closure-based implementation did not meet the recursive-chain
+1000-pair win gate. Its raw log and samples are retained as =exploratory-chain*=.
+An initial dense-output golden mistakenly assumed arrival order; native
+behavior emits the reversed first-admission order within one round. That
+fixture error is retained in =exploratory-golden-error.log= and corrected for
+both frozen and candidate evaluators.
+
+The pre-shared-check candidate's single-solve samples are retained in =single-solve*=.
+All medians improve, but dense unique/duplicate paired wins are only 648/760
+of 1000, below the >=900 gate. They do not establish a qualified single-call
+latency gain. Dense output admission below instead uses samples averaging ten
+complete solves to amortize GC phase. It measures sustained solve throughput;
+it does not supersede the failed single-solve evidence or the original SS
+latency budgets. Each of 1000 alternating pairs checks exact ordered goldens
+outside the timer, after 20 warmups. Dense batches still require >=900 wins;
+recursive chains 16/256/1024 remain controls with median non-regression. The
+16-chain control averages 20 solves because its ~17 us time is near clock
+quantization and dispatch noise. Every individual solve retains the original
+bounds, and the runtime heap remains 1 GiB.
+
+The source associated with the timing samples is retained as
+=candidate-before-shared-check.ss=. Those timing attempts were rejected. The
+shipped implementation factors admission validation and membership updates into
+one per-round function, retaining the direct built-in path. It passes the
+unchanged module-size policy; both earlier policy errors remain in qualification
+logs. No timing win is claimed for the final source.
+
+Final-source allocation comparison
+---------------------------------
+
+=just set-emit-allocation= observes Gambit =##process-statistics= slot 7,
+the cumulative allocated-byte counter. The meaning is confirmed in Gambit's
+[[https://github.com/gambit/gambit/blob/master/lib/_kernel.scm][kernel source]] and calibrated against a one-million-element vector on this
+installed runtime in =counter-calibration.sexp=. Slot 16 is the latest GC
+allocation gauge, so the initial slot-16 probe returned misleading zero deltas.
+That probe was stopped after diagnosing the metric error; its log and source
+hashes are retained as =allocation-gauge-error*= and excluded from admission.
+No dependency code or SS memory budget was changed.
+
+Each of 1000 alternating pairs measures allocations during a complete solve;
+ordered goldens are checked outside the observed interval. The two statistics
+reads add equal instrumentation overhead on both sides. Automatic GC remains
+visible through the cumulative counter. Dense output uses one solve per sample;
+the tiny recursive control averages 20 solves. All controls require median
+non-regression; dense output also requires >=900 strictly lower allocation
+pairs. This is allocated bytes, not peak memory, retained live data or speed.
+
+| complete-solve workload | old p50 bytes, both runs | new p50 bytes, both runs | lower-allocation pairs, both runs |
+|-------------------------+-------------------------+-------------------------+----------------------------------|
+| recursive chain 16      | 48480                   | 47984                   | 936 / 1000                       |
+| recursive chain 256     | 644640                  | 636464                  | 996 / 1000                       |
+| recursive chain 1024    | 2512704                 | 2479952                 | 978 / 1000                       |
+| 10000 unique emissions  | 5475712                 | 4995728                 | 952 / 1000                       |
+| 10000 emissions, 16 values | 1939968              | 1459984                 | 1000 / 1000                      |
+
+Dense unique/duplicate allocation falls by 8.8 / 24.7 percent respectively.
+Both independent runs yield the same median byte counts and paired-win counts;
+these are deterministic allocation observations rather than timing samples.
+
+Final-source gates
+------------------
+
+Build and unchanged ASP policy pass: 37 selected production modules,
+findings=0, errors=0. The final-source complete semantic suite passes all
+42 modules and 331 Cases at =GERBIL_BUILD_CORES=12= (seven admitted process
+workers; 35 exclusive modules). Native per-module logs, source hashes and
+machine-readable summaries are retained under =qualification/=. The private
+compiled candidate and frozen-reference module resolution paths are recorded
+in =module-resolution.log=.
+
+The original =just performance= fails at its first BYODS trrel scenario.
+The original 1000-sample p95 is 1288000 ns against the unchanged 1000000 ns
+limit; p50=421000 ns and max=42267000 ns. The raw failed receipt and exit=1
+are retained. The remaining SS entries were not run after this fail-fast gate.
+This slice establishes reduced allocation and semantic conformance; it does
+not qualify overall SS latency or attribute its tail failure to a cause.
+Dependency pins, heap limits and original SS profiles are unchanged. Remote CI
+has not been run, and no remote push is included.

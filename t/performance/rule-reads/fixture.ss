@@ -1,0 +1,21 @@
+;;; -*- Gerbil -*-
+(import :gerbil-ascent/core/rule-semantics
+ (prefix-in :gerbil-ascent/t/performance/rule-reads/reference old-))
+(export reads-input reads-workflow reads-expected)
+(def (reads-input width count shape)
+ (let* ((heads (map (lambda (n) (vector (+ n 1) [])) (iota width)))
+        (body (map (lambda (n)
+          (case shape
+            ((mixed) (if (= n (- count 1)) (vector 'negation (vector 0 [])) (vector 'guard #f)))
+            ((positive) (vector 'atom (vector 0 [])))
+            (else (vector (if (= n (- count 1)) 'negation 'atom) (vector 0 []))))) (iota count)))
+        (read-count (if (eq? shape 'mixed) (if (> count 0) 1 0) count)))
+  (vector (list (vector heads body)) (make-vector (+ width 1) 'relation)
+          (* width (+ read-count (if (or (eq? shape 'positive) (= read-count 0)) 0 1))))))
+(def (reads-workflow old? input)
+ (let* ((plans (vector-ref input 0)) (kinds (vector-ref input 1)) (count (vector-length kinds))
+        (successors ((if old? old-gerbil-ascent-rule-successors gerbil-ascent-rule-successors) plans count))
+        (strata ((if old? old-gerbil-ascent-rule-strata gerbil-ascent-rule-strata) plans count kinds)))
+  (+ (foldl + 0 (vector->list strata))
+     (foldl + 0 (map length (vector->list successors))))))
+(def (reads-expected input) (vector-ref input 2))

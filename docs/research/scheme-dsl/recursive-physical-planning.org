@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: FlowLog reading: rule IR, recursive planning and update cost
+#+STATUS: paper-to-code research; no Gerbil performance transfer
+#+DATE: 2026-10-04
+#+FILETAGS: :research:datalog:planning:incremental:
+
+* Source and selection
+
+Hangdong Zhao et al., [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog: Efficient and Extensible Datalog via
+Incrementality]], PVLDB 19(3), 2025, presented at [[https://vldb.org/2026/program.html][VLDB 2026]];
+[[https://arxiv.org/html/2511.00865][author preprint]] and [[https://github.com/flowlog-rs/vldb26-artifact][public artifact]]. The publication year is
+2025 even though the conference is in 2026. It belongs in the core
+reading because it directly studies the architecture of a Datalog
+engine on graph and program-analysis workloads, with executable
+artifacts and multiple engine baselines.
+
+* Evidence and transfer
+
+| Paper location | Evidence | Gerbil question and limit |
+|----------------+----------+---------------------------|
+| §§3–5 | A relational IR per rule separates logical join/project plans from semi-naive recursion and physical Differential Dataflow operators. | Can our admitted rule plan preserve one logical meaning across index and storage choices? Our vector/POO plans are a different IR and engine. |
+| §§4–8 | Logic fusion, subplan reuse, structural join planning, sideways information passing and Boolean specialization target repeated state and pathological intermediates. | Inspect =program/planning.ss= and =core/positive-plan.ss= for one costly multi-join rule; change plans only with exact output parity. No optimization result transfers. |
+| §10, Table 1 and Figures 7–9 | Compares FlowLog with Soufflé, RecStep, DDlog, DuckDB and Umbra on graph and program-analysis workloads. It reports runtime, CPU/memory and scaling, including unsupported/time-out cells. | Use matched complete workloads and preserve unsupported cases. FlowLog still reports higher memory than Soufflé in its measured cases; a speed result alone is insufficient. |
+
+* Current code seam
+
+[[file:../../../program/planning.ss][=program/planning.ss=]] prepares a checked plan before reading source rows;
+[[file:../../../core/dependency-graph.ss][=core/dependency-graph.ss=]] and
+[[file:../../../core/positive-plan.ss][=core/positive-plan.ss=]] retain dependency/delta and positive
+join structure. [[file:../../../program/evaluate.ss][=program/evaluate.ss=]] owns evaluation-local buffers and
+indexes, while [[file:../../../table/provider.ss][=table/provider.ss=]] lets a declared physical index
+serve bound-column lookup. [[file:../../../program/session.ss][=program/session.ss=]] and
+[[file:../../../program/reuse.ss][=program/reuse.ss=]] can retain completed state for supported updates;
+replacement invalidates affected components or recomputes as the
+[[file:../../scheme-closure-contract.org][closure contract]] states. This does not implement Differential
+Dataflow, FlowLog's optimizer, or general deletion maintenance.
+
+* Falsifiable next receipt
+
+Freeze the same admitted recursive program and source bytes. Run a
+chain, a branch-heavy graph and a real program-analysis or KG extract
+through default and one custom index/eligible storage Provider. First
+compare every relation against an independent oracle and each
+publication after append/withdrawal against fresh recomputation. Then
+record per-rule join candidates, materialized intermediate rows,
+allocation, peak memory, cold solve and retained-update wall times.
+Run paired plan orders only after the output oracle passes; retain
+regressions and unsupported cells. This tests whether the IR/physical
+boundary is useful *here*, not whether Gerbil matches FlowLog's ranking.
+
+[[file:index.org][Scheme research index]]; [[file:../../related-work-matrix.org][related-work matrix]].

@@ -1,0 +1,188 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Candidate execution feedback: finite reference qualification
+#+DATE: 2026-10-10
+
+* Design and ownership
+
+[[file:../../research/agent-inference/candidate-feedback.org][candidate execution feedback reading]] motivates separating static admission, native completion and
+semantic agreement. [[file:../../../candidate/feedback.ss][reasoning-compare-rows]] consumes the existing snapshot,
+proposal and receipt, plus a caller-owned finite reference for the full query
+row. It checks snapshot identity/generation/content and proposal content before
+requiring native completion. An inconclusive result carries a reason and no
+differences; it cannot count as agreement. Malformed, cyclic, executable or
+oversized references are refused using the existing bounded datum walker
+(16384 nodes, depth 128). Duplicate reference rows use set semantics.
+
+The comparison indexes actual/reference rows once using equal?-hash tables,
+then returns every missing and extra row in first-occurrence input order.
+Published differences copy caller-owned pairs. Neither this API nor the
+receipt establishes the reference's authority or natural-language fidelity.
+A match applies only to this reference, query and snapshot; it is not program
+equivalence or a proof/certificate verification result.
+
+* Same-source gold executor comparison (scoped witness execution)
+
+The [[file:../../research/agent-inference/scoped-witness.org][MatLogic reading]] motivates distinguishing a scope specification error
+from successful execution of that wrong specification. =reasoning-compare-attempts=
+accepts already executed candidate and gold proposals, retaining the exact
+existing executor and source boundary:
+
+#+begin_src scheme
+(reasoning-compare-attempts snapshot proposal receipt gold-proposal gold-receipt)
+#+end_src
+
+Candidate binding/completion is checked first, preserving =unbound= and the
+existing typed execution status. Gold must independently bind to the same
+snapshot identity, generation and content and its submitted proposal; failures
+return =reference-unbound=. A non-complete gold returns =reference-incomplete=.
+The entire query datum must agree, including predicate, variable spelling,
+constants and order, or the result is =query-mismatch=. This conservative
+contract does not normalize alpha-equivalent queries. All refusals return
+=inconclusive= and empty differences, including two empty but unfinished results.
+
+The API never executes either proposal again. Both public comparison functions
+share the bounded reference validation and one set-indexing pass; gold rows
+above the existing material bound are still =invalid-reference=. The caller
+must keep receipt/source material stable during this read, as for
+=reasoning-compare-rows=; it is not a concurrent publication owner.
+
+Four additional frozen-control Cases exercise branch-local exclusion, a
+global exclusion missing city 0, an omitted exclusion adding city 2, stale
+candidate/gold generations, changed gold content, rejected/exhausted attempts,
+changed query constants and detached differences. A wrong gold compared with
+itself can match: this explicitly preserves the distinction between executor
+agreement and natural-language intent. These are specification controls, not
+raw model responses or a KGQA population score.
+
+* Scheme, Lean and Quint correspondence
+
+The seven injected faults are engineering obligations, not a count of found
+production bugs. Each now has an independently named native Case using actual
+=reasoning-attempt= receipts and the production =reasoning-compare-attempts= API.
+No fabricated receipt or replacement admission function is used. The Case
+suffix is identical to the Quint =Mutation= value, so CI reports can be joined
+by that identifier.
+
+| Quint mutation / native Case suffix | Required production behavior | Scheme owner | Lean semantic obligation |
+|-----------------------------------+------------------------------+--------------+--------------------------|
+| stale | Identical rows from an old candidate generation are inconclusive, with empty differences | receipt-feedback-reason | comparison_requires_candidate |
+| partial | A genuinely unfinished candidate cannot be graded | receipt-feedback-reason | comparison_requires_candidate |
+| missing | Global exclusion loses city 0; return exactly that missing row and mismatch | compare-qualified-rows | Missing; mismatch_witness; no_differences_iff_exact |
+| extra | Omitted exclusion adds city 2; return exactly that extra row and mismatch | compare-qualified-rows | Extra; mismatch_witness; no_differences_iff_exact |
+| referenceStale | Identical gold rows from an old generation are inconclusive | reasoning-compare-attempts | comparison_requires_reference |
+| referencePartial | A genuinely unfinished gold attempt cannot grade a completed candidate | reasoning-compare-attempts | comparison_requires_reference |
+| query | Equal tuple arity with changed query constant is inconclusive | reasoning-compare-attempts | comparison_requires_reference |
+
+Every native refusal Case also requires empty missing/extra lists. The
+missing/extra Cases require completed receipts and independently fixed exact
+row expectations. These tests fail if a corresponding observable gate or
+difference is lost. The original corpus still exercises duplicate rows,
+binding content, malformed references and detached publication.
+
+The model uses finite sets and Boolean qualification premises; the production
+implementation derives those premises from snapshots, digest binding and native
+execution status. This is a documented abstraction correspondence with native
+regression controls. The shared finite corpus below now checks that correspondence
+automatically; it is not a proof of the Scheme compiler, digest implementation
+or general hash-table refinement.
+A counterexample that violates actual behavior must become a failing native
+regression, an owner-scoped repair and a rerun of all corresponding gates.
+An injected fault already rejected by production remains a regression control;
+it does not justify an artificial production edit.
+
+* Executable finite conformance bridge
+
+[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint's evaluate]] is now the pure function used by both the actual =grade=
+transition and the corpus exporter. =conformance= deterministically enumerates
+all 1,024 initial states, not random samples or seven hand-selected examples.
+The [[file:../../../t/qualification/fixtures/feedback/conformance.json][frozen JSON corpus]] stores =[id,status,missingMask,extraMask]=. Status codes
+are 0=inconclusive, 1=match, 2=mismatch. The input ID packs two answer-set bits,
+two reference-set bits, then candidate binding, candidate completion, paired
+comparison, gold binding, gold completion and identical query bits in that order.
+Row masks range from 0 to 3 for the fixed unary tuples =(0)= and =(1)=.
+
+[[file:../../../packages/proofs/lean/FeedbackConformance.lean][The executable Lean grader]] independently calculates the same observations.
+Kernel-checked finite theorems establish match iff qualified extensional equality,
+exact missing/extra membership, and refusal with empty differences. The proofs
+use =decide=, without =native_decide= or new axioms. =just check-feedback-conformance=
+regenerates current Quint output and requires both it and the frozen corpus to
+equal Lean's complete ordered result. This is a formal CI gate; malformed output,
+missing IDs, changed result fields or a stale frozen corpus fail comparison.
+
+[[file:../../../t/qualification/ascent-feedback-conformance-test.ss][The production Scheme replay]] consumes that same frozen corpus through ordinary
+Gerbil test discovery. It creates real snapshots and executes inert proposals,
+using generation changes for unbound observations and actual resource exhaustion
+for incomplete observations. It verifies binding, completion, query equality
+and complete answer rows from public receipts before comparing native feedback
+with foreign result fields. Both public comparison APIs are covered. No receipt
+constructor, mock completion flag or replacement Scheme grader is used.
+Admission receipts are cached within this Case; repeated input flags do not
+trigger another solve. Actual progress is reported every 128 comparisons.
+
+The finite replay and the formal regeneration check are independent CI consumers
+of one artifact, so changing any one implementation or the corpus cannot silently
+count as three-way agreement. This closes finite result correspondence for these
+1,024 states. Arbitrary tuples, full digest/source implementation refinement,
+concurrent source mutation, model-language intent and TLC counterexample trace
+serialization remain outside this gate. Detailed refusal reasons remain covered
+by the seven named native regressions above.
+
+* Assurance correspondence
+
+[[file:../../../packages/proofs/lean/ExecutionFeedback.lean][Lean laws]] establish absence of both differences iff extensional equality,
+a mismatch witness, disjoint missing/extra sets and binding/completion premises
+for admitted matches. Actual hash equality, finite tuple encoding and digest
+correspondence remain implementation premises; no new custom axioms or sorry.
+The gold comparison adds independent reference binding/completion and identical
+query premises. Qualified comparison is equivalent to absence of both differences;
+tests refute stale gold, incomplete gold, changed query and a scoped missing row.
+[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint]] now explores 2,048 distinct states for two-row finite sets, binding,
+completion and the optional gold gate. Seven mutants admit stale/partial
+candidate or gold observations, change query, or drop missing/extra rows;
+each produces the expected invariant counterexample. This model checks
+the feedback gate, not all execution/session interleavings.
+
+[[file:../../../t/qualification/ascent-candidate-feedback-test.ss][Native qualification]] freezes five proposals before enumerating all 64 directed
+non-self graphs on three vertices: correct reachability, removed base, removed
+step, wrong recursive join and reversed base. The corpus uses =reasoning-attempt= with its third argument =#f= to omit
+optional positive proof/absence replay while retaining complete native solve.
+All 320 completed attempts are
+compared with independent graph walks and exact missing/extra outputs. Every
+mutant is distinguished somewhere; individual agreement remains allowed.
+A one-edge demonstration passes the wrong join, while a held-out chain rejects
+it. Additional controls cover withdrawal/current generation, proposal mismatch,
+undeclared helper diagnostics, refused execution, duplicate rows, malformed and
+cyclic references, material bound and detached differences.
+
+The original four Cases, four comparison Cases and seven named correspondence
+Cases pass locally (15 total). Focused
+Lean kernel checking and the expanded Quint gate also pass. Remote
+whole-revision CI is a separate delivery gate. No model-generated proposal,
+Souffle corpus execution, published candidate execution feedback score or general equivalence is claimed.
+
+The additional conformance Case passes all 1,024 observations in native compiled
+execution (12 seconds locally), and current Quint/frozen/Lean comparison passes.
+A deliberately corrupted status observation is rejected by the Lean CLI
+(exit 1). This negative control is retained as validation evidence, not committed
+as an alternate accepted corpus. No timeout, heap or performance contract changed.
+
+* Initial CI timeout and execution-only consumer correction
+
+Revision =e888940= passed all four candidate execution feedback compiled Cases in CI, but the full
+semantic roster reached the unchanged 120-second invocation deadline during
+the subsequent BYODS invariant Suite (exit 124). This is rejected aggregate
+qualification, not a candidate execution feedback semantic failure. Execution grading does not consume
+optional positive certificates, so =reasoning-attempt= now accepts =#f= for
+that work budget and omits both replays. Default certificate production and
+its regression Suite remain active. The 320 native attempts and exact row
+assertions remain unchanged; no timeout, graph corpus or semantic gate is relaxed.
+
+Revision =3dac84c= still hit the aggregate semantic deadline, so skipping
+optional certificate replay alone did not discharge that gate. Its log places
+the IRIS graph enumeration at roughly nine seconds. That fixture now admits
+one ordinary Session per graph and replaces the sanitizer source for all
+eight subsets; all 512 independent oracle comparisons and fresh Program
+controls remain. Focused native execution passes all three IRIS Cases.
+This removes repeated rule admission without changing execution deadlines;
+whole-revision qualification still requires a fresh CI result.

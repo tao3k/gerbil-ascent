@@ -1,0 +1,107 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil/runtime/gambit
+        (only-in :gerbil/expander core-resolve-library-module-path)
+        (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
+        (rename-in (only-in :gerbil-ascent/t/performance/bounded-datum/reference reasoning-bounded-data?)
+                   (reasoning-bounded-data? old-bounded?))
+        (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
+        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/provenance-graph
+                 candidate-positive-provenance candidate-verify-positive-provenance
+                 positive-provenance-witness positive-provenance-alternatives)
+        (rename-in (only-in :gerbil-ascent/t/performance/bounded-datum/reference-graph
+                           candidate-positive-provenance candidate-verify-positive-provenance
+                           positive-provenance-witness positive-provenance-alternatives)
+                   (candidate-positive-provenance old-graph)
+                   (candidate-verify-positive-provenance old-verify)
+                   (positive-provenance-witness old-witness)
+                   (positive-provenance-alternatives old-alternatives)))
+(export main)
+(def (median xs) (list-ref (list-sort < xs) (quotient (length xs) 2)))
+(def (measure call)
+  (let (before (##process-statistics))
+    (let loop ((left 10) (result #f))
+      (if (zero? left)
+        (let (after (##process-statistics))
+          (values result
+            (/ (- (f64vector-ref after 7) (f64vector-ref before 7)) 10)
+            (/ (- (+ (f64vector-ref after 0) (f64vector-ref after 1))
+                  (+ (f64vector-ref before 0) (f64vector-ref before 1))) 10)))
+        (loop (- left 1) (call))))))
+(def (paired name old new expected mode)
+  (##gc)
+  (unless (and (equal? (old) expected) (equal? (new) expected)) (error "warm verdict" name))
+  (let ((ab []) (bb []) (ac []) (bc []) (wins 0))
+    (let loop ((sample 0))
+      (when (< sample 50)
+        (let-values (((a x y b u v)
+                      (if (even? sample)
+                        (let-values (((a x y) (measure old)) ((b u v) (measure new))) (values a x y b u v))
+                        (let-values (((b u v) (measure new)) ((a x y) (measure old))) (values a x y b u v)))))
+          (unless (and (equal? a expected) (equal? b expected)) (error "paired verdict" name sample))
+          (set! ab (cons x ab)) (set! bb (cons u bb))
+          (set! ac (cons y ac)) (set! bc (cons v bc))
+          (when (< v y) (set! wins (+ wins 1))))
+        (when (zero? (modulo (+ sample 1) 10))
+          (displayln "DATUM-PAIRS-CHECKED " name " " (+ sample 1) "/50") (force-output))
+        (loop (+ sample 1))))
+    (displayln "RESULT " name " old-bytes=" (median ab) " new-bytes=" (median bb)
+               " old-cpu-us=" (* 1000000 (median ac)) " new-cpu-us=" (* 1000000 (median bc))
+               " cpu-wins=" wins "/50") (force-output)
+    ;; Fixed before sampling: large traversals must earn both allocation and
+    ;; CPU gains. The complete verifier has a shared replay and a 5% CPU cap.
+    (unless (and (<= (median bb) (* (case mode ((kernel) 0.7) ((verifier) 0.95) (else 1)) (median ab)))
+                 (<= (median bc) (* (case mode ((kernel) 0.9) ((verifier) 1.05) (else 1.1)) (median ac)))
+                 (or (not (eq? mode 'kernel)) (>= wins 35)))
+      (error "bounded datum allocation/CPU gate failed" name))
+    (displayln "OK " name) (force-output)))
+(def (main scenario library)
+  (for-each
+   (lambda (name)
+     (let (path (path-expand (string-append "gerbil-ascent/" name ".ssi") library))
+       (unless (and (equal? path (core-resolve-library-module-path
+                                  (string->symbol (string-append ":gerbil-ascent/" name))))
+                    (file-exists? (string-append (path-strip-extension path) ".o1")))
+         (error "bounded datum benchmark requires symmetric native modules" name))))
+   '("candidate/datum" "candidate/types" "candidate/provenance" "candidate/provenance-graph"
+     "t/performance/bounded-datum/reference" "t/performance/bounded-datum/reference-graph"))
+  (displayln "NATIVE-MODULES-OK") (force-output)
+  (cond
+   ((string=? scenario "kernel")
+    (let* ((shared (iota 64))
+           (deep (let loop ((left 512) (datum 0))
+                   (if (zero? left) datum (loop (- left 1) (cons datum [])))))
+           (fixtures (list (list 'flat (iota 4096) 8193 0 #t 'kernel)
+                           (list 'shared (make-list 64 shared) 20000 1 #t 'kernel)
+                           (list 'deep deep 1025 511 #t 'kernel)
+                           (list 'reject (append (iota 4095) (list "reject")) 8193 0 #f 'kernel)
+                           ;; Mixed prefixes must remain linear even when
+                           ;; specialization falls back near the tail.
+                           (list 'late-mixed (append (iota 2048) (list '(7))) 4101 1 #t 'control)
+                           (list 'small '(0 1 2 3) 9 0 #t 'control))))
+      (for-each
+       (lambda (fixture)
+         (let ((datum (cadr fixture)) (nodes (caddr fixture)) (depth (cadddr fixture)))
+           (paired (car fixture) (lambda () (old-bounded? datum nodes depth))
+                   (lambda () (reasoning-bounded-data? datum nodes depth))
+                   (list-ref fixture 4) (list-ref fixture 5)))) fixtures)))
+   ((string=? scenario "verifier")
+    (let* ((rows (map list (iota 64)))
+           (snapshot (reasoning-source-snapshot 'datum-verifier 1 (list (list 's 1 rows))))
+           (spec (make-reasoning-candidate '((p . 1)) []
+                   (list (vector '(p ?x) '((s ?x)) 10) (vector '(p ?x) '((p ?x)) 11))
+                   (vector '(p ?x) 12) '(128 128 256)))
+           (a (old-graph snapshot spec 'program 'complete rows 10000))
+           (b (candidate-positive-provenance snapshot spec 'program 'complete rows 10000)))
+      (unless (and (equal? (old-witness a) (positive-provenance-witness b))
+                   (equal? (old-alternatives a) (positive-provenance-alternatives b))
+                   (= (length (positive-provenance-alternatives b)) 192))
+        (error "verifier certificate parity"))
+      (paired 'verifier
+              (lambda () (old-verify snapshot spec 'program 'complete rows a 10000))
+              (lambda () (candidate-verify-positive-provenance snapshot spec 'program 'complete rows b 10000))
+              #t 'verifier)))
+   (else (error "unknown bounded datum scenario" scenario)))
+  (displayln "OK") (force-output))

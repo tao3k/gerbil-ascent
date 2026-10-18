@@ -1,0 +1,56 @@
+#+title: SDK compiler output reuse across executable build phases
+
+* Scope
+
+Reuse the existing released SDK, compiler executor and compiled Reader SHA-256
+implementation. No SDK, upstream source, runtime, resource limit, cancellation,
+provenance rule, semantic deadline or existing performance threshold changes.
+Build-only helpers stay in bindings/build-entry.ss; the C ABI runtime does not
+import this module. Unrelated feature edits are outside the commit.
+
+* Actual duplicate work
+
+The preceding build's 96 repeated static object compilations comprise 89
+ASCENT objects and seven dependency objects. The SDK registers the ASCENT
+runtime C producers, but closes their executor at each make boundary. The next
+make therefore lacks those producer records and translates Scheme again.
+
+Capture the SDK's actual producer predicate before the first make. After its
+successful drain, observe only those registered outputs and their SHA-256
+values. Register digest-validation jobs with the SDK in the next executor.
+Its existing dependency barrier prevents link preparation until validation
+succeeds, and propagates a changed or missing output as a build error. This is
+scoped to one single-writer build invocation; it is not a persistent cache,
+filesystem-existence shortcut, GSC wrapper or replacement scheduler.
+
+The first executor is explicitly drained even when synchronous make or a warm
+build submitted no jobs. Each executable still has a separate completed make
+call, retaining isolation of shared C writers. Dependency files not registered
+by the SDK remain on the original path; no producer evidence is invented.
+
+* Validation and remaining scope
+
+A cold diagnostic using the released SDK observes 126 admitted output paths.
+Actual GSC invocations fall from 573 to 484, and invocations triggering C
+compilation from 445 to 356. Repeated object paths fall from 96 to seven, all
+in dependencies. The shared-host diagnostic wall time is not speedup evidence.
+
+Two added artifact Cases use the real SDK executor: only registered outputs
+cross a completed executor boundary; changed or missing bytes prevent the
+dependent consumer from running. Every pre-existing semantic Case is retained.
+The compiled artifact-test closure declares its build-only helper explicitly.
+
+A separate hosted macOS 26 runner supplies uncontaminated timing controls.
+The released binary requires macOS 26 or later; its SDK and declared dependency
+seed are fixed for all controls. The predeclared order is baseline, candidate,
+candidate, baseline. Each control starts with zero ASCENT artifacts, executes
+the same policy-enabled build and test preparation, and rejects unrelated
+compiler activity or production recompilation during preparation. Binary
+receipts and common program source hashes are checked before retaining each
+result. All controls are preserved; there is no fastest-run selection.
+
+The complete macOS semantic and exact pushed-commit CI results, together with
+the hosted control receipts, are recorded in PR #1 after execution. Compiler
+output re-admission is not a new production source-refinement proof. The
+remaining seven dependency recompilations need a separate SDK producer
+contract before they can be reused safely through this interface.

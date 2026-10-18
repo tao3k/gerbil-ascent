@@ -4,6 +4,8 @@
 
 (import (only-in :std/build-script defbuild-script)
         (only-in :std/make make-clean)
+        (only-in :gerbil/compiler execute-pending-compile-jobs!)
+        (only-in "bindings/build-entry.ss" observe-compiler-outputs reuse-compiler-outputs!)
         (only-in :std/source this-source-file)
         (only-in :gerbil/runtime/loader add-load-path!)
         (only-in "bindings/artifact.ss"
@@ -188,11 +190,18 @@
       ;; Including the first executable lets std/make reuse each module's
       ;; generated C/object for both its dynamic bundle and the static link.
       ;; One executable per call still prevents competing gsc -link writers.
-      (run (append libraries (if (pair? executables) [(car executables)] [])))
-      (for-each (lambda (target)
-                  (displayln "... link target " (cadr target))
-                  (run [target]))
-                (if (pair? executables) (cdr executables) [])))
+      (let (observe (observe-compiler-outputs))
+        (run (append libraries (if (pair? executables) [(car executables)] [])))
+        ;; make drains parallel jobs; close the observer's idle executor too
+        ;; when a synchronous or unchanged-input build submitted no jobs.
+        (execute-pending-compile-jobs!)
+        (let (outputs (observe (path-expand "lib/gerbil-ascent" (gerbil-path))))
+          (for-each (lambda (target)
+                      (reuse-compiler-outputs! outputs)
+                      (displayln "... link target " (cadr target)
+                                 " admitted-outputs=" (length outputs))
+                      (run [target]))
+                    (if (pair? executables) (cdr executables) [])))))
     (run spec)))
 
 (def (main . args)

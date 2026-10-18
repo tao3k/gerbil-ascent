@@ -245,6 +245,26 @@ theorem changed_input_requires_work (stored requested : CompileKey)
 theorem missing_output_requires_work (stored requested : CompileKey) :
     reuse stored requested false = false := by simp [reuse]
 
+-- A CI cache entry is not just its compiled interfaces. The existing producer
+-- guard reads the payload and content receipt before native make can reuse it.
+-- Presence is necessary, never sufficient: reuse still requires the exact key.
+def bundleReuse (stored requested : CompileKey)
+    (interfaces payload receipt : Bool) : Bool :=
+  reuse stored requested (interfaces && payload && receipt)
+
+theorem missing_payload_requires_work (stored requested : CompileKey)
+    (interfaces receipt : Bool) : bundleReuse stored requested interfaces false receipt = false := by
+  simp [bundleReuse, reuse]
+
+theorem missing_receipt_requires_work (stored requested : CompileKey)
+    (interfaces payload : Bool) : bundleReuse stored requested interfaces payload false = false := by
+  simp [bundleReuse, reuse]
+
+theorem bundle_requires_current_inputs (stored requested : CompileKey)
+    (changed : stored ≠ requested) (interfaces payload receipt : Bool) :
+    bundleReuse stored requested interfaces payload receipt = false := by
+  simp [bundleReuse, reuse, changed]
+
 structure Work where
   jobs : Nat := 0
   inputBytes : Nat := 0
@@ -314,6 +334,9 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms isolated_entries_preserved
 #print axioms changed_input_requires_work
 #print axioms missing_output_requires_work
+#print axioms missing_payload_requires_work
+#print axioms missing_receipt_requires_work
+#print axioms bundle_requires_current_inputs
 #print axioms module_data_avoids_package_declaration
 #print axioms inactive_dependency_no_work
 #print axioms removed_two_observations

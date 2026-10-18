@@ -809,3 +809,38 @@ gate in the separately developed Clue interfaces and twelve assert_is_empty
 Clippy diagnostics; the PyO3 wheel and Python interface nevertheless passed.
 Those failures are not a Python timeout and are not waived by this CI policy
 change. Other tasks' Rust API and test changes are preserved.
+
+* Complete producer cache bundles
+
+A further CI cache audit found that ascent-compiled restored interfaces/static
+objects but omitted bin/libascent and its .json source receipt. The existing
+artifact-invalidated-modules guard requires that payload/receipt pair; a
+missing pair correctly selects conservative clean/rebuild. Meanwhile the
+shared dependency cache included application bin outputs, so an application
+receipt could come from the wrong cache entry. This is a cache-content defect,
+not evidence that the released compiler is broken.
+
+The minimal CI correction stores libascent* and ascent-develop* with the
+content-bound application cache, excludes both from the shared dependency
+cache, and removes dependency-restored application bins before restoring the
+application cache. Versioned cache keys avoid treating old incomplete entries
+as complete bundles. All source, SDK/root and binary-digest checks remain.
+Native make still checks compiler interfaces and dependency freshness; bundle
+presence alone does not authorize reuse. No generated timestamps are forged.
+
+A new native artifact Case exercises the real guard using a fixture payload
+and receipt: complete matching metadata permits the empty fixture inventory;
+missing receipt, missing payload and mismatched payload all reject. All 23
+standalone compiled artifact Cases passed on the existing released SDK under
+the original 1G/120-second test limit. Lean proves that missing payload or
+receipt cannot satisfy bundle reuse and that changed inputs still reject.
+Quint retains earlier controls and adds missing-payload/missing-receipt
+counterexamples, for nineteen fault controls. Full Lean checking still uses
+the locked process Guard and original budgets.
+
+This corrects an unconditional rebuild trigger, not every cause of rebuilds.
+Fresh checkout timestamps, native make behavior, dependency changes and cache
+availability remain separate. The versioned cache starts cold; no wall-time
+improvement from a future warm restore is claimed without its own receipt.
+The preceding uninstrumented ABBA measurements concern 04553345, not this
+additional cache configuration correction.

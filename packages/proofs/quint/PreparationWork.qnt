@@ -8,14 +8,14 @@ module PreparationWork {
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
-                inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool,
+                inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
-    inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false,
+    inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
@@ -38,12 +38,17 @@ module PreparationWork {
   action CompileSourceSuite = all {any {Mutation == "compile-source-suite", Mutation == "compile-source-consumer"},
     q' = {...q, compiledSourceCarriers: q.compiledSourceCarriers + 1, published: false}}
   action CacheOutput = all {q.finished,
-    q' = {...q, cacheReady: true, cacheGeneration: q.inputGeneration}}
+    q' = {...q, cacheReady: true, payloadPresent: true, receiptPresent: true, cacheGeneration: q.inputGeneration}}
   action ChangeInput = all {q.inputGeneration < 2,
     q' = {...q, inputGeneration: q.inputGeneration + 1, current: false, published: false}}
+  action DropPayload = q' = {...q, payloadPresent: false}
+  action DropReceipt = q' = {...q, receiptPresent: false}
   action Reuse = all {q.cacheReady,
+    q.payloadPresent or Mutation == "reuse-missing-payload",
+    q.receiptPresent or Mutation == "reuse-missing-receipt",
     q.cacheGeneration == q.inputGeneration or Mutation == "reuse-stale-input",
-    q' = {...q, staleReuse: q.staleReuse or q.cacheGeneration != q.inputGeneration}}
+    q' = {...q, staleReuse: q.staleReuse or q.cacheGeneration != q.inputGeneration,
+      incompleteReuse: q.incompleteReuse or not(q.payloadPresent and q.receiptPresent)}}
   // Models one two-entry child batch (finite instance). ActorTestPool separately checks the capacity-3 pool.
   // Suite completion does not evict Gerbil's retained module contexts; VM exit does.
   action StartSourceVm = all {not(q.sourceVmActive), q.sourceStarts < 2,
@@ -69,7 +74,7 @@ module PreparationWork {
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
-    CacheOutput, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
+    CacheOutput, DropPayload, DropReceipt, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val UnadmittedCatalogPresent = (q.rootsProjected and not(q.productionAdmitted)) implies q.forcedCatalogRoots == 1
@@ -83,6 +88,7 @@ module PreparationWork {
   val OrderedCounter = q.published implies q.counterValid
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
+  val CompleteCacheBundle = not(q.incompleteReuse)
   val ReuseCurrentInputs = not(q.staleReuse)
   val BoundedSourceEntries = q.retainedEntryRoots <= 2
   val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0

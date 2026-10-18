@@ -168,6 +168,33 @@
          (check (rejected? (lambda () (reuse-compiler-outputs!
                    [(cons "unregistered.c" "untrusted digest")]))) => #t)
          (check (reuse-compiler-outputs! []) => (void)))))
+    (test-case "restored modules need the matching producer payload and receipt"
+      (with-artifact-fixture (lambda ()
+        (let ((prefix (getenv "GERBIL_PATH" #f))
+              (receipt (make-hash-table)))
+          (try
+           (setenv "GERBIL_PATH" (current-directory))
+           (artifact-directory! (path-expand "bin"))
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "producer fixture bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (hash-put! receipt "sdk" (gerbil-home))
+           (hash-put! receipt "sourceRoot" (current-directory))
+           (hash-put! receipt "librarySha256" (artifact-file-sha256 "bin/libascent"))
+           (hash-put! receipt "sourceInputs" (make-hash-table))
+           (call-with-output-file [path: "bin/libascent.json" truncate: #t]
+             (lambda (out) (write-json out receipt)))
+           (check (artifact-invalidated-modules (current-directory) [] []) => [])
+           (delete-file "bin/libascent")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "different producer bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "producer fixture bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => [])
+           (delete-file "bin/libascent.json")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (finally
+            (if prefix (setenv "GERBIL_PATH" prefix) (setenv "GERBIL_PATH"))))))))
     (test-case "unadmitted roots do not eagerly read missing source inputs"
       (with-artifact-fixture (lambda ()
         (check (artifact-invalidated-modules (current-directory) '("absent")) => #f))))

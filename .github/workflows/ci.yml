@@ -62,12 +62,15 @@ jobs:
             .gerbil
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
-          key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
@@ -81,7 +84,9 @@ jobs:
             .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v2-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just check-policy
       - name: Qualify compiled performance contracts and benchmarks
@@ -177,12 +182,15 @@ jobs:
             .gerbil
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
-          key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
@@ -196,7 +204,9 @@ jobs:
             .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v2-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just build
       - name: Record Rust and Python compiler identity
@@ -329,12 +339,15 @@ jobs:
             .gerbil
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
-          key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
@@ -348,7 +361,9 @@ jobs:
             .cache/ascent/compiled-library
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
-          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v2-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just build
       - name: Qualify runtime source view loading

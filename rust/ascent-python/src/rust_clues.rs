@@ -1,7 +1,10 @@
 //! Transport only: clue semantics and declarative evaluation belong to the Library.
 use super::{Owner, error, packets};
 use gerbil_ascent::{Cancellation, ClueExchange as Exchange, SourceSession, clue_sexpr};
-use pyo3::{exceptions::PyRuntimeError, prelude::*};
+use pyo3::{
+    Bound, IntoPyObject, Py, PyAny, PyResult, Python, exceptions::PyRuntimeError, pyclass,
+    pymethods, types::PyAnyMethods,
+};
 use std::sync::Mutex;
 
 #[pyclass(name = "ClueExchange", frozen)]

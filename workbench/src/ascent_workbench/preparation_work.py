@@ -68,6 +68,16 @@ def file_input(path, contents=None):
     return row
 
 
+def compiler_stage(record):
+    if record['kind'] == 'sdk-helper':
+        return 'sdk-' + record['arguments'][0]
+    args = record['arguments']
+    for flag, stage in (('-c', 'scheme-to-c'), ('-obj', 'c-to-object'), ('-link', 'link-source')):
+        if flag in args:
+            return stage
+    return 'dynamic-or-executable'
+
+
 def execute_gsc(arguments, helper=False):
     trace = Path(os.environ['ASCENT_GSC_WORK_DIRECTORY'])
     contents = trace.parent / 'inputs'
@@ -90,12 +100,27 @@ def execute_gsc(arguments, helper=False):
     started = time.monotonic_ns()
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     command = str(Path(os.environ['ASCENT_REAL_GSC']).parent / 'gambuild-C') if helper else os.environ['ASCENT_REAL_GSC']
-    result = subprocess.run([command, *arguments])
+    child_env = os.environ.copy()
+    runtime_options = []
+    if not helper and child_env.get('ASCENT_SDK_HELPER_DIRECTORY'):
+        # Gambit's documented ~~bin runtime override observes internal helper
+        # dispatch too. It changes no compiler option or installed SDK file.
+        # Pin ~~ too: Gambit otherwise infers the include/lib root from the
+        # overridden bin directory, which would change compiler inputs.
+        runtime_options = ['-:~~=' + str(Path(command).parent.parent) +
+                           ',~~bin=' + child_env['ASCENT_SDK_HELPER_DIRECTORY']]
+        child_env['ASCENT_PARENT_GSC_OBSERVER'] = str(os.getpid())
+    child = subprocess.Popen([command, *runtime_options, *arguments], env=child_env)
+    exit_code = child.wait()
+    process_wall_ns = time.monotonic_ns() - started
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     current = all(Path(row['path']).is_file() and file_input(Path(row['path'])) == row for row in inputs)
-    record = {'schema': 'ascent.compiler-work.v2', 'kind': 'sdk-helper' if helper else 'gsc',
-              'pid': os.getpid(), 'arguments': arguments,
-              'inputs': inputs, 'exit_code': result.returncode, 'inputs_current': current,
+    record = {'schema': 'ascent.compiler-work.v3', 'kind': 'sdk-helper' if helper else 'gsc',
+              'pid': os.getpid(), 'child_pid': child.pid,
+              'parent_gsc_observer': os.environ.get('ASCENT_PARENT_GSC_OBSERVER') if helper else None,
+              'arguments': arguments, 'runtime_options': runtime_options,
+              'inputs': inputs, 'exit_code': exit_code, 'inputs_current': current,
+              'process_wall_ns': process_wall_ns,
               'wall_ns': time.monotonic_ns() - started,
               'user_seconds': after.ru_utime - before.ru_utime,
               'system_seconds': after.ru_stime - before.ru_stime,
@@ -105,7 +130,7 @@ def execute_gsc(arguments, helper=False):
               'output_blocks': after.ru_oublock - before.ru_oublock}
     # One bounded record per process; no concurrent partial text writes.
     (trace / f'{os.getpid()}-{started}.json').write_text(json.dumps(record) + '\n')
-    return result.returncode if current else 1
+    return exit_code if current else 1
 
 
 def summarize(directory):
@@ -125,6 +150,27 @@ def summarize(directory):
                     raise ValueError('missing or damaged expanded compiler input')
         gsc = [r for r in records if r['kind'] == 'gsc']
         helpers = [r for r in records if r['kind'] == 'sdk-helper']
+        nested_helpers = [r for r in helpers if r.get('parent_gsc_observer') is not None]
+        gsc_by_pid = {str(r['pid']): r for r in gsc if 'pid' in r}
+        for helper in nested_helpers:
+            if helper['parent_gsc_observer'] not in gsc_by_pid:
+                raise ValueError('SDK helper has no containing GSC observation')
+        helper_cpu = {}
+        for helper in nested_helpers:
+            parent = helper['parent_gsc_observer']
+            helper_cpu[parent] = helper_cpu.get(parent, 0) + helper['user_seconds'] + helper['system_seconds']
+        for parent, cpu in helper_cpu.items():
+            outer = gsc_by_pid[parent]
+            if cpu > outer['user_seconds'] + outer['system_seconds']:
+                raise ValueError('nested SDK helper CPU exceeds containing GSC CPU')
+        helper_observed = bool(gsc) and all(r.get('runtime_options') for r in gsc)
+        stages = {}
+        for record in records:
+            stage = compiler_stage(record) if 'arguments' in record else 'legacy-unknown'
+            group = stages.setdefault(stage, {'invocations': 0, 'input_bytes': 0, 'inclusive_cpu_seconds': 0})
+            group['invocations'] += 1
+            group['input_bytes'] += sum(item['bytes'] for item in record['inputs'])
+            group['inclusive_cpu_seconds'] += record['user_seconds'] + record['system_seconds']
         imports = []
         trace = directory / f'{phase}-imports.sexp'
         if trace.exists():
@@ -149,6 +195,9 @@ def summarize(directory):
                                 'gc_cpu_ns': int(gcuser) + int(gcsys), 'gc_wall_ns': int(gcwall)})
         phases[phase] = {
             'gsc_invocations': len(gsc),
+            'compiler_stages': stages,
+            'largest_gsc_jobs': sorted(gsc,
+                key=lambda r: r['user_seconds'] + r['system_seconds'], reverse=True)[:12],
             'gsc_input_bytes': sum(x['bytes'] for r in gsc for x in r['inputs']),
             'gsc_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in gsc),
             'gsc_major_faults': sum(r['major_faults'] for r in gsc),
@@ -162,6 +211,15 @@ def summarize(directory):
                 sum(not r['inputs_current'] for r in records),
                 sum(r['sdk_allocated_bytes'] < 0 or r['raw_counter_decreased'] for r in imports), trace.exists()),
             'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
+            # GSC RUSAGE_CHILDREN includes nested SDK helpers and native C/link
+            # children. These are a subset, never an additive second cost.
+            'nested_sdk_helper_invocations': len(nested_helpers),
+            'nested_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in nested_helpers),
+            'internal_helper_observer_enabled': helper_observed,
+            'gsc_residual_cpu_seconds': (
+                sum(r['user_seconds'] + r['system_seconds'] for r in gsc) - sum(helper_cpu.values())
+                if helper_observed else None),
+            'cpu_scope': 'GSC inclusive; nested helper CPU is a subset; residual includes observer overhead and is not pure frontend CPU',
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),
             'direct_registry_hits': sum(r['direct_registry_hit'] for r in imports),
@@ -202,6 +260,7 @@ def install(directory, real_gxi, real_gsc):
     for path in (gsc, gxi, helper):
         path.chmod(0o755)
     return {'GERBIL_GSC': str(gsc), 'ASCENT_REAL_GSC': str(real_gsc),
+            'ASCENT_SDK_HELPER_DIRECTORY': str(directory.resolve()),
             # Package builders execute build.ss through /usr/bin/env gxi;
             # observing only explicit package-prefix gxi calls misses them.
             'PATH': str(directory) + os.pathsep + os.environ.get('PATH', os.defpath),

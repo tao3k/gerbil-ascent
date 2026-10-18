@@ -20,6 +20,7 @@ class FormalTests(unittest.TestCase):
             "hide-changed-input": "CompilerWorkComplete",
             "hide-job": "JobsExact", "forget-import": "ImportsExact",
             "sum-nested": "AllocationNotNested", "publish-partial": "Complete",
+            "sum-helper-cpu": "CompilerCpuPartition",
             "ignore-generation": "Current", "clamp-counter": "OrderedCounter",
             "bootstrap-inventory": "InventoryDataOnly",
             "eager-catalog": "OnlyDemandedCompilation",

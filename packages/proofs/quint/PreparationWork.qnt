@@ -8,6 +8,7 @@ module PreparationWork {
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, rawStart: int, rawFinish: int, inventoryDeclarations: int,
+                gscCpu: int, helperCpu: int, residualCpu: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
@@ -15,6 +16,7 @@ module PreparationWork {
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, rawStart: 0, rawFinish: 0, inventoryDeclarations: 0,
+    gscCpu: 0, helperCpu: 0, residualCpu: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
@@ -69,6 +71,10 @@ module PreparationWork {
       retainedEntryRoots: if (Mutation == "retain-source-roots") q.retainedEntryRoots else 0}}
   action Allocate = q' = {...q, outerAllocation: 4,
     reportedAllocation: if (Mutation == "sum-nested") 6 else 4, published: false}
+  // GSC child usage already includes native compiler/helper descendants.
+  // Keep a partition instead of adding a second inclusive measurement.
+  action ObserveCompilerCpu = q' = {...q, gscCpu: 4, helperCpu: 3,
+    residualCpu: if (Mutation == "sum-helper-cpu") 4 else 1}
   action Finish = all {q.jobs == 2, q.imports == 2, q' = {...q, finished: true}}
   action ChangeSource = q' = {...q, current: false, published: false}
   // Current SDK counters can fall when a GC releases earlier still objects.
@@ -88,7 +94,7 @@ module PreparationWork {
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
-    Allocate, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
+    Allocate, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val DemandedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "requested")
   val CachedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "cached")
@@ -97,6 +103,7 @@ module PreparationWork {
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports
   val AllocationNotNested = q.reportedAllocation == q.outerAllocation
+  val CompilerCpuPartition = q.residualCpu >= 0 and q.helperCpu + q.residualCpu == q.gscCpu
   val CompilerWorkComplete = q.published implies (q.failedJobs == 0 and q.changedInputs == 0)
   val Complete = q.published implies q.finished
   val Current = q.published implies q.current

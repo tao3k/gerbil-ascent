@@ -357,6 +357,27 @@ theorem ordered_allocation_snapshots (start middle finish : Nat)
 theorem nested_inclusive_double_counts (outer inner : Nat) (positive : 0 < inner) :
     outer < outer + inner := by omega
 
+-- preparation_work.execute_gsc reads RUSAGE_CHILDREN after waiting for GSC.
+-- Its helper observer reads the same statistic for GSC's native child only.
+-- Parent identity must be retained; disjoint parents cannot share a child.
+-- The OS accounting/decoder are premises, not source-refined by this lemma.
+def compilerCpuResidual (inclusive nested : Nat) : Option Nat :=
+  if nested ≤ inclusive then some (inclusive - nested) else none
+
+theorem compiler_cpu_partition (inclusive nested residual : Nat)
+    (accepted : compilerCpuResidual inclusive nested = some residual) :
+    residual + nested = inclusive := by
+  unfold compilerCpuResidual at accepted
+  split at accepted
+  · simp only [Option.some.injEq] at accepted
+    omega
+  · contradiction
+
+theorem excessive_child_cpu_rejected (inclusive nested : Nat)
+    (invalid : inclusive < nested) : compilerCpuResidual inclusive nested = none := by
+  simp [compilerCpuResidual]; omega
+
+
 -- Nat subtraction would silently turn this invalid interval into zero.
 -- The observed counter must pass ordering before it can enter an allocation sum.
 theorem decreasing_counter_rejected (start finish : Nat) (decreased : finish < start) :
@@ -426,6 +447,8 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms removed_two_observations
 #print axioms ordered_allocation_snapshots
 #print axioms nested_inclusive_double_counts
+#print axioms compiler_cpu_partition
+#print axioms excessive_child_cpu_rejected
 #print axioms decreasing_counter_rejected
 #print axioms work_reduction_does_not_bound_wait
 #print axioms still_release_can_decrease_counter

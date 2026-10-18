@@ -48,6 +48,52 @@ class PreparationWorkTests(unittest.TestCase):
             self.assertEqual(process.returncode, 9)
             self.assertEqual(process.stdout.splitlines(), [str(helper), 'dyn'])
 
+    def test_internal_sdk_helper_is_attributed_without_changing_sdk_root(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sdk = root / 'sdk' / 'bin'
+            sdk.mkdir(parents=True)
+            helper = sdk / 'gambuild-C'
+            helper.write_text('#!/bin/sh\nprintf "%s\\n" "$0" "$1"\nexit 9\n')
+            helper.chmod(0o755)
+            real = sdk / 'gsc'
+            real.write_text(f'#!{sys.executable}\nimport subprocess,sys\n'
+                            f'assert sys.argv[1].startswith("-:~~=" + {str(sdk.parent)!r} + ",~~bin=")\n'
+                            'directory=sys.argv[1].split(",~~bin=",1)[1]\n'
+                            'sys.exit(subprocess.run([directory+"/gambuild-C", "dyn"]).returncode)\n')
+            real.chmod(0o755)
+            observer = root / 'observer'
+            env = dict(os.environ, **install(observer, sdk / 'gxi', real))
+            process = subprocess.run([str(observer / 'gsc'), '-dynamic'], env=env,
+                                     capture_output=True, text=True)
+            self.assertEqual(process.returncode, 9)
+            self.assertEqual(process.stdout.splitlines(), [str(helper), 'dyn'])
+            records = [json.loads(p.read_text()) for p in (observer / 'gsc-records').glob('*.json')]
+            outer, = [r for r in records if r['kind'] == 'gsc']
+            inner, = [r for r in records if r['kind'] == 'sdk-helper']
+            self.assertEqual(inner['parent_gsc_observer'], str(outer['pid']))
+            self.assertEqual(outer['arguments'], ['-dynamic'])
+            self.assertLessEqual(outer['process_wall_ns'], outer['wall_ns'])
+            (observer / 'gsc-records').rename(observer / 'prepare')
+            phase = summarize(observer)['phases']['prepare']
+            self.assertEqual(phase['nested_sdk_helper_invocations'], 1)
+            self.assertEqual(phase['nested_sdk_helper_cpu_seconds'],
+                             inner['user_seconds'] + inner['system_seconds'])
+            self.assertTrue(phase['internal_helper_observer_enabled'])
+            self.assertAlmostEqual(phase['gsc_residual_cpu_seconds'] +
+                                   phase['nested_sdk_helper_cpu_seconds'], phase['gsc_cpu_seconds'])
+            inner_path, = [p for p in (observer / 'prepare').glob('*.json')
+                           if json.loads(p.read_text())['kind'] == 'sdk-helper']
+            inner_path.write_text(json.dumps(dict(inner, user_seconds=10**9)))
+            with self.assertRaisesRegex(ValueError, 'exceeds containing GSC'):
+                summarize(observer)
+            inner_path.write_text(json.dumps(inner))
+            for p in (observer / 'prepare').glob('*.json'):
+                if json.loads(p.read_text())['kind'] == 'gsc':
+                    p.unlink()
+            with self.assertRaisesRegex(ValueError, 'no containing GSC'):
+                summarize(observer)
+
     def test_nested_process_allocations_are_not_added(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

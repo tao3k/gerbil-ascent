@@ -1167,3 +1167,59 @@ exchange suite retains all 17 original test names. The new helper extraction
 preserves request inheritance, selector validation, error order and checkpoint
 content; its existing semantic Cases remain the qualification, not a new
 source-equivalence proof. Full exact-head CI remains a separate requirement.
+
+
+** Cold-build variance and internal compiler-child accounting
+
+The retained 19.41 percent result is a measured total, not an established
+per-build slowdown or a causal attribution. Its ABBA cold-build samples are
+187.254453, 186.220807, 188.146780 and 126.250123 seconds. The last baseline
+also consumes less reaped-child CPU (278.049351 seconds versus 380.868096 for
+the first baseline); descheduling alone does not explain that difference.
+There are too few controls to classify this as a stable regression or noise.
+The original failed admission and unresolved ledger remain unchanged.
+
+The separate preparation samples measure a different phase. The current
+46a46bbe macOS preparation log records 253 distinct module compile starts and
+zero production rebuilds; it does not demonstrate duplicate DF scheduling.
+Gerbil's separate runtime and phase compilation products are distinct jobs.
+No build.ss scheduling change is justified by these observations.
+
+In the historical instrumented cold-build controls, 161 compiler inputs have
+identical bytes and matching relative names across all four runs. Their summed
+inclusive GSC CPU is 67.682868, 79.077658, 73.302743 and 67.836389 seconds.
+Equal inputs do not bound hardware latency or the cost of the other inputs;
+these instrumented controls cannot replace the uninstrumented latency failure.
+
+The work-only observer previously recorded direct Gerbil helper calls but
+missed gambuild-C started internally by GSC. It now uses the existing SDK's
+documented ~~bin override while pinning ~~ to the original SDK root. Both
+are necessary: overriding bin alone changes the inferred include directory
+and fails before C compilation. The installed SDK is not modified. Each helper
+still executes at its original absolute path, preserving sibling lookup and
+SDK cache identity. Original compiler arguments and the added diagnostic
+runtime options are retained separately.
+
+Compiler-work v3 records the containing GSC observer, child PID and native
+process wall interval before source-validation overhead. A helper without its
+parent record, or nested helper CPU exceeding its parent's inclusive CPU, is
+rejected. Stage summaries and largest compiler jobs retain exact input blobs.
+Nested helper CPU is a subset of GSC child usage, never an additional total;
+the residual includes observer overhead and must not be called pure expansion
+or frontend CPU. Import requests and direct registry hits still are not actual
+expansion counts or complete cache-hit counts.
+
+The existing Release compiles a diagnostic dynamic module through the internal
+helper observer, then loads it and returns 49 for the square of 7. This checks
+routing and execution only, not latency equivalence. Lean checks conservation
+of an accepted inclusive/residual partition and rejection of an excessive
+child cost. Quint adds a sum-helper-cpu counterexample while retaining every
+existing preparation control. OS accounting, the observer decoder, actual
+expansion, cumulative allocation and the compiler source remain outside those
+proofs. The signed SDK occupancy counter is not relabeled as allocation work.
+
+A same-revision, on-demand work experiment is required to characterize these
+costs without assuming a version regression. Its timings remain diagnostic,
+and source semantics retain three workers, a 240-second runtime limit and
+all existing Cases. Twelve-thread Rust/PyO3 acceptance remains independent.
+No performance threshold, cancellation, resource or provenance rule changes.

@@ -50,6 +50,73 @@ def selectionSchemeSource : String :=
   "    (map cdr\n" ++
   "      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))\n"
 
+-- The native ASP/Gerbil graph supplies dependencies; this policy decides only
+-- which carriers are compiled. It never removes a source Suite from discovery.
+def retainedSource (sourceSuites : Bool) (sourceConsumers : List String) (path : String) : Bool :=
+  !sourceConsumers.contains path && (!sourceSuites || !path.endsWith "-test.ss")
+
+def sourceSchemeSource : String :=
+  ";; Generated from PreparationWork.lean; formal CI compares this region.\n" ++
+  "(def (preparation-retained-source? source source-suites? source-consumers)\n" ++
+  "  (and (not (member source source-consumers))\n" ++
+  "       (or (not source-suites?) (not (string-suffix? \"-test.ss\" source)))))\n"
+
+theorem performance_carriers_retained (path : String) (sourceConsumers : List String)
+    (compiled : path ∉ sourceConsumers) :
+    retainedSource false sourceConsumers path = true := by simp [retainedSource, compiled]
+
+theorem source_suite_not_compiled (path : String) (sourceConsumers : List String)
+    (suite : path.endsWith "-test.ss" = true) :
+    retainedSource true sourceConsumers path = false := by simp [retainedSource, suite]
+
+theorem source_dependencies_retained (path : String) (sourceConsumers : List String)
+    (compiled : path ∉ sourceConsumers)
+    (support : path.endsWith "-test.ss" = false) :
+    retainedSource true sourceConsumers path = true := by simp [retainedSource, support, compiled]
+
+theorem explicit_source_not_compiled (path : String) (sourceConsumers : List String)
+    (source : path ∈ sourceConsumers) (sourceSuites : Bool) :
+    retainedSource sourceSuites sourceConsumers path = false := by simp [retainedSource, source]
+
+-- Weights come from concrete compiler/expander events, not a fixed number of
+-- native invocations per module. A graph projection removes work only for
+-- modules outside the demand closure. SDK graph completeness remains a premise.
+def sourceWork (weight : String → Nat) : List String → Nat
+  | [] => 0
+  | path :: rest => weight path + sourceWork weight rest
+
+theorem demanded_work_le_catalog (weight : String → Nat) (needed : String → Bool)
+    (catalog : List String) :
+    sourceWork weight (catalog.filter needed) ≤ sourceWork weight catalog := by
+  induction catalog with
+  | nil => simp [sourceWork]
+  | cons path rest ih =>
+    by_cases h : needed path = true
+    · simp [List.filter_cons, h, sourceWork]
+      omega
+    · simp [List.filter_cons, h, sourceWork]
+      omega
+
+-- File contents, dependency generations, SDK/options and output presence all
+-- participate in reuse. This is a cost precondition, not a claim that the SDK
+-- timestamp cache or the untyped receipt decoder has been source-refined.
+structure CompileKey where
+  source : String
+  dependencies : String
+  sdk : String
+  options : String
+  deriving DecidableEq, Repr
+
+def reuse (stored requested : CompileKey) (outputPresent : Bool) : Bool :=
+  decide (stored = requested) && outputPresent
+
+theorem changed_input_requires_work (stored requested : CompileKey)
+    (changed : stored ≠ requested) (outputPresent : Bool) :
+    reuse stored requested outputPresent = false := by simp [reuse, changed]
+
+theorem missing_output_requires_work (stored requested : CompileKey) :
+    reuse stored requested false = false := by simp [reuse]
+
 structure Work where
   jobs : Nat := 0
   inputBytes : Nat := 0
@@ -100,6 +167,13 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
     work < work - saved + wait := by omega
 
 #print axioms total_append
+#print axioms performance_carriers_retained
+#print axioms source_suite_not_compiled
+#print axioms source_dependencies_retained
+#print axioms explicit_source_not_compiled
+#print axioms demanded_work_le_catalog
+#print axioms changed_input_requires_work
+#print axioms missing_output_requires_work
 #print axioms module_data_avoids_package_declaration
 #print axioms inactive_dependency_no_work
 #print axioms removed_two_observations

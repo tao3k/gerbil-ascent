@@ -612,7 +612,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter InventoryDataOnly',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs',
 }
 FAULTS['PreparationWork'] = (
     ('hide-job', 'JobsExact', 12),
@@ -622,4 +622,8 @@ FAULTS['PreparationWork'] = (
     ('ignore-generation', 'Current', 12),
     ('clamp-counter', 'OrderedCounter', 12),
     ('bootstrap-inventory', 'InventoryDataOnly', 12),
+    ('eager-catalog', 'OnlyDemandedCompilation', 12),
+    ('compile-source-suite', 'SourceCarriersRemainSource', 12),
+    ('compile-source-consumer', 'SourceCarriersRemainSource', 12),
+    ('reuse-stale-input', 'ReuseCurrentInputs', 12),
 )

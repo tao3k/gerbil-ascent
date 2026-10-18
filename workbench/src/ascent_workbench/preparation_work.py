@@ -46,13 +46,26 @@ IMPORT_HOOK = r'''(import :gerbil/expander)
 
 
 
-def file_input(path):
+def file_input(path, contents=None):
     data = path.read_bytes()
-    return {'path': str(path.resolve()), 'bytes': len(data),
-            'sha256': hashlib.sha256(data).hexdigest()}
+    row = {'path': str(path.resolve()), 'bytes': len(data),
+           'sha256': hashlib.sha256(data).hexdigest()}
+    if contents is not None:
+        contents.mkdir(exist_ok=True)
+        # Preserve the real expanded input, including source positions and
+        # generated names. A digest alone cannot explain compiler work changes.
+        blob = contents / row['sha256']
+        try:
+            with blob.open('xb') as output:
+                output.write(data)
+        except FileExistsError:
+            pass  # Other wrappers may be recording the identical bytes.
+    return row
 
 
 def execute_gsc(arguments, helper=False):
+    trace = Path(os.environ['ASCENT_GSC_WORK_DIRECTORY'])
+    contents = trace.parent / 'inputs'
     inputs = []
     if helper:
         operation = arguments[0].upper()
@@ -60,7 +73,7 @@ def execute_gsc(arguments, helper=False):
         metadata = os.environ.get(f'BUILD_{operation}_META_INFO_FILE_PARAM')
         if metadata:
             names.append(metadata)
-        inputs = [file_input(Path(name)) for name in dict.fromkeys(names) if Path(name).is_file()]
+        inputs = [file_input(Path(name), contents) for name in dict.fromkeys(names) if Path(name).is_file()]
     option_value = False
     for arg in ([] if helper else arguments):
         if option_value:
@@ -68,14 +81,14 @@ def execute_gsc(arguments, helper=False):
         elif arg in {'-o', '-cc-options', '-ld-options', '-prelude', '-postlude', '-e', '-target', '-cc'}:
             option_value = True
         elif Path(arg).suffix in ('.scm', '.c') and Path(arg).is_file():
-            inputs.append(file_input(Path(arg)))
+            inputs.append(file_input(Path(arg), contents))
     started = time.monotonic_ns()
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     command = str(Path(os.environ['ASCENT_REAL_GSC']).parent / 'gambuild-C') if helper else os.environ['ASCENT_REAL_GSC']
     result = subprocess.run([command, *arguments])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     current = all(Path(row['path']).is_file() and file_input(Path(row['path'])) == row for row in inputs)
-    record = {'schema': 'ascent.compiler-work.v1', 'kind': 'sdk-helper' if helper else 'gsc',
+    record = {'schema': 'ascent.compiler-work.v2', 'kind': 'sdk-helper' if helper else 'gsc',
               'pid': os.getpid(), 'arguments': arguments,
               'inputs': inputs, 'exit_code': result.returncode, 'inputs_current': current,
               'wall_ns': time.monotonic_ns() - started,
@@ -86,7 +99,6 @@ def execute_gsc(arguments, helper=False):
               'input_blocks': after.ru_inblock - before.ru_inblock,
               'output_blocks': after.ru_oublock - before.ru_oublock}
     # One bounded record per process; no concurrent partial text writes.
-    trace = Path(os.environ['ASCENT_GSC_WORK_DIRECTORY'])
     (trace / f'{os.getpid()}-{started}.json').write_text(json.dumps(record) + '\n')
     return result.returncode if current else 1
 
@@ -99,6 +111,11 @@ def summarize(directory):
                          r'([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)\)')
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
+        for record in records:
+            for item in record['inputs']:
+                blob = directory / 'inputs' / item['sha256']
+                if not blob.is_file() or hashlib.sha256(blob.read_bytes()).hexdigest() != item['sha256']:
+                    raise ValueError('missing or damaged expanded compiler input')
         gsc = [r for r in records if r['kind'] == 'gsc']
         helpers = [r for r in records if r['kind'] == 'sdk-helper']
         imports = []
@@ -139,7 +156,7 @@ def summarize(directory):
                 key=lambda r: r['wall_ns'], reverse=True)[:12],
             'allocation_scope': 'SDK exec-stats corrected inclusive estimates; nested bytes/GC/CPU are not summed',
         }
-    return {'schema': 'ascent.preparation-work.v1', 'phases': phases,
+    return {'schema': 'ascent.preparation-work.v2', 'phases': phases,
             'latency_admitted': False, 'compiler_allocator_source_refinement': False}
 
 

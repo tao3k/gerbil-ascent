@@ -90,8 +90,13 @@ class PreparationWorkTests(unittest.TestCase):
             record, = [json.loads(p.read_text()) for p in records.glob('*.json')]
             self.assertEqual(record['inputs'][0]['sha256'], hashlib.sha256(source.read_bytes()).hexdigest())
             self.assertEqual(len(record['inputs']), 1)
+            blob = root / 'inputs' / record['inputs'][0]['sha256']
+            self.assertEqual(blob.read_bytes(), source.read_bytes())
             summary = summarize(root)['phases']['prepare']
             self.assertEqual(summary['gsc_invocations'], 1)
             self.assertEqual(summary['gsc_failed'], 1)
             self.assertEqual(summary['gsc_input_bytes'], source.stat().st_size)
             self.assertFalse(summary['import_observer_ran'])
+            blob.write_bytes(b'damaged retained input')
+            with self.assertRaisesRegex(ValueError, 'expanded compiler input'):
+                summarize(root)

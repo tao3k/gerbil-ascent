@@ -360,6 +360,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-selection", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "preparation-import", "t/harness/build.ss"),
+                ("ExecutionPolicy.lean", "preparation-source", "t/harness/build.ss"),
                 ("RenderDescriptor.lean", "scheme", "core/descriptor-stream.ss"),
                 ("RenderDescriptor.lean", "rust", "rust/ascent/src/graph/descriptor_stream.rs"),
                 ("RenderCache.lean", "scheme", "core/index-publication.ss"),
@@ -370,8 +371,8 @@ def main() -> int:
                     ["lake", "env", "lean", "--run", script, language],
                     Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language in {"preparation-selection", "preparation-import"}:
-                    region = "SELECTION" if language == "preparation-selection" else "IMPORT"
+                if language in {"preparation-selection", "preparation-import", "preparation-source"}:
+                    region = language.removeprefix("preparation-").upper()
                     begin, end = (f';; BEGIN GENERATED PREPARATION {region}\n',
                                   f';; END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

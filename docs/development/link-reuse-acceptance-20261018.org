@@ -506,3 +506,85 @@ its actual source region exactly. Quint passes the correct configuration and
 all seven required counterexamples. Fourteen work/admission/formal receipt
 unit tests pass. These focused results precede exact-head full CI and the
 unchanged isolated performance comparison; they are not full acceptance.
+
+* Demanded compilation and complete source-Suite preparation
+
+The c9860b0 three-core ABBA receipt rejected preparation +33.123187%.
+Its make intervals were 64.582/112.217/106.192/99.035 seconds (ABBA);
+entry and inventory savings cannot establish a repair of this result.
+The independent source run exhausted 180 seconds with all three ordinary
+batches still consuming CPU. These failures remain retained and unresolved.
+
+The existing preparation entry compiled every non-Suite qualification source
+for thirteen performance consumers. The pinned ASP v0.1.2.2 import projection
+identifies 204 required sources for the complete fresh-prefix performance
+roots: production catalog, base modules, declared dynamic dependencies and
+all thirteen consumers and their thirteen dynamically loaded scenario scripts.
+Seventy-four qualification support sources are outside
+this closure. Projecting the historical 259 GSC records onto that exact graph
+identifies 151 calls on unrequested support sources in each ABBA control.
+Their observed compiler CPU costs were 148.415/144.388/136.144/109.393 seconds
+out of 236.161/235.397/222.008/176.890 seconds respectively. These are
+historical work observations, not a prediction of equal wall-time savings.
+The old entry also supplied unrelated support in the baseline; this finding
+alone does not explain the temporal variation responsible for +33.12%.
+
+Preparation now reuses the existing ASP/Gerbil import-closure API. It has no
+new dependency parser, scheduler, compiler, or upstream patch. std/make owns
+ordering and freshness. Cached support stays in the refresh set so producer
+changes cannot strand previously compiled reference consumers. The source
+snapshot begins before projection and covers expansion as well as make.
+
+Source qualification requests its actual Suite dependency graph rather than
+the performance consumers. A bounded projection of the complete 173-Suite
+inventory succeeded under the existing 3G preparation heap and returned 610
+sources including Suites. Suite carriers are filtered from compilation;
+GxTest still loads every original Suite from its explicit source path. The
+reference implementations keep their independent algorithms. This prepares
+more reference dependencies than the old performance-only setup: its cost
+must not be hidden or described as free. The three-worker CI records this
+preparation as candidate-prepare-semantics separately, checks that it emitted
+no compiled Suite interfaces, and retains the unchanged 180-second/2G runtime
+qualification. Both costs are required when discussing end-to-end results.
+
+A 128-declaration diagnostic collected 597 heartbeat samples, 573 including
+POO object admission. A separate 128-candidate diagnostic collected 852
+samples; 799 included contract validation and 88 included construction of the
+owned-root contract refinement. These observations identify validation work,
+not permission to skip checks or persist caller-owned admission results. No
+validation, cancellation, resource, or provenance implementation is changed.
+The bounded complete semi-naive semantic module also exited successfully;
+this does not replace the failed complete three-worker qualification.
+
+Lean renders the exact source-carrier selection used by preparation and
+proves preservation of dependency carriers, exclusion of source Suite carriers,
+and nonincreasing demanded source work for arbitrary observed nonnegative
+weights. Compile-key lemmas require source/dependency/SDK/options identity and
+an existing output before reuse. These are explicit preconditions: the SDK's
+timestamp cache, graph projector, allocator and untyped receipt decoder are
+not thereby source-refined. Quint checks the correct protocol and eleven fault
+controls, including eager catalog compilation, compiled source Suites and
+reuse after input generation changes. Neither model proves a hardware latency
+bound. Compilation and expansion/allocator source-cost closure remains open.
+
+The diagnostic compiler-work format is version 2. It retains actual expanded
+input bytes by digest, including generated names and source positions, and
+rejects a missing or damaged retained input. This permits subsequent causal
+input comparisons that the previous digest-only receipts could not support.
+Work-only observations remain separate from uninstrumented latency gates;
+inclusive/negative SDK allocation estimates are not promoted to exact totals.
+
+Focused validation passed all 22 artifact Cases (including the original 20),
+15 work/admission/formal unit tests (20 including repository policy), the PreparationWork Lean file through the
+locked LeanPoo Guard, and the correct Quint model plus all eleven fault controls.
+Full current-commit CI and the fixed ABBA comparison must supply the remaining
+acceptance evidence; the earlier 39 MB estimate is not a closure certificate.
+
+The remote evidence-read commit efcec55 was preserved by rebasing this
+preparation change onto it. The original ab3d5e2 comparison and historical
+failure ledger are unchanged. A separate fixed-parent comparison against
+efcec55 isolates this preparation patch without mixing unrelated Rust/model
+changes into its timed-source comparison. Such diagnostics cannot replace the
+original gate or discharge its unresolved failures. Manual cost dispatches
+run only the cost job; the PR event still requires the original complete
+three-worker source qualification once, with its unchanged deadline and heap.

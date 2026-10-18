@@ -10,6 +10,8 @@
         (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
+        (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
+                 asp-gerbil-scheme-native-import-closure)
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
@@ -55,24 +57,52 @@
       (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))
 ;; END GENERATED PREPARATION SELECTION
 
-(def (prepare-test-library! (tests []))
+;; BEGIN GENERATED PREPARATION SOURCE
+;; Generated from PreparationWork.lean; formal CI compares this region.
+(def (preparation-retained-source? source source-suites? source-consumers)
+  (and (not (member source source-consumers))
+       (or (not source-suites?) (not (string-suffix? "-test.ss" source)))))
+;; END GENERATED PREPARATION SOURCE
+
+(def (prepare-test-library! (tests []) (source-suites? #f) (source-consumers []))
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
+         (started (current-jiffy))
+         (sources (artifact-sources))
+         (inventory-seconds (build-elapsed started))
+         (production-before (map production-output-time gerbil-ascent-library-modules))
          (modules
           (append gerbil-ascent-library-modules test-library-base
             (preparation-selected-dependencies tests test-library-dependencies))))
-    ;; AOT links the complete fixture/reference closure. These support modules
-    ;; previously resolved from source in gxtest; source loading is not a compiled
-    ;; carrier dependency. Scheme make still owns dependency order/currentness.
+    ;; Source qualification retains its complete fixture catalog. Performance
+    ;; consumers request their actual import closure, rather than compiling all
+    ;; unrelated qualification drivers and frozen reference evaluators.
     (let (support
           (map (lambda (name) (string-append "t/qualification/" (path-strip-extension name)))
                (list-sort string<?
                  (filter (lambda (name)
                            (and (string-suffix? ".ss" name)
                                 (not (string-suffix? "-test.ss" name))))
-                         (directory-files "t/qualification")))))
+                         (if source-suites? (directory-files "t/qualification") [])))))
       (set! modules (delete-duplicates/hash
                       (append modules support (cached-support-modules)) from-end?: #t)))
+    ;; Reuse ASP's projection of Gerbil contexts, including phases and preludes.
+    ;; std/make still owns scheduling, dependency timestamps and invalidation.
+    ;; Source Suites remain source inputs to GxTest; only their dependencies
+    ;; are compiled here. Preparation time is reported separately in CI.
+    (let* ((phase (current-jiffy))
+           (closure (asp-gerbil-scheme-native-import-closure
+                      (current-directory) (append modules tests source-consumers))))
+      (set! modules
+        (delete-duplicates/hash
+          (append modules
+            (map path-strip-extension
+              (filter (lambda (source)
+                        (and (not (member source tests))
+                             (preparation-retained-source? source source-suites? source-consumers))) closure)))
+          from-end?: #t))
+      (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
+                 (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Upstream make checks production, reference and consumer currentness.
@@ -82,15 +112,14 @@
     (setenv "GERBIL_LOADPATH"
       (string-append library ":" (current-directory) ":" (getenv "GERBIL_LOADPATH" "")))
     (let* ((consumers (map path-strip-extension tests))
-           (all (append modules (filter (lambda (module) (not (member module modules))) consumers)))
-           (started (current-jiffy))
-           (sources (artifact-sources))
-           (production-before (map production-output-time gerbil-ascent-library-modules)))
+           (all (append modules
+                  (if source-suites? []
+                      (filter (lambda (module) (not (member module modules))) consumers)))))
       (displayln "BUILD-TEST-LIBRARY modules=" (length all)
                  " cores=" (initialize-native-build-core-capacity!))
       (force-output)
       (displayln "BUILD-TEST-LIBRARY-PHASE inventory-before wall-seconds="
-                 (build-elapsed started))
+                 inventory-seconds)
       ;; Upstream make owns dependency order, compiler threads and currentness.
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
@@ -112,7 +141,12 @@
       (force-output))))
 (def (main . args)
   (match args
-    (["library"] (with-test-lane (lambda () (prepare-test-library! (append (performance-contract-files) performance-modules)))))
+    (["library"] (with-test-lane (lambda ()
+      (prepare-test-library! (append (performance-contract-files) performance-modules)
+                             #f (performance-scenario-files)))))
+    (["semantics" . tests]
+     (unless (pair? tests) (error "source qualification requires its complete Suite inventory"))
+     (with-test-lane (lambda () (prepare-test-library! tests #t))))
     (["dsl"]
      (with-test-lane
       (lambda ()

@@ -184,6 +184,19 @@ def main():
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
         try:
+            # This replaces the previous performance-library setup, not any
+            # source Suite execution. Retain its complete cost separately so
+            # moving dependency work cannot be reported as end-to-end savings.
+            measure(root, ['just', 'prepare-semantic-library'],
+                    output / 'candidate-prepare-semantics.log', env)
+            suite_interfaces = [str(path.relative_to(root))
+                                for source in sorted((root / 't/qualification').glob('*-test.ss'))
+                                if (path := root / '.gerbil/lib/gerbil-ascent/t/qualification' /
+                                    (source.stem + '.ssi')).exists()]
+            (output / 'source-suite-interfaces.json').write_text(json.dumps(
+                {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
+            if suite_interfaces:
+                raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
             measure(root, ['timeout', '180s', 'just', 'test-file', 't/qualification', '2G'],
                     output / 'candidate-semantics.log', env, semantic_diagnostics=True)
         finally:
@@ -197,9 +210,10 @@ def main():
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
-    allowed = {'build.ss', 'build-modules.ss', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
+    allowed = {'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss',
+               't/performance/ascent-scenario-performance-test.ss',
                't/harness/build.ss',
                'docs/development/link-reuse-acceptance-20261018.org',
                't/qualification/ascent-support-study-output.ss',

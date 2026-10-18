@@ -6,9 +6,12 @@ on:
     paths:
       - build.ss
       - build-modules.ss
+      - justfile
+      - t/harness/build.ss
       - bindings/build-entry.ss
       - bindings/artifact.ss
       - t/harness/library-spec.ss
+      - t/performance/ascent-scenario-performance-test.ss
       - t/qualification/scheme-artifact-test.ss
       - t/qualification/ascent-support-study-output.ss
       - t/qualification/ascent-steensgaard-test.ss
@@ -86,7 +89,7 @@ jobs:
           include-hidden-files: true
 
   macos-semantics:
-    if: ${{ !inputs.work_only }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: macos-26
     timeout-minutes: 30
     env:
@@ -112,7 +115,6 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           just check-policy
-          just prepare-test-library
       - name: Qualify complete source semantics with three workers
         run: python3 tools/ci/build-cost-control.py --semantics-only --output "$RUNNER_TEMP/macos-semantics"
       - name: Preserve semantic diagnostics and every batch log

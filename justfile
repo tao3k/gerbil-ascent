@@ -100,12 +100,16 @@ _test-file path heap='2G':
     printf '[ascent-test] PASS %s (%ss)\n' "{{ path }}" "$((SECONDS - started))"
 
 # Scheme GxTest owns every Suite; the Scheme pool uses GERBIL_BUILD_CORES for directories.
-test heap='2G': prepare-test-library
+test heap='2G': prepare-semantic-library
     ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just test-file t/qualification "{{ heap }}"
 
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:
     {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/harness/build.ss library
+
+# Prepare the source Suite dependencies; GxTest still loads every Suite source.
+prepare-semantic-library:
+    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/harness/build.ss semantics t/qualification/*-test.ss
 
 # Scheme performance Suites use the declared Gerbil testing isolation profile.
 test-performance-contracts: prepare-test-library

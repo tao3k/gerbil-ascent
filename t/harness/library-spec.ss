@@ -2,7 +2,15 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(export test-library-base test-library-dependencies performance-modules performance-contract-files)
+(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files)
+(def (performance-scenario-files)
+  (let (selected (getenv "ASCENT_SS_SCENARIO" #f))
+    (if selected
+      (list selected)
+      (filter file-exists?
+        (map (lambda (name) (string-append "t/scenarios/performance/" name "/scenario.ss"))
+          (filter (lambda (name) (not (member name '("ascent-binary-program" "ascent-shortest-candidates"))))
+            (list-sort string<? (directory-files "t/scenarios/performance"))))))))
 (def performance-modules
   '("t/performance/ascent-scenario-performance-test.ss"
     "t/performance/ascent-binary-program-performance-test.ss"

@@ -7,6 +7,22 @@ from ascent_workbench.formal import MODEL_ORDER, Obligation, configuration, obli
 
 
 class FormalTests(unittest.TestCase):
+    def test_preparation_work_preserves_all_observation_and_source_controls(self):
+        controls = {item.name: item for item in obligations(configuration("PreparationWork", {}))}
+        self.assertEqual(controls["correct"].expected, 0)
+        faults = {name: item.property for name, item in controls.items() if name != "correct"}
+        self.assertEqual(faults, {
+            "hide-job": "JobsExact", "forget-import": "ImportsExact",
+            "sum-nested": "AllocationNotNested", "publish-partial": "Complete",
+            "ignore-generation": "Current", "clamp-counter": "OrderedCounter",
+            "bootstrap-inventory": "InventoryDataOnly",
+            "eager-catalog": "OnlyDemandedCompilation",
+            "compile-source-suite": "SourceCarriersRemainSource",
+            "compile-source-consumer": "SourceCarriersRemainSource",
+            "reuse-stale-input": "ReuseCurrentInputs",
+        })
+        self.assertTrue(all(controls[name].expected == 12 for name in faults))
+
     def test_zero_exit_without_exhaustive_conclusion_is_rejected(self):
         correct = Obligation("correct", configuration("EvidenceInteraction", {}))
         for code, output in ((0, "Progress(1): states left on queue"),

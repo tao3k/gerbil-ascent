@@ -1,24 +1,23 @@
 //! Clue exchange over the existing declarative Session, without a consumer VM.
 use crate::{Cancellation, Data, Engine, FactLimits, Limits, Result, Row, SourceSession, Value};
 use std::collections::{BTreeMap, BTreeSet};
-mod slices;
 
-const RULES: &str = include_str!("../../../python/src/ascent/clue_query_rules.ss");
+pub(super) const RULES: &str = include_str!("../../../../python/src/ascent/clue_query_rules.ss");
 
 /// Source-bound observations and untrusted hypotheses share query rules, not authority.
 /// The host supplies source attestations; this owner never executes or admits work.
 pub struct ClueExchange {
-    engine: Engine,
-    facts: BTreeMap<String, Vec<Row>>,
-    identity: String,
+    pub(super) engine: Engine,
+    pub(super) facts: BTreeMap<String, Vec<Row>>,
+    pub(super) identity: String,
     session: SourceSession,
 }
 
-fn invalid(message: &str) -> crate::Error {
+pub(super) fn invalid(message: &str) -> crate::Error {
     crate::invalid_data(message)
 }
 
-fn rows(value: &Data) -> Result<Vec<Row>> {
+pub(super) fn rows(value: &Data) -> Result<Vec<Row>> {
     value
         .list()?
         .iter()
@@ -32,7 +31,7 @@ fn rows(value: &Data) -> Result<Vec<Row>> {
         .collect()
 }
 
-fn data_rows(rows: &[Row]) -> Result<Data> {
+pub(super) fn data_rows(rows: &[Row]) -> Result<Data> {
     Ok(Data::List(
         rows.iter()
             .map(|row| {
@@ -49,7 +48,7 @@ fn data_rows(rows: &[Row]) -> Result<Data> {
     ))
 }
 
-fn evaluate(
+pub(super) fn evaluate(
     session: &mut SourceSession,
     facts: BTreeMap<String, Vec<Row>>,
     limits: &Limits,
@@ -65,7 +64,7 @@ fn evaluate(
 }
 
 impl ClueExchange {
-    fn check(&self) -> Result<()> {
+    pub(super) fn check(&self) -> Result<()> {
         self.engine.check()?;
         if self.session.is_closed() {
             Err(crate::Error::Closed)

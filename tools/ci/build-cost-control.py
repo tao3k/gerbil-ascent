@@ -187,11 +187,6 @@ def main():
             'cores': 3, 'deadline_seconds': 240, 'child_heap': '2G',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
-        # Preserve an untimed SDK counter diagnostic alongside the workload.
-        # It does not substitute for full cost or semantic acceptance.
-        with (output / 'sdk-allocation-counter.log').open('w') as probe_log:
-            checked(['gxi', '-:debug=q', 'workbench/tests/fixtures/sdk-allocation-counter.scm'],
-                    cwd=root, env=env, stdout=probe_log, stderr=subprocess.STDOUT, timeout=10)
         try:
             # This replaces the previous performance-library setup, not any
             # source Suite execution. Retain its complete cost separately so

@@ -1113,3 +1113,9 @@ the broad Scheme product-cache key, even though no production compiler consumes
 that fixture. The correction avoids this newly introduced invalidation without
 excluding any actual Scheme module from the key. It does not explain or resolve
 the earlier 19.41 percent regression. Both published CI revisions are retained.
+
+The first published macOS observation (04b803a5) failed before preparation:
+the newly added diagnostic passed a list to a variadic command wrapper and
+raised TypeError. No semantic runtime result exists for that attempt. The
+mandatory diagnostic call is removed; the fixed-SDK probe remains a standalone
+reproduction command rather than a prerequisite for every semantic run.

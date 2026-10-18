@@ -111,3 +111,25 @@ cause cannot be recovered by treating a subsequent faster group as a repair.
 Both historical control groups remain evidence, including the negative result.
 No SDK source, production evaluator, resource limit or performance threshold
 changes in this dependency repair.
+
+* Darwin CPU-counter units
+
+A native calibration found an independent measurement defect in build
+supervision: proc_pid_rusage CPU fields are Mach absolute ticks. Treating
+them as nanoseconds underreports CPU time by 125/3 on this ARM host. A
+one-second process-CPU workload produced approximately 24 million ticks;
+mach_timebase_info converted that to 1.00005 seconds. The supervisor now
+uses the host timebase for both self and reaped-child CPU. Positive advance
+remains the activity criterion; no startup, idle, heap or acceptance deadline
+changes. Linux accounting is unchanged. Raw ticks, rather than previously
+mislabelled supervisor seconds, must be used for historical Darwin logs.
+RUSAGE_CHILDREN CPU measurements and monotonic wall measurements in the
+hosted controls already use seconds and are unaffected by this correction.
+This unit error does not explain the historical 40.3% wall regression.
+
+The diagnostic expander hook observed 265 distinct project source misses
+and zero GSC jobs on an unchanged warm preparation. This identifies source
+currentness/expansion work that remains even after fixing the missing-library
+dependencies. These instrumented shared-host timings are not speedup evidence.
+Native process disk-byte samples were partial; they do not establish an I/O
+bottleneck or a unique cause for the historical first control.

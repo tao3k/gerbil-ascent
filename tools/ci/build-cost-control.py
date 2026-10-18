@@ -125,7 +125,9 @@ def main():
                't/qualification/ascent-support-study-output.ss',
                't/qualification/ascent-steensgaard-test.ss',
                't/qualification/ascent-steensgaard-reference.ss',
-               't/performance/ascent-steensgaard-performance-test.ss'}
+               't/performance/ascent-steensgaard-performance-test.ss',
+               'workbench/src/ascent_workbench/supervision.py',
+               'workbench/tests/test_supervision.py'}
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}')
     dependencies = root / '.gerbil'

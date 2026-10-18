@@ -67,7 +67,7 @@ def group_cpu(group: int) -> dict[int, float]:
 
 
 class RusageInfoV1(ctypes.Structure):
-    """Public Darwin sys/resource.h ABI; CPU counters are nanoseconds."""
+    """Public Darwin sys/resource.h ABI; CPU counters are Mach absolute ticks."""
     _fields_ = [('uuid', ctypes.c_uint8 * 16),
                 ('user', ctypes.c_uint64), ('system', ctypes.c_uint64),
                 ('resources', ctypes.c_uint64 * 8),
@@ -84,12 +84,28 @@ def darwin_rusage():
     return read
 
 
+class MachTimebaseInfo(ctypes.Structure):
+    _fields_ = [('numer', ctypes.c_uint32), ('denom', ctypes.c_uint32)]
+
+
+@cache
+def darwin_cpu_seconds_per_tick() -> float:
+    info = MachTimebaseInfo()
+    read = ctypes.CDLL('/usr/lib/libSystem.B.dylib').mach_timebase_info
+    read.argtypes = [ctypes.POINTER(MachTimebaseInfo)]
+    read.restype = ctypes.c_int
+    if read(ctypes.byref(info)) != 0 or not info.numer or not info.denom:
+        raise OSError('cannot read Darwin CPU timebase')
+    return info.numer / info.denom / 1e9
+
+
 def darwin_process_cpu(pid: int) -> float:
     usage = RusageInfoV1()
     if darwin_rusage()(pid, 1, ctypes.byref(usage)) != 0:  # RUSAGE_INFO_V1
         code = ctypes.get_errno()
         raise OSError(code, os.strerror(code), str(pid))
-    return (usage.user + usage.system + usage.child_user + usage.child_system) / 1e9
+    return ((usage.user + usage.system + usage.child_user + usage.child_system)
+            * darwin_cpu_seconds_per_tick())
 
 
 def proc_group_cpu(root: Path, group: int, ticks: int) -> dict[int, float]:

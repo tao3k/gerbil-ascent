@@ -1,13 +1,16 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Check build supervision against CPU work, a sleeping child and failure."""
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from unittest.mock import patch
 
-from ascent_workbench.supervision import proc_group_cpu
+from ascent_workbench.supervision import proc_group_cpu, darwin_process_cpu
 
 
 class BuildActivity(unittest.TestCase):
@@ -56,6 +59,29 @@ class BuildActivity(unittest.TestCase):
                                 'subprocess.Popen([sys.executable,"-c","import time; time.sleep(30)"]); '
                                 'raise SystemExit(7)')
         self.assertEqual(result.returncode, 7, result.stderr)
+
+    def test_darwin_cpu_converts_self_and_reaped_child_ticks(self):
+        def read(pid, flavor, pointer):
+            self.assertEqual((pid, flavor), (42, 1))
+            usage = pointer._obj
+            usage.user, usage.system = 2400000, 4800000
+            usage.child_user, usage.child_system = 7200000, 9600000
+            return 0
+        for scale in (125 / 3 / 1e9, 1 / 1e9):
+            with self.subTest(scale=scale), \
+                 patch('ascent_workbench.supervision.darwin_rusage', return_value=read), \
+                 patch('ascent_workbench.supervision.darwin_cpu_seconds_per_tick', return_value=scale):
+                self.assertAlmostEqual(darwin_process_cpu(42), 24000000 * scale)
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'Darwin native CPU clock')
+    def test_darwin_native_cpu_matches_process_clock(self):
+        before = darwin_process_cpu(os.getpid())
+        started = time.process_time()
+        while time.process_time() - started < .2:
+            pass
+        elapsed = time.process_time() - started
+        measured = darwin_process_cpu(os.getpid()) - before
+        self.assertAlmostEqual(measured, elapsed, delta=.02)
 
     def test_linux_cpu_includes_reaped_children_and_tick_precision(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -141,6 +141,8 @@ jobs:
   rust-pyo3:
     needs: repository-hygiene
     runs-on: ubuntu-latest
+    outputs:
+      python_ready: ${{ steps.python_interface.outcome == 'success' && steps.python_cache.outcome == 'success' }}
     timeout-minutes: 120
     env:
       GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
@@ -223,6 +225,7 @@ jobs:
             python/src/ascent/.gerbil-resources.json
           key: ascent-cargo-products-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ github.sha }}
       - name: Prepare shared Python build environment and protocol tools
+        id: build_prerequisites
         run: |
           just prepare-quint
           echo "$PWD/.cache/ascent/tools/quint/node_modules/.bin" >> "$GITHUB_PATH"
@@ -234,24 +237,31 @@ jobs:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- --test-threads=1
       - name: Enforce strict workspace Clippy
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- -D warnings
       - name: Check the independent Scheme backend interface
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo check --locked --manifest-path rust/Cargo.toml -p ascent-python --no-default-features --features scheme-runtime,rayon
       - name: Compile the separate Scheme test inventory without VM execution
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo test --locked --manifest-path rust/Cargo.toml -p ascent-scheme --no-run
       - name: Build and install the PyO3 wheel
+        id: python_wheel
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: |
           (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --features rust-runtime,rayon,extension-module,gerbil-ascent/default --auditwheel repair --out ../.cache/ascent/wheels)
           .cache/ascent/python-runtime/bin/pip install --no-deps .cache/ascent/wheels/*.whl
       - name: Qualify original Python and Scheme interface semantics
+        id: python_interface
+        if: ${{ !cancelled() && steps.python_wheel.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
           PYTHONPATH: workbench/src
@@ -259,7 +269,8 @@ jobs:
         run: |
           GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
           .cache/ascent/python-runtime/bin/python -m ascent_workbench.interface_tests
-      - name: Publish the qualified Python wheel for downstream consumers
+      - name: Retain the interface-checked wheel for downstream tests
+        if: ${{ !cancelled() && steps.python_interface.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ascent-python-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
@@ -267,7 +278,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Preserve the exact wheel and its runtime syntax closure
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        id: python_cache
+        if: ${{ !cancelled() && steps.python_interface.outcome == 'success' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: |
             .cache/ascent/wheels
@@ -442,6 +455,7 @@ jobs:
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
   python-consumers:
     needs: rust-pyo3
+    if: ${{ !cancelled() && needs.rust-pyo3.outputs.python_ready == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

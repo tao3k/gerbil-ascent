@@ -377,3 +377,12 @@ and checks its exported answer. This also demonstrates why 257 logical
 compile-file jobs cannot be reported as 257 GSC/native compiler invocations.
 The original failed logs and artifacts remain retained. No result from either
 failed dispatch qualifies the historical or current performance comparison.
+
+Rust style failure previously suppressed Clippy, the independent Scheme
+interface, PyO3 wheel/interface checks and downstream Python consumers. These
+steps now execute independently after their actual shared prerequisites pass.
+The exact interface-checked wheel and runtime closure use an immediate
+source-keyed cache save, so consumer checks can run even if the Rust job is
+already red. Every original check, failure status, timeout and aggregate
+requirement remains required; no continue-on-error or severity waiver is used.
+A failed wheel/interface cannot authorize the downstream consumer job.

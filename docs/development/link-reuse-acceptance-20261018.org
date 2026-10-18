@@ -588,3 +588,50 @@ changes into its timed-source comparison. Such diagnostics cannot replace the
 original gate or discharge its unresolved failures. Manual cost dispatches
 run only the cost job; the PR event still requires the original complete
 three-worker source qualification once, with its unchanged deadline and heap.
+
+* Resident projection and per-entry source VMs
+
+The exact-head 89ad617 fixed-parent uninstrumented ABBA result reduced cold
+preparation by 52.51% (198.291 to 94.161 seconds summed across each pair), but
+warm preparation regressed by 17.96% (22.714 to 26.794 seconds). This is a
+failure, not a repaired acceptance. The independent three-core run prepared
+in 268.667 seconds and then exhausted the original 180-second runtime budget
+with 1,152 completed Cases in 145 of 173 source modules. Its last two worker
+RSS observations were approximately 1.22 and 1.32 GB. All failures are retained.
+
+The normal ASP projection first tries the complete compiled-interface graph.
+Explicit source-only scenario scripts have no interface, so this work is
+followed by source fallback even on a warm prefix. Preparation now imports
+its roots through Gerbil and calls the existing public resident-context
+projection. There is no custom graph cache or invalidation bypass. std/make
+continues to own compilation freshness, and the source inventory still spans
+the entire projection and compilation interval.
+
+Gerbil's source test tool imports every requested module before running the
+harness; the native module registry retains expanded contexts until VM exit.
+The directory recipe now selects the existing process-isolation profile:
+one entry per child VM, with the same three-worker pool, 2G child heaps and
+180-second deadline. This trades retained entry contexts for additional VM
+starts. It must be measured; a lower modeled peak does not establish a wall
+time improvement. No test is dropped, compiled in place of source, or relaxed.
+
+Lean renders the actual recipe and proves singleton entry coverage, process
+count and a conditional retained-entry peak bound for arbitrary nonnegative
+weights. Quint adds batched-root and leaked-root counterexamples; all thirteen
+PreparationWork fault controls pass. The complete 179-job guarded Lean build,
+all four generated preparation regions and twenty focused Python tests pass.
+These do not prove the SDK compiler, allocator, registry, timestamp cache or
+untyped observer decoder equivalent to Lean. Those source refinements remain
+open, and process-wide signed allocation estimates remain diagnostic only.
+
+The two new artifact controls initially failed in the standalone DSL binary:
+a test relied on the interpreter's eval macro environment and a fixture
+implicitly relied on its prelude. The source policy is now imported directly
+and both fixture modules declare the original Gerbil prelude explicitly. A
+private-prefix standalone executable passes all 22 Cases with the original
+1G/120-second bounds, including prepared-graph equality and rejection of an
+unprepared root. No SDK or upstream compiler change was needed.
+
+Current-head remote full CI and clean-host timing are still required. The
+original ab3d5e2 gate also rejects the unrelated preserved efcec55 change set
+before timing; this mismatch is retained rather than allowlisted away.

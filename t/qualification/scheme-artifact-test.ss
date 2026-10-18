@@ -5,8 +5,11 @@
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
         (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
         (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+        (only-in "../harness/library-spec.ss" preparation-retained-source?)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-native-import-closure)
+                 asp-gerbil-scheme-native-import-closure
+                 asp-gerbil-scheme-prepared-native-import-closure
+                 call-with-asp-gerbil-scheme-prepared-source-graph)
         (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! source-snapshot record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
@@ -47,34 +50,31 @@
 (def scheme-artifact-test
   (test-suite "Scheme native artifact publication"
     (test-case "source qualification retains every dependency and loads Suites as source"
-      (let (predicate
-            (call-with-input-file "t/harness/build.ss"
-              (lambda (port)
-                (read-line port)
-                (let loop ()
-                  (let (form (read port))
-                    (match form
-                      (['def ['preparation-retained-source? . _] . _]
-                       ;; Execute the real source definition with Gerbil's
-                       ;; reader and evaluator, rather than a test translation.
-                       (eval form) (eval 'preparation-retained-source?))
-                      (_ (if (eof-object? form) (error "missing preparation source policy") (loop)))))))))
-        (for-each (lambda (source)
-          (check (predicate source #f []) => #t)
-          (check (predicate source #t []) => (not (string-suffix? "-test.ss" source)))
-          (check (predicate source #f (list source)) => #f)
-          (check (predicate source #t (list source)) => #f))
+      (for-each (lambda (source)
+          (check (preparation-retained-source? source #f []) => #t)
+          (check (preparation-retained-source? source #t []) => (not (string-suffix? "-test.ss" source)))
+          (check (preparation-retained-source? source #f (list source)) => #f)
+          (check (preparation-retained-source? source #t (list source)) => #f))
           '("t/qualification/example-test.ss" "t/qualification/example-fixture.ss"
-            "t/performance/example/reference.ss" "program/evaluate.ss"))))
+            "t/performance/example/reference.ss" "program/evaluate.ss")))
     (test-case "requested import closure omits unrelated compilation without dropping dependencies"
       (with-artifact-fixture (lambda ()
         (put "gerbil.pkg" "(package: ascent-preparation-probe)\n")
-        (put "leaf.ss" "(export value)\n(def value 1)\n")
-        (put "entry.ss" "(import \"./leaf.ss\")\n(export value)\n")
+        (put "leaf.ss" "prelude: :gerbil/core\n(export value)\n(def value 1)\n")
+        (put "entry.ss" "prelude: :gerbil/core\n(import \"./leaf.ss\")\n(export value)\n")
         ;; Expanding an unrelated catalog entry would fail this control.
         (put "unrequested.ss" "(\n")
         (let (closure (asp-gerbil-scheme-native-import-closure (current-directory) '("entry")))
-          (check (list-sort string<? closure) => '("entry.ss" "leaf.ss"))))))
+          (check (list-sort string<? closure) => '("entry.ss" "leaf.ss"))
+          (call-with-asp-gerbil-scheme-prepared-source-graph
+           (lambda ()
+             (check (list-sort string<?
+                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) '("entry")))
+                    => '("entry.ss" "leaf.ss"))
+             ;; Resident projection must not expand an unprepared source.
+             (check (rejected? (lambda ()
+                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) '("unrequested"))))
+                    => #t)))))))
     (test-case "preparation reads module data without evaluating the build entry"
       (let (declared
             (call-with-input-file "build-modules.ss"

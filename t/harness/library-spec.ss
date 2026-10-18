@@ -2,7 +2,14 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files)
+(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source?)
+;; BEGIN GENERATED PREPARATION SOURCE
+;; Generated from PreparationWork.lean; formal CI compares this region.
+(def (preparation-retained-source? source source-suites? source-consumers)
+  (and (not (member source source-consumers))
+       (or (not source-suites?) (not (string-suffix? "-test.ss" source)))))
+;; END GENERATED PREPARATION SOURCE
+
 (def (performance-scenario-files)
   (let (selected (getenv "ASCENT_SS_SCENARIO" #f))
     (if selected

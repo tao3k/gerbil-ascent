@@ -84,7 +84,9 @@ _test-file path heap='2G':
         test_args=(-v 5 "$test_module")
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     elif [[ -d "$test_module" ]]; then
-        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss batched "{{ heap }}")
+        # BEGIN GENERATED PREPARATION RUNNER
+        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss isolated "{{ heap }}")
+        # END GENERATED PREPARATION RUNNER
         test_args=("$test_module")
     else
         runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)

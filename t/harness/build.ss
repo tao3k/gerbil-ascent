@@ -10,8 +10,10 @@
         (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
+        (only-in :std/string/path path-default-extension)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-native-import-closure)
+                 asp-gerbil-scheme-prepared-native-import-closure
+                 call-with-asp-gerbil-scheme-prepared-source-graph)
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
@@ -57,12 +59,6 @@
       (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))
 ;; END GENERATED PREPARATION SELECTION
 
-;; BEGIN GENERATED PREPARATION SOURCE
-;; Generated from PreparationWork.lean; formal CI compares this region.
-(def (preparation-retained-source? source source-suites? source-consumers)
-  (and (not (member source source-consumers))
-       (or (not source-suites?) (not (string-suffix? "-test.ss" source)))))
-;; END GENERATED PREPARATION SOURCE
 
 (def (prepare-test-library! (tests []) (source-suites? #f) (source-consumers []))
   (let* ((library package-library)
@@ -90,17 +86,23 @@
     ;; std/make still owns scheduling, dependency timestamps and invalidation.
     ;; Source Suites remain source inputs to GxTest; only their dependencies
     ;; are compiled here. Preparation time is reported separately in CI.
-    (let* ((phase (current-jiffy))
-           (closure (asp-gerbil-scheme-native-import-closure
-                      (current-directory) (append modules tests source-consumers))))
-      (set! modules
-        (delete-duplicates/hash
-          (append modules
-            (map path-strip-extension
-              (filter (lambda (source)
-                        (and (not (member source tests))
-                             (preparation-retained-source? source source-suites? source-consumers))) closure)))
-          from-end?: #t))
+    (let ((phase (current-jiffy)) (roots (append modules tests source-consumers)))
+      ;; Source-only consumers have no compiled interfaces. Do not traverse a
+      ;; whole interface graph only to reject it and expand the same roots.
+      ;; Prepare through Gerbil once, then use ASP's resident-context projection.
+      (add-load-path! (current-directory))
+      (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
+      (let (closure
+            (call-with-asp-gerbil-scheme-prepared-source-graph
+             (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))
+        (set! modules
+          (delete-duplicates/hash
+            (append modules
+              (map path-strip-extension
+                (filter (lambda (source)
+                          (and (not (member source tests))
+                               (preparation-retained-source? source source-suites? source-consumers))) closure)))
+            from-end?: #t)))
       (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
                  (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]

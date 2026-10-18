@@ -97,6 +97,51 @@ theorem demanded_work_le_catalog (weight : String → Nat) (needed : String → 
     · simp [List.filter_cons, h, sourceWork]
       omega
 
+-- gxtest imports every requested entry before running the harness. Its native
+-- module registry retains the expanded contexts through VM exit. Isolating
+-- entries bounds this retained entry footprint, but increases process starts.
+inductive SourceGrouping where
+  | batched
+  | perModule
+  deriving DecidableEq
+
+def groupingArgument : SourceGrouping → String
+  | .batched => "batched"
+  | .perModule => "isolated"
+
+def sourceGrouping : SourceGrouping := .perModule
+
+def runnerRecipeSource : String :=
+  "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
+  groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
+
+def isolatedEntryPeak (weight : String → Nat) : List String → Nat
+  | [] => 0
+  | path :: rest => max (weight path) (isolatedEntryPeak weight rest)
+
+theorem isolated_entry_peak_le_batched (weight : String → Nat) (entries : List String) :
+    isolatedEntryPeak weight entries ≤ sourceWork weight entries := by
+  induction entries with
+  | nil => simp [isolatedEntryPeak, sourceWork]
+  | cons path rest ih =>
+    simp only [isolatedEntryPeak, sourceWork]
+    omega
+
+theorem one_entry_per_isolated_batch (entries : List String) (batch : List String)
+    (present : batch ∈ entries.map (fun entry => [entry])) : batch.length = 1 := by
+  simp only [List.mem_map] at present
+  obtain ⟨entry, _, rfl⟩ := present
+  rfl
+
+theorem isolated_process_starts (entries : List String) :
+    (entries.map (fun entry => [entry])).length = entries.length := by simp
+
+theorem isolated_entries_preserved (entries : List String) :
+    (entries.map (fun entry => [entry])).flatten = entries := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih => simp [ih]
+
 -- File contents, dependency generations, SDK/options and output presence all
 -- participate in reuse. This is a cost precondition, not a claim that the SDK
 -- timestamp cache or the untyped receipt decoder has been source-refined.
@@ -172,6 +217,10 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms source_dependencies_retained
 #print axioms explicit_source_not_compiled
 #print axioms demanded_work_le_catalog
+#print axioms isolated_entry_peak_le_batched
+#print axioms one_entry_per_isolated_batch
+#print axioms isolated_process_starts
+#print axioms isolated_entries_preserved
 #print axioms changed_input_requires_work
 #print axioms missing_output_requires_work
 #print axioms module_data_avoids_package_declaration

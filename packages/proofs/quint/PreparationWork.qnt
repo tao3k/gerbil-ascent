@@ -7,13 +7,15 @@ module PreparationWork {
                 finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
-                inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool}
+                inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool,
+                sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
-    inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false}
+    inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false,
+    sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0}
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action Import = all {q.imports < 2,
@@ -36,6 +38,14 @@ module PreparationWork {
   action Reuse = all {q.cacheReady,
     q.cacheGeneration == q.inputGeneration or Mutation == "reuse-stale-input",
     q' = {...q, staleReuse: q.staleReuse or q.cacheGeneration != q.inputGeneration}}
+  // Models one child VM. ActorTestPool separately checks the capacity-3 pool.
+  // Suite completion does not evict Gerbil's retained module contexts; VM exit does.
+  action StartSourceVm = all {not(q.sourceVmActive), q.sourceStarts < 2,
+    q' = {...q, sourceVmActive: true, sourceStarts: q.sourceStarts + 1,
+      retainedEntryRoots: if (Mutation == "batch-source-roots") 2 else 1}}
+  action ExitSourceVm = all {q.sourceVmActive,
+    q' = {...q, sourceVmActive: false,
+      retainedEntryRoots: if (Mutation == "retain-source-roots") q.retainedEntryRoots else 0}}
   action Allocate = q' = {...q, outerAllocation: 4,
     reportedAllocation: if (Mutation == "sum-nested") 6 else 4, published: false}
   action Finish = all {q.jobs == 2, q.imports == 2, q' = {...q, finished: true}}
@@ -47,7 +57,8 @@ module PreparationWork {
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
   action step = any {ReadInventory, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
-    CacheOutput, ChangeInput, Reuse, Allocate, Finish, ChangeSource, CounterDecrease, Publish}
+    CacheOutput, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
+    Allocate, Finish, ChangeSource, CounterDecrease, Publish}
   val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports
@@ -58,4 +69,6 @@ module PreparationWork {
   val OnlyDemandedCompilation = q.unrequestedJobs == 0
   val SourceCarriersRemainSource = q.compiledSourceCarriers == 0
   val ReuseCurrentInputs = not(q.staleReuse)
+  val OneSourceEntryPerVm = q.retainedEntryRoots <= 1
+  val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0
 }

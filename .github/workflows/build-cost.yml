@@ -85,6 +85,7 @@ jobs:
           include-hidden-files: true
 
   macos-semantics:
+    if: ${{ !inputs.work_only }}
     runs-on: macos-26
     timeout-minutes: 30
     env:

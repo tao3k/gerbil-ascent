@@ -751,3 +751,61 @@ expansion, allocator work or wall time. Quint retains every earlier control
 and checks both unnecessary producer expansion and erroneous pruning before
 admission, for fifteen fault controls in total. The new functional controls
 keep the original standalone artifact Case count and all original limits.
+
+* Consumer-root results and on-demand experiment policy
+
+The 045533450fd54e700c66c438bc9b8f90639e1369 receipts are retained, including
+failures. The three-core macOS source qualification completed all 173 modules
+and 1,399 Cases in 122.146155 seconds under the unchanged 180-second deadline
+and 2G per-child heap. Preparation is separate: 292.588780 seconds, including
+25.815760 seconds of dependency projection and 261.942133 seconds of make.
+The peak child RSS was 1297.421875 MiB. Neither phase reported foreign compiler
+activity or process-audit errors. This closes this commit's complete three-core
+execution timeout, not the compiler allocation or timing-variance obligations.
+
+The uninstrumented 455397c9/04553345 ABBA experiment (run 39118249862) reports:
+
+| Phase       | Baseline total ns | Candidate total ns | Change percent |
+|-------------+-------------------+--------------------+----------------|
+| Build       |      268035232999 |       248779607833 |          -7.18 |
+| Preparation |       88150154125 |        70749405542 |         -19.74 |
+| Warm prep   |       16015134250 |        13183824417 |         -17.68 |
+
+All four controls have empty foreign-compiler/audit lists and no changed warm
+outputs. Individual preparation samples remain variable: baseline 29.050098
+and 59.100077 seconds; candidate 28.046221 and 42.703196 seconds. This is a
+bounded observation of one matched experiment, not proof of stable latency
+or resolution of every historical regression. The job was red because its
+historical admission ledger still contains runs 39084120171 and 39088480174;
+no faster observation clears those records.
+
+The separate work-only run 39118252329 preserves identical observations in
+both controls of each revision: production GSC calls/bytes remain
+490/240762807; preparation calls change from 110 to 108, input bytes from
+2096985 to 2070568, import requests from 5554 to 5388. Warm calls remain zero;
+warm import requests change from 5196 to 5040. The allocation observations
+contain negative SDK corrected estimates, so that run remains unqualified.
+Instrumented latency is never used for the preceding timing claim.
+
+Fixed historical-baseline ABBA no longer runs on pull requests. It remains an
+explicit workflow_dispatch experiment and requires a baseline input with no
+historic default. The macos-semantics job still runs independently on pull
+requests with three workers, the original 180-second deadline, and 2G heaps.
+The main semantic, formal, performance and oracle checks are unchanged. Every
+old negative receipt and the historical admission ledger remain intact.
+
+The collector now verifies retained input byte counts as well as SHA256 before
+publishing work costs. It applies the Lean-rendered observation-completeness
+predicate to both GSC and SDK helper records: helper failure and changed helper
+inputs cannot qualify a phase merely because GSC records succeeded. Quint
+imports the same generated decision and adds failure/changed-input controls.
+This closes the executable decision's correspondence for those conditions;
+JSON decoding, observer coverage, SDK expansion/allocation, native cache
+invalidation, and a transitive source-work or latency bound remain open.
+
+The full 04553345 CI passed Scheme semantics, Scheme performance, formal, all
+three oracle lanes and Python consumers. Rust/PyO3 failed the ASP Rust style
+gate in the separately developed Clue interfaces and twelve assert_is_empty
+Clippy diagnostics; the PyO3 wheel and Python interface nevertheless passed.
+Those failures are not a Python timeout and are not waived by this CI policy
+change. Other tasks' Rust API and test changes are preserved.

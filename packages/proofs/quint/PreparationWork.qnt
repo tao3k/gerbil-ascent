@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 // Observer protocol. This does not model the SDK compiler or allocator.
 module PreparationWork {
+  import PreparationPolicy.* from "./PreparationPolicy"
   const Mutation: str
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
-                finished: bool, current: bool, counterValid: bool, published: bool,
+                failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
-    finished: false, current: true, counterValid: true, published: false,
+    failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false,
@@ -56,20 +57,27 @@ module PreparationWork {
   action Finish = all {q.jobs == 2, q.imports == 2, q' = {...q, finished: true}}
   action ChangeSource = q' = {...q, current: false, published: false}
   action CounterDecrease = q' = {...q, counterValid: false, published: false}
+  action CompilerFails = q' = {...q, failedJobs: 1, published: false}
+  action CompilerInputChanges = q' = {...q, changedInputs: 1, published: false}
   action Publish = all {
+    preparation_observation_complete(
+      if (Mutation == "hide-compiler-failure") 0 else q.failedJobs,
+      if (Mutation == "hide-changed-input") 0 else q.changedInputs,
+      0, true),
     q.finished or Mutation == "publish-partial",
     q.current or Mutation == "ignore-generation",
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, ChangeInput, Reuse, StartSourceVm, ExitSourceVm,
-    Allocate, Finish, ChangeSource, CounterDecrease, Publish}
+    Allocate, Finish, ChangeSource, CounterDecrease, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val UnadmittedCatalogPresent = (q.rootsProjected and not(q.productionAdmitted)) implies q.forcedCatalogRoots == 1
   val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports
   val AllocationNotNested = q.reportedAllocation == q.outerAllocation
+  val CompilerWorkComplete = q.published implies (q.failedJobs == 0 and q.changedInputs == 0)
   val Complete = q.published implies q.finished
   val Current = q.published implies q.current
   val OrderedCounter = q.published implies q.counterValid

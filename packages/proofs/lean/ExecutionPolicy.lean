@@ -218,7 +218,22 @@ theorem arbitrary_later_observations_preserve_failure (observations : List Bool)
   | cons next rest ih => simpa [failedAfter] using ih
 
 
+-- The actual collector uses this decision for both GSC and SDK helper records.
+-- Blob decoding and observer coverage are still host-side proof obligations.
+def observationComplete : Predicate :=
+  .both (.flag "observer_ran")
+    (.both (.equal "failed_jobs" .zero)
+      (.both (.equal "changed_inputs" .zero) (.equal "negative_allocations" .zero)))
+
+theorem observation_complete_exact (numbers : String → Nat) (flags : String → Bool) :
+    eval numbers flags observationComplete = true ↔
+      flags "observer_ran" = true ∧ numbers "failed_jobs" = 0 ∧
+      numbers "changed_inputs" = 0 ∧ numbers "negative_allocations" = 0 := by
+  simp [observationComplete, eval, Number.value]
+
 def definitions : List Definition := [
+  ⟨"preparation_observation_complete", ["failed_jobs", "changed_inputs", "negative_allocations"],
+     ["observer_ran"], observationComplete⟩,
   ⟨"preparation_non_regression", ["baseline_ns", "candidate_ns"], [], nonRegression⟩,
   ⟨"preparation_latch_failure", [], ["prior_failure", "new_failure"], latchFailure⟩,
   ⟨"preparation_admitted", ["baseline_ns", "candidate_ns", "warm_rebuilds", "unresolved"],

@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 # Generated from ExecutionPolicy.lean (PreparationPolicy); formal CI checks exact rendering.
 
+def preparation_observation_complete(failed_jobs, changed_inputs, negative_allocations, observer_ran):
+    return (observer_ran and ((failed_jobs == 0) and ((changed_inputs == 0) and (negative_allocations == 0))))
+
 def preparation_non_regression(baseline_ns, candidate_ns):
     return (not (baseline_ns < candidate_ns))
 

@@ -105,6 +105,7 @@ def execute_gsc(arguments, helper=False):
 
 def summarize(directory):
     """Fail closed on truncated events. Never sum nested allocation snapshots."""
+    from ascent_workbench.preparation_policy import preparation_observation_complete
     phases = {}
     pattern = re.compile(r'\(import-work ([0-9]+) ([01]) ("(?:[^"\\]|\\.)*") '
                          r'([0-9]+) ([0-9]+) ([0-9]+) (-?[0-9]+) ([0-9]+) '
@@ -114,7 +115,8 @@ def summarize(directory):
         for record in records:
             for item in record['inputs']:
                 blob = directory / 'inputs' / item['sha256']
-                if not blob.is_file() or hashlib.sha256(blob.read_bytes()).hexdigest() != item['sha256']:
+                if (not blob.is_file() or blob.stat().st_size != item['bytes']
+                        or hashlib.sha256(blob.read_bytes()).hexdigest() != item['sha256']):
                     raise ValueError('missing or damaged expanded compiler input')
         gsc = [r for r in records if r['kind'] == 'gsc']
         helpers = [r for r in records if r['kind'] == 'sdk-helper']
@@ -143,6 +145,12 @@ def summarize(directory):
             'gsc_failed': sum(r['exit_code'] != 0 for r in gsc),
             'gsc_changed_inputs': sum(not r['inputs_current'] for r in gsc),
             'external_sdk_helper_invocations': len(helpers),
+            'external_sdk_helper_failed': sum(r['exit_code'] != 0 for r in helpers),
+            'external_sdk_helper_changed_inputs': sum(not r['inputs_current'] for r in helpers),
+            'observations_complete': preparation_observation_complete(
+                sum(r['exit_code'] != 0 for r in records),
+                sum(not r['inputs_current'] for r in records),
+                sum(r['sdk_allocated_bytes'] < 0 for r in imports), trace.exists()),
             'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
             'import_observer_ran': trace.exists(), 'import_requests': len(imports),
             'source_import_requests': sum(r['path'].endswith('.ss') for r in imports),

@@ -97,6 +97,32 @@ class PreparationWorkTests(unittest.TestCase):
             self.assertEqual(summary['gsc_failed'], 1)
             self.assertEqual(summary['gsc_input_bytes'], source.stat().st_size)
             self.assertFalse(summary['import_observer_ran'])
+            self.assertFalse(summary['observations_complete'])
+            # A correct digest with a fabricated byte count corrupts the cost basis.
+            original_bytes = record['inputs'][0]['bytes']
+            record['inputs'][0]['bytes'] += 1
+            next(records.glob('*.json')).write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, 'expanded compiler input'):
+                summarize(root)
+            record['inputs'][0]['bytes'] = original_bytes
+            next(records.glob('*.json')).write_text(json.dumps(record))
             blob.write_bytes(b'damaged retained input')
             with self.assertRaisesRegex(ValueError, 'expanded compiler input'):
                 summarize(root)
+
+    def test_helper_failure_and_changed_inputs_cannot_qualify_work(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            phase = root / 'prepare'
+            phase.mkdir()
+            (root / 'prepare-imports.sexp').write_text('')
+            record = {'kind': 'sdk-helper', 'inputs': [], 'exit_code': 0,
+                      'inputs_current': True, 'user_seconds': 0, 'system_seconds': 0}
+            path = phase / 'helper.json'
+            path.write_text(json.dumps(record))
+            self.assertTrue(summarize(root)['phases']['prepare']['observations_complete'])
+            for key, bad in (('exit_code', 7), ('inputs_current', False)):
+                with self.subTest(key=key):
+                    path.write_text(json.dumps(dict(record, **{key: bad})))
+                    result = summarize(root)['phases']['prepare']
+                    self.assertFalse(result['observations_complete'])

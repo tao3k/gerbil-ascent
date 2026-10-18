@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-name: Isolated macOS build costs
+name: macOS semantics and build experiments
 on:
   pull_request:
     paths:
@@ -31,8 +31,7 @@ on:
   workflow_dispatch:
     inputs:
       baseline:
-        description: Baseline commit for the fixed ABBA control
-        default: ab3d5e23fa7ed32e1f76c16c2628b7573be31f80
+        description: Explicit baseline commit for an on-demand ABBA experiment
         required: true
       candidate:
         description: Optional candidate commit for a historical work diagnosis
@@ -46,6 +45,7 @@ permissions:
   contents: read
 jobs:
   build-cost:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: macos-26
     timeout-minutes: 90
     env:
@@ -73,9 +73,9 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           test ! -e .gerbil/lib/gerbil-ascent
-      - name: Fixed ABBA cold build and test preparation
+      - name: On-demand ABBA cold build and test preparation
         env:
-          BASELINE: ${{ inputs.baseline || 'ab3d5e23fa7ed32e1f76c16c2628b7573be31f80' }}
+          BASELINE: ${{ inputs.baseline }}
           CANDIDATE: ${{ inputs.candidate || github.event.pull_request.head.sha || github.sha }}
           WORK_ONLY: ${{ inputs.work_only || false }}
         run: |

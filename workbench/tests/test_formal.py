@@ -12,6 +12,8 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(controls["correct"].expected, 0)
         faults = {name: item.property for name, item in controls.items() if name != "correct"}
         self.assertEqual(faults, {
+            "hide-compiler-failure": "CompilerWorkComplete",
+            "hide-changed-input": "CompilerWorkComplete",
             "hide-job": "JobsExact", "forget-import": "ImportsExact",
             "sum-nested": "AllocationNotNested", "publish-partial": "Complete",
             "ignore-generation": "Current", "clamp-counter": "OrderedCounter",

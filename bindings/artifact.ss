@@ -87,7 +87,7 @@
   (map (lambda (relative)
          (cons relative (artifact-file-sha256 (path-expand relative root))))
        (append (map (cut string-append <> ".ss") modules) assets
-               '("build.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
+               '("build.ss" "build-modules.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
                  "bindings/artifact.ss" "bindings/build-entry.ss"))))
 
 ;; make's timestamp cache cannot detect restoring older, different bytes.

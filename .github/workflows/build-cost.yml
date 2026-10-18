@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - build.ss
+      - build-modules.ss
       - bindings/build-entry.ss
       - bindings/artifact.ss
       - t/harness/library-spec.ss

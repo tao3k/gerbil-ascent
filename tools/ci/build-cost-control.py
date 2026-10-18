@@ -197,7 +197,7 @@ def main():
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
-    allowed = {'build.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
+    allowed = {'build.ss', 'build-modules.ss', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss',
                't/harness/build.ss',

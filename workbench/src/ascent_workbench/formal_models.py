@@ -612,7 +612,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter',
+    'invariants': 'JobsExact ImportsExact AllocationNotNested Complete Current OrderedCounter InventoryDataOnly',
 }
 FAULTS['PreparationWork'] = (
     ('hide-job', 'JobsExact', 12),
@@ -621,4 +621,5 @@ FAULTS['PreparationWork'] = (
     ('publish-partial', 'Complete', 12),
     ('ignore-generation', 'Current', 12),
     ('clamp-counter', 'OrderedCounter', 12),
+    ('bootstrap-inventory', 'InventoryDataOnly', 12),
 )

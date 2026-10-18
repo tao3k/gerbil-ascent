@@ -5,11 +5,13 @@ module PreparationWork {
   const Mutation: str
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 finished: bool, current: bool, counterValid: bool, published: bool,
-                outerAllocation: int, reportedAllocation: int}
+                outerAllocation: int, reportedAllocation: int, inventoryDeclarations: int}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     finished: false, current: true, counterValid: true, published: false,
-    outerAllocation: 0, reportedAllocation: 0}
+    outerAllocation: 0, reportedAllocation: 0, inventoryDeclarations: 0}
+  action ReadInventory = q' = {...q,
+    inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action Import = all {q.imports < 2,
     q' = {...q, imports: q.imports + 1,
       observedImports: if (Mutation == "forget-import") q.observedImports else q.observedImports + 1,
@@ -28,7 +30,8 @@ module PreparationWork {
     q.current or Mutation == "ignore-generation",
     q.counterValid or Mutation == "clamp-counter",
     q' = {...q, published: true}}
-  action step = any {Import, Gsc, Allocate, Finish, ChangeSource, CounterDecrease, Publish}
+  action step = any {ReadInventory, Import, Gsc, Allocate, Finish, ChangeSource, CounterDecrease, Publish}
+  val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports
   val AllocationNotNested = q.reportedAllocation == q.outerAllocation

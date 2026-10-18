@@ -44,7 +44,7 @@
               (let (path (path-expand name root))
                 (displayln "cargo:rerun-if-changed=" path)
                 (source path)))
-    '("build.ss" "gerbil.pkg" "rust/Cargo.toml" "rust/Cargo.lock" "rust/ascent/Cargo.toml" "rust/ascent/build.rs"
+    '("build.ss" "build-modules.ss" "gerbil.pkg" "rust/Cargo.toml" "rust/Cargo.lock" "rust/ascent/Cargo.toml" "rust/ascent/build.rs"
       "rust/ascent-scheme/Cargo.toml" "rust/ascent-scheme/build.rs" "rust/ascent-python/Cargo.toml"
       "python/pyproject.toml"))
   (for-each (lambda (directory) (collect-files directory resource? (lambda (path)

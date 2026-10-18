@@ -11,7 +11,9 @@
         :std/os/flock :std/os/device
         "library-spec.ss"
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
-        (only-in "../../build.ss" gerbil-ascent-library-modules)
+;; BEGIN GENERATED PREPARATION IMPORT
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
 (def test-cache (path-expand ".cache/ascent/compiled-library"))

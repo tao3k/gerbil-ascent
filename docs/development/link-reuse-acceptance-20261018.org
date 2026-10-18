@@ -441,3 +441,68 @@ the corrected invocation uses the existing relocation options, without SDK
 changes. Absence of build import coverage still rejects the older groups. This correction changes diagnostic coverage, not production build
 behavior or acceptance thresholds. Full compiler/expander/allocator source
 refinement and causal repair of the original regression remain open.
+
+** Remove package construction from module-inventory loading
+
+Commit cca82a9 completes its full main CI: Scheme semantics/performance,
+formal, all three oracles and Python consumers pass. The Rust job still
+fails its ASP style gate and eighteen Clippy errors; its 85 integration tests,
+PyO3 wheel and original interfaces pass. Independent three-worker source
+semantics times out at 180.228 seconds after 640 completed Cases and 77 modules,
+with no observed foreign compiler or audit error. Its complete uninstrumented
+ABBA rejects cold build +29.97%, preparation +31.75% and warm +65.71%. All four
+warm output-change sets are empty. These remain failures, not speed claims.
+
+The complete historical observer group 39098736586 covers build, preparation
+and warm imports in every control. Historical GSC counts remain 573/484 in
+build (baseline/candidate), 257 in preparation, and four in warm preparation.
+Negative SDK allocation estimates and historical warm rebuilds still reject
+that group. Original supervisor logs also retain reported activity increments:
+8.818 baseline versus 12.305 candidate, about +39.5%. Those logs divide Mach
+ticks by 1e9 incorrectly; only a same-host relative sampled comparison is
+meaningful. Sampling, rounding, process reaping and interleaved output prevent
+an exact CPU census or a causal attribution. Absolute seconds are not recovered.
+
+A source-level startup experiment identifies removable work: t/harness/build.ss
+imports the full build entry solely to read gerbil-ascent-library-modules.
+That evaluates the PackageSpec declaration and imports its build-only closure.
+The module list now lives in build-modules.ss as the same ordered quoted data,
+with its complete definition preserved verbatim. Both consumers use that one
+owner. Preparation no longer imports build.ss to get the list. The production
+build keeps its unchanged PackageSpec and std/make orchestration.
+
+A temporary fixed-path ABBA import control observes one PackageSpec declaration
+per old startup and zero per data-only startup. The SDK exec-stats estimates
+are 361,035,528/361,037,416 bytes for the old route and
+322,106,624/322,108,112 for the data route. These positive estimates identify
+about 39 MB of reported startup work removed; they are not exact allocator
+bounds. Local foreign compiler activity makes their wall times unqualified.
+A separate native time-tool probe confirms fixed-input object identity, but
+its hardware counters have process-scope limits and are not an original-run
+explanation. Neither experiment discharges the 40.3 percent obligation.
+
+The new data file participates in production source snapshots and Cargo's
+source identity/rerun inventory. Changing its bytes requires conservative
+invalidation. The artifact Suite checks this admission behavior, the exact
+two-form quoted-data shape, the exported ordered value, and the preparation
+import. Its compiled test dependency is declared explicitly; it is not selected
+by the thirteen performance consumers. Lean renders the actual import region
+and models removal of the package-declaration step. Quint retains every prior
+control and adds bootstrap-inventory as a required negative control. These are
+bounded source/import checks and a parametric work model, not source refinement
+of the complete SDK compiler, expander, allocator or decoder. All prior
+performance failures, three-worker configuration, timeouts and heap limits
+remain required. Cancellation, provenance and production evaluator behavior
+are unchanged.
+
+Focused validation of the inventory change: all twenty artifact Cases pass
+using a separately compiled artifact module in a disposable package prefix;
+the shared compiled application is not overwritten. The actual selection
+function is read from the harness with Gerbil's reader and evaluated against
+the real manifest: thirteen consumers still select twenty-three dependencies.
+The complete Lean build passes 179 jobs through the locked LeanPoo Guard,
+with zero additional helper threads. The rendered preparation import matches
+its actual source region exactly. Quint passes the correct configuration and
+all seven required counterexamples. Fourteen work/admission/formal receipt
+unit tests pass. These focused results precede exact-head full CI and the
+unchanged isolated performance comparison; they are not full acceptance.

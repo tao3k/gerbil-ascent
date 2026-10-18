@@ -8,6 +8,26 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
+-- Importing build.ss evaluates its PackageSpec declaration even when the
+-- consumer only requests its module list. The separate data module has no
+-- such declaration. Source controls read that module with Gerbil's reader
+-- and require exactly an export and a quoted string-list binding.
+inductive InventorySource where
+  | moduleData
+  | buildEntry
+  deriving DecidableEq
+
+def inventoryPackageDeclarations : InventorySource → Nat
+  | .moduleData => 0
+  | .buildEntry => 1
+
+def inventoryImportSchemeSource : String :=
+  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-modules)\n"
+
+theorem module_data_avoids_package_declaration :
+    inventoryPackageDeclarations .moduleData = 0 ∧
+    inventoryPackageDeclarations .buildEntry = 1 := by decide
+
 abbrev Dependency := List String × List String
 def requested (tests : List String) (entry : Dependency) : Bool :=
   entry.1.any tests.contains
@@ -80,6 +100,7 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
     work < work - saved + wait := by omega
 
 #print axioms total_append
+#print axioms module_data_avoids_package_declaration
 #print axioms inactive_dependency_no_work
 #print axioms removed_two_observations
 #print axioms ordered_allocation_snapshots

@@ -4,7 +4,8 @@
 (import :std/test :std/encoding/json "../harness/artifact-admission"
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
         (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
-        (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+        (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! source-snapshot record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (cond-expand
@@ -43,6 +44,37 @@
   (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
 (def scheme-artifact-test
   (test-suite "Scheme native artifact publication"
+    (test-case "preparation reads module data without evaluating the build entry"
+      (let (declared
+            (call-with-input-file "build-modules.ss"
+              (lambda (port)
+                (check (read port) => '(export gerbil-ascent-library-modules))
+                (let (form (read port))
+                  (check (eof-object? (read port)) => #t)
+                  (match form
+                    (['def 'gerbil-ascent-library-modules ['quote modules]] modules)
+                    (_ (error "build module inventory must be quoted data" form)))))))
+        (check (and (list? declared) (andmap string? declared)) => #t)
+        (check declared => gerbil-ascent-library-modules))
+      (let (imports
+            (call-with-input-file "t/harness/build.ss"
+              (lambda (port) (read-line port) (read port))))
+        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules)
+                            (cdr imports)) #t) => #t)
+        (check (and (member '(only-in "../../build.ss" gerbil-ascent-library-modules)
+                            (cdr imports)) #t) => #f)))
+    (test-case "module inventory content participates in build source admission"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! "bindings/c")
+        (for-each (lambda (name) (put name "original fixture bytes"))
+          '("build.ss" "build-modules.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
+            "bindings/artifact.ss" "bindings/build-entry.ss"))
+        (let (before (source-snapshot (current-directory) []))
+          (check (and (assoc "build-modules.ss" before) #t) => #t)
+          (put "build-modules.ss" "modified fixture bytes")
+          (let (after (source-snapshot (current-directory) []))
+            (check (equal? before after) => #f)
+            (check (artifact-changed-modules (list->hash-table before) after []) => #f))))))
     (test-case "only SDK-produced outputs cross a drained executor boundary"
       (cond-expand
         (darwin

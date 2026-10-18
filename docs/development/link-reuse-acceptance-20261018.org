@@ -274,3 +274,12 @@ API/complexity/membership diagnostics. No diagnostic severity or gate is waived.
 The workspace CI uses --no-fail-fast so that a failing library test does not
 prevent the remaining Rust test targets from running. This local integration
 result is not full Scheme, Python, formal or performance acceptance.
+
+The first independent formal job on 822c6ea exposed a cold-build inventory
+failure: AscentProof imported ClueSubmission and AnchoredEvidenceSlice, but
+neither module was registered in Lake's explicit roots. Registering both
+modules fixes the missing-module failure without changing any proof body,
+SDK, or resource budget. Both focused checks and the complete guarded Lean
+build pass locally (178 jobs, 51.60 seconds, zero additional helper threads).
+This repairs proof execution coverage; it does not resolve preparation costs
+or establish source refinement of the measurement collector.

@@ -202,6 +202,7 @@ def main():
                'workbench/src/ascent_workbench/supervision.py',
                'workbench/tests/test_supervision.py',
                'packages/proofs/lean/ExecutionPolicy.lean',
+               'packages/proofs/lean/lakefile.lean',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'workbench/src/ascent_workbench/preparation_policy.py',

@@ -232,6 +232,7 @@ def main():
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'packages/proofs/quint/PreparationWork.qnt',
+               'packages/proofs/quint/PreparationSupport.qnt',
                'workbench/src/ascent_workbench/preparation_policy.py',
                'workbench/src/ascent_workbench/preparation_admission.py',
                'workbench/src/ascent_workbench/preparation_work.py',

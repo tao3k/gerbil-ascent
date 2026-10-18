@@ -1,6 +1,8 @@
 //! Scheme-defined relational composition lowered to Rust and caller-owned Rayon pools.
 //! The supported boundary is finite typed sets and stratified negation.
 mod catalog;
+mod clues;
+pub use clues::{ClueExchange, clue_sexpr};
 mod computational;
 mod data;
 mod derivations;

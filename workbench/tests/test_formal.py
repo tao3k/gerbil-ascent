@@ -25,11 +25,12 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        original = {name: items for name, items in plans.items() if name != "CachePublication"}
+        original = {name: items for name, items in plans.items()
+                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)
-        self.assertEqual(len(plans), 57)
-        self.assertEqual(sum(map(len, plans.values())), 383)
+        self.assertEqual(set(plans) - set(original),
+                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead"})
         self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)
@@ -43,7 +44,47 @@ class FormalTests(unittest.TestCase):
                           "publish-unreviewed", "publish-stale",
                           "ignore-counterexample", "select-action",
                           "ignore-rule-revision", "same-count-replacement"})
+        progressive = {o.name: o for o in plans["ProgressiveEvidenceRead"]}
+        self.assertEqual({name: o.property for name, o in progressive.items() if name != "correct"}, {
+            "replay-seen": "NoReplay", "ack-hidden": "NoHiddenAcknowledgement",
+            "forget-on-rescope": "PreserveSeen", "reuse-stale": "SourceBound",
+            "scope-is-removal": "ScopeIsNotRemoval", "close-exploration": "Open",
+        })
+        self.assertTrue(all(o.expected == 12 for name, o in progressive.items() if name != "correct"))
+        anchored = {o.name: o for o in plans["AnchoredEvidenceSlice"]}
+        self.assertEqual({name: o.property for name, o in anchored.items() if name != "correct"}, {
+            "invalid-declaration-hit": "SoundHit",
+            "ack-collapsed": "Acknowledged",
+            "drop-first-hit": "FirstHit", "invent-hit": "SoundHit", "dump-graph": "Local",
+            "hide-counter": "Family", "wrong-chain": "Traceable",
+            "hide-truncation": "HonestPresentation", "gap-as-absent": "Gaps",
+            "mask-gap": "Gaps", "count-only-delta": "ExactDelta",
+            "select-action": "Open", "close-scope": "Open",
+        })
+        self.assertTrue(all(o.expected == 12 for name, o in anchored.items() if name != "correct"))
         cache = {o.name: o for o in plans["CachePublication"]}
+        clue = {o.name: o for o in plans["ClueSubmission"]}
+        self.assertEqual(set(clue), {"correct", "stale-cas", "drop-history", "promote-hypothesis"})
+        self.assertEqual(clue["stale-cas"].property, "CompareAndSwap")
+        self.assertEqual(clue["drop-history"].property, "Durable")
+        self.assertEqual(clue["promote-hypothesis"].property, "HypothesisSeparation")
+        scope = {o.name: o for o in plans["TrajectoryClueScope"]}
+        self.assertEqual({name: o.property for name, o in scope.items() if name != "correct"}, {
+            "mix-catalog-source": "CurrentBinding",
+            "promote-hypothesis": "ObservationAuthority",
+            "negate-absence": "OpenWorld",
+            "accept-stale": "CurrentBinding",
+            "accept-missing-receipt": "CurrentBinding",
+            "drop-on-expand": "ScopeConservative",
+            "close-scope": "OpenExploration",
+            "force-choice": "OpenExploration",
+            "drop-history": "DurableHistory",
+            "hide-counterevidence": "ConflictVisible",
+            "misattribute-counter": "CorrectReferences",
+            "inherit-old-receipt": "ObservationAuthority",
+        })
+        self.assertEqual(scope["correct"].expected, 0)
+        self.assertTrue(all(o.expected == 12 for name, o in scope.items() if name != "correct"))
         self.assertEqual(set(cache), {"correct", "late-revoke", "early-publish",
                                       "mask-error", "mask-witness", "skip-witness"})
         self.assertEqual(cache["correct"].expected, 0)

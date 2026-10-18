@@ -148,6 +148,8 @@
     "interface/value-graph"
     "evidence/interface"
     "evidence/execution"
+    "evidence/clue-query"
+    "program/clue-exchange"
     "evidence/module"
     "t/qualification/evidence-api-module"
     "interface/engine-api"))

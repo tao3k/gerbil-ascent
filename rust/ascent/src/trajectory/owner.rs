@@ -208,6 +208,37 @@ impl Trajectory {
         set(&mut packet, "ownerIdentity", self.handle.into())?;
         Ok(packet)
     }
+    /// Return a small read index; an observed brief must bind this owner's retained prefix.
+    /// No attempt payload or result reference is included.
+    /// # Errors
+    /// Rejects a closed owner or a foreign, malformed, or divergent observed brief.
+    pub fn brief(&self, observed: Option<&Data>) -> Result<Data> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Err(Error::Closed);
+        }
+        self.state.brief(observed, self.handle)
+    }
+    /// Compare one caller-chosen candidate against only relevant changes to an observed view.
+    /// # Errors
+    /// Rejects a closed owner or a foreign, malformed, or divergent observed view.
+    pub fn focus(&self, candidate: &Data, observed: Option<&Data>) -> Result<Data> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Err(Error::Closed);
+        }
+        self.state.focus(candidate, observed, self.handle)
+    }
+    /// Read a named retained event prefix; this does not review its result references.
+    /// # Errors
+    /// Rejects a closed owner or a count/identity mismatch.
+    pub fn exact_prefix(&self, through: usize, identity: &str) -> Result<Data> {
+        self.engine.check()?;
+        if self.closed.is_some() {
+            return Err(Error::Closed);
+        }
+        self.state.exact_prefix(through, identity, self.handle)
+    }
     /// Check whether an immutable advice packet still names this exact ledger revision.
     /// This does not review underlying evidence or grant execution permission.
     /// # Errors
@@ -220,6 +251,8 @@ impl Trajectory {
         Ok(matches!(
             packet.field("schema")?.text()?,
             "ascent.trajectory-exploration.v1" | "ascent.trajectory-context.v1"
+                | "ascent.trajectory-brief.v1" | "ascent.trajectory-focus.v1"
+                | "ascent.trajectory-exact-prefix.v1"
         ) && *packet.field("ownerIdentity")?.natural()? == self.handle.into()
             && packet.field("sourceIdentity")?.text()? == self.state.source
             && *packet.field("generation")?.natural()? == self.state.generation.into()

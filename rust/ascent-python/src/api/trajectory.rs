@@ -293,6 +293,32 @@ impl Trajectory {
     fn context(&self, py: Python<'_>) -> PyResult<pyo3::Py<PyAny>> {
         packets::write(py, &self.lock()?.ledger.context().map_err(source_error)?)
     }
+    #[pyo3(signature=(observed=None))]
+    fn brief(
+        &self,
+        py: Python<'_>,
+        observed: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<pyo3::Py<PyAny>> {
+        let observed = observed.map(packets::read).transpose()?;
+        let packet = self.lock()?.ledger.brief(observed.as_ref()).map_err(source_error)?;
+        packets::write(py, &packet)
+    }
+    #[pyo3(signature=(candidate,observed=None))]
+    fn focus(
+        &self,
+        py: Python<'_>,
+        candidate: &Bound<'_, PyAny>,
+        observed: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<pyo3::Py<PyAny>> {
+        let candidate = packets::read(candidate)?;
+        let observed = observed.map(packets::read).transpose()?;
+        let packet = self.lock()?.ledger.focus(&candidate, observed.as_ref()).map_err(source_error)?;
+        packets::write(py, &packet)
+    }
+    fn exact_prefix(&self, py: Python<'_>, through: usize, prefix_identity: &str) -> PyResult<pyo3::Py<PyAny>> {
+        let packet = self.lock()?.ledger.exact_prefix(through, prefix_identity).map_err(source_error)?;
+        packets::write(py, &packet)
+    }
     fn exploration_current(&self, packet: &Bound<'_, PyAny>) -> PyResult<bool> {
         self.lock()?
             .ledger

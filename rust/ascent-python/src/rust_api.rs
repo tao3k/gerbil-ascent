@@ -15,6 +15,8 @@ use std::{
 };
 #[path = "rust_bindings.rs"]
 mod bindings;
+#[path = "rust_clues.rs"]
+mod clues;
 #[path = "api/computational.rs"]
 mod computational;
 #[path = "api/conversation.rs"]

@@ -50,6 +50,7 @@ pub(super) fn install(root: &Bound<'_, PyModule>) -> PyResult<()> {
     root.add("datalog", datalog)?;
     let trajectory = PyModule::new(root.py(), "ascent.trajectory")?;
     trajectory.add_class::<super::trajectory::Trajectory>()?;
+    trajectory.add_class::<super::clues::ClueExchange>()?;
     publish(root, &trajectory)?;
     root.add("trajectory", trajectory)?;
     interaction(root)?;

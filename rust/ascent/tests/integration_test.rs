@@ -27,3 +27,5 @@ mod interaction;
 
 #[path = "integration/evidence_definitions.rs"]
 mod evidence_definitions;
+#[path = "integration/clues.rs"]
+mod clues;

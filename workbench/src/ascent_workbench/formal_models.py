@@ -529,3 +529,66 @@ FAULTS['CachePublication'] = (
     ('mask-witness', 'ErrorIdentity', 12),
     ('skip-witness', 'CompletePublication', 12),
 )
+
+MODEL_ORDER += ('ClueSubmission',)
+CONFIGURATIONS['ClueSubmission'] = {
+    'constants': 'Fault = "none"', 'invariants': 'Safe',
+}
+FAULTS['ClueSubmission'] = (
+    ('stale-cas', 'CompareAndSwap', 12),
+    ('drop-history', 'Durable', 12),
+    ('promote-hypothesis', 'HypothesisSeparation', 12),
+)
+
+MODEL_ORDER += ('ProgressiveEvidenceRead',)
+CONFIGURATIONS['ProgressiveEvidenceRead'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['ProgressiveEvidenceRead'] = (
+    ('replay-seen', 'NoReplay', 12),
+    ('ack-hidden', 'NoHiddenAcknowledgement', 12),
+    ('forget-on-rescope', 'PreserveSeen', 12),
+    ('reuse-stale', 'SourceBound', 12),
+    ('scope-is-removal', 'ScopeIsNotRemoval', 12),
+    ('close-exploration', 'Open', 12),
+)
+
+MODEL_ORDER += ('AnchoredEvidenceSlice',)
+CONFIGURATIONS['AnchoredEvidenceSlice'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['AnchoredEvidenceSlice'] = (
+    ('invalid-declaration-hit', 'SoundHit', 12),
+    ('ack-collapsed', 'Acknowledged', 12),
+    ('drop-first-hit', 'FirstHit', 12),
+    ('invent-hit', 'SoundHit', 12),
+    ('dump-graph', 'Local', 12),
+    ('hide-counter', 'Family', 12),
+    ('wrong-chain', 'Traceable', 12),
+    ('hide-truncation', 'HonestPresentation', 12),
+    ('gap-as-absent', 'Gaps', 12),
+    ('mask-gap', 'Gaps', 12),
+    ('count-only-delta', 'ExactDelta', 12),
+    ('select-action', 'Open', 12),
+    ('close-scope', 'Open', 12),
+)
+
+# Public Clue exchange shares the Scheme query contract, not an Agent policy.
+MODEL_ORDER += ('TrajectoryClueScope',)
+CONFIGURATIONS['TrajectoryClueScope'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['TrajectoryClueScope'] = (
+    ('mix-catalog-source', 'CurrentBinding', 12),
+    ('promote-hypothesis', 'ObservationAuthority', 12),
+    ('negate-absence', 'OpenWorld', 12),
+    ('accept-stale', 'CurrentBinding', 12),
+    ('accept-missing-receipt', 'CurrentBinding', 12),
+    ('drop-on-expand', 'ScopeConservative', 12),
+    ('close-scope', 'OpenExploration', 12),
+    ('force-choice', 'OpenExploration', 12),
+    ('drop-history', 'DurableHistory', 12),
+    ('hide-counterevidence', 'ConflictVisible', 12),
+    ('misattribute-counter', 'CorrectReferences', 12),
+    ('inherit-old-receipt', 'ObservationAuthority', 12),
+)

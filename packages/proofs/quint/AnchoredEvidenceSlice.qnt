@@ -1,0 +1,98 @@
+// Finite protocol abstraction, never a production search/cardinality limit.
+module AnchoredEvidenceSlice {
+  const Mutation: str
+  val associations = Set({factor: 0, chain: 0}, {factor: 1, chain: 1})
+  def seeds(exposed: Set[int], applicable: Set[int]): Set[int] =
+    associations.filter(a => exposed.contains(a.factor) and applicable.contains(a.chain)).map(a => a.chain)
+  def family(chains: Set[int]): Set[int] =
+    Set(0, 1, 2, 3).filter(w => chains.contains(if (w < 2) 0 else 1))
+  type State = {
+    applicable: Set[int], exposed: Set[int], scope: Set[int], prior: Set[int],
+    items: Set[int], added: Set[int], removed: Set[int], retained: Set[int],
+    current: bool, receipts: bool, conditions: bool, declared: bool, evaluated: bool,
+    sufficient: bool, full: bool, acknowledged: bool, queried: bool, hit: bool, visible: Set[int],
+    references: Set[int], expandable: Set[int], complete: bool, absent: bool,
+    status: str, selectedAction: bool, explorationOpen: bool
+  }
+  var q: State
+  action init = q' = {
+    applicable: Set(0, 1), exposed: Set(), scope: Set(), prior: Set(),
+    items: Set(), added: Set(), removed: Set(), retained: Set(),
+    current: true, receipts: true, conditions: true, declared: true, evaluated: true,
+    sufficient: true, full: true, acknowledged: false, queried: false, hit: false, visible: Set(),
+    references: Set(), expandable: Set(), complete: false, absent: false,
+    status: "unqueried", selectedAction: false, explorationOpen: true
+  }
+  // Factor 2 is unassociated. 0/1 and 2/3 are opposite-polarity witness families.
+  action Prepare = {
+    nondet exposed = Set(Set(), Set(0), Set(1), Set(2), Set(0, 1)).oneOf()
+    nondet applicable = Set(Set(), Set(0), Set(1), Set(0, 1)).oneOf()
+    nondet prior = Set(Set(), Set(0, 1), Set(2, 3)).oneOf()
+    all {not(q.queried),
+    q' = {...q, exposed: exposed, applicable: applicable, prior: prior}}
+  }
+  action Gap = {
+    nondet which = Set("source", "receipt", "condition", "declaration", "evaluation", "capacity", "detail").oneOf()
+    all {not(q.queried),
+    q' = if (which == "source") {...q, current: false}
+      else if (which == "receipt") {...q, receipts: false}
+      else if (which == "condition") {...q, conditions: false}
+      else if (which == "declaration") {...q, declared: false}
+      else if (which == "evaluation") {...q, evaluated: false}
+      else if (which == "detail") {...q, full: false}
+      else {...q, sufficient: false}}
+  }
+  def valid(s: State): bool = s.current and s.receipts and s.conditions and s.declared and s.evaluated
+  def ready(s: State): bool = valid(s) and s.sufficient and seeds(s.exposed, s.applicable).size() > 0
+  def outcome(s: State): str =
+    if (not(s.current)) "source-gap"
+    else if (not(s.receipts)) "receipt-gap"
+    else if (not(s.conditions)) "condition-gap"
+    else if (not(s.declared)) "declaration-gap"
+    else if (not(s.evaluated)) "evaluation-gap"
+    else if (s.exposed.size() == 0) "anchor-gap"
+    else if (seeds(s.exposed, Set(0, 1)).size() == 0) "association-gap"
+    else if (seeds(s.exposed, s.applicable).size() == 0) "applicability-gap"
+    else if (not(s.sufficient)) "presentation-gap" else "hit"
+  action Query = {
+    val scoped = seeds(q.exposed, q.applicable)
+    val result = if (valid(q)) family(scoped) else Set()
+    val shown = if (Mutation == "dump-graph") Set(0, 1, 2, 3)
+      else if (Mutation == "hide-counter") result.exclude(Set(1, 3))
+      else if (q.sufficient and q.full) result else Set()
+    all {not(q.queried), q' = {...q, queried: true, scope: scoped, items: result,
+      hit: if (Mutation == "drop-first-hit") false
+        else if (Mutation == "invalid-declaration-hit") ready({...q, declared: true})
+        else if (Mutation == "invent-hit") true else ready(q),
+      visible: shown,
+      references: if (Mutation == "wrong-chain") Set(2) else if (valid(q)) scoped else Set(),
+      expandable: if (q.sufficient and q.full) Set() else result,
+      complete: if (Mutation == "hide-truncation") true else valid(q) and q.sufficient and q.full,
+      acknowledged: (valid(q) and q.sufficient and q.full) or Mutation == "ack-collapsed",
+      absent: Mutation == "gap-as-absent" and not(ready(q)),
+      status: if (Mutation == "mask-gap") "hit" else outcome(q),
+      added: if (Mutation == "count-only-delta" and result.size() == q.prior.size())
+        Set() else result.exclude(q.prior),
+      removed: q.prior.intersect(family(scoped)).exclude(result), retained: result.intersect(q.prior),
+      selectedAction: Mutation == "select-action", explorationOpen: Mutation != "close-scope"}}
+  }
+  action step = any {Prepare, Gap, Query}
+  val FirstHit = not(q.queried and ready(q)) or q.hit
+  val SoundHit = not(q.queried and q.hit) or ready(q)
+  val Local = not(q.queried) or q.visible.subseteq(family(q.scope))
+  val Family = not(q.queried and valid(q) and q.sufficient and q.full) or q.visible == q.items
+  val Traceable = not(q.queried) or
+    q.references == (if (valid(q)) seeds(q.exposed, q.applicable) else Set())
+  val HonestPresentation = not(q.queried) or
+    (q.complete == (valid(q) and q.sufficient and q.full) and
+      q.expandable == (if (q.sufficient and q.full) Set() else q.items))
+  val Acknowledged = not(q.queried and q.acknowledged) or q.complete
+  val Gaps = not(q.queried) or (q.status == outcome(q) and not(q.absent))
+  val ExactDelta = not(q.queried) or
+    (q.added == q.items.exclude(q.prior) and
+      q.removed == q.prior.intersect(family(q.scope)).exclude(q.items) and
+      q.retained == q.items.intersect(q.prior))
+  val Open = not(q.selectedAction) and q.explorationOpen
+  val Safety = FirstHit and SoundHit and Local and Family and Traceable and
+    HonestPresentation and Acknowledged and Gaps and ExactDelta and Open
+}

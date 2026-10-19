@@ -5,7 +5,7 @@
 (import :std/encoding/json :std/encoding/hex :std/crypto/digest
         (only-in :std/io/file call-with-file-reader)
         :std/misc/ports)
-(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+(export artifact-support-interfaces artifact-record-support-interfaces! artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 (def cache ".cache/ascent/compiled-library/")
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
@@ -36,6 +36,51 @@
                               (path-normalize (current-directory)) options) out)
       (newline out))))
 ;; END GENERATED PREPARATION OPTIONS
+
+;; Reuse reference interfaces only for an unchanged complete source/resource set.
+;; std/make and the compiler still own dependency checking and compilation.
+(def (artifact-support-resources library)
+  (let (result [])
+    (def (visit path)
+      (if (eq? (file-type path) 'directory)
+        (for-each (lambda (name) (visit (path-expand name path)))
+                  (list-sort string<? (directory-files path)))
+        (set! result (cons (cons path (artifact-digest path)) result))))
+    (visit library)
+    result))
+(def (artifact-support-profile options)
+  (list "ascent-support-interfaces/v1" (path-normalize (current-directory)) (gerbil-home) options))
+(def (artifact-support-interfaces file sources library options)
+  (with-catch (lambda (_) [])
+    (lambda ()
+      (call-with-input-file file
+        (lambda (port)
+          (let (record (read port))
+            (if (and (eof-object? (read port)) (list? record) (= (length record) 4)
+                     (equal? (car record) (artifact-support-profile options))
+                     (list? (cadddr record)) (andmap string? (cadddr record))
+                     (artifact-support-admitted? sources (cadr record)
+                       (artifact-support-resources library) (caddr record)))
+              (cadddr record) [])))))))
+;; BEGIN GENERATED PREPARATION SUPPORT-ADMISSION
+(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)
+  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
+               recorded-sources)
+       (equal? resources recorded-resources)))
+;; END GENERATED PREPARATION SUPPORT-ADMISSION
+(def (artifact-record-support-interfaces! file sources library options modules)
+  (let (pending (string-append file ".pending"))
+    (call-with-output-file [path: pending truncate: #t]
+      (lambda (port)
+        (write (list (artifact-support-profile options)
+                     (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
+                     (artifact-support-resources library)
+                     (filter (lambda (module)
+                               (file-exists? (path-expand (string-append "gerbil-ascent/" module ".ssi") library)))
+                             modules)) port)
+        (newline port)))
+    (rename-file pending file #t)))
+
 (def load-json artifact-read-json)
 (def (save-json path value)
   (call-with-output-file [path: path truncate: #t]

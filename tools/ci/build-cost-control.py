@@ -272,7 +272,7 @@ def main():
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
-    allowed = {'core/relation-view.ss', 'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
+    allowed = {'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss', 't/harness/artifact-admission.ss',
                'docs/development/compiler-cost-acceptance-20261019.org',
@@ -312,7 +312,8 @@ def main():
                'workbench/tests/test_preparation_work.py',
                't/qualification/fixtures/preparation/unresolved.json'}
     if set(changed) - allowed:
-        raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}')
+        raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}; '
+                           'select a baseline with identical program sources before measuring compiler/cache changes')
     dependencies = root / '.gerbil'
     if ((dependencies / 'lib/gerbil-ascent').exists()
             or list((dependencies / 'lib/static').glob('gerbil-ascent__*'))

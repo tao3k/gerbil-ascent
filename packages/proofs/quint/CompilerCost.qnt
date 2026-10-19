@@ -9,6 +9,18 @@ module CompilerCost {
   var q: State
   action init = q' = {wanted: 0, cached: 0, valid: false, active: false, attempt: 0,
                      failed: false, published: false, lastGood: true, staleReuse: false, violation: false}
+  pure val ProducerPolicy = Set(false, true).forall(success => Set(false, true).forall(current =>
+    Set(false, true).forall(ordered => Set(false, true).forall(content => Set(false, true).forall(unique => {
+      val actual = producer_eligible(success, current,
+        ordered or Mutation == "ignore-producer-order", content or Mutation == "match-producer-name",
+        unique or Mutation == "ambiguous-producer")
+      actual == (success and current and ordered and content and unique)
+    })))))
+  pure val SupportPolicy = Set(false, true).forall(sources => Set(false, true).forall(resources => {
+    val actual = support_admitted(sources or Mutation == "reuse-changed-reference",
+                                 resources or Mutation == "reuse-damaged-interface")
+    actual == (sources and resources)
+  }))
   pure val ParentPolicy = Set(false, true).forall(same => Set(0,1,2).forall(matches => {
     val actual = if (Mutation == "cross-parent-cost") matches == 1
       else if (Mutation == "ambiguous-parent-cost") same and matches > 0
@@ -50,7 +62,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

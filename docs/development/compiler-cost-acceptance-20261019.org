@@ -307,3 +307,43 @@ observation identity from compiler identity. Git/hashFiles/SDK behavior are
 external premises. There is no fallback to a cache containing different
 Scheme bytes. This prevents avoidable cold starts after observer-only edits;
 it does not solve genuinely cold reference compilation or cold expansion.
+
+* Same-program reference reuse and static C producer observations
+
+The compiler/cache experiment must keep the production Scheme program fixed.
+The preflight now rejects a changed core/relation-view.ss before starting any
+control. The subsequent binary-receipt program comparison is retained. The
+previous 25431f62 versus 916326b1 experiment remains rejected; its timings are
+not a benefit estimate. New controls must use 916326b1 as the program baseline.
+
+Preparation now records a successful support-interface receipt after make and
+the unchanged final source check. Reuse requires the same complete source
+inventory, source root, SDK path, compiler options, and installed package-library
+file inventory and content hashes. Missing, malformed, changed or damaged
+receipts take the source route. Only currently installed support modules can
+be selected; semantic Suites remain source-loaded. Compiler imports and explicit
+reloads bypass the existing interface hook. make still checks every dependency.
+No alternate compiler, threshold change or cross-source restore key is added.
+This targets repeated reference expansion after compilation; genuinely cold C
+compilation remains separate work. Hashing and receipt publication are part of
+measured preparation, not subtracted overhead.
+
+The 148 previously unattributed build tasks are SDK obj operations whose GSC
+parent consumes copied static C, rather than generated Scheme. The observer now
+retains successful explicit Scheme-to-C outputs as content-addressed inputs to
+the cost ledger. Static C can be joined only to one successful, unchanged,
+prior producer with identical C bytes and exactly one Scheme input. Parent
+identity and actual C input checks remain mandatory. Ambiguity fails attribution;
+no basename inference is used. Historical records lack these output observations
+and cannot acquire this stronger lineage retroactively. The released SDK test
+covers generation, a renamed C copy, a separate object job, and its actual GCC
+cumulative GGC report.
+
+Lean renders the producer predicate and support content-admission predicate
+into the deployed Python/Scheme regions. Quint exercises producer ordering,
+content/uniqueness and changed-source/damaged-interface rejection. These guards
+do not prove the SDK generator, filesystem, manifest decoder or macro-expansion
+semantics. The true whole-Scheme cumulative allocation obligation remains open:
+the negative historical SDK samples remain rejected and are not clipped,
+wrapped, replaced with RSS, or added across overlapping imports. Native GCC GGC
+allocation is independently measured and explicitly retains its narrower scope.

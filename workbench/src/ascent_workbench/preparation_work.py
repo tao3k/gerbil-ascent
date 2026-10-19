@@ -233,11 +233,17 @@ def execute_gsc(arguments, helper=False):
     exit_code = child.wait()
     process_wall_ns = time.monotonic_ns() - started
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    outputs = []
+    if not helper and '-c' in arguments and '-o' in arguments:
+        target = Path(arguments[arguments.index('-o') + 1])
+        if target.suffix == '.c' and target.is_file() and exit_code == 0:
+            outputs.append(file_input(target, contents))
     current = all(Path(row['path']).is_file() and file_input(Path(row['path'])) == row for row in inputs)
     record = {'schema': 'ascent.compiler-work.v3', 'kind': 'sdk-helper' if helper else 'gsc',
               'pid': os.getpid(), 'child_pid': child.pid,
               'parent_gsc_observer': os.environ.get('ASCENT_PARENT_GSC_OBSERVER') if helper else None,
               'arguments': arguments, 'runtime_options': runtime_options,
+              'started_ns': started, 'finished_ns': started + process_wall_ns, 'outputs': outputs,
               'inputs': inputs, 'compiler_input_paths': compiler_input_paths if helper else None,
               'exit_code': exit_code, 'inputs_current': current,
               'process_wall_ns': process_wall_ns,
@@ -276,6 +282,33 @@ def generated_scheme_input(helper, parent):
 # END GENERATED PREPARATION PARENT
 
 
+
+# BEGIN GENERATED PREPARATION PRODUCER
+def producer_eligible(success, current, ordered, same_content, unique):
+    return success and current and ordered and same_content and unique
+# END GENERATED PREPARATION PRODUCER
+
+def generated_scheme_producer(helper, parent, producers):
+    """Join copied static C by observed bytes, never by its renamed basename."""
+    if helper.get('parent_gsc_observer') != str(parent.get('pid')):
+        return None
+    sources = gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', []))
+    if len(sources) != 1 or sources[0] not in parent['inputs']:
+        return None
+    target = sources[0]
+    candidates = []
+    for producer in producers:
+        schemes = [item for item in producer['inputs'] if Path(item['path']).suffix == '.scm']
+        outputs = producer.get('outputs', [])
+        same = len(outputs) == 1 and all(outputs[0].get(k) == target.get(k) for k in ('sha256', 'bytes'))
+        ordered = ('finished_ns' in producer and 'started_ns' in parent
+                   and producer['finished_ns'] <= parent['started_ns'])
+        if producer_eligible(producer['exit_code'] == 0, producer['inputs_current'],
+                             ordered, same, len(schemes) == 1):
+            candidates.append({'producer_pid': producer['pid'], 'scheme_input': schemes[0],
+                               'generated_c_output': outputs[0]})
+    return candidates[0] if len(candidates) == 1 else None
+
 def summarize(directory):
     """Fail closed on truncated events. Never sum nested allocation snapshots."""
     from ascent_workbench.preparation_policy import preparation_observation_complete
@@ -286,7 +319,7 @@ def summarize(directory):
     for phase in ('build', 'prepare', 'prepare-warm'):
         records = [json.loads(p.read_text()) for p in (directory / phase).glob('*.json')]
         for record in records:
-            for item in record['inputs']:
+            for item in record['inputs'] + record.get('outputs', []):
                 blob = directory / 'inputs' / item['sha256']
                 if (not blob.is_file() or blob.stat().st_size != item['bytes']
                         or hashlib.sha256(blob.read_bytes()).hexdigest() != item['sha256']):
@@ -335,11 +368,15 @@ def summarize(directory):
         for helper in gcc_jobs:
             parent = gsc_by_pid.get(helper.get('parent_gsc_observer'))
             scheme = generated_scheme_input(helper, parent) if parent else None
+            producer = generated_scheme_producer(helper, parent, gsc) if parent and scheme is None else None
+            if producer is not None:
+                scheme = producer['scheme_input']
             source_costs.append({
                 'helper_pid': helper.get('pid'),
                 'parent_gsc_observer': helper.get('parent_gsc_observer'),
                 'actual_c_inputs': gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', [])),
                 'generated_scheme_input': scheme,
+                'generated_scheme_producer': producer,
                 'cpu_seconds': helper['user_seconds'] + helper['system_seconds'],
                 'gcc_cumulative_ggc_bytes': helper.get('gcc_ggc_bytes'),
                 'gcc_report': helper.get('gcc_report'),
@@ -397,7 +434,7 @@ def summarize(directory):
             'generated_scheme_attributed_jobs': sum(r['generated_scheme_input'] is not None for r in source_costs),
             'generated_scheme_unattributed_cpu_seconds': sum(r['cpu_seconds'] for r in source_costs
                                                             if r['generated_scheme_input'] is None),
-            'compiler_source_cost_scope': 'Exclusive native helper costs by actual C input; generated Scheme input only when unique within the containing GSC job; not original DSL source or macro-expansion equivalence',
+            'compiler_source_cost_scope': 'Exclusive native helper costs by actual C input; generated Scheme via unique containing input or prior successful content-identical C producer; not original DSL source or macro-expansion equivalence',
             'gsc_invocations': len(gsc),
             'compiler_stages': stages,
             'largest_gsc_jobs': sorted(gsc,

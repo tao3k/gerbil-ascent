@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input
+from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input, generated_scheme_producer
 
 
 class CompilerCostTests(unittest.TestCase):
@@ -49,6 +49,87 @@ class CompilerCostTests(unittest.TestCase):
                         dict(parent, inputs=[dict(scheme, path='/other/module~0.scm')])]:
             self.assertIsNone(generated_scheme_input(helper, changed))
         self.assertIsNone(generated_scheme_input(dict(helper, compiler_input_paths=[]), parent))
+
+    def test_static_copy_cost_requires_successful_prior_content_producer(self):
+        scheme = {'path': '/build/module~0.scm', 'sha256': 'scheme', 'bytes': 17}
+        copied = {'path': '/build/static/module.c', 'sha256': 'c-output', 'bytes': 29}
+        output = dict(copied, path='/build/module~0.c')
+        parent = {'pid': 7, 'started_ns': 100, 'inputs': [copied]}
+        helper = {'parent_gsc_observer': '7', 'inputs': [copied],
+                  'compiler_input_paths': [copied['path']]}
+        producer = {'pid': 2, 'finished_ns': 90, 'exit_code': 0, 'inputs_current': True,
+                    'inputs': [scheme], 'outputs': [output]}
+        found = generated_scheme_producer(helper, parent, [producer])
+        self.assertEqual(found['scheme_input'], scheme)
+        for changes in [dict(exit_code=1), dict(inputs_current=False), dict(finished_ns=101),
+                        dict(outputs=[]), dict(outputs=[dict(output, sha256='other')]),
+                        dict(outputs=[dict(output, bytes=30)]), dict(inputs=[scheme, scheme])]:
+            with self.subTest(changes=changes):
+                self.assertIsNone(generated_scheme_producer(helper, parent, [dict(producer, **changes)]))
+        self.assertIsNone(generated_scheme_producer(helper, parent, [producer, dict(producer, pid=3)]))
+        self.assertIsNone(generated_scheme_producer(helper, dict(parent, inputs=[]), [producer]))
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_support_interfaces_reject_source_resource_profile_and_receipt_changes(self):
+        module = Path('t/harness/artifact-admission.ss').resolve()
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            library = root / 'lib'
+            compiled = library / 'gerbil-ascent/reference.ssi'
+            compiled.parent.mkdir(parents=True)
+            compiled.write_text('compiled interface')
+            record = root / 'support.sexp'
+            expression = f'''(import {json.dumps(str(module))})
+(def file {json.dumps(str(record))})
+(def library {json.dumps(str(library))})
+(def sources (make-hash-table))
+(hash-put! sources "reference.ss" "source-digest")
+(artifact-record-support-interfaces! file sources library '("profile") '("reference"))
+(def (read-support) (artifact-support-interfaces file sources library '("profile")))
+(unless (equal? (read-support) '("reference")) (error "current reference not reused"))
+(hash-put! sources "reference.ss" "changed-source")
+(unless (null? (read-support)) (error "changed source reused"))
+(hash-put! sources "reference.ss" "source-digest")
+(unless (null? (artifact-support-interfaces file sources library '("other"))) (error "wrong compiler profile reused"))
+(call-with-output-file {json.dumps(str(compiled))} (lambda (out) (display "changed output" out)))
+(unless (null? (read-support)) (error "changed compiled output reused"))
+(call-with-output-file file (lambda (out) (display "(malformed)" out)))
+(unless (null? (read-support)) (error "malformed receipt reused"))
+(display "SUPPORT-CACHE-CHECKED")
+'''
+            process = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                     cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            self.assertIn('SUPPORT-CACHE-CHECKED', process.stdout)
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_static_c_producer_is_observed_across_separate_gsc_jobs(self):
+        from ascent_workbench.preparation_work import install, summarize
+        import os
+        sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            source = root / 'producer.scm'
+            source.write_text('(define (ascent-producer x) (+ x 1))\n')
+            generated = root / 'producer.c'
+            copied = root / 'renamed.c'
+            observer = root / 'work'
+            env = dict(os.environ, **install(observer, sdk / 'bin/gxi', sdk / 'bin/gsc'))
+            for arguments in [['-c', '-o', str(generated), str(source)],
+                              ['-obj', '-o', str(root / 'renamed.o'), str(copied)]]:
+                if arguments[0] == '-obj':
+                    shutil.copyfile(generated, copied)
+                process = subprocess.run([str(observer / 'gsc'), *arguments], env=env, cwd=root,
+                                         capture_output=True, text=True, timeout=30)
+                self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            (observer / 'gsc-records').rename(observer / 'build')
+            phase = summarize(observer)['phases']['build']
+            self.assertEqual(phase['generated_scheme_attributed_jobs'], 1)
+            self.assertEqual(phase['generated_scheme_unattributed_cpu_seconds'], 0)
+            cost, = phase['compiler_source_costs']
+            self.assertEqual(cost['generated_scheme_input']['path'], str(source))
+            self.assertEqual(cost['generated_scheme_producer']['generated_c_output']['path'], str(generated))
+            self.assertGreater(cost['gcc_cumulative_ggc_bytes'], 0)
 
     def test_incomplete_or_changed_allocation_coverage_is_rejected(self):
         self.assertTrue(gcc_ggc_complete(3, 3, 0, 0, 0))

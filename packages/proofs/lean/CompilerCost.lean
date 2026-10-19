@@ -107,6 +107,24 @@ theorem unrelated_parent_rejected (matchedInputs : Nat) : uniqueParentInput fals
 theorem ambiguous_parent_input_rejected (same : Bool) (n : Nat) (notUnique : n ≠ 1) :
     uniqueParentInput same n = false := by simp [uniqueParentInput, notUnique]
 
+
+-- Static C may be copied/renamed: bind observed content and producer order.
+def producerEligible (success current ordered sameContent unique : Bool) : Bool :=
+  success && current && ordered && sameContent && unique
+
+theorem producer_admission_requires_every_link (a b c d e : Bool)
+    (accepted : producerEligible a b c d e = true) :
+    a = true ∧ b = true ∧ c = true ∧ d = true ∧ e = true := by
+  simpa [producerEligible, Bool.and_eq_true, and_assoc] using accepted
+
+def supportAdmitted (sameSources sameResources : Bool) : Bool := sameSources && sameResources
+
+theorem changed_reference_resources_rejected (sources : Bool) :
+    supportAdmitted sources false = false := by simp [supportAdmitted]
+
+theorem changed_reference_sources_rejected (resources : Bool) :
+    supportAdmitted false resources = false := by simp [supportAdmitted]
+
 def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
   "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
@@ -153,6 +171,9 @@ def coveragePythonSource : String :=
 def quintSource : String :=
   "// Generated from CompilerCost.lean; formal CI checks exact source.\n" ++
   "module CompilerPolicy {\n" ++
+  "  pure def producer_eligible(success: bool, current: bool, ordered: bool, same_content: bool, unique: bool): bool =\n" ++
+  "    success and current and ordered and same_content and unique\n" ++
+  "  pure def support_admitted(sources: bool, resources: bool): bool = sources and resources\n" ++
   "  pure def compiler_input(is_c: bool, direct: bool): bool = is_c and direct\n" ++
   "  pure def unique_parent_input(same: bool, matches: int): bool = same and matches == 1\n" ++
   "  pure def source_attributed(expected: int, targets: List[int], arguments: Set[int]): bool =\n" ++
@@ -176,6 +197,12 @@ theorem observation_change_preserves_compiler_identity (profile : Profile) (a b 
 
 def cacheInputsYamlSource : String :=
   "          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
+
+def producerPythonSource : String :=
+  "def producer_eligible(success, current, ordered, same_content, unique):\n    return success and current and ordered and same_content and unique\n"
+
+def supportAdmissionSchemeSource : String :=
+  "(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)\n  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n               recorded-sources)\n       (equal? resources recorded-resources)))\n"
 
 end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.small_unit_unchanged
@@ -201,3 +228,7 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.ambiguous_parent_input_rejected
 
 #print axioms Ascent.CompilerCost.observation_change_preserves_compiler_identity
+
+#print axioms Ascent.CompilerCost.producer_admission_requires_every_link
+#print axioms Ascent.CompilerCost.changed_reference_sources_rejected
+#print axioms Ascent.CompilerCost.changed_reference_resources_rejected

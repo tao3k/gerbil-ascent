@@ -16,7 +16,7 @@
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
-        (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+        (only-in "artifact-admission.ss" artifact-support-interfaces artifact-record-support-interfaces! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
 ;; END GENERATED PREPARATION IMPORT
@@ -69,6 +69,8 @@
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
+         (support-file (path-expand "support-interfaces.sexp" test-cache))
+         (admitted-support [])
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
@@ -93,6 +95,12 @@
            (roots (preparation-projection-roots gerbil-ascent-library-modules
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
+      (when production-current?
+        (let (installed (cached-support-modules))
+          (set! admitted-support
+            (filter (lambda (module) (member module installed))
+                    (artifact-support-interfaces support-file sources library gerbil-ascent-compiler-options)))))
+      (displayln "BUILD-TEST-LIBRARY admitted-support-interfaces=" (length admitted-support))
       (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
       ;; Source-only consumers have no compiled interfaces. Do not traverse a
       ;; whole interface graph only to reject it and expand the same roots.
@@ -108,7 +116,7 @@
         ;; interfaces. Source consumers/support roots and explicit reload keep
         ;; Gerbil's source path. Actual compiler imports always bypass the hook.
         (call-with-preparation-production-interfaces
-          production-current? library gerbil-ascent-library-modules
+          production-current? library (append gerbil-ascent-library-modules admitted-support)
           (lambda ()
             (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
         (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
@@ -163,7 +171,7 @@
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
         ;; Gerbil's driver binds current-compile-context for actual builds.
         (call-with-preparation-production-interfaces
-          production-interfaces-admitted? library gerbil-ascent-library-modules
+          production-interfaces-admitted? library (append gerbil-ascent-library-modules admitted-support)
           (lambda ()
             (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
                   build-deps: (path-expand "build-deps" test-cache)
@@ -175,6 +183,7 @@
         (displayln "BUILD-TEST-LIBRARY-PHASE inventory-after wall-seconds=" (build-elapsed phase)))
       (artifact-directory! (path-directory options-file))
       (artifact-record-compiler-options! options-file gerbil-ascent-compiler-options)
+      (artifact-record-support-interfaces! support-file sources library gerbil-ascent-compiler-options modules)
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before

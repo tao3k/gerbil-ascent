@@ -655,3 +655,49 @@ budgets and performance thresholds remain unchanged. The failed run is retained.
 The ongoing independent macOS ABBA and work comparisons already use a compatible
 Just and unchanged application/build inputs; this CI-only correction does not
 replace their measured program or turn any previous rejection into a pass.
+
+* Rejected compiler-pass candidate and restored released policy
+
+The complete uninstrumented ABBA run 39266273037 did not confirm the local
+fixed-C result. For the common-program baseline dfca07f5 and candidate 45d3ffb9,
+build totals were 338.604868000 versus 404.303686625 seconds; preparation totals
+were 679.895994000 versus 735.565387459 seconds; warm preparation totals were
+27.895894292 versus 30.758013917 seconds. All three original non-regression
+checks rejected. The historical failure ledger also remained unresolved. These
+failed controls are retained without normalization, selection or retry.
+
+The independent work run 39266280304 completed all four controls. Every control
+attributed all 360 build C jobs and all 589 preparation C jobs. There were no
+failed compiler/helper invocations or changed inputs; warm preparation compiled
+zero C jobs and retained six source coordinator contexts. Preparation had 174
+outer qualification roots in every control. These observations exclude extra
+compiler jobs or a failed warm projection reuse as the explanation for this
+particular difference; they do not identify a unique cause of the wall-time
+increase. Baseline preparation itself changed from 289.828484 to 390.067519
+seconds across the group, while its identical fixed-C calibration became faster.
+No sample is discounted as noise and no calibration normalization is applied.
+
+Candidate GCC cumulative GGC totals were approximately 9.636 GB for build and
+17.605 GB for preparation, compared with baseline 10.663 GB and 19.991 GB.
+Lower compiler allocation did not establish whole-phase CPU or latency savings.
+The -fno-tree-dominator-opts candidate is therefore withdrawn; production and
+reference compilation retain the original -D___SINGLE_HOST_LIMIT=512 profile.
+The complete-key work reduction, matched reference profile, recipe invalidation
+and actual option/source-cost observations remain. No upstream SDK changes
+are required. Cold-preparation regression is still open.
+
+All work observations retained signed SDK counter decreases and negative net
+allocation estimates, including intervals without GC. They fail the existing
+work-admission check. No raw sample was clipped, converted to an unsigned value
+or summed into a claimed cumulative Scheme allocation. True whole-VM heap-event
+allocation and source refinement of the full expansion/compiler pipeline remain
+open; the narrower native GCC GGC records are complete.
+
+Before withdrawal, commit f296ef96 passed all Linux CI jobs and macOS source
+semantics. Linux performance executed all ten targets, eight compiled studies
+and 84 successful scenario records. The repeated-small reference/current pair
+was 31.574/27.120 ms with 20/20 wins; capture, tiny-capture and all twelve owner
+plan scenarios executed. macOS ran 174 modules and 1403 cases in 101.890092
+seconds under three cores, twelve workers and the unchanged 240-second limit.
+Withdrawal requires a new current-head CI; those prior results are not relabeled
+as evidence for the restored compiler profile.

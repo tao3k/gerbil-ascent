@@ -136,7 +136,7 @@ theorem stack_release_can_decrease_counter (heap stack released : Nat) (positive
 
 def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
-  "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512 -fno-tree-dominator-opts\"))\n"
+  "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
 
 def ggcPythonSource : String :=
   "    if len(totals) != 1 or type(totals[0]) is not int or totals[0] < 0:\n" ++

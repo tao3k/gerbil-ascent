@@ -4,6 +4,8 @@
 (import :gerbil/expander
         (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         (only-in :std/make make)
+        (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-compiler-options)
         (only-in :std/misc/process run-process)
         (only-in :std/string/uuid random-uuid uuid->string)
         :std/encoding/json
@@ -14,18 +16,27 @@
         "studies.ss")
 (export main build-study! resolve-study-arguments)
 
+;; BEGIN GENERATED LOOKUP STUDY-PROFILE
+(def (study-build-spec module)
+  (normalize-spec
+    (if (member module gerbil-ascent-library-modules) module
+      [gxc: module [extra-inputs: [(path-expand "build-modules.ss") (path-expand "t/performance/run.ss")]]])
+    gerbil-ascent-compiler-options))
+
+;; END GENERATED LOOKUP STUDY-PROFILE
+
 ;; Gerbil owns scheduling, dependencies and object/link completion. A study
 ;; supplies data, never a second compiler or a benchmark-specific build script.
 (def (build-study! study library binary)
   (let (sources (artifact-sources))
     (add-load-path! library)
     (initialize-native-build-core-capacity!)
-    (make (study-modules study)
+    (make (map study-build-spec (study-modules study))
       srcdir: (current-directory) libdir: library
       build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
     (when (study-compiled? study)
       (compile-exe (study-entry study)
-        [output-dir: library output-file: binary parallel: #t
+        [output-dir: library output-file: binary gsc-options: gerbil-ascent-compiler-options parallel: #t
          verbose: #t invoke-gsc: #t static: #t])
       (execute-pending-compile-jobs!))
     (unless (artifact-matching-sources? sources (artifact-sources))
@@ -72,7 +83,7 @@
                             arguments))))
           (with-exception-catcher
             (lambda (failure)
-              (if (study-keep-going? study)
+              (if (or (study-keep-going? study) (study-compiled? study))
                 (set! failures (cons failure failures))
                 (raise failure)))
             (lambda ()

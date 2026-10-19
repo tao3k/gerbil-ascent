@@ -9,6 +9,19 @@ module CompilerCost {
   var q: State
   action init = q' = {wanted: 0, cached: 0, valid: false, active: false, attempt: 0,
                      failed: false, published: false, lastGood: true, staleReuse: false, violation: false}
+  pure val LookupAdmissionPolicy = Set(false, true).forall(admitted => {
+    val published = admitted or Mutation == "skip-complete-admission"
+    published == admitted
+  })
+  pure val LookupCostPolicy = Set(2,3,4).forall(width => {
+    val schemas = if (Mutation == "retain-duplicate-admission") 2 else 1
+    val ranges = if (Mutation == "retain-tiny-range-scan") width else 0
+    schemas == 1 and ranges == 0
+  })
+  pure val CounterInformationPolicy = {
+    val identicalSnapshots = 10 + 0 == 2 + 8
+    not(identicalSnapshots and Mutation == "decode-net-as-heap-events")
+  }
   pure val ProducerPolicy = Set(false, true).forall(success => Set(false, true).forall(current =>
     Set(false, true).forall(ordered => Set(false, true).forall(content => Set(false, true).forall(unique => {
       val actual = producer_eligible(success, current,
@@ -103,7 +116,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

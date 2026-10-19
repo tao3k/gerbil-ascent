@@ -654,19 +654,25 @@
                  ((planned-axis column (car key)) =>
                   (lambda (plans) (visit-axis-plan plans consume (= column left-column) expand) #t))
                  (else #f)))))))
+  ;; Both callers have already admitted the complete column schema.
+  ;; Tiny cuts therefore need neither another schema comparison nor range scan.
+;; BEGIN GENERATED LOOKUP ADMISSION
+  (def (visit-admitted-complete-key columns key point)
+    (let* ((offset (- (vector-length routes) 2))
+           (endpoints (list-tail key offset)))
+      (for-each (lambda (block)
+        (with (((rectangle prefix left right) block))
+          (when (matches-prefix? key prefix)
+            ;; Return the candidate's stored values directly, without
+            ;; allocating selected singleton spines or product collectors.
+            (let ((a (captured-point-member routes left offset (car endpoints)))
+                  (b (captured-point-member routes right (+ offset 1) (cadr endpoints))))
+              (when (and a b) (point prefix (car a) (car b))))))) (if small? blocks (selected columns key)))
+      #t))
   (def (visit-complete-key columns key point)
     (and complete-columns (equal? columns complete-columns)
-      (let* ((offset (- (vector-length routes) 2))
-             (endpoints (list-tail key offset)))
-        (for-each (lambda (block)
-          (with (((rectangle prefix left right) block))
-            (when (matches-prefix? key prefix)
-              ;; Return the candidate's stored values directly, without
-              ;; allocating selected singleton spines or product collectors.
-              (let ((a (captured-point-member routes left offset (car endpoints)))
-                    (b (captured-point-member routes right (+ offset 1) (cadr endpoints))))
-                (when (and a b) (point prefix (car a) (car b))))))) (selected columns key))
-        #t)))
+       (visit-admitted-complete-key columns key point)))
+;; END GENERATED LOOKUP ADMISSION
   ;; Intersect immutable descriptor plans with invocation-local list cursors.
   ;; Equal ordinals identify the same captured descriptor, not equal values
   ;; from unrelated owners. No owner table or query record is constructed.
@@ -885,6 +891,7 @@
   ;; Select member axes through the same index/checked traversal as visitors,
   ;; then expand each admitted product directly into one owned list builder.
   ;; No row callback or intermediate public tuple runs inside the product.
+;; BEGIN GENERATED LOOKUP MATERIALIZATION
   (def (materialize-selected columns key)
     (defrule (with-product-collector collect! collect-product body ...)
       (with-list-builder (collect!)
@@ -921,13 +928,14 @@
       ((and complete-columns (equal? columns complete-columns))
        (validate-key! columns key)
        (with-list-builder (collect!)
-         (visit-complete-key columns key
+         (visit-admitted-complete-key columns key
            (lambda (prefix left right)
              (match prefix
                ([] (collect! (list left right)))
                ([group] (collect! (list group left right)))
                (else (collect! (append prefix (list left right)))))))))
       (else (validate-key! columns key) (materialize #f #f #f #f))))
+;; END GENERATED LOOKUP MATERIALIZATION
   (make-relation-view #f #f 0 'total count units
     (lambda (columns key consume)
       (if (null? columns)

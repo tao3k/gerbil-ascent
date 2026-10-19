@@ -180,6 +180,7 @@ jobs:
         run: |
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_reference_cache.py -v
+          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_study_profile.py -v
       - name: Qualify complete source semantics with three workers
         run: python3 tools/ci/build-cost-control.py --semantics-only --output "$RUNNER_TEMP/macos-semantics"
       - name: Preserve semantic diagnostics and every batch log

@@ -4,6 +4,7 @@ import Std
 import Lean.Data.Json
 import PreparationWork
 import CompilerCost
+import LookupCost
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -393,6 +394,9 @@ def renderedSource (name : String) : IO String := do
   | "preparation-selection" => pure Ascent.PreparationWork.selectionSchemeSource
   | "preparation-interface-quint" => pure Ascent.PreparationWork.interfacesQuintSource
   | "preparation-interfaces" => pure Ascent.PreparationWork.interfacesSchemeSource
+  | "lookup-materialization" => pure Ascent.LookupCost.materializationSchemeSource
+  | "lookup-admission" => pure Ascent.LookupCost.admissionSchemeSource
+  | "lookup-study-profile" => pure Ascent.LookupCost.studyProfileSchemeSource
   | "preparation-compiler" => pure Ascent.CompilerCost.compilerSchemeSource
   | "preparation-options" => pure Ascent.CompilerCost.optionsSchemeSource
   | "compiler-quint" => pure Ascent.CompilerCost.quintSource

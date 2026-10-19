@@ -766,6 +766,10 @@ CONFIGURATIONS['CompilerCost'] = {
     'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
 }
 FAULTS['CompilerCost'] = (
+    ('skip-complete-admission', 'PolicyExact', 12),
+    ('retain-duplicate-admission', 'PolicyExact', 12),
+    ('retain-tiny-range-scan', 'PolicyExact', 12),
+    ('decode-net-as-heap-events', 'PolicyExact', 12),
     ('accept-foreign-module-catalog', 'PolicyExact', 12),
     ('ignore-source-cost-gap', 'PolicyExact', 12),
     ('choose-copy-by-time', 'PolicyExact', 12),

@@ -383,6 +383,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-interfaces", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-import", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "compiler-quint", "packages/proofs/quint/CompilerPolicy.qnt"),
+                ("ExecutionPolicy.lean", "lookup-materialization", "core/relation-view.ss"),
+                ("ExecutionPolicy.lean", "lookup-admission", "core/relation-view.ss"),
+                ("ExecutionPolicy.lean", "lookup-study-profile", "t/performance/run.ss"),
                 ("ExecutionPolicy.lean", "preparation-compiler", "build-modules.ss"),
                 ("ExecutionPolicy.lean", "preparation-options", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-stale", "t/harness/library-spec.ss"),
@@ -436,6 +439,12 @@ def main() -> int:
                     end = "      # END GENERATED ARCHIVE CACHE\n"
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language.startswith("lookup-"):
+                    region = language.removeprefix("lookup-").upper()
+                    begin, end = f';; BEGIN GENERATED LOOKUP {region}\n', f';; END GENERATED LOOKUP {region}\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate lookup source region')
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()

@@ -565,3 +565,53 @@ malformed/negative/nonfinite intervals. The original raw log is retained. The
 correct source-context-reuse interval is 0.000011 seconds; dependency admission,
 make checking and total elapsed time remain fully charged. Top-level wall timing
 and performance thresholds did not use that truncated phase field.
+
+* Repair of matched reference profiles and complete-key admission
+
+The previous 5.91 percent cold-preparation regression and selector-init failure
+remain historical failures. A Release-native compiled-module fixture now
+reproduces mismatched make profiles: the production constant is 512 while a
+bare-built reference reports zero. The actual study builder must produce
+(512 512). Its native extra-input dependency on build-modules.ss and the study
+builder invalidates only owned reference modules when the recipe changes;
+production object bytes and timestamps remain unchanged. A second build reuses
+the unchanged reference. The same declared options also flow into compile-exe.
+This repairs experiment comparability without changing the frozen source,
+workload, threshold, result admission or SDK.
+
+Complete-key materialization had already admitted the canonical column schema,
+but its private visitor compared that schema again and tiny selection rescanned
+the already-known column ranges. The private admitted visitor now receives only
+calls after that same admission. Tiny owners retain their original descriptor
+list, including order and multiplicity. General selectors, invalid-key checks,
+nonuniform owners and non-tiny routing keep their existing paths. A native
+independent Cartesian corpus covers empty through multi-owner cuts, false values,
+multiple widths and malformed selectors. The existing 16 selector-init scenarios
+were all executed locally under unchanged contracts, including the previously
+skipped capture and tiny-capture controls.
+
+A speculative small-view compact predicate guard produced no measurable benefit
+and was discarded. Reducing the host threshold from 512 to 128 did not produce
+consistent fixed-C benefits and was also discarded. Retained original logs are
+under .cache/ascent/preparation-repair-20261019; none is a whole-build acceptance.
+The measured duplicate-admission experiment used identical compiler profiles,
+with before/reference medians 38.840/39.075 ms and after/reference medians
+38.325/35.801 ms. Further removal of the canonical range scan reduced the
+repeated-small allocation observation from 15,206,400 to 13,633,536 bytes in the
+unchanged local paired fixture. These SDK net-counter observations remain scoped
+fixture observations, not a new whole-VM cumulative-allocation claim.
+
+Performance CI now prepares once, then runs all original independent recipes
+with just's existing --no-deps option, collecting a nonzero final status for any
+failure. Compiled studies likewise retain every scenario failure before raising.
+This covers later scenarios and owner-plan recipes even when an earlier gate
+fails; it does not change or waive any gate.
+
+LookupCost.lean proves admitted-branch equivalence, canonical range membership,
+unchanged owner order/multiplicity and the exact removed comparison/range work.
+Lean source rendering binds the private visitor, actual materialization caller
+and study-profile builder. Quint includes bad-admission, retained-work and
+invalid-net-counter-decoding controls. Identical net snapshots can come from
+histories with different heap-event allocations: real cumulative Scheme allocator
+work is not identifiable from this SDK counter alone. No clipping, unsigned
+reinterpretation or positive-increment accumulation is introduced.

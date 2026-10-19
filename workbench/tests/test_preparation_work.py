@@ -324,7 +324,7 @@ class PreparationWorkTests(unittest.TestCase):
                              '(' + ' '.join([json.dumps(str(source))] * 3) + ' #t)')
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
-    def test_sdk_compiler_uses_source_after_readonly_interface_selection(self):
+    def test_sdk_make_reads_interfaces_but_compiler_emits_source_program(self):
         spec = Path('t/harness/library-spec.ss').resolve()
         with tempfile.TemporaryDirectory(prefix='ascent-compiler-boundary-') as folder:
             root = Path(folder).resolve()
@@ -332,20 +332,36 @@ class PreparationWorkTests(unittest.TestCase):
             source.write_text('package: gerbil-ascent\n(export value)\n(def value 17)\n')
             library = root / 'lib'
             library.mkdir()
+            options = (f'srcdir: {json.dumps(str(root))} libdir: {json.dumps(str(library))} '
+                       'prefix: "gerbil-ascent" optimize: #f parallelize: 3')
+            setup = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e',
+                                    f'(import :std/make) (make \'("producer") {options})'],
+                                   cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(setup.returncode, 0, setup.stdout + setup.stderr)
             script = root / 'check.ss'
-            script.write_text(f'''(import :gerbil/expander :gerbil/compiler {json.dumps(str(spec))})
+            script.write_text(f'''(import :gerbil/expander :gerbil/compiler :std/make {json.dumps(str(spec))})
 (def source {json.dumps(str(source))})
 (def library {json.dumps(str(library))})
-(def options [output-dir: library invoke-gsc: #t optimize: #f])
-(compile-module source options)
+(def target (path-expand "gerbil-ascent/producer.ssi" library))
+(def original (current-expander-module-import))
+(def source-requests 0)
+(def interface-requests 0)
+(parameterize ((current-expander-module-import
+ (lambda (path reload?)
+  (when (equal? path source) (set! source-requests (+ source-requests 1)))
+  (when (equal? path target) (set! interface-requests (+ interface-requests 1)))
+  (original path reload?))))
+ (call-with-preparation-production-interfaces #t library '("producer")
+  (lambda ()
+   (make '("producer") {options})
+   (write (list 'readonly source-requests (> interface-requests 0))) (newline)
+   (let (thread (make-thread (lambda () (module-context-path (import-module source #f #f)))))
+    (thread-start! thread) (write (thread-join! thread)) (newline)))))
 (delete-file (path-expand "gerbil-ascent/producer.o1" library))
 (##eval '(define gerbil-ascent/producer#value 'sentinel))
 (call-with-preparation-production-interfaces #t library '("producer")
  (lambda ()
-  (let (thread (make-thread (lambda () (module-context-path (import-module source #f #f)))))
-   (thread-start! thread)
-   (write (thread-join! thread)) (newline))
-  (compile-module source options)))
+  (compile-module source [output-dir: library invoke-gsc: #t optimize: #f])))
 (add-load-path! library)
 (load-module "gerbil-ascent/producer")
 (write (##eval 'gerbil-ascent/producer#value)) (newline)
@@ -354,4 +370,4 @@ class PreparationWorkTests(unittest.TestCase):
                                      cwd=root, capture_output=True, text=True, timeout=30)
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
             self.assertEqual(process.stdout.splitlines(), [
-                json.dumps(str(library / 'gerbil-ascent/producer.ssi')), '17'])
+                '(readonly 0 #t)', json.dumps(str(library / 'gerbil-ascent/producer.ssi')), '17'])

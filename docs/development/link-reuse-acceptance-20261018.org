@@ -1594,3 +1594,30 @@ revision's costs. Fresh matched controls are required for the revised runtime
 path. The 3G preparation heap, live-ratio=50, three-core/240-second semantics,
 12-thread bindings, cancellation, resource, provenance and original performance
 rules are unchanged. Cumulative allocator events remain unobserved.
+
+* Refine the compiler marker against the complete SDK call path
+
+Further source audit found std/make itself setting
+current-expander-compiling?=#t around its entire operation. The 4c4cf633 marker
+therefore preserved correct compilation but still disabled reuse during native
+dependency checks. The two unfinished 4c4cf633 experiments were canceled as
+superseded; their partial controls are retained, not used as complete results.
+
+The corrected selector reads the existing public current-compile-context from
+:gerbil/compiler/base. Its default is #f. std/make does not set it, whereas both
+compile-module and compile-exe bind their diagnostic context before importing
+the actual program input. No stack tags or caller names are parsed. Any present
+compiler context conservatively retains the source path. The generated Scheme
+region uses this actual SDK getter; the Lean/Quint Boolean denotes context
+presence, not the broader expansion-mode flag.
+
+The strengthened native fixture runs real std/make with three workers against
+an unchanged compiled producer in a fresh VM. It asserts zero producer-source
+requests and at least one interface request, checks thread inheritance, then
+recompiles and loads the actual program object to obtain 17 instead of a
+sentinel. Replacing only the getter with the earlier broad flag makes this
+fixture fail its readonly counter assertion while still returning 17. That
+negative control is retained. The corrected fixture and all 14 work-observer
+tests pass on the existing released SDK. This checks the concrete native call
+path that the Boolean model alone could not distinguish; it does not establish
+full native compiler/decoder source equivalence or cumulative allocation.

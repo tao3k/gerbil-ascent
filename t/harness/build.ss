@@ -147,7 +147,7 @@
       (let (phase (current-jiffy))
         ;; std/make imports carriers again to identify and check dependencies.
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
-        ;; Gerbil's driver binds current-expander-compiling? for actual builds.
+        ;; Gerbil's driver binds current-compile-context for actual builds.
         (call-with-preparation-production-interfaces
           production-interfaces-admitted? library gerbil-ascent-library-modules
           (lambda ()

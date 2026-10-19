@@ -142,7 +142,7 @@ def interfacesSchemeSource : String :=
   "    (parameterize\n" ++
   "      ((current-expander-module-import\n" ++
   "         (lambda (path reload?)\n" ++
-  "           (let (entry (and (not reload?) (not (current-expander-compiling?)) (string? path)\n" ++
+  "           (let (entry (and (not reload?) (not (current-compile-context)) (string? path)\n" ++
   "                           (assoc (path-normalize path) interfaces)))\n" ++
   "             (original (if entry (cdr entry) path) reload?)))))\n" ++
   "      (thunk))))\n"

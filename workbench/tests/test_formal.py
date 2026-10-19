@@ -80,7 +80,7 @@ class FormalTests(unittest.TestCase):
     def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
         checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}
         self.assertEqual(checks.pop("correct").expected, 0)
-        self.assertEqual(set(checks), {"promote-net-stack-counter", "ignore-producer-order", "match-producer-name", "ambiguous-producer", "reuse-changed-reference", "reuse-damaged-interface", "cross-parent-cost", "ambiguous-parent-cost", "count-link-metadata", "ignore-compiler-origin", "accept-multiple-targets", "host-boundary", "ignore-compiler-failure", "ignore-compiler-input",
+        self.assertEqual(set(checks), {"execute-cached-source", "skip-head-admission", "promote-net-stack-counter", "ignore-producer-order", "match-producer-name", "ambiguous-producer", "reuse-changed-reference", "reuse-damaged-interface", "cross-parent-cost", "ambiguous-parent-cost", "count-link-metadata", "ignore-compiler-origin", "accept-multiple-targets", "host-boundary", "ignore-compiler-failure", "ignore-compiler-input",
                                     "publish-partial-ggc", "keep-unrequested-old-output", "clean-production",
                                     "promote-vm-counter", "sum-nested-passes", "record-failed-build", "reuse-old-options"})
         self.assertTrue(all(item.expected == 12 for item in checks.values()))

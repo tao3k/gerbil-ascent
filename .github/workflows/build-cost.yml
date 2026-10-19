@@ -131,6 +131,8 @@ jobs:
           printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # BEGIN GENERATED PREPARATION CACHE-INPUTS
+          compiler_inputs="$(git ls-files -s -- build.ss build-modules.ss justfile gerbil.pkg bindings t/harness .github/workflows/build-cost.yml | sha256sum | cut -d ' ' -f 1)"
+          printf 'compiler_inputs=%s\n' "$compiler_inputs" >> "$GITHUB_OUTPUT"
           source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
           echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> "$GITHUB_OUTPUT"
@@ -147,14 +149,27 @@ jobs:
             ${{ steps.preparation.outputs.cache_sources }}
             .gerbil
             .cache/ascent/compiled-library
-          key: macos-preparation-v1-${{ runner.os }}-${{ runner.arch }}-3-${{ steps.preparation.outputs.toolchain }}-${{ steps.preparation.outputs.source_inputs }}-${{ steps.preparation.outputs.source_bytes }}
+          key: macos-preparation-v2-${{ runner.os }}-${{ runner.arch }}-3-${{ steps.preparation.outputs.toolchain }}-${{ steps.preparation.outputs.compiler_inputs }}-${{ steps.preparation.outputs.source_inputs }}-${{ steps.preparation.outputs.source_bytes }}
+          restore-keys: |
+            macos-preparation-v2-${{ runner.os }}-${{ runner.arch }}-3-${{ steps.preparation.outputs.toolchain }}-${{ steps.preparation.outputs.compiler_inputs }}-
+      - name: Restore current program inputs before using cached compilation
+        run: |
+          # This checkout is disposable and was checked clean before restore.
+          # Git retains unchanged cached source clocks; make owns invalidation.
+          # BEGIN GENERATED PREPARATION RESTORE-INPUTS
+          git diff --name-only HEAD -- '*.ss' bindings/c
+          git reset --hard HEAD
+          git clean -f -- '*.ss' bindings/c
+          # END GENERATED PREPARATION RESTORE-INPUTS
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.preparation.outputs.source_bytes }}
           RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}
         run: |
+          # BEGIN GENERATED PREPARATION CACHE-ADMISSION
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          # END GENERATED PREPARATION CACHE-ADMISSION
       - name: Build current Scheme package and test support
         run: |
           mkdir -p "$HOME/.gerbil/pkg"

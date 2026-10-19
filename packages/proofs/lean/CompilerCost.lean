@@ -205,13 +205,30 @@ theorem observation_change_preserves_compiler_identity (profile : Profile) (a b 
     observedCacheIdentity profile a = observedCacheIdentity profile b := rfl
 
 def cacheInputsYamlSource : String :=
-  "          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
+  "          compiler_inputs=\"$(git ls-files -s -- build.ss build-modules.ss justfile gerbil.pkg bindings t/harness .github/workflows/build-cost.yml | sha256sum | cut -d ' ' -f 1)\"\n          printf 'compiler_inputs=%s\\n' \"$compiler_inputs\" >> \"$GITHUB_OUTPUT\"\n          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
 
 def producerPythonSource : String :=
   "def producer_eligible(success, current, ordered, same_content, unique):\n    return success and current and ordered and same_content and unique\n"
 
 def supportAdmissionSchemeSource : String :=
   "(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)\n  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n               recorded-sources)\n       (equal? resources recorded-resources)))\n"
+
+
+-- Restoring artifacts from another program is never execution authority.
+-- Git restoration and hashing remain external premises; both guards run first.
+def restoredProgramAdmitted (sameBytes cleanHead : Bool) : Bool := sameBytes && cleanHead
+
+theorem stale_cache_cannot_admit_program (clean : Bool) :
+    restoredProgramAdmitted false clean = false := by simp [restoredProgramAdmitted]
+
+theorem dirty_checkout_cannot_admit_program (same : Bool) :
+    restoredProgramAdmitted same false = false := by simp [restoredProgramAdmitted]
+
+def restoreInputsYamlSource : String :=
+  "          git diff --name-only HEAD -- '*.ss' bindings/c\n          git reset --hard HEAD\n          git clean -f -- '*.ss' bindings/c\n"
+
+def cacheAdmissionYamlSource : String :=
+  "          test \"$EXPECTED_SOURCE_BYTES\" = \"$RESTORED_SOURCE_BYTES\"\n          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'\n"
 
 end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.small_unit_unchanged
@@ -243,3 +260,6 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.changed_reference_resources_rejected
 
 #print axioms Ascent.CompilerCost.stack_release_can_decrease_counter
+
+#print axioms Ascent.CompilerCost.stale_cache_cannot_admit_program
+#print axioms Ascent.CompilerCost.dirty_checkout_cannot_admit_program

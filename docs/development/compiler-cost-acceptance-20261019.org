@@ -323,7 +323,9 @@ file inventory and content hashes. Missing, malformed, changed or damaged
 receipts take the source route. Only currently installed support modules can
 be selected; semantic Suites remain source-loaded. Compiler imports and explicit
 reloads bypass the existing interface hook. make still checks every dependency.
-No alternate compiler, threshold change or cross-source restore key is added.
+The initial interface-reuse change added no alternate compiler, threshold
+change or cross-source restore key. The later CI artifact restoration is
+qualified separately below.
 This targets repeated reference expansion after compilation; genuinely cold C
 compilation remains separate work. Hashing and receipt publication are part of
 measured preparation, not subtracted overhead.
@@ -381,3 +383,41 @@ build-time native-context projection for content-admitted interface reuse and
 retains the prepared-source projection for the unchanged cold route. Both
 routes keep the same roots and Gerbil-owned dependency traversal. This failure
 is retained rather than retried unchanged or hidden by the earlier semantic pass.
+
+* Compiler-profile-bound incremental CI artifacts
+
+The initial interface-reuse change only avoided repeated context expansion; it
+did not reduce the cold native compilation of frozen references. The previous
+whole-source-only CI cache also discarded unchanged reference compilation when
+a production source changed. The v2 cache retains a strict toolchain/build-recipe
+prefix, but permits restoring compiled artifacts from another application source
+revision under that same prefix. Compiler entrypoints, binding code, harness,
+package dependencies and workflow are in the recipe fingerprint.
+
+Only the disposable, initially clean CI checkout runs the restore procedure.
+Before invoking any cached Scheme code, Git refreshes its stat index, restores
+tracked files to current HEAD, and removes obsolete untracked Scheme/C inputs.
+Unchanged reference bytes retain their cached source timestamps. The original
+whole-input hash comparison and clean HEAD check still run after restoration;
+an older artifact's source bytes never authorize execution. No timestamp
+adapter, replacement scheduler or build.ss orchestration is introduced.
+
+The Release-native integration test compiles a core, an independent reference
+and their consumer; restores an older cached source set; then applies the exact
+workflow commands. It verifies zero reference GSC/native-helper jobs, unchanged reference output
+bytes and timestamps, a nonempty changed-producer compiler trace, the current core result (43 rather than 41), and removal/preservation of deleted
+and added source Suites. A first variant without index refresh rewrote an
+unchanged reference timestamp and failed this check; it is retained in the local
+evidence logs. The implemented stat refresh prevents that unnecessary rebuild.
+
+This is actual unchanged-object reuse in the native integration fixture, not a
+measured full-project speedup. Full-project cold costs, reference dependency
+invalidation and same-program wall controls remain separate evidence. Lean
+renders the restoration and final admission commands, and Quint rejects execution
+of old source bytes or skipping current HEAD admission. Git, filesystem clocks,
+hashing and the SDK's dependency/compiler implementation remain explicit premises.
+
+The 131344fd macOS SDK unit stage failed because the integration subprocess had
+changed directory without carrying the project GERBIL_PATH; the native compiler
+counter checks had passed. The fixture now supplies the absolute package prefix.
+This is a downstream test invocation fix, not a compiler change or a gate waiver.

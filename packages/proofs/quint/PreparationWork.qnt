@@ -6,7 +6,7 @@ module PreparationWork {
   import PreparationInterfaces.* from "./PreparationInterfaces"
   import PreparationSupport.* from "./PreparationSupport"
   const Mutation: str
-  type State = {interfaceViolation: bool, jobs: int, observedJobs: int, imports: int, observedImports: int,
+  type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, rawStart: int, rawFinish: int, inventoryDeclarations: int,
                 gscCpu: int, helperCpu: int, residualCpu: int, cumulativeClaim: bool, heapCap: int, heapSections: int, sourceStamp: int, sourceRestored: bool,
@@ -14,26 +14,30 @@ module PreparationWork {
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
-  action init = q' = {interfaceViolation: false, jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
+  action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, rawStart: 0, rawFinish: 0, inventoryDeclarations: 0,
     gscCpu: 0, helperCpu: 0, residualCpu: 0, cumulativeClaim: false, heapCap: 3, heapSections: 0, sourceStamp: 0, sourceRestored: false,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
-  action ImportPath = {
-    nondet reload = Set(false, true).oneOf()
-    nondet producer = Set(false, true).oneOf()
-    nondet present = Set(false, true).oneOf()
-    val expected = interface_selected(q.productionAdmitted, reload, producer, present)
-    val selected = if ((Mutation == "reuse-unadmitted-interface" and not(q.productionAdmitted)) or
-                       (Mutation == "reuse-reloaded-interface" and reload) or
-                       (Mutation == "reuse-consumer-interface" and not(producer)) or
-                       (Mutation == "reuse-missing-interface" and not(present))) true
-                   else if (Mutation == "expand-admitted-interface" and expected) false else expected
-    q' = {...q, interfaceViolation: q.interfaceViolation or selected != expected}
+  // A stateless selector has no protocol transition. Check its complete input
+  // domain once; adding eight no-op choices at every state only repeats work.
+  pure def selected_interface(admitted: bool, reload: bool, producer: bool, present: bool): bool = {
+    val expected = interface_selected(admitted, reload, producer, present)
+    if ((Mutation == "reuse-unadmitted-interface" and not(admitted)) or
+        (Mutation == "reuse-reloaded-interface" and reload) or
+        (Mutation == "reuse-consumer-interface" and not(producer)) or
+        (Mutation == "reuse-missing-interface" and not(present))) true
+    else if (Mutation == "expand-admitted-interface" and expected) false else expected
   }
-  val InterfaceSelectionExact = not(q.interfaceViolation)
+  pure def selection_conforms(admitted: bool): bool =
+    Set(false, true).forall(reload => Set(false, true).forall(producer =>
+      Set(false, true).forall(present => selected_interface(admitted, reload, producer, present) ==
+        interface_selected(admitted, reload, producer, present))))
+  pure val AdmittedSelectionExact = selection_conforms(true)
+  pure val UnadmittedSelectionExact = selection_conforms(false)
+  val InterfaceSelectionExact = if (q.productionAdmitted) AdmittedSelectionExact else UnadmittedSelectionExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}
@@ -126,7 +130,7 @@ module PreparationWork {
     q.counterValid or Mutation == "clamp-counter" or
       (Mutation == "ignore-negative-raw" and q.rawStart < 0),
     q' = {...q, published: true}}
-  action step = any {ImportPath, ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
+  action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, FreshCheckout, RestoreSource, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
     Allocate, ResizeHeap, ObserveOccupancy, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CounterNegative, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0

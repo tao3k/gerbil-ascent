@@ -1545,3 +1545,16 @@ completed interface contexts. Its allocator/GC samples remain inclusive SDK
 observations, not cumulative still-object allocation. No negative counter is
 clamped, no historical regression is resolved by this change, and no SDK or
 upstream source is modified.
+
+The first candidate's formal job 39190450404 reached the unchanged 15-minute
+job limit after ALL-FORMAL-CHECK-OK and before the conformance step. The failure
+is retained. The selector is stateless, but its first Quint representation
+added eight no-op ImportPath choices to every protocol state. It generated
+67,969,681 transitions while exploring 2,442,600 states locally. The revision
+checks the entire 16-element Boolean input domain as constant predicates selected by the original admission state and
+removes the artificial state field and no-op action. All original protocol
+states, transitions, invariants and five new mutation controls remain; no
+sampling, cutoff, timeout, worker count or resource limit changes. Runtime
+Scheme, observer, controller, production inputs and experiment code are
+identical to 4bdf2922, whose independent native experiments remain attributable
+to that exact revision rather than being relabeled as another SHA.

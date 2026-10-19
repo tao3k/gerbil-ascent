@@ -698,7 +698,8 @@ semantics. Linux performance executed all ten targets, eight compiled studies
 and 84 successful scenario records. The repeated-small reference/current pair
 was 31.574/27.120 ms with 20/20 wins; capture, tiny-capture and all twelve owner
 plan scenarios executed. macOS ran 174 modules and 1403 cases in 101.890092
-seconds under three cores, twelve workers and the unchanged 240-second limit.
+seconds under three cores, three independent Scheme VM workers and the unchanged
+240-second limit. Rust qualification separately retains twelve test threads.
 Withdrawal requires a new current-head CI; those prior results are not relabeled
 as evidence for the restored compiler profile.
 
@@ -814,3 +815,49 @@ also explicitly requires this additional fault without removing any old fault.
 The broad local Python discovery retained 19 import errors because the PyO3
 extension was not installed; it is not reported as full Python acceptance.
 The independent CI consumer lane builds and installs its actual wheel first.
+
+* Current source receipts and concurrency terminology (2026-10-20)
+
+The macOS receipt for 7d69eb6a explicitly dispatches three Scheme VM workers,
+with one thread per VM. The twelve-thread setting belongs to Rust/nextest; this
+macOS receipt is not a twelve-VM Scheme stress result. The original three-core
+Scheme capacity, 240-second bound and twelve-thread Rust gates remain intact.
+The previously ambiguous twelve-worker wording above is corrected accordingly.
+
+The complete macOS source workload retains 174 modules and 1,403 cases, exits
+zero in 213.841424417 seconds, and reports no foreign compilers or audit errors.
+Preparation is 345.570501542 seconds, including 37.142699 seconds of native
+source-context loading and 297.212168 seconds in make. Warm preparation is
+13.487747458 seconds with unchanged outputs and a matching projection receipt.
+This independent lane is a successful semantic/resource check, not a matched
+cold-preparation improvement claim. The separate cold ABBA remains in progress.
+
+The 7d69eb6a full local formal gate passes 84 positive obligations, 491 expected
+counterexamples and 49 source-rendering correspondences. Its remote formal gate
+also passes those counts. Remote performance executes all 84 scenarios, including
+repeated-small at 31.863 -> 26.913 ms with 20/20 wins. All original performance
+targets execute. These runtime results do not close compiler or allocator source
+refinement. The GitHub merge checkout cc47e80c and 7d69eb6a have exactly the same
+source tree e81b5200db8e69f83e1bc806c0a02fb6a10cbd9d.
+
+A further audit of the original uninstrumented preparation logs removes only
+the supervisor's interleaved progress text for event decoding; the raw logs and
+original timing receipts remain unchanged. All four controls have the identical
+589-entry native compilation-job multiset, with no repeated preparation jobs.
+All four warm controls have zero compilation jobs. Verbose executable-object
+reuse requests in the build phase must not be labeled actual repeated compiler
+invocations; the SDK already owns streaming jobs and native output reuse.
+
+The same fixed SHA-256 work, which does not inspect ASCENT compiler options,
+consumes 2.104502 CPU seconds across the two preparation baselines and 2.510680
+across the two candidates, a 19.30% difference. Input bytes and digest are equal.
+This is direct execution-cost drift evidence, not a correction factor or proof
+that all of the 8.19% application difference has that cause. The failed admission
+and unresolved historical ledger remain unchanged. A further eight-fixed-C-input
+512/256 host-limit probe changes CPU by only -0.93%; no new layout is adopted.
+
+Still open: the matched current cold-preparation verdict, a unique causal source
+explanation/resolution of the historical 8.19% failure, true whole-VM cumulative
+Scheme allocation, and complete original-source/macro/allocator refinement.
+The final acceptance update belongs to the marked PR section and immutable CI
+artifacts; a new faster observation cannot silently erase the retained failures.

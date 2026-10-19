@@ -766,6 +766,9 @@ CONFIGURATIONS['CompilerCost'] = {
     'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
 }
 FAULTS['CompilerCost'] = (
+    ('count-link-metadata', 'PolicyExact', 12),
+    ('ignore-compiler-origin', 'PolicyExact', 12),
+    ('accept-multiple-targets', 'PolicyExact', 12),
     ('host-boundary', 'PolicyExact', 12),
     ('ignore-compiler-failure', 'PolicyExact', 12),
     ('ignore-compiler-input', 'PolicyExact', 12),

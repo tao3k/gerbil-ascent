@@ -45,6 +45,10 @@ on:
         description: Measure source-Suite preparation with the same ABBA controls
         type: boolean
         default: false
+      semantic_runtime:
+        description: Also compare all source semantics with three workers and the unchanged 240-second limit
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -83,11 +87,13 @@ jobs:
           CANDIDATE: ${{ inputs.candidate || github.event.pull_request.head.sha || github.sha }}
           WORK_ONLY: ${{ inputs.work_only || false }}
           SEMANTIC_PREPARATION: ${{ inputs.semantic_preparation || false }}
+          SEMANTIC_RUNTIME: ${{ inputs.semantic_runtime || false }}
           GERBIL_BUILD_CORES: "3"
         run: |
           work_args=()
           if [[ "$WORK_ONLY" == "true" ]]; then work_args+=(--work-only); fi
           if [[ "$SEMANTIC_PREPARATION" == "true" ]]; then work_args+=(--semantic-preparation); fi
+          if [[ "$SEMANTIC_RUNTIME" == "true" ]]; then work_args+=(--semantic-runtime); fi
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost" "${work_args[@]}"
       - name: Preserve every control and admission record
         if: always()

@@ -9,6 +9,18 @@ module CompilerCost {
   var q: State
   action init = q' = {wanted: 0, cached: 0, valid: false, active: false, attempt: 0,
                      failed: false, published: false, lastGood: true, staleReuse: false, violation: false}
+  pure val InputPolicy = Set(false, true).forall(is_c => Set(false, true).forall(direct => {
+    val selected = compiler_input(is_c, direct)
+    val actual = if (Mutation == "count-link-metadata" and is_c) true else selected
+    actual == (is_c and direct)
+  }))
+  pure val OriginPolicy = Set([], [0], [1], [0,0], [0,1]).forall(targets =>
+    Set(Set(), Set(0), Set(1), Set(0,1)).forall(arguments => {
+      val actual = if (Mutation == "ignore-compiler-origin") targets == [0]
+        else if (Mutation == "accept-multiple-targets") (targets == [0] or targets == [0,0]) and arguments.contains(0)
+        else source_attributed(0, targets, arguments)
+      actual == (targets == [0] and arguments.contains(0))
+    }))
   pure val HostPolicy = Set(0, 1, 511, 512, 513, 2048).forall(labels => {
     val selected = if (Mutation == "host-boundary") labels < 512 else single_host(labels, 512)
     selected == (labels <= 512)
@@ -32,7 +44,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

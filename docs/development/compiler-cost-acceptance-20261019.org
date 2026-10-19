@@ -66,10 +66,10 @@ unobserved. These are GGC allocations only, excluding other GCC allocations
 and Scheme VM allocations.
 
 CompilerCost.lean renders the actual compiler declaration, option-receipt
-reader/writer, stale-output selection, TOTAL guard and coverage guard. Formal
+reader/writer, stale-output selection, compiler-input roles, unique-source attribution, TOTAL guard and coverage guard. Formal
 CI compares these regions byte for byte and renders CompilerPolicy.qnt from
 Lean. CompilerCost.qnt checks successful profile publication, invalidation
-and counter scope with ten independent fault controls. Native tests exercise
+and counter scope with thirteen independent fault controls. Native tests exercise
 actual supported SDK code generation, tail calls, values, one processor per
 VM, option-receipt rejection and native SARIF attribution.
 
@@ -99,6 +99,69 @@ the PR acceptance section. Until the new controls complete, the local C
 micro-experiment is the only measured compiler-layout benefit. Reduced
 context counts and a green CI are not closure of cold expansion or real
 cumulative Scheme allocation.
+
+* Retained measurements and corrections
+
+The first complete uninstrumented group (run 39212238091, candidate 6df25c95,
+baseline 25431f62) retained all four controls:
+
+| Control | Cold build s | Cold preparation s | Warm preparation s |
+|---------+--------------+--------------------+--------------------|
+| A0      |      227.835 |            424.113 |             42.477 |
+| B1      |      183.658 |            311.429 |             30.650 |
+| B2      |      166.588 |            276.726 |             32.250 |
+| A3      |      245.258 |            348.266 |             28.481 |
+
+The paired means fall by 26.0, 23.9 and 11.4 percent respectively. The fixed
+calibration C source hash is identical in every control and its cumulative
+GGC total is exactly 134038312 bytes each time. Its CPU varies from 6.047669
+to 5.770078, 4.761598 and 5.031501 seconds in order. Work-rate drift is real;
+the measured application difference must not all be attributed to the patch.
+The original admission still rejects historical runs 39084120171/39088480174.
+The first candidate also retained a source-inventory semantic failure: the
+test expected the previous two exports/definitions. The fix requires the new
+exact quoted option, exact imports, module data and EOF. The original complete
+artifact Suite passed in a private prefix; no semantic check was removed.
+
+Standalone macOS source-runtime receipts remain a warning, not proof of a
+layout regression or improvement. Baseline 25431f62 used 351.020872 seconds
+for preparation and 126.705578 for execution. Candidate 6df25c95 used
+345.508930/183.083409 seconds and failed the old inventory assertion; fixed
+19f877e8 used 369.752136/193.896723 seconds and passed all 173 modules/1401
+Cases with no compiled Suite interfaces, within the unchanged 240-second
+runtime limit. These runs used different runners. The optional uninstrumented
+ABBA experiment now also executes the complete source workload, retains every
+batch log and requires matched module/Case counts and the existing generated
+zero-regression predicate. This is an on-demand experiment, not another
+required CR job or a larger timeout.
+
+The first instrumented group (39212242223) stopped after A0 because the GCC
+report used relative filenames and PWD URI bases, while the summarizer
+resolved arguments against its own directory. Correcting that decoder and
+replaying the unchanged raw reports yields 19802123536 bytes of cumulative
+GGC allocation for cold preparation, across 589 GSC operations, with 173
+nonoverlapping source-root intervals totaling 24.621883 seconds. No build was
+rerun to obtain that replay. Whole-build allocation remains unqualified in
+that old receipt: the observer guessed the object-report basename and counted
+C link metadata as a compilation input. The collector now distinguishes the
+SDK's declared input filenames from its metadata filenames and handles GCC's
+object versus bundle report names. Real SDK obj/dyn/link-only tests cover this
+boundary. It does not force diagnostic filenames or disable SDK reuse.
+
+One identical captured UF C input allocates 256299840 GGC bytes at limit zero
+and 254438768 at 512: only 0.73 percent less. This must not be presented as
+a large allocator reduction. A matching UF runtime probe and an Actor/oracle
+Suite probe did not establish a 40-percent C-layout slowdown; both showed
+large ordering/loading effects. Those local probes use isolated generated
+inputs and are diagnostics, not current-head whole-program acceptance.
+
+The macOS preparation cache restores only on exact full Scheme/source-recipe
+identity; even a changed test declaration can cause a cold prefix. This is a
+conservative cross-revision cache miss, not repeated compilation of one object
+inside DF Build Script. Safe reuse across changed source inventories and the
+remaining cold loading/expansion costs are still open. Normalized path handling,
+SDK readers/compiler, filesystem stability and GCC allocator semantics remain
+explicit premises beyond the Lean-rendered guards.
 
 * Preserved previous acceptance
 

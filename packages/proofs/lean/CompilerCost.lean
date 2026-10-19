@@ -76,6 +76,20 @@ theorem changed_input_not_attributed (n reported failed errors : Nat) :
 theorem partial_jobs_not_total (expected reported : Nat) (different : expected ≠ reported) :
     ggcComplete expected reported 0 0 0 = false := by simp [ggcComplete, different]
 
+-- Normalized paths and decoded input roles are premises, not filesystem proofs.
+def sourceAttributed (expected : String) (targets arguments : List String) : Bool :=
+  targets == [expected] && arguments.contains expected
+
+theorem attributed_source_is_unique (expected : String) (targets arguments : List String)
+    (accepted : sourceAttributed expected targets arguments = true) :
+    targets = [expected] ∧ expected ∈ arguments := by
+  simpa [sourceAttributed] using accepted
+
+def compilerInput (isC direct : Bool) : Bool := isC && direct
+
+theorem metadata_only_is_not_compile (isC : Bool) : compilerInput isC false = false := by
+  cases isC <;> rfl
+
 -- Even eliminating an entire loading phase cannot eliminate independent compile work.
 def preparationWall (loading compilation other : Nat) : Nat := loading + compilation + other
 
@@ -114,6 +128,14 @@ def staleSchemeSource : String :=
   "    (filter (lambda (module) (not (member module production)))\n" ++
   "            (append requested cached))))\n"
 
+def originPythonSource : String :=
+  "    if actual != [expected] or expected not in arguments:\n" ++
+  "        raise ValueError('GCC input attribution differs')\n"
+
+def inputsPythonSource : String :=
+  "def gcc_c_inputs(inputs, compiler_input_paths):\n" ++
+  "    return [row for row in inputs if row['path'] in compiler_input_paths and Path(row['path']).suffix == '.c']\n"
+
 def coveragePythonSource : String :=
   "def gcc_ggc_complete(expected, reported, failed, changed, errors):\n" ++
   "    return 0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0\n"
@@ -121,6 +143,9 @@ def coveragePythonSource : String :=
 def quintSource : String :=
   "// Generated from CompilerCost.lean; formal CI checks exact source.\n" ++
   "module CompilerPolicy {\n" ++
+  "  pure def compiler_input(is_c: bool, direct: bool): bool = is_c and direct\n" ++
+  "  pure def source_attributed(expected: int, targets: List[int], arguments: Set[int]): bool =\n" ++
+  "    targets == [expected] and arguments.contains(expected)\n" ++
   "  pure def single_host(labels: int, limit: int): bool = limit == 0 or labels <= limit\n" ++
   "  pure def ggc_complete(expected: int, reported: int, failed: int, changed: int, errors: int): bool =\n" ++
   "    0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0\n" ++
@@ -144,3 +169,6 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.compile_work_remains
 
 #print axioms Ascent.CompilerCost.changed_root_invalidate
+
+#print axioms Ascent.CompilerCost.attributed_source_is_unique
+#print axioms Ascent.CompilerCost.metadata_only_is_not_compile

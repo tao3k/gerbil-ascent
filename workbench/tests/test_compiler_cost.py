@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Native compiler scope, exact cumulative counters and profile invalidation."""
+"""SDK compiler scope, exact cumulative counters and profile invalidation."""
 import copy
 import json
 from pathlib import Path
@@ -13,6 +13,31 @@ from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete
 
 
 class CompilerCostTests(unittest.TestCase):
+    def test_full_runtime_control_rejects_missing_duplicate_or_compiled_source_suites(self):
+        import runpy
+        check = runpy.run_path('tools/ci/build-cost-control.py')['source_semantic_workload']
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / 't/qualification'
+            source.mkdir(parents=True)
+            for name in ['a-test.ss', 'b-test.ss']:
+                (source / name).touch()
+            log = root / 'run.log'
+            valid = 'MODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            log.write_text(valid)
+            self.assertEqual(check(root, log)['cases'], 1)
+            for invalid in [valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
+                            valid.replace('MODULE-OK t/qualification/b-test.ss\n', '')]:
+                log.write_text(invalid)
+                with self.subTest(log=invalid), self.assertRaises(ValueError):
+                    check(root, log)
+            log.write_text(valid)
+            compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/a-test.ssi'
+            compiled.parent.mkdir(parents=True)
+            compiled.touch()
+            with self.assertRaises(ValueError):
+                check(root, log)
+
     def test_incomplete_or_changed_allocation_coverage_is_rejected(self):
         self.assertTrue(gcc_ggc_complete(3, 3, 0, 0, 0))
         for row in [(0,0,0,0,0), (3,2,0,0,0), (3,3,1,0,0), (3,3,0,1,0), (3,3,0,0,1)]:
@@ -29,7 +54,7 @@ class CompilerCostTests(unittest.TestCase):
                     {'name': 'TOTAL', 'elapsed': {'ggc_mem': 400}}]}}}],
             'artifacts': [{'location': {'uri': str(source)}, 'roles': ['analysisTarget']}]}]}
 
-    def test_native_total_is_not_sum_of_overlapping_passes(self):
+    def test_total_is_not_sum_of_overlapping_passes(self):
         source = Path('/tmp/owner.c').resolve()
         self.assertEqual(gcc_ggc_bytes(self.report(source), source), 400)
 
@@ -45,6 +70,27 @@ class CompilerCostTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             gcc_ggc_bytes(report, source)
 
+    def test_relative_input_is_bound_to_compiler_origin_not_summary_directory(self):
+        source = Path('/tmp/native-compiler-origin/owner.c').resolve()
+        report = self.report(source)
+        run = report['runs'][0]
+        run['originalUriBaseIds'] = {'PWD': {'uri': source.parent.as_uri() + '/'}}
+        run['artifacts'][0]['location'] = {'uri': source.name, 'uriBaseId': 'PWD'}
+        invocation = run['invocations'][0]
+        invocation['workingDirectory'] = {'uri': str(source.parent)}
+        invocation['arguments'] = [source.name, source.name, '.c']
+        self.assertEqual(gcc_ggc_bytes(report, source), 400)
+        for changed in ['workingDirectory', 'uriBaseId', 'originalUriBaseIds']:
+            invalid = copy.deepcopy(report)
+            if changed == 'workingDirectory':
+                invalid['runs'][0]['invocations'][0]['workingDirectory']['uri'] = '/tmp/wrong-origin'
+            elif changed == 'uriBaseId':
+                invalid['runs'][0]['artifacts'][0]['location']['uriBaseId'] = 'MISSING'
+            else:
+                invalid['runs'][0]['originalUriBaseIds']['PWD']['uri'] = 'https://invalid.test/'
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                gcc_ggc_bytes(invalid, source)
+
     def test_wrong_input_partial_duplicate_or_malformed_report_is_rejected(self):
         source = Path('/tmp/owner.c').resolve()
         report = self.report(source)
@@ -54,6 +100,9 @@ class CompilerCostTests(unittest.TestCase):
         timers = duplicate['runs'][0]['invocations'][0]['properties']['gcc/timeReport']['timevars']
         timers.append(copy.deepcopy(timers[-1]))
         variants.append(duplicate)
+        duplicate_target = copy.deepcopy(report)
+        duplicate_target['runs'][0]['artifacts'].append(copy.deepcopy(duplicate_target['runs'][0]['artifacts'][0]))
+        variants.append(duplicate_target)
         for invalid in variants:
             with self.subTest(report=invalid), self.assertRaises(ValueError):
                 gcc_ggc_bytes(invalid, source)
@@ -61,7 +110,7 @@ class CompilerCostTests(unittest.TestCase):
             gcc_ggc_bytes(report, source.with_name('other.c'))
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
-    def test_native_option_receipt_rejects_mismatch_truncation_and_trailing_data(self):
+    def test_compiler_option_receipt_rejects_mismatch_truncation_and_trailing_data(self):
         module = Path('t/harness/artifact-admission.ss').resolve()
         with tempfile.TemporaryDirectory() as folder:
             record = Path(folder) / 'options.sexp'
@@ -119,7 +168,40 @@ class CompilerCostTests(unittest.TestCase):
                 self.assertEqual(invoked.stdout.strip(), f'(5000050000 {limit} 17 1)')
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
-    def test_native_gcc_counter_is_retained_and_bound_to_its_real_input(self):
+    def test_object_counter_and_link_metadata_have_distinct_cost_roles(self):
+        from ascent_workbench.preparation_work import install, summarize
+        import os
+        sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            source = root / 'input.c'
+            source.write_text('int ascent_probe(int x) { return x + 1; }\n')
+            obj = root / 'different.o'
+            for operation, inputs, output in [('obj', source.name, obj), ('dyn', obj.name, root / 'linked.o1')]:
+                observer = root / operation
+                env = dict(os.environ, **install(observer, sdk / 'bin/gxi', sdk / 'bin/gsc'))
+                env.update(GAMBITDIR_INCLUDE=str(sdk / 'include'), GAMBITDIR_LIB=str(sdk / 'lib'))
+                env.update({f'BUILD_{operation.upper()}_INPUT_FILENAMES_PARAM': inputs,
+                            f'BUILD_{operation.upper()}_META_INFO_FILE_PARAM': source.name,
+                            f'BUILD_{operation.upper()}_OUTPUT_FILENAME_PARAM': str(output)})
+                process = subprocess.run([str(observer / 'gambuild-C'), operation], env=env, cwd=root,
+                                         capture_output=True, text=True, timeout=30)
+                self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+                (observer / 'gsc-records').rename(observer / 'prepare')
+                phase = summarize(observer)['phases']['prepare']
+                record = json.loads(next((observer / 'prepare').glob('*.json')).read_text())
+                self.assertIn(str(source), [i['path'] for i in record['inputs']])
+                if operation == 'obj':
+                    self.assertTrue(phase['gcc_cumulative_ggc_observed'])
+                    self.assertGreater(phase['gcc_cumulative_ggc_bytes'], 0)
+                else:
+                    self.assertEqual(record['compiler_input_paths'], [str(obj)])
+                    self.assertNotIn('gcc_report_expected', record)
+                    self.assertEqual(phase['gcc_allocation_errors'], [])
+                    self.assertFalse(phase['gcc_cumulative_ggc_observed'])
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_gcc_counter_is_retained_and_bound_to_its_real_input(self):
         from ascent_workbench.preparation_work import install, summarize
         import os
         sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
@@ -130,10 +212,10 @@ class CompilerCostTests(unittest.TestCase):
             observer = root / 'observer'
             env = dict(os.environ, **install(observer, sdk / 'bin/gxi', sdk / 'bin/gsc'))
             env.update(GAMBITDIR_INCLUDE=str(sdk / 'include'), GAMBITDIR_LIB=str(sdk / 'lib'),
-                       BUILD_DYN_INPUT_FILENAMES_PARAM=str(source), BUILD_DYN_META_INFO_FILE_PARAM=str(source),
+                       BUILD_DYN_INPUT_FILENAMES_PARAM=source.name, BUILD_DYN_META_INFO_FILE_PARAM=source.name,
                        BUILD_DYN_OUTPUT_FILENAME_PARAM=str(root / 'owned.o1'))
             process = subprocess.run([str(observer / 'gambuild-C'), 'dyn'], env=env,
-                                     capture_output=True, text=True, timeout=30)
+                                     capture_output=True, text=True, timeout=30, cwd=root)
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
             (observer / 'gsc-records').rename(observer / 'prepare')
             phase = summarize(observer)['phases']['prepare']

@@ -108,21 +108,41 @@ def _gcc_ggc_bytes(report, source):
         raise ValueError('incomplete GCC invocation')
     invocation = invocations[0]
     from urllib.parse import unquote, urlparse
-    targets = [a['location']['uri'] for a in run.get('artifacts', [])
+    def location_path(uri, base=None):
+        parsed = urlparse(uri)
+        if parsed.scheme not in ('', 'file') or parsed.netloc:
+            raise ValueError('unsupported GCC input URI')
+        path = Path(unquote(parsed.path))
+        if not path.is_absolute():
+            if base is None:
+                raise ValueError('relative GCC path has no compiler origin')
+            path = base / path
+        return path.resolve()
+
+    directory = invocation.get('workingDirectory', {}).get('uri')
+    working = location_path(directory) if directory is not None else None
+    targets = [a['location'] for a in run.get('artifacts', [])
                if 'analysisTarget' in a.get('roles', [])]
     expected = Path(source).resolve()
     actual = []
     for target in targets:
-        uri = urlparse(target)
-        if uri.scheme not in ('', 'file') or uri.netloc:
-            raise ValueError('unsupported GCC input URI')
-        path = Path(unquote(uri.path))
-        if not path.is_absolute():
-            path = Path(invocation['workingDirectory']['uri']) / path
-        actual.append(path.resolve())
-    if actual != [expected] or not any(Path(arg).suffix == '.c' and Path(arg).resolve() == expected
-                                       for arg in invocation.get('arguments', [])):
+        base = working
+        if 'uriBaseId' in target:
+            origin = run.get('originalUriBaseIds', {}).get(target['uriBaseId'])
+            if origin is None:
+                raise ValueError('unbound GCC input URI base')
+            base = location_path(origin['uri'])
+        actual.append(location_path(target['uri'], base))
+    # Relative compiler arguments belong to the reported compiler directory,
+    # never the later summarizer's working directory. Retained reports can be
+    # decoded after GSC has deleted its temporary C files.
+    arguments = [Path(arg) for arg in invocation.get('arguments', []) if Path(arg).suffix == '.c']
+    arguments = [arg.resolve() if arg.is_absolute() else location_path(str(arg), working)
+                 for arg in arguments]
+    # BEGIN GENERATED PREPARATION ORIGIN
+    if actual != [expected] or expected not in arguments:
         raise ValueError('GCC input attribution differs')
+    # END GENERATED PREPARATION ORIGIN
     timers = invocation.get('properties', {}).get('gcc/timeReport', {}).get('timevars', [])
     totals = [item.get('elapsed', {}).get('ggc_mem') for item in timers if item.get('name') == 'TOTAL']
     # BEGIN GENERATED PREPARATION GGC
@@ -136,6 +156,12 @@ def _gcc_ggc_bytes(report, source):
 def gcc_ggc_complete(expected, reported, failed, changed, errors):
     return 0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0
 # END GENERATED PREPARATION COVERAGE
+
+
+# BEGIN GENERATED PREPARATION INPUTS
+def gcc_c_inputs(inputs, compiler_input_paths):
+    return [row for row in inputs if row['path'] in compiler_input_paths and Path(row['path']).suffix == '.c']
+# END GENERATED PREPARATION INPUTS
 
 
 def compiler_stage(record):
@@ -152,9 +178,11 @@ def execute_gsc(arguments, helper=False):
     trace = Path(os.environ['ASCENT_GSC_WORK_DIRECTORY'])
     contents = trace.parent / 'inputs'
     inputs = []
+    compiler_input_paths = []
     if helper:
         operation = arguments[0].upper()
         names = shlex.split(os.environ.get(f'BUILD_{operation}_INPUT_FILENAMES_PARAM', ''))
+        compiler_input_paths = [str(Path(name).resolve()) for name in names if Path(name).is_file()]
         metadata = os.environ.get(f'BUILD_{operation}_META_INFO_FILE_PARAM')
         if metadata:
             names.append(metadata)
@@ -183,11 +211,16 @@ def execute_gsc(arguments, helper=False):
     gcc_report = None
     gcc_source = None
     if helper:
-        c_sources = [row for row in inputs if Path(row['path']).suffix == '.c']
+        c_sources = gcc_c_inputs(inputs, compiler_input_paths)
         output = child_env.get(f'BUILD_{arguments[0].upper()}_OUTPUT_FILENAME_PARAM')
-        if len(c_sources) == 1 and output:
+        if len(c_sources) == 1 and output and sum(Path(path).suffix == '.c' for path in compiler_input_paths) == 1:
             gcc_source = c_sources[0]['path']
-            gcc_report = Path(output).resolve().with_name(Path(output).name + '-' + Path(gcc_source).name + '.sarif')
+            # GCC's normal object output uses a different auxiliary basename
+            # from an unknown bundle extension (.o1). Link metadata is not a C
+            # compiler input and must never manufacture an expected report.
+            destination = Path(output).resolve()
+            gcc_report = (destination.with_suffix('.c.sarif') if destination.suffix == '.o' else
+                          destination.with_name(destination.name + '-' + Path(gcc_source).name + '.sarif'))
             # The native compiler writes this diagnostic beside its own output.
             # Never add diagnostics to the immutable SDK installation.
             if gcc_report.is_relative_to(Path(command).parent.parent):
@@ -205,7 +238,8 @@ def execute_gsc(arguments, helper=False):
               'pid': os.getpid(), 'child_pid': child.pid,
               'parent_gsc_observer': os.environ.get('ASCENT_PARENT_GSC_OBSERVER') if helper else None,
               'arguments': arguments, 'runtime_options': runtime_options,
-              'inputs': inputs, 'exit_code': exit_code, 'inputs_current': current,
+              'inputs': inputs, 'compiler_input_paths': compiler_input_paths if helper else None,
+              'exit_code': exit_code, 'inputs_current': current,
               'process_wall_ns': process_wall_ns,
               'wall_ns': time.monotonic_ns() - started,
               'user_seconds': after.ru_utime - before.ru_utime,
@@ -276,7 +310,8 @@ def summarize(directory):
                 if (not blob.is_file() or hashlib.sha256(blob.read_bytes()).hexdigest() != report['sha256']
                         or gcc_ggc_bytes(json.loads(blob.read_text()), record['gcc_source']) != record['gcc_ggc_bytes']):
                     raise ValueError('damaged GCC allocation report')
-        gcc_jobs = [r for r in helpers if any(Path(i['path']).suffix == '.c' for i in r['inputs'])]
+        gcc_jobs = [r for r in helpers if gcc_c_inputs(r['inputs'],
+                    r.get('compiler_input_paths', [i['path'] for i in r['inputs']]))]
         gcc_complete = gcc_ggc_complete(len(gcc_jobs), len(gcc_reports),
                                         sum(r['exit_code'] != 0 for r in gcc_jobs),
                                         sum(not r['inputs_current'] for r in gcc_jobs), len(gcc_errors))

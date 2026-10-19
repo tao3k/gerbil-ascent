@@ -16,6 +16,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'workbench/src'))
 from ascent_workbench.preparation_admission import qualify
+from ascent_workbench.preparation_policy import preparation_non_regression
 from ascent_workbench.preparation_work import gcc_ggc_bytes
 from ascent_workbench.preparation_work import install as install_work_observers
 from ascent_workbench.preparation_work import summarize as summarize_work
@@ -197,6 +198,17 @@ def test_outputs(tree):
             for p in paths if p.is_file() and p.suffix in {'.ssi', '.scm', '.o1', '.o'}}
 
 
+def source_semantic_workload(tree, log):
+    expected = sorted(str(path.relative_to(tree)) for path in (tree / 't/qualification').glob('*-test.ss'))
+    lines = log.read_text().splitlines()
+    modules = sorted(line.removeprefix('MODULE-OK ') for line in lines if line.startswith('MODULE-OK '))
+    cases = sum(line.startswith('CASE-OK ') for line in lines)
+    compiled = [name for name in expected if (tree / '.gerbil/lib/gerbil-ascent' / name).with_suffix('.ssi').exists()]
+    if not expected or modules != expected or cases == 0 or compiled:
+        raise ValueError('source semantic workload is incomplete or compiled')
+    return {'modules': modules, 'cases': cases}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline')
@@ -204,6 +216,8 @@ def main():
     parser.add_argument('--semantics-only', action='store_true')
     parser.add_argument('--semantic-preparation', action='store_true',
                         help='measure source-Suite preparation instead of the original performance lane')
+    parser.add_argument('--semantic-runtime', action='store_true',
+                        help='also compare complete source runtime under the original 240-second bound')
     parser.add_argument('--work-only', action='store_true',
                         help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
@@ -212,6 +226,8 @@ def main():
         parser.error('--semantic-preparation is a comparison mode, not a semantic runtime mode')
     if args.work_only and args.semantics_only:
         parser.error('work observations and full semantics are independent modes')
+    if args.semantic_runtime and (not args.semantic_preparation or args.work_only or args.semantics_only):
+        parser.error('--semantic-runtime requires uninstrumented --semantic-preparation controls')
     root = Path.cwd()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -309,6 +325,7 @@ def main():
                                 for name in ['gxi', 'gsc']}, 'controls': []}
     preparation = ['just', 'prepare-semantic-library' if args.semantic_preparation else 'prepare-test-library']
     receipt['preparation_command'] = preparation
+    receipt['semantic_runtime_requested'] = args.semantic_runtime
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(
@@ -395,6 +412,23 @@ def main():
                      for paths in [list(support.rglob('*' + suffix))]}
         receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases,
                                     'test_artifacts': inventory, 'warm_changed_outputs': changed_outputs})
+        if args.semantic_runtime:
+            env['ASCENT_GXTEST_TIMEOUT'] = '240s'
+            semantic_log = output / f'{name}-semantics.log'
+            try:
+                phases['semantics'] = measure(tree,
+                    ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
+                    semantic_log, env, semantic_diagnostics=True)
+            finally:
+                batches = tree / '.cache/ascent/test-modules'
+                if batches.exists():
+                    shutil.copytree(batches, output / f'{name}-semantic-batches')
+            workload = source_semantic_workload(tree, semantic_log)
+            if 'semantic_workload' in receipt and receipt['semantic_workload'] != workload:
+                raise RuntimeError('semantic workload differs between controls')
+            receipt['semantic_workload'] = workload
+            if digest(library) != binding['librarySha256']:
+                raise RuntimeError('semantic run changed the bound production library')
         if args.work_only:
             work = summarize_work(observer)
             (observer / 'summary.json').write_text(json.dumps(work, indent=2) + '\n')
@@ -422,8 +456,17 @@ def main():
     ledger = json.loads(ledger_path.read_text())
     receipt['regression_ledger_sha256'] = digest(ledger_path)
     receipt['performance_admission'] = qualify(receipt['controls'], ledger)
+    if args.semantic_runtime:
+        totals = {kind: sum(c['phases']['semantics']['wall_nanoseconds'] for c in receipt['controls']
+                            if c['kind'] == kind) for kind in ['baseline', 'candidate']}
+        receipt['semantic_runtime_comparison'] = {**totals,
+            'non_regression': preparation_non_regression(totals['baseline'], totals['candidate']),
+            'scope': 'Matched full source runtime; three workers, 240 seconds each; no timing normalization'}
+
     (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
     print('BUILD-COST-MEASUREMENTS-COMPLETE', flush=True)
+    if args.semantic_runtime and not receipt['semantic_runtime_comparison']['non_regression']:
+        raise RuntimeError('matched source runtime regressed: ' + json.dumps(receipt['semantic_runtime_comparison']))
     if not receipt['performance_admission']['admitted']:
         raise RuntimeError('preparation performance not admitted: ' +
                            json.dumps(receipt['performance_admission'], sort_keys=True))

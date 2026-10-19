@@ -527,3 +527,41 @@ reference/cache integration passed both tests; formal admission passed 10 tests.
 The complete source workload decoder was checked against the preceding macOS
 receipt: 173 modules and 1,401 Cases, with source carriers uncompiled. These local
 checks do not substitute for the new commit's whole-project CI or latency audit.
+
+* Complete v4 source audit and macOS semantics at 7be9d266
+
+Run 39254136350 used the single-source-cost protocol at 7be9d266, retaining every
+raw event and its failed global admission. Production compilation attributed
+360 of 360 native C jobs: 212 direct nodes, 146 Scheme-to-C producer nodes
+(128 explicit plus 18 implicit outputs), and two multi-input link-source nodes.
+Cold preparation attributed all 589 of 589 native C jobs. GCC reports were
+complete, with zero report errors, compiler failures or changed compiler inputs.
+Cumulative GCC GGC bytes were 10,662,988,232 for production and 19,991,382,848
+for cold preparation, charged once per compiler job. This closes the previously
+unassigned 148 native C cost nodes for this observed build, not the original
+DSL-to-expanded-code or arbitrary SDK/decoder refinement obligation.
+
+Warm preparation had zero compiler invocations and six source-loaded coordinator
+contexts, down from 179 in the previous candidate. The source Suite inventory
+still executes separately. The global work gate correctly failed: production
+had 135 negative raw observations and 13 decreases; cold preparation had two
+decreases; warm preparation had 3,685 negative observations and three decreases.
+Whole-Scheme cumulative allocation remains unobserved. GCC GGC is a measured
+allocator scope, not all native malloc or Scheme VM allocation.
+
+Independent macOS run 39254108336 passed three-core source semantics under the
+unchanged 240-second limit: 173 modules, 1,401 Cases, 193.885536 runtime seconds,
+no foreign compiler samples or audit errors, and no compiled Suite interfaces.
+Cold preparation took 363.129301 seconds, including 35.018730 source-context
+loading and 317.344401 make seconds. Warm preparation took 13.426856 seconds;
+its matching graph admission passed and compiled test resources were unchanged.
+These single-run times are not a matched cold-build speedup claim. The independent
+four-control latency run remains a separate observation.
+
+The warm log exposed a diagnostic decoder bug: Scheme prints a small interval
+as 1.1e-5, while the previous phase regex consumed only 1.1. The decoder now
+requires the complete finite numeric token, accepts exponent notation and rejects
+malformed/negative/nonfinite intervals. The original raw log is retained. The
+correct source-context-reuse interval is 0.000011 seconds; dependency admission,
+make checking and total elapsed time remain fully charged. Top-level wall timing
+and performance thresholds did not use that truncated phase field.

@@ -13,6 +13,17 @@ from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, g
 
 
 class CompilerCostTests(unittest.TestCase):
+    def test_builder_phase_decoder_preserves_exponents_and_rejects_partial_values(self):
+        import runpy
+        decode = runpy.run_path('tools/ci/build-cost-control.py')['builder_phases']
+        prefix = 'BUILD-TEST-LIBRARY-PHASE source-context-reuse wall-seconds='
+        for text, value in [('1.1e-5', 0.000011), ('.10284', 0.10284), ('4.54305', 4.54305),
+                            ('0', 0.0), ('0.', 0.0), ('1.', 1.0), ('1E+2', 100.0)]:
+            self.assertEqual(decode(prefix + text), {'source-context-reuse': value})
+        for text in ['nan', 'inf', '-1', '1e999', '1.1e', '1.1e-5junk', '1..2', '1 2']:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                decode(prefix + text)
+
     def test_full_runtime_control_rejects_missing_duplicate_or_compiled_source_suites(self):
         import runpy
         check = runpy.run_path('tools/ci/build-cost-control.py')['source_semantic_workload']

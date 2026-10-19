@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 from pathlib import Path
@@ -79,6 +80,20 @@ def measure_compiler_reference(source, output):
     if result.returncode == 0 and sarif.exists():
         row['gcc_cumulative_ggc_bytes'] = gcc_ggc_bytes(json.loads(sarif.read_text()), source)
     return row
+
+
+def builder_phases(text):
+    """Decode complete finite elapsed values, including Scheme exponents."""
+    phases = {}
+    for line in text.splitlines():
+        if not line.startswith('BUILD-TEST-LIBRARY-PHASE '):
+            continue
+        match = re.fullmatch(r'BUILD-TEST-LIBRARY-PHASE ([a-z-]+) wall-seconds='
+                             r'((?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)', line)
+        if not match or not math.isfinite(float(match[2])):
+            raise ValueError('invalid builder phase elapsed value: ' + line)
+        phases[match[1]] = float(match[2])
+    return phases
 
 
 def measure(tree, command, log, env, *, semantic_diagnostics=False):
@@ -170,8 +185,7 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
         receipt['diagnostic_resolution_seconds'] = 1
         receipt['child_usage_scope'] = 'reaped children only; not total descendant CPU on timeout'
     text = log.read_text()
-    receipt['builder_phases'] = {name: float(value) for name, value in re.findall(
-        r'BUILD-TEST-LIBRARY-PHASE ([a-z-]+) wall-seconds=([.0-9]+)', text)}
+    receipt['builder_phases'] = builder_phases(text)
     total = re.search(r'BUILD-TEST-LIBRARY-OK wall-seconds=([.0-9]+)', text)
     if total:
         receipt['builder_seconds'] = float(total[1])

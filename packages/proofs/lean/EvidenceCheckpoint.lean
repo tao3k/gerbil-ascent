@@ -175,4 +175,102 @@ theorem observation_preserves_choice_and_authority {α : Type}
     (observe s e).choice = s.choice ∧
     (observe s e).executionAuthorized = s.executionAuthorized := ⟨rfl, rfl⟩
 
+-- A caller declares the obligation set. Presentation is not an input to it.
+def supportedGoal {α : Type} (s : Evidence α) (required : α → Prop) : Prop :=
+  ∀ a, required a → applicable s a
+
+theorem missing_requirement_prevents_goal_support {α : Type}
+    (s : Evidence α) (required : α → Prop) (a : α)
+    (needed : required a) (missing : ¬ s.historical a) :
+    ¬ supportedGoal s required := by
+  intro complete
+  exact missing (complete a needed).1
+
+theorem component_support_cannot_replace_target_receipt {α : Type}
+    (s : Evidence α) (required : α → Prop) (component target : α)
+    (_componentPass : applicable s component)
+    (needed : required target) (missing : ¬ s.historical target) :
+    ¬ supportedGoal s required :=
+  missing_requirement_prevents_goal_support s required target needed missing
+
+theorem cache_cleanup_preserves_goal_evidence {α : Type}
+    (s : Evidence α) (required : α → Prop) :
+    supportedGoal (clean s) required ↔ supportedGoal s required := Iff.rfl
+
+theorem changed_parent_exposes_unclosed_goal {α : Type}
+    (s : Evidence α) (required : α → Prop) (target parent : α)
+    (needed : required target) (edge : s.depends target parent)
+    (changed : Affected s.depends s.directGap parent) :
+    ¬ supportedGoal s required := by
+  intro complete
+  exact affected_parent_revokes_child s target parent edge changed (complete target needed)
+
+-- Query provenance is distinct from retained receipt validity and material.
+structure TraceCut (α : Type) where
+  evidence : Evidence α
+  sourceAvailable : α → Prop
+
+def provenanceGap {α : Type} (s : TraceCut α) (a : α) : Prop :=
+  s.evidence.historical a ∧ ¬ s.sourceAvailable a
+
+def loseTrace {α : Type} (s : TraceCut α) : TraceCut α :=
+  { s with sourceAvailable := fun _ => False }
+
+theorem missing_trace_preserves_history {α : Type} (s : TraceCut α) :
+    (loseTrace s).evidence = s.evidence := rfl
+
+theorem retained_receipt_without_trace_exposes_gap {α : Type} (s : TraceCut α)
+    (a : α) (retained : s.evidence.historical a) :
+    provenanceGap (loseTrace s) a := ⟨retained, id⟩
+
+-- Context includes scope, actor incarnation, counter meaning and source.
+structure WorkSample (Context : Type) where
+  context : Context
+  counter : Nat
+  attested : Prop
+  completed : Prop
+
+def advances {Context : Type} (context : Context) (cursor : Nat)
+    (sample : WorkSample Context) : Prop :=
+  sample.context = context ∧ sample.attested ∧ sample.completed ∧ cursor < sample.counter
+
+theorem wrong_work_context_cannot_renew {Context : Type}
+    (context : Context) (cursor : Nat) (sample : WorkSample Context)
+    (wrong : sample.context ≠ context) : ¬ advances context cursor sample := by
+  intro accepted
+  exact wrong accepted.1
+
+theorem heartbeat_without_completed_work_cannot_renew {Context : Type}
+    (context : Context) (cursor : Nat) (sample : WorkSample Context)
+    (missing : ¬ sample.completed) : ¬ advances context cursor sample := by
+  intro accepted
+  exact missing accepted.2.2.1
+
+theorem restored_cursor_rejects_replay {Context : Type}
+    (context : Context) (cursor : Nat) (sample : WorkSample Context)
+    (replayed : sample.counter ≤ cursor) : ¬ advances context cursor sample := by
+  intro accepted
+  exact (Nat.not_lt_of_ge replayed) accepted.2.2.2
+
+theorem renewal_requires_strict_completed_witness {Context : Type}
+    (context : Context) (cursor : Nat) (sample : WorkSample Context)
+    (accepted : advances context cursor sample) :
+    sample.attested ∧ sample.completed ∧ cursor < sample.counter := accepted.2
+
+def observedAdvances {Context : Type} (context : Option Context) (cursor : Option Nat)
+    (sample : WorkSample Context) : Prop :=
+  match context, cursor with
+  | some current, some baseline => advances current baseline sample
+  | _, _ => False
+
+theorem unknown_current_actor_cannot_renew {Context : Type}
+    (cursor : Option Nat) (sample : WorkSample Context) :
+    ¬ observedAdvances none cursor sample := by
+  cases cursor <;> exact id
+
+theorem missing_checkpoint_cursor_cannot_renew {Context : Type}
+    (context : Option Context) (sample : WorkSample Context) :
+    ¬ observedAdvances context none sample := by
+  cases context <;> exact id
+
 end Ascent.EvidenceCheckpoint

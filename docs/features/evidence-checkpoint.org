@@ -54,6 +54,37 @@ engine primitive. Downstream applications can register another constructor or
 derive another view without changing the engine. A universal fixed recovery
 state machine would reverse this layering and is explicitly not the design.
 
+* Evidence exchange composition
+
+The same checkpoint module exports =evidence-checkpoint-exchange-fragment=.
+It includes the existing closure kernel, rather than reimplementing receipt
+admission in a host or a downstream navigator. =checkpoint_claim= maps a
+caller-owned claim to a requirement, qualification scope and declaration source;
+=checkpoint_source= binds paths/digests, and =checkpoint_receipt_source= binds
+each receipt to its retained report. The existing constructor accepts these
+optional relations; no additional command or navigation interface is required.
+
+=checkpoint_observation= projects applicable support, historical-only support,
+unclosed requirements and recorded noncompletion. =checkpoint_dependency=
+exposes evidence references, not a prescribed execution order.
+=checkpoint_reason= keeps each reason bound to its own receipt and origin;
+an obsolete receipt's mismatch must not be attached to a newer valid receipt.
+Downstream Scheme maps these rows into its existing Clue/factor/link vocabulary.
+Python observes and transports; it does not decide applicability or completion.
+
+A component's qualified report is not a receipt for a dependent source repair
+or native test. Reading every returned unit changes acknowledgments, not any
+requirement's support. Cleaned binaries can prevent reuse without erasing
+historical or applicable evidence. A failed receipt remains counterevidence,
+not an absent event. Qualification scopes remain caller-declared and visible.
+
+=CheckpointProjection.qnt= checks partial support and seven falsifying
+mutations. =EvidenceCheckpoint.lean= states the general missing-target,
+component/goal separation, changed-parent and cleanup preservation properties.
+Real Session tests bind the projection to the existing relational kernel and
+exercise first reads and new-process checkpoint continuation. These checks
+are not an implementation-refinement proof or native SMP acceptance.
+
 * Four distinct cuts
 
 | Cut | Meaning | Never establishes |
@@ -259,6 +290,79 @@ Lean proves no-event preservation and repeated-completion idempotence; Quint
 rejects heartbeat/duplicate progress mutations. Natural exit, child status,
 quiescence and complete test inventory remain independent acceptance conditions.
 
+*** Configurable work witnesses in the existing checkpoint Session
+
+The registered checkpoint Library also exports =evidence-progress-fragment=;
+=make-evidence-checkpoint= composes it without a second query endpoint. A
+downstream constructor may include the same fragment through its existing
+component registry. No task names, GC operation names, host CPU counts, timeout
+constants or investigation directions are built into the rules.
+
+| Input | Host-observed or caller-declared meaning |
+|-------+-----------------------------------------|
+| =progress_contract(scope, actor, epoch, kind, source)= | Accepted meaning and provenance of a work counter |
+| =progress_active(scope, actor, epoch)= | Host-established current producer incarnation, not an inherited checkpoint assertion |
+| =progress_cursor(scope, actor, epoch, kind, source, value)= | Last retained counter baseline; an explicitly known nonnegative integer |
+| =progress_sample(id, scope, actor, epoch, kind, source, value)= | Observed counter with immutable observation identity |
+| =progress_attested(id)= / =progress_completed(id)= | Host custody/attribution and completion witnesses; neither is inferred from output volume |
+
+Scheme admits a sample only for the exact active contract, with both witnesses,
+nonnegative integer counters and no contradictory payload under its observation
+identity. Conflicting active incarnations or cursors cannot renew a watchdog.
+The frontier is derived in Scheme, and =progress_advanced= additionally requires
+a strict increase over the matching retained cursor. Missing or conflicting
+cursors produce an explicit =progress_rejected= reason instead of silently
+becoming zero. Typed scalar admission rejects booleans masquerading as integers.
+
+The host collector must bind actor incarnation and source to the owned process
+or authenticated child channel. A producer's self-reported PID, busy CPU,
+arbitrary increasing heartbeat, GC request or log timestamp is not a completion
+witness. Attestation includes stable observation identity across batches; this
+is an explicit host premise, not something Datalog proves about arbitrary I/O.
+A completed collection plus verified mutator work may be a domain witness, but
+the Gambit-specific correspondence has not been established by these generic
+rules. Independent actors/kinds keep independent cursors; they are not summed
+into a synthetic work counter by the Library.
+
+The existing host inactivity loop renews its monotonic timer only when this
+Session returns an advance. It retains the raw batch, cursor before/after and
+decision in the existing execution journal. Observation inputs are replaced per
+batch: omitted attestation/completion rows cannot inherit a previous batch's
+witnesses. A collector may emit just its new batch; it need not replay the
+entire execution history. Host bookkeeping counts admitted renewals only to
+adapt the existing callback signature; it does not implement the inference.
+
+Recovery retains cursor facts and immutable history, never a live-process claim
+or a fresh renewal. A new query owner must obtain current host attribution before
+accepting later work. After a cache clear, the existing retained prefix is read
+from the checkpoint store, not recreated from missing disposable process files.
+A new owned process is a distinct incarnation with its own declared baseline;
+it does not reuse old events as work. Recovery does not reopen a terminal run,
+authorize a process or turn progress into task success. Physical OS reboot and
+application-specific child attribution remain distinct host validation duties.
+
+The finite =ProgressWitness= model checks correct completion and eleven fault
+controls, including stale epochs, heartbeats, missing/conflicting cursors and
+restoration that invents renewal time. Lean checks the corresponding context,
+completion and replay premises under LeanPoo's Guard. Installed Session tests,
+actual subprocess inactivity/exit tests, immutable journal writes and fresh-owner
+recovery after deletion of disposable run files exercise the connection points.
+These are framework qualification, not a native SMP pass or a promise that every
+domain already emits a suitable witness.
+
+The completed consumer integration run exercised the same three contracts with
+1,777/1,777 tests, zero failures/errors/skips and unchanged inputs, using the
+existing full validation supervisor and actual sealed domain. Suite time was
+288.343 seconds; the supervisor exited naturally in 291.500 seconds with the
+original 300-second completed-test inactivity window, a reaped parent and
+quiescent process group. The installed upstream checkpoint suite separately
+passes 20 cases, and the host watchdog suite passes 21; these are not added to
+the full consumer count. The earlier incorrect bare-unittest launch remains a
+failed observation; source-origin checks and unavailable checker endpoints were
+not waived. Renewal is anchored before inference/recording cost, not at the end
+of those operations. Publication and exact locked-revision installation remain
+the independent post-publication obligations below.
+
 Each receipt identifies its requirement, checker/contract, complete support
 manifest, exact prerequisite receipt identities and outcome. Complete means a
 host-admitted declaration of relevant inputs and dependency inventory, not
@@ -332,6 +436,39 @@ Python planner. No new flags or checkpoint protocol version are required.
 * Delivery and evidence boundary
 
 ** Architecture closure checklist: qualified implementation slice
+
+*** Subsequent integration correction: missing query provenance
+
+The qualified slice below did not originally cover a retained valid receipt
+whose =checkpoint_receipt_source= association or referenced
+=checkpoint_source= disappeared. In that case applicability could remain true
+while the exchange silently returned no observation. This is a projection gap,
+not evidence that historical execution failed or material was deleted.
+
+The existing exchange fragment now derives =checkpoint_resolved_receipt= from
+the source association and its resolved source. If resolution is absent, it
+emits a =provenance-unavailable= counterobservation anchored to the retained
+claim declaration and a =receipt-source-unavailable= reason. It neither
+invents a report nor revokes independently established receipt validity.
+The declaration itself must still be admitted by its normal registry/host
+boundary. A missing declaration cannot be reconstructed by this rule.
+
+- [X] Native Scheme regression reproduces both absent associations and
+  associations to absent sources; historical completion remains unchanged.
+- [X] The installed public Clue exchange returns the new counterobservation.
+  A fresh process restores the read checkpoint and does not replay the same
+  family. Reading this gap does not grant runtime admission.
+- [X] =CheckpointProjection= checks source loss/restoration independently of
+  history, changed inputs, material, restart and caller choice. The positive
+  model exhausts 26,880 states; the hidden-provenance mutation fails as intended,
+  alongside the seven existing fault controls.
+- [X] Lean proves trace loss preserves receipt evidence and exposes a gap for
+  retained history, using the locked LeanPoo process Guard.
+- [X] The installed checkpoint contract suite passes 14 cases, including the
+  real new-process continuation. These results are local installation evidence,
+  not published exact-revision qualification or native SMP acceptance.
+
+*** Previously qualified base slice
 
 The following four framework contracts are qualified by the current source,
 formal controls and real cross-process scenarios. This is the defined Library /

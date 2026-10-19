@@ -395,5 +395,6 @@ def main (args : List String) : IO Unit := do
   | ["preparation-roots"] => IO.print Ascent.PreparationWork.rootsSchemeSource
   | ["preparation-support"] => IO.print Ascent.PreparationWork.supportQuintSource
   | ["preparation-groups"] => IO.print Ascent.PreparationWork.groupsSchemeSource
+  | ["preparation-heap"] => IO.print Ascent.PreparationWork.heapRecipeSource
   | ["preparation-runner"] => IO.print Ascent.PreparationWork.runnerRecipeSource
   | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")

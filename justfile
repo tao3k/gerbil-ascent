@@ -26,6 +26,9 @@ build_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" pyt
 test_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" python3 -m ascent_workbench.supervision'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
+# BEGIN GENERATED PREPARATION HEAP
+preparation_runtime_options := "-:max-heap=3G,live-ratio=20,debug=q"
+# END GENERATED PREPARATION HEAP
 test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/compiled-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
 
 default:
@@ -107,11 +110,11 @@ test heap='2G': prepare-semantic-library
 
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:
-    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/harness/build.ss library
+    {{ build_supervisor }} {{ gxi_command }} {{ preparation_runtime_options }} t/harness/build.ss library
 
 # Prepare the source Suite dependencies; GxTest still loads every Suite source.
 prepare-semantic-library:
-    {{ build_supervisor }} {{ gxi_command }} -:max-heap=3G,debug=q t/harness/build.ss semantics t/qualification/*-test.ss
+    {{ build_supervisor }} {{ gxi_command }} {{ preparation_runtime_options }} t/harness/build.ss semantics t/qualification/*-test.ss
 
 # Scheme performance Suites use the declared Gerbil testing isolation profile.
 test-performance-contracts: prepare-test-library

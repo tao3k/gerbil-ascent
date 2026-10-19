@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import shutil
+import re
 import sys
 import tempfile
 import unittest
@@ -260,3 +261,17 @@ class PreparationWorkTests(unittest.TestCase):
             self.assertEqual(phase['completed_source_contexts'], 2)
             self.assertEqual(phase['completed_module_contexts'], [str(module), str(module)])
             self.assertEqual(phase['top_level_context_reuses'], 2)
+
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_preparation_policy_keeps_native_heap_limit(self):
+        recipe = Path('justfile').read_text()
+        match = re.search(r'^preparation_runtime_options := "([^"]+)"$', recipe, re.M)
+        self.assertIsNotNone(match)
+        self.assertEqual(recipe.count('{{ preparation_runtime_options }} t/harness/build.ss'), 2)
+        process = subprocess.run(
+            ['gxi', match[1], '-e',
+             '(write (list (##get-max-heap) (##get-live-percent))) (newline)'],
+            capture_output=True, text=True, timeout=30)
+        self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+        self.assertEqual(process.stdout.strip(), '(3221225472 20)')

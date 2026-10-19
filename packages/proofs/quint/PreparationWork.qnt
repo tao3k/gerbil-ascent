@@ -8,7 +8,7 @@ module PreparationWork {
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
                 failedJobs: int, changedInputs: int, finished: bool, current: bool, counterValid: bool, published: bool,
                 outerAllocation: int, reportedAllocation: int, rawStart: int, rawFinish: int, inventoryDeclarations: int,
-                gscCpu: int, helperCpu: int, residualCpu: int, cumulativeClaim: bool, sourceStamp: int, sourceRestored: bool,
+                gscCpu: int, helperCpu: int, residualCpu: int, cumulativeClaim: bool, heapCap: int, heapSections: int, sourceStamp: int, sourceRestored: bool,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
                 sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
@@ -16,7 +16,7 @@ module PreparationWork {
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
     outerAllocation: 0, reportedAllocation: 0, rawStart: 0, rawFinish: 0, inventoryDeclarations: 0,
-    gscCpu: 0, helperCpu: 0, residualCpu: 0, cumulativeClaim: false, sourceStamp: 0, sourceRestored: false,
+    gscCpu: 0, helperCpu: 0, residualCpu: 0, cumulativeClaim: false, heapCap: 3, heapSections: 0, sourceStamp: 0, sourceRestored: false,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
@@ -84,6 +84,10 @@ module PreparationWork {
   // GSC child usage already includes native compiler/helper descendants.
   // Keep a partition instead of adding a second inclusive measurement.
   // A positive occupancy-based SDK interval still lacks cumulative event telemetry.
+  // SDK live-ratio changes its target. The existing maximum stays separate.
+  action ResizeHeap = q' = {...q,
+    heapCap: if (Mutation == "raise-heap-for-gc") 4 else 3,
+    heapSections: if (Mutation == "skip-heap-cap") 4 else 3}
   action ObserveOccupancy = q' = {...q,
     cumulativeClaim: Mutation == "occupancy-as-cumulative"}
   action ObserveCompilerCpu = q' = {...q, gscCpu: 4, helperCpu: 3,
@@ -110,7 +114,7 @@ module PreparationWork {
     q' = {...q, published: true}}
   action step = any {ReadInventory, UnadmitProduction, ProjectRoots, Import, Gsc, UnrequestedGsc, CompileSourceSuite,
     CacheOutput, FreshCheckout, RestoreSource, DropPayload, DropReceipt, ChangeInput, ChangeCommit, ChangeManifest, Reuse, StartSourceVm, ExitSourceVm,
-    Allocate, ObserveOccupancy, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CounterNegative, CompilerFails, CompilerInputChanges, Publish}
+    Allocate, ResizeHeap, ObserveOccupancy, ObserveCompilerCpu, Finish, ChangeSource, CounterDecrease, CounterNegative, CompilerFails, CompilerInputChanges, Publish}
   val OnlyConsumerRoots = q.productionAdmitted implies q.forcedCatalogRoots == 0
   val DemandedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "requested")
   val CachedSupportRetained = q.rootsProjected implies SelectedSupport.foldl(false, (found, root) => found or root == "cached")
@@ -118,6 +122,8 @@ module PreparationWork {
   val InventoryDataOnly = q.inventoryDeclarations == 0
   val JobsExact = q.observedJobs == q.jobs
   val ImportsExact = q.observedImports == q.imports
+  val HeapLimitUnchanged = q.heapCap == 3
+  val HeapSelectionBounded = q.heapSections <= q.heapCap
   val CumulativeCapabilityRequired = not(q.cumulativeClaim)
   val AllocationNotNested = q.reportedAllocation == q.outerAllocation
   val CompilerCpuPartition = q.residualCpu >= 0 and q.helperCpu + q.residualCpu == q.gscCpu

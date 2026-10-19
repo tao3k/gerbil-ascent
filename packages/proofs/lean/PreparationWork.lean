@@ -429,6 +429,60 @@ theorem negative_raw_counter_rejected (start finish corrected : Int)
     (negative : start < 0) : allocationObservationValid start finish corrected = false := by
   simp [allocationObservationValid]; omega
 
+-- The released SDK's adjust_heap uses division before multiplication.
+-- resize_heap retains a separate maximum section bound; the live-ratio policy
+-- never changes that bound. These lemmas describe that arithmetic, not RSS,
+-- GC latency, or the complete native resize/overflow implementation.
+def preparationHeapGiB : Nat := 3
+def preparationLiveRatio : Nat := 20
+
+def heapRecipeSource : String :=
+  "preparation_runtime_options := \"-:max-heap=" ++ toString preparationHeapGiB ++
+  "G,live-ratio=" ++ toString preparationLiveRatio ++ ",debug=q\"\n"
+
+def adjustedHeapWords (live minimum ratio : Nat) : Nat :=
+  max (live / ratio * 100) minimum
+
+def resizedSections (target lower upper : Nat) : Nat :=
+  min (max target lower) upper
+
+theorem resized_sections_preserve_maximum (target lower upper : Nat) :
+    resizedSections target lower upper ≤ upper := Nat.min_le_right _ _
+
+theorem preparation_heap_policy_is_bounded :
+    preparationHeapGiB = 3 ∧ 0 < preparationLiveRatio ∧ preparationLiveRatio ≤ 100 := by
+  decide
+
+-- mem.c updates current still occupancy on allocation and release. The
+-- existing counter exposes its endpoint, not the history of those events.
+-- Thus even exact endpoint arithmetic cannot recover cumulative still bytes.
+inductive StillEvent where
+  | allocate (bytes : Int) | release (bytes : Int)
+
+def stillEndpoint : List StillEvent → Int
+  | [] => 0
+  | .allocate n :: rest => n + stillEndpoint rest
+  | .release n :: rest => -n + stillEndpoint rest
+
+def stillAllocated : List StillEvent → Int
+  | [] => 0
+  | .allocate n :: rest => n + stillAllocated rest
+  | .release _ :: rest => stillAllocated rest
+
+theorem equal_still_endpoints_do_not_identify_allocation (bytes : Int) (positive : 0 < bytes) :
+    stillEndpoint [.allocate bytes, .release bytes] = stillEndpoint [] ∧
+    stillAllocated [.allocate bytes, .release bytes] ≠ stillAllocated [] := by
+  simp [stillEndpoint, stillAllocated]
+  omega
+
+-- Valid only for exact integer observations of the SDK's floating counters.
+-- This separates the observed processor and still-occupancy components; it
+-- does not promote either into a full allocator-event stream.
+theorem sdk_counter_component_difference (processorBefore processorAfter stillBefore stillAfter : Int) :
+    sdkCounter processorAfter stillAfter - sdkCounter processorBefore stillBefore =
+    (processorAfter - processorBefore) + (stillAfter - stillBefore) := by
+  simp [sdkCounter]; omega
+
 -- The SDK inserts path and id aliases only after core-expand-module-begin
 -- and code assignment. The observer indexes context identity, not registry keys.
 -- This list model specifies that boundary; the SDK hash-table implementation,
@@ -512,4 +566,8 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms resident_context_scan_has_no_new_work
 #print axioms occupancy_never_admits_cumulative
 
+#print axioms resized_sections_preserve_maximum
+#print axioms preparation_heap_policy_is_bounded
+#print axioms equal_still_endpoints_do_not_identify_allocation
+#print axioms sdk_counter_component_difference
 end Ascent.PreparationWork

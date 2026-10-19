@@ -364,6 +364,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-selection", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "preparation-import", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "preparation-source", "t/harness/library-spec.ss"),
+                ("ExecutionPolicy.lean", "preparation-heap", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
@@ -385,9 +386,9 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache"}:
+                elif language in {"preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()
-                    prefix = "        #" if language == "preparation-runner" else "          #" if language == "preparation-cargo-cache" else ";;"
+                    prefix = "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language == "preparation-cargo-cache" else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',
                                   f'{prefix} END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

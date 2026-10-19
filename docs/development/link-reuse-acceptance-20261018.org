@@ -1393,3 +1393,67 @@ identity check passes without rerunning the measured import. Initial Lean
 proof errors were repaired under the same Guard budget. A broad Python test
 invocation used an environment without ascent._core and failed; it is not a
 full Python acceptance receipt. The exact-head wheel consumer CI is required.
+
+* Preparation GC and macOS compiled reuse candidate (2026-10-19)
+
+The previous macOS receipt is cold: 44.030551 seconds of dependency projection,
+347.852286 seconds in native make, and 399.407757 seconds for preparation. The
+macOS semantics job did not restore compiled application/support outputs.
+Consequently each fresh job compiled the support closure again. This is not
+proof of duplicate compilation within one make. The retained native trace
+contains 589 distinct GSC phase inputs. Its three compiler slots were occupied
+for 874.101047 slot-seconds over a 323.231993-second interval, about 90.14 percent
+utilization. Reordering jobs cannot remove the actual C work represented by
+those distinct inputs.
+
+The candidate uses the released SDK's documented live-ratio=20 option in the
+two preparation commands. Their existing max-heap=3G remains unchanged. The
+source test runtime, three-worker capacity, 240-second macOS runtime deadline,
+12-thread binding tests, performance gates, cancellation, resources, and
+provenance are unchanged. Production and GSC child compiler flags are unchanged.
+This tunes native GC rather than implementing a new collector or evaluator.
+
+The SDK adjust_heap path computes max(live / ratio * 100, minimum), using
+integer division before multiplication. resize_heap separately caps selected
+sections with its upper maximum bound. Lean renders the actual preparation
+option line and checks that section-selection arithmetic respects its maximum;
+a real SDK test reads back 3221225472 max-heap bytes and live-percent 20 from the
+rendered command. Quint retains every old control and adds rejection of both
+raising the maximum and bypassing it. The complete resize/overflow implementation
+and process RSS remain outside this arithmetic proof.
+
+Local diagnostic loading preserved all 173 entry roots and the 560-source
+closure. The default policy performed 29 GCs versus 11 at live-ratio=20. Timing
+admission was rejected because other compilers and Lean appeared during both
+probes. Those rejected receipts are retained; their wall times are not speedup
+evidence. An initial diagnostic used the unsupported spelling live-percent;
+the SDK rejected it. The corrected option comes directly from its runtime help.
+
+The macOS semantics job also reuses the already established source/product
+snapshot method. Its exact key binds the released SDK binaries/header/receipt,
+GCC driver/cc1, linker, architecture, three-worker configuration, indexed source
+names/modes/blobs, and actual source bytes. There is no fallback key. It restores
+the dependency/application prefix and matching tracked Scheme/C source mtimes.
+Raw bytes and Git are rechecked after restoration. Dependency installation,
+production native make, complete source preparation, zero compiled source Suite
+interfaces, and every semantic Case still execute on a hit. This is compiled
+artifact reuse, not a cache of source graph verdicts or macro-expansion results.
+The on-demand cold ABBA experiment continues to use four fresh application
+prefixes and cannot consume this macOS acceptance cache.
+
+Allocation remains a separate limitation. A real SDK probe allocates an 8MB
+still vector between forced GCs: the last-GC processor counter increases by
+only 32 bytes, then by 240 after releasing it. Thus substituting that field for
+the earlier signed raw counter would omit this allocation. The large still
+allocation path accounts space at the VM level; the exposed endpoint statistics
+do not supply a cumulative still-allocation event history. Lean checks the
+component-difference identity under exact integer observations and proves that
+equal still-occupancy endpoints cannot identify total allocated bytes. The
+observer continues to report cumulative allocation as unknown. Neither fewer
+GCs nor unchanged endpoints is presented as a total allocation saving.
+
+Cold wall/CPU, warm compiled reuse, current-head semantics, and full SDK source
+refinement must be reported separately. The historical unresolved performance
+ledger is retained without a resolution entry or threshold change. This
+candidate does not close per-macro source refinement or the full allocator
+observer/decoder equivalence.

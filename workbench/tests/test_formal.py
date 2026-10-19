@@ -69,6 +69,14 @@ class FormalTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 validate_output(correct, code, output)
 
+    def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
+        checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}
+        self.assertEqual(checks.pop("correct").expected, 0)
+        self.assertEqual(set(checks), {"host-boundary", "ignore-compiler-failure", "ignore-compiler-input",
+                                    "publish-partial-ggc", "keep-unrequested-old-output", "clean-production",
+                                    "promote-vm-counter", "sum-nested-passes", "record-failed-build", "reuse-old-options"})
+        self.assertTrue(all(item.expected == 12 for item in checks.values()))
+
     def test_counterexample_must_match_property_and_exit(self):
         fault = next(o for o in obligations(configuration("EvidenceInteraction", {})) if o.name == "stale")
         validate_output(fault, 12, "Invariant Safety is violated")
@@ -81,11 +89,11 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         original = {name: items for name, items in plans.items()
-                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume"}}
+                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)
         self.assertEqual(set(plans) - set(original),
-                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume"})
+                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost"})
         self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)

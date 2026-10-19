@@ -89,6 +89,55 @@ def file_input(path, contents=None):
     return row
 
 
+def gcc_ggc_bytes(report, source):
+    try:
+        return _gcc_ggc_bytes(report, source)
+    except (AttributeError, IndexError, KeyError, TypeError) as error:
+        raise ValueError('malformed GCC report') from error
+
+
+def _gcc_ggc_bytes(report, source):
+    """Read one native GCC cumulative GGC total; never sum nested pass totals."""
+    if report.get('version') != '2.1.0' or len(report.get('runs', [])) != 1:
+        raise ValueError('unsupported GCC report')
+    run = report['runs'][0]
+    if not run['tool']['driver']['name'].startswith('GNU C'):
+        raise ValueError('unsupported compiler allocation scope')
+    invocations = run.get('invocations', [])
+    if len(invocations) != 1 or invocations[0].get('executionSuccessful') is not True:
+        raise ValueError('incomplete GCC invocation')
+    invocation = invocations[0]
+    from urllib.parse import unquote, urlparse
+    targets = [a['location']['uri'] for a in run.get('artifacts', [])
+               if 'analysisTarget' in a.get('roles', [])]
+    expected = Path(source).resolve()
+    actual = []
+    for target in targets:
+        uri = urlparse(target)
+        if uri.scheme not in ('', 'file') or uri.netloc:
+            raise ValueError('unsupported GCC input URI')
+        path = Path(unquote(uri.path))
+        if not path.is_absolute():
+            path = Path(invocation['workingDirectory']['uri']) / path
+        actual.append(path.resolve())
+    if actual != [expected] or not any(Path(arg).suffix == '.c' and Path(arg).resolve() == expected
+                                       for arg in invocation.get('arguments', [])):
+        raise ValueError('GCC input attribution differs')
+    timers = invocation.get('properties', {}).get('gcc/timeReport', {}).get('timevars', [])
+    totals = [item.get('elapsed', {}).get('ggc_mem') for item in timers if item.get('name') == 'TOTAL']
+    # BEGIN GENERATED PREPARATION GGC
+    if len(totals) != 1 or type(totals[0]) is not int or totals[0] < 0:
+        raise ValueError('invalid GCC cumulative GGC total')
+    # END GENERATED PREPARATION GGC
+    return totals[0]
+
+
+# BEGIN GENERATED PREPARATION COVERAGE
+def gcc_ggc_complete(expected, reported, failed, changed, errors):
+    return 0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0
+# END GENERATED PREPARATION COVERAGE
+
+
 def compiler_stage(record):
     if record['kind'] == 'sdk-helper':
         return 'sdk-' + record['arguments'][0]
@@ -131,6 +180,22 @@ def execute_gsc(arguments, helper=False):
         runtime_options = ['-:~~=' + str(Path(command).parent.parent) +
                            ',~~bin=' + child_env['ASCENT_SDK_HELPER_DIRECTORY']]
         child_env['ASCENT_PARENT_GSC_OBSERVER'] = str(os.getpid())
+    gcc_report = None
+    gcc_source = None
+    if helper:
+        c_sources = [row for row in inputs if Path(row['path']).suffix == '.c']
+        output = child_env.get(f'BUILD_{arguments[0].upper()}_OUTPUT_FILENAME_PARAM')
+        if len(c_sources) == 1 and output:
+            gcc_source = c_sources[0]['path']
+            gcc_report = Path(output).resolve().with_name(Path(output).name + '-' + Path(gcc_source).name + '.sarif')
+            # The native compiler writes this diagnostic beside its own output.
+            # Never add diagnostics to the immutable SDK installation.
+            if gcc_report.is_relative_to(Path(command).parent.parent):
+                gcc_report = None
+            else:
+                gcc_report.unlink(missing_ok=True)
+                key = f'BUILD_{arguments[0].upper()}_CC_OPTIONS_PARAM'
+                child_env[key] = child_env.get(key, '') + ' -ftime-report -ftime-report-details -fdiagnostics-format=sarif-file'
     child = subprocess.Popen([command, *runtime_options, *arguments], env=child_env)
     exit_code = child.wait()
     process_wall_ns = time.monotonic_ns() - started
@@ -149,6 +214,15 @@ def execute_gsc(arguments, helper=False):
               'max_child_rss_bytes': after.ru_maxrss * (1 if sys.platform == 'darwin' else 1024),
               'input_blocks': after.ru_inblock - before.ru_inblock,
               'output_blocks': after.ru_oublock - before.ru_oublock}
+    if gcc_report is not None:
+        record['gcc_report_expected'] = True
+        try:
+            observed = file_input(gcc_report, contents)
+            record['gcc_ggc_bytes'] = gcc_ggc_bytes(json.loads(gcc_report.read_text()), gcc_source)
+            record['gcc_report'] = observed
+            record['gcc_source'] = gcc_source
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            record['gcc_allocation_error'] = str(error)
     # One bounded record per process; no concurrent partial text writes.
     (trace / f'{os.getpid()}-{started}.json').write_text(json.dumps(record) + '\n')
     return exit_code if current else 1
@@ -192,6 +266,20 @@ def summarize(directory):
             group['invocations'] += 1
             group['input_bytes'] += sum(item['bytes'] for item in record['inputs'])
             group['inclusive_cpu_seconds'] += record['user_seconds'] + record['system_seconds']
+        gcc_reports = [r for r in helpers if r.get('gcc_report_expected')]
+        gcc_errors = [r.get('gcc_allocation_error', 'missing GCC report') for r in gcc_reports
+                      if 'gcc_report' not in r]
+        for record in gcc_reports:
+            if 'gcc_report' in record:
+                report = record['gcc_report']
+                blob = directory / 'inputs' / report['sha256']
+                if (not blob.is_file() or hashlib.sha256(blob.read_bytes()).hexdigest() != report['sha256']
+                        or gcc_ggc_bytes(json.loads(blob.read_text()), record['gcc_source']) != record['gcc_ggc_bytes']):
+                    raise ValueError('damaged GCC allocation report')
+        gcc_jobs = [r for r in helpers if any(Path(i['path']).suffix == '.c' for i in r['inputs'])]
+        gcc_complete = gcc_ggc_complete(len(gcc_jobs), len(gcc_reports),
+                                        sum(r['exit_code'] != 0 for r in gcc_jobs),
+                                        sum(not r['inputs_current'] for r in gcc_jobs), len(gcc_errors))
         imports = []
         completed_contexts = []
         context_results = []
@@ -216,6 +304,7 @@ def summarize(directory):
                 if not hz or end < start:
                     raise ValueError('unordered compiler time snapshots')
                 imports.append({'depth': int(depth), 'path': json.loads(path),
+                                'start_tick': start, 'end_tick': end, 'clock_hz': hz,
                                 'direct_registry_hit': cached == '1',
                                 'wall_ns': (end - start) * 10**9 // hz,
                                 'sdk_allocated_bytes': int(allocated), 'gc_count': int(gcs),
@@ -228,7 +317,18 @@ def summarize(directory):
         if (completed_contexts and not context_results) or (context_results and
                 len(context_results) != sum(r['depth'] == 0 for r in imports)):
             raise ValueError('incomplete top-level context observations')
+        roots = sorted((r for r in imports if r['depth'] == 0
+                        and r['path'].startswith('t/qualification/')
+                        and r['path'].endswith('-test.ss')), key=lambda r: r['start_tick'])
+        if any(a['clock_hz'] != b['clock_hz'] or a['end_tick'] > b['start_tick']
+               for a, b in zip(roots, roots[1:])):
+            raise ValueError('overlapping qualification root observations')
+        root_work = {key: sum(r[key] for r in roots)
+                     for key in ['wall_ns', 'cpu_ns', 'gc_cpu_ns', 'gc_wall_ns', 'gc_count']}
+        root_work.update(roots=len(roots), observed=bool(roots),
+                         scope='Nonoverlapping outer qualification imports only; nested imports not summed; not total preparation or allocation')
         phases[phase] = {
+            'qualification_root_work': root_work,
             'gsc_invocations': len(gsc),
             'compiler_stages': stages,
             'largest_gsc_jobs': sorted(gsc,
@@ -245,7 +345,7 @@ def summarize(directory):
                 sum(r['exit_code'] != 0 for r in records),
                 sum(not r['inputs_current'] for r in records),
                 sum(r['sdk_allocated_bytes'] < 0 or r['raw_counter_decreased'] or r['raw_counter_negative']
-                    for r in imports), trace.exists()),
+                    for r in imports), trace.exists()) and not gcc_errors,
             'external_sdk_helper_cpu_seconds': sum(r['user_seconds'] + r['system_seconds'] for r in helpers),
             # GSC RUSAGE_CHILDREN includes nested SDK helpers and native C/link
             # children. These are a subset, never an additive second cost.
@@ -264,6 +364,11 @@ def summarize(directory):
             'completed_module_contexts': completed_contexts,
             'completed_source_contexts': sum(p.endswith('.ss') for p in completed_contexts),
             'completed_interface_contexts': sum(p.endswith('.ssi') for p in completed_contexts),
+            'gcc_cumulative_ggc_bytes': sum(r['gcc_ggc_bytes'] for r in gcc_reports) if gcc_complete else None,
+            'gcc_cumulative_ggc_observed': gcc_complete,
+            'gcc_allocation_jobs': len(gcc_reports),
+            'gcc_allocation_errors': gcc_errors,
+            'gcc_allocation_scope': 'Native GCC cumulative GGC allocations only; excludes non-GGC malloc and Scheme VM allocations; nested passes not summed',
             'cumulative_allocation_bytes': None,
             'cumulative_allocation_observed': False,
             'context_scope': 'new registered context identities at successful top-level import boundaries; aliases deduplicated; failed or unregistered expansions and pre-installation work excluded; not per-macro expansion counts',

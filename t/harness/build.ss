@@ -4,20 +4,21 @@
 ;;; Build only. Upstream Gerbil owns test discovery and execution.
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
-        (only-in :std/make make)
+        (only-in :std/make make make-clean)
+        (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         :std/iter
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
-        (only-in "../../bindings/artifact.ss" artifact-invalidated-modules)
+        (only-in "../../bindings/artifact.ss" artifact-invalidated-modules clean-compiled-resources!)
         (only-in :std/string/path path-default-extension)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
-        (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
+        (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
@@ -37,7 +38,7 @@
 ;; Previously compiled fixtures remain build inputs. A producer or SDK update
 ;; must let compiled make refresh their imports, rather than leave stale private
 ;; call entry points in a warm package prefix. Cases still load through GxTest.
-(def (cached-support-modules)
+(def (cached-support-modules (all-outputs? #f))
   (with-list-builder (collect)
     (def (visit module)
       (def output (path-expand (string-append "gerbil-ascent/" module) package-library))
@@ -47,10 +48,13 @@
            (for (name (list-sort string<? (directory-files output)))
              (visit (string-append module "/" name))))
           ((and (string-suffix? ".ssi" module)
-                (not (string-suffix? "-test.ssi" module))
-                (file-exists? (string-append (path-strip-extension module) ".ss")))
+                (or all-outputs?
+                    (and (not (string-suffix? "-test.ssi" module))
+                         (file-exists? (string-append (path-strip-extension module) ".ss")))))
            (collect (path-strip-extension module))))))
-    (for (tree '("t/qualification" "t/performance")) (visit tree))))
+    (for (tree (if all-outputs? '("t" "bindings" "build-modules.ssi")
+                   '("t/qualification" "t/performance")))
+      (visit tree))))
 
 ;; BEGIN GENERATED PREPARATION SELECTION
 ;; Generated from PreparationWork.lean; formal CI compares this region.
@@ -64,6 +68,7 @@
 (def (prepare-test-library! (tests []) (source-suites? #f) (source-consumers []))
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
+         (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
@@ -145,13 +150,22 @@
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
+        ;; make tracks source/dependency timestamps, not changed compiler flags.
+        ;; A changed profile invalidates installed test outputs, including
+        ;; unrequested old Suites; make still owns all actual compilation.
+        (unless (artifact-compiler-options-current? options-file gerbil-ascent-compiler-options)
+          (let (stale (delete-duplicates/hash
+                       (preparation-stale-compiler-modules #f gerbil-ascent-library-modules
+                                                           all (cached-support-modules #t))))
+            (make-clean stale srcdir: (current-directory) libdir: library)
+            (clean-compiled-resources! (path-expand "gerbil-ascent" library) stale)))
         ;; std/make imports carriers again to identify and check dependencies.
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
         ;; Gerbil's driver binds current-compile-context for actual builds.
         (call-with-preparation-production-interfaces
           production-interfaces-admitted? library gerbil-ascent-library-modules
           (lambda ()
-            (make all srcdir: (current-directory) libdir: library
+            (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
                   build-deps: (path-expand "build-deps" test-cache)
                   optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))))
         (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
@@ -159,6 +173,8 @@
         (unless (artifact-matching-sources? sources (artifact-sources))
           (error "source changed during test library compilation"))
         (displayln "BUILD-TEST-LIBRARY-PHASE inventory-after wall-seconds=" (build-elapsed phase)))
+      (artifact-directory! (path-directory options-file))
+      (artifact-record-compiler-options! options-file gerbil-ascent-compiler-options)
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before
@@ -214,7 +230,8 @@
         (let ((source "t/model/study.ss")
               (options [output-dir: package-library
                         output-file: (path-expand "dsl-closure" test-cache)
-                        parallel: #t verbose: #t invoke-gsc: #t static: #t]))
+                        parallel: #t verbose: #t invoke-gsc: #t static: #t
+                        gsc-options: gerbil-ascent-compiler-options]))
           ;; This lane owns the static cache. timeout terminates the previous
           ;; build process group, but gxc's existence-based object locks can
           ;; survive SIGTERM. Recover only this lane's object locks, never

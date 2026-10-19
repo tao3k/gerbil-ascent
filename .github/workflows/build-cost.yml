@@ -153,6 +153,8 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           just check-policy
+      - name: Verify supported SDK compiler profile and allocation counters
+        run: PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
       - name: Qualify complete source semantics with three workers
         run: python3 tools/ci/build-cost-control.py --semantics-only --output "$RUNNER_TEMP/macos-semantics"
       - name: Preserve semantic diagnostics and every batch log

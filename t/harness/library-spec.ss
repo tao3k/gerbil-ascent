@@ -4,7 +4,7 @@
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
 (import (only-in :gerbil/expander current-expander-module-import core-library-module-path? stx-e)
         (only-in :gerbil/compiler/base current-compile-context))
-(export call-with-preparation-production-interfaces test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
+(export call-with-preparation-production-interfaces test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots preparation-stale-compiler-modules)
 ;; BEGIN GENERATED PREPARATION INTERFACES
 ;; Gerbil still owns syntax decoding, path normalization, caching and expansion.
 (def (call-with-preparation-production-interfaces admitted? library production thunk)
@@ -32,6 +32,13 @@
              (original (if entry (cdr entry) path) reload?)))))
       (thunk))))
 ;; END GENERATED PREPARATION INTERFACES
+
+;; BEGIN GENERATED PREPARATION STALE
+(def (preparation-stale-compiler-modules current? production requested cached)
+  (if current? []
+    (filter (lambda (module) (not (member module production)))
+            (append requested cached))))
+;; END GENERATED PREPARATION STALE
 
 ;; BEGIN GENERATED PREPARATION SOURCE
 ;; Generated from PreparationWork.lean; formal CI compares this region.

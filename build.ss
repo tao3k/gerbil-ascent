@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in "build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+(import (only-in "build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
         (only-in :std/build-script defbuild-script)
         (only-in :std/make make-clean)
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
@@ -21,6 +21,7 @@
   @ asp-gerbil-scheme-library-package-prototype)
  (spec gerbil-ascent-build-spec)
  (modules gerbil-ascent-library-modules)
+ (native-options-resolver (lambda () gerbil-ascent-compiler-options))
  (extra-spec
   (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
          (c-options (string-append "-fPIC -I" c-dir))

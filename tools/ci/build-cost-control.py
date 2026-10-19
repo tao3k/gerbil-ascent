@@ -16,6 +16,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'workbench/src'))
 from ascent_workbench.preparation_admission import qualify
+from ascent_workbench.preparation_work import gcc_ggc_bytes
 from ascent_workbench.preparation_work import install as install_work_observers
 from ascent_workbench.preparation_work import summarize as summarize_work
 
@@ -36,6 +37,47 @@ def reference_cpu():
     return {'bytes': len(block) * 2048, 'sha256': digest.hexdigest(),
             'wall_seconds': time.monotonic() - wall,
             'cpu_seconds': time.process_time() - cpu}
+
+
+def compiler_reference(output):
+    """One fixed SDK-generated C unit; replay after each complete control only."""
+    output.mkdir()
+    source = output / 'compiler-reference.scm'
+    source.write_text('(declare (block) (standard-bindings) (extended-bindings))\n' +
+        ''.join(f'(define (compiler-reference-{i} x) (let loop ((n x) (sum {i})) '
+                '(if (<= n 0) sum (loop (- n 1) (+ sum (bitwise-xor n sum))))))\n'
+                for i in range(64)))
+    sdk = Path(os.environ['GERBIL_HOME'])
+    subprocess.run([str(sdk / 'bin/gsc'), '-c', '-o', str(source.with_suffix('.c')), str(source)],
+                   check=True, timeout=30, capture_output=True)
+    return source.with_suffix('.c')
+
+
+def measure_compiler_reference(source, output):
+    # Do not silently discard A0 or warm an application prefix. This diagnostic
+    # follows the complete control; its cost is retained outside phase timings.
+    sdk = Path(os.environ['GERBIL_HOME'])
+    env = os.environ.copy()
+    env.update(GAMBITDIR_INCLUDE=str(sdk / 'include'), GAMBITDIR_LIB=str(sdk / 'lib'),
+               BUILD_DYN_INPUT_FILENAMES_PARAM=str(source), BUILD_DYN_META_INFO_FILE_PARAM=str(source),
+               BUILD_DYN_OUTPUT_FILENAME_PARAM=str(output),
+               BUILD_DYN_CC_OPTIONS_PARAM='-D___SINGLE_HOST_LIMIT=0 -ftime-report -fdiagnostics-format=sarif-file')
+    source_before = digest(source)
+    before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    started = time.monotonic_ns()
+    with output.with_suffix('.log').open('w') as log:
+        result = subprocess.run([str(sdk / 'bin/gambuild-C'), 'dyn'], env=env,
+                                stdout=log, stderr=subprocess.STDOUT, timeout=30)
+    elapsed = time.monotonic_ns() - started
+    after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    sarif = output.with_name(output.name + '-' + source.name + '.sarif')
+    row = {'source_sha256': source_before, 'inputs_current': source_before == digest(source), 'exit_code': result.returncode, 'wall_ns': elapsed,
+           'child_usage': {key: getattr(after, key) - getattr(before, key) for key in
+                           ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt', 'ru_inblock', 'ru_oublock', 'ru_nvcsw', 'ru_nivcsw']},
+           'scope': 'Fixed post-control native compiler calibration; not application work or speedup admission'}
+    if result.returncode == 0 and sarif.exists():
+        row['gcc_cumulative_ggc_bytes'] = gcc_ggc_bytes(json.loads(sarif.read_text()), source)
+    return row
 
 
 def measure(tree, command, log, env, *, semantic_diagnostics=False):
@@ -216,7 +258,8 @@ def main():
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
     allowed = {'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
-               't/harness/library-spec.ss',
+               't/harness/library-spec.ss', 't/harness/artifact-admission.ss',
+               'docs/development/compiler-cost-acceptance-20261019.org',
                't/performance/ascent-scenario-performance-test.ss',
                't/harness/build.ss', 't/harness/test.ss', 't/qualification/ascent-source-import-test.ss',
                'docs/development/link-reuse-acceptance-20261018.org',
@@ -229,6 +272,11 @@ def main():
                'packages/proofs/lean/ExecutionPolicy.lean',
                'packages/proofs/lean/lakefile.lean',
                'packages/proofs/lean/PreparationWork.lean',
+               'packages/proofs/lean/CompilerCost.lean',
+               'packages/proofs/quint/CompilerCost.qnt',
+               'packages/proofs/quint/CompilerPolicy.qnt',
+               'rust/ascent-build/src/graph.rs',
+               'workbench/tests/test_compiler_cost.py',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'packages/proofs/quint/PreparationWork.qnt',
@@ -266,6 +314,11 @@ def main():
         receipt['work_observer_sha256'] = digest(
             root / 'workbench/src/ascent_workbench/preparation_work.py')
     (output / 'inputs.json').write_text(json.dumps(receipt, indent=2) + '\n')
+    calibration_started = time.monotonic_ns()
+    calibration = compiler_reference(output / 'compiler-calibration')
+    receipt['compiler_reference_setup'] = {'wall_ns': time.monotonic_ns() - calibration_started,
+                                           'source_sha256': digest(calibration), 'source_bytes': calibration.stat().st_size,
+                                           'scope': 'SDK calibration setup outside application phase timings'}
     # Fixed ABBA order: four fresh application prefixes; never select a fastest run.
     for index, kind in enumerate(['baseline', 'candidate', 'candidate', 'baseline']):
         name = f'{index}-{kind}'
@@ -350,6 +403,8 @@ def main():
                 if not observations['observations_complete']:
                     work_violations.append({'control': name, 'phase': phase,
                                             'error': 'incomplete compiler/helper work, changed inputs, missing imports or negative allocation'})
+        receipt['controls'][-1]['compiler_calibration'] = measure_compiler_reference(
+            calibration, output / 'compiler-calibration' / (name + '.o1'))
         (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(f"CONTROL-OK {name} build={phases['build']['wall_seconds']:.3f} "
               f"prepare={phases['prepare']['wall_seconds']:.3f}", flush=True)

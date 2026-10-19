@@ -714,3 +714,22 @@ FAULTS['ClueQueryResume'] = (
     ('authorize-resume', 'NoAuthority', 12),
     ('erase-history', 'History', 12),
 )
+
+# Native compiler settings and scoped counters; distinct from the SDK's correctness.
+MODEL_ORDER += ('CompilerCost',)
+CONFIGURATIONS['CompilerCost'] = {
+    'constants': 'Mutation = "none"',
+    'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
+}
+FAULTS['CompilerCost'] = (
+    ('host-boundary', 'PolicyExact', 12),
+    ('ignore-compiler-failure', 'PolicyExact', 12),
+    ('ignore-compiler-input', 'PolicyExact', 12),
+    ('publish-partial-ggc', 'PolicyExact', 12),
+    ('keep-unrequested-old-output', 'PolicyExact', 12),
+    ('clean-production', 'PolicyExact', 12),
+    ('promote-vm-counter', 'PolicyExact', 12),
+    ('sum-nested-passes', 'PolicyExact', 12),
+    ('record-failed-build', 'SuccessfulCommitOnly', 12),
+    ('reuse-old-options', 'CurrentOptionsOnly', 12),
+)

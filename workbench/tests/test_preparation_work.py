@@ -118,6 +118,25 @@ class PreparationWorkTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 summarize(root)
 
+    def test_qualification_roots_exclude_nested_work_and_reject_overlap(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            trace = root / 'prepare-imports.sexp'
+            outer = '(import-work 0 0 "t/qualification/a-test.ss" 1 4 100 40 1 20 10 2 1 3)\n'
+            nested = '(import-work 1 0 "t/qualification/child-test.ss" 2 3 100 20 1 10 5 2 1 3)\n'
+            next_root = '(import-work 0 0 "t/qualification/b-test.ss" 4 6 100 20 1 10 5 2 1 3)\n'
+            trace.write_text(outer + nested + next_root)
+            row = summarize(root)['phases']['prepare']['qualification_root_work']
+            self.assertEqual(row['roots'], 2)
+            self.assertEqual(row['wall_ns'], 50_000_000)
+            self.assertEqual(row['cpu_ns'], 45)
+            self.assertEqual(row['gc_count'], 2)
+            for invalid in [next_root.replace(' 4 6 ', ' 3 6 '),
+                            next_root.replace(' 100 ', ' 200 ')]:
+                trace.write_text(outer + invalid)
+                with self.assertRaisesRegex(ValueError, 'overlapping qualification'):
+                    summarize(root)
+
     def test_raw_counter_drop_rejects_even_positive_corrected_estimate(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

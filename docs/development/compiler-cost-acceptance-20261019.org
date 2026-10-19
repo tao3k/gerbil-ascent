@@ -1,0 +1,174 @@
+#+title: Compiler layout and source-bound preparation costs
+#+date: 2026-10-19
+
+* Problem and scope
+
+The remaining 23--35 seconds of source-Suite context loading is not the
+whole cold preparation problem. These measurements keep three build cores,
+the 240-second source-runtime limit, twelve Rust binding test threads, and
+all existing semantic, cancellation, resource, provenance and performance
+gates. The immutable released Gerbil 1cfb032 / Gambit ea114fc SDK is unchanged.
+No application or reference workload is modified.
+
+* Existing cost evidence
+
+The d151 instrumented candidate cold preparation recorded 671.042620 seconds
+of inclusive GSC CPU. Native C helpers account for 562.601045 seconds within
+that total; they must not be added again. The remaining 108.441575 seconds
+includes the Scheme compiler, observer and other overhead, not just expansion.
+
+| Native helper class | Calls | Input bytes | CPU seconds |
+|---------------------+-------+-------------+-------------|
+| Runtime C units     |   253 |   146925922 |  409.511529 |
+| Loader C units      |   253 |     2041631 |   89.209884 |
+| Phase/meta C units  |    83 |    12322980 |   63.879632 |
+
+The SDK deliberately emits distinct runtime, loader and phase units. This
+is not evidence that the same object was compiled repeatedly. Across 173
+nonoverlapping outer test imports, GC accounts for approximately one quarter
+to one third of CPU, not all context loading. Nested imports are excluded
+from this sum. The source-work decoder rejects overlapping root intervals
+and mixed clocks.
+
+* Supported SDK layout policy
+
+The existing gambit.h supports ___SINGLE_HOST_LIMIT. The declared compiler
+option sets it to 512: small units retain their existing C function layout;
+large units use multiple C functions. This has no relation to VM concurrency.
+The C optimization level is unchanged. The production PackageSpec, test make
+specifications and Rust build graph consume the same declared option through
+the existing ASP normalizer. SDK loader/meta paths reset compiler options;
+no claim is made that this setting affects every helper.
+
+On one identical 2,936,432-byte captured UF C input, the unchanged native SDK
+helper used 5.028917 CPU seconds with limit zero and 3.684581 with limit 512
+(26.7 percent less). This is a local compiler experiment, not an end-to-end
+speedup claim. Final-record declarations did not reduce the toy generated
+input and were rejected. GCC parsing was only about 10 percent of runtime
+unit CPU, so precompiled headers were not selected as the primary remedy.
+
+Native make checks timestamps rather than changed compiler options. A scoped
+receipt binds SDK home, source root and declared options. A mismatch removes
+installed test-owned outputs, including unrequested old Suites, before native
+make. Production carriers remain under the existing producer admission.
+The receipt is written only after successful make and unchanged source
+inventory. It is not a cached build-success or source-graph verdict.
+
+* Cumulative allocation and source correspondence
+
+Native GCC SARIF time reports supply the exact integer TOTAL ggc_mem counter,
+the cumulative allocation of GCC's garbage-collected allocator. The decoder
+requires one successful GNU C invocation and the matching actual C input;
+the observer retains and hashes the raw report and input. Nested pass counters
+are not added. Coverage requires every expected C helper, no failed helper,
+no changed input and no report error. Missing or partial coverage remains
+unobserved. These are GGC allocations only, excluding other GCC allocations
+and Scheme VM allocations.
+
+CompilerCost.lean renders the actual compiler declaration, option-receipt
+reader/writer, stale-output selection, TOTAL guard and coverage guard. Formal
+CI compares these regions byte for byte and renders CompilerPolicy.qnt from
+Lean. CompilerCost.qnt checks successful profile publication, invalidation
+and counter scope with ten independent fault controls. Native tests exercise
+actual supported SDK code generation, tail calls, values, one processor per
+VM, option-receipt rejection and native SARIF attribution.
+
+The full SARIF decoder, Scheme reader, SDK compiler, allocator implementation
+and filesystem traversal remain external implementation premises. Generated
+guards and bounded models do not prove those complete implementations.
+Scheme endpoint occupancy counters still do not establish cumulative VM
+allocation. The old negative-counter and historical-regression gates remain
+strict; native GCC evidence does not replace or waive them.
+
+* Baseline drift protocol
+
+A fixed SDK-generated C input is compiled after each complete ABBA control.
+Its content hash, CPU/wall time, faults, context switches and cumulative GGC
+allocation are retained outside application phase timings. This provides a
+matched compiler-work-rate diagnostic without dropping the first control,
+normalizing application times or warming an application prefix. A drift in
+that calibration does not identify a particular host or filesystem cause.
+Both source hashes must remain current. Instrumented work and uninstrumented
+wall-time experiments run independently, with foreign-build audits.
+
+* Validation status
+
+Local native/compiler and preparation tests, full Lean/Quint verification,
+exact-head CI and independent ABBA measurements are recorded separately in
+the PR acceptance section. Until the new controls complete, the local C
+micro-experiment is the only measured compiler-layout benefit. Reduced
+context counts and a green CI are not closure of cold expansion or real
+cumulative Scheme allocation.
+
+* Preserved previous acceptance
+
+The following previous d151 report is archived verbatim so PR body size does
+not force removal of failed or unresolved historical evidence.
+
+#+begin_example
+<!-- preparation-d151-acceptance:start -->
+### SDK dependency expansion: d1510025
+
+Current head: `d15100258b38ce2e84710c9a1930e6f38e74c476`.
+Head and PR merge trees match: `becd6832a2afdac0a6bca6aa3c4f0f7d9579dbaa`.
+
+The selector previously missed syntax-wrapped qualified origins from compiled
+`spec:` imports. It now reuses SDK syntax decoding and admitted interfaces for
+filename, qualified-symbol and syntax-origin requests, including readonly make
+checks. Actual compiler contexts, reload, missing/invalidated interfaces and
+unknown requests retain their original path. SDK make owns scheduling. No
+upstream, SDK, evaluator, Rust runtime, dependency or resource changes.
+
+[Main CI](https://github.com/tao3k/gerbil-ascent/actions/runs/39201474791):
+10/10 first-attempt success, full Scheme semantics, original performance gates,
+all oracles, Rust 131 tests, bindings 51/51 with 12 threads and zero retries,
+PyO3/wheel/Python and formal. Python workbench ran 185 tests with five existing
+platform/SDK skips; SDK-dependent fixtures passed locally on the released SDK.
+[macOS semantics](https://github.com/tao3k/gerbil-ascent/actions/runs/39201474908):
+173 modules/1401 Cases, zero compiled source Suites, three cores, 240s deadline.
+Preparation 225.225s, context 25.226s, runtime 105.049s; clean process audits.
+This unmatched observation is not a speedup estimate.
+
+Fresh independent [uninstrumented ABBA](https://github.com/tao3k/gerbil-ascent/actions/runs/39201510988),
+against `4df75849`; all four fresh prefixes and every sample retained:
+
+| Control | Build s | Cold context s | Cold preparation s | Warm context s | Warm preparation s |
+|---|---:|---:|---:|---:|---:|
+| A0 | 225.958 | 41.184 | 357.518 | 44.582 | 50.276 |
+| B1 | 179.824 | 31.779 | 289.249 | 20.942 | 24.698 |
+| B2 | 125.651 | 21.379 | 224.726 | 17.996 | 21.579 |
+| A3 | 116.327 | 19.396 | 217.164 | 35.680 | 39.948 |
+
+Aggregated cold context 30.290 -> 26.579s (-12.25%); cold preparation
+287.341 -> 256.987s (-10.56%); warm preparation 45.112 -> 23.138s (-48.71%).
+Build also changes -10.75% despite unchanged production/compiler inputs. The
+large baseline/reference drift prevents attributing the entire latency change
+to this fix. Warm gains do not close cold expansion. All commands exited zero,
+audits were clean, and all warm output-change sets were empty. Strict admission
+REJECTED the experiment because historical runs 39084120171/39088480174 remain
+unresolved; current phase comparisons introduced no regression. No ledger edits.
+
+Independent [work ABBA](https://github.com/tao3k/gerbil-ascent/actions/runs/39201517084):
+both A controls have cold/warm source contexts 862/563; both B controls have
+725/426. Exactly 137 bound program-source completions disappear; none remain
+in either candidate preparation phase, and no source completions are added.
+The 426 warm sources are 424 test-tree modules plus artifact/build-spec modules.
+Interface completions change 176/175 -> 313/312. GSC calls stay 589/0; production
+build counts stay identical. Inputs are current, all compiler/helpers succeeded,
+all import traces are present, and audits are clean. These are completed context
+identities, not per-macro work counts. Work admission REJECTED negative signed
+SDK occupancy estimates. Cumulative allocation is unobserved; no byte gain is
+claimed and no negative value is clamped.
+
+The real two-module fixture rejects the old string-only route even though its
+compiled result is still 17. Complete guarded Lean checks, exact generated
+Scheme/Quint source and correct plus 39 fault controls passed. This closes the
+observed request-form/source-fallback defect. Full SDK syntax/expander and
+collector/decoder source equivalence, cumulative allocator events, and a causal
+bound for remaining test/interface expansion remain OPEN. Limits, cancellation,
+provenance, 12-thread load, Rust Ascent dev-only alignment and concurrent primary
+edits are preserved. Earlier failed/superseded observations remain in the
+English development receipt and original workflow artifacts below.
+
+<!-- preparation-d151-acceptance:end -->
+#+end_example

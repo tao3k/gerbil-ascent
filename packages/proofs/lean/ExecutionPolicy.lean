@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std
 import PreparationWork
+import CompilerCost
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -391,6 +392,12 @@ def main (args : List String) : IO Unit := do
   | ["preparation-selection"] => IO.print Ascent.PreparationWork.selectionSchemeSource
   | ["preparation-interface-quint"] => IO.print Ascent.PreparationWork.interfacesQuintSource
   | ["preparation-interfaces"] => IO.print Ascent.PreparationWork.interfacesSchemeSource
+  | ["preparation-compiler"] => IO.print Ascent.CompilerCost.compilerSchemeSource
+  | ["preparation-options"] => IO.print Ascent.CompilerCost.optionsSchemeSource
+  | ["compiler-quint"] => IO.print Ascent.CompilerCost.quintSource
+  | ["preparation-stale"] => IO.print Ascent.CompilerCost.staleSchemeSource
+  | ["preparation-coverage"] => IO.print Ascent.CompilerCost.coveragePythonSource
+  | ["preparation-ggc"] => IO.print Ascent.CompilerCost.ggcPythonSource
   | ["preparation-import"] => IO.print Ascent.PreparationWork.inventoryImportSchemeSource
   | ["preparation-source"] => IO.print Ascent.PreparationWork.sourceSchemeSource
   | ["preparation-cargo-cache"] => IO.print Ascent.PreparationWork.cargoCacheSchemeSource

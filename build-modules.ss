@@ -1,7 +1,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Build-time module data; importing this list does not construct PackageSpec.
-(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
+
+;; BEGIN GENERATED PREPARATION COMPILER
+;; Existing SDK header policy; this limits C function size, not VM concurrency.
+(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
+;; END GENERATED PREPARATION COMPILER
 
 (def gerbil-ascent-library-modules
   '("core/ordered-pair-set"

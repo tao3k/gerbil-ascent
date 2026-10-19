@@ -5,7 +5,7 @@
 (import :std/encoding/json :std/encoding/hex :std/crypto/digest
         (only-in :std/io/file call-with-file-reader)
         :std/misc/ports)
-(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory!)
+(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 (def cache ".cache/ascent/compiled-library/")
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
@@ -19,6 +19,23 @@
 (def (artifact-read-json path)
   (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
     (call-with-input-file path read-json)))
+;; BEGIN GENERATED PREPARATION OPTIONS
+(def (artifact-compiler-options-current? file options)
+  (with-catch false
+    (lambda ()
+      (call-with-input-file file
+        (lambda (port)
+          (let (record (read port))
+            (and (eof-object? (read port))
+                 (equal? record (list "ascent-compiler-options/v1" (gerbil-home)
+                              (path-normalize (current-directory)) options)))))))))
+(def (artifact-record-compiler-options! file options)
+  (call-with-output-file [path: file truncate: #t]
+    (lambda (out)
+      (write (list "ascent-compiler-options/v1" (gerbil-home)
+                              (path-normalize (current-directory)) options) out)
+      (newline out))))
+;; END GENERATED PREPARATION OPTIONS
 (def load-json artifact-read-json)
 (def (save-json path value)
   (call-with-output-file [path: path truncate: #t]

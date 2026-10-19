@@ -642,3 +642,16 @@ reference and semantic workload sources. Only the compiler-cost policy and its
 observation/model/report inputs differ. Historical 39254141798 and its cold 5.91
 percent failure remain unchanged; new cold, warm, semantic and performance results
 must be assessed independently rather than inferred from this local experiment.
+
+* Linux qualification prerequisite correction
+
+Run 39266250226 rejected --no-deps in Ubuntu's distro-provided Just before any
+of the ten performance recipes executed. The local verified Just was 1.56.0;
+the CI prerequisite had not been matched to that version. This was an invocation
+configuration error, not an observed algorithm gate result. The Scheme matrix
+now installs the upstream-published Just 1.56.0 through an exact-commit-pinned
+setup action. All targets, failure accumulation, compiler options, semantic
+budgets and performance thresholds remain unchanged. The failed run is retained.
+The ongoing independent macOS ABBA and work comparisons already use a compatible
+Just and unchanged application/build inputs; this CI-only correction does not
+replace their measured program or turn any previous rejection into a pass.

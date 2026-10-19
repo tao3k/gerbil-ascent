@@ -39,7 +39,11 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev gdb
+          sudo apt-get install -y build-essential ca-certificates git jq ripgrep libssl-dev openssl pkg-config zlib1g-dev gdb
+      - name: Install the verified Just CLI used by complete performance qualification
+        uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3
+        with:
+          just-version: '1.56.0'
           just --version
       - name: Restore immutable release archive
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0

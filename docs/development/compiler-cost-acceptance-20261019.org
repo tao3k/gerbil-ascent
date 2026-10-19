@@ -701,3 +701,32 @@ plan scenarios executed. macOS ran 174 modules and 1403 cases in 101.890092
 seconds under three cores, twelve workers and the unchanged 240-second limit.
 Withdrawal requires a new current-head CI; those prior results are not relabeled
 as evidence for the restored compiler profile.
+
+* Composed session oracle construction cost
+
+After the compiler-pass withdrawal, b620cf8e passed complete Linux performance,
+Scheme semantics and formal checks. Its oracle-other lane retained a new failure:
+the integrated 256-case session fixture reached case 243 before its unchanged
+90-second child limit returned 124. This was a timeout, not a result-parity
+assertion. The full failure transcript and preceding successful controls remain.
+
+A fixed-input diagnostic separated declaration construction from row emission.
+The source fixture's 256 cases used about 10.06 seconds constructing fresh
+programs and 0.057 seconds emitting rows in that local diagnostic. This does not
+identify remote scheduling cost, but rules out row formatting as its local
+dominant cost. The adapter now uses the existing checked inert-construction
+receiver for its canonical, callback-free construction flow. It constructs a
+fresh Program for every case, validates the complete root before opening the
+session, and retains every append, replacement, held-snapshot and Rust-oracle
+assertion. Rule lambdas remain fresh values and run only after root admission.
+No production evaluator or general public constructor was changed.
+
+A full 256-case ordinary/root/root/ordinary Release fixture experiment retained
+all four invocations and 247,016 identical output bytes through END in every
+control. Wall seconds were 13.574972, 7.534030, 9.645390 and 14.637911; child CPU
+seconds were 10.604027, 6.625826, 6.561408 and 10.656783. Both paths rejected a
+non-integer edge input with exit 70. Existing candidate-flow and operator root
+admission tests retain malformed-root rejection, dynamic-extent restoration and
+immediate public validation checks. This bounded source-fixture result requires
+complete compiled oracle CI under twelve-thread load before acceptance; it is
+not a source-refinement proof of POO validation or an end-to-end cold-build gain.

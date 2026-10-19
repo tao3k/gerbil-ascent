@@ -5,6 +5,7 @@
 ;;; Batch differential adapter for one composed Ascent program. Each input
 ;;; case is (edge-rows blocked-nodes); every case gets a fresh POO program.
 (import (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-count gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -25,8 +26,14 @@
   (vector (max (vector-ref left 0) (vector-ref right 0))
           (max (vector-ref left 1) (vector-ref right 1))))
 
+;; This adapter constructs only canonical declarations, fixed built-in predicates
+;; and fresh lambda values. It invokes no supplied callback and exposes no child
+;; during construction. Validate the complete fresh root once before opening the
+;; session; public constructors outside this extent retain immediate validation.
 (def (case-program edges blocked)
-  (ascent
+  (gerbil-ascent-construct-inert-program
+   (lambda ()
+    (ascent
     (relation edge ((from integer?) (to integer?)) edges)
     (relation block ((node integer?)) (map list blocked))
     (relation root ((node integer?)) '((0) (1) (2) (3)))
@@ -47,7 +54,7 @@
     ((score to (expr (from to) (vector from to))) <-- (edge from to))
     ((score to (expr (value) value)) <--
      (score from value) (edge from to))
-    (bounds 32 64 96)))
+    (bounds 32 64 96)))))
 
 (def (evaluate-case edges blocked)
   (gerbil-ascent-evaluate-program (case-program edges blocked)))

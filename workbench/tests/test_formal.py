@@ -69,6 +69,14 @@ class FormalTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 validate_output(correct, code, output)
 
+    def test_integrated_checkpoint_extensions_retain_all_fault_controls(self):
+        for model, faults in [('ModelApplicability', 7), ('CheckpointProjection', 8), ('ProgressWitness', 11)]:
+            with self.subTest(model=model):
+                checks = obligations(configuration(model, {}))
+                self.assertEqual(len(checks), faults + 1)
+                self.assertEqual(checks[0].expected, 0)
+                self.assertTrue(all(item.expected == 12 for item in checks[1:]))
+
     def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
         checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}
         self.assertEqual(checks.pop("correct").expected, 0)
@@ -89,11 +97,11 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         original = {name: items for name, items in plans.items()
-                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost"}}
+                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)
         self.assertEqual(set(plans) - set(original),
-                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost"})
+                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness"})
         self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)

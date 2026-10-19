@@ -13,6 +13,13 @@ from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, g
 
 
 class CompilerCostTests(unittest.TestCase):
+    def test_unknown_cc_options_are_not_the_observed_sdk_default(self):
+        from ascent_workbench.preparation_work import cc_options_observed
+        for unknown in [None, False, 0, [], {}]:
+            self.assertFalse(cc_options_observed(unknown))
+        self.assertTrue(cc_options_observed(''))
+        self.assertTrue(cc_options_observed('-D___SINGLE_HOST_LIMIT=512'))
+
     def test_builder_phase_decoder_preserves_exponents_and_rejects_partial_values(self):
         import runpy
         decode = runpy.run_path('tools/ci/build-cost-control.py')['builder_phases']
@@ -428,7 +435,8 @@ class CompilerCostTests(unittest.TestCase):
             source.write_text('#include "gambit.h"\nint ascent_probe(int x) { return x + 1; }\n')
             observer = root / 'observer'
             env = dict(os.environ, **install(observer, sdk / 'bin/gxi', sdk / 'bin/gsc'))
-            env.update(GAMBITDIR_INCLUDE=str(sdk / 'include'), GAMBITDIR_LIB=str(sdk / 'lib'),
+            options = '-DASCENT_PROFILE_MARKER=17 -fno-tree-dominator-opts'
+            env.update(BUILD_DYN_CC_OPTIONS_PARAM=options, GAMBITDIR_INCLUDE=str(sdk / 'include'), GAMBITDIR_LIB=str(sdk / 'lib'),
                        BUILD_DYN_INPUT_FILENAMES_PARAM=source.name, BUILD_DYN_META_INFO_FILE_PARAM=source.name,
                        BUILD_DYN_OUTPUT_FILENAME_PARAM=str(root / 'owned.o1'))
             process = subprocess.run([str(observer / 'gambuild-C'), 'dyn'], env=env,
@@ -436,11 +444,15 @@ class CompilerCostTests(unittest.TestCase):
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
             (observer / 'gsc-records').rename(observer / 'prepare')
             phase = summarize(observer)['phases']['prepare']
+            self.assertTrue(phase['compiler_options_observed'])
+            self.assertEqual(phase['compiler_source_costs'][0]['requested_cc_options'], options)
             self.assertTrue(phase['gcc_cumulative_ggc_observed'])
             self.assertGreater(phase['gcc_cumulative_ggc_bytes'], 0)
             self.assertFalse(phase['cumulative_allocation_observed'])
             record_path, = (observer / 'prepare').glob('*.json')
             record = json.loads(record_path.read_text())
+            self.assertEqual(record['requested_cc_options'], options)
+            self.assertIn('-ftime-report', record['effective_cc_options'])
             report_path = observer / 'inputs' / record['gcc_report']['sha256']
             report_path.write_text('{}')
             with self.assertRaisesRegex(ValueError, 'damaged GCC allocation report'):

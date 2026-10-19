@@ -174,6 +174,12 @@ def compiler_stage(record):
     return 'dynamic-or-executable'
 
 
+# BEGIN GENERATED PREPARATION CC-OBSERVED
+def cc_options_observed(options):
+    return isinstance(options, str)
+# END GENERATED PREPARATION CC-OBSERVED
+
+
 def execute_gsc(arguments, helper=False):
     trace = Path(os.environ['ASCENT_GSC_WORK_DIRECTORY'])
     contents = trace.parent / 'inputs'
@@ -209,6 +215,8 @@ def execute_gsc(arguments, helper=False):
         runtime_options = ['-:~~=' + str(Path(command).parent.parent) +
                            ',~~bin=' + child_env['ASCENT_SDK_HELPER_DIRECTORY']]
         child_env['ASCENT_PARENT_GSC_OBSERVER'] = str(os.getpid())
+    requested_cc_options = (child_env.get(f'BUILD_{arguments[0].upper()}_CC_OPTIONS_PARAM', '')
+                            if helper else None)
     gcc_report = None
     gcc_source = None
     if helper:
@@ -244,6 +252,8 @@ def execute_gsc(arguments, helper=False):
               'pid': os.getpid(), 'child_pid': child.pid,
               'parent_gsc_observer': os.environ.get('ASCENT_PARENT_GSC_OBSERVER') if helper else None,
               'arguments': arguments, 'runtime_options': runtime_options, 'working_directory': working_directory,
+              'requested_cc_options': requested_cc_options,
+              'effective_cc_options': (child_env.get(f'BUILD_{arguments[0].upper()}_CC_OPTIONS_PARAM', '') if helper else None),
               'started_ns': started, 'finished_ns': time.monotonic_ns(), 'outputs': outputs,
               'inputs': inputs, 'compiler_input_paths': compiler_input_paths if helper else None,
               'exit_code': exit_code, 'inputs_current': current,
@@ -473,6 +483,7 @@ def summarize(directory):
                 'cpu_seconds': helper['user_seconds'] + helper['system_seconds'],
                 'gcc_cumulative_ggc_bytes': helper.get('gcc_ggc_bytes'),
                 'gcc_report': helper.get('gcc_report'),
+                'requested_cc_options': helper.get('requested_cc_options'),
             })
         source_complete = source_cost_coverage(len(source_costs), sum(bool(row['source_inputs']) for row in source_costs))
         imports = []
@@ -525,6 +536,8 @@ def summarize(directory):
         phases[phase] = {
             'qualification_root_work': root_work,
             'compiler_source_costs': source_costs,
+            'compiler_options_observed': bool(gcc_jobs) and all(cc_options_observed(row.get('requested_cc_options')) for row in gcc_jobs),
+            'compiler_options_scope': 'Observed SDK per-invocation extra C options; immutable SDK supplies base flags; not inferred from the parent or metadata',
             'source_cost_complete': source_complete,
             'source_attributed_jobs': sum(bool(row['source_inputs']) for row in source_costs),
             'generated_scheme_attributed_jobs': sum(r['generated_scheme_input'] is not None for r in source_costs),

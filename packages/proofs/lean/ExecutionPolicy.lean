@@ -397,6 +397,7 @@ def renderedSource (name : String) : IO String := do
   | "lookup-materialization" => pure Ascent.LookupCost.materializationSchemeSource
   | "lookup-admission" => pure Ascent.LookupCost.admissionSchemeSource
   | "lookup-study-profile" => pure Ascent.LookupCost.studyProfileSchemeSource
+  | "preparation-cc-observed" => pure Ascent.CompilerCost.ccObservedPythonSource
   | "preparation-compiler" => pure Ascent.CompilerCost.compilerSchemeSource
   | "preparation-options" => pure Ascent.CompilerCost.optionsSchemeSource
   | "compiler-quint" => pure Ascent.CompilerCost.quintSource

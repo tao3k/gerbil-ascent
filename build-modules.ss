@@ -5,7 +5,7 @@
 
 ;; BEGIN GENERATED PREPARATION COMPILER
 ;; Existing SDK header policy; this limits C function size, not VM concurrency.
-(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
+(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512 -fno-tree-dominator-opts"))
 ;; END GENERATED PREPARATION COMPILER
 
 (def gerbil-ascent-library-modules

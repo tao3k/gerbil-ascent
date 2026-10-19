@@ -136,7 +136,7 @@ theorem stack_release_can_decrease_counter (heap stack released : Nat) (positive
 
 def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
-  "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
+  "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512 -fno-tree-dominator-opts\"))\n"
 
 def ggcPythonSource : String :=
   "    if len(totals) != 1 or type(totals[0]) is not int or totals[0] < 0:\n" ++
@@ -304,6 +304,16 @@ theorem foreign_singleton_module_rejected (sources : List String) (name : String
 def modulesCurrentSchemeSource : String :=
   "(def (artifact-support-modules-current? sources modules)\n  (and (list? modules)\n       (andmap (lambda (module)\n                 (and (string? module) (hash-key? sources (string-append module \".ss\")))) modules)))\n"
 
+-- Missing observation is not evidence of an empty SDK option list.
+def ccOptionsObserved (options : Option String) : Bool := options.isSome
+
+theorem missing_options_not_default : ccOptionsObserved none = false := rfl
+
+theorem observed_empty_options_are_known : ccOptionsObserved (some "") = true := rfl
+
+def ccObservedPythonSource : String :=
+  "def cc_options_observed(options):\n    return isinstance(options, str)\n"
+
 end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.small_unit_unchanged
 #print axioms Ascent.CompilerCost.oversized_unit_split
@@ -353,3 +363,6 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.missing_source_cost_not_complete
 
 #print axioms Ascent.CompilerCost.foreign_singleton_module_rejected
+
+#print axioms Ascent.CompilerCost.missing_options_not_default
+#print axioms Ascent.CompilerCost.observed_empty_options_are_known

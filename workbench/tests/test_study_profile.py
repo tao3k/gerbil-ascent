@@ -41,8 +41,9 @@ class StudyProfileTests(unittest.TestCase):
                                         cwd=root, env=env, capture_output=True, text=True, timeout=60)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
-            invoke(f'''(import :std/make)
-(make '((gxc: "core/relation-view" "-cc-options" "-D___SINGLE_HOST_LIMIT=512")
+            invoke(f'''(import :std/make
+ (only-in {json.dumps(str(project / 'build-modules.ss'))} gerbil-ascent-compiler-options))
+(make (list (append '(gxc: "core/relation-view") gerbil-ascent-compiler-options)
         "t/performance/profile-reference") srcdir: {json.dumps(str(root))}
  libdir: {json.dumps(str(library))} optimize: #t parallelize: 3)
 ''')

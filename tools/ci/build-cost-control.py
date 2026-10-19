@@ -338,6 +338,7 @@ def main():
                'rust/ascent/tests/unit/clues/capacity.rs',
                'workbench/tests/test_compiler_cost.py',
                'workbench/tests/test_reference_cache.py',
+               'workbench/tests/test_study_profile.py',
                'workbench/tests/fixtures/allocation-stack.scm',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
@@ -485,6 +486,8 @@ def main():
             (observer / 'summary.json').write_text(json.dumps(work, indent=2) + '\n')
             receipt['controls'][-1]['work'] = work
             for phase, observations in work['phases'].items():
+                if observations['gcc_allocation_jobs'] and not observations['compiler_options_observed']:
+                    work_violations.append({'control': name, 'phase': phase, 'error': 'native C options were not observed'})
                 if not observations['observations_complete']:
                     work_violations.append({'control': name, 'phase': phase,
                                             'error': 'incomplete compiler/helper work, changed inputs, missing imports or negative allocation'})

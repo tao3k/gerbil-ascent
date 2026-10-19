@@ -615,3 +615,30 @@ invalid-net-counter-decoding controls. Identical net snapshots can come from
 histories with different heap-event allocations: real cumulative Scheme allocator
 work is not identifiable from this SDK counter alone. No clipping, unsigned
 reinterpretation or positive-increment accumulation is introduced.
+
+* Native compiler pass cost candidate
+
+The captured GCC report for the weighted UF reference attributes 0.689094 seconds
+and 49,824,208 GGC bytes to dominator optimization, within its 9.1544-second total.
+Those inclusive diagnostic fields are not added to TOTAL. Eight actual reference
+C inputs, with 351--497 labels and fixed SHA-256 identities, were compiled in
+per-input ABBA order. The 16 default-option compilations used 19.373614 CPU seconds;
+the 16 compilations with -fno-tree-dominator-opts used 18.042850 CPU seconds (6.87
+percent less). Every invocation succeeded. This is a bounded compiler experiment,
+not an end-to-end timing admission or a proof of GCC code generation.
+
+The candidate keeps the original SDK, -O1, host limit 512, TCO, overflow and alias
+policies. The explicit option is passed through the existing SDK compiler API to
+both production and reference code. Native helper records now retain the actual
+requested and instrumented extra C options alongside each source-cost node; SDK
+base options remain a separate immutable-toolchain premise. Missing historical
+option observations remain unknown, distinct from an observed empty option list.
+Quint/Lean and native compiler tests enforce that boundary. Original work-admission
+checks are retained; a missing option observation is an additional rejection.
+
+The compiler experiment baseline is dfca07f5, after the complete-key and matched
+reference repair. Baseline and candidate therefore contain the same production,
+reference and semantic workload sources. Only the compiler-cost policy and its
+observation/model/report inputs differ. Historical 39254141798 and its cold 5.91
+percent failure remain unchanged; new cold, warm, semantic and performance results
+must be assessed independently rather than inferred from this local experiment.

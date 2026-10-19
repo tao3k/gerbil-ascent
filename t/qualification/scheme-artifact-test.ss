@@ -94,8 +94,8 @@
             (call-with-input-file "build-modules.ss"
               (lambda (port)
                 (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options))
-                (check (read port) => '(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512")))
-                (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
+                (check (read port) => '(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512 -fno-tree-dominator-opts")))
+                (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512 -fno-tree-dominator-opts"))
                 (let (form (read port))
                   (check (read port) =>
                     '(def gerbil-ascent-build-input-modules

@@ -230,6 +230,80 @@ def restoreInputsYamlSource : String :=
 def cacheAdmissionYamlSource : String :=
   "          test \"$EXPECTED_SOURCE_BYTES\" = \"$RESTORED_SOURCE_BYTES\"\n          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'\n"
 
+
+def cOutputTarget (isC flat : Bool) : Bool := isC && !flat
+
+theorem other_codegen_target_not_c_output (flat : Bool) : cOutputTarget false flat = false := by
+  cases flat <;> rfl
+
+def nativeNodeCost (cost : Nat) (_inputEdges : List String) : Nat := cost
+
+theorem link_edges_do_not_multiply_allocation (cost : Nat) (a b : List String) :
+    nativeNodeCost cost a = nativeNodeCost cost b := rfl
+
+def outputTargetPythonSource : String :=
+  "def c_output_target(arguments):\n    return ('-target' not in arguments or arguments[arguments.index('-target') + 1] == 'C') and '-flat' not in arguments\n"
+
+def jobAllocationPythonSource : String :=
+  "def compiler_allocation_total(jobs):\n    return sum(job['gcc_ggc_bytes'] for job in jobs)\n"
+
+
+def auditOrder (workOnly same : Bool) : List Bool :=
+  if workOnly && same then [true] else [false, true, true, false]
+
+theorem latency_controls_stay_abba (same : Bool) :
+    auditOrder false same = [false, true, true, false] := by simp [auditOrder]
+
+theorem distinct_program_controls_stay_abba (work : Bool) :
+    auditOrder work false = [false, true, true, false] := by simp [auditOrder]
+
+def auditOrderPythonSource : String :=
+  "def control_order(work_only, baseline, candidate):\n    return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']\n"
+
+
+def projectionReuse (current sameRoots complete : Bool) : Bool := current && sameRoots && complete
+
+theorem changed_roots_do_not_skip_expansion (current complete : Bool) :
+    projectionReuse current false complete = false := by simp [projectionReuse]
+
+theorem incomplete_projection_not_reused (current same : Bool) :
+    projectionReuse current same false = false := by simp [projectionReuse]
+
+def projectionCacheSchemeSource : String :=
+  "(def (artifact-support-projection record selection required)\n  (and record (equal? selection (cadddr record))\n       (andmap (lambda (module) (member module (car (cddddr record)))) required)\n       (car (cddddr record))))\n"
+
+
+def orderedPublication (samePath disjoint unique : Bool) : Bool := samePath && disjoint && unique
+
+theorem copied_candidates_do_not_gain_time_authority (disjoint unique : Bool) :
+    orderedPublication false disjoint unique = false := by simp [orderedPublication]
+
+theorem overlapping_writers_not_selected (same unique : Bool) :
+    orderedPublication same false unique = false := by simp [orderedPublication]
+
+def outputPublicationPythonSource : String :=
+  "def ordered_publication_eligible(same_path, disjoint, unique_latest):\n    return same_path and disjoint and unique_latest\n"
+
+
+def sourceCostCoverage (expected attributed : Nat) : Bool := expected == attributed
+
+theorem missing_source_cost_not_complete (expected attributed : Nat) (different : expected ≠ attributed) :
+    sourceCostCoverage expected attributed = false := by simp [sourceCostCoverage, different]
+
+def sourceCoveragePythonSource : String :=
+  "def source_cost_coverage(expected, attributed):\n    return expected == attributed\n"
+
+
+def modulesCurrent (sources modules : List String) : Bool :=
+  modules.all (fun name => sources.contains (name ++ ".ss"))
+
+theorem foreign_singleton_module_rejected (sources : List String) (name : String)
+    (unknown : name ++ ".ss" ∉ sources) : modulesCurrent sources [name] = false := by
+  simp [modulesCurrent, unknown]
+
+def modulesCurrentSchemeSource : String :=
+  "(def (artifact-support-modules-current? sources modules)\n  (and (list? modules)\n       (andmap (lambda (module)\n                 (and (string? module) (hash-key? sources (string-append module \".ss\")))) modules)))\n"
+
 end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.small_unit_unchanged
 #print axioms Ascent.CompilerCost.oversized_unit_split
@@ -263,3 +337,19 @@ end Ascent.CompilerCost
 
 #print axioms Ascent.CompilerCost.stale_cache_cannot_admit_program
 #print axioms Ascent.CompilerCost.dirty_checkout_cannot_admit_program
+
+#print axioms Ascent.CompilerCost.other_codegen_target_not_c_output
+#print axioms Ascent.CompilerCost.link_edges_do_not_multiply_allocation
+
+#print axioms Ascent.CompilerCost.latency_controls_stay_abba
+#print axioms Ascent.CompilerCost.distinct_program_controls_stay_abba
+
+#print axioms Ascent.CompilerCost.changed_roots_do_not_skip_expansion
+#print axioms Ascent.CompilerCost.incomplete_projection_not_reused
+
+#print axioms Ascent.CompilerCost.copied_candidates_do_not_gain_time_authority
+#print axioms Ascent.CompilerCost.overlapping_writers_not_selected
+
+#print axioms Ascent.CompilerCost.missing_source_cost_not_complete
+
+#print axioms Ascent.CompilerCost.foreign_singleton_module_rejected

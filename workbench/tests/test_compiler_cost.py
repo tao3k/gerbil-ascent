@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input, generated_scheme_producer
+from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input, generated_source_producer, compiler_output_paths, compiler_allocation_total, source_cost_coverage
 
 
 class CompilerCostTests(unittest.TestCase):
@@ -58,16 +58,17 @@ class CompilerCostTests(unittest.TestCase):
         helper = {'parent_gsc_observer': '7', 'inputs': [copied],
                   'compiler_input_paths': [copied['path']]}
         producer = {'pid': 2, 'finished_ns': 90, 'exit_code': 0, 'inputs_current': True,
+                    'arguments': ['-c', '-o', output['path'], scheme['path']],
                     'inputs': [scheme], 'outputs': [output]}
-        found = generated_scheme_producer(helper, parent, [producer])
-        self.assertEqual(found['scheme_input'], scheme)
+        found = generated_source_producer(helper, parent, [producer])
+        self.assertEqual(found['source_inputs'][0], scheme)
         for changes in [dict(exit_code=1), dict(inputs_current=False), dict(finished_ns=101),
                         dict(outputs=[]), dict(outputs=[dict(output, sha256='other')]),
                         dict(outputs=[dict(output, bytes=30)]), dict(inputs=[scheme, scheme])]:
             with self.subTest(changes=changes):
-                self.assertIsNone(generated_scheme_producer(helper, parent, [dict(producer, **changes)]))
-        self.assertIsNone(generated_scheme_producer(helper, parent, [producer, dict(producer, pid=3)]))
-        self.assertIsNone(generated_scheme_producer(helper, dict(parent, inputs=[]), [producer]))
+                self.assertIsNone(generated_source_producer(helper, parent, [dict(producer, **changes)]))
+        self.assertIsNone(generated_source_producer(helper, parent, [producer, dict(producer, pid=3)]))
+        self.assertIsNone(generated_source_producer(helper, dict(parent, inputs=[]), [producer]))
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
     def test_support_interfaces_reject_source_resource_profile_and_receipt_changes(self):
@@ -84,13 +85,29 @@ class CompilerCostTests(unittest.TestCase):
 (def library {json.dumps(str(library))})
 (def sources (make-hash-table))
 (hash-put! sources "reference.ss" "source-digest")
-(artifact-record-support-interfaces! file sources library '("profile") '("reference"))
-(def (read-support) (artifact-support-interfaces file sources library '("profile")))
+(artifact-record-support-cache! file sources library '("profile") '(#t ("suite.ss") ()) '("reference"))
+(def (read-support)
+ (let (record (artifact-support-cache file sources library '("profile")))
+  (if record (artifact-support-interfaces record library) [])))
+(def current (artifact-support-cache file sources library '("profile")))
+(unless (equal? (artifact-support-projection current '(#t ("suite.ss") ()) '("reference")) '("reference"))
+ (error "complete matching projection not reused"))
+(when (artifact-support-projection current '(#t ("suite.ss") ()) '("missing-dependency"))
+ (error "incomplete cached projection reused"))
+(for-each (lambda (selection)
+ (when (artifact-support-projection current selection '("reference")) (error "different roots reused" selection)))
+ '( (#f ("suite.ss") ()) (#t ("other.ss") ()) (#t ("suite.ss") ("consumer.ss")) ))
 (unless (equal? (read-support) '("reference")) (error "current reference not reused"))
+(def original-modules (car (cddddr current)))
+(set-car! (cddddr current) (cons "../outside" original-modules))
+(call-with-output-file file (lambda (out) (write current out)))
+(unless (null? (read-support)) (error "foreign module catalog accepted"))
+(set-car! (cddddr current) original-modules)
+(call-with-output-file file (lambda (out) (write current out)))
 (hash-put! sources "reference.ss" "changed-source")
 (unless (null? (read-support)) (error "changed source reused"))
 (hash-put! sources "reference.ss" "source-digest")
-(unless (null? (artifact-support-interfaces file sources library '("other"))) (error "wrong compiler profile reused"))
+(when (artifact-support-cache file sources library '("other")) (error "wrong compiler profile reused"))
 (call-with-output-file {json.dumps(str(compiled))} (lambda (out) (display "changed output" out)))
 (unless (null? (read-support)) (error "changed compiled output reused"))
 (call-with-output-file file (lambda (out) (display "(malformed)" out)))
@@ -128,7 +145,7 @@ class CompilerCostTests(unittest.TestCase):
             self.assertEqual(phase['generated_scheme_unattributed_cpu_seconds'], 0)
             cost, = phase['compiler_source_costs']
             self.assertEqual(cost['generated_scheme_input']['path'], str(source))
-            self.assertEqual(cost['generated_scheme_producer']['generated_c_output']['path'], str(generated))
+            self.assertEqual(cost['generated_source_producer']['generated_c_output']['path'], str(generated))
             self.assertGreater(cost['gcc_cumulative_ggc_bytes'], 0)
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
@@ -150,6 +167,82 @@ class CompilerCostTests(unittest.TestCase):
             self.assertEqual(gcs, 0, process.stdout)
             self.assertLess(after, before, process.stdout)
             # This is an observed counterexample, never an allocation benefit.
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_linker_emitted_modules_and_multi_input_link_source_keep_one_cost_node(self):
+        from ascent_workbench.preparation_work import install, summarize
+        import os
+        sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            for name in ('ready', 'first', 'second'):
+                (root / f'{name}.scm').write_text(f'(define ({name}-value x) (+ x 1))\n')
+            observer = root / 'work'
+            env = dict(os.environ, **install(observer, sdk / 'bin/gxi', sdk / 'bin/gsc'))
+            commands = [['-c', '-o', 'ready.c', 'ready.scm'],
+                        ['-link', '-target', 'C', str(root / 'ready.c'), str(root / 'first.scm'), str(root / 'second.scm')]]
+            commands += [['-obj', '-o', str(root / f'{name}.o'), str(root / f'{name}.c')]
+                         for name in ('first', 'second', 'second_')]
+            commands += [['-link', '-target', 'C', str(root / 'ready.c'), str(root / 'first.scm'), str(root / 'second.scm')],
+                         ['-obj', '-o', str(root / 'first-again.o'), str(root / 'first.c')]]
+            for arguments in commands:
+                process = subprocess.run([str(observer / 'gsc'), *arguments], env=env, cwd=root,
+                                         capture_output=True, text=True, timeout=30)
+                self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            (observer / 'gsc-records').rename(observer / 'build')
+            phase = summarize(observer)['phases']['build']
+            self.assertEqual(phase['source_attributed_jobs'], 4)
+            self.assertTrue(phase['source_cost_complete'])
+            self.assertEqual(phase['generated_scheme_attributed_jobs'], 3)
+            link, = [row for row in phase['compiler_source_costs']
+                     if row['generated_source_producer']['operation'] == 'link-source']
+            self.assertEqual({Path(row['path']).name for row in link['source_inputs']},
+                             {'ready.c', 'first.c', 'second.c'})
+            self.assertEqual(len(phase['compiler_source_costs']), 4)
+            first = [row for row in phase['compiler_source_costs'] if Path(row['actual_c_inputs'][0]['path']).name == 'first.c']
+            self.assertEqual(len({row['generated_source_producer']['producer_pid'] for row in first}), 2)
+            self.assertTrue(phase['gcc_cumulative_ggc_observed'])
+            self.assertGreater(link['gcc_cumulative_ggc_bytes'], 0)
+
+    def test_output_roles_require_c_target_compiler_origin_and_disjoint_outputs(self):
+        scheme = {'path': '/compiler/input.scm'}
+        self.assertEqual(compiler_output_paths(['-c', '-o', 'output.c'], [scheme], '/compiler'),
+                         [Path('/compiler/output.c')])
+        self.assertEqual(compiler_output_paths(['-c', '-o', 'output.c'], [scheme]), [])
+        for arguments in [['-c', '-o', '/compiler/output.c', '-target', 'JavaScript'],
+                          ['-link', '-flat'], ['-link', '-o', '/compiler/input.c']]:
+            with self.subTest(arguments=arguments):
+                self.assertEqual(compiler_output_paths(arguments, [scheme]), [])
+        self.assertEqual(compiler_output_paths(['-link'], [scheme, {'path': '/compiler/input.c'}]), [])
+
+    def test_link_input_edges_do_not_multiply_native_job_allocation(self):
+        jobs = [{'gcc_ggc_bytes': 11, 'source_inputs': ['a.c', 'b.c', 'c.c']},
+                {'gcc_ggc_bytes': 7, 'source_inputs': []}]
+        self.assertEqual(compiler_allocation_total(jobs), 18)
+
+    def test_only_identical_program_work_audit_can_omit_comparison_controls(self):
+        import runpy
+        order = runpy.run_path('tools/ci/build-cost-control.py')['control_order']
+        self.assertEqual(order(True, 'same', 'same'), ['candidate'])
+        for work, a, b in [(False, 'same', 'same'), (False, 'a', 'b'), (True, 'a', 'b')]:
+            self.assertEqual(order(work, a, b), ['baseline', 'candidate', 'candidate', 'baseline'])
+
+    def test_overlapping_same_path_publishers_are_not_attributed(self):
+        source = {'path': '/build/module.scm', 'sha256': 'scheme', 'bytes': 1}
+        output = {'path': '/build/module.c', 'sha256': 'c', 'bytes': 2}
+        helper = {'parent_gsc_observer': '9', 'inputs': [output], 'compiler_input_paths': [output['path']]}
+        parent = {'pid': 9, 'started_ns': 100, 'inputs': [output]}
+        def producer(pid, start, end):
+            return {'pid': pid, 'started_ns': start, 'finished_ns': end, 'exit_code': 0, 'inputs_current': True,
+                    'arguments': ['-c', '-o', output['path'], source['path']], 'inputs': [source], 'outputs': [output]}
+        self.assertIsNone(generated_source_producer(helper, parent, [producer(1,10,30), producer(2,20,40)]))
+        result = generated_source_producer(helper, parent, [producer(1,10,30), producer(2,31,40)])
+        self.assertEqual(result['producer_pid'], 2)
+
+    def test_missing_source_cost_never_qualifies_complete_compiler_work(self):
+        self.assertTrue(source_cost_coverage(0, 0))
+        self.assertTrue(source_cost_coverage(360, 360))
+        self.assertFalse(source_cost_coverage(360, 340))
 
     def test_incomplete_or_changed_allocation_coverage_is_rejected(self):
         self.assertTrue(gcc_ggc_complete(3, 3, 0, 0, 0))

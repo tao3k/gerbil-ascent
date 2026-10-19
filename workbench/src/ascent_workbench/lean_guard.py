@@ -67,7 +67,9 @@ def main():
             parser.error("build accepts no additional arguments")
         command, seconds = ["lake", "-v", "build", "AscentProof", "AscentProofTests"], 180
     else:
-        if len(args.arguments) != (1 if args.mode == "file" else 2):
+        batch = (args.mode == "render" and len(args.arguments) > 2
+                 and args.arguments[:2] == ["ExecutionPolicy.lean", "batch"])
+        if not batch and len(args.arguments) != (1 if args.mode == "file" else 2):
             parser.error("expected a Lean source file and, for render, a language")
         source = args.arguments[0]
         if not source.endswith(".lean") or not (PROJECT / source).is_file():

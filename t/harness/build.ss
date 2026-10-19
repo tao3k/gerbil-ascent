@@ -17,7 +17,7 @@
                  asp-gerbil-scheme-native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
-        (only-in "artifact-admission.ss" artifact-support-interfaces artifact-record-support-interfaces! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+        (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
 ;; END GENERATED PREPARATION IMPORT
@@ -70,8 +70,10 @@
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
-         (support-file (path-expand "support-interfaces.sexp" test-cache))
+         (support-file (path-expand "support-graph.sexp" test-cache))
          (admitted-support [])
+         (admitted-projection #f)
+         (selection (list source-suites? tests source-consumers))
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
@@ -97,10 +99,13 @@
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
       (when production-current?
-        (let (installed (cached-support-modules))
-          (set! admitted-support
-            (filter (lambda (module) (member module installed))
-                    (artifact-support-interfaces support-file sources library gerbil-ascent-compiler-options)))))
+        (let ((installed (cached-support-modules))
+              (cached (artifact-support-cache support-file sources library gerbil-ascent-compiler-options)))
+          (when cached
+            (set! admitted-support
+              (filter (lambda (module) (member module installed))
+                      (artifact-support-interfaces cached library)))
+            (set! admitted-projection (artifact-support-projection cached selection modules)))))
       (displayln "BUILD-TEST-LIBRARY admitted-support-interfaces=" (length admitted-support))
       (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
       ;; Source-only consumers have no compiled interfaces. Do not traverse a
@@ -112,36 +117,43 @@
       (add-load-path! (current-directory))
       (displayln "BUILD-TEST-LIBRARY-PHASE projection-input-admission wall-seconds="
                  (build-elapsed phase))
-      (let (loading (current-jiffy))
-        ;; Only the content-admitted production catalog may use its installed
-        ;; interfaces. Source consumers/support roots and explicit reload keep
-        ;; Gerbil's source path. Actual compiler imports always bypass the hook.
-        (call-with-preparation-production-interfaces
-          production-current? library (append gerbil-ascent-library-modules admitted-support)
-          (lambda ()
-            (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
-        (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
-                   (build-elapsed loading)))
-      (let* ((projection-started (current-jiffy))
-             (closure
-              (if (pair? admitted-support)
-                ;; Interface contexts are registered by .ssi, not source path.
-                ;; The existing build API projects those native contexts too.
-                (call-with-preparation-production-interfaces
-                  production-current? library (append gerbil-ascent-library-modules admitted-support)
-                  (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))
-                (call-with-asp-gerbil-scheme-prepared-source-graph
-                 (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))))
-        (set! modules
-          (delete-duplicates/hash
-            (append modules
-              (map path-strip-extension
-                (filter (lambda (source)
-                          (and (not (member source tests))
-                               (preparation-retained-source? source source-suites? source-consumers))) closure)))
-            from-end?: #t))
-        (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
-                   (build-elapsed projection-started)))
+      (when admitted-projection
+        (let (reused (current-jiffy))
+          (set! modules admitted-projection)
+          (displayln "BUILD-TEST-LIBRARY projection-cache-hit=1")
+          (displayln "BUILD-TEST-LIBRARY-PHASE source-context-reuse wall-seconds="
+                     (build-elapsed reused))))
+      (unless admitted-projection
+        (let (loading (current-jiffy))
+          ;; Only the content-admitted production catalog may use its installed
+          ;; interfaces. Source consumers/support roots and explicit reload keep
+          ;; Gerbil's source path. Actual compiler imports always bypass the hook.
+          (call-with-preparation-production-interfaces
+            production-current? library (append gerbil-ascent-library-modules admitted-support)
+            (lambda ()
+              (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
+          (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
+                     (build-elapsed loading)))
+        (let* ((projection-started (current-jiffy))
+               (closure
+                (if (pair? admitted-support)
+                  ;; Interface contexts are registered by .ssi, not source path.
+                  ;; The existing build API projects those native contexts too.
+                  (call-with-preparation-production-interfaces
+                    production-current? library (append gerbil-ascent-library-modules admitted-support)
+                    (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))
+                  (call-with-asp-gerbil-scheme-prepared-source-graph
+                   (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))))
+          (set! modules
+            (delete-duplicates/hash
+              (append modules
+                (map path-strip-extension
+                  (filter (lambda (source)
+                            (and (not (member source tests))
+                                 (preparation-retained-source? source source-suites? source-consumers))) closure)))
+              from-end?: #t))
+          (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
+                     (build-elapsed projection-started))))
       (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
                  (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]
@@ -190,7 +202,7 @@
         (displayln "BUILD-TEST-LIBRARY-PHASE inventory-after wall-seconds=" (build-elapsed phase)))
       (artifact-directory! (path-directory options-file))
       (artifact-record-compiler-options! options-file gerbil-ascent-compiler-options)
-      (artifact-record-support-interfaces! support-file sources library gerbil-ascent-compiler-options modules)
+      (artifact-record-support-cache! support-file sources library gerbil-ascent-compiler-options selection modules)
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before

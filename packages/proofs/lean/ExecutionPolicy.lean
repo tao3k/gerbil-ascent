@@ -1,6 +1,7 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std
+import Lean.Data.Json
 import PreparationWork
 import CompilerCost
 
@@ -379,39 +380,57 @@ def ciSource : String :=
 
 end Ascent.ArchivePolicy
 
+def renderedSource (name : String) : IO String := do
+  match name with
+  | "archive-rust" => pure Ascent.ArchivePolicy.rustSource
+  | "archive-cache" => pure Ascent.ArchivePolicy.ciSource
+  | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
+  | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
+  | "rust" => pure Ascent.ExecutionPolicy.rustSource
+  | "quint" => pure Ascent.ExecutionPolicy.quintSource
+  | "preparation-python" => pure Ascent.PreparationPolicy.pythonSource
+  | "preparation-quint" => pure Ascent.PreparationPolicy.quintSource
+  | "preparation-selection" => pure Ascent.PreparationWork.selectionSchemeSource
+  | "preparation-interface-quint" => pure Ascent.PreparationWork.interfacesQuintSource
+  | "preparation-interfaces" => pure Ascent.PreparationWork.interfacesSchemeSource
+  | "preparation-compiler" => pure Ascent.CompilerCost.compilerSchemeSource
+  | "preparation-options" => pure Ascent.CompilerCost.optionsSchemeSource
+  | "compiler-quint" => pure Ascent.CompilerCost.quintSource
+  | "preparation-stale" => pure Ascent.CompilerCost.staleSchemeSource
+  | "preparation-coverage" => pure Ascent.CompilerCost.coveragePythonSource
+  | "preparation-ggc" => pure Ascent.CompilerCost.ggcPythonSource
+  | "preparation-restore-inputs" => pure Ascent.CompilerCost.restoreInputsYamlSource
+  | "preparation-cache-admission" => pure Ascent.CompilerCost.cacheAdmissionYamlSource
+  | "preparation-cache-inputs" => pure Ascent.CompilerCost.cacheInputsYamlSource
+  | "preparation-producer" => pure Ascent.CompilerCost.producerPythonSource
+  | "preparation-support-admission" => pure Ascent.CompilerCost.supportAdmissionSchemeSource
+  | "preparation-output-target" => pure Ascent.CompilerCost.outputTargetPythonSource
+  | "preparation-job-allocation" => pure Ascent.CompilerCost.jobAllocationPythonSource
+  | "preparation-audit-order" => pure Ascent.CompilerCost.auditOrderPythonSource
+  | "preparation-projection-cache" => pure Ascent.CompilerCost.projectionCacheSchemeSource
+  | "preparation-output-publication" => pure Ascent.CompilerCost.outputPublicationPythonSource
+  | "preparation-source-coverage" => pure Ascent.CompilerCost.sourceCoveragePythonSource
+  | "preparation-modules-current" => pure Ascent.CompilerCost.modulesCurrentSchemeSource
+  | "preparation-parent" => pure Ascent.CompilerCost.parentPythonSource
+  | "preparation-origin" => pure Ascent.CompilerCost.originPythonSource
+  | "preparation-inputs" => pure Ascent.CompilerCost.inputsPythonSource
+  | "preparation-import" => pure Ascent.PreparationWork.inventoryImportSchemeSource
+  | "preparation-source" => pure Ascent.PreparationWork.sourceSchemeSource
+  | "preparation-cargo-cache" => pure Ascent.PreparationWork.cargoCacheSchemeSource
+  | "preparation-roots" => pure Ascent.PreparationWork.rootsSchemeSource
+  | "preparation-support" => pure Ascent.PreparationWork.supportQuintSource
+  | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
+  | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
+  | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource
+  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")
+
+
 def main (args : List String) : IO Unit := do
   match args with
-  | ["archive-rust"] => IO.print Ascent.ArchivePolicy.rustSource
-  | ["archive-cache"] => IO.print Ascent.ArchivePolicy.ciSource
-  | ["archive-quint"] => IO.print Ascent.ArchivePolicy.quintSource
-  | ["scheme"] => IO.print Ascent.ExecutionPolicy.schemeSource
-  | ["rust"] => IO.print Ascent.ExecutionPolicy.rustSource
-  | ["quint"] => IO.print Ascent.ExecutionPolicy.quintSource
-  | ["preparation-python"] => IO.print Ascent.PreparationPolicy.pythonSource
-  | ["preparation-quint"] => IO.print Ascent.PreparationPolicy.quintSource
-  | ["preparation-selection"] => IO.print Ascent.PreparationWork.selectionSchemeSource
-  | ["preparation-interface-quint"] => IO.print Ascent.PreparationWork.interfacesQuintSource
-  | ["preparation-interfaces"] => IO.print Ascent.PreparationWork.interfacesSchemeSource
-  | ["preparation-compiler"] => IO.print Ascent.CompilerCost.compilerSchemeSource
-  | ["preparation-options"] => IO.print Ascent.CompilerCost.optionsSchemeSource
-  | ["compiler-quint"] => IO.print Ascent.CompilerCost.quintSource
-  | ["preparation-stale"] => IO.print Ascent.CompilerCost.staleSchemeSource
-  | ["preparation-coverage"] => IO.print Ascent.CompilerCost.coveragePythonSource
-  | ["preparation-ggc"] => IO.print Ascent.CompilerCost.ggcPythonSource
-  | ["preparation-restore-inputs"] => IO.print Ascent.CompilerCost.restoreInputsYamlSource
-  | ["preparation-cache-admission"] => IO.print Ascent.CompilerCost.cacheAdmissionYamlSource
-  | ["preparation-cache-inputs"] => IO.print Ascent.CompilerCost.cacheInputsYamlSource
-  | ["preparation-producer"] => IO.print Ascent.CompilerCost.producerPythonSource
-  | ["preparation-support-admission"] => IO.print Ascent.CompilerCost.supportAdmissionSchemeSource
-  | ["preparation-parent"] => IO.print Ascent.CompilerCost.parentPythonSource
-  | ["preparation-origin"] => IO.print Ascent.CompilerCost.originPythonSource
-  | ["preparation-inputs"] => IO.print Ascent.CompilerCost.inputsPythonSource
-  | ["preparation-import"] => IO.print Ascent.PreparationWork.inventoryImportSchemeSource
-  | ["preparation-source"] => IO.print Ascent.PreparationWork.sourceSchemeSource
-  | ["preparation-cargo-cache"] => IO.print Ascent.PreparationWork.cargoCacheSchemeSource
-  | ["preparation-roots"] => IO.print Ascent.PreparationWork.rootsSchemeSource
-  | ["preparation-support"] => IO.print Ascent.PreparationWork.supportQuintSource
-  | ["preparation-groups"] => IO.print Ascent.PreparationWork.groupsSchemeSource
-  | ["preparation-heap"] => IO.print Ascent.PreparationWork.heapRecipeSource
-  | ["preparation-runner"] => IO.print Ascent.PreparationWork.runnerRecipeSource
-  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")
+  | "batch" :: names =>
+      let rows ← names.mapM fun name => do
+        let source ← renderedSource name
+        pure (Lean.Json.arr #[Lean.Json.str name, Lean.Json.str source])
+      IO.println ((Lean.Json.arr rows.toArray).compress)
+  | [name] => IO.print (← renderedSource name)
+  | _ => throw (IO.userError "expected one source rendering or batch followed by source names")

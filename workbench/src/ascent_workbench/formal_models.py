@@ -766,6 +766,18 @@ CONFIGURATIONS['CompilerCost'] = {
     'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
 }
 FAULTS['CompilerCost'] = (
+    ('accept-foreign-module-catalog', 'PolicyExact', 12),
+    ('ignore-source-cost-gap', 'PolicyExact', 12),
+    ('choose-copy-by-time', 'PolicyExact', 12),
+    ('ignore-writer-overlap', 'PolicyExact', 12),
+    ('accept-tied-writers', 'PolicyExact', 12),
+    ('reuse-unadmitted-projection', 'PolicyExact', 12),
+    ('reuse-other-suite-roots', 'PolicyExact', 12),
+    ('drop-projection-dependency', 'PolicyExact', 12),
+    ('drop-latency-controls', 'PolicyExact', 12),
+    ('attribute-non-c-output', 'PolicyExact', 12),
+    ('infer-flat-linker-output', 'PolicyExact', 12),
+    ('multiply-link-cost-by-edges', 'PolicyExact', 12),
     ('execute-cached-source', 'PolicyExact', 12),
     ('skip-head-admission', 'PolicyExact', 12),
     ('promote-net-stack-counter', 'PolicyExact', 12),

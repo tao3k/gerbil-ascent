@@ -29,6 +29,39 @@ module CompilerCost {
     val admitted = (same or Mutation == "execute-cached-source") and (clean or Mutation == "skip-head-admission")
     admitted == (same and clean)
   }))
+  pure val OutputTargetPolicy = Set(false, true).forall(is_c => Set(false, true).forall(flat => {
+    val actual = (is_c or Mutation == "attribute-non-c-output") and (not(flat) or Mutation == "infer-flat-linker-output")
+    actual == (is_c and not(flat))
+  }))
+  pure val LinkCostPolicy = Set(1,2).forall(cost => Set(1,2,3).forall(edges => {
+    val actual = if (Mutation == "multiply-link-cost-by-edges") cost * edges else cost
+    actual == cost
+  }))
+  pure val AuditOrderPolicy = Set(false, true).forall(work => Set(false, true).forall(same => {
+    val single = (work or Mutation == "drop-latency-controls") and same
+    single == (work and same)
+  }))
+  pure val ProjectionPolicy = Set(false, true).forall(current => Set(false, true).forall(same => Set(false, true).forall(complete => {
+    val actual = (current or Mutation == "reuse-unadmitted-projection") and
+                 (same or Mutation == "reuse-other-suite-roots") and
+                 (complete or Mutation == "drop-projection-dependency")
+    actual == (current and same and complete)
+  })))
+  pure val PublicationPolicy = Set(false, true).forall(same => Set(false, true).forall(disjoint => Set(false, true).forall(unique => {
+    val actual = (same or Mutation == "choose-copy-by-time") and
+                 (disjoint or Mutation == "ignore-writer-overlap") and
+                 (unique or Mutation == "accept-tied-writers")
+    actual == (same and disjoint and unique)
+  })))
+  pure val SourceCoveragePolicy = Set(0,1,2).forall(expected => Set(0,1,2).forall(attributed => {
+    val actual = expected == attributed or Mutation == "ignore-source-cost-gap"
+    actual == (expected == attributed)
+  }))
+  pure val ModuleDomainPolicy = Set(Set(), Set(0), Set(1), Set(0,1)).forall(sources =>
+    Set(Set(), Set(0), Set(1), Set(0,1)).forall(modules => {
+      val actual = modules.subseteq(sources) or Mutation == "accept-foreign-module-catalog"
+      actual == modules.subseteq(sources)
+    }))
   pure val ParentPolicy = Set(false, true).forall(same => Set(0,1,2).forall(matches => {
     val actual = if (Mutation == "cross-parent-cost") matches == 1
       else if (Mutation == "ambiguous-parent-cost") same and matches > 0
@@ -70,7 +103,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

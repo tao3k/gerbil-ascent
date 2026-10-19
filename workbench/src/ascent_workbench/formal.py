@@ -199,7 +199,8 @@ class Runner:
             adapter = [sys.executable, str(ROOT / "workbench/src/ascent_workbench/lean_guard.py")]
             if argv[1:] == ["-v", "build", "AscentProof", "AscentProofTests"]:
                 argv = [*adapter, "build"]
-            elif len(argv) == 6 and argv[1:4] == ["env", "lean", "--run"]:
+            elif (argv[1:4] == ["env", "lean", "--run"] and
+                  (len(argv) == 6 or (len(argv) > 6 and argv[4:6] == ["ExecutionPolicy.lean", "batch"]))):
                 argv = [*adapter, "render", *argv[4:]]
             else:
                 raise ValueError("unsupported Lean invocation; use the source-owned Guard adapter")
@@ -325,6 +326,22 @@ class Runner:
         return results
 
 
+
+def renderings_from_batch(output: str, languages: list[str]) -> dict[str, str]:
+    """Keep every named source comparison; batching only avoids Lean restarts."""
+    try:
+        rows = json.loads(output)
+    except (json.JSONDecodeError, TypeError) as error:
+        raise RuntimeError('malformed Lean source rendering batch') from error
+    if (not isinstance(rows, list) or any(not isinstance(row, list) or len(row) != 2
+            or not all(isinstance(value, str) for value in row) for row in rows)):
+        raise RuntimeError('malformed Lean source rendering rows')
+    result = dict(rows)
+    if len(result) != len(rows) or set(result) != set(languages):
+        raise RuntimeError('missing, duplicate or extra Lean source rendering')
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("all", "quint"))
@@ -352,7 +369,7 @@ def main() -> int:
                     raise RuntimeError("Lean failed: " + output)
             # Compare generated executable definitions, not source digests or
             # captured test outputs. Runtime and Quint import these exact files.
-            for script, language, target in (
+            renderings = (
                 ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
                 ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
@@ -376,6 +393,13 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-cache-inputs", ".github/workflows/build-cost.yml"),
                 ("ExecutionPolicy.lean", "preparation-producer", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-support-admission", "t/harness/artifact-admission.ss"),
+                ("ExecutionPolicy.lean", "preparation-output-target", "workbench/src/ascent_workbench/preparation_work.py"),
+                ("ExecutionPolicy.lean", "preparation-job-allocation", "workbench/src/ascent_workbench/preparation_work.py"),
+                ("ExecutionPolicy.lean", "preparation-audit-order", "tools/ci/build-cost-control.py"),
+                ("ExecutionPolicy.lean", "preparation-projection-cache", "t/harness/artifact-admission.ss"),
+                ("ExecutionPolicy.lean", "preparation-output-publication", "workbench/src/ascent_workbench/preparation_work.py"),
+                ("ExecutionPolicy.lean", "preparation-source-coverage", "workbench/src/ascent_workbench/preparation_work.py"),
+                ("ExecutionPolicy.lean", "preparation-modules-current", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-parent", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-origin", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-inputs", "workbench/src/ascent_workbench/preparation_work.py"),
@@ -391,10 +415,21 @@ def main() -> int:
                 ("RenderCache.lean", "scheme", "core/index-publication.ss"),
                 ("RenderActor.lean", "scheme", "core/actor-envelope.ss"),
                 ("RenderScc.lean", "scheme", "core/scc-state.ss"),
-            ):
-                code, source = runner.run(
-                    ["lake", "env", "lean", "--run", script, language],
-                    Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
+            )
+            languages = [language for script, language, _ in renderings if script == "ExecutionPolicy.lean"]
+            code, batch_output = runner.run(
+                ["lake", "env", "lean", "--run", "ExecutionPolicy.lean", "batch", *languages],
+                "ExecutionPolicy-batch", ROOT / "packages/proofs/lean")
+            if code:
+                raise RuntimeError("Lean source rendering batch failed: " + batch_output)
+            batch = renderings_from_batch(batch_output, languages)
+            for script, language, target in renderings:
+                if script == "ExecutionPolicy.lean":
+                    code, source = 0, batch[language]
+                else:
+                    code, source = runner.run(
+                        ["lake", "env", "lean", "--run", script, language],
+                        Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
                 if language == "archive-cache":
                     begin = "      # BEGIN GENERATED ARCHIVE CACHE\n"
@@ -402,9 +437,9 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
+                elif language in {"preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()
-                    prefix = "#" if language in {"preparation-producer", "preparation-parent", "preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language in {"preparation-restore-inputs", "preparation-cache-admission", "preparation-cache-inputs", "preparation-cargo-cache"} else ";;"
+                    prefix = "#" if language in {"preparation-source-coverage", "preparation-output-publication", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-producer", "preparation-parent", "preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language in {"preparation-restore-inputs", "preparation-cache-admission", "preparation-cache-inputs", "preparation-cargo-cache"} else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',
                                   f'{prefix} END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

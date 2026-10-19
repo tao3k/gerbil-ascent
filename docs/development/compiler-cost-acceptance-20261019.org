@@ -421,3 +421,109 @@ The 131344fd macOS SDK unit stage failed because the integration subprocess had
 changed directory without carrying the project GERBIL_PATH; the native compiler
 counter checks had passed. The fixture now supplies the absolute package prefix.
 This is a downstream test invocation fix, not a compiler change or a gate waiver.
+
+* Completed same-program controls before complete projection reuse
+
+The full uninstrumented run 39240209789 compared 916326b1 with 131344fd.
+All production Scheme, runtime C and header identities matched. Every control
+used three build workers and the complete semantic-preparation inventory.
+
+| Phase                    | Baseline mean (s) | Candidate mean (s) | Change |
+|--------------------------+-------------------+--------------------+--------|
+| Production build         |        209.567706 |         205.717663 | -1.84% |
+| Full source preparation  |        378.679350 |         377.898969 | -0.21% |
+| Unchanged warm preparation |       43.848113 |          37.123744 | -15.34% |
+
+The original admission remains false because historical runs 39084120171 and
+39088480174 are unresolved. These averages do not resolve their causal source
+obligations. Baseline preparation itself moved from 420.774935 to 336.583765
+seconds within this group. The fixed compiler calibration kept the same C digest
+and 134,038,312 cumulative GGC bytes, while its wall time moved from 7.571684 to
+5.780120 seconds and major faults from 2077 to 305. No sample is dropped,
+normalized by calibration, or used to label every earlier regression as noise.
+
+The corresponding complete work run 39240214048 retained all four controls.
+Each build had 490 GSC invocations and 360 native C jobs; each cold preparation
+had 589 native C jobs; every warm preparation had zero compiler jobs. All native
+GGC reports were complete, with no failed compiler or changed input. The
+Scheme signed counters still invalidated ten phase observations. Native GGC
+allocation remains a narrower measured scope, never whole-Scheme allocation.
+
+* Final twenty linker output nodes
+
+Fresh work established 128 explicit Scheme-to-C output matches, leaving twenty
+build jobs. Each of the two GSC link invocations generates nine module C outputs
+from its Scheme inputs plus one link-source C output. The link-source node has
+many actual C predecessors; its native allocation is charged once per compiler
+job, regardless of the number of graph edges.
+
+The v4 observer captures those outputs, compiler working directories, and the
+end of output observation. Relative output paths are bound to compiler origin,
+not the summary process directory. Unsupported code-generation targets and flat
+link modes do not gain inferred C-output provenance. Repeated linker publication
+to the same C path is resolved only when the latest observed writer is unique
+and starts after every earlier matching writer has finished. Copied alternatives
+and overlapping/tied writers remain rejected. Native fixtures cover implicit
+code generation, multi-input link output, a second publication to the same path,
+and separate object compilations; the cost remains one node per native job.
+
+The source-cost completeness gate now also rejects any unassigned native job,
+independently of counter negativity. Historical v3 traces cannot acquire the
+missing output snapshots retroactively. The current whole-build v4 audit is a
+separate qualification obligation; none of these mechanisms proves the SDK
+code generator, original DSL macro expansion or all decoder semantics.
+
+* Avoid repeating complete Suite expansion during warm preparation
+
+The first interface-only reuse left 179 newly source-loaded contexts during
+warm preparation, rather than 426. Most remaining work was the 173 source
+Suites: preparation expanded their bodies to obtain a dependency catalog, then
+GxTest loaded them again to execute their Cases.
+
+The support graph receipt now binds the complete successful catalog to the
+exact source-Suite mode, ordered Suite roots and source-consumer roots. Reuse
+also requires the existing source/resource/profile admission and inclusion of
+every currently required module. A different selection, changed input/resource,
+or incomplete catalog returns to the existing native projection route. make
+still checks all selected modules. No Suite is compiled, removed, or executed
+from a saved result; GxTest still loads every source Suite and owns every Case.
+Only the duplicate preparation expansion is avoided. Actual cache lookup,
+resource hashing, make checking and receipt publication remain in elapsed cost.
+
+The macOS entry exercises both cold and repeated preparation, verifies the
+projection hit and unchanged compiled test outputs, then executes the complete
+source workload. A cache-check failure is reported after semantic execution;
+it cannot silently skip semantic verification. Unexpected compiled source
+Suites still fail the original source-route prerequisite.
+
+A source-cost audit with identical canonical baseline/candidate commit IDs now
+uses one complete instrumented control. It has no comparison or latency
+admission. Every latency run, and every work comparison between different
+commits, retains the original fixed four-control order. This avoids compiling
+the identical program four times merely to obtain one source provenance trace.
+
+Formal source rendering is batched within one checked Lean invocation rather
+than repeatedly typechecking ExecutionPolicy.lean for each output. Every named
+output still undergoes its original exact comparison; missing, duplicate or
+extra rows fail. Proof inventories, expected counterexamples, Guard budgets and
+all original performance/semantic limits are unchanged.
+
+* Additional local probe retained without qualification
+
+An extra full-project incremental replay first lacked dependency manifests.
+After copying metadata into the disposable prefix, its cloned compiled-dependency
+seed stopped producing compiler events and had no active child compiler. A
+native sample showed the compiler driver waiting in device_select. The owned
+diagnostic VM was stopped, and its native sample and failed logs were retained.
+This mixed cloned-prefix attempt supplies no full-project cache qualification
+or timing benefit. No upstream code was changed on the strength of this probe.
+
+* Local verification before v4 whole-project audit
+
+The full guarded formal run completed with 70 models, 84 positive obligations,
+485 expected counterexamples and 45 exact source renderings. Release-native
+compiler-cost checks passed 21 tests; observation controls passed 15 tests;
+reference/cache integration passed both tests; formal admission passed 10 tests.
+The complete source workload decoder was checked against the preceding macOS
+receipt: 173 modules and 1,401 Cases, with source carriers uncompiled. These local
+checks do not substitute for the new commit's whole-project CI or latency audit.

@@ -209,6 +209,13 @@ def source_semantic_workload(tree, log):
     return {'modules': modules, 'cases': cases}
 
 
+
+# BEGIN GENERATED PREPARATION AUDIT-ORDER
+def control_order(work_only, baseline, candidate):
+    return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']
+# END GENERATED PREPARATION AUDIT-ORDER
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline')
@@ -251,6 +258,21 @@ def main():
             # moving dependency work cannot be reported as end-to-end savings.
             measure(root, ['just', 'prepare-semantic-library'],
                     output / 'candidate-prepare-semantics.log', env)
+            before_warm = test_outputs(root)
+            cache_error = None
+            warm_log = output / 'candidate-prepare-warm-semantics.log'
+            try:
+                measure(root, ['just', 'prepare-semantic-library'], warm_log, env)
+                if 'BUILD-TEST-LIBRARY projection-cache-hit=1' not in warm_log.read_text():
+                    cache_error = 'matching complete Suite selection did not reuse its native projection'
+                if test_outputs(root) != before_warm:
+                    cache_error = 'matching warm preparation changed compiled test resources'
+            except RuntimeError as error:
+                cache_error = str(error)
+            (output / 'projection-cache-check.json').write_text(json.dumps(
+                {'error': cache_error, 'required': 'same roots, inputs, profile and resources; no Suite compilation'},
+                indent=2) + '\n')
+            # Preserve full semantic execution even when this cache check fails.
             suite_interfaces = [str(path.relative_to(root))
                                 for source in sorted((root / 't/qualification').glob('*-test.ss'))
                                 if (path := root / '.gerbil/lib/gerbil-ascent/t/qualification' /
@@ -261,11 +283,15 @@ def main():
                 raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
             measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
                     output / 'candidate-semantics.log', env, semantic_diagnostics=True)
+            workload = source_semantic_workload(root, output / 'candidate-semantics.log')
+            (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
         finally:
             batches = root / '.cache/ascent/test-modules'
             if batches.exists():
                 shutil.copytree(batches, output / 'semantic-batches')
         print('MACOS-THREE-WORKER-SEMANTICS-OK', flush=True)
+        if cache_error:
+            raise RuntimeError('projection cache verification failed after full semantics: ' + cache_error)
         return
     if not args.baseline or not args.candidate:
         parser.error('build comparisons require --baseline and --candidate')
@@ -308,6 +334,7 @@ def main():
                'workbench/src/ascent_workbench/preparation_admission.py',
                'workbench/src/ascent_workbench/preparation_work.py',
                'workbench/src/ascent_workbench/formal.py',
+               'workbench/src/ascent_workbench/lean_guard.py',
                'workbench/src/ascent_workbench/formal_models.py',
                'workbench/tests/test_formal.py',
                'workbench/tests/test_preparation_admission.py',
@@ -343,8 +370,10 @@ def main():
     receipt['compiler_reference_setup'] = {'wall_ns': time.monotonic_ns() - calibration_started,
                                            'source_sha256': digest(calibration), 'source_bytes': calibration.stat().st_size,
                                            'scope': 'SDK calibration setup outside application phase timings'}
-    # Fixed ABBA order: four fresh application prefixes; never select a fastest run.
-    for index, kind in enumerate(['baseline', 'candidate', 'candidate', 'baseline']):
+    # Comparisons keep all four controls. A one-program work audit has no ratio.
+    order = control_order(args.work_only, identities['baseline'], identities['candidate'])
+    receipt['control_protocol'] = 'single-source-cost-audit' if len(order) == 1 else 'ABBA'
+    for index, kind in enumerate(order):
         name = f'{index}-{kind}'
         tree = output / name
         tree.mkdir()

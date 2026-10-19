@@ -80,10 +80,19 @@ class FormalTests(unittest.TestCase):
     def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
         checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}
         self.assertEqual(checks.pop("correct").expected, 0)
-        self.assertEqual(set(checks), {"execute-cached-source", "skip-head-admission", "promote-net-stack-counter", "ignore-producer-order", "match-producer-name", "ambiguous-producer", "reuse-changed-reference", "reuse-damaged-interface", "cross-parent-cost", "ambiguous-parent-cost", "count-link-metadata", "ignore-compiler-origin", "accept-multiple-targets", "host-boundary", "ignore-compiler-failure", "ignore-compiler-input",
+        self.assertEqual(set(checks), {"accept-foreign-module-catalog", "ignore-source-cost-gap", "choose-copy-by-time", "ignore-writer-overlap", "accept-tied-writers", "reuse-unadmitted-projection", "reuse-other-suite-roots", "drop-projection-dependency", "drop-latency-controls", "attribute-non-c-output", "infer-flat-linker-output", "multiply-link-cost-by-edges", "execute-cached-source", "skip-head-admission", "promote-net-stack-counter", "ignore-producer-order", "match-producer-name", "ambiguous-producer", "reuse-changed-reference", "reuse-damaged-interface", "cross-parent-cost", "ambiguous-parent-cost", "count-link-metadata", "ignore-compiler-origin", "accept-multiple-targets", "host-boundary", "ignore-compiler-failure", "ignore-compiler-input",
                                     "publish-partial-ggc", "keep-unrequested-old-output", "clean-production",
                                     "promote-vm-counter", "sum-nested-passes", "record-failed-build", "reuse-old-options"})
         self.assertTrue(all(item.expected == 12 for item in checks.values()))
+
+    def test_batched_lean_renderings_cannot_drop_duplicate_or_add_sources(self):
+        from ascent_workbench.formal import renderings_from_batch
+        self.assertEqual(renderings_from_batch('[["a","source-a"],["b","source-b"]]', ['a','b']),
+                         {'a': 'source-a', 'b': 'source-b'})
+        for bad in ['[]', '[["a","x"]]', '[["a","x"],["a","y"]]',
+                    '[["a","x"],["b","y"],["c","extra"]]', '{}', '[["a",null]]', 'truncated']:
+            with self.subTest(output=bad), self.assertRaises(RuntimeError):
+                renderings_from_batch(bad, ['a','b'])
 
     def test_counterexample_must_match_property_and_exit(self):
         fault = next(o for o in obligations(configuration("EvidenceInteraction", {})) if o.name == "stale")

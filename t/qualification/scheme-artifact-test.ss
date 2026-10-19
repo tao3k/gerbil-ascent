@@ -4,7 +4,7 @@
 (import :std/test :std/encoding/json "../harness/artifact-admission"
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
         (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
         (only-in "../harness/library-spec.ss" preparation-retained-source? preparation-projection-roots)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-native-import-closure
@@ -93,7 +93,9 @@
       (let (declared
             (call-with-input-file "build-modules.ss"
               (lambda (port)
-                (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules))
+                (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options))
+                (check (read port) => '(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512")))
+                (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
                 (let (form (read port))
                   (check (read port) =>
                     '(def gerbil-ascent-build-input-modules
@@ -111,7 +113,7 @@
       (let (imports
             (call-with-input-file "t/harness/build.ss"
               (lambda (port) (read-line port) (read port))))
-        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules)
+        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
                             (cdr imports)) #t) => #t)
         (check (and (member '(only-in "../../build.ss" gerbil-ascent-library-modules)
                             (cdr imports)) #t) => #f)))

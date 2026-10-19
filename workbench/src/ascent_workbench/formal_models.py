@@ -619,6 +619,7 @@ CONFIGURATIONS['PreparationWork'] = {
 FAULTS['PreparationWork'] = (
     ('reuse-unadmitted-interface', 'InterfaceSelectionExact', 12),
     ('reuse-reloaded-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-compiling-interface', 'InterfaceSelectionExact', 12),
     ('reuse-consumer-interface', 'InterfaceSelectionExact', 12),
     ('reuse-missing-interface', 'InterfaceSelectionExact', 12),
     ('expand-admitted-interface', 'InterfaceSelectionExact', 12),

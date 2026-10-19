@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(import (only-in :gerbil/expander current-expander-module-import))
+(import (only-in :gerbil/expander current-expander-module-import current-expander-compiling?))
 (export call-with-preparation-production-interfaces test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
 ;; BEGIN GENERATED PREPARATION INTERFACES
 ;; Gerbil still owns path normalization, module caching and expansion.
@@ -20,7 +20,7 @@
     (parameterize
       ((current-expander-module-import
          (lambda (path reload?)
-           (let (entry (and (not reload?) (string? path)
+           (let (entry (and (not reload?) (not (current-expander-compiling?)) (string? path)
                            (assoc (path-normalize path) interfaces)))
              (original (if entry (cdr entry) path) reload?)))))
       (thunk))))

@@ -98,30 +98,32 @@ def rootsSchemeSource : String :=
 -- This dispatch is only active after the existing source/SDK receipt check.
 -- It changes an admitted producer's input path, not source-Suite execution.
 -- Native normalization/expansion and receipt decoding remain explicit premises.
-def interfaceSelected (admitted reload producer present : Bool) : Bool :=
-  admitted && !reload && producer && present
+def interfaceSelected (admitted reload compiling producer present : Bool) : Bool :=
+  admitted && !reload && !compiling && producer && present
 
-theorem invalidated_producer_uses_source (reload producer present : Bool) :
-    interfaceSelected false reload producer present = false := by simp [interfaceSelected]
-theorem reload_uses_source (admitted producer present : Bool) :
-    interfaceSelected admitted true producer present = false := by simp [interfaceSelected]
-theorem consumer_uses_source (admitted reload present : Bool) :
-    interfaceSelected admitted reload false present = false := by simp [interfaceSelected]
-theorem missing_interface_uses_source (admitted reload producer : Bool) :
-    interfaceSelected admitted reload producer false = false := by simp [interfaceSelected]
-theorem admitted_producer_uses_interface : interfaceSelected true false true true = true := rfl
+theorem invalidated_producer_uses_source (reload compiling producer present : Bool) :
+    interfaceSelected false reload compiling producer present = false := by simp [interfaceSelected]
+theorem reload_uses_source (admitted compiling producer present : Bool) :
+    interfaceSelected admitted true compiling producer present = false := by simp [interfaceSelected]
+theorem compiling_uses_source (admitted reload producer present : Bool) :
+    interfaceSelected admitted reload true producer present = false := by simp [interfaceSelected]
+theorem consumer_uses_source (admitted reload compiling present : Bool) :
+    interfaceSelected admitted reload compiling false present = false := by simp [interfaceSelected]
+theorem missing_interface_uses_source (admitted reload compiling producer : Bool) :
+    interfaceSelected admitted reload compiling producer false = false := by simp [interfaceSelected]
+theorem admitted_producer_uses_interface : interfaceSelected true false false true true = true := rfl
 
 -- Count actual source-body completions separately from interface completions.
 -- These event weights do not assert a latency or cumulative-allocation bound.
 def sourceCompletion (interface : Bool) : Nat := if interface then 0 else 1
 theorem admitted_source_completion_avoided :
-    sourceCompletion (interfaceSelected true false true true) = 0 := rfl
+    sourceCompletion (interfaceSelected true false false true true) = 0 := rfl
 
 def interfacesQuintSource : String :=
   "// Generated from PreparationWork.lean; formal CI checks exact source.\n" ++
   "module PreparationInterfaces {\n" ++
-  "  pure def interface_selected(admitted: bool, reload: bool, producer: bool, present: bool): bool =\n" ++
-  "    admitted and not(reload) and producer and present\n" ++
+  "  pure def interface_selected(admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool =\n" ++
+  "    admitted and not(reload) and not(compiling) and producer and present\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -140,7 +142,7 @@ def interfacesSchemeSource : String :=
   "    (parameterize\n" ++
   "      ((current-expander-module-import\n" ++
   "         (lambda (path reload?)\n" ++
-  "           (let (entry (and (not reload?) (string? path)\n" ++
+  "           (let (entry (and (not reload?) (not (current-expander-compiling?)) (string? path)\n" ++
   "                           (assoc (path-normalize path) interfaces)))\n" ++
   "             (original (if entry (cdr entry) path) reload?)))))\n" ++
   "      (thunk))))\n"
@@ -628,3 +630,5 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.missing_interface_uses_source
 #print axioms Ascent.PreparationWork.admitted_producer_uses_interface
 #print axioms Ascent.PreparationWork.admitted_source_completion_avoided
+
+#print axioms Ascent.PreparationWork.compiling_uses_source

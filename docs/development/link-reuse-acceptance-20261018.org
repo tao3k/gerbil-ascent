@@ -1558,3 +1558,39 @@ sampling, cutoff, timeout, worker count or resource limit changes. Runtime
 Scheme, observer, controller, production inputs and experiment code are
 identical to 4bdf2922, whose independent native experiments remain attributable
 to that exact revision rather than being relabeled as another SHA.
+
+* Keep dependency checks separate from actual compilation
+
+The first selector was scoped only to consumer loading. Source inspection of
+this exact SDK shows std/make calling import-module on each carrier in both
+module-id and build-coordinator. Restoring the hook before make can therefore
+move producer expansion into make rather than remove it. Its successful macOS
+receipt 39190450400 is retained: context loading 46.068162s, make 317.427017s,
+preparation 371.604331s, source runtime 148.346624s, 173 modules / 1401 Cases,
+253 support compilations and zero production rebuilds. These unmatched wall
+values are not a speedup or a causal regression estimate.
+
+The revised selector also scopes std/make's dependency checks. It uses the SDK's
+current-expander-compiling? capability, which compile-module binds before
+importing its actual input. When this capability is true the selector always
+passes the original source path; it cannot compile an interface as the program
+body. Source/support inputs remain original paths in every mode. Native make
+still owns all carriers, dependency ordering, currentness, workers and builds.
+No module registry alias is written by ASCENT. The parameter restores naturally
+on success or exception and is inherited by native Scheme build threads.
+
+The real compiler regression fixture first generates an interface, removes the
+compiled object, reads that interface in a child Scheme thread, then recompiles
+the program while the selector is active. It loads the newly compiled object
+through the SDK loader and checks the actual value 17 against a sentinel. This
+validates compiler body selection and thread inheritance, rather than checking
+method names or only the Boolean policy. Reload and missing-interface controls
+remain. The generated Lean/Quint policy adds compilation as its fifth Boolean
+input: all 32 combinations and six new mutation controls are retained.
+
+The earlier independent experiments bind 4bdf2922, not this expanded-scope
+implementation. Their observations remain historical and cannot qualify this
+revision's costs. Fresh matched controls are required for the revised runtime
+path. The 3G preparation heap, live-ratio=50, three-core/240-second semantics,
+12-thread bindings, cancellation, resource, provenance and original performance
+rules are unchanged. Cumulative allocator events remain unobserved.

@@ -322,3 +322,36 @@ class PreparationWorkTests(unittest.TestCase):
             self.assertEqual(missing.returncode, 0, missing.stdout + missing.stderr)
             self.assertEqual(missing.stdout.splitlines()[0],
                              '(' + ' '.join([json.dumps(str(source))] * 3) + ' #t)')
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_sdk_compiler_uses_source_after_readonly_interface_selection(self):
+        spec = Path('t/harness/library-spec.ss').resolve()
+        with tempfile.TemporaryDirectory(prefix='ascent-compiler-boundary-') as folder:
+            root = Path(folder).resolve()
+            source = root / 'producer.ss'
+            source.write_text('package: gerbil-ascent\n(export value)\n(def value 17)\n')
+            library = root / 'lib'
+            library.mkdir()
+            script = root / 'check.ss'
+            script.write_text(f'''(import :gerbil/expander :gerbil/compiler {json.dumps(str(spec))})
+(def source {json.dumps(str(source))})
+(def library {json.dumps(str(library))})
+(def options [output-dir: library invoke-gsc: #t optimize: #f])
+(compile-module source options)
+(delete-file (path-expand "gerbil-ascent/producer.o1" library))
+(##eval '(define gerbil-ascent/producer#value 'sentinel))
+(call-with-preparation-production-interfaces #t library '("producer")
+ (lambda ()
+  (let (thread (make-thread (lambda () (module-context-path (import-module source #f #f)))))
+   (thread-start! thread)
+   (write (thread-join! thread)) (newline))
+  (compile-module source options)))
+(add-load-path! library)
+(load-module "gerbil-ascent/producer")
+(write (##eval 'gerbil-ascent/producer#value)) (newline)
+''')
+            process = subprocess.run(['gxi', '-:max-heap=1G,debug=q', str(script)],
+                                     cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            self.assertEqual(process.stdout.splitlines(), [
+                json.dumps(str(library / 'gerbil-ascent/producer.ssi')), '17'])

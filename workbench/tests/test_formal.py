@@ -14,6 +14,7 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(faults, {
             "reuse-unadmitted-interface": "InterfaceSelectionExact",
             "reuse-reloaded-interface": "InterfaceSelectionExact",
+            "reuse-compiling-interface": "InterfaceSelectionExact",
             "reuse-consumer-interface": "InterfaceSelectionExact",
             "reuse-missing-interface": "InterfaceSelectionExact",
             "expand-admitted-interface": "InterfaceSelectionExact",

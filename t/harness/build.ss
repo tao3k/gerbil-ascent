@@ -67,6 +67,7 @@
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
+         (production-interfaces-admitted? #f)
          (production-before (map production-output-time gerbil-ascent-library-modules))
          (modules
           (delete-duplicates/hash
@@ -86,6 +87,7 @@
              (null? (artifact-invalidated-modules (current-directory) gerbil-ascent-build-input-modules)))
            (roots (preparation-projection-roots gerbil-ascent-library-modules
                     modules tests source-consumers production-current?)))
+      (set! production-interfaces-admitted? production-current?)
       (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
       ;; Source-only consumers have no compiled interfaces. Do not traverse a
       ;; whole interface graph only to reject it and expand the same roots.
@@ -99,7 +101,7 @@
       (let (loading (current-jiffy))
         ;; Only the content-admitted production catalog may use its installed
         ;; interfaces. Source consumers/support roots and explicit reload keep
-        ;; Gerbil's source path. The hook is restored before make executes.
+        ;; Gerbil's source path. Actual compiler imports always bypass the hook.
         (call-with-preparation-production-interfaces
           production-current? library gerbil-ascent-library-modules
           (lambda ()
@@ -143,9 +145,15 @@
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
-        (make all srcdir: (current-directory) libdir: library
-              build-deps: (path-expand "build-deps" test-cache)
-              optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+        ;; std/make imports carriers again to identify and check dependencies.
+        ;; Reuse admitted interfaces there too, but never as compiler inputs:
+        ;; Gerbil's driver binds current-expander-compiling? for actual builds.
+        (call-with-preparation-production-interfaces
+          production-interfaces-admitted? library gerbil-ascent-library-modules
+          (lambda ()
+            (make all srcdir: (current-directory) libdir: library
+                  build-deps: (path-expand "build-deps" test-cache)
+                  optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))))
         (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
       (let (phase (current-jiffy))
         (unless (artifact-matching-sources? sources (artifact-sources))

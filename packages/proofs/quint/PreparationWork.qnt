@@ -23,18 +23,19 @@ module PreparationWork {
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
   // A stateless selector has no protocol transition. Check its complete input
   // domain once; adding eight no-op choices at every state only repeats work.
-  pure def selected_interface(admitted: bool, reload: bool, producer: bool, present: bool): bool = {
-    val expected = interface_selected(admitted, reload, producer, present)
+  pure def selected_interface(admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool = {
+    val expected = interface_selected(admitted, reload, compiling, producer, present)
     if ((Mutation == "reuse-unadmitted-interface" and not(admitted)) or
         (Mutation == "reuse-reloaded-interface" and reload) or
+        (Mutation == "reuse-compiling-interface" and compiling) or
         (Mutation == "reuse-consumer-interface" and not(producer)) or
         (Mutation == "reuse-missing-interface" and not(present))) true
     else if (Mutation == "expand-admitted-interface" and expected) false else expected
   }
   pure def selection_conforms(admitted: bool): bool =
-    Set(false, true).forall(reload => Set(false, true).forall(producer =>
-      Set(false, true).forall(present => selected_interface(admitted, reload, producer, present) ==
-        interface_selected(admitted, reload, producer, present))))
+    Set(false, true).forall(reload => Set(false, true).forall(compiling => Set(false, true).forall(producer =>
+      Set(false, true).forall(present => selected_interface(admitted, reload, compiling, producer, present) ==
+        interface_selected(admitted, reload, compiling, producer, present)))))
   pure val AdmittedSelectionExact = selection_conforms(true)
   pure val UnadmittedSelectionExact = selection_conforms(false)
   val InterfaceSelectionExact = if (q.productionAdmitted) AdmittedSelectionExact else UnadmittedSelectionExact

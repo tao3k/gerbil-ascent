@@ -53,6 +53,7 @@ MODEL_ORDER = ('DeltaClosure','RayonPublication',
  'TrajectoryExploration',
  'TrajectoryEvidenceChain',
  'TrajectoryRuleEvolution',
+ 'ModelApplicability',
  'ClosedDslLowering',
  'ClosedEvidenceScope',
  'EvidenceConsumption',
@@ -104,6 +105,7 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
  'TrajectoryExploration': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
  'TrajectoryEvidenceChain': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
  'TrajectoryRuleEvolution': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
+ 'ModelApplicability': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
  'EvidenceCacheAdmission': {'constants': 'Mutation = "none"',
                             'invariants': 'ExactSource ExactBackend ExactPolicy FailureRevoked '
                                           'LiveAdmission'},
@@ -300,6 +302,13 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
                              ('select-action', 'NoActionSelection', 12),
                              ('ignore-rule-revision', 'ReviewedPublication', 12),
                              ('same-count-replacement', 'ReviewedPublication', 12)),
+ 'ModelApplicability': (('pass-shortcut', 'ExactScope', 12),
+                        ('ignore-proposal', 'ExactScope', 12),
+                        ('ignore-model', 'ExactScope', 12),
+                        ('ignore-assumptions', 'ExactScope', 12),
+                        ('missing-dimension', 'MissingVisible', 12),
+                        ('force-next', 'OpenExploration', 12),
+                        ('ignore-provenance', 'ExactScope', 12)),
  'EvidenceCacheAdmission': (('source', 'ExactSource', 12),
                             ('backend', 'ExactBackend', 12),
                             ('policy', 'ExactPolicy', 12),
@@ -696,6 +705,41 @@ FAULTS['EvidenceCheckpoint'] = (
     ('guess-exit', 'AvailableAndSettled', 12),
     ('recovery-authorizes', 'NoAuthority', 12),
     ('force-choice', 'OpenChoice', 12),
+)
+
+# Projection must keep partial component evidence distinct from a closed goal.
+MODEL_ORDER += ('CheckpointProjection',)
+CONFIGURATIONS['CheckpointProjection'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['CheckpointProjection'] = (
+    ('promote-component', 'GoalRequiresOwnReceipt', 12),
+    ('display-completes', 'GoalRequiresOwnReceipt', 12),
+    ('erase-history', 'PreserveLedger', 12),
+    ('cache-erases-evidence', 'ExactSupport', 12),
+    ('ignore-closure', 'ExactSupport', 12),
+    ('hide-open', 'ExactOpen', 12),
+    ('force-choice', 'OpenChoice', 12),
+    ('hide-provenance-gap', 'ProvenanceGapVisible', 12),
+)
+
+# Declarative read resumption is not a stored answer or a prescribed path.
+MODEL_ORDER += ('ProgressWitness',)
+CONFIGURATIONS['ProgressWitness'] = {
+    'constants': 'Mutation = "none"', 'invariants': 'Safety',
+}
+FAULTS['ProgressWitness'] = (
+    ('wrong-actor', 'OnlyGroundedCompletion', 12),
+    ('stale-epoch', 'OnlyGroundedCompletion', 12),
+    ('heartbeat', 'OnlyGroundedCompletion', 12),
+    ('unattested', 'OnlyGroundedCompletion', 12),
+    ('changed-source', 'OnlyGroundedCompletion', 12),
+    ('conflicting-id', 'OnlyGroundedCompletion', 12),
+    ('cursor-missing', 'OnlyGroundedCompletion', 12),
+    ('cursor-conflicting', 'OnlyGroundedCompletion', 12),
+    ('active-conflicting', 'OnlyGroundedCompletion', 12),
+    ('duplicate', 'OnlyGroundedCompletion', 12),
+    ('resume-renews', 'NoInventedTime', 12),
 )
 
 # Declarative read resumption is not a stored answer or a prescribed path.

@@ -2,27 +2,33 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(import (only-in :gerbil/expander current-expander-module-import)
+(import (only-in :gerbil/expander current-expander-module-import core-library-module-path? stx-e)
         (only-in :gerbil/compiler/base current-compile-context))
 (export call-with-preparation-production-interfaces test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
 ;; BEGIN GENERATED PREPARATION INTERFACES
-;; Gerbil still owns path normalization, module caching and expansion.
+;; Gerbil still owns syntax decoding, path normalization, caching and expansion.
 (def (call-with-preparation-production-interfaces admitted? library production thunk)
   (let ((original (current-expander-module-import))
         (interfaces
           (if admitted?
-            (filter-map
+            (apply append (map
               (lambda (module)
                 (let (target (path-expand (string-append "gerbil-ascent/" module ".ssi") library))
-                  (and (file-exists? target)
-                       (cons (path-normalize (string-append module ".ss")) target))))
-              production)
+                  (if (file-exists? target)
+                    (list (cons (path-normalize (string-append module ".ss")) target)
+                          (cons (string->symbol (string-append ":gerbil-ascent/" module)) target))
+                    [])))
+              production))
             [])))
     (parameterize
       ((current-expander-module-import
          (lambda (path reload?)
-           (let (entry (and (not reload?) (not (current-compile-context)) (string? path)
-                           (assoc (path-normalize path) interfaces)))
+           (let (entry
+                  (and (not reload?) (not (current-compile-context))
+                       (let (key (cond ((string? path) (path-normalize path))
+                                        ((core-library-module-path? path) (stx-e path))
+                                        (else #f)))
+                         (and key (assoc key interfaces)))))
              (original (if entry (cdr entry) path) reload?)))))
       (thunk))))
 ;; END GENERATED PREPARATION INTERFACES

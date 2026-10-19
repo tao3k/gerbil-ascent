@@ -623,6 +623,9 @@ FAULTS['PreparationWork'] = (
     ('reuse-consumer-interface', 'InterfaceSelectionExact', 12),
     ('reuse-missing-interface', 'InterfaceSelectionExact', 12),
     ('expand-admitted-interface', 'InterfaceSelectionExact', 12),
+    ('drop-qualified-interface', 'InterfaceSelectionExact', 12),
+    ('drop-syntax-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-unknown-interface', 'InterfaceSelectionExact', 12),
 
     ('raise-heap-for-gc', 'HeapLimitUnchanged', 12),
     ('skip-heap-cap', 'HeapSelectionBounded', 12),

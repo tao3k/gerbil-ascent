@@ -36,8 +36,20 @@ module PreparationWork {
     Set(false, true).forall(reload => Set(false, true).forall(compiling => Set(false, true).forall(producer =>
       Set(false, true).forall(present => selected_interface(admitted, reload, compiling, producer, present) ==
         interface_selected(admitted, reload, compiling, producer, present)))))
-  pure val AdmittedSelectionExact = selection_conforms(true)
-  pure val UnadmittedSelectionExact = selection_conforms(false)
+  // 0: filename, 1: qualified symbol, 2: SDK syntax-wrapped origin,
+  // 3: unsupported form. No new state transitions or stuttering choices.
+  pure def request_selection_conforms(admitted: bool): bool =
+    Set(0, 1, 2, 3).forall(request =>
+      Set(false, true).forall(reload => Set(false, true).forall(compiling =>
+        Set(false, true).forall(producer => Set(false, true).forall(present => {
+          val expected = request_interface_selected(request, admitted, reload, compiling, producer, present)
+          val actual = if (Mutation == "drop-qualified-interface" and request == 1) false
+            else if (Mutation == "drop-syntax-interface" and request == 2) false
+            else if (Mutation == "reuse-unknown-interface" and request == 3) true else expected
+          actual == expected
+        })))))
+  pure val AdmittedSelectionExact = selection_conforms(true) and request_selection_conforms(true)
+  pure val UnadmittedSelectionExact = selection_conforms(false) and request_selection_conforms(false)
   val InterfaceSelectionExact = if (q.productionAdmitted) AdmittedSelectionExact else UnadmittedSelectionExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}

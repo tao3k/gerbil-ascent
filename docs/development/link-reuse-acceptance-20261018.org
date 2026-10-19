@@ -1621,3 +1621,44 @@ negative control is retained. The corrected fixture and all 14 work-observer
 tests pass on the existing released SDK. This checks the concrete native call
 path that the Boolean model alone could not distinguish; it does not establish
 full native compiler/decoder source equivalence or cumulative allocation.
+
+* Native compiled-interface dependency requests
+
+The completed 20ca9be3 ABBA experiments retain all four independent controls
+against 4df75849. Cold/warm source completions were 815/516 versus 862/563;
+compiler jobs stayed 589/0. Cold context time summed to 65.278085s versus
+71.335481s (-8.49%), but complete cold preparation only changed from
+589.219499s to 587.335356s (-0.32%). Build time regressed 7.16%. The
+uninstrumented latency experiment 39196369920 was rejected, including the
+unchanged historical failure ledger. Work experiment 39196373467 was also
+rejected: the SDK allocation estimates cannot provide cumulative allocator
+events. No byte reduction or end-to-end improvement is admitted. The separate
+macOS semantics receipt 39196292780 retains its slow 350.226764s preparation
+and 40.846909s context phase; its 118.873312s runtime passed the original gate.
+
+The remaining 90 production source contexts are concrete, distinct identities,
+not additional compilations. This SDK's compiled spec: imports call
+core-import-nested-module, which forwards a syntax-wrapped qualified origin to
+import-module. A filename-only selector misses these requests and the SDK
+then resolves them against the ordinary source-first load path. The revised
+selector indexes each admitted interface by both normalized source filename
+and qualified interned symbol. The existing SDK core-library-module-path? and
+stx-e decode native bare and syntax-wrapped library requests. Unknown forms,
+explicit reloads, nonadmitted producers, missing interfaces and actual compiler
+contexts retain their original request. Global load-path order and module
+registry remain untouched.
+
+The real native regression test now compiles two modules, with an only-in
+import producing a compiled spec: dependency. Fresh-VM readonly make uses
+three workers and must not register the dependency source, then actual
+compile-module emits an executable object whose value is 17. Disabling only
+qualified-origin selection makes the same test fail its source-registry
+assertion while still returning 17: correct values alone would miss the
+expansion waste. Guarded Lean checks source/symbol/syntax request policy and
+renders the exact deployed helper and Quint predicate; Quint adds three
+negative controls for missing qualified/syntax routes and accepting unknown
+forms. SDK syntax decoding, full macro expansion and allocator internals remain
+explicit unproved premises. This change needs new exact-revision matched
+receipts; the earlier 47-context reduction cannot qualify the revised selector.
+The immutable released SDK, three cores, 240-second source runtime deadline,
+12 binding-test threads and every semantic and performance limit are unchanged.

@@ -113,6 +113,33 @@ theorem missing_interface_uses_source (admitted reload compiling producer : Bool
     interfaceSelected admitted reload compiling producer false = false := by simp [interfaceSelected]
 theorem admitted_producer_uses_interface : interfaceSelected true false false true true = true := rfl
 
+-- The SDK decodes qualified syntax to the same interned symbol as a bare
+-- library identifier. Unknown forms are forwarded untouched; normalization
+-- and syntax identity are SDK premises, not a proof of its whole expander.
+inductive InterfaceRequest where
+  | source | library | syntaxLibrary | other
+  deriving DecidableEq
+
+def requestSupported : InterfaceRequest → Bool
+  | .source | .library | .syntaxLibrary => true
+  | .other => false
+
+def requestInterfaceSelected (request : InterfaceRequest)
+    (admitted reload compiling producer present : Bool) : Bool :=
+  requestSupported request && interfaceSelected admitted reload compiling producer present
+
+theorem qualified_request_same_as_source (admitted reload compiling producer present : Bool) :
+    requestInterfaceSelected .library admitted reload compiling producer present =
+      requestInterfaceSelected .source admitted reload compiling producer present := rfl
+
+theorem syntax_request_same_as_source (admitted reload compiling producer present : Bool) :
+    requestInterfaceSelected .syntaxLibrary admitted reload compiling producer present =
+      requestInterfaceSelected .source admitted reload compiling producer present := rfl
+
+theorem unknown_request_forwarded (admitted reload compiling producer present : Bool) :
+    requestInterfaceSelected .other admitted reload compiling producer present = false := by
+  simp [requestInterfaceSelected, requestSupported]
+
 -- Count actual source-body completions separately from interface completions.
 -- These event weights do not assert a latency or cumulative-allocation bound.
 def sourceCompletion (interface : Bool) : Nat := if interface then 0 else 1
@@ -124,26 +151,34 @@ def interfacesQuintSource : String :=
   "module PreparationInterfaces {\n" ++
   "  pure def interface_selected(admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool =\n" ++
   "    admitted and not(reload) and not(compiling) and producer and present\n" ++
+  "  pure def request_interface_selected(request: int, admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool =\n" ++
+  "    Set(0, 1, 2).contains(request) and interface_selected(admitted, reload, compiling, producer, present)\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
-  ";; Gerbil still owns path normalization, module caching and expansion.\n" ++
+  ";; Gerbil still owns syntax decoding, path normalization, caching and expansion.\n" ++
   "(def (call-with-preparation-production-interfaces admitted? library production thunk)\n" ++
   "  (let ((original (current-expander-module-import))\n" ++
   "        (interfaces\n" ++
   "          (if admitted?\n" ++
-  "            (filter-map\n" ++
+  "            (apply append (map\n" ++
   "              (lambda (module)\n" ++
   "                (let (target (path-expand (string-append \"gerbil-ascent/\" module \".ssi\") library))\n" ++
-  "                  (and (file-exists? target)\n" ++
-  "                       (cons (path-normalize (string-append module \".ss\")) target))))\n" ++
-  "              production)\n" ++
+  "                  (if (file-exists? target)\n" ++
+  "                    (list (cons (path-normalize (string-append module \".ss\")) target)\n" ++
+  "                          (cons (string->symbol (string-append \":gerbil-ascent/\" module)) target))\n" ++
+  "                    [])))\n" ++
+  "              production))\n" ++
   "            [])))\n" ++
   "    (parameterize\n" ++
   "      ((current-expander-module-import\n" ++
   "         (lambda (path reload?)\n" ++
-  "           (let (entry (and (not reload?) (not (current-compile-context)) (string? path)\n" ++
-  "                           (assoc (path-normalize path) interfaces)))\n" ++
+  "           (let (entry\n" ++
+  "                  (and (not reload?) (not (current-compile-context))\n" ++
+  "                       (let (key (cond ((string? path) (path-normalize path))\n" ++
+  "                                        ((core-library-module-path? path) (stx-e path))\n" ++
+  "                                        (else #f)))\n" ++
+  "                         (and key (assoc key interfaces)))))\n" ++
   "             (original (if entry (cdr entry) path) reload?)))))\n" ++
   "      (thunk))))\n"
 
@@ -632,3 +667,6 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.admitted_source_completion_avoided
 
 #print axioms Ascent.PreparationWork.compiling_uses_source
+#print axioms Ascent.PreparationWork.qualified_request_same_as_source
+#print axioms Ascent.PreparationWork.syntax_request_same_as_source
+#print axioms Ascent.PreparationWork.unknown_request_forwarded

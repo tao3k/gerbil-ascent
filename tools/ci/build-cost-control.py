@@ -272,7 +272,7 @@ def main():
     identities = {name: subprocess.check_output(['git', 'rev-parse', rev + '^{commit}'], text=True).strip()
                   for name, rev in [('baseline', args.baseline), ('candidate', args.candidate)]}
     changed = subprocess.check_output(['git', 'diff', '--name-only', *identities.values()], text=True).splitlines()
-    allowed = {'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
+    allowed = {'core/relation-view.ss', 'build.ss', 'build-modules.ss', 'justfile', 'interface/build-identity.ss', 'bindings/build-entry.ss', 'bindings/artifact.ss', 't/qualification/scheme-artifact-test.ss',
                'tools/ci/build-cost-control.py', '.github/workflows/build-cost.yml', '.github/workflows/ci.yml',
                't/harness/library-spec.ss', 't/harness/artifact-admission.ss',
                'docs/development/compiler-cost-acceptance-20261019.org',
@@ -415,6 +415,7 @@ def main():
                      for suffix in ['.ssi', '.scm', '.o1']
                      for paths in [list(support.rglob('*' + suffix))]}
         receipt['controls'].append({'name': name, 'kind': kind, 'phases': phases,
+                                    'relation_view_source_sha256': digest(tree / 'core/relation-view.ss'),
                                     'test_artifacts': inventory, 'warm_changed_outputs': changed_outputs})
         if args.semantic_runtime:
             env['ASCENT_GXTEST_TIMEOUT'] = '240s'

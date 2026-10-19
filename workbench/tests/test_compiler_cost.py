@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete
+from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input
 
 
 class CompilerCostTests(unittest.TestCase):
@@ -37,6 +37,18 @@ class CompilerCostTests(unittest.TestCase):
             compiled.touch()
             with self.assertRaises(ValueError):
                 check(root, log)
+
+    def test_generated_scheme_cost_requires_unique_containing_input(self):
+        scheme = {'path': '/build/module~0.scm', 'sha256': 'source', 'bytes': 17}
+        parent = {'pid': 7, 'inputs': [scheme]}
+        helper = {'parent_gsc_observer': '7', 'inputs': [{'path': '/build/module~0.c'}],
+                  'compiler_input_paths': ['/build/module~0.c']}
+        self.assertEqual(generated_scheme_input(helper, parent), scheme)
+        for changed in [dict(parent, pid=8), dict(parent, inputs=[]),
+                        dict(parent, inputs=[scheme, scheme]),
+                        dict(parent, inputs=[dict(scheme, path='/other/module~0.scm')])]:
+            self.assertIsNone(generated_scheme_input(helper, changed))
+        self.assertIsNone(generated_scheme_input(dict(helper, compiler_input_paths=[]), parent))
 
     def test_incomplete_or_changed_allocation_coverage_is_rejected(self):
         self.assertTrue(gcc_ggc_complete(3, 3, 0, 0, 0))

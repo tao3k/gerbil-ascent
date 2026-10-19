@@ -97,6 +97,16 @@ theorem compile_work_remains (loading compilation other : Nat) :
     preparationWall loading compilation other - loading = compilation + other := by
   simp [preparationWall]; omega
 
+-- The containing process and normalized path matching are observed premises.
+def uniqueParentInput (sameParent : Bool) (matchedInputs : Nat) : Bool :=
+  sameParent && matchedInputs == 1
+
+theorem unrelated_parent_rejected (matchedInputs : Nat) : uniqueParentInput false matchedInputs = false := by
+  simp [uniqueParentInput]
+
+theorem ambiguous_parent_input_rejected (same : Bool) (n : Nat) (notUnique : n ≠ 1) :
+    uniqueParentInput same n = false := by simp [uniqueParentInput, notUnique]
+
 def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
   "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
@@ -144,6 +154,7 @@ def quintSource : String :=
   "// Generated from CompilerCost.lean; formal CI checks exact source.\n" ++
   "module CompilerPolicy {\n" ++
   "  pure def compiler_input(is_c: bool, direct: bool): bool = is_c and direct\n" ++
+  "  pure def unique_parent_input(same: bool, matches: int): bool = same and matches == 1\n" ++
   "  pure def source_attributed(expected: int, targets: List[int], arguments: Set[int]): bool =\n" ++
   "    targets == [expected] and arguments.contains(expected)\n" ++
   "  pure def single_host(labels: int, limit: int): bool = limit == 0 or labels <= limit\n" ++
@@ -152,6 +163,19 @@ def quintSource : String :=
   "  pure def stale_modules(current: bool, production: Set[int], requested: Set[int], cached: Set[int]): Set[int] =\n" ++
   "    if (current) Set() else requested.union(cached).exclude(production)\n" ++
   "}\n"
+
+def parentPythonSource : String :=
+  "# Paths are normalized by file_input; SDK code generation remains a premise.\ndef generated_scheme_input(helper, parent):\n    if helper.get('parent_gsc_observer') != str(parent.get('pid')):\n        return None\n    sources = gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', []))\n    if len(sources) != 1:\n        return None\n    expected = str(Path(sources[0]['path']).with_suffix('.scm'))\n    matches = [item for item in parent['inputs'] if item['path'] == expected]\n    return matches[0] if len(matches) == 1 else None\n"
+
+-- Cache identity includes SDK, compiler configuration and source inputs, while
+-- the current observation controller still executes and admits those inputs.
+def observedCacheIdentity (profile : Profile) (_controller : String) : Profile := profile
+
+theorem observation_change_preserves_compiler_identity (profile : Profile) (a b : String) :
+    observedCacheIdentity profile a = observedCacheIdentity profile b := rfl
+
+def cacheInputsYamlSource : String :=
+  "          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
 
 end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.small_unit_unchanged
@@ -172,3 +196,8 @@ end Ascent.CompilerCost
 
 #print axioms Ascent.CompilerCost.attributed_source_is_unique
 #print axioms Ascent.CompilerCost.metadata_only_is_not_compile
+
+#print axioms Ascent.CompilerCost.unrelated_parent_rejected
+#print axioms Ascent.CompilerCost.ambiguous_parent_input_rejected
+
+#print axioms Ascent.CompilerCost.observation_change_preserves_compiler_identity

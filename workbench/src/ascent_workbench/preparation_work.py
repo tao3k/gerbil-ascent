@@ -262,6 +262,20 @@ def execute_gsc(arguments, helper=False):
     return exit_code if current else 1
 
 
+# BEGIN GENERATED PREPARATION PARENT
+# Paths are normalized by file_input; SDK code generation remains a premise.
+def generated_scheme_input(helper, parent):
+    if helper.get('parent_gsc_observer') != str(parent.get('pid')):
+        return None
+    sources = gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', []))
+    if len(sources) != 1:
+        return None
+    expected = str(Path(sources[0]['path']).with_suffix('.scm'))
+    matches = [item for item in parent['inputs'] if item['path'] == expected]
+    return matches[0] if len(matches) == 1 else None
+# END GENERATED PREPARATION PARENT
+
+
 def summarize(directory):
     """Fail closed on truncated events. Never sum nested allocation snapshots."""
     from ascent_workbench.preparation_policy import preparation_observation_complete
@@ -281,6 +295,8 @@ def summarize(directory):
         helpers = [r for r in records if r['kind'] == 'sdk-helper']
         nested_helpers = [r for r in helpers if r.get('parent_gsc_observer') is not None]
         gsc_by_pid = {str(r['pid']): r for r in gsc if 'pid' in r}
+        if len(gsc_by_pid) != len(gsc):
+            raise ValueError('ambiguous containing GSC observation')
         for helper in nested_helpers:
             if helper['parent_gsc_observer'] not in gsc_by_pid:
                 raise ValueError('SDK helper has no containing GSC observation')
@@ -315,6 +331,19 @@ def summarize(directory):
         gcc_complete = gcc_ggc_complete(len(gcc_jobs), len(gcc_reports),
                                         sum(r['exit_code'] != 0 for r in gcc_jobs),
                                         sum(not r['inputs_current'] for r in gcc_jobs), len(gcc_errors))
+        source_costs = []
+        for helper in gcc_jobs:
+            parent = gsc_by_pid.get(helper.get('parent_gsc_observer'))
+            scheme = generated_scheme_input(helper, parent) if parent else None
+            source_costs.append({
+                'helper_pid': helper.get('pid'),
+                'parent_gsc_observer': helper.get('parent_gsc_observer'),
+                'actual_c_inputs': gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', [])),
+                'generated_scheme_input': scheme,
+                'cpu_seconds': helper['user_seconds'] + helper['system_seconds'],
+                'gcc_cumulative_ggc_bytes': helper.get('gcc_ggc_bytes'),
+                'gcc_report': helper.get('gcc_report'),
+            })
         imports = []
         completed_contexts = []
         context_results = []
@@ -364,6 +393,11 @@ def summarize(directory):
                          scope='Nonoverlapping outer qualification imports only; nested imports not summed; not total preparation or allocation')
         phases[phase] = {
             'qualification_root_work': root_work,
+            'compiler_source_costs': source_costs,
+            'generated_scheme_attributed_jobs': sum(r['generated_scheme_input'] is not None for r in source_costs),
+            'generated_scheme_unattributed_cpu_seconds': sum(r['cpu_seconds'] for r in source_costs
+                                                            if r['generated_scheme_input'] is None),
+            'compiler_source_cost_scope': 'Exclusive native helper costs by actual C input; generated Scheme input only when unique within the containing GSC job; not original DSL source or macro-expansion equivalence',
             'gsc_invocations': len(gsc),
             'compiler_stages': stages,
             'largest_gsc_jobs': sorted(gsc,

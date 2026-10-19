@@ -315,10 +315,13 @@
              (if (and present (matches-coordinate? (car present) coordinate columns key))
                (retain present) [])))
           (else (find (cdr remaining) (cdr values))))))
-(def (selected-scan-members members coordinate columns key)
-  (defrule (probe value) (member value members))
-  (defrule (retain present) (list (car present)))
-  (select-members-by-column members coordinate columns key probe retain))
+;; Keep scan-only probes lexical: split C hosts otherwise add generic calls
+;; at each selected axis. Bind every macro argument exactly once.
+(defrule (selected-scan-members members coordinate columns key)
+  (let ((axis members) (index coordinate) (constraints columns) (values key))
+    (defrule (probe value) (member value axis))
+    (defrule (retain present) (list (car present)))
+    (select-members-by-column axis index constraints values probe retain)))
 (def (selected-members members coordinate columns key routes)
   (defrule (probe value)
     (if routes (captured-member routes members coordinate value) (member value members)))
@@ -394,27 +397,38 @@
       (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
         (error "invalid ASCENT UF view column")))
     (admitted block columns key consume routes expand)))
+(defrule (with-admitted-rectangle-parts block columns key consume routes expand routed?)
+  (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+    (when (if (and routed? (rectangle-query? routes) (rectangle-query-bindings routes))
+            (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
+            (andmap (lambda (column value)
+                      (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
+      (let ((lefts (if routed?
+                     (selected-members (rectangle-left block) offset columns key routes)
+                     (selected-scan-members (rectangle-left block) offset columns key)))
+            (rights (if routed?
+                      (selected-members (rectangle-right block) (+ offset 1) columns key routes)
+                      (selected-scan-members (rectangle-right block) (+ offset 1) columns key))))
+        (expand prefix lefts rights consume)))))
 (defrule (define-admitted-rectangle-visitor name routed?)
   (def (name block columns key consume routes (expand visit-left-members))
-    (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
-      (when (if (and routed? (rectangle-query? routes) (rectangle-query-bindings routes))
-              (matches-bound-prefix? prefix (rectangle-query-bindings routes) 0)
-              (andmap (lambda (column value)
-                        (or (>= column offset) (equal? (list-ref prefix column) value))) columns key))
-        (let ((lefts (if routed?
-                       (selected-members (rectangle-left block) offset columns key routes)
-                       (selected-scan-members (rectangle-left block) offset columns key)))
-              (rights (if routed?
-                        (selected-members (rectangle-right block) (+ offset 1) columns key routes)
-                        (selected-scan-members (rectangle-right block) (+ offset 1) columns key))))
-          (expand prefix lefts rights consume))))))
-;; Both visitors share the complete check/expansion syntax. The scan instance
-;; statically excludes route types and owner lookup without changing equality,
-;; duplicate constraints, stored representatives or callback order.
+    (with-admitted-rectangle-parts block columns key consume routes expand routed?)))
+;; Both visitors share the complete expansion syntax. The scan macro also
+;; keeps the caller's publisher lexical instead of passing it through optional
+;; argument functions. Checks, stored representatives and callback order stay
+;; in the same sequence; only routed visitors need runtime procedure values.
 (define-admitted-rectangle-visitor visit-admitted-rectangle-parts #t)
-(define-admitted-rectangle-visitor visit-admitted-scan-rectangle-parts #f)
+(defrule (visit-admitted-scan-rectangle-parts block columns key consume routes expand)
+  (let ((owner block) (constraints columns) (keys key) (visitor consume)
+        (query routes) (emit expand))
+    (with-admitted-rectangle-parts owner constraints keys visitor query emit #f)))
 (define-checked-rectangle-visitor visit-rectangle-parts visit-admitted-rectangle-parts)
-(define-checked-rectangle-visitor visit-scan-rectangle-parts visit-admitted-scan-rectangle-parts)
+(defrule (visit-scan-rectangle-parts block columns key consume routes expand)
+  (let ((owner block) (constraints columns) (keys key) (visitor consume) (query routes) (emit expand))
+    (let (offset (length (rectangle-prefix owner)))
+      (unless (andmap (lambda (column) (< column (+ offset 2))) constraints)
+        (error "invalid ASCENT UF view column")))
+    (visit-admitted-scan-rectangle-parts owner constraints keys visitor query emit)))
 ;; Build once from owned spines. Each component contributes its members once
 ;; per coordinate; the buckets retain descriptor references, never pair tuples.
 ;; Readers only inspect these private tables after construction.

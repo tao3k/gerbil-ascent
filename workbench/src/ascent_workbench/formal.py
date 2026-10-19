@@ -371,6 +371,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-stale", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-coverage", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-ggc", "workbench/src/ascent_workbench/preparation_work.py"),
+                ("ExecutionPolicy.lean", "preparation-cache-inputs", ".github/workflows/build-cost.yml"),
+                ("ExecutionPolicy.lean", "preparation-parent", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-origin", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-inputs", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-source", "t/harness/library-spec.ss"),
@@ -396,9 +398,9 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
+                elif language in {"preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()
-                    prefix = "#" if language in {"preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language == "preparation-cargo-cache" else ";;"
+                    prefix = "#" if language in {"preparation-parent", "preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language in {"preparation-cache-inputs", "preparation-cargo-cache"} else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',
                                   f'{prefix} END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

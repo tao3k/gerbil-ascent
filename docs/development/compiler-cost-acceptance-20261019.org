@@ -69,7 +69,7 @@ CompilerCost.lean renders the actual compiler declaration, option-receipt
 reader/writer, stale-output selection, compiler-input roles, unique-source attribution, TOTAL guard and coverage guard. Formal
 CI compares these regions byte for byte and renders CompilerPolicy.qnt from
 Lean. CompilerCost.qnt checks successful profile publication, invalidation
-and counter scope with thirteen independent fault controls. Native tests exercise
+and counter scope with fifteen independent fault controls. Native tests exercise
 actual supported SDK code generation, tail calls, values, one processor per
 VM, option-receipt rejection and native SARIF attribution.
 
@@ -235,3 +235,75 @@ English development receipt and original workflow artifacts below.
 
 <!-- preparation-d151-acceptance:end -->
 #+end_example
+
+* Rejected runtime tradeoff and scanner repair
+
+The a6f6a1ec Linux performance job (run 39225705662) rejected UF unindexed:
+median CPU 33.053 -> 36.908 ms, with unchanged allocation-counter estimates.
+The previous passing run is not a substitute for this failure. An isolated
+SDK-managed control held sources, frozen fixtures and reference layout fixed
+and varied only the production C host limit. In fixed 0/512/512/0 order,
+candidate medians were 22.204 / 25.080 / 24.866 / 22.429 ms. The first 512
+control failed the original ratio; the second was just inside it. Both were
+slower. Global host splitting therefore exposed a real hot-path tradeoff.
+
+Inlining only the axis selector was insufficient (about two percent). That
+candidate was not applied. Keeping the complete checked/admitted scan path
+lexical removed optional-argument procedure boundaries. The shared body still
+performs global key admission, per-block range admission, prefix checks, axis
+selection and publication in their original order. Macro arguments are bound
+once, including the publisher. Routed/custom visitors retain procedures.
+In a private fixed before/after/after/before control, the original split-host
+scanner took 24.540 / 24.599 ms and the candidate took 22.648 / 22.509 ms.
+Both original controls failed; both candidates passed. Existing paired
+allocation estimates were 1,640,064 -> 1,541,760 bytes. These estimates are not
+proof of total cumulative VM allocation. The private experiment is a local
+mechanism check, not whole-runtime or isolated-runner acceptance.
+
+The a6 standalone macOS source run completed 173 modules and 1401 cases in
+199.367751 seconds after 350.918069 seconds preparation. Its preparation
+included 39.499814 seconds context loading and 304.605324 seconds make.
+The independent full-runtime ABBA stopped at the unchanged baseline's
+240-second timeout (run 39225699142); no candidate runtime comparison exists.
+At 239 seconds, child CPU and newly completed cases still increased. There
+were no audited foreign compilers. This is evidence of ongoing test work,
+not a demonstrated deadlock or a reason to widen the deadline.
+
+* Containing-source cost attribution
+
+Every native C helper now retains its actual C inputs, containing GSC observer,
+exclusive CPU, retained GCC report and exact GGC total. A generated Scheme
+input is attributed only when its normalized path matches the C input inside
+one unique containing GSC observation. Cross-parent, missing and ambiguous
+matches remain unattributed; duplicate containing process identities reject
+the observation. Costs are not added to their inclusive parent again.
+The path/confinement guard is generated from Lean, and Quint includes separate
+cross-parent and ambiguous-input fault controls. These guards do not prove
+that the SDK compiler implements Scheme semantics, establish original DSL to
+expanded-Scheme equivalence, or observe every Scheme allocator. Those remain
+explicit gaps alongside cold expansion and baseline/runtime variability.
+
+* Whole preparation attribution and avoidable invalidation
+
+Reclassifying the first retained baseline helper records by their actual C
+input paths gives 426 reference-named jobs / 551.516220 exclusive CPU seconds,
+113 other performance support jobs / 61.753759 seconds, 37 other qualification
+support jobs / 22.273310 seconds, and 13 other jobs / 8.530882 seconds. This is
+all 589 helper invocations / 644.074171 seconds; the reference-named class is
+85.63 percent of helper CPU. This is a path classification, not proof that
+references with different histories are duplicate programs. Frozen semantic
+oracles remain part of the workload.
+
+The macOS compiled-prefix key also hashed tools/ci/build-cost-control.py.
+Consequently, editing observation or source-scope diagnostics invalidated
+all unchanged Scheme products. The controller is never restored from that
+cache; the current checkout always executes it. The key now retains the full
+tracked Scheme/C input set, package/recipe/workflow and toolchain fingerprints,
+but excludes that observation script. Source bytes and Git equality are still
+admitted after restoration, producer receipts and std/make still validate
+actual compilation, and compiler-option changes remain source-bound.
+Lean renders the exact key-input declaration; its profile law separates
+observation identity from compiler identity. Git/hashFiles/SDK behavior are
+external premises. There is no fallback to a cache containing different
+Scheme bytes. This prevents avoidable cold starts after observer-only edits;
+it does not solve genuinely cold reference compilation or cold expansion.

@@ -95,6 +95,56 @@ def rootsSchemeSource : String :=
   "(def (preparation-support-roots source-suites? base requested cached)\n" ++
   "  (append (if source-suites? [] base) requested cached))\n"
 
+-- This dispatch is only active after the existing source/SDK receipt check.
+-- It changes an admitted producer's input path, not source-Suite execution.
+-- Native normalization/expansion and receipt decoding remain explicit premises.
+def interfaceSelected (admitted reload producer present : Bool) : Bool :=
+  admitted && !reload && producer && present
+
+theorem invalidated_producer_uses_source (reload producer present : Bool) :
+    interfaceSelected false reload producer present = false := by simp [interfaceSelected]
+theorem reload_uses_source (admitted producer present : Bool) :
+    interfaceSelected admitted true producer present = false := by simp [interfaceSelected]
+theorem consumer_uses_source (admitted reload present : Bool) :
+    interfaceSelected admitted reload false present = false := by simp [interfaceSelected]
+theorem missing_interface_uses_source (admitted reload producer : Bool) :
+    interfaceSelected admitted reload producer false = false := by simp [interfaceSelected]
+theorem admitted_producer_uses_interface : interfaceSelected true false true true = true := rfl
+
+-- Count actual source-body completions separately from interface completions.
+-- These event weights do not assert a latency or cumulative-allocation bound.
+def sourceCompletion (interface : Bool) : Nat := if interface then 0 else 1
+theorem admitted_source_completion_avoided :
+    sourceCompletion (interfaceSelected true false true true) = 0 := rfl
+
+def interfacesQuintSource : String :=
+  "// Generated from PreparationWork.lean; formal CI checks exact source.\n" ++
+  "module PreparationInterfaces {\n" ++
+  "  pure def interface_selected(admitted: bool, reload: bool, producer: bool, present: bool): bool =\n" ++
+  "    admitted and not(reload) and producer and present\n" ++
+  "}\n"
+
+def interfacesSchemeSource : String :=
+  ";; Gerbil still owns path normalization, module caching and expansion.\n" ++
+  "(def (call-with-preparation-production-interfaces admitted? library production thunk)\n" ++
+  "  (let ((original (current-expander-module-import))\n" ++
+  "        (interfaces\n" ++
+  "          (if admitted?\n" ++
+  "            (filter-map\n" ++
+  "              (lambda (module)\n" ++
+  "                (let (target (path-expand (string-append \"gerbil-ascent/\" module \".ssi\") library))\n" ++
+  "                  (and (file-exists? target)\n" ++
+  "                       (cons (path-normalize (string-append module \".ss\")) target))))\n" ++
+  "              production)\n" ++
+  "            [])))\n" ++
+  "    (parameterize\n" ++
+  "      ((current-expander-module-import\n" ++
+  "         (lambda (path reload?)\n" ++
+  "           (let (entry (and (not reload?) (string? path)\n" ++
+  "                           (assoc (path-normalize path) interfaces)))\n" ++
+  "             (original (if entry (cdr entry) path) reload?)))))\n" ++
+  "      (thunk))))\n"
+
 -- Source Suites name their own imports. CLI-only fixture drivers are not
 -- implicit roots. Previously compiled fixtures still need ABI refresh.
 def supportRoots (sourceSuites : Bool) (base requested cached : List String) : List String :=
@@ -571,3 +621,10 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms equal_still_endpoints_do_not_identify_allocation
 #print axioms sdk_counter_component_difference
 end Ascent.PreparationWork
+
+#print axioms Ascent.PreparationWork.invalidated_producer_uses_source
+#print axioms Ascent.PreparationWork.reload_uses_source
+#print axioms Ascent.PreparationWork.consumer_uses_source
+#print axioms Ascent.PreparationWork.missing_interface_uses_source
+#print axioms Ascent.PreparationWork.admitted_producer_uses_interface
+#print axioms Ascent.PreparationWork.admitted_source_completion_avoided

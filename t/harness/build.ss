@@ -97,7 +97,13 @@
       (displayln "BUILD-TEST-LIBRARY-PHASE projection-input-admission wall-seconds="
                  (build-elapsed phase))
       (let (loading (current-jiffy))
-        (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
+        ;; Only the content-admitted production catalog may use its installed
+        ;; interfaces. Source consumers/support roots and explicit reload keep
+        ;; Gerbil's source path. The hook is restored before make executes.
+        (call-with-preparation-production-interfaces
+          production-current? library gerbil-ascent-library-modules
+          (lambda ()
+            (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
         (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
                    (build-elapsed loading)))
       (let* ((projection-started (current-jiffy))

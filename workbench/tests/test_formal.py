@@ -12,6 +12,11 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(controls["correct"].expected, 0)
         faults = {name: item.property for name, item in controls.items() if name != "correct"}
         self.assertEqual(faults, {
+            "reuse-unadmitted-interface": "InterfaceSelectionExact",
+            "reuse-reloaded-interface": "InterfaceSelectionExact",
+            "reuse-consumer-interface": "InterfaceSelectionExact",
+            "reuse-missing-interface": "InterfaceSelectionExact",
+            "expand-admitted-interface": "InterfaceSelectionExact",
             "raise-heap-for-gc": "HeapLimitUnchanged",
             "skip-heap-cap": "HeapSelectionBounded",
             "occupancy-as-cumulative": "CumulativeCapabilityRequired",

@@ -275,3 +275,50 @@ class PreparationWorkTests(unittest.TestCase):
             capture_output=True, text=True, timeout=30)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
         self.assertEqual(process.stdout.strip(), '(3221225472 50)')
+
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_admitted_interfaces_use_sdk_paths_and_restore_import_hook(self):
+        spec = (Path('t/harness/library-spec.ss').resolve())
+        with tempfile.TemporaryDirectory(prefix='ascent-interface-') as folder:
+            root = Path(folder).resolve()
+            source = root / 'producer.ss'
+            source.write_text('package: gerbil-ascent\n(export value)\n(def value 1)\n')
+            library = root / 'lib'
+            library.mkdir()
+            compile_expression = (
+                '(import :gerbil/compiler) '
+                f'(compile-module {json.dumps(str(source))} '
+                f'[output-dir: {json.dumps(str(library))} invoke-gsc: #f optimize: #f])')
+            compiled = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', compile_expression],
+                                      capture_output=True, text=True, timeout=30)
+            self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
+            interface = library / 'gerbil-ascent/producer.ssi'
+            self.assertTrue(interface.is_file())
+            expression = (
+                f'(import :gerbil/expander {json.dumps(str(spec))}) '
+                '(def original (current-expander-module-import)) '
+                '(def (probe admitted? reload? name) '
+                f'(call-with-preparation-production-interfaces admitted? {json.dumps(str(library))} '
+                '\'("producer") (lambda () (string-copy (module-context-path (import-module name reload? #f)))))) '
+                '(write (list '
+                '(probe #f #f "producer.ss") '
+                '(probe #t #f "./producer.ss") '
+                '(probe #t #t "producer.ss") '
+                '(eq? original (current-expander-module-import)))) (newline) '
+                '(with-catch (lambda (_) #f) (lambda () '
+                f'(call-with-preparation-production-interfaces #t {json.dumps(str(library))} '
+                '\'("producer") (lambda () (error "expected"))))) '
+                '(write (eq? original (current-expander-module-import))) (newline)')
+            observed = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                      cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            self.assertEqual(observed.stdout.splitlines(), [
+                '(' + json.dumps(str(source)) + ' ' + json.dumps(str(interface)) + ' '
+                + json.dumps(str(source)) + ' #t)', '#t'])
+            interface.unlink()
+            missing = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                     cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(missing.returncode, 0, missing.stdout + missing.stderr)
+            self.assertEqual(missing.stdout.splitlines()[0],
+                             '(' + ' '.join([json.dumps(str(source))] * 3) + ' #t)')

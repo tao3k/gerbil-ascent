@@ -804,3 +804,13 @@ All negative observations remain in the local evidence directory
 cold experiment must be reported separately. The original 8.19% failure, complete
 original-source expansion refinement and cumulative Scheme allocation remain open
 until their own evidence is available; green CI does not close them.
+
+The first new alias-mutant run failed with TLC configuration exit 151 because
+its invariant simplified to constant FALSE. That is retained as a failed check,
+not an accepted counterexample. The invariant now checks the same alias property
+after the existing projection transition, so the mutant must produce a concrete
+state trace and the unchanged expected exit 12. The formal inventory assertion
+also explicitly requires this additional fault without removing any old fault.
+The broad local Python discovery retained 19 import errors because the PyO3
+extension was not installed; it is not reported as full Python acceptance.
+The independent CI consumer lane builds and installs its actual wheel first.

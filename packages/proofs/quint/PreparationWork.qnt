@@ -59,7 +59,9 @@ module PreparationWork {
         first_alias(k1, v1, k0, v0, key) else expected
       actual == expected
     })))))
-  val IndexedDispatchExact = IndexedAliasesExact
+  // Check after native projection is requested, so a mutant has a concrete
+  // state-transition counterexample rather than a constant-FALSE TLC config.
+  val IndexedDispatchExact = not(q.rootsProjected) or IndexedAliasesExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}

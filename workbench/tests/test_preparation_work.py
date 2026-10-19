@@ -297,6 +297,46 @@ class PreparationWorkTests(unittest.TestCase):
 
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_indexed_interface_dispatch_matches_first_alias_and_bypasses(self):
+        spec = Path('t/harness/library-spec.ss').resolve()
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            library = root / 'lib'
+            (library / 'gerbil-ascent').mkdir(parents=True)
+            (library / 'gerbil-ascent/producer.ssi').touch()
+            expression = f'''(import :gerbil/expander
+ (only-in :gerbil/compiler/base current-compile-context) {json.dumps(str(spec))})
+(def library {json.dumps(str(library))})
+(def requests (list "producer.ss" (string-copy "./producer.ss") ':gerbil-ascent/producer
+ (stx-wrap-source ':gerbil-ascent/producer #f) "missing.ss" '(unknown)))
+(def entries
+ (list (cons (path-normalize "producer.ss") (path-expand "gerbil-ascent/producer.ssi" library))
+       (cons ':gerbil-ascent/producer (path-expand "gerbil-ascent/producer.ssi" library))
+       (cons (path-normalize "./producer.ss") (path-expand "gerbil-ascent/./producer.ssi" library))
+       (cons ':gerbil-ascent/./producer (path-expand "gerbil-ascent/./producer.ssi" library))))
+(for-each (lambda (admitted?)
+ (for-each (lambda (reload?)
+  (for-each (lambda (compiling?)
+   (parameterize ((current-expander-module-import (lambda (path reload?) (list path reload?)))
+                  (current-compile-context compiling?))
+    (call-with-preparation-production-interfaces admitted? library '("producer" "./producer")
+     (lambda ()
+      (for-each (lambda (path)
+       (let* ((key (cond ((string? path) (path-normalize path))
+                        ((core-library-module-path? path) (stx-e path)) (else #f)))
+              (entry (and admitted? (not reload?) (not compiling?) key (assoc key entries)))
+              (expected (list (if entry (cdr entry) path) reload?))
+              (actual ((current-expander-module-import) path reload?)))
+        (unless (equal? actual expected) (error "indexed dispatch changed" expected actual)))) requests)))))
+   '(#f #t))) '(#f #t))) '(#f #t))
+(display "INDEXED-DISPATCH-CHECKED")
+'''
+            result = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                    cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stdout, 'INDEXED-DISPATCH-CHECKED')
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
     def test_admitted_interfaces_use_sdk_paths_and_restore_import_hook(self):
         spec = (Path('t/harness/library-spec.ss').resolve())
         with tempfile.TemporaryDirectory(prefix='ascent-interface-') as folder:

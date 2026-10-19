@@ -51,6 +51,15 @@ module PreparationWork {
   pure val AdmittedSelectionExact = selection_conforms(true) and request_selection_conforms(true)
   pure val UnadmittedSelectionExact = selection_conforms(false) and request_selection_conforms(false)
   val InterfaceSelectionExact = if (q.productionAdmitted) AdmittedSelectionExact else UnadmittedSelectionExact
+  // Finite protocol controls supplement the unbounded Lean HashMap theorem.
+  pure val IndexedAliasesExact = Set(0, 1).forall(k0 => Set(0, 1).forall(k1 =>
+    Set(0, 1).forall(v0 => Set(0, 1).forall(v1 => Set(0, 1, 2).forall(key => {
+      val expected = first_alias(k0, v0, k1, v1, key)
+      val actual = if (Mutation == "last-interface-alias-wins")
+        first_alias(k1, v1, k0, v0, key) else expected
+      actual == expected
+    })))))
+  val IndexedDispatchExact = IndexedAliasesExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}

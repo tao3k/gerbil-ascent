@@ -623,9 +623,10 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'InterfaceSelectionExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
+    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
+    ('last-interface-alias-wins', 'IndexedDispatchExact', 12),
     ('reuse-unadmitted-interface', 'InterfaceSelectionExact', 12),
     ('reuse-reloaded-interface', 'InterfaceSelectionExact', 12),
     ('reuse-compiling-interface', 'InterfaceSelectionExact', 12),

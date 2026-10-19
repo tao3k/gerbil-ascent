@@ -8,8 +8,8 @@
 ;; BEGIN GENERATED PREPARATION INTERFACES
 ;; Gerbil still owns syntax decoding, path normalization, caching and expansion.
 (def (call-with-preparation-production-interfaces admitted? library production thunk)
-  (let ((original (current-expander-module-import))
-        (interfaces
+  (let* ((original (current-expander-module-import))
+        (entries
           (if admitted?
             (apply append (map
               (lambda (module)
@@ -19,7 +19,9 @@
                           (cons (string->symbol (string-append ":gerbil-ascent/" module)) target))
                     [])))
               production))
-            [])))
+            []))
+         ;; Reverse insertion retains the first matching alias.
+         (interfaces (list->hash-table (reverse entries))))
     (parameterize
       ((current-expander-module-import
          (lambda (path reload?)
@@ -28,8 +30,8 @@
                        (let (key (cond ((string? path) (path-normalize path))
                                         ((core-library-module-path? path) (stx-e path))
                                         (else #f)))
-                         (and key (assoc key interfaces)))))
-             (original (if entry (cdr entry) path) reload?)))))
+                         (and key (hash-get interfaces key)))))
+             (original (or entry path) reload?)))))
       (thunk))))
 ;; END GENERATED PREPARATION INTERFACES
 

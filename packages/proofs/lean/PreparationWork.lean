@@ -146,6 +146,48 @@ def sourceCompletion (interface : Bool) : Nat := if interface then 0 else 1
 theorem admitted_source_completion_avoided :
     sourceCompletion (interfaceSelected true false false true true) = 0 := rfl
 
+-- Gerbil's list->hash-table inserts left to right. Reversing the entry list
+-- therefore preserves assoc's FIRST match, including duplicate normalized aliases.
+-- Std.HashMap discharges this data-structure lemma; the Gerbil hash implementation
+-- and SDK path/syntax normalization remain explicit host assumptions.
+def interfaceIndex {α : Type} [BEq α] [Hashable α] : List (α × String) → Std.HashMap α String
+  | [] => ∅
+  | (key, value) :: rest => (interfaceIndex rest).insert key value
+
+def interfaceAssoc {α : Type} [BEq α] (entries : List (α × String)) (key : α) : Option String :=
+  match entries with
+  | [] => none
+  | (candidate, value) :: rest =>
+    if candidate == key then some value else interfaceAssoc rest key
+
+theorem indexed_interface_equals_first_assoc {α : Type} [BEq α] [Hashable α]
+    [EquivBEq α] [LawfulHashable α] (entries : List (α × String)) (key : α) :
+    (interfaceIndex entries)[key]? = interfaceAssoc entries key := by
+  induction entries with
+  | nil => simp [interfaceIndex, interfaceAssoc]
+  | cons entry rest ih =>
+    rcases entry with ⟨candidate, value⟩
+    simp only [interfaceIndex, Std.HashMap.getElem?_insert, interfaceAssoc, ih]
+
+-- Number of key comparisons performed by the former source-loaded assoc.
+-- Hash-table probe complexity is not claimed: collisions belong to the host.
+def interfaceAssocComparisons {α : Type} [BEq α] (entries : List (α × String)) (key : α) : Nat :=
+  match entries with
+  | [] => 0
+  | (candidate, _) :: rest =>
+    1 + if candidate == key then 0 else interfaceAssocComparisons rest key
+
+theorem assoc_missing_traverses_catalog {α : Type} [BEq α]
+    (entries : List (α × String)) (key : α)
+    (missing : ∀ entry ∈ entries, (entry.1 == key) = false) :
+    interfaceAssocComparisons entries key = entries.length := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih =>
+    rcases entry with ⟨candidate, value⟩
+    have ne : (candidate == key) = false := missing (candidate, value) (by simp)
+    simp [interfaceAssocComparisons, ne, ih (fun e h => missing e (by simp [h])), Nat.add_comm]
+
 def interfacesQuintSource : String :=
   "// Generated from PreparationWork.lean; formal CI checks exact source.\n" ++
   "module PreparationInterfaces {\n" ++
@@ -153,13 +195,16 @@ def interfacesQuintSource : String :=
   "    admitted and not(reload) and not(compiling) and producer and present\n" ++
   "  pure def request_interface_selected(request: int, admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool =\n" ++
   "    Set(0, 1, 2).contains(request) and interface_selected(admitted, reload, compiling, producer, present)\n" ++
+  "  // Two possibly aliased entries: reverse insertion must retain the first.\n" ++
+  "  pure def first_alias(k0: int, v0: int, k1: int, v1: int, key: int): int =\n" ++
+  "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
   ";; Gerbil still owns syntax decoding, path normalization, caching and expansion.\n" ++
   "(def (call-with-preparation-production-interfaces admitted? library production thunk)\n" ++
-  "  (let ((original (current-expander-module-import))\n" ++
-  "        (interfaces\n" ++
+  "  (let* ((original (current-expander-module-import))\n" ++
+  "        (entries\n" ++
   "          (if admitted?\n" ++
   "            (apply append (map\n" ++
   "              (lambda (module)\n" ++
@@ -169,7 +214,9 @@ def interfacesSchemeSource : String :=
   "                          (cons (string->symbol (string-append \":gerbil-ascent/\" module)) target))\n" ++
   "                    [])))\n" ++
   "              production))\n" ++
-  "            [])))\n" ++
+  "            []))\n" ++
+  "         ;; Reverse insertion retains the first matching alias.\n" ++
+  "         (interfaces (list->hash-table (reverse entries))))\n" ++
   "    (parameterize\n" ++
   "      ((current-expander-module-import\n" ++
   "         (lambda (path reload?)\n" ++
@@ -178,8 +225,8 @@ def interfacesSchemeSource : String :=
   "                       (let (key (cond ((string? path) (path-normalize path))\n" ++
   "                                        ((core-library-module-path? path) (stx-e path))\n" ++
   "                                        (else #f)))\n" ++
-  "                         (and key (assoc key interfaces)))))\n" ++
-  "             (original (if entry (cdr entry) path) reload?)))))\n" ++
+  "                         (and key (hash-get interfaces key)))))\n" ++
+  "             (original (or entry path) reload?)))))\n" ++
   "      (thunk))))\n"
 
 -- Source Suites name their own imports. CLI-only fixture drivers are not
@@ -670,3 +717,6 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.qualified_request_same_as_source
 #print axioms Ascent.PreparationWork.syntax_request_same_as_source
 #print axioms Ascent.PreparationWork.unknown_request_forwarded
+
+#print axioms Ascent.PreparationWork.indexed_interface_equals_first_assoc
+#print axioms Ascent.PreparationWork.assoc_missing_traverses_catalog

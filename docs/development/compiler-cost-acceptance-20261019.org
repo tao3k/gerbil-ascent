@@ -730,3 +730,77 @@ admission tests retain malformed-root rejection, dynamic-extent restoration and
 immediate public validation checks. This bounded source-fixture result requires
 complete compiled oracle CI under twelve-thread load before acceptance; it is
 not a source-refinement proof of POO validation or an end-to-end cold-build gain.
+
+* Cold preparation attribution and indexed import dispatch (2026-10-20)
+
+The retained uninstrumented dfca07f5/45d3ffb9 experiment still fails its original
+preparation gate by 8.19%. Across the two observations per revision, the excess
+is approximately 55.67 seconds: source-context loading contributes +27.790343,
+make contributes +29.303952, and the remaining preparation contributes
+-1.424898. Integer nanosecond totals in the original receipt remain authoritative;
+rounded component observations are not a replacement admission calculation.
+This identifies where time was spent, not a unique compiler-policy cause.
+
+The work-only controls retain 589 native compilation jobs per preparation,
+including 496 performance, 80 qualification and 13 other C inputs in the first
+baseline control. Their exclusive helper CPU costs are respectively 438.078821,
+77.936476 and 10.215856 seconds. Every helper has its real C input and generated
+Scheme input. This is not an equivalence proof back to the original Scheme DSL.
+The GSC parent already includes helper costs: summing both would double count.
+
+An additional identical-input control groups 264 C input hashes present in all
+four work observations with the same empty extra compiler options. Their CPU
+sums, in retained ABBA order, are 87.872712, 101.327869, 78.741188 and 77.342391
+seconds. The candidate pair adds 14.853954 CPU seconds on these unchanged inputs;
+all native helpers together add only 7.301724 CPU seconds. SDK base flags are
+separate from these extra flags and remain fixed by the original SDK receipt.
+This comparison does not normalize, remove or excuse the failed latency gate.
+It prevents attributing every observed difference to the changed compiler pass.
+
+The import-dispatch adapter previously scanned the entire admitted interface
+association list on each request. It now uses the released Gerbil equal?-based
+hash table. Reversing insertion preserves assoc's first match for duplicate
+normalized aliases. The compiler-context bypass, explicit reload, unknown-form
+forwarding, missing-interface behavior and dynamic hook restoration are retained.
+No production evaluator, build.ss orchestration, compiler flags, cache key,
+semantic workload, resource bound or performance threshold changes here.
+
+A Release-native local ABBA fixture retains 500 producers and 15,030 calls per
+control. Old/new/new/old child CPU observations are 1.034074, 0.977604, 0.995797
+and 1.123504 seconds (pair totals 2.157578 and 1.973401, approximately -8.54%).
+This is dispatch-only evidence, not a cold-preparation or end-to-end gain. The
+complete indexed dispatcher is also checked against an independent assoc-based
+oracle for admitted/unadmitted, reload, compiling, supported/unknown requests,
+missing interfaces and duplicate aliases. Existing native context, compiler
+source emission and exceptional-restoration controls remain in the same suite.
+
+Lean proves lookup equivalence for arbitrary entry lists using Std.HashMap,
+including duplicate keys, and proves the old missing-key scan visits every entry.
+The exact deployed Scheme adapter and bounded Quint selector are rendered from
+PreparationWork.lean. A new Quint mutation makes the last alias win and must
+produce a counterexample. Gerbil's hash implementation, SDK normalization and
+macro expansion remain explicit host assumptions; this is not SDK source closure.
+
+Source cost rows now retain the already observed helper process wall interval,
+maximum child RSS, major faults and input/output block counters next to the exact
+C/SCM content and GCC GGC record. RSS is a maximum and is never summed as allocated
+bytes; faults and block counters are not allocation counts. The complete original
+work controls reported zero input/output blocks and do not support an I/O cause.
+
+The native allocation fixture now compiles its source copy in a temporary
+directory, preventing Gambit's intermediate C file from dirtying maintained
+sources. Its same no-GC descending-counter counterexample remains unchanged.
+Whole-VM cumulative Scheme allocation is still unobserved. The SDK byte counter
+includes live stack/occupancy changes and can decrease without GC. Neither that
+counter, positive-only deltas, RSS nor GCC GGC can supply the missing cumulative
+Scheme allocation. GCC GGC is real cumulative allocation in its narrower scope.
+
+An independent four-module experiment disabling Gerbil optimization increased
+child CPU by 15.19% and was rejected. An eight-fixed-C-file -Og feasibility probe
+reduced compilation CPU by 28.95%, but no such flag is adopted: fixed-C compile
+cost alone does not establish matched reference runtime/performance admission.
+All negative observations remain in the local evidence directory
+=.cache/ascent/import-index-20261020/=. Exact-head full CI and a new uninstrumented
+cold experiment must be reported separately. The original 8.19% failure, complete
+original-source expansion refinement and cumulative Scheme allocation remain open
+until their own evidence is available; green CI does not close them.

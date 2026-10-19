@@ -165,13 +165,22 @@ class CompilerCostTests(unittest.TestCase):
             self.assertEqual(cost['generated_scheme_input']['path'], str(source))
             self.assertEqual(cost['generated_source_producer']['generated_c_output']['path'], str(generated))
             self.assertGreater(cost['gcc_cumulative_ggc_bytes'], 0)
+            self.assertGreater(cost['process_wall_ns'], 0)
+            self.assertGreater(cost['max_child_rss_bytes'], 0)
+            self.assertGreaterEqual(cost['major_faults'], 0)
+            self.assertGreaterEqual(cost['input_blocks'], 0)
+            self.assertGreaterEqual(cost['output_blocks'], 0)
+            self.assertIsNone(phase['cumulative_allocation_bytes'])
+            self.assertFalse(phase['cumulative_allocation_observed'])
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
     def test_sdk_net_stack_counter_is_not_cumulative_allocation(self):
         import os
         sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
-        source = Path('workbench/tests/fixtures/allocation-stack.scm').resolve()
+        fixture = Path('workbench/tests/fixtures/allocation-stack.scm').read_bytes()
         with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'allocation-stack.scm'
+            source.write_bytes(fixture)
             bundle = Path(folder) / 'allocation.o1'
             env = dict(os.environ, GAMBOPT=f'~~={sdk},~~bin={sdk}/bin,~~lib={sdk}/lib')
             compiled = subprocess.run([str(sdk / 'bin/gsc'), '-dynamic', '-o', str(bundle), str(source)],

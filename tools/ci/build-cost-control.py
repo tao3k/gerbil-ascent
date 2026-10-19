@@ -292,6 +292,10 @@ def main():
                'packages/proofs/quint/CompilerCost.qnt',
                'packages/proofs/quint/CompilerPolicy.qnt',
                'rust/ascent-build/src/graph.rs',
+               # Preserved Rust-only unit-test relocation. These Scheme-only
+               # commands do not compile/execute Rust; independent CI covers it.
+               'rust/ascent/src/clues/slices.rs',
+               'rust/ascent/tests/unit/clues/capacity.rs',
                'workbench/tests/test_compiler_cost.py',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',

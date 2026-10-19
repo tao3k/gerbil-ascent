@@ -1457,3 +1457,52 @@ refinement must be reported separately. The historical unresolved performance
 ledger is retained without a resolution entry or threshold change. This
 candidate does not close per-macro source refinement or the full allocator
 observer/decoder equivalence.
+
+
+* Rejected GC candidate; retain compiled reuse (2026-10-19)
+
+The independent three-worker cold experiment 39180328303 completed all four
+controls, in the fixed original order, without foreign compilers or audit
+errors. It compares baseline 76e485a6 with candidate 52aa65bb. All negative and
+positive samples are retained:
+
+| Control | Build seconds | Cold preparation seconds | Compiled-prefix preparation seconds |
+|---------+---------------+--------------------------+-------------------------------------|
+| Baseline 0 | 195.269 | 396.777 | 31.421 |
+| Candidate 1 | 212.998 | 415.225 | 44.998 |
+| Candidate 2 | 169.372 | 303.210 | 41.043 |
+| Baseline 3 | 216.350 | 291.389 | 38.812 |
+
+Cold preparation is 4.398 percent worse in aggregate and compiled-prefix
+preparation is 22.508 percent worse. The experiment rejects both under its
+unchanged policy. The historical unresolved runs 39084120171 and 39088480174
+also remain unresolved. The second candidate becoming faster is not a repair
+certificate. Build time, which the preparation-only GC option does not change,
+varies too; no precise causal percentage is inferred from these four samples.
+The GC candidate has not demonstrated a benefit and is removed without retrying
+the failed experiment or changing its thresholds. The final preparation option
+explicitly selects the existing SDK default live-ratio=50 and preserves 3G.
+
+The compiled-reuse change is retained. On 52aa65bb the first macOS job succeeded
+before any replay. Its populated-cache replay also succeeded. Both qualified
+173 source modules and 1401 Cases, with zero compiled source Suite interfaces,
+three workers, the original 240-second runtime limit, and clean isolation
+audits. Preparation changed from 343.571735 seconds to 36.452008 seconds;
+native make changed from 287.123218 seconds to 0.458765 seconds. Support-module
+compilations changed from 253 to zero while the 390-target native carrier list
+remained present. The cache archive was 57,837,006 bytes and restored in about
+3.4 seconds. The complete job changed from 1071 seconds to 354 seconds, including
+cache IO and full semantics. These are concrete compiled-reuse observations,
+not evidence of a cold algorithmic speedup. This receipt used the rejected GC
+candidate; the final default-policy commit requires its own cold and cache-hit
+semantic acceptance, rather than relabeling the candidate's measurements.
+
+The main 52aa65bb CI completed 10/10 jobs at its first attempt, including full
+Scheme, Rust/PyO3, formal, all original performance and oracle controls. Binding
+nextest retained 12 concurrent tests, no retries, and passed 51/51 with no skips.
+The successful CI does not override the failed optional GC experiment.
+
+The primary checkout acquired unrelated edits to gerbil.pkg, formal_models.py
+and a new ModelApplicability.qnt while the experiment ran. They are preserved;
+this rejection and final default-policy acceptance use a separate worktree
+based on the tested commit. No SDK or upstream code is changed.

@@ -434,7 +434,7 @@ theorem negative_raw_counter_rejected (start finish corrected : Int)
 -- never changes that bound. These lemmas describe that arithmetic, not RSS,
 -- GC latency, or the complete native resize/overflow implementation.
 def preparationHeapGiB : Nat := 3
-def preparationLiveRatio : Nat := 20
+def preparationLiveRatio : Nat := 50
 
 def heapRecipeSource : String :=
   "preparation_runtime_options := \"-:max-heap=" ++ toString preparationHeapGiB ++

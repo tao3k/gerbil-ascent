@@ -264,7 +264,7 @@ class PreparationWorkTests(unittest.TestCase):
 
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
-    def test_preparation_policy_keeps_native_heap_limit(self):
+    def test_preparation_policy_keeps_heap_limit(self):
         recipe = Path('justfile').read_text()
         match = re.search(r'^preparation_runtime_options := "([^"]+)"$', recipe, re.M)
         self.assertIsNotNone(match)
@@ -274,4 +274,4 @@ class PreparationWorkTests(unittest.TestCase):
              '(write (list (##get-max-heap) (##get-live-percent))) (newline)'],
             capture_output=True, text=True, timeout=30)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
-        self.assertEqual(process.stdout.strip(), '(3221225472 20)')
+        self.assertEqual(process.stdout.strip(), '(3221225472 50)')

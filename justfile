@@ -27,7 +27,7 @@ test_supervisor := 'PYTHONPATH="' + justfile_directory() + '/workbench/src" pyth
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 # BEGIN GENERATED PREPARATION HEAP
-preparation_runtime_options := "-:max-heap=3G,live-ratio=20,debug=q"
+preparation_runtime_options := "-:max-heap=3G,live-ratio=50,debug=q"
 # END GENERATED PREPARATION HEAP
 test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + gerbil_package_prefix + '/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/compiled-library/modules.sexp" GERBIL_LOADPATH="' + gerbil_package_prefix + '/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
 

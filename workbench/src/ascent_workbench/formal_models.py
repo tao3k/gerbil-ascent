@@ -623,9 +623,19 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
+    'invariants': 'InterfaceSelectionExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
+    ('reuse-unadmitted-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-reloaded-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-compiling-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-consumer-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-missing-interface', 'InterfaceSelectionExact', 12),
+    ('expand-admitted-interface', 'InterfaceSelectionExact', 12),
+    ('drop-qualified-interface', 'InterfaceSelectionExact', 12),
+    ('drop-syntax-interface', 'InterfaceSelectionExact', 12),
+    ('reuse-unknown-interface', 'InterfaceSelectionExact', 12),
+
     ('raise-heap-for-gc', 'HeapLimitUnchanged', 12),
     ('skip-heap-cap', 'HeapSelectionBounded', 12),
     ('occupancy-as-cumulative', 'CumulativeCapabilityRequired', 12),

@@ -275,3 +275,106 @@ class PreparationWorkTests(unittest.TestCase):
             capture_output=True, text=True, timeout=30)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
         self.assertEqual(process.stdout.strip(), '(3221225472 50)')
+
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_admitted_interfaces_use_sdk_paths_and_restore_import_hook(self):
+        spec = (Path('t/harness/library-spec.ss').resolve())
+        with tempfile.TemporaryDirectory(prefix='ascent-interface-') as folder:
+            root = Path(folder).resolve()
+            source = root / 'producer.ss'
+            source.write_text('package: gerbil-ascent\n(export value)\n(def value 1)\n')
+            library = root / 'lib'
+            library.mkdir()
+            compile_expression = (
+                '(import :gerbil/compiler) '
+                f'(compile-module {json.dumps(str(source))} '
+                f'[output-dir: {json.dumps(str(library))} invoke-gsc: #f optimize: #f])')
+            compiled = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', compile_expression],
+                                      capture_output=True, text=True, timeout=30)
+            self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
+            interface = library / 'gerbil-ascent/producer.ssi'
+            self.assertTrue(interface.is_file())
+            expression = (
+                f'(import :gerbil/expander {json.dumps(str(spec))}) '
+                '(def original (current-expander-module-import)) '
+                '(def (probe admitted? reload? name) '
+                f'(call-with-preparation-production-interfaces admitted? {json.dumps(str(library))} '
+                '\'("producer") (lambda () (string-copy (module-context-path (import-module name reload? #f)))))) '
+                '(write (list '
+                '(probe #f #f "producer.ss") '
+                '(probe #t #f "./producer.ss") '
+                '(probe #t #t "producer.ss") '
+                '(eq? original (current-expander-module-import)))) (newline) '
+                '(with-catch (lambda (_) #f) (lambda () '
+                f'(call-with-preparation-production-interfaces #t {json.dumps(str(library))} '
+                '\'("producer") (lambda () (error "expected"))))) '
+                '(write (eq? original (current-expander-module-import))) (newline)')
+            observed = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                      cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            self.assertEqual(observed.stdout.splitlines(), [
+                '(' + json.dumps(str(source)) + ' ' + json.dumps(str(interface)) + ' '
+                + json.dumps(str(source)) + ' #t)', '#t'])
+            interface.unlink()
+            missing = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                     cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(missing.returncode, 0, missing.stdout + missing.stderr)
+            self.assertEqual(missing.stdout.splitlines()[0],
+                             '(' + ' '.join([json.dumps(str(source))] * 3) + ' #t)')
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_sdk_make_reads_interfaces_but_compiler_emits_source_program(self):
+        spec = Path('t/harness/library-spec.ss').resolve()
+        with tempfile.TemporaryDirectory(prefix='ascent-compiler-boundary-') as folder:
+            root = Path(folder).resolve() / 'gerbil-ascent'
+            root.mkdir()
+            source = root / 'producer.ss'
+            source.write_text('package: gerbil-ascent\n(import (only-in :gerbil-ascent/dependency base))\n'
+                              '(export value)\n(def value (+ base 1))\n')
+            dependency = root / 'dependency.ss'
+            dependency.write_text('package: gerbil-ascent\n(export base)\n(def base 16)\n')
+            library = root.parent / 'lib'
+            library.mkdir()
+            options = (f'srcdir: {json.dumps(str(root))} libdir: {json.dumps(str(library))} '
+                       'prefix: "gerbil-ascent" optimize: #f parallelize: 3')
+            setup = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e',
+                                    f'(import :std/make) (add-load-path! {json.dumps(str(root.parent))}) (make \'("dependency" "producer") {options})'],
+                                   cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(setup.returncode, 0, setup.stdout + setup.stderr)
+            script = root / 'check.ss'
+            script.write_text(f'''(import :gerbil/expander :gerbil/compiler :std/make {json.dumps(str(spec))})
+(def source {json.dumps(str(source))})
+(def library {json.dumps(str(library))})
+(def dependency {json.dumps(str(root / "dependency.ss"))})
+(add-load-path! {json.dumps(str(root.parent))})
+(def target (path-expand "gerbil-ascent/producer.ssi" library))
+(def original (current-expander-module-import))
+(def source-requests 0)
+(def interface-requests 0)
+(parameterize ((current-expander-module-import
+ (lambda (path reload?)
+  (when (equal? path source) (set! source-requests (+ source-requests 1)))
+  (when (equal? path target) (set! interface-requests (+ interface-requests 1)))
+  (original path reload?))))
+ (call-with-preparation-production-interfaces #t library '("dependency" "producer")
+  (lambda ()
+   (make '("producer") {options})
+   (write (list 'readonly source-requests (> interface-requests 0)
+                (not (hash-get (eval 'gx#__module-registry) dependency)))) (newline)
+   (let (thread (make-thread (lambda () (module-context-path (import-module source #f #f)))))
+    (thread-start! thread) (write (thread-join! thread)) (newline)))))
+(delete-file (path-expand "gerbil-ascent/producer.o1" library))
+(##eval '(define gerbil-ascent/producer#value 'sentinel))
+(call-with-preparation-production-interfaces #t library '("dependency" "producer")
+ (lambda ()
+  (compile-module source [output-dir: library invoke-gsc: #t optimize: #f])))
+(add-load-path! library)
+(load-module "gerbil-ascent/producer")
+(write (##eval 'gerbil-ascent/producer#value)) (newline)
+''')
+            process = subprocess.run(['gxi', '-:max-heap=1G,debug=q', str(script)],
+                                     cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            self.assertEqual(process.stdout.splitlines(), [
+                '(readonly 0 #t #t)', json.dumps(str(library / 'gerbil-ascent/producer.ssi')), '17'])

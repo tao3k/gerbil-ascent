@@ -3,6 +3,7 @@
 // Observer protocol. This does not model the SDK compiler or allocator.
 module PreparationWork {
   import PreparationPolicy.* from "./PreparationPolicy"
+  import PreparationInterfaces.* from "./PreparationInterfaces"
   import PreparationSupport.* from "./PreparationSupport"
   const Mutation: str
   type State = {jobs: int, observedJobs: int, imports: int, observedImports: int,
@@ -20,6 +21,36 @@ module PreparationWork {
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
     sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
+  // A stateless selector has no protocol transition. Check its complete input
+  // domain once; adding eight no-op choices at every state only repeats work.
+  pure def selected_interface(admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool = {
+    val expected = interface_selected(admitted, reload, compiling, producer, present)
+    if ((Mutation == "reuse-unadmitted-interface" and not(admitted)) or
+        (Mutation == "reuse-reloaded-interface" and reload) or
+        (Mutation == "reuse-compiling-interface" and compiling) or
+        (Mutation == "reuse-consumer-interface" and not(producer)) or
+        (Mutation == "reuse-missing-interface" and not(present))) true
+    else if (Mutation == "expand-admitted-interface" and expected) false else expected
+  }
+  pure def selection_conforms(admitted: bool): bool =
+    Set(false, true).forall(reload => Set(false, true).forall(compiling => Set(false, true).forall(producer =>
+      Set(false, true).forall(present => selected_interface(admitted, reload, compiling, producer, present) ==
+        interface_selected(admitted, reload, compiling, producer, present)))))
+  // 0: filename, 1: qualified symbol, 2: SDK syntax-wrapped origin,
+  // 3: unsupported form. No new state transitions or stuttering choices.
+  pure def request_selection_conforms(admitted: bool): bool =
+    Set(0, 1, 2, 3).forall(request =>
+      Set(false, true).forall(reload => Set(false, true).forall(compiling =>
+        Set(false, true).forall(producer => Set(false, true).forall(present => {
+          val expected = request_interface_selected(request, admitted, reload, compiling, producer, present)
+          val actual = if (Mutation == "drop-qualified-interface" and request == 1) false
+            else if (Mutation == "drop-syntax-interface" and request == 2) false
+            else if (Mutation == "reuse-unknown-interface" and request == 3) true else expected
+          actual == expected
+        })))))
+  pure val AdmittedSelectionExact = selection_conforms(true) and request_selection_conforms(true)
+  pure val UnadmittedSelectionExact = selection_conforms(false) and request_selection_conforms(false)
+  val InterfaceSelectionExact = if (q.productionAdmitted) AdmittedSelectionExact else UnadmittedSelectionExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}

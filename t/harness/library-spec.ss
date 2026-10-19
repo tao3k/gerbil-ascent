@@ -2,7 +2,37 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Test-only runtime dependencies. std/make owns their compilation order.
-(export test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
+(import (only-in :gerbil/expander current-expander-module-import core-library-module-path? stx-e)
+        (only-in :gerbil/compiler/base current-compile-context))
+(export call-with-preparation-production-interfaces test-library-base test-library-dependencies performance-modules performance-contract-files performance-scenario-files preparation-retained-source? preparation-projection-roots preparation-support-roots)
+;; BEGIN GENERATED PREPARATION INTERFACES
+;; Gerbil still owns syntax decoding, path normalization, caching and expansion.
+(def (call-with-preparation-production-interfaces admitted? library production thunk)
+  (let ((original (current-expander-module-import))
+        (interfaces
+          (if admitted?
+            (apply append (map
+              (lambda (module)
+                (let (target (path-expand (string-append "gerbil-ascent/" module ".ssi") library))
+                  (if (file-exists? target)
+                    (list (cons (path-normalize (string-append module ".ss")) target)
+                          (cons (string->symbol (string-append ":gerbil-ascent/" module)) target))
+                    [])))
+              production))
+            [])))
+    (parameterize
+      ((current-expander-module-import
+         (lambda (path reload?)
+           (let (entry
+                  (and (not reload?) (not (current-compile-context))
+                       (let (key (cond ((string? path) (path-normalize path))
+                                        ((core-library-module-path? path) (stx-e path))
+                                        (else #f)))
+                         (and key (assoc key interfaces)))))
+             (original (if entry (cdr entry) path) reload?)))))
+      (thunk))))
+;; END GENERATED PREPARATION INTERFACES
+
 ;; BEGIN GENERATED PREPARATION SOURCE
 ;; Generated from PreparationWork.lean; formal CI compares this region.
 (def (preparation-retained-source? source source-suites? source-consumers)

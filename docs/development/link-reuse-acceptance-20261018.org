@@ -1506,3 +1506,159 @@ The primary checkout acquired unrelated edits to gerbil.pkg, formal_models.py
 and a new ModelApplicability.qnt while the experiment ran. They are preserved;
 this rejection and final default-policy acceptance use a separate worktree
 based on the tested commit. No SDK or upstream code is changed.
+
+* Context-load input selection (2026-10-19)
+
+The remaining source-context interval is separate from native make and from
+compiled-product cache restoration. The existing harness prepends the source
+root to Gerbil's load path. Gerbil resolves a qualified import to a concrete
+path before invoking current-expander-module-import; preloading a qualified
+interface therefore does not prevent a subsequent source-path expansion.
+
+The harness now uses that existing SDK import parameter only during context
+loading. Its mapping contains the canonical source paths of the production
+catalog, and only interfaces present in the installed package library. It is
+empty unless the existing production receipt admits source bytes, SDK, root and
+linked-library identity. Explicit reload, unsupported path values, absent
+interfaces and non-production inputs retain the original SDK import path.
+Gerbil owns normalization, module caching, interface/source expansion and macro
+evaluation. Dynamic parameter scope restores the original hook on success or
+exception, before resident projection and native make. Source Suite and support
+roots, the full carrier list and all execution gates remain unchanged.
+
+PreparationWork.lean renders the deployed mapping/dispatch region exactly and
+renders the shared Quint selection predicate. It proves the four fallback
+conditions and the admitted source-completion selection. PreparationWork.qnt
+adds five mutation controls for invalidated producers, reload, consumers,
+missing interfaces and needless admitted source expansion. These dispatch
+correspondences do not prove the entire native resolver, decoder or allocator.
+Real SDK fixtures generate an interface through Gerbil's compiler (without C
+compilation), then check source/interface paths, aliases, reload, missing
+outputs and exceptional hook restoration.
+
+Local probes are diagnostic only: unrelated compiler and Lean activity was
+present. The incomplete older local prefix also lacks current interfaces, so
+its timings are not admitted as candidate performance. Independent remote
+baseline/candidate controls must qualify actual context-load work and latency.
+The existing import observer distinguishes completed source contexts from
+completed interface contexts. Its allocator/GC samples remain inclusive SDK
+observations, not cumulative still-object allocation. No negative counter is
+clamped, no historical regression is resolved by this change, and no SDK or
+upstream source is modified.
+
+The first candidate's formal job 39190450404 reached the unchanged 15-minute
+job limit after ALL-FORMAL-CHECK-OK and before the conformance step. The failure
+is retained. The selector is stateless, but its first Quint representation
+added eight no-op ImportPath choices to every protocol state. It generated
+67,969,681 transitions while exploring 2,442,600 states locally. The revision
+checks the entire 16-element Boolean input domain as constant predicates selected by the original admission state and
+removes the artificial state field and no-op action. All original protocol
+states, transitions, invariants and five new mutation controls remain; no
+sampling, cutoff, timeout, worker count or resource limit changes. Runtime
+Scheme, observer, controller, production inputs and experiment code are
+identical to 4bdf2922, whose independent native experiments remain attributable
+to that exact revision rather than being relabeled as another SHA.
+
+* Keep dependency checks separate from actual compilation
+
+The first selector was scoped only to consumer loading. Source inspection of
+this exact SDK shows std/make calling import-module on each carrier in both
+module-id and build-coordinator. Restoring the hook before make can therefore
+move producer expansion into make rather than remove it. Its successful macOS
+receipt 39190450400 is retained: context loading 46.068162s, make 317.427017s,
+preparation 371.604331s, source runtime 148.346624s, 173 modules / 1401 Cases,
+253 support compilations and zero production rebuilds. These unmatched wall
+values are not a speedup or a causal regression estimate.
+
+The revised selector also scopes std/make's dependency checks. It uses the SDK's
+current-expander-compiling? capability, which compile-module binds before
+importing its actual input. When this capability is true the selector always
+passes the original source path; it cannot compile an interface as the program
+body. Source/support inputs remain original paths in every mode. Native make
+still owns all carriers, dependency ordering, currentness, workers and builds.
+No module registry alias is written by ASCENT. The parameter restores naturally
+on success or exception and is inherited by native Scheme build threads.
+
+The real compiler regression fixture first generates an interface, removes the
+compiled object, reads that interface in a child Scheme thread, then recompiles
+the program while the selector is active. It loads the newly compiled object
+through the SDK loader and checks the actual value 17 against a sentinel. This
+validates compiler body selection and thread inheritance, rather than checking
+method names or only the Boolean policy. Reload and missing-interface controls
+remain. The generated Lean/Quint policy adds compilation as its fifth Boolean
+input: all 32 combinations and six new mutation controls are retained.
+
+The earlier independent experiments bind 4bdf2922, not this expanded-scope
+implementation. Their observations remain historical and cannot qualify this
+revision's costs. Fresh matched controls are required for the revised runtime
+path. The 3G preparation heap, live-ratio=50, three-core/240-second semantics,
+12-thread bindings, cancellation, resource, provenance and original performance
+rules are unchanged. Cumulative allocator events remain unobserved.
+
+* Refine the compiler marker against the complete SDK call path
+
+Further source audit found std/make itself setting
+current-expander-compiling?=#t around its entire operation. The 4c4cf633 marker
+therefore preserved correct compilation but still disabled reuse during native
+dependency checks. The two unfinished 4c4cf633 experiments were canceled as
+superseded; their partial controls are retained, not used as complete results.
+
+The corrected selector reads the existing public current-compile-context from
+:gerbil/compiler/base. Its default is #f. std/make does not set it, whereas both
+compile-module and compile-exe bind their diagnostic context before importing
+the actual program input. No stack tags or caller names are parsed. Any present
+compiler context conservatively retains the source path. The generated Scheme
+region uses this actual SDK getter; the Lean/Quint Boolean denotes context
+presence, not the broader expansion-mode flag.
+
+The strengthened native fixture runs real std/make with three workers against
+an unchanged compiled producer in a fresh VM. It asserts zero producer-source
+requests and at least one interface request, checks thread inheritance, then
+recompiles and loads the actual program object to obtain 17 instead of a
+sentinel. Replacing only the getter with the earlier broad flag makes this
+fixture fail its readonly counter assertion while still returning 17. That
+negative control is retained. The corrected fixture and all 14 work-observer
+tests pass on the existing released SDK. This checks the concrete native call
+path that the Boolean model alone could not distinguish; it does not establish
+full native compiler/decoder source equivalence or cumulative allocation.
+
+* Native compiled-interface dependency requests
+
+The completed 20ca9be3 ABBA experiments retain all four independent controls
+against 4df75849. Cold/warm source completions were 815/516 versus 862/563;
+compiler jobs stayed 589/0. Cold context time summed to 65.278085s versus
+71.335481s (-8.49%), but complete cold preparation only changed from
+589.219499s to 587.335356s (-0.32%). Build time regressed 7.16%. The
+uninstrumented latency experiment 39196369920 was rejected, including the
+unchanged historical failure ledger. Work experiment 39196373467 was also
+rejected: the SDK allocation estimates cannot provide cumulative allocator
+events. No byte reduction or end-to-end improvement is admitted. The separate
+macOS semantics receipt 39196292780 retains its slow 350.226764s preparation
+and 40.846909s context phase; its 118.873312s runtime passed the original gate.
+
+The remaining 90 production source contexts are concrete, distinct identities,
+not additional compilations. This SDK's compiled spec: imports call
+core-import-nested-module, which forwards a syntax-wrapped qualified origin to
+import-module. A filename-only selector misses these requests and the SDK
+then resolves them against the ordinary source-first load path. The revised
+selector indexes each admitted interface by both normalized source filename
+and qualified interned symbol. The existing SDK core-library-module-path? and
+stx-e decode native bare and syntax-wrapped library requests. Unknown forms,
+explicit reloads, nonadmitted producers, missing interfaces and actual compiler
+contexts retain their original request. Global load-path order and module
+registry remain untouched.
+
+The real native regression test now compiles two modules, with an only-in
+import producing a compiled spec: dependency. Fresh-VM readonly make uses
+three workers and must not register the dependency source, then actual
+compile-module emits an executable object whose value is 17. Disabling only
+qualified-origin selection makes the same test fail its source-registry
+assertion while still returning 17: correct values alone would miss the
+expansion waste. Guarded Lean checks source/symbol/syntax request policy and
+renders the exact deployed helper and Quint predicate; Quint adds three
+negative controls for missing qualified/syntax routes and accepting unknown
+forms. SDK syntax decoding, full macro expansion and allocator internals remain
+explicit unproved premises. This change needs new exact-revision matched
+receipts; the earlier 47-context reduction cannot qualify the revised selector.
+The immutable released SDK, three cores, 240-second source runtime deadline,
+12 binding-test threads and every semantic and performance limit are unchanged.

@@ -347,3 +347,37 @@ semantics. The true whole-Scheme cumulative allocation obligation remains open:
 the negative historical SDK samples remain rejected and are not clipped,
 wrapped, replaced with RSS, or added across overlapping imports. Native GCC GGC
 allocation is independently measured and explicitly retains its narrower scope.
+
+
+* Released counter semantics: native non-monotonicity witness
+
+A separately compiled Scheme function in the existing immutable SDK captures
+its allocation statistic at 20,000 nested non-tail calls and after return.
+The initial local witness changed from 62,589,456 to 61,310,160 bytes while the
+GC count did not change. The committed fixture records both samples before IO
+and also checks the calculation result. This is a counterexample to treating
+the SDK statistic as monotonic cumulative allocator events, not a speed or
+allocation benefit. The pinned kernel calls bytes_allocated; its memory source
+includes current stack occupancy in words_movable_objs, and returning across
+stack sections subtracts their contribution from words_prev_msections. Lean
+states the decrease property and Quint rejects promoting this net counter to
+cumulative evidence. The Release-native witness is checked independently.
+
+This does not establish that every historical negative import sample has the
+same cause. It invalidates the measurement premise even when a sample happens
+to be positive. True cumulative Scheme allocator-event observations remain
+unobserved in this integration; neither max-clipping samples nor summing positive nested
+intervals supplies that missing evidence. All original rejection gates remain.
+
+
+* Interface projection integration failure retained
+
+Commit 42260dcd Linux semantic job 118013762114 passed the complete source
+semantic run, then failed the compiled DSL closure build. A reused reference
+root had an interface-path registry entry, while the prepared-source closure
+API requires its source-path registry entry. The ASCENT caller was wrong; no
+upstream compiler change is required. The corrected caller uses ASP's existing
+build-time native-context projection for content-admitted interface reuse and
+retains the prepared-source projection for the unchanged cold route. Both
+routes keep the same roots and Gerbil-owned dependency traversal. This failure
+is retained rather than retried unchanged or hidden by the earlier semantic pass.

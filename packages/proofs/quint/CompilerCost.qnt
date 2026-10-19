@@ -21,6 +21,10 @@ module CompilerCost {
                                  resources or Mutation == "reuse-damaged-interface")
     actual == (sources and resources)
   }))
+  pure val NetCounterPolicy = Set(0,1).forall(heap => Set(0,1).forall(stack => Set(1,2).forall(released => {
+    val decreased = heap + stack < heap + stack + released
+    not(decreased and Mutation == "promote-net-stack-counter")
+  })))
   pure val ParentPolicy = Set(false, true).forall(same => Set(0,1,2).forall(matches => {
     val actual = if (Mutation == "cross-parent-cost") matches == 1
       else if (Mutation == "ambiguous-parent-cost") same and matches > 0
@@ -62,7 +66,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

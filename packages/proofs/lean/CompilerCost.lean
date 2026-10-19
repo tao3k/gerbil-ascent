@@ -125,6 +125,15 @@ theorem changed_reference_resources_rejected (sources : Bool) :
 theorem changed_reference_sources_rejected (resources : Bool) :
     supportAdmitted false resources = false := by simp [supportAdmitted]
 
+-- The pinned SDK counter includes live stack contribution. Unwinding can
+-- decrease it without changing heap-event allocation or collecting garbage.
+def netStackCounter (heap stack : Nat) : Nat := heap + stack
+
+theorem stack_release_can_decrease_counter (heap stack released : Nat) (positive : 0 < released) :
+    netStackCounter heap stack < netStackCounter heap (stack + released) := by
+  simp only [netStackCounter]
+  omega
+
 def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
   "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
@@ -232,3 +241,5 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.producer_admission_requires_every_link
 #print axioms Ascent.CompilerCost.changed_reference_sources_rejected
 #print axioms Ascent.CompilerCost.changed_reference_resources_rejected
+
+#print axioms Ascent.CompilerCost.stack_release_can_decrease_counter

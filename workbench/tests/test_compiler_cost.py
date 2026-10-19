@@ -131,6 +131,26 @@ class CompilerCostTests(unittest.TestCase):
             self.assertEqual(cost['generated_scheme_producer']['generated_c_output']['path'], str(generated))
             self.assertGreater(cost['gcc_cumulative_ggc_bytes'], 0)
 
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_sdk_net_stack_counter_is_not_cumulative_allocation(self):
+        import os
+        sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
+        source = Path('workbench/tests/fixtures/allocation-stack.scm').resolve()
+        with tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder) / 'allocation.o1'
+            env = dict(os.environ, GAMBOPT=f'~~={sdk},~~bin={sdk}/bin,~~lib={sdk}/lib')
+            compiled = subprocess.run([str(sdk / 'bin/gsc'), '-dynamic', '-o', str(bundle), str(source)],
+                                      env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
+            process = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', f'(load {json.dumps(str(bundle))})'],
+                                     capture_output=True, text=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            before, after, gcs, result = map(float, process.stdout.strip().strip('()').split())
+            self.assertEqual(result, 200010000)
+            self.assertEqual(gcs, 0, process.stdout)
+            self.assertLess(after, before, process.stdout)
+            # This is an observed counterexample, never an allocation benefit.
+
     def test_incomplete_or_changed_allocation_coverage_is_rejected(self):
         self.assertTrue(gcc_ggc_complete(3, 3, 0, 0, 0))
         for row in [(0,0,0,0,0), (3,2,0,0,0), (3,3,1,0,0), (3,3,0,1,0), (3,3,0,0,1)]:

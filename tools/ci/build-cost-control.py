@@ -297,6 +297,8 @@ def main():
                'rust/ascent/src/clues/slices.rs',
                'rust/ascent/tests/unit/clues/capacity.rs',
                'workbench/tests/test_compiler_cost.py',
+               'workbench/tests/test_reference_cache.py',
+               'workbench/tests/fixtures/allocation-stack.scm',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'packages/proofs/quint/PreparationWork.qnt',

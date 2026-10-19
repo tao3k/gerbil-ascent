@@ -14,6 +14,7 @@
         (only-in "../../bindings/artifact.ss" artifact-invalidated-modules clean-compiled-resources!)
         (only-in :std/string/path path-default-extension)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
+                 asp-gerbil-scheme-native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
         (only-in "artifact-admission.ss" artifact-support-interfaces artifact-record-support-interfaces! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
@@ -123,8 +124,14 @@
                    (build-elapsed loading)))
       (let* ((projection-started (current-jiffy))
              (closure
-              (call-with-asp-gerbil-scheme-prepared-source-graph
-               (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots)))))
+              (if (pair? admitted-support)
+                ;; Interface contexts are registered by .ssi, not source path.
+                ;; The existing build API projects those native contexts too.
+                (call-with-preparation-production-interfaces
+                  production-current? library (append gerbil-ascent-library-modules admitted-support)
+                  (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))
+                (call-with-asp-gerbil-scheme-prepared-source-graph
+                 (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))))
         (set! modules
           (delete-duplicates/hash
             (append modules

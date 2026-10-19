@@ -766,6 +766,7 @@ CONFIGURATIONS['CompilerCost'] = {
     'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
 }
 FAULTS['CompilerCost'] = (
+    ('promote-net-stack-counter', 'PolicyExact', 12),
     ('ignore-producer-order', 'PolicyExact', 12),
     ('match-producer-name', 'PolicyExact', 12),
     ('ambiguous-producer', 'PolicyExact', 12),

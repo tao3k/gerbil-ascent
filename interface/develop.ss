@@ -3,6 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Linked development shell. Upstream owns expansion, reload and the REPL.
 (import :gerbil/expander :std/interactive
+        ;; Link the released test runtime once; Suite carriers remain source.
+        ;; Every fresh VM can share these read-only image pages instead of
+        ;; loading and retiring the same dynamic SDK bundles per batch.
+        (only-in :gerbil/tools/gxtest)
+        (only-in :std/test)
         (for-syntax :gerbil/runtime/system)
         (only-in :gerbil/runtime/init gerbil-load-expander!)
         (only-in :gerbil/runtime/repl replx)

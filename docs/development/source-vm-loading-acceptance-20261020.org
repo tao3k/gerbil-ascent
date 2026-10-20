@@ -296,3 +296,53 @@ and Quint link that source-bound workload to86016 versus172032 Term Contract
 checks, retaining all3072 evaluations and oracle calls. This counts checks,
 not bytes or elapsed time. Each oracle receives a fresh graph-input list so
 an erroneous evaluator mutation cannot contaminate the reference input.
+
+* Reviewed upstream follow-up and complete Linux receipt
+
+The reviewed runtime pin advances from =150dd6c0= to PR #18 head
+=418adc8e25c38481c25dde26fdb62e02fa961d8c=. The intervening commit changes
+upstream model-test wiring, retention attribution and documentation. Its diff
+contains no runtime implementation or Cargo manifest change. This is not an
+additional threading or performance repair. Cargo's locked metadata resolves
+all four runtime/build-support dependencies to that head; the separate retired
+IR generator remains a build-only dependency at its existing fixed revision.
+
+At =5d2aa2df=, main CI =39434192451= passed every job, including complete
+Scheme source semantics, original performance, formal, Rust/PyO3 and downstream
+Python consumers. The source gate completed174 modules and1410 Cases in85
+seconds, with90 fresh batches,12 concurrent VMs and one processor per VM.
+The first two exhaustive semi-naive Cases took42.05 and39.31 seconds. The
+preceding =44e659d9= Linux source gate took120 seconds; these individual runs
+are observations, not a stable matched speedup claim.
+
+Installed PyO3's selected Rust-worker and default-worker entrypoints each
+completed120 calls with12 resident single-processor owners and reaped all12.
+The full =418adc8e= dependency integration still requires its own exact-head
+CI; prior green runs do not substitute for that receipt. macOS default-GC and
+separate tighter-GC experiments remain independent evidence, including failures.
+
+* Failed default and tighter-GC follow-up
+
+The default-policy =5d2aa2df= macOS run =39434192497= failed at240.2029
+seconds with48 batches started,36 completed and572 Cases completed. The first
+exhaustive Case ran from15.03 to230.95 seconds; the Actor Case then remained
+unfinished. The owned VM sampled RSS peak was3143.91 MiB and sampled SELF CPU
+lower bound468.99 seconds. Host compression/decompression increased4400502
+and3787020 pages respectively (16 KiB pages). There were no foreign compilers
+or audit errors. These host counters are not whole-VM cumulative allocations.
+
+The separate =7a42fc19= GC80 experiment =39434523368= failed at240.1981
+seconds, with67 batches started,55 completed and870 Cases completed. Its first
+exhaustive Case ran from18.98 to186.68 seconds. The Actor Case remained
+unfinished. More completed work does not satisfy the unchanged deadline;
+this failed GC policy is not promoted to the PR.
+
+The next candidate retains the SDK default GC policy. It links the existing
+released GxTest and std/test runtimes into the already linked development
+shell. Source Suite carriers, their native GxTest discovery and expansion,
+complete selection, fresh process exits and12-worker admission remain unchanged.
+It changes no SDK, build.ss, evaluator or resource/provenance policy. Sharing
+read-only image pages and avoiding repeated dynamic SDK bundle loading are
+mechanism hypotheses; exact-head complete semantics and timings must confirm
+any benefit. This does not close native loader/GC or cumulative allocation
+source refinement.

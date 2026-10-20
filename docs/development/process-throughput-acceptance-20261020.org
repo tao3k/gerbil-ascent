@@ -426,3 +426,44 @@ execution allowance and does not replace any checkpoint decision. The original
 parent controller still runs once for every signed work transition. This
 scheduling repair requires fresh Linux semantic and current-head CI receipts;
 Mac success alone does not admit it.
+
+* Complete sustained control before platform wait repair
+
+Experiment =39383877607= at =ef5e78a3= admitted all fourteen configurations:
+three CPUs, twelve persistent clients, clean source, complete matching fixed-work
+answers, all sustained requests independently checked, and no foreign compiler
+or audit errors. The request interval excludes preparation and native teardown.
+The following table retains the negative scaling rather than selecting faster
+samples. Fixed-work throughput is the median of the five predetermined samples;
+its ratio uses the corresponding VM1 or Rayon1 baseline. The sustained window
+has the same per-request workload but deliberately different completed counts,
+so it is not mislabeled as an equal-total-work comparison. P95 is the upper
+edge of the 0.1-ms histogram interval and includes client result verification.
+
+| Workload | Backend | Fixed req/s | Equal-work gain | Sustained req/s | Sustained p50 ms | Sustained p95 ms |
+|----------+---------+-------------+-----------------+-----------------+------------------+------------------|
+| small | VM1 | 29.93 | 1.000x | 24.22 | 379.7 | 769.6 |
+| small | VM3 | 34.15 | 1.141x | 34.03 | 323.1 | 632.0 |
+| small | VM12 | 40.72 | 1.360x | 39.50 | 269.8 | 447.4 |
+| small | Rayon1 | 6983.87 | 1.000x | 9110.62 | 1.1 | 2.4 |
+| small | Rayon3 | 14243.04 | 2.039x | 17325.93 | 0.7 | 1.3 |
+| small | Rayon6 | 13440.48 | 1.925x | 16300.64 | 0.7 | 1.5 |
+| small | Rayon12 | 13051.13 | 1.869x | 18420.93 | 0.6 | 1.3 |
+| closure | VM1 | 23.78 | 1.000x | 18.70 | 557.2 | 988.4 |
+| closure | VM3 | 45.20 | 1.901x | 40.52 | 262.4 | 481.8 |
+| closure | VM12 | 40.69 | 1.711x | 29.12 | 410.8 | 584.3 |
+| closure | Rayon1 | 1618.81 | 1.000x | 1663.87 | 6.5 | 11.9 |
+| closure | Rayon3 | 3141.73 | 1.941x | 2646.63 | 4.0 | 8.6 |
+| closure | Rayon6 | 2780.20 | 1.717x | 2503.09 | 3.7 | 11.8 |
+| closure | Rayon12 | 2478.23 | 1.531x | 2588.09 | 3.3 | 13.1 |
+
+In the closure sustained window, VM12 delivered 29.12 requests/second versus
+40.52 for VM3: a 28.1% regression despite twelve overlapping native calls.
+Measured overlap is not evidence of twelve executing CPU cores. The shared
+active-yield transport was therefore not accepted as a universal performance
+improvement. On macOS, production kernel checkpoints return to buffered binary
+socket IO, which sleeps while waiting for each original decision. Linux uses
+the process-shared futex exchange. No private Darwin wait ABI, additional SDK,
+control batching, or new application scheduling framework is introduced.
+The ready record identifies the actual compiled platform transport. These
+platform wait changes require a fresh same-matrix receipt at the new head.

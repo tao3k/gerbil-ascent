@@ -108,7 +108,8 @@ fn execute(
     // Kernel checkpoints are frequent. Expansion, loading and arbitrary
     // callbacks keep the sleeping socket exchange, so idle owner threads
     // never burn a core while the VM performs unrelated preparation.
-    let shared_checkpoints = request.get("executionControl").is_some()
+    let shared_checkpoints = cfg!(target_os = "linux")
+        && request.get("executionControl").is_some()
         && matches!(
             request.get("operation").and_then(|v| v.text().ok()),
             Some("source-run" | "source-replace")

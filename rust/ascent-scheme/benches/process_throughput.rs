@@ -446,8 +446,13 @@ fn main() {
     for (i, session) in sessions.iter_mut().enumerate() {
         execute(session, samples * tasks + i, groups, width);
     }
+    let checkpoint_transport = if cfg!(target_os = "linux") {
+        "shared-futex"
+    } else {
+        "buffered-socket"
+    };
     eprintln!(
-        "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} startup_ns={}",
+        "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} startup_ns={}",
         startup.elapsed().as_nanos()
     );
     println!("sample\ttask\tlatency_ns\tcompletion_ns\treplace_ns\trun_export_ns\tanswer_sha");

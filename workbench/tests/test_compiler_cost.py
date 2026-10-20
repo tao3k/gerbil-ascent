@@ -41,10 +41,11 @@ class CompilerCostTests(unittest.TestCase):
             for name in ['a-test.ss', 'b-test.ss']:
                 (source / name).touch()
             log = root / 'run.log'
-            valid = 'MODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            valid = 'TEST-DISPATCH modules=2 batches=12 workers=12 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            valid += 'VM-RUNTIME processors=1\n' * 12
             log.write_text(valid)
             self.assertEqual(check(root, log)['cases'], 1)
-            for invalid in [valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
+            for invalid in [valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=12', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
                             valid.replace('MODULE-OK t/qualification/b-test.ss\n', '')]:
                 log.write_text(invalid)
                 with self.subTest(log=invalid), self.assertRaises(ValueError):
@@ -87,6 +88,59 @@ class CompilerCostTests(unittest.TestCase):
                 self.assertIsNone(generated_source_producer(helper, parent, [dict(producer, **changes)]))
         self.assertIsNone(generated_source_producer(helper, parent, [producer, dict(producer, pid=3)]))
         self.assertIsNone(generated_source_producer(helper, dict(parent, inputs=[]), [producer]))
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_indexed_projection_matches_independent_list_membership(self):
+        module = Path('t/harness/artifact-admission.ss').resolve()
+        expression = f'''(import {json.dumps(str(module))})
+(def selection '(#t ("suite.ss") ()))
+(for-each (lambda (cached)
+ (for-each (lambda (required)
+  (let* ((record (list 'profile 'sources 'resources selection cached))
+         (expected (and (andmap (lambda (m) (member m cached)) required) cached)))
+   (unless (equal? (artifact-support-projection record selection required) expected)
+    (error "indexed completeness changed" cached required))
+   (when (artifact-support-projection record '(#f () ()) required)
+    (error "wrong selection admitted"))))
+  '(() ("a") ("b") ("a" "b") ("b" "a") ("a" "a"))))
+ '(() ("a") ("b") ("a" "b") ("b" "a") ("a" "a")))
+(display "PROJECTION-INDEX-CHECKED")'''
+        result = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stdout, 'PROJECTION-INDEX-CHECKED')
+
+    @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
+    def test_unchanged_cache_keeps_encoding_but_rechecks_resources(self):
+        module = Path('t/harness/artifact-admission.ss').resolve()
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            library = root / 'lib'
+            library.mkdir()
+            (library / 'fixture.ssi').write_text('original')
+            expression = f'''(import {json.dumps(str(module))})
+(def library {json.dumps(str(library))})
+(def file {json.dumps(str(root / 'support.sexp'))})
+(def sources (make-hash-table))
+(hash-put! sources "fixture.ss" "digest")
+(def (record previous)
+ (artifact-record-support-cache! file sources library '() '(#t () ()) '("fixture") previous))
+(record #f)
+(def previous (artifact-support-cache file sources library '()))
+(def inode (file-info-inode (file-info file)))
+(record previous)
+(unless (= inode (file-info-inode (file-info file))) (error "unchanged record encoded again"))
+(call-with-output-file (path-expand "fixture.ssi" library) (lambda (out) (display "changed" out)))
+(record previous)
+(when (= inode (file-info-inode (file-info file))) (error "changed resource did not publish"))
+(unless (artifact-support-cache file sources library '()) (error "fresh cache rejected"))
+(display "CACHE-ENCODING-CHECKED")'''
+            result = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                                    cwd=root, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stdout.splitlines(), ['BUILD-TEST-LIBRARY support-cache-write=1',
+                'BUILD-TEST-LIBRARY support-cache-write=0', 'BUILD-TEST-LIBRARY support-cache-write=1',
+                'CACHE-ENCODING-CHECKED'])
 
     @unittest.skipUnless(shutil.which('gxi'), 'released Gerbil SDK required')
     def test_support_interfaces_reject_source_resource_profile_and_receipt_changes(self):

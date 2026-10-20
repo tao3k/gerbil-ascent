@@ -73,6 +73,7 @@
          (support-file (path-expand "support-graph.sexp" test-cache))
          (admitted-support [])
          (admitted-projection #f)
+         (admitted-cache #f)
          (selection (list source-suites? tests source-consumers))
          (started (current-jiffy))
          (sources (artifact-sources))
@@ -102,6 +103,7 @@
         (let ((installed (cached-support-modules))
               (cached (artifact-support-cache support-file sources library gerbil-ascent-compiler-options)))
           (when cached
+            (set! admitted-cache cached)
             (set! admitted-support
               (filter (lambda (module) (member module installed))
                       (artifact-support-interfaces cached library)))
@@ -202,7 +204,9 @@
         (displayln "BUILD-TEST-LIBRARY-PHASE inventory-after wall-seconds=" (build-elapsed phase)))
       (artifact-directory! (path-directory options-file))
       (artifact-record-compiler-options! options-file gerbil-ascent-compiler-options)
-      (artifact-record-support-cache! support-file sources library gerbil-ascent-compiler-options selection modules)
+      (let (phase (current-jiffy))
+        (artifact-record-support-cache! support-file sources library gerbil-ascent-compiler-options selection modules admitted-cache)
+        (displayln "BUILD-TEST-LIBRARY-PHASE support-cache-publication wall-seconds=" (build-elapsed phase)))
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before

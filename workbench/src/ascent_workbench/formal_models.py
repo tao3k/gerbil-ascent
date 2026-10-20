@@ -767,6 +767,8 @@ CONFIGURATIONS['CompilerCost'] = {
     'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
 }
 FAULTS['CompilerCost'] = (
+    ('skip-changed-cache-write', 'PolicyExact', 12),
+    ('projection-index-first-only', 'PolicyExact', 12),
     ('missing-options-as-default', 'PolicyExact', 12),
     ('skip-complete-admission', 'PolicyExact', 12),
     ('retain-duplicate-admission', 'PolicyExact', 12),

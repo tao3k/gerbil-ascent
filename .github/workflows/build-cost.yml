@@ -46,7 +46,7 @@ on:
         type: boolean
         default: false
       semantic_runtime:
-        description: Also compare all source semantics with three workers and the unchanged 240-second limit
+        description: Also compare all source semantics with twelve single-thread VMs and the unchanged 240-second limit
         type: boolean
         default: false
 permissions:
@@ -181,7 +181,7 @@ jobs:
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_reference_cache.py -v
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_study_profile.py -v
-      - name: Qualify complete source semantics with three workers
+      - name: Qualify complete source semantics with twelve single-thread VMs
         run: python3 tools/ci/build-cost-control.py --semantics-only --output "$RUNNER_TEMP/macos-semantics"
       - name: Preserve semantic diagnostics and every batch log
         if: always()

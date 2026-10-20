@@ -210,8 +210,35 @@ def cacheInputsYamlSource : String :=
 def producerPythonSource : String :=
   "def producer_eligible(success, current, ordered, same_content, unique):\n    return success and current and ordered and same_content and unique\n"
 
+-- Under the existing exclusive lane lock, skipping only the encoding of an
+-- equal complete record preserves publication. Digest construction is eager.
+def publishedCache (previous next : List String) : List String :=
+  if previous == next then previous else next
+
+theorem identical_cache_encoding_reuse (previous next : List String) :
+    publishedCache previous next = next := by
+  simp only [publishedCache]
+  split <;> simp_all
+
 def supportAdmissionSchemeSource : String :=
-  "(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)\n  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n               recorded-sources)\n       (equal? resources recorded-resources)))\n"
+  "(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)\n" ++
+  "  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n" ++
+  "               recorded-sources)\n" ++
+  "       (equal? resources recorded-resources)))\n" ++
+  "(def (artifact-record-support-cache! file sources library options selection modules (previous #f))\n" ++
+  "  ;; The caller owns lane.lock. Recompute every resource digest after make;\n" ++
+  "  ;; reuse only the encoding of an identical complete record, never its hashes.\n" ++
+  "  (let ((next (list (artifact-support-profile options)\n" ++
+  "                    (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n" ++
+  "                    (artifact-support-resources library) selection modules))\n" ++
+  "        (pending (string-append file \".pending\")))\n" ++
+  "    (if (and (equal? previous next) (file-exists? file))\n" ++
+  "      (displayln \"BUILD-TEST-LIBRARY support-cache-write=0\")\n" ++
+  "      (begin\n" ++
+  "        (call-with-output-file [path: pending truncate: #t]\n" ++
+  "          (lambda (port) (write next port) (newline port)))\n" ++
+  "        (rename-file pending file #t)\n" ++
+  "        (displayln \"BUILD-TEST-LIBRARY support-cache-write=1\")))))\n"
 
 
 -- Restoring artifacts from another program is never execution authority.
@@ -269,8 +296,30 @@ theorem changed_roots_do_not_skip_expansion (current complete : Bool) :
 theorem incomplete_projection_not_reused (current same : Bool) :
     projectionReuse current same false = false := by simp [projectionReuse]
 
+-- Hash membership agrees with the former list scan for arbitrary module lists,
+-- including duplicate strings. Native hash equality remains a host premise.
+def projectionIndex (modules : List String) : Std.HashSet String := .ofList modules
+
+theorem projection_membership_exact (modules : List String) (module : String) :
+    (projectionIndex modules).contains module = modules.contains module := by
+  simp [projectionIndex, Std.HashSet.contains_ofList]
+
+theorem projection_completeness_exact (modules required : List String) :
+    required.all (fun m => (projectionIndex modules).contains m) =
+      required.all (fun m => modules.contains m) := by
+  simp only [projection_membership_exact]
+
+-- Source operations, not allocator bytes or a collision/latency theorem.
+def projectionIndexEntries (modules : List String) : Nat := modules.length
+def projectionProbeRequests (required : List String) : Nat := required.length
+
 def projectionCacheSchemeSource : String :=
-  "(def (artifact-support-projection record selection required)\n  (and record (equal? selection (cadddr record))\n       (andmap (lambda (module) (member module (car (cddddr record)))) required)\n       (car (cddddr record))))\n"
+  "(def (artifact-support-projection record selection required)\n" ++
+  "  (and record (equal? selection (cadddr record))\n" ++
+  "       (let* ((modules (car (cddddr record)))\n" ++
+  "              (present (list->hash-table (map (lambda (module) (cons module #t)) modules))))\n" ++
+  "         (and (andmap (lambda (module) (hash-key? present module)) required)\n" ++
+  "              modules))))\n"
 
 
 def orderedPublication (samePath disjoint unique : Bool) : Bool := samePath && disjoint && unique
@@ -366,3 +415,8 @@ end Ascent.CompilerCost
 
 #print axioms Ascent.CompilerCost.missing_options_not_default
 #print axioms Ascent.CompilerCost.observed_empty_options_are_known
+
+#print axioms Ascent.CompilerCost.projection_membership_exact
+#print axioms Ascent.CompilerCost.projection_completeness_exact
+
+#print axioms Ascent.CompilerCost.identical_cache_encoding_reuse

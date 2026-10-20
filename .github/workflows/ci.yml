@@ -148,7 +148,7 @@ jobs:
           ulimit -c unlimited
           just prepare-semantic-library
           # Retain the acceptance deadline independently of live-output supervision.
-          ASCENT_GXTEST_TIMEOUT=180s GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s just test-file t/qualification 2G
+          GERBIL_BUILD_CORES=12 ASCENT_GXTEST_TIMEOUT=180s GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s just test-file t/qualification 2G
       - name: Qualify independent Scheme source consumers
         if: ${{ matrix.lane == 'semantics' }}
         env:

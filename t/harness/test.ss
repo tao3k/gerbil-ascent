@@ -20,7 +20,7 @@
                  testing-interface-map-profile testing-test-selector
                  +testing-memory-profile+ +testing-process-isolation-profile+)
         (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!))
-(export main striped-module-files source-test-interface source-test-batches)
+(export main striped-module-files source-test-interface source-test-batches single-thread-vm-command)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -59,16 +59,23 @@
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
    '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
-;; Refine the native capacity groups once more before queueing them. This
-;; retains native option compatibility and avoids one full stripe pinning a
-;; worker after the isolated exhaustive jobs finish. Capacity still owns both
-;; divisions; there is no project batch-size or extra worker setting.
+;; One native partition retains compatible options while amortizing VM startup.
+;; A second partition multiplied short-lived VMs with the worker capacity.
 ;; BEGIN GENERATED PREPARATION GROUPS
 (def (preparation-refined-batches profiled compatible)
-  (apply append
-    (map (cut testing-interface-test-file-batches profiled <>)
-      (testing-interface-test-file-batches profiled
-        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))
+  (testing-interface-test-file-batches profiled
+    (striped-module-files compatible (testing-interface-worker-count (length compatible)))))
+(def (single-thread-vm-command command)
+  (let wrap ((arguments command))
+    (cond
+      ((null? arguments) (error "native test command has no expression" command))
+      ((equal? (car arguments) "-e")
+       (cons "-e" (cons
+         (string-append
+           "(let (n (##current-vm-processor-count)) (unless (= n 1) (error \"expected one processor per test VM\" n)) (displayln \"VM-RUNTIME processors=\" n)) "
+           (cadr arguments))
+         (cddr arguments))))
+      (else (cons (car arguments) (wrap (cdr arguments)))))))
 ;; END GENERATED PREPARATION GROUPS
 (def (source-test-batches profiled files mode)
   (if (string=? mode "batched")
@@ -108,7 +115,7 @@
               (lambda (out)
                 ;; The canonical command includes compiled GxTest's explicit exit
                 ;; propagation. Process success is checked after draining output.
-                (run-process (append (testing-interface-command-for profiled file '("-v" "5")) (cdr batch))
+                (run-process (append (single-thread-vm-command (testing-interface-command-for profiled file '("-v" "5"))) (cdr batch))
                   stdout-redirection: #t stderr-redirection: #t
                   coprocess:
                   (lambda (input)

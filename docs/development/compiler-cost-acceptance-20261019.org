@@ -861,3 +861,55 @@ explanation/resolution of the historical 8.19% failure, true whole-VM cumulative
 Scheme allocation, and complete original-source/macro/allocator refinement.
 The final acceptance update belongs to the marked PR section and immutable CI
 artifacts; a new faster observation cannot silently erase the retained failures.
+
+* Warm preparation and twelve-VM execution (2026-10-20)
+
+The previous four-control experiment remains a failure: warm preparation rose
+from 7.722192083 to 8.141006333 seconds (+5.4235151%). Cold preparation improvement
+is a separate observation. All warm controls compiled zero jobs. Their phase
+receipts attribute approximately 0.163 seconds of the mean increase to input
+admission and 0.076 seconds to make; these observations do not uniquely identify
+the cause of the remaining wall-time difference.
+
+The candidate removes two concrete costs without bypassing cache admission:
+
+- Projection completeness builds one module-membership index rather than
+  repeatedly scanning the cached module list. Required modules, duplicate
+  entries, empty requests and mismatched selections retain the former result.
+- Cache publication recomputes the complete resource digest inventory after
+  make. Under the existing exclusive lane lock, an identical complete record
+  retains its existing encoding instead of serializing and replacing it again.
+  Changed resources still require a new record. No digest scan is replaced by
+  a timestamp check, and no source or resource validation is omitted.
+
+The existing phase receipt now separates support-cache publication. Its
+support-cache-write field records whether serialization and replacement ran;
+it is an operation count, not a cumulative allocation measurement. The native
+SDK tests cover unchanged inode retention, changed-resource publication and
+source, profile, resource and malformed-receipt rejection.
+
+Lean checks arbitrary-list indexed membership and completeness, unchanged-record
+publication equivalence, and the nondecreasing VM-start count of a second
+partition when each native partition is nonempty. Exact source renderings bind
+the deployed cache selectors, publication function and batch wrapper. Quint
+retains all previous controls and adds counterexamples for an incomplete index
+and skipping publication of a changed record. Native hash correctness, the
+Scheme reader/writer and the SDK compiler/allocator remain external premises.
+These results do not close full compiler or allocator source refinement.
+
+Compilation and preparation retain three build cores. Full source execution
+uses twelve independent VM workers, with one processor checked inside each
+actual child before GxTest starts. The child command keeps its original argument
+positions, options and exit handling. One native compatible partition replaces
+the second subdivision; the two exhaustive corpora retain process isolation.
+The full module/case inventory, 2G child heaps and the macOS 240-second limit
+remain unchanged. Rust retains twelve test threads. Linux keeps its existing
+runtime deadline. The controller rejects missing processor receipts or a worker
+count other than twelve.
+
+The source-import suite and 25 native compiler/cache tests passed locally.
+Full current-commit CI and a new matched cold/warm experiment are required before
+claiming an end-to-end improvement. Historical failed controls remain retained.
+Whole-VM cumulative allocation is still unavailable from the SDK's net occupancy
+counter; net deltas, RSS, GGC and avoided serialization must not be reported as
+whole-VM cumulative allocation or hardware latency proofs.

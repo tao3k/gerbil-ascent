@@ -64,6 +64,21 @@ module CompilerCost {
                  (complete or Mutation == "drop-projection-dependency")
     actual == (current and same and complete)
   })))
+  // Exercise actual finite list-to-index construction, including duplicates,
+  // missing keys and empty requests; source/kernel proof covers arbitrary lists.
+  pure val ProjectionIndexPolicy = Set(List(), List(0), List(1), List(0, 1), List(1, 0), List(0, 0)).forall(cached =>
+    Set(List(), List(0), List(1), List(0, 1), List(1, 1)).forall(required => {
+      val indexed = cached.foldl(Set(), (members, key) => members.union(Set(key)))
+      val actualKeys = if (Mutation == "projection-index-first-only" and cached.length() > 0)
+        Set(cached[0]) else indexed
+      val actual = required.foldl(true, (ok, key) => ok and actualKeys.contains(key))
+      val expected = required.foldl(true, (ok, key) => ok and cached.foldl(false, (found, m) => found or m == key))
+      actual == expected
+    }))
+  pure val CacheEncodingPolicy = Set(0,1).forall(previous => Set(0,1).forall(next => {
+    val published = if (previous == next or Mutation == "skip-changed-cache-write") previous else next
+    published == next
+  }))
   pure val PublicationPolicy = Set(false, true).forall(same => Set(false, true).forall(disjoint => Set(false, true).forall(unique => {
     val actual = (same or Mutation == "choose-copy-by-time") and
                  (disjoint or Mutation == "ignore-writer-overlap") and
@@ -120,7 +135,7 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and ProjectionIndexPolicy and CacheEncodingPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

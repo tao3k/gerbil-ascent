@@ -218,9 +218,16 @@ def source_semantic_workload(tree, log):
     modules = sorted(line.removeprefix('MODULE-OK ') for line in lines if line.startswith('MODULE-OK '))
     cases = sum(line.startswith('CASE-OK ') for line in lines)
     compiled = [name for name in expected if (tree / '.gerbil/lib/gerbil-ascent' / name).with_suffix('.ssi').exists()]
+    dispatches = [line for line in lines if line.startswith('TEST-DISPATCH ')]
+    if len(dispatches) != 1 or ' workers=12 ' not in dispatches[0]:
+        raise ValueError('source semantics did not dispatch twelve independent VM workers')
+    batch_count = int(re.search(r' batches=(\d+) ', dispatches[0]).group(1))
+    processors = [line for line in lines if line.startswith('VM-RUNTIME processors=')]
+    if len(processors) != batch_count or any(line != 'VM-RUNTIME processors=1' for line in processors):
+        raise ValueError('source VM runtime processor receipts are incomplete or not single-threaded')
     if not expected or modules != expected or cases == 0 or compiled:
         raise ValueError('source semantic workload is incomplete or compiled')
-    return {'modules': modules, 'cases': cases}
+    return {'modules': modules, 'cases': cases, 'vm_workers': 12}
 
 
 
@@ -263,7 +270,8 @@ def main():
         env.pop('ASCENT_TEST_LIBRARY', None)
         (output / 'inputs.json').write_text(json.dumps({
             'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-            'cores': 3, 'deadline_seconds': 240, 'child_heap': '2G',
+            'cores': 3, 'scheme_vm_workers': 12, 'threads_per_vm': 1,
+            'deadline_seconds': 240, 'child_heap': '2G',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
         try:
@@ -279,6 +287,8 @@ def main():
                 measure(root, ['just', 'prepare-semantic-library'], warm_log, env)
                 if 'BUILD-TEST-LIBRARY projection-cache-hit=1' not in warm_log.read_text():
                     cache_error = 'matching complete Suite selection did not reuse its native projection'
+                if 'BUILD-TEST-LIBRARY support-cache-write=0' not in warm_log.read_text():
+                    cache_error = 'identical complete warm cache was serialized again'
                 if test_outputs(root) != before_warm:
                     cache_error = 'matching warm preparation changed compiled test resources'
             except RuntimeError as error:
@@ -296,14 +306,14 @@ def main():
             if suite_interfaces:
                 raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
             measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
-                    output / 'candidate-semantics.log', env, semantic_diagnostics=True)
+                    output / 'candidate-semantics.log', dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
             workload = source_semantic_workload(root, output / 'candidate-semantics.log')
             (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
         finally:
             batches = root / '.cache/ascent/test-modules'
             if batches.exists():
                 shutil.copytree(batches, output / 'semantic-batches')
-        print('MACOS-THREE-WORKER-SEMANTICS-OK', flush=True)
+        print('MACOS-TWELVE-VM-SEMANTICS-OK', flush=True)
         if cache_error:
             raise RuntimeError('projection cache verification failed after full semantics: ' + cache_error)
         return
@@ -470,7 +480,7 @@ def main():
             try:
                 phases['semantics'] = measure(tree,
                     ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
-                    semantic_log, env, semantic_diagnostics=True)
+                    semantic_log, dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
             finally:
                 batches = tree / '.cache/ascent/test-modules'
                 if batches.exists():
@@ -515,7 +525,7 @@ def main():
                             if c['kind'] == kind) for kind in ['baseline', 'candidate']}
         receipt['semantic_runtime_comparison'] = {**totals,
             'non_regression': preparation_non_regression(totals['baseline'], totals['candidate']),
-            'scope': 'Matched full source runtime; three workers, 240 seconds each; no timing normalization'}
+            'scope': 'Matched full source runtime; three build cores, twelve single-thread VMs, 240 seconds each; no timing normalization'}
 
     (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
     print('BUILD-COST-MEASUREMENTS-COMPLETE', flush=True)

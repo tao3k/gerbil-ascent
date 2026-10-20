@@ -337,15 +337,23 @@ def runnerRecipeSource : String :=
   "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
 
--- The implementation composes the existing native partitioner twice. It
--- neither adds workers nor invents option-compatibility rules. Native graph
--- and grouping correctness remain premises, not claimed SDK refinements.
+-- One existing native compatible partition; SDK partition coverage remains a
+-- premise. Avoiding a second split reduces fresh-process startup multiplicity.
 def groupsSchemeSource : String :=
   "(def (preparation-refined-batches profiled compatible)\n" ++
-  "  (apply append\n" ++
-  "    (map (cut testing-interface-test-file-batches profiled <>)\n" ++
-  "      (testing-interface-test-file-batches profiled\n" ++
-  "        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))\n"
+  "  (testing-interface-test-file-batches profiled\n" ++
+  "    (striped-module-files compatible (testing-interface-worker-count (length compatible)))))\n" ++
+  "(def (single-thread-vm-command command)\n" ++
+  "  (let wrap ((arguments command))\n" ++
+  "    (cond\n" ++
+  "      ((null? arguments) (error \"native test command has no expression\" command))\n" ++
+  "      ((equal? (car arguments) \"-e\")\n" ++
+  "       (cons \"-e\" (cons\n" ++
+  "         (string-append\n" ++
+  "           \"(let (n (##current-vm-processor-count)) (unless (= n 1) (error \\\"expected one processor per test VM\\\" n)) (displayln \\\"VM-RUNTIME processors=\\\" n)) \"\n" ++
+  "           (cadr arguments))\n" ++
+  "         (cddr arguments))))\n" ++
+  "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n"
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split
@@ -361,6 +369,23 @@ theorem refined_entries_preserved (split : List String → List (List String))
     have rest := ih (by intro g h; exact coverage g (by simp [h]))
     simp only [refineBatches, List.flatMap_cons, List.flatten_append, List.flatten_cons] at *
     rw [first, rest]
+
+-- Every compatible native batch launches a fresh VM. Counting starts is
+-- distinct from concurrent capacity, elapsed time and cumulative allocation.
+def batchStartupUnits (groups : List (List String)) : Nat := groups.length
+
+theorem second_partition_never_fewer_starts
+    (split : List String → List (List String)) (groups : List (List String))
+    (nonempty : ∀ group ∈ groups, 1 ≤ (split group).length) :
+    batchStartupUnits groups ≤ batchStartupUnits (refineBatches split groups) := by
+  induction groups with
+  | nil => simp [batchStartupUnits, refineBatches]
+  | cons group groups ih =>
+    have first := nonempty group (by simp)
+    have rest := ih (by intro g h; exact nonempty g (by simp [h]))
+    simp only [batchStartupUnits, refineBatches, List.flatMap_cons, List.length_append,
+      List.length_cons] at *
+    omega
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -720,3 +745,5 @@ end Ascent.PreparationWork
 
 #print axioms Ascent.PreparationWork.indexed_interface_equals_first_assoc
 #print axioms Ascent.PreparationWork.assoc_missing_traverses_catalog
+
+#print axioms Ascent.PreparationWork.second_partition_never_fewer_starts

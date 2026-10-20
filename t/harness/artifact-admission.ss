@@ -80,24 +80,31 @@
 ;; BEGIN GENERATED PREPARATION PROJECTION-CACHE
 (def (artifact-support-projection record selection required)
   (and record (equal? selection (cadddr record))
-       (andmap (lambda (module) (member module (car (cddddr record)))) required)
-       (car (cddddr record))))
+       (let* ((modules (car (cddddr record)))
+              (present (list->hash-table (map (lambda (module) (cons module #t)) modules))))
+         (and (andmap (lambda (module) (hash-key? present module)) required)
+              modules))))
 ;; END GENERATED PREPARATION PROJECTION-CACHE
 ;; BEGIN GENERATED PREPARATION SUPPORT-ADMISSION
 (def (artifact-support-admitted? sources recorded-sources resources recorded-resources)
   (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
                recorded-sources)
        (equal? resources recorded-resources)))
+(def (artifact-record-support-cache! file sources library options selection modules (previous #f))
+  ;; The caller owns lane.lock. Recompute every resource digest after make;
+  ;; reuse only the encoding of an identical complete record, never its hashes.
+  (let ((next (list (artifact-support-profile options)
+                    (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
+                    (artifact-support-resources library) selection modules))
+        (pending (string-append file ".pending")))
+    (if (and (equal? previous next) (file-exists? file))
+      (displayln "BUILD-TEST-LIBRARY support-cache-write=0")
+      (begin
+        (call-with-output-file [path: pending truncate: #t]
+          (lambda (port) (write next port) (newline port)))
+        (rename-file pending file #t)
+        (displayln "BUILD-TEST-LIBRARY support-cache-write=1")))))
 ;; END GENERATED PREPARATION SUPPORT-ADMISSION
-(def (artifact-record-support-cache! file sources library options selection modules)
-  (let (pending (string-append file ".pending"))
-    (call-with-output-file [path: pending truncate: #t]
-      (lambda (port)
-        (write (list (artifact-support-profile options)
-                     (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
-                     (artifact-support-resources library) selection modules) port)
-        (newline port)))
-    (rename-file pending file #t)))
 
 (def load-json artifact-read-json)
 (def (save-json path value)

@@ -264,11 +264,61 @@ def control_order(work_only, baseline, candidate):
 # END GENERATED PREPARATION AUDIT-ORDER
 
 
+def prepare_source_semantics(root, output, env):
+    """Retain cold preparation cost independently from source execution."""
+    measure(root, ['just', 'prepare-semantic-library'],
+            output / 'candidate-prepare-semantics.log', env)
+
+
+def check_source_semantic_cache(root, output, env):
+    """Check warm reuse without preventing the independent semantic gate."""
+    before_warm = test_outputs(root)
+    cache_error = None
+    warm_log = output / 'candidate-prepare-warm-semantics.log'
+    try:
+        measure(root, ['just', 'prepare-semantic-library'], warm_log, env)
+        if 'BUILD-TEST-LIBRARY projection-cache-hit=1' not in warm_log.read_text():
+            cache_error = 'matching complete Suite selection did not reuse its native projection'
+        if 'BUILD-TEST-LIBRARY support-cache-write=0' not in warm_log.read_text():
+            cache_error = 'identical complete warm cache was serialized again'
+        if test_outputs(root) != before_warm:
+            cache_error = 'matching warm preparation changed compiled test resources'
+    except RuntimeError as error:
+        cache_error = str(error)
+    (output / 'projection-cache-check.json').write_text(json.dumps(
+        {'error': cache_error, 'required': 'same roots, inputs, profile and resources; no Suite compilation'},
+        indent=2) + '\n')
+    return cache_error
+
+
+def run_source_semantics(root, output, env):
+    """Execute the complete Suite under the original single 240-second bound."""
+    try:
+        suite_interfaces = [str(path.relative_to(root))
+                            for source in sorted((root / 't/qualification').glob('*-test.ss'))
+                            if (path := root / '.gerbil/lib/gerbil-ascent/t/qualification' /
+                                (source.stem + '.ssi')).exists()]
+        (output / 'source-suite-interfaces.json').write_text(json.dumps(
+            {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
+        if suite_interfaces:
+            raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
+        measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
+                output / 'candidate-semantics.log', dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
+        workload = source_semantic_workload(root, output / 'candidate-semantics.log')
+        (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
+    finally:
+        batches = root / '.cache/ascent/test-modules'
+        if batches.exists():
+            shutil.copytree(batches, output / 'semantic-batches')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline')
     parser.add_argument('--candidate')
     parser.add_argument('--semantics-only', action='store_true')
+    parser.add_argument('--semantic-phase', choices=('all', 'prepare', 'cache', 'run'), default='all',
+                        help='separate source preparation, warm reuse and full runtime CI steps')
     parser.add_argument('--semantic-preparation', action='store_true',
                         help='measure source-Suite preparation instead of the original performance lane')
     parser.add_argument('--semantic-runtime', action='store_true',
@@ -277,6 +327,8 @@ def main():
                         help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.semantic_phase != 'all' and not args.semantics_only:
+        parser.error('--semantic-phase requires --semantics-only')
     if args.semantic_preparation and args.semantics_only:
         parser.error('--semantic-preparation is a comparison mode, not a semantic runtime mode')
     if args.work_only and args.semantics_only:
@@ -301,48 +353,16 @@ def main():
             'deadline_seconds': 240, 'child_heap': '2G',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
-        try:
-            # This replaces the previous performance-library setup, not any
-            # source Suite execution. Retain its complete cost separately so
-            # moving dependency work cannot be reported as end-to-end savings.
-            measure(root, ['just', 'prepare-semantic-library'],
-                    output / 'candidate-prepare-semantics.log', env)
-            before_warm = test_outputs(root)
-            cache_error = None
-            warm_log = output / 'candidate-prepare-warm-semantics.log'
-            try:
-                measure(root, ['just', 'prepare-semantic-library'], warm_log, env)
-                if 'BUILD-TEST-LIBRARY projection-cache-hit=1' not in warm_log.read_text():
-                    cache_error = 'matching complete Suite selection did not reuse its native projection'
-                if 'BUILD-TEST-LIBRARY support-cache-write=0' not in warm_log.read_text():
-                    cache_error = 'identical complete warm cache was serialized again'
-                if test_outputs(root) != before_warm:
-                    cache_error = 'matching warm preparation changed compiled test resources'
-            except RuntimeError as error:
-                cache_error = str(error)
-            (output / 'projection-cache-check.json').write_text(json.dumps(
-                {'error': cache_error, 'required': 'same roots, inputs, profile and resources; no Suite compilation'},
-                indent=2) + '\n')
-            # Preserve full semantic execution even when this cache check fails.
-            suite_interfaces = [str(path.relative_to(root))
-                                for source in sorted((root / 't/qualification').glob('*-test.ss'))
-                                if (path := root / '.gerbil/lib/gerbil-ascent/t/qualification' /
-                                    (source.stem + '.ssi')).exists()]
-            (output / 'source-suite-interfaces.json').write_text(json.dumps(
-                {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
-            if suite_interfaces:
-                raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
-            measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
-                    output / 'candidate-semantics.log', dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
-            workload = source_semantic_workload(root, output / 'candidate-semantics.log')
-            (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
-        finally:
-            batches = root / '.cache/ascent/test-modules'
-            if batches.exists():
-                shutil.copytree(batches, output / 'semantic-batches')
-        print('MACOS-TWELVE-VM-SEMANTICS-OK', flush=True)
+        cache_error = None
+        if args.semantic_phase in ('all', 'prepare'):
+            prepare_source_semantics(root, output, env)
+        if args.semantic_phase in ('all', 'cache'):
+            cache_error = check_source_semantic_cache(root, output, env)
+        if args.semantic_phase in ('all', 'run'):
+            run_source_semantics(root, output, env)
         if cache_error:
-            raise RuntimeError('projection cache verification failed after full semantics: ' + cache_error)
+            raise RuntimeError('projection cache verification failed: ' + cache_error)
+        print('MACOS-SOURCE-SEMANTICS-PHASE-OK phase=' + args.semantic_phase, flush=True)
         return
     if not args.baseline or not args.candidate:
         parser.error('build comparisons require --baseline and --candidate')

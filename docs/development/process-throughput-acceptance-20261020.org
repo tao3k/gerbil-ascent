@@ -510,3 +510,33 @@ The initial worker build now also preserves Cargo's structured compiler
 messages, as the benchmark build already does. This changes diagnostics only;
 it is not claimed as a performance repair or acceptance of the failed run.
 No timing result is extracted from either failed build.
+
+* Exact-head CI and separated macOS phases
+
+At =b5fbc58fc4911c0512d2582925787d22da33678e=, main CI =39397372718=
+completed successfully in all ten jobs. The native binding lane ran 63/63
+Cases with no skips. Each installed PyO3 worker entry validated twelve resident
+single-processor VMs, 120 calls and 120 callable applications, and reaped all
+twelve children. This is semantic and lifecycle acceptance, not a throughput
+measurement.
+
+Independent macOS source acceptance =39397372724= failed its original
+240-second execution gate with exit 124, zero foreign compilers and no audit
+errors. Cold preparation took 388.90 seconds, including 48.24 seconds of
+source-context loading and 327.22 seconds in make; warm preparation took
+12.13 seconds. The separate execution lasted 240.28 seconds: 51 batches had
+started and 39 completed; 423 Cases had started and 419 completed, with no
+recorded Case assertion failure. Unfinished work is not accepted as a pass.
+These observations do not establish the source-cost or allocation gaps as
+closed, and are not production request latency.
+
+The macOS workflow now exposes cold dependency preparation, warm reuse
+verification and complete source execution as independent steps on the same
+runner. Each retains its own input manifest, measurements and diagnostics.
+A failed warm cache check does not suppress complete semantic execution when
+preparation succeeded. Runtime remains one complete selection under one
+240-second timeout, with twelve VM workers, one processor per VM, the original
+heap and three available CPUs. Compiler input admission, source Suite carrier
+rejection, resource checks and the original generated formal regions remain
+unchanged. No per-shard replacement deadline, build.ss orchestration, SDK
+modification or mandatory timing experiment was added.

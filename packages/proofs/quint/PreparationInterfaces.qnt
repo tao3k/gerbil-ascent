@@ -7,4 +7,6 @@ module PreparationInterfaces {
   // Two possibly aliased entries: reverse insertion must retain the first.
   pure def first_alias(k0: int, v0: int, k1: int, v1: int, key: int): int =
     if (k0 == key) v0 else if (k1 == key) v1 else -1
+  pure def batch_width(entries: int, workers: int): int =
+    if (entries == 0) 0 else (entries - 1) / workers + 1
 }

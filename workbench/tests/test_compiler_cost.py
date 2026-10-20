@@ -41,11 +41,11 @@ class CompilerCostTests(unittest.TestCase):
             for name in ['a-test.ss', 'b-test.ss']:
                 (source / name).touch()
             log = root / 'run.log'
-            valid = 'TEST-DISPATCH modules=2 batches=12 workers=12 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            valid = 'TEST-DISPATCH modules=2 batches=12 workers=12 max-batch-modules=1 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
             valid += 'VM-RUNTIME processors=1\n' * 12
             log.write_text(valid)
             self.assertEqual(check(root, log)['cases'], 1)
-            for invalid in [valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=12', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
+            for invalid in [valid.replace('max-batch-modules=1', 'max-batch-modules=2'), valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=12', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
                             valid.replace('MODULE-OK t/qualification/b-test.ss\n', '')]:
                 log.write_text(invalid)
                 with self.subTest(log=invalid), self.assertRaises(ValueError):
@@ -56,6 +56,15 @@ class CompilerCostTests(unittest.TestCase):
             compiled.touch()
             with self.assertRaises(ValueError):
                 check(root, log)
+
+    def test_native_refinement_width_covers_empty_and_complete_source_selection(self):
+        import runpy
+        width = runpy.run_path('tools/ci/build-cost-control.py')['source_batch_width']
+        self.assertEqual(width(width(174, 12), 12), 2)
+        for workers in [1, 2, 3, 12, 48]:
+            for entries in [0, 1, 2, 12, 37, 174, 253]:
+                self.assertEqual(width(entries, workers), (entries + workers - 1) // workers)
+                self.assertLessEqual(width(width(entries, workers), workers), width(entries, workers))
 
     def test_generated_scheme_cost_requires_unique_containing_input(self):
         scheme = {'path': '/build/module~0.scm', 'sha256': 'source', 'bytes': 17}

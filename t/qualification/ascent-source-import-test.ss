@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
-        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches single-thread-vm-command)
+        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
         (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
@@ -48,6 +48,10 @@
         (check-equal? (take wrapped 3) (take command 3))
         (check-equal? (drop wrapped 4) (drop command 4))
         (check-equal? (string-suffix? "(native-main)" (list-ref wrapped 3)) #t)))
+    (test-case "observed wide source batches are rejected before child admission"
+      (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 15)))
+        (check-equal? (preparation-batches-bounded? (list files) 174 12) #f)
+        (check-equal? (preparation-batches-bounded? (map list files) 174 12) #t)))
     (test-case "native capacity retains every module and distributes adjacent inputs"
       (let* ((files (list-sort string<?
                       (map (lambda (index) (string-append "module-" (number->string index) "-test.ss"))
@@ -72,11 +76,12 @@
         (check-equal? (list-sort string<? (apply append batches)) files)
         ;; The independent exhaustive jobs must start before ordinary stripes.
         ;; Otherwise the original deadline can expire before either gets CPU.
-        (check-equal? batches (append (map list heavy) baseline))
+        (check-equal? batches (append (map list heavy)
+          (apply append (map (cut testing-interface-test-file-batches profiled <>) baseline))))
         (let* ((workers (testing-interface-worker-count (length normal)))
                (ordinary (cddr batches))
-               (bound (ceiling (/ (length normal) workers))))
-          (check-equal? (<= (length ordinary) workers) #t)
+               (bound (ceiling (/ (length normal) (* workers workers)))))
+          (check-equal? (<= (length ordinary) (* workers workers)) #t)
           (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))
         (check-equal? (list (car batches) (cadr batches)) (map list heavy))
         (for-each (lambda (file)

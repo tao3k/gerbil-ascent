@@ -20,7 +20,7 @@
                  testing-interface-map-profile testing-test-selector
                  +testing-memory-profile+ +testing-process-isolation-profile+)
         (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!))
-(export main striped-module-files source-test-interface source-test-batches single-thread-vm-command)
+(export main striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -59,12 +59,19 @@
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
    '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
-;; One native partition retains compatible options while amortizing VM startup.
-;; A second partition multiplied short-lived VMs with the worker capacity.
+;; Native GxTest prepares all modules before running a batch. Refine compatible
+;; batches to release those contexts on VM exit without lowering concurrency.
 ;; BEGIN GENERATED PREPARATION GROUPS
 (def (preparation-refined-batches profiled compatible)
-  (testing-interface-test-file-batches profiled
-    (striped-module-files compatible (testing-interface-worker-count (length compatible)))))
+  (apply append
+    (map (cut testing-interface-test-file-batches profiled <>)
+      (testing-interface-test-file-batches profiled
+        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))
+(def (preparation-batch-width entries workers)
+  (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))
+(def (preparation-batches-bounded? batches entries workers)
+  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))
+    (andmap (lambda (batch) (<= (length batch) bound)) batches)))
 (def (single-thread-vm-command command)
   (let wrap ((arguments command))
     (cond
@@ -76,13 +83,19 @@
            (cadr arguments))
          (cddr arguments))))
       (else (cons (car arguments) (wrap (cdr arguments)))))))
-;; END GENERATED PREPARATION GROUPS
 (def (source-test-batches profiled files mode)
-  (if (string=? mode "batched")
-    (let-values (((isolated compatible)
-                  (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-      (append (map list isolated) (preparation-refined-batches profiled compatible)))
-    (testing-interface-test-file-batches profiled files)))
+  (let (batches
+    (if (string=? mode "batched")
+      (let-values (((isolated compatible)
+                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
+        (append (map list isolated) (preparation-refined-batches profiled compatible)))
+      (testing-interface-test-file-batches profiled files)))
+    (unless (or (null? files)
+                (preparation-batches-bounded? batches (length files)
+                  (testing-interface-worker-count (length files))))
+      (error "source batch retains too many entry modules"))
+    batches))
+;; END GENERATED PREPARATION GROUPS
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
@@ -97,7 +110,7 @@
          (logs (map (lambda (index)
                       (string-append log-root "/" (number->string index) ".log"))
                     (iota (length batches)))))
-    (displayln "TEST-DISPATCH modules=" (length files) " batches=" (length batches) " workers=" workers " mode=" mode " heap=" heap " logs=" log-root) (force-output)
+    (displayln "TEST-DISPATCH modules=" (length files) " batches=" (length batches) " workers=" workers " max-batch-modules=" (apply max (map length batches)) " mode=" mode " heap=" heap " logs=" log-root) (force-output)
     (for-each
       (lambda (batch log index)
         (wg-add! group
@@ -133,6 +146,8 @@
                                     (string-prefix? "*** ERROR" line)
                                     (string-prefix? "--- " line)
                                     (string-prefix? "... " line)
+                                    (string-prefix? "HARNESS-OK " line)
+                                    (string=? "OK" line)
                                     (string-prefix? "PROGRESS" line)
                                     (string-contains line "SCOPED-")
                                     (string-contains line "-PAIRS ")

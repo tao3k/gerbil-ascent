@@ -96,7 +96,22 @@ def builder_phases(text):
     return phases
 
 
+def host_vm_snapshot():
+    if platform.system() != 'Darwin':
+        return None
+    result = {}
+    for name, command in [('pages', ['/usr/bin/vm_stat']),
+                          ('memory', ['/usr/sbin/sysctl', 'hw.memsize', 'vm.swapusage'])]:
+        try:
+            p = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            result[name] = {'exit_code': p.returncode, 'stdout': p.stdout, 'stderr': p.stderr}
+        except (OSError, subprocess.TimeoutExpired) as error:
+            result[name] = {'error': str(error)}
+    return result
+
+
 def measure(tree, command, log, env, *, semantic_diagnostics=False):
+    host_vm_before = host_vm_snapshot() if semantic_diagnostics else None
     stop = threading.Event()
     foreign = []
     audit_errors = []
@@ -108,10 +123,10 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
 
     def audit_once():
         rows = []
-        columns = 'pid=,ppid=,time=,rss=,comm=' if semantic_diagnostics else 'pid=,ppid=,comm='
+        columns = 'pid=,ppid=,time=,rss=,state=,comm=' if semantic_diagnostics else 'pid=,ppid=,comm='
         for line in subprocess.check_output(['ps', '-axo', columns], text=True).splitlines():
-            parts = line.strip().split(None, 4 if semantic_diagnostics else 2)
-            if len(parts) == (5 if semantic_diagnostics else 3):
+            parts = line.strip().split(None, 5 if semantic_diagnostics else 2)
+            if len(parts) == (6 if semantic_diagnostics else 3):
                 rows.append((int(parts[0]), int(parts[1]), parts[-1], parts[2:-1]))
         owned = {os.getpid()}
         for _ in range(16):
@@ -125,7 +140,7 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
             # descendants. RUSAGE_CHILDREN alone omits those processes.
             process_samples.append({'observed_seconds': time.monotonic() - wall_started,
                 'processes': [{'pid': pid, 'ppid': parent, 'command': name,
-                               'self_cpu_time': metrics[0], 'rss_kib': int(metrics[1])}
+                               'self_cpu_time': metrics[0], 'rss_kib': int(metrics[1]), 'state': metrics[2]}
                               for pid, parent, name, metrics in rows
                               if pid in owned and Path(name).name in
                               COMPILERS | {'gerbil', 'gxtest', 'timeout', 'just'}]})
@@ -180,6 +195,8 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
                                                   'ru_nvcsw', 'ru_nivcsw', 'ru_inblock', 'ru_oublock']}}
     if semantic_diagnostics:
+        receipt['host_vm'] = {'before': host_vm_before, 'after': host_vm_snapshot(),
+                              'scope': 'Host-wide VM page/compression/swap counters; not Scheme allocation'}
         receipt['live_process_samples'] = process_samples
         receipt['progress_samples'] = progress_samples
         receipt['diagnostic_resolution_seconds'] = 1
@@ -212,6 +229,12 @@ def test_outputs(tree):
             for p in paths if p.is_file() and p.suffix in {'.ssi', '.scm', '.o1', '.o'}}
 
 
+# BEGIN GENERATED PREPARATION BATCH-WIDTH
+def source_batch_width(entries, workers):
+    return 0 if entries == 0 else (entries - 1) // workers + 1
+# END GENERATED PREPARATION BATCH-WIDTH
+
+
 def source_semantic_workload(tree, log):
     expected = sorted(str(path.relative_to(tree)) for path in (tree / 't/qualification').glob('*-test.ss'))
     lines = log.read_text().splitlines()
@@ -222,12 +245,16 @@ def source_semantic_workload(tree, log):
     if len(dispatches) != 1 or ' workers=12 ' not in dispatches[0]:
         raise ValueError('source semantics did not dispatch twelve independent VM workers')
     batch_count = int(re.search(r' batches=(\d+) ', dispatches[0]).group(1))
+    width = re.search(r' max-batch-modules=(\d+)(?: |$)', dispatches[0])
+    retained_width = source_batch_width(source_batch_width(len(expected), 12), 12)
+    if width is None or not 0 < int(width[1]) <= retained_width:
+        raise ValueError('source VM retained-entry width exceeds the native refinement bound')
     processors = [line for line in lines if line.startswith('VM-RUNTIME processors=')]
     if len(processors) != batch_count or any(line != 'VM-RUNTIME processors=1' for line in processors):
         raise ValueError('source VM runtime processor receipts are incomplete or not single-threaded')
     if not expected or modules != expected or cases == 0 or compiled:
         raise ValueError('source semantic workload is incomplete or compiled')
-    return {'modules': modules, 'cases': cases, 'vm_workers': 12}
+    return {'modules': modules, 'cases': cases, 'vm_workers': 12, 'max_batch_modules': int(width[1])}
 
 
 

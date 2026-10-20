@@ -900,9 +900,10 @@ These results do not close full compiler or allocator source refinement.
 Compilation and preparation retain three build cores. Full source execution
 uses twelve independent VM workers, with one processor checked inside each
 actual child before GxTest starts. The child command keeps its original argument
-positions, options and exit handling. One native compatible partition replaces
-the second subdivision; the two exhaustive corpora retain process isolation.
-The full module/case inventory, 2G child heaps and the macOS 240-second limit
+positions, options and exit handling. The candidate initially used one native compatible partition; its full macOS
+run timed out and that scheduling choice was rejected. The two exhaustive
+corpora retain process isolation.
+All existing modules and cases, 2G child heaps and the macOS 240-second limit
 remain unchanged. Rust retains twelve test threads. Linux keeps its existing
 runtime deadline. The controller rejects missing processor receipts or a worker
 count other than twelve.
@@ -913,3 +914,58 @@ claiming an end-to-end improvement. Historical failed controls remain retained.
 Whole-VM cumulative allocation is still unavailable from the SDK's net occupancy
 counter; net deltas, RSS, GGC and avoided serialization must not be reported as
 whole-VM cumulative allocation or hardware latency proofs.
+
+** Rejected wide batches and retained-source refinement
+
+Commit 89383383 passed the complete Linux CI, including 84 positive formal
+checks, 493 expected counterexamples, 49 source bindings, eight compiled
+performance studies and 84 scenarios. Its separate macOS run 39352365620
+failed with exit 124 at 240.283719 seconds. The three-core/twelve-VM run had
+14 batches and 14--15 source Suites in ordinary batches; the final first Case
+started at approximately 104 seconds. Only two ordinary batches had completed
+when the deadline expired. No foreign compiler or audit error was recorded.
+The sampled resident-memory peak was 3.207 GiB. RSS alone cannot establish
+compression, swap or cumulative allocation, so no unique memory-pressure cause
+is asserted from this failure.
+
+The pinned SDK's prepare-harness imports every file before running the batch.
+Restoring its second compatible partition trades extra VM starts for shorter
+context lifetimes. For the current 174-module selection and twelve workers,
+the balanced two-stage width bound is two entries per VM; the controller checks
+the actual emitted width. Lean proves the generic width reduction and the
+current numeric instance. Quint uses the generated width function rather than
+an unrelated literal two-entry example. This bounds retained entry roots, not
+their transitive heap footprint or allocator bytes. Host-wide VM page and swap
+snapshots supplement the existing live-process samples on the next macOS run.
+No test, heap, concurrency or deadline is reduced.
+
+The local full formal run reached its original total deadline while finishing
+PreparationWork controls; that timeout is retained. The separate current-commit
+remote formal inventory passed in full. The isolated work run 39352461254
+retained 589/589 generated-Scheme producer mappings and 19,993,637,520 bytes of
+native GCC GGC allocation for preparation. Warm preparation invoked zero
+compiler jobs. It rejected all three phases because signed SDK VM occupancy
+observations still contain decreases/negative values. This is neither a
+cumulative Scheme allocation total nor complete original-DSL/macro refinement.
+
+** Matched preparation result for the rejected wide-batch revision
+
+Run 39352361216 compares baseline 5dc35246 with candidate 89383383, in the original
+uninstrumented ABBA order and with three build cores. Build means were
+151.066786396 -> 155.851760688 seconds (+3.1675%); cold preparation means were
+342.756655563 -> 271.866835167 seconds (-20.6823%); warm preparation means were
+13.598131792 -> 8.499500417 seconds (-37.4951%). Every warm output inventory was
+unchanged. This is evidence for that revision, not the later batching revision.
+Overall admission remains false because of the measured build regression and
+the retained historical ledger. The first baseline warm calibration used
+1.540445 CPU seconds versus 1.046004 for the last baseline; their warm times
+were 15.805226292 and 11.391056250 seconds. Baseline drift therefore remains
+visible rather than being normalized away. Neither cold improvement nor the
+warm comparison closes compiler/allocator source refinement.
+
+The refined scheduler now checks actual batch widths before spawning any child.
+An oversized batch is rejected by the source guard, independently of the SDK
+balancing premise. The Python receipt checker uses a separately source-bound
+Lean rendering of the same width function. This adds a source binding rather
+than replacing any of the existing 49. The native source-import Suite includes
+a regression control for the observed fifteen-entry batch.

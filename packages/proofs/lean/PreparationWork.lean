@@ -198,6 +198,8 @@ def interfacesQuintSource : String :=
   "  // Two possibly aliased entries: reverse insertion must retain the first.\n" ++
   "  pure def first_alias(k0: int, v0: int, k1: int, v1: int, key: int): int =\n" ++
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
+  "  pure def batch_width(entries: int, workers: int): int =\n" ++
+  "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -337,12 +339,19 @@ def runnerRecipeSource : String :=
   "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
 
--- One existing native compatible partition; SDK partition coverage remains a
--- premise. Avoiding a second split reduces fresh-process startup multiplicity.
+-- The SDK eagerly prepares every module in one GxTest batch. Two native
+-- partitions trade extra starts for a smaller retained source-entry set.
 def groupsSchemeSource : String :=
   "(def (preparation-refined-batches profiled compatible)\n" ++
-  "  (testing-interface-test-file-batches profiled\n" ++
-  "    (striped-module-files compatible (testing-interface-worker-count (length compatible)))))\n" ++
+  "  (apply append\n" ++
+  "    (map (cut testing-interface-test-file-batches profiled <>)\n" ++
+  "      (testing-interface-test-file-batches profiled\n" ++
+  "        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))\n" ++
+  "(def (preparation-batch-width entries workers)\n" ++
+  "  (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))\n" ++
+  "(def (preparation-batches-bounded? batches entries workers)\n" ++
+  "  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))\n" ++
+  "    (andmap (lambda (batch) (<= (length batch) bound)) batches)))\n" ++
   "(def (single-thread-vm-command command)\n" ++
   "  (let wrap ((arguments command))\n" ++
   "    (cond\n" ++
@@ -353,7 +362,19 @@ def groupsSchemeSource : String :=
   "           \"(let (n (##current-vm-processor-count)) (unless (= n 1) (error \\\"expected one processor per test VM\\\" n)) (displayln \\\"VM-RUNTIME processors=\\\" n)) \"\n" ++
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
-  "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n"
+  "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
+  "(def (source-test-batches profiled files mode)\n" ++
+  "  (let (batches\n" ++
+  "    (if (string=? mode \"batched\")\n" ++
+  "      (let-values (((isolated compatible)\n" ++
+  "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
+  "        (append (map list isolated) (preparation-refined-batches profiled compatible)))\n" ++
+  "      (testing-interface-test-file-batches profiled files)))\n" ++
+  "    (unless (or (null? files)\n" ++
+  "                (preparation-batches-bounded? batches (length files)\n" ++
+  "                  (testing-interface-worker-count (length files))))\n" ++
+  "      (error \"source batch retains too many entry modules\"))\n" ++
+  "    batches))\n"
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split
@@ -386,6 +407,43 @@ theorem second_partition_never_fewer_starts
     simp only [batchStartupUnits, refineBatches, List.flatMap_cons, List.length_append,
       List.length_cons] at *
     omega
+
+-- Ceiling width of a balanced native group. Native partition balance and
+-- compatibility remain SDK premises; the source controller checks actual width.
+def nativeBatchWidth (entries workers : Nat) : Nat :=
+  if entries = 0 then 0 else (entries - 1) / workers + 1
+
+def batchWidthPythonSource : String :=
+  "def source_batch_width(entries, workers):\n" ++
+  "    return 0 if entries == 0 else (entries - 1) // workers + 1\n"
+
+theorem native_batch_width_le_entries (entries workers : Nat) :
+    nativeBatchWidth entries workers ≤ entries := by
+  unfold nativeBatchWidth
+  split
+  · omega
+  · have h := Nat.div_le_self (entries - 1) workers
+    omega
+
+theorem native_refinement_retained_width (entries workers : Nat) :
+    nativeBatchWidth (nativeBatchWidth entries workers) workers ≤
+      nativeBatchWidth entries workers := native_batch_width_le_entries _ _
+
+def batchesBounded (groups : List (List String)) (entries workers : Nat) : Bool :=
+  groups.all (fun group => group.length ≤ nativeBatchWidth (nativeBatchWidth entries workers) workers)
+
+theorem oversized_batch_refused (groups : List (List String)) (entries workers : Nat)
+    (group : List String) (present : group ∈ groups)
+    (oversized : nativeBatchWidth (nativeBatchWidth entries workers) workers < group.length) :
+    batchesBounded groups entries workers = false := by
+  cases h : batchesBounded groups entries workers with
+  | false => rfl
+  | true =>
+    have bound := (List.all_eq_true.mp h) group present
+    simp only [decide_eq_true_eq] at bound
+    omega
+
+theorem complete_source_batch_width : nativeBatchWidth (nativeBatchWidth 174 12) 12 = 2 := by decide
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -747,3 +805,9 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.assoc_missing_traverses_catalog
 
 #print axioms Ascent.PreparationWork.second_partition_never_fewer_starts
+
+#print axioms Ascent.PreparationWork.native_batch_width_le_entries
+#print axioms Ascent.PreparationWork.native_refinement_retained_width
+#print axioms Ascent.PreparationWork.complete_source_batch_width
+
+#print axioms Ascent.PreparationWork.oversized_batch_refused

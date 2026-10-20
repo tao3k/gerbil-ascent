@@ -424,6 +424,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-cargo-cache" => pure Ascent.PreparationWork.cargoCacheSchemeSource
   | "preparation-roots" => pure Ascent.PreparationWork.rootsSchemeSource
   | "preparation-support" => pure Ascent.PreparationWork.supportQuintSource
+  | "preparation-batch-width" => pure Ascent.PreparationWork.batchWidthPythonSource
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
   | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource

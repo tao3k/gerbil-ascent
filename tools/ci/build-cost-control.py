@@ -116,6 +116,8 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
     foreign = []
     audit_errors = []
     process_samples = []
+    stack_samples = []
+    sampled = set()
     progress_samples = []
     wall_started = None
     log_offset = 0
@@ -144,6 +146,26 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                               for pid, parent, name, metrics in rows
                               if pid in owned]})
             observe_progress()
+            # Diagnostic branch only: sample real owned workers, never qualification.
+            elapsed = time.monotonic() - wall_started
+            if sys.platform == 'darwin' and elapsed >= 60 and len(sampled) < 3:
+                eligible = [(pid, metrics) for pid, _, name, metrics in rows
+                            if pid in owned and pid not in sampled and
+                            Path(name).name == 'ascent-develop']
+                if eligible:
+                    pid, _ = max(eligible, key=lambda item: item[1][0])
+                    sampled.add(pid)
+                    target = log.parent / f'worker-stack-{pid}.txt'
+                    try:
+                        probe = subprocess.run(['/usr/bin/sample', str(pid), '1', '10',
+                            '-mayDie', '-fullPaths', '-file', str(target)],
+                            text=True, capture_output=True, timeout=5)
+                        stack_samples.append({'pid': pid, 'observed_seconds': elapsed,
+                            'exit_code': probe.returncode, 'file': target.name,
+                            'diagnostics': probe.stdout + probe.stderr})
+                    except subprocess.TimeoutExpired:
+                        stack_samples.append({'pid': pid, 'observed_seconds': elapsed,
+                            'error': 'sample exceeded five-second diagnostic deadline'})
 
     def observe_progress():
         nonlocal log_offset, pending_line
@@ -194,6 +216,8 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
                                                   'ru_nvcsw', 'ru_nivcsw', 'ru_inblock', 'ru_oublock']}}
     if semantic_diagnostics:
+        receipt['diagnostic_only'] = True
+        receipt['stack_samples'] = stack_samples
         receipt['host_vm'] = {'before': host_vm_before, 'after': host_vm_snapshot(),
                               'scope': 'Host-wide VM page/compression/swap counters; not Scheme allocation'}
         receipt['live_process_samples'] = process_samples

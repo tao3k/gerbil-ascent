@@ -146,26 +146,44 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                               for pid, parent, name, metrics in rows
                               if pid in owned]})
             observe_progress()
-            # Diagnostic branch only: sample real owned workers, never qualification.
+            # Diagnostic branch only: freeze before attaching so profiler image
+            # notifications cannot turn a live-work snapshot into an exit trace.
             elapsed = time.monotonic() - wall_started
-            if sys.platform == 'darwin' and elapsed >= 60 and len(sampled) < 3:
+            if sys.platform == 'darwin' and len(sampled) < 3 and elapsed >= (30, 60, 90)[len(sampled)]:
+                finished = {match[1] for item in progress_samples
+                            if (match := re.match(r'TEST-WORK batch=(\S+) (?:HARNESS-OK |OK$)', item['line']))}
                 eligible = [(pid, metrics) for pid, _, name, metrics in rows
                             if pid in owned and pid not in sampled and
                             Path(name).name == 'ascent-develop']
-                if eligible:
-                    pid, _ = max(eligible, key=lambda item: item[1][0])
+                for pid, _ in sorted(eligible, key=lambda item: item[1][0], reverse=True):
+                    argv = subprocess.check_output(['ps', '-p', str(pid), '-o', 'command='], text=True)
+                    if any(batch in argv for batch in finished):
+                        continue
                     sampled.add(pid)
                     target = log.parent / f'worker-stack-{pid}.txt'
+                    stopped = False
                     try:
+                        os.kill(pid, signal.SIGSTOP)
+                        stopped = True
                         probe = subprocess.run(['/usr/bin/sample', str(pid), '1', '10',
                             '-mayDie', '-fullPaths', '-file', str(target)],
                             text=True, capture_output=True, timeout=5)
                         stack_samples.append({'pid': pid, 'observed_seconds': elapsed,
+                            'argv': argv, 'frozen_before_attach': True,
                             'exit_code': probe.returncode, 'file': target.name,
                             'diagnostics': probe.stdout + probe.stderr})
                     except subprocess.TimeoutExpired:
                         stack_samples.append({'pid': pid, 'observed_seconds': elapsed,
-                            'error': 'sample exceeded five-second diagnostic deadline'})
+                            'argv': argv, 'error': 'sample exceeded five-second diagnostic deadline'})
+                    except ProcessLookupError:
+                        stack_samples.append({'pid': pid, 'error': 'worker exited before snapshot'})
+                    finally:
+                        if stopped:
+                            try:
+                                os.kill(pid, signal.SIGCONT)
+                            except ProcessLookupError:
+                                pass
+                    break
 
     def observe_progress():
         nonlocal log_offset, pending_line

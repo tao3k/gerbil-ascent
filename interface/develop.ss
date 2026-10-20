@@ -24,7 +24,7 @@
                        :gerbil-ascent/interface/engine-api))
   (match args
     ([] (replx))
-    (["--eval" text]
+    (["--eval" text . arguments]
      (call-with-input-string text
        (lambda (port)
          (let loop ()
@@ -32,4 +32,4 @@
              (unless (eof-object? form)
                (eval-syntax form)
                (loop)))))))
-    (else (error "usage: ascent-develop [--eval Scheme-expression]"))))
+    (else (error "usage: ascent-develop [--eval Scheme-expression [arguments ...]]"))))

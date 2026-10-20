@@ -12,10 +12,15 @@ fn main() {
         .canonicalize()
         .expect("Library source root");
     let bridge = build_source_root().expect("compiled bridge dependency source");
+    let compiler = gerbil_scheme_compiler_source::build_source_root()
+        .expect("pinned build-only compiler dependency source");
     let output = PathBuf::from(env::var_os("OUT_DIR").expect("build output"));
     let directories = [
         (root.join("rust/ascent/src"), "_sources/rust/ascent/src"),
-        (root.join("rust/ascent-c-abi/src"), "_sources/rust/ascent-c-abi/src"),
+        (
+            root.join("rust/ascent-c-abi/src"),
+            "_sources/rust/ascent-c-abi/src",
+        ),
         (
             root.join("rust/ascent-python/src"),
             "_sources/rust/ascent-python/src",
@@ -24,14 +29,28 @@ fn main() {
             bridge.join("crates/gerbil-scheme-python/src"),
             "_sources/bridge/crates/gerbil-scheme-python/src",
         ),
-        (bridge.join("build-support/gerbil-scheme-rust-ir/src"),
-         "_sources/bridge/build-support/gerbil-scheme-rust-ir/src"),
+        (
+            compiler.join("build-support/gerbil-scheme-rust-ir/src"),
+            "_sources/compiler/build-support/gerbil-scheme-rust-ir/src",
+        ),
     ];
     let files = [
-        (root.join("rust/ascent-c-abi/Cargo.toml"), "_sources/rust/ascent-c-abi/Cargo.toml"),
-        (root.join("bindings/c/ascent-core.h"), "_sources/bindings/c/ascent-core.h"),
-        (bridge.join("include/gerbil_scheme_owned.h"), "_sources/bridge/include/gerbil_scheme_owned.h"),
-        (bridge.join("include/gerbil_scheme_rust.h"), "_sources/bridge/include/gerbil_scheme_rust.h"),
+        (
+            root.join("rust/ascent-c-abi/Cargo.toml"),
+            "_sources/rust/ascent-c-abi/Cargo.toml",
+        ),
+        (
+            root.join("bindings/c/ascent-core.h"),
+            "_sources/bindings/c/ascent-core.h",
+        ),
+        (
+            bridge.join("include/gerbil_scheme_owned.h"),
+            "_sources/bridge/include/gerbil_scheme_owned.h",
+        ),
+        (
+            bridge.join("include/gerbil_scheme_rust.h"),
+            "_sources/bridge/include/gerbil_scheme_rust.h",
+        ),
         (root.join("rust/Cargo.toml"), "_sources/rust/Cargo.toml"),
         (root.join("rust/Cargo.lock"), "_sources/rust/Cargo.lock"),
         (
@@ -62,8 +81,12 @@ fn main() {
             root.join("program/rust-execution.ss"),
             "_sources/program/rust-execution.ss",
         ),
-        (bridge.join("build-support/gerbil-scheme-rust-ir/Cargo.toml"),
-         "_sources/bridge/build-support/gerbil-scheme-rust-ir/Cargo.toml"),
+        (
+            compiler.join("build-support/gerbil-scheme-rust-ir/Cargo.toml"),
+            "_sources/compiler/build-support/gerbil-scheme-rust-ir/Cargo.toml",
+        ),
+        (compiler.join("Cargo.toml"), "_sources/compiler/Cargo.toml"),
+        (compiler.join("Cargo.lock"), "_sources/compiler/Cargo.lock"),
         (bridge.join("Cargo.toml"), "_sources/bridge/Cargo.toml"),
         (bridge.join("Cargo.lock"), "_sources/bridge/Cargo.lock"),
         (
@@ -75,7 +98,9 @@ fn main() {
         let mut pending = vec![path.clone()];
         while let Some(input) = pending.pop() {
             println!("cargo:rerun-if-changed={}", input.display());
-            let kind = fs::symlink_metadata(&input).expect("source inventory input").file_type();
+            let kind = fs::symlink_metadata(&input)
+                .expect("source inventory input")
+                .file_type();
             if kind.is_dir() {
                 let mut entries = fs::read_dir(&input)
                     .expect("source inventory directory")

@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
-        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
+        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches source-vm-command single-thread-vm-command preparation-batches-bounded?)
         (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
@@ -48,6 +48,12 @@
         (check-equal? (take wrapped 3) (take command 3))
         (check-equal? (drop wrapped 4) (drop command 4))
         (check-equal? (string-suffix? "(native-main)" (list-ref wrapped 3)) #t)))
+    (test-case "linked source VM preserves heap native GxTest argv and processor assertion"
+      (let* ((command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
+             (linked (source-vm-command command "/package/bin/ascent-develop")))
+        (check-equal? (take linked 3) '("/package/bin/ascent-develop" "-:max-heap=2048M" "--eval"))
+        (check-equal? (drop linked 3) (drop (single-thread-vm-command command) 3))
+        (check-equal? (source-vm-command command #f) (single-thread-vm-command command))))
     (test-case "observed wide source batches are rejected before child admission"
       (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 15)))
         (check-equal? (preparation-batches-bounded? (list files) 174 12) #f)

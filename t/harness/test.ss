@@ -19,8 +19,10 @@
                  testing-interface-test-file-batches testing-interface-test-file-isolated?
                  testing-interface-map-profile testing-test-selector
                  +testing-memory-profile+ +testing-process-isolation-profile+)
-        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!))
-(export main striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
+        (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!)
+        (only-in :gerbil-ascent/bindings/artifact artifact-development-program)
+        (only-in :gerbil-ascent/build-modules gerbil-ascent-build-input-modules))
+(export main source-vm-command striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -96,8 +98,23 @@
       (error "source batch retains too many entry modules"))
     batches))
 ;; END GENERATED PREPARATION GROUPS
+(def (source-vm-command command program)
+  ;; Keep upstream GxTest, argv, heap options and its original explicit exit.
+  ;; The package's admitted linked shell owns only the preloaded production
+  ;; closure; Suite carriers are still expanded from source in each fresh VM.
+  (let (command (single-thread-vm-command command))
+    (if program
+      (cons program
+        (let replace ((arguments (cdr command)))
+          (cond
+            ((null? arguments) (error "native test command has no expression" command))
+            ((equal? (car arguments) "-e") (cons "--eval" (cdr arguments)))
+            (else (cons (car arguments) (replace (cdr arguments)))))))
+      command)))
+
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
+         (program (artifact-development-program (current-directory) gerbil-ascent-build-input-modules))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
   (unless (member mode '("batched" "isolated")) (error "invalid compiled testing mode" mode))
   (unless (pair? files) (error "no discovered test modules" paths))
@@ -110,6 +127,7 @@
          (logs (map (lambda (index)
                       (string-append log-root "/" (number->string index) ".log"))
                     (iota (length batches)))))
+    (displayln "TEST-VM-DRIVER linked=" (if program 1 0)) (force-output)
     (displayln "TEST-DISPATCH modules=" (length files) " batches=" (length batches) " workers=" workers " max-batch-modules=" (apply max (map length batches)) " mode=" mode " heap=" heap " logs=" log-root) (force-output)
     (for-each
       (lambda (batch log index)
@@ -128,7 +146,7 @@
               (lambda (out)
                 ;; The canonical command includes compiled GxTest's explicit exit
                 ;; propagation. Process success is checked after draining output.
-                (run-process (append (single-thread-vm-command (testing-interface-command-for profiled file '("-v" "5"))) (cdr batch))
+                (run-process (append (source-vm-command (testing-interface-command-for profiled file '("-v" "5")) program) (cdr batch))
                   stdout-redirection: #t stderr-redirection: #t
                   coprocess:
                   (lambda (input)

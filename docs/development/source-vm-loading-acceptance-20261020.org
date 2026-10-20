@@ -1,0 +1,68 @@
+#+title: Source VM loading and semantic deadline acceptance
+#+date: 2026-10-20
+
+* Retained failing control
+
+The control is PR #1 commit =34f01f7e3d0f539b30883be75e60b19f154d5f15=.
+Linux CI =39401308697= timed out at its original 180-second source gate.
+macOS CI =39401308777= timed out at its original three-CPU/240-second gate.
+Both use twelve independent single-processor VMs; Rust tests retain twelve
+threads. No threshold, Case, cancellation, resource or provenance requirement
+is relaxed by this candidate.
+
+Native GxTest prepares every source carrier in a batch before emitting MODULE.
+For completed batches only, the Linux start-to-first-MODULE median was 6.31
+seconds (130 completed batches), and macOS was 12.99 seconds (82 batches).
+The macOS sum of last-MODULE-OK-to-process-completion intervals was 593.25
+seconds versus 16.71 seconds on Linux. These are overlapping per-batch elapsed
+intervals, not additive wall-clock phases or exclusive CPU/GC attribution.
+They identify repeated loading/expansion and retirement as concrete targets.
+macOS cold preparation was 332.83 seconds and warm preparation 9.44 seconds;
+neither is production request latency or proof of a causal optimization.
+
+* Reuse the existing linked application
+
+The standard build already produces =ascent-develop= with the native production
+closure linked into it. Source GxTest can use that image instead of repeatedly
+loading and retiring separate dynamic production modules. Its --eval mode now
+retains trailing application arguments, matching the existing GxTest expression's
+command-line contract. GxTest remains the upstream executor; every Suite carrier
+remains source, and the original process exit performs normal runtime cleanup.
+There is no new evaluator, Suite compilation, process reuse or GC bypass.
+
+The build receipt records the executable's SHA-256. Selection requires the
+existing complete source/SDK/library admission and an exact executable digest.
+Old receipts, changed source, a different SDK, missing executable and changed
+image bytes reject reuse and retain the original gxi path. The dispatcher
+records the selected driver. Heap arguments, verbosity, selectors, test files,
+single-processor assertion, batch width and twelve-worker admission are unchanged.
+New source Cases cover argv preservation and negative image-admission controls.
+
+* Upstream runtime revision
+
+Native gerbil-scheme, sys, AOT support and Python support are pinned to PR #18
+revision =6bb8f6c86313b65618140ad67e3fd45eff7428e8=. The upstream thread/dispatch
+work does not move a Scheme VM onto Rayon workers. ASCENT keeps one owner thread
+per process VM and Rust-owned execution on Rayon. The pure gxi source gate does
+not execute the Python instance dispatch layer, so this dependency update is
+not claimed as the source-timeout repair by itself.
+
+The upstream PR removed its old IR generator and rust-backend support feature.
+ASCENT still uses that generator at library build time. Its exact revision
+=7ebc26dac9e32f982f9ab1455b664b01f2f6e007= and source inventory remain separately
+pinned under build-only dependencies. Installed runtime support uses the new
+revision; the compiler source locator adds no VM or execution owner. Raw compiler
+inputs and its workspace manifests remain packaged and checked, rather than
+silently dropping them from admission. User DSL is never compiled at runtime.
+
+* Acceptance boundary
+
+A selected linked image and finite argv/admission tests do not establish that
+loading, expansion or execution deadlines are repaired. Acceptance requires the
+complete same source selection to finish under the original Linux 180-second
+and macOS three-CPU/240-second deadlines, with twelve single-processor workers,
+all Cases, original resource/provenance controls, and current-head full CI.
+The local host has other compilation activity; local build/test observations
+are functional checks, not dedicated-host latency qualification. Historical
+failures remain retained. Exact-head CI receipts and remaining failures are
+reported in PR #1's owned acceptance section.

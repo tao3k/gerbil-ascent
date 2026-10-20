@@ -10,7 +10,7 @@
                  asp-gerbil-scheme-native-import-closure
                  asp-gerbil-scheme-prepared-native-import-closure
                  call-with-asp-gerbil-scheme-prepared-source-graph)
-        (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! source-snapshot record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-file-sha256 artifact-directory-reader)
+        (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! source-snapshot record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-development-program artifact-file-sha256 artifact-directory-reader)
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (cond-expand
@@ -195,6 +195,43 @@
            (check (artifact-invalidated-modules (current-directory) [] []) => [])
            (delete-file "bin/libascent.json")
            (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (finally
+            (if prefix (setenv "GERBIL_PATH" prefix) (setenv "GERBIL_PATH"))))))))
+    (test-case "linked source driver rejects stale source SDK missing image and changed bytes"
+      (with-artifact-fixture (lambda ()
+        (let ((prefix (getenv "GERBIL_PATH" #f))
+              (receipt (make-hash-table)))
+          (try
+           (setenv "GERBIL_PATH" (current-directory))
+           (for-each artifact-directory! '("bin" "bindings/c"))
+           (for-each (lambda (file) (put file "source input"))
+             '("build.ss" "build-modules.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
+               "bindings/artifact.ss" "bindings/build-entry.ss"))
+           (put "bin/libascent" "producer bytes")
+           (put "bin/ascent-develop" "linked image")
+           (hash-put! receipt "sdk" (gerbil-home))
+           (hash-put! receipt "sourceRoot" (current-directory))
+           (hash-put! receipt "librarySha256" (artifact-file-sha256 "bin/libascent"))
+           (hash-put! receipt "sourceInputs" (list->hash-table (source-snapshot (current-directory) [])))
+           (def (save!)
+             (call-with-output-file [path: "bin/libascent.json" truncate: #t]
+               (lambda (out) (write-json out receipt))))
+           (save!)
+           (check (artifact-development-program (current-directory) []) => #f)
+           (hash-put! receipt "developmentSha256" (artifact-file-sha256 "bin/ascent-develop"))
+           (save!)
+           (check (artifact-development-program (current-directory) []) => (path-expand "bin/ascent-develop"))
+           (put "build.ss" "changed source")
+           (check (artifact-development-program (current-directory) []) => #f)
+           (put "build.ss" "source input")
+           (put "bin/ascent-develop" "changed image")
+           (check (artifact-development-program (current-directory) []) => #f)
+           (put "bin/ascent-develop" "linked image")
+           (hash-put! receipt "sdk" "other-sdk") (save!)
+           (check (artifact-development-program (current-directory) []) => #f)
+           (hash-put! receipt "sdk" (gerbil-home)) (save!)
+           (delete-file "bin/ascent-develop")
+           (check (artifact-development-program (current-directory) []) => #f)
            (finally
             (if prefix (setenv "GERBIL_PATH" prefix) (setenv "GERBIL_PATH"))))))))
     (test-case "unadmitted roots do not eagerly read missing source inputs"

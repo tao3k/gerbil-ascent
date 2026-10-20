@@ -13,7 +13,7 @@
                     compile-executor-output-produced? add-compile-output-job!))))
 (export observe-compiler-outputs reuse-compiler-outputs!
         source-snapshot artifact-receipt! artifact-source-current?
-        artifact-invalidated-modules artifact-changed-modules
+        artifact-invalidated-modules artifact-changed-modules artifact-development-program
         record-compiled-resources! clean-compiled-resources! compiled-resource-error?
         artifact-file-sha256 artifact-directory-reader)
 
@@ -130,6 +130,19 @@
              (artifact-changed-modules (hash-get receipt "sourceInputs")
                                       (or current (source-snapshot root modules)) modules))))))
 
+(def (artifact-development-program root modules)
+  ;; A linked image is reusable only with the same SDK, complete source inputs
+  ;; and exact executable bytes. Old receipts conservatively use gxi.
+  (with-catch false
+    (lambda ()
+      (let* ((program (path-expand "bin/ascent-develop" (gerbil-path)))
+             (changed (artifact-invalidated-modules root modules))
+             (receipt (call-with-input-file (path-expand "bin/libascent.json" (gerbil-path))
+                        (lambda (port) (read-json port object-as-hash: #t)))))
+        (and changed (null? changed) (file-exists? program)
+             (equal? (hash-get receipt "developmentSha256") (artifact-file-sha256 program))
+             program)))))
+
 (def (artifact-receipt! root modules before (assets []))
   (unless (equal? before (source-snapshot root modules assets))
     (error "native build source inputs changed; no receipt published"))
@@ -204,6 +217,7 @@
                           ("compiledResourceOrigins" compiled-origins)
                           ("sourceOnlyResources" source-only)
                           ("librarySha256" (artifact-file-sha256 library))
+                          ("developmentSha256" (artifact-file-sha256 (path-expand "bin/ascent-develop" (gerbil-path))))
                           ("runtimeSourceSha256" (artifact-file-sha256 (path-expand "bindings/c/runtime.c" root)))
                           ("headerSha256" (artifact-file-sha256 (path-expand "bindings/c/ascent.h" root)))))
            (output (string-append library ".json"))

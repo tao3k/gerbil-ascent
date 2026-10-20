@@ -14,9 +14,12 @@ ascent-c-abi = { path = "../ascent-c-abi", optional = true }
 pyo3.workspace = true
 serde_json.workspace = true
 ascent-scheme = { path = "../ascent-scheme", optional = true }
-gerbil-scheme-python = { workspace = true, features = ["rust-backend", "c-abi", "parallel-verification"], optional = true }
+gerbil-scheme-python = { workspace = true, features = ["python", "c-abi", "parallel-verification"], optional = true }
 
 [build-dependencies]
+# The upstream PR retired the IR generator. Freeze the exact build-only
+# generator inputs still used by ascent; this crate is never a runtime owner.
+gerbil-scheme-compiler-source = { package = "gerbil-scheme-python", git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "7ebc26dac9e32f982f9ab1455b664b01f2f6e007", default-features = false }
 gerbil-scheme-python.workspace = true
 serde_json.workspace = true
 

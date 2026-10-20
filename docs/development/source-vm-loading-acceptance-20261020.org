@@ -282,3 +282,17 @@ Guard; the new Quint protocol and all three expected counterexamples passed.
 The11 formal inventory controls, five repository-policy controls and four
 source-orchestration controls passed. These are focused semantic receipts,
 not174-module/twelve-VM or isolated performance acceptance.
+
+The selector follow-up inspects syntax heads and atomic rule terms directly.
+It does not call syntax->datum on whole Programs, source expressions or limits;
+large source fact literals therefore do not incur a second deep datum copy
+just to choose admission. Relation identifiers/columns retain the collector's
+syntax checks. The exact selector is now included in Lean source rendering.
+Current-source SDK compilation and both DSL/root-publication source suites
+passed before the follow-up; full exact-head CI is still required after it.
+
+The exhaustive fixture also asserts its actual fourteen-Term rule shape. Lean
+and Quint link that source-bound workload to86016 versus172032 Term Contract
+checks, retaining all3072 evaluations and oracle calls. This counts checks,
+not bytes or elapsed time. Each oracle receives a fresh graph-input list so
+an erroneous evaluator mutation cannot contaminate the reference input.

@@ -33,5 +33,6 @@ module PositiveDslAdmission {
   val CallbacksOutside = not(q.callbackInside)
   val ScopeRestored = q.phase != "terminal" or not(q.borrowed)
   val PublicationChecked = not(q.published) or q.checked
+  val TermCheckCount = (1024 * 56 + 2048 * 14) * 2 == 3072 * 56
   val FullEvaluationMatrix = 512 * 2 * (1 + 2) == 3072
 }

@@ -24,7 +24,7 @@
 (def (verify mask rules workers)
  (let* ((edges (graph-input mask)) (program (if (= workers 1) (declaration edges rules) (owned-declaration edges rules)))
         (actual (gerbil-ascent-evaluate-program program workers: workers)))
-  (let-values (((expected _) (naive-positive edges rules)))
+  (let-values (((expected _) (naive-positive (graph-input mask) rules)))
    (check-equal? (.ref actual 'finished) #t)
    (for-each (lambda (name)
      (check-equal? (canonical-rows ((.ref actual 'rows-of) name))
@@ -35,6 +35,8 @@
    (for-each (lambda (mask) (verify mask naive-rules 1)
      (verify mask (reverse naive-rules) 1)) (iota 512)))
   (test-case "Actor reschedules empty consumers and nonlinear mutual recursion"
+   (check-equal? (foldl (lambda (rule total)
+     (+ total (foldl (lambda (atom n) (+ n (length (cdr atom)))) 0 rule))) 0 naive-rules) 14)
    (let* ((sample (owned-declaration (graph-input 511) naive-rules))
           (relations (.ref sample 'relations))
           (schema (gerbil-ascent-program-schema sample relations))

@@ -412,6 +412,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-heap", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "dsl-select", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-root", "program/objects.ss"),
                 ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-workload", "t/qualification/ascent-semi-naive-test.ss"),

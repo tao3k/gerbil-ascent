@@ -97,7 +97,7 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                                       'LiveValues',
                         'constraint': 'ExplorationBound'},
  'PositiveDslAdmission': {'constants': 'Mutation = "none"',
-                          'invariants': 'CallbacksOutside ScopeRestored PublicationChecked FullEvaluationMatrix'},
+                          'invariants': 'CallbacksOutside ScopeRestored PublicationChecked FullEvaluationMatrix TermCheckCount'},
  'ClosedDslLowering': {'constants': 'Mutation = "none"',
                        'invariants': 'WholeChoice NoRetry FailurePrivate'},
  'ClosedEvidenceScope': {'constants': 'Mutation = "none"',

@@ -426,6 +426,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-roots" => pure Ascent.PreparationWork.rootsSchemeSource
   | "preparation-support" => pure Ascent.PreparationWork.supportQuintSource
   | "preparation-batch-width" => pure Ascent.PreparationWork.batchWidthPythonSource
+  | "dsl-select" => pure Ascent.ClosedDslLowering.selectorSchemeSource
   | "dsl-root" => pure Ascent.ClosedDslLowering.rootSchemeSource
   | "dsl-owned" => pure Ascent.ClosedDslLowering.ownedMacroSchemeSource
   | "dsl-workload" => pure Ascent.ClosedDslLowering.workloadSchemeSource

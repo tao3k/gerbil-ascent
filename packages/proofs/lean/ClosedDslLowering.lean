@@ -96,6 +96,13 @@ def exhaustiveOracleCalls : Nat := 512 * 2 * (1 + 2)
  theorem complete_exhaustive_matrix :
     exhaustiveEvaluations = 3072 ∧ exhaustiveOracleCalls = 3072 := by decide
 
+-- The checked corpus asserts fourteen variable Terms per rule graph.
+-- Public constructors recheck them at Term/Atom/Rule/Program boundaries;
+-- the closed tree path retains the complete Program-root traversal.
+def oldCorpusTermChecks : Nat := 3072 * publicTermChecks 14
+def newCorpusTermChecks : Nat := 1024 * publicTermChecks 14 + 2048 * ownedTermChecks 14
+ theorem corpus_term_check_reduction : newCorpusTermChecks * 2 = oldCorpusTermChecks := by decide
+
 -- Canonical construction is pure after captures. Capture failure propagates
 -- before construction, and complete root rejection cannot publish a value.
 def admittedConstruction {E C P : Type} (capture : Except E C)
@@ -108,6 +115,58 @@ def admittedConstruction {E C P : Type} (capture : Except E C)
     (construct : C → P) (check : P → Except E P) (failure : E)
     (rejected : check (construct captured) = .error failure) :
     admittedConstruction (.ok captured) construct check = .error failure := rejected
+
+def selectorSchemeSource : String :=
+  "(defsyntax (relational-program stx)\n" ++
+  "  (def (closed-positive? clauses)\n" ++
+  "    (def has-rule? #f)\n" ++
+  "    (def names\n" ++
+  "      (let (index (make-hash-table-eq))\n" ++
+  "        (for-each (lambda (form)\n" ++
+  "          ;; Source/limit expressions stay opaque syntax, never datum copies.\n" ++
+  "          (syntax-case form (relation rule)\n" ++
+  "            ((relation name (column ...) rows)\n" ++
+  "             (identifier? (syntax name))\n" ++
+  "             (hash-put! index (syntax->datum (syntax name)) #t))\n" ++
+  "            ((relation name (column ...))\n" ++
+  "             (identifier? (syntax name))\n" ++
+  "             (hash-put! index (syntax->datum (syntax name)) #t))\n" ++
+  "            ((rule head body ...) (set! has-rule? #t))\n" ++
+  "            (_ (void)))) clauses)\n" ++
+  "        index))\n" ++
+  "    (def (term? term)\n" ++
+  "      (if (identifier? term)\n" ++
+  "        (let (name (symbol->string (syntax->datum term)))\n" ++
+  "          (and (> (string-length name) 1) (char=? (string-ref name 0) #\\?)))\n" ++
+  "        (syntax-case term ()\n" ++
+  "          ((head . tail) #f)\n" ++
+  "          (_ (let (datum (syntax->datum term))\n" ++
+  "               (or (exact-integer? datum) (boolean? datum) (char? datum)))))))\n" ++
+  "    (def (atom? form)\n" ++
+  "      (syntax-case form ()\n" ++
+  "        ((name term ...)\n" ++
+  "         (identifier? (syntax name))\n" ++
+  "         (let (name (syntax->datum (syntax name)))\n" ++
+  "           (and (hash-get names name) (not (memq name '(where compute not reduce)))\n" ++
+  "                (andmap term? (syntax->list (syntax (term ...)))))))\n" ++
+  "        (_ #f)))\n" ++
+  "    (and has-rule?\n" ++
+  "      (andmap (lambda (form)\n" ++
+  "        (syntax-case form (relation rule limits)\n" ++
+  "          ((relation name (column ...) rows)\n" ++
+  "           (and (identifier? (syntax name))\n" ++
+  "                (andmap identifier? (syntax->list (syntax (column ...))))))\n" ++
+  "          ((relation name (column ...))\n" ++
+  "           (and (identifier? (syntax name))\n" ++
+  "                (andmap identifier? (syntax->list (syntax (column ...))))))\n" ++
+  "          ((limits input derived output) #t)\n" ++
+  "          ((rule head body ...) (andmap atom? (syntax->list (syntax (head body ...)))))\n" ++
+  "          (_ #f))) clauses)))\n" ++
+  "  (syntax-case stx ()\n" ++
+  "    ((_ clause ...)\n" ++
+  "     (if (closed-positive? (syntax->list (syntax (clause ...))))\n" ++
+  "       (syntax (relational-collect relational-owned-program () () clause ...))\n" ++
+  "       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))\n"
 
 def rootSchemeSource : String :=
   "(def (receive-inert-declarations construct receive)\n" ++
@@ -168,7 +227,7 @@ def workloadSchemeSource : String :=
   "(def (verify mask rules workers)\n" ++
   " (let* ((edges (graph-input mask)) (program (if (= workers 1) (declaration edges rules) (owned-declaration edges rules)))\n" ++
   "        (actual (gerbil-ascent-evaluate-program program workers: workers)))\n" ++
-  "  (let-values (((expected _) (naive-positive edges rules)))\n" ++
+  "  (let-values (((expected _) (naive-positive (graph-input mask) rules)))\n" ++
   "   (check-equal? (.ref actual 'finished) #t)\n" ++
   "   (for-each (lambda (name)\n" ++
   "     (check-equal? (canonical-rows ((.ref actual 'rows-of) name))\n" ++
@@ -179,6 +238,8 @@ def workloadSchemeSource : String :=
   "   (for-each (lambda (mask) (verify mask naive-rules 1)\n" ++
   "     (verify mask (reverse naive-rules) 1)) (iota 512)))\n" ++
   "  (test-case \"Actor reschedules empty consumers and nonlinear mutual recursion\"\n" ++
+  "   (check-equal? (foldl (lambda (rule total)\n" ++
+  "     (+ total (foldl (lambda (atom n) (+ n (length (cdr atom)))) 0 rule))) 0 naive-rules) 14)\n" ++
   "   (let* ((sample (owned-declaration (graph-input 511) naive-rules))\n" ++
   "          (relations (.ref sample 'relations))\n" ++
   "          (schema (gerbil-ascent-program-schema sample relations))\n" ++
@@ -197,3 +258,5 @@ end Ascent.ClosedDslLowering
 #print axioms Ascent.ClosedDslLowering.complete_exhaustive_matrix
 #print axioms Ascent.ClosedDslLowering.failed_capture_prevents_construction
 #print axioms Ascent.ClosedDslLowering.rejected_root_not_published
+
+#print axioms Ascent.ClosedDslLowering.corpus_term_check_reduction

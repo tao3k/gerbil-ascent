@@ -105,7 +105,11 @@ jobs:
         env:
           CARGO_BUILD_JOBS: "3"
           GERBIL_BUILD_CORES: "3"
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+          RUSTFLAGS: "-C link-arg=-Wl,-ld_classic"
         run: |
+          xcrun --find ld-classic
+          printf 'RUSTFLAGS=%s\nMACOSX_DEPLOYMENT_TARGET=%s\n' "$RUSTFLAGS" "$MACOSX_DEPLOYMENT_TARGET" > "$RUNNER_TEMP/process-build-recipe.txt"
           gerbil env cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker
           gerbil env cargo bench --no-run --profile release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-benchmark-build.jsonl"
       - name: Measure sustained production interface after all compilation
@@ -121,6 +125,8 @@ jobs:
           path: |
             ${{ runner.temp }}/process-throughput
             ${{ runner.temp }}/process-benchmark-build.jsonl
+            ${{ runner.temp }}/process-build-recipe.txt
+            ~/Library/Logs/DiagnosticReports/ld-*.ips
           include-hidden-files: true
       - name: Preserve every control and admission record
         if: ${{ always() && inputs.baseline != '' }}

@@ -467,3 +467,34 @@ the process-shared futex exchange. No private Darwin wait ABI, additional SDK,
 control batching, or new application scheduling framework is introduced.
 The ready record identifies the actual compiled platform transport. These
 platform wait changes require a fresh same-matrix receipt at the new head.
+
+* Current socket/futex semantic and build receipts
+
+At =b91493afacbeccddc97c9f7f68f84bf23710f855=, strict all-target native Clippy
+passed in 2.93 seconds and the complete macOS buffered-socket native suite
+passed 63/63 Cases with twelve workers, zero retries and zero skips in
+297.573 seconds. Strict Scheme-profile PyO3 Clippy passed in 47.50 seconds.
+Both actual installed-wheel entries passed 120 calls plus 120 callable
+applications and reaped all twelve children. VM1/3/12 and Rayon12 functional
+soak smoke passed, explicitly not admitted as performance measurements.
+The local twelve-core host still had foreign Lean/gxi work during preflight,
+so no local capacity measurement was started and no other thread was contacted.
+
+The Linux futex implementation's prior-head CI semantic step passed under its
+original limits. Current main CI =39390280213= also passed Linux complete source
+semantics, formal, the original performance lane and all three oracles;
+individual Rust/PyO3 and downstream conclusions are checked independently.
+The separate macOS source gate remains an independent failure at 240 seconds.
+No source allocation or preparation issue is declared fixed from a green job.
+
+Production experiment =39390427481= failed before measurement. Its preserved
+structured compiler output identifies Xcode 26.6 / Apple clang 21 terminating
+with =Bus error: 10= while dead-stripping the worker binary. It links SDK objects
+built for macOS 26.0 using Rust's implicit 11.0 minimum. This is not runtime
+throughput and no numbers are admitted from that run. The optional build step
+now explicitly selects Xcode's shipped classic linker, already validated with
+the local saved identical linker inputs, and matches the immutable SDK's 26.0
+deployment target. The chosen flags and linker diagnostics are retained with
+the experiment. No SDK patch, build.ss orchestration, execution deadline,
+resource ceiling, semantic Case, performance threshold or concurrency count
+is changed by this compiler-invocation correction.

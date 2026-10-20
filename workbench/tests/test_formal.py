@@ -153,6 +153,7 @@ class FormalTests(unittest.TestCase):
             "hide-counter": "Family", "wrong-chain": "Traceable",
             "hide-truncation": "HonestPresentation", "gap-as-absent": "Gaps",
             "mask-gap": "Gaps", "count-only-delta": "ExactDelta",
+            "hide-discovery": "DiscoveryExact", "invent-discovery": "DiscoveryExact",
             "select-action": "Open", "close-scope": "Open",
         })
         self.assertTrue(all(o.expected == 12 for name, o in anchored.items() if name != "correct"))

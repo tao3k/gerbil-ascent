@@ -401,3 +401,38 @@ failure is retained; no budget is raised and a warm rerun is not used for
 acceptance. The focused PreparationWork file passed the same locked Guard.
 The stronger finite queue control checks exact order and multiplicity by list
 equality instead of repeating set-membership searches in every solver state.
+
+* Complete integrated receipt and Linux scheduling correction
+
+Commit =510df1da14fe9463d5e702aace53d905d8bc841a= passed main CI
+=39447463888= and macOS CI =39447463865=. Both source gates completed all
+174 modules,1410 Cases and90 single-processor VM batches with12 workers.
+macOS completed in181.2358 seconds under240; Linux completed in160 seconds
+under180. The macOS exhaustive public Case ran from155.035 to169.148 seconds,
+and the Actor Case then completed at180.066 seconds. Every3072 evaluator
+invocation and independent oracle call remains. Foreign compiler/audit lists
+were empty. This is source-test timing, not production request throughput or
+a measured complete-baseline speedup; the earlier240-second runs timed out.
+
+The independent conformance job passed the complete Lean inventory under the
+unchanged Guard in107.5565 seconds, with zero helper threads and a reaped child.
+Its6400 output-conformance Cases passed. The main exhaustive formal/source
+rendering job passed independently. The source-admitted compilation cache save
+also succeeded before runtime. Package build was313 seconds, cold preparation
+230 seconds and warm reuse10 seconds; these single observations do not close
+cold expansion, allocation accounting or baseline drift.
+
+Uniform late scheduling fixes the Darwin gate but creates a Linux tail:
+Linux's same exhaustive public/Actor Cases take19.22/11.33 seconds at the end,
+where their earlier execution could overlap other batches. The next correction
+retains the verified Darwin order and restores the original Linux order. The
+private test helper's default uses the existing darwin compile feature; no
+new environment knob or CI wrapper is introduced. An explicit boolean allows
+both identical-coverage policies to be exercised on either host. The new
+source Case retains the90-batch/two-entry and same-module/resource assertions.
+Lean proves batch count and arbitrary weighted work equal for both choices;
+Quint checks exact order and multiplicity for both. This preserves every
+Contract call. The new1411-Case exact-head CI is still required before claiming
+the Linux regression repaired. Native checker/decoder, mutable caches, full
+SCC/message/allocator source equivalence and true cumulative allocation remain
+open beyond these source-bound controls.

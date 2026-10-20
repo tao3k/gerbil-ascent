@@ -49,9 +49,9 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; Exhaustive corpora own independent processes. Queue ordinary batches first
-;; so repeated declaration allocation does not overlap every source expansion.
-;; Scheme profiles retain the same capacity, isolation and runtime options.
+;; Exhaustive corpora own independent processes. Darwin defers them to avoid
+;; the observed allocation/expansion pressure; other hosts keep their native
+;; overlap. Capacity, isolation, module coverage and runtime options are equal.
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -88,12 +88,15 @@
            (cadr arguments))
          (cddr arguments))))
       (else (cons (car arguments) (wrap (cdr arguments)))))))
-(def (source-test-batches profiled files mode)
+(def (source-test-batches profiled files mode
+                          (defer? (cond-expand (darwin #t) (else #f))))
   (let (batches
     (if (string=? mode "batched")
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (append (preparation-refined-batches profiled compatible) (map list isolated)))
+        (let (ordinary (preparation-refined-batches profiled compatible))
+          (if defer? (append ordinary (map list isolated))
+                     (append (map list isolated) ordinary))))
       (testing-interface-test-file-batches profiled files)))
     (unless (or (null? files)
                 (preparation-batches-bounded? batches (length files)

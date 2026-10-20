@@ -368,12 +368,15 @@ def groupsSchemeSource : String :=
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
-  "(def (source-test-batches profiled files mode)\n" ++
+  "(def (source-test-batches profiled files mode\n" ++
+  "                          (defer? (cond-expand (darwin #t) (else #f))))\n" ++
   "  (let (batches\n" ++
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (append (preparation-refined-batches profiled compatible) (map list isolated)))\n" ++
+  "        (let (ordinary (preparation-refined-batches profiled compatible))\n" ++
+  "          (if defer? (append ordinary (map list isolated))\n" ++
+  "                     (append (map list isolated) ordinary))))\n" ++
   "      (testing-interface-test-file-batches profiled files)))\n" ++
   "    (unless (or (null? files)\n" ++
   "                (preparation-batches-bounded? batches (length files)\n" ++
@@ -398,6 +401,21 @@ theorem deferred_source_work (weight : String → Nat) (ordinary : List (List St
     sourceWork weight (deferIsolated ordinary isolated).flatten =
       sourceWork weight ((isolated.map (fun entry => [entry])) ++ ordinary).flatten := by
   simp [deferIsolated, List.flatten_append, sourceWork_append, Nat.add_comm]
+
+-- Both platform policies retain the complete same work, with no capacity change.
+def orderedBatches (defer : Bool) (ordinary : List (List String))
+    (isolated : List String) : List (List String) :=
+  if defer then deferIsolated ordinary isolated else isolated.map (fun entry => [entry]) ++ ordinary
+theorem host_policy_batch_count (defer : Bool) (ordinary : List (List String))
+    (isolated : List String) :
+    (orderedBatches defer ordinary isolated).length = ordinary.length + isolated.length := by
+  cases defer <;> simp [orderedBatches, deferIsolated, Nat.add_comm]
+theorem host_policy_source_work (defer : Bool) (weight : String → Nat)
+    (ordinary : List (List String)) (isolated : List String) :
+    sourceWork weight (orderedBatches defer ordinary isolated).flatten =
+      sourceWork weight (deferIsolated ordinary isolated).flatten := by
+  cases defer <;> simp [orderedBatches, deferIsolated, List.flatten_append,
+                        sourceWork_append, Nat.add_comm]
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split

@@ -9,6 +9,7 @@ module PreparationInterfaces {
     if (k0 == key) v0 else if (k1 == key) v1 else -1
   pure def batch_width(entries: int, workers: int): int =
     if (entries == 0) 0 else (entries - 1) / workers + 1
+  pure val source_vm_live_ratio = 80
   pure val complete_packed_starts =
     2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)
 }

@@ -194,3 +194,31 @@ These sums are not exclusive CPU or wall time and cannot establish a cause.
 The refreshed macOS sampler is required for complete live-process CPU/RSS.
 True cumulative allocation and generic compiler/SDK source equivalence remain
 open; the startup-count proofs do not imply either claim.
+
+* macOS all-descendant pressure diagnosis and GC candidate
+
+The =7ad1db24= macOS run failed at 240.258 seconds: 40 batches started,
+28 completed, 464 Cases started and 454 completed; foreign compilers and
+audit errors were both zero. The first semi-naive exhaustive Case started
+at approximately 22.38 seconds and remained incomplete at the deadline.
+The corrected sampler captured 40 VM PIDs, at least 435.29 aggregate VM SELF
+CPU seconds and a sampled aggregate VM RSS peak of 3,144.06 MiB. This sampled
+lower bound includes processes later killed or reaped; it is not complete
+child accounting or cumulative allocation.
+
+The runner reports =hw.memsize: 7516192768= bytes, with no swap. Host-wide
+compressed-page storage rose from 162,160 to 304,522 pages; compression and
+decompression counts grew by 4,196,346 and 3,660,086 pages respectively.
+Each page is 16 KiB. These host-wide counters support a memory-pressure
+hypothesis; they do not attribute every page or prove the sole cause.
+The packed two-entry candidate increased pressure and did not fix the gate.
+
+The next candidate applies the released SDK's existing =live-ratio=80= option
+only to source-test child VMs. The SDK default is 50. This requests a smaller
+post-GC target while preserving the original 2 GiB maximum, twelve concurrent
+processes, one active processor each, full source selection and deadlines.
+No evaluator, cancellation, provenance or performance-threshold code changes.
+Lean checks that its SDK arithmetic target is no larger than the default and
+that resizing retains the separate maximum; exact generated command source
+is checked by the existing renderer. This does not prove full GC source
+refinement or a performance benefit. Those remain empirical acceptance gates.

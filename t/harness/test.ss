@@ -87,6 +87,8 @@
            "(let (n (##current-vm-processor-count)) (unless (= n 1) (error \"expected one processor per test VM\" n)) (displayln \"VM-RUNTIME processors=\" n)) "
            (cadr arguments))
          (cddr arguments))))
+      ((string-prefix? "-:max-heap=" (car arguments))
+       (cons (string-append (car arguments) ",live-ratio=80") (wrap (cdr arguments))))
       (else (cons (car arguments) (wrap (cdr arguments)))))))
 (def (source-test-batches profiled files mode)
   (let (batches
@@ -131,7 +133,7 @@
                       (string-append log-root "/" (number->string index) ".log"))
                     (iota (length batches)))))
     (displayln "TEST-VM-DRIVER linked=" (if program 1 0)) (force-output)
-    (displayln "TEST-DISPATCH modules=" (length files) " batches=" (length batches) " workers=" workers " max-batch-modules=" (apply max (map length batches)) " mode=" mode " heap=" heap " logs=" log-root) (force-output)
+    (displayln "TEST-DISPATCH modules=" (length files) " batches=" (length batches) " workers=" workers " max-batch-modules=" (apply max (map length batches)) " mode=" mode " heap=" heap " gc-live-ratio=80 logs=" log-root) (force-output)
     (for-each
       (lambda (batch log index)
         (wg-add! group

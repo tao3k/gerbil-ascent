@@ -200,6 +200,7 @@ def interfacesQuintSource : String :=
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
+  "  pure val source_vm_live_ratio = 80\n" ++
   "  pure val complete_packed_starts =\n" ++
   "    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)\n" ++
   "}\n"
@@ -367,6 +368,8 @@ def groupsSchemeSource : String :=
   "           \"(let (n (##current-vm-processor-count)) (unless (= n 1) (error \\\"expected one processor per test VM\\\" n)) (displayln \\\"VM-RUNTIME processors=\\\" n)) \"\n" ++
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
+  "      ((string-prefix? \"-:max-heap=\" (car arguments))\n" ++
+  "       (cons (string-append (car arguments) \",live-ratio=80\") (wrap (cdr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
   "(def (source-test-batches profiled files mode)\n" ++
   "  (let (batches\n" ++
@@ -681,6 +684,13 @@ def resizedSections (target lower upper : Nat) : Nat :=
 theorem resized_sections_preserve_maximum (target lower upper : Nat) :
     resizedSections target lower upper ≤ upper := Nat.min_le_right _ _
 
+-- The existing SDK heap target is tightened without changing its maximum.
+-- This is the SDK arithmetic model, not a claim about RSS or collection cost.
+theorem source_gc_target_le_default (live minimum : Nat) :
+    adjustedHeapWords live minimum 80 ≤ adjustedHeapWords live minimum 50 := by
+  unfold adjustedHeapWords
+  omega
+
 theorem preparation_heap_policy_is_bounded :
     preparationHeapGiB = 3 ∧ 0 < preparationLiveRatio ∧ preparationLiveRatio ≤ 100 := by
   decide
@@ -829,3 +839,5 @@ end Ascent.PreparationWork
 
 #print axioms Ascent.PreparationWork.complete_packing_start_count
 #print axioms Ascent.PreparationWork.complete_packing_fewer_starts
+
+#print axioms Ascent.PreparationWork.source_gc_target_le_default

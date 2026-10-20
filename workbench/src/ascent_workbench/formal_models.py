@@ -623,7 +623,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
+    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle SourceGcPolicy PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
     ('last-interface-alias-wins', 'IndexedDispatchExact', 12),

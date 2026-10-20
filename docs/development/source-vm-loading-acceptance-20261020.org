@@ -168,3 +168,29 @@ Copied local compiled package artifacts lack the new artifact export; the
 failed source-suite attempts are retained. The successful packing check uses
 the actual current dispatch definitions and released SDK profiles directly;
 it does not stand in for full source semantics.
+
+* Moving upstream OS-boundary repair and Linux source receipt
+
+PR #18 subsequently advanced to =150dd6c052c24a9a089a0aeecb4ae92d42be37ab=.
+Unlike the preceding model-only increment, this snapshot changes real owner
+OS boundaries: host control signals are restored, Darwin owner cwd isolation
+is explicit, and rooted-call Scheme errors are consumed through a typed
+optional diagnostic export. ASCENT pins this reviewed snapshot without local
+upstream modifications. Earlier =0126e6c8= results are retained as historical.
+
+At =7ad1db24= Linux completed all 174 source modules, 1,409 Cases and 90
+single-processor VM batches with twelve workers and the original two-entry
+cap. Full Scheme semantics, original performance gates, formal and two oracle
+jobs passed. The source-step interval was 136 seconds versus 115 seconds at
+=35aacf1b=; these are distinct observations, not a measured speedup. The added
+packing Case occupied about 28 ms. Both runners reported four CPUs. The
+isolated semi-naive exhaustive batch was the critical path: approximately
+132.20 seconds total, 5.26 loading, 126.90 execution, versus 111.93 / 3.21 /
+108.68 previously. Reducing VM starts has not demonstrated an end-to-end
+Linux improvement. Its cause is not classified as noise or dismissed by a
+passing deadline. Overlapping load elapsed sums declined from 537.76 to
+497.96 seconds, while execution elapsed sums rose from 681.13 to 883.05.
+These sums are not exclusive CPU or wall time and cannot establish a cause.
+The refreshed macOS sampler is required for complete live-process CPU/RSS.
+True cumulative allocation and generic compiler/SDK source equivalence remain
+open; the startup-count proofs do not imply either claim.

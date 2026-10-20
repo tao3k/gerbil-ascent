@@ -51,6 +51,27 @@
         (check-equal? (capture-rows held #f) actual)))))
 (def ascent-uf-capture-test
   (test-suite "UF ordered singleton capture and query-local owner plans"
+    (test-case "shared prefix aliases preserve shape validation and detached public rows"
+      (let* ((prefix (list (string-copy "scope") #f))
+             (blocks (list (make-rectangle prefix '(0) '(1))
+                           (make-rectangle prefix '(2) '(3))
+                           (make-rectangle (list (car prefix) #f) '(4) '(5)))))
+        (for-each (lambda (indexed?)
+          (let* ((view (gerbil-ascent-rectangle-view blocks 3 6 indexed?))
+                 (rows (gerbil-ascent-view-rows view)))
+            (check-equal? rows '(("scope" #f 0 1) ("scope" #f 2 3) ("scope" #f 4 5)))
+            (check-equal? (eq? (caar rows) (car prefix)) #t)
+            (set-car! (car rows) 'changed)
+            (check-equal? prefix '("scope" #f)))) '(#f #t)))
+      (check-exception
+        (gerbil-ascent-rectangle-view (list (make-rectangle '(scope . invalid) '(0) '(1))) 1 2 #f)
+        (lambda (_) #t))
+      ;; A prior width mismatch retains the original constructor short circuit.
+      (check-equal? (relation-view-count
+        (gerbil-ascent-rectangle-view
+          (list (make-rectangle '(a) '(0) '(1))
+                (make-rectangle '(a b) '(0) '(1))
+                (make-rectangle '(a . invalid) '(0) '(1))) 3 6 #f)) 3))
     (test-case "dense weighted grouped cuts retain exact order and independent DFS truth"
       (for-each (lambda (indexed?)
         (for-each (lambda (scenario)

@@ -108,7 +108,7 @@
         (let replace ((arguments (cdr command)))
           (cond
             ((null? arguments) (error "native test command has no expression" command))
-            ((equal? (car arguments) "-e") (cons "--eval" (cdr arguments)))
+            ((equal? (car arguments) "-e") (cons "--eval-plain" (cdr arguments)))
             (else (cons (car arguments) (replace (cdr arguments)))))))
       command)))
 

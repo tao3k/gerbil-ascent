@@ -66,3 +66,47 @@ The local host has other compilation activity; local build/test observations
 are functional checks, not dedicated-host latency qualification. Historical
 failures remain retained. Exact-head CI receipts and remaining failures are
 reported in PR #1's owned acceptance section.
+
+* First candidate: retained positive and negative receipts
+
+At =abb90de7c0316b959661f67e6d621eaebd360454=, Linux CI =39406613756=
+selected =TEST-VM-DRIVER linked=1=. Its original 180-second source gate passed:
+174 modules, 1,407 Cases and all 146 single-processor batches completed in the
+reported 109-second test interval. The whole Scheme semantic job passed,
+including downstream source and compiled DSL consumers. The completed-batch
+loading median was 4.17 seconds; its cross-run difference is diagnostic, not
+an isolated causal speedup. Existing formal checks and three oracles passed.
+The updated upstream bridge passed all 63 binding Cases and both installed
+PyO3 worker entries (120 calls/120 applications each, twelve VMs reaped).
+
+macOS =39406613828= still failed: 240.23 seconds, exit124, zero foreign compiler
+or audit errors, linked driver selected. Only 60 batches completed, 614 Cases
+started/611 completed, no recorded Case assertion failure. Loading median was
+14.27 seconds. The linked shell still expanded its entire interactive application
+prelude before GxTest selected its actual source imports. The next candidate
+uses a plain core evaluation entry for GxTest, while preserving the existing
+application-aware --eval/REPL behavior. This isolates unnecessary context
+expansion; static production modules and normal cleanup remain unchanged.
+
+The original performance lane retained an owner-plan unindexed failure:
+paired median CPU 12,667us to 23,402us, equal allocation75,648 bytes, zero wins.
+No threshold or fixture was changed. The constructor still checked every
+prefix length even when many descriptors borrowed the exact same validated
+prefix. The candidate reuses that identity, preserving first-prefix shape
+validation, heterogeneous-prefix checks and their original short circuit.
+Additional source controls cover shared/distinct headers, detached public rows,
+malformed initial prefixes and later malformed prefixes after a width mismatch.
+No routing, result-order, cancellation or provenance check is removed.
+
+Both strict Clippy steps failed on the same build-script function-length
+error (118/100), not two different ABI failures. Extracting its input traversal
+keeps every compiler/source inventory byte and its symlink/special-file checks;
+no lint is disabled. All current-head gates still need to run after these fixes.
+
+Local functional builds remain unadmitted: the copied scratch cache contained
+October17 object locks. A native sample showed an idle compiler with no child
+processes, and SDK source confirmed existence-based object-lock waiting. Only
+that private copy's old locks were removed; original workspace locks stayed
+untouched. The original 1,200-second build/check watchdogs were not extended;
+their failures remain in local logs. No upstream or build.ss repair was inferred
+from this cache-copy problem.

@@ -595,8 +595,13 @@
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((small? (or (null? blocks) (null? (cdr blocks)) (null? (cddr blocks))))
          (uniform? (or (null? blocks)
-                       (let (width (length (rectangle-prefix (car blocks))))
-                         (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks))))
+                       (let (prefix (rectangle-prefix (car blocks)))
+                         ;; Preserve first-prefix shape validation. Captured
+                         ;; aliases need no repeated prefix-spine traversal.
+                         (length prefix)
+                         (andmap (lambda (block)
+                           (let (other (rectangle-prefix block))
+                             (or (eq? prefix other) (= (length prefix) (length other))))) blocks))))
          (self? (and indexed? uniform? (pair? blocks)
                      (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)))
          (routes (and indexed? (pair? blocks) (rectangle-routing blocks small? self?)))

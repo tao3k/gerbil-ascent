@@ -88,8 +88,8 @@ or alternate evaluator is introduced.
 
 The matrix has Scheme populations 1, 3 and 12, each with one processor per VM,
 and a shared Rayon pool with 1, 3, 6 and 12 threads. Every configuration receives
-the same total work and five predetermined samples. Scheme clients keep
-independent admission resources; Rayon clients explicitly share the specified
+the same total work, twelve sustained clients and five predetermined samples.
+Scheme clients keep independent admission resources; Rayon clients explicitly share the specified
 Rust pool. Startup/loading/warmup are recorded separately from measurement.
 
 Per-request traces retain latency, batch-relative completion time, replacement
@@ -151,3 +151,14 @@ recipe before its unchanged timed source execution, matching the documented
 remains separately visible; no Case is removed and no runtime timeout is raised.
 The prior macOS 240.238-second timeout remains a failure and is not claimed fixed
 by the process-runtime change.
+
+* Matched caller-concurrency correction
+
+The first dispatched throughput candidate used one caller per Scheme VM but
+always twelve Rayon callers. That confounded offered concurrency with VM
+population and is not an admitted scaling comparison. Run 39365176637 is retained
+as a superseded invalid control, not a successful measurement. The corrected
+benchmark has twelve caller/session streams for every 1/3/12 VM configuration
+and every Rayon configuration; the driver checks that receipt explicitly.
+Runtime algorithms, native semantic tests, work/fact budgets and deadlines are
+unchanged by this experiment-only correction.

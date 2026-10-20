@@ -262,7 +262,8 @@ fn main() {
     }
     // All Rayon clients share this one caller-owned Rust thread pool.
     let engine = Engine::new(threads).unwrap();
-    let clients = if mode == "vm" { owners } else { 12 };
+    let clients = 12;
+    assert!(tasks >= clients);
     let mut sessions = Vec::new();
     let mut retained = Vec::new();
     for client in 0..clients {

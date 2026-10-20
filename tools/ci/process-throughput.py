@@ -86,7 +86,8 @@ def main():
             valid = (status == 0 and len(samples) == 5
                      and {value["sample"] for value in samples} == {str(i) for i in range(5)}
                      and all(value["mode"] == mode and value["vms"] == str(owners)
-                             and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks) for value in samples)
+                             and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks)
+                             and value["clients"] == "12" for value in samples)
                      and "ASCENT-PROCESS-FORCED-STOP" not in stderr and len(identities) == owners
                      and len({value["pid"] for value in identities}) == owners
                      and all(value["processors"] == "1" for value in identities) and not audit and not errors)

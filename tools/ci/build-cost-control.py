@@ -156,7 +156,10 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                             if pid in owned and pid not in sampled and
                             Path(name).name == 'ascent-develop']
                 for pid, _ in sorted(eligible, key=lambda item: item[1][0], reverse=True):
-                    argv = subprocess.check_output(['ps', '-p', str(pid), '-o', 'command='], text=True)
+                    try:
+                        argv = subprocess.check_output(['ps', '-p', str(pid), '-o', 'command='], text=True, timeout=2)
+                    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                        continue
                     if any(batch in argv for batch in finished):
                         continue
                     sampled.add(pid)

@@ -30,6 +30,10 @@ on:
       - .github/workflows/build-cost.yml
   workflow_dispatch:
     inputs:
+      process_throughput:
+        description: Measure resident production VM processes and Rayon on the same fixed work
+        type: boolean
+        default: false
       baseline:
         description: Baseline for on-demand ABBA; omit to run full macOS semantics
         required: false
@@ -53,7 +57,7 @@ permissions:
   contents: read
 jobs:
   build-cost:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.baseline != '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.baseline != '' || inputs.process_throughput) }}
     runs-on: macos-26
     timeout-minutes: 90
     env:
@@ -82,6 +86,7 @@ jobs:
           gerbil deps --install
           test ! -e .gerbil/lib/gerbil-ascent
       - name: On-demand ABBA cold build and test preparation
+        if: ${{ inputs.baseline != '' }}
         env:
           BASELINE: ${{ inputs.baseline }}
           CANDIDATE: ${{ inputs.candidate || github.event.pull_request.head.sha || github.sha }}
@@ -95,8 +100,30 @@ jobs:
           if [[ "$SEMANTIC_PREPARATION" == "true" ]]; then work_args+=(--semantic-preparation); fi
           if [[ "$SEMANTIC_RUNTIME" == "true" ]]; then work_args+=(--semantic-runtime); fi
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost" "${work_args[@]}"
+      - name: Build production process benchmark with the released SDK
+        if: ${{ inputs.process_throughput }}
+        env:
+          CARGO_BUILD_JOBS: "3"
+          GERBIL_BUILD_CORES: "3"
+        run: |
+          gerbil env cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker
+          gerbil env cargo bench --no-run --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-benchmark-build.jsonl"
+      - name: Measure sustained production interface after all compilation
+        if: ${{ inputs.process_throughput }}
+        run: |
+          benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-benchmark-build.jsonl")"
+          python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
+      - name: Preserve production throughput and every negative observation
+        if: ${{ always() && inputs.process_throughput }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: process-throughput-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/process-throughput
+            ${{ runner.temp }}/process-benchmark-build.jsonl
+          include-hidden-files: true
       - name: Preserve every control and admission record
-        if: always()
+        if: ${{ always() && inputs.baseline != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: macos-build-cost-${{ github.sha }}-${{ github.run_attempt }}
@@ -104,7 +131,7 @@ jobs:
           include-hidden-files: true
 
   macos-semantics:
-    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '') }}
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '' && !inputs.process_throughput) }}
     runs-on: macos-26
     timeout-minutes: 30
     env:

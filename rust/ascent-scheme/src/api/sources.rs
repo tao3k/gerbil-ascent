@@ -1,5 +1,5 @@
 //! Original Scheme source admission followed by owned-data execution.
-use super::{Backend, Engine, Evidence, id, invoke, policy};
+use super::{Backend, Engine, Evidence, id, policy};
 use gerbil_ascent::{Data, FactLimits, Result, SourceSession};
 
 /// Scheme callback session or a finite DAG transferred to the caller's Rayon pool.
@@ -38,7 +38,7 @@ impl Engine {
         }
         if projection.field("status")?.text()? != "supported" {
             if self.backend() == Some(Backend::Rayon) {
-                invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
+                self.invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
                 return Err(crate::failure(
                     "program requires Scheme callbacks; Rayon projection unavailable",
                 ));
@@ -50,7 +50,7 @@ impl Engine {
             .map(|session| Source::Rayon(Box::new(session)));
         // Projection owns only Rust values; release the temporary VM session on
         // admission failure as well as success, before any Rayon execution.
-        invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
+        self.invoke("close", [("handle", Data::from(id(&loaded, "handle")?))])?;
         result
     }
     /// Parse the original inert rule interface in Scheme and return owned catalog data.

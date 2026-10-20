@@ -40,6 +40,26 @@
 (defstruct module-owner (module results resolver))
 (def module-owners (make-hash-table-eqv))
 (def next-module-owner 0)
+(def owner-stride 1)
+(def (configure-owner-domain! domain)
+  (unless (and (= owner-stride 1) (= next-result 0) (= next-handle 0)
+               (= next-evidence-owner 0) (= next-module-owner 0)
+               (exact-integer? domain) (< 0 domain 4294967296))
+    (error "invalid or already initialized process owner domain"))
+  (set! owner-stride 4294967296)
+  (set! next-result domain)
+  (set! next-handle domain)
+  (set! next-evidence-owner domain)
+  (set! next-module-owner domain)
+  (hash ("domain" domain)))
+
+;; All exported owner identities fit Rust's u64 domain. Exhaustion refuses
+;; publication before mutating a counter; domains never wrap or alias another VM.
+(def (next-owner-identity current)
+  (let (value (+ current owner-stride))
+    (unless (<= value 18446744073709551615)
+      (error "process owner identity exhausted"))
+    value))
 
 ;; Trusted module calls retain arbitrary upstream values, not only Programs.
 ;; Inference and object contracts remain in the selected exported procedure.
@@ -78,7 +98,7 @@
            (value (if (= (length values) 1) (car values) (list->vector values)))
            (retained (make-hash-table-eqv))
            (entry (make-owned-result 0 value retained 'module-value)))
-      (set! next-result (+ next-result 1))
+      (set! next-result (next-owner-identity next-result))
       ;; Retain before projection; transport failure must not discard execution.
       (ascent-accept-publication!)
       (hash-put! results next-result entry)
@@ -145,7 +165,7 @@
       (begin
         (shape request '("operation" "action"))
         (when (>= (hash-length evidence-owners) 64) (error "evidence owner limit"))
-        (set! next-evidence-owner (+ next-evidence-owner 1))
+        (set! next-evidence-owner (next-owner-identity next-evidence-owner))
         (hash-put! evidence-owners next-evidence-owner (reasoning-open-evidence-store))
         (hash ("owner" next-evidence-owner)))
       (let* ((id (hash-ref request "owner"))
@@ -314,7 +334,7 @@
              (program (limit-program
                (gerbil-ascent-program (reverse relations) compiled +inf.0 +inf.0 +inf.0 (map car sources)) policy))
              (session (gerbil-ascent-open-session program)))
-        (set! next-handle (+ next-handle 1))
+        (set! next-handle (next-owner-identity next-handle))
         (ascent-accept-publication!)
       (hash-put! sessions next-handle (make-api-session session sources queries))
         (hash ("handle" next-handle) ("factLimits" (program-limits program)))))))
@@ -360,7 +380,7 @@
                                   (map (lambda (d) (cons (name (hash-ref d "name")) (hash-ref d "columns")))
                                        descriptors) queries))))))
            (session (gerbil-ascent-open-session program)))
-      (set! next-handle (+ next-handle 1))
+      (set! next-handle (next-owner-identity next-handle))
       (ascent-accept-publication!)
       (hash-put! sessions next-handle (make-api-session session sources queries))
       (hash-put! source-sessions next-handle
@@ -492,7 +512,7 @@
 (def (retain-owned-result state value (kind 'result))
   (when (>= (hash-length (source-state-results state)) 64)
     (error "native result owner limit; release results"))
-  (set! next-result (+ next-result 1))
+  (set! next-result (next-owner-identity next-result))
   (hash-put! (source-state-results state) next-result
     (make-owned-result (source-state-generation state) value (make-hash-table-eqv) kind))
   next-result)
@@ -599,7 +619,7 @@
        (unless (and (string? module) (or (hash-key? request "source") (string-prefix? ":" module))
                     (<= (string-length module) 4096)) (error "invalid native module"))
        (when (>= (hash-length module-owners) 64) (error "native module owner limit"))
-       (set! next-module-owner (+ 1 next-module-owner))
+       (set! next-module-owner (next-owner-identity next-module-owner))
        (let (resolver (and (hash-key? request "source")
                            ((if (eq? (name (hash-ref request "operation")) 'module-source-open)
                                 ascent-load-module-source ascent-load-evidence-source) (hash-ref request "source")
@@ -614,7 +634,7 @@
      (let-values (((resolver selected)
        (ascent-load-evidence-components (hash-ref request "components") (hash-ref request "sources")
          (hash-ref request "entry") (hash-ref request "trusted") (hash-get request "maxSourceScopes"))))
-       (set! next-module-owner (+ 1 next-module-owner))
+       (set! next-module-owner (next-owner-identity next-module-owner))
        (ascent-accept-publication!)
        (hash-put! module-owners next-module-owner
          (make-module-owner "<evidence-components>" (make-hash-table-eqv) resolver))
@@ -796,7 +816,12 @@
                   ((.ref result 'rows-of) n)))) (api-session-queries session))
          (hash ("complete" (.ref result 'finished)) ("relations" answers)))))
     (else (error "unsupported scheme operation"))))
-(def (ascent-engine-call request) (dispatch request))
+(def (ascent-engine-call request)
+  (if (equal? (hash-ref request "operation") "process-domain")
+    (begin
+      (shape request '("operation" "domain"))
+      (configure-owner-domain! (hash-ref request "domain")))
+    (dispatch request)))
 
 (def (ascent-engine-dispatch text)
   (call-with-input-string text (lambda (port)

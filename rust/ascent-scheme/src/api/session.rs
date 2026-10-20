@@ -1,5 +1,5 @@
 //! Scheme inference and generation-scoped result authority.
-use super::{Engine, check, id, input, invoke};
+use super::{Engine, check, id, input};
 use gerbil_ascent::{
     Cancellation, Data, Error, FactLimits, Limits, ObjectInput, Program, Relation, Result, Type,
 };
@@ -38,7 +38,9 @@ impl State {
                 }
                 proofs.clear();
             }
-            let _ = invoke("close", [("handle", Data::from(self.handle))]);
+            let _ = self
+                .engine
+                .invoke_unchecked("close", [("handle", Data::from(self.handle))]);
         }
     }
 }
@@ -236,7 +238,7 @@ impl Evidence {
         if handle == 0 {
             return Err(crate::failure("invalid result handle"));
         }
-        let admitted = invoke(
+        let admitted = self.0.engine.invoke_unchecked(
             "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
@@ -364,22 +366,24 @@ impl Evidence {
         Ok(generation)
     }
     fn release(&self, handle: u64) -> Result<()> {
-        invoke(
-            "owned-result",
-            [
-                ("handle", Data::from(self.0.handle)),
-                ("result", Data::from(handle)),
-                ("action", Data::from("release")),
-            ],
-        )
-        .map(|_| ())
+        self.0
+            .engine
+            .invoke_unchecked(
+                "owned-result",
+                [
+                    ("handle", Data::from(self.0.handle)),
+                    ("result", Data::from(handle)),
+                    ("action", Data::from("release")),
+                ],
+            )
+            .map(|_| ())
     }
     /// Capture the native explainer result independently of the source result lease.
     /// # Errors
     /// Rejects stale results and invalid query names.
     pub fn explain(&self, handle: u64, query: &str) -> Result<Explanation> {
         self.check()?;
-        let value = invoke(
+        let value = self.0.engine.invoke_unchecked(
             "owned-result",
             [
                 ("handle", Data::from(self.0.handle)),
@@ -690,7 +694,7 @@ impl EvidenceResult {
     /// Rejects stale, released or unknown results/relations.
     pub fn rows(&self, relation: &str) -> Result<Data> {
         self.check()?;
-        invoke(
+        self.0.owner.0.engine.invoke_unchecked(
             "owned-result",
             [
                 ("handle", Data::from(self.0.owner.0.handle)),

@@ -12,4 +12,4 @@ pub use result_value::ResultValue;
 pub use session::{Evidence, EvidenceResult, Explanation, SchemeProvenance};
 pub use sources::Source;
 mod transport;
-use transport::{check, id, invoke, policy};
+use transport::{check, id, policy};

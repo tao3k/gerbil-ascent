@@ -1,5 +1,5 @@
 //! Scheme module/value leases; no Scheme interpretation in Rust.
-use super::{Engine, Evidence, check, id, input, invoke};
+use super::{Engine, Evidence, check, id, input};
 use gerbil_ascent::{Data, Error, FactLimits, ObjectInput, Result, ValueReference};
 use std::sync::{
     Arc,
@@ -18,7 +18,9 @@ impl Owner {
     }
     pub(super) fn close(&self) {
         if !self.closed.swap(true, Ordering::AcqRel) {
-            let _ = invoke("module-close", [("owner", Data::from(self.id))]);
+            let _ = self
+                .engine
+                .invoke_unchecked("module-close", [("owner", Data::from(self.id))]);
         }
     }
 }
@@ -258,14 +260,18 @@ impl ModuleValue {
             }
             self.owner.0.engine.open_projection(&loaded, limits)
         })();
-        let released = invoke("close", [("handle", loaded.field("handle")?.clone())]);
+        let released = self
+            .owner
+            .0
+            .engine
+            .invoke_unchecked("close", [("handle", loaded.field("handle")?.clone())]);
         released?;
         result
     }
     /// Release native retained state exactly once.
     pub fn close(&self) {
         if !self.released.swap(true, Ordering::AcqRel) && !self.owner.is_closed() {
-            let _ = invoke(
+            let _ = self.owner.0.engine.invoke_unchecked(
                 "module-value",
                 [
                     ("owner", Data::from(self.owner.0.id)),

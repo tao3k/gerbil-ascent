@@ -7,9 +7,11 @@ license.workspace = true
 [dependencies]
 gerbil-scheme.workspace = true
 gerbil-scheme-sys.workspace = true
-gerbil-ascent.workspace = true
+gerbil-ascent = { workspace = true, features = ["process-runtime"] }
+bincode.workspace = true
+serde.workspace = true
+tempfile = "=3.27.0"
 num-bigint.workspace = true
-tokio.workspace = true
 
 [features]
 default = ["rayon"]
@@ -38,5 +40,14 @@ path = "tests/integration/archive.rs"
 
 [[bench]]
 name = "hybrid_benchmark"
+harness = false
+required-features = ["rayon"]
+
+[[test]]
+name = "process_runtime"
+path = "tests/integration/process_runtime.rs"
+
+[[bench]]
+name = "process_throughput"
 harness = false
 required-features = ["rayon"]

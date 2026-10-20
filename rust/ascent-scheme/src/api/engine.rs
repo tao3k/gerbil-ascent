@@ -1,5 +1,5 @@
 //! Public engine ownership delegates finite execution to the existing Rayon owner.
-use super::{Module, invoke};
+use super::Module;
 use gerbil_ascent::{Component, Data, Error, Result};
 use std::{
     collections::BTreeMap,
@@ -17,6 +17,7 @@ pub enum Backend {
 #[derive(Clone)]
 pub struct Engine {
     core: gerbil_ascent::Engine,
+    process: Arc<std::sync::OnceLock<crate::ProcessOwner>>,
     backend: Option<Backend>,
     modules: Arc<Mutex<BTreeMap<String, String>>>,
     loaded_modules: Arc<Mutex<BTreeMap<String, Weak<super::module::Owner>>>>,
@@ -42,6 +43,7 @@ impl Engine {
     pub fn new(workers: usize) -> Result<Self> {
         Ok(Self {
             core: gerbil_ascent::Engine::new(workers)?,
+            process: Arc::default(),
             backend: None,
             modules: Arc::default(),
             loaded_modules: Arc::default(),
@@ -178,9 +180,40 @@ impl Engine {
             )?);
             fields.push(("executionControl", admission.as_ref().unwrap().id()));
         }
-        let result = invoke(operation, fields);
+        let result = self.invoke_unchecked(operation, fields);
         drop(admission);
         result
+    }
+    /// Bind this engine and all of its leases to one persistent process VM.
+    #[must_use]
+    pub fn on_process(mut self, process: crate::ProcessOwner) -> Self {
+        self.process = Arc::new(std::sync::OnceLock::from(process));
+        self.loaded_modules = Arc::default();
+        self.owners = Arc::default();
+        self
+    }
+    pub(super) fn invoke_unchecked(
+        &self,
+        operation: &str,
+        fields: impl IntoIterator<Item = (&'static str, Data)>,
+    ) -> Result<Data> {
+        let mut request = BTreeMap::from([("operation".into(), Data::from(operation))]);
+        request.extend(fields.into_iter().map(|(key, value)| (key.into(), value)));
+        self.process_owner()?.call(Data::Map(request))
+    }
+    fn process_owner(&self) -> Result<&crate::ProcessOwner> {
+        if self.process.get().is_none() {
+            let owner = crate::service::standalone_owner()?;
+            let _ = self.process.set(owner);
+        }
+        self.process.get().ok_or(Error::Closed)
+    }
+    /// Initialize lazily and observe the actual process/VM identity.
+    /// # Errors
+    /// Rejects closed engines and incomplete native initialization.
+    pub fn process_receipt(&self) -> Result<crate::ProcessReceipt> {
+        super::check(self, false)?;
+        Ok(self.process_owner()?.receipt())
     }
     /// Observe the original native runtime inventory through typed data.
     /// # Errors

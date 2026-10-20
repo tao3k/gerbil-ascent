@@ -1,0 +1,153 @@
+#+TITLE: Resident Scheme process owners and production throughput acceptance
+#+DATE: 2026-10-20
+
+* Scope
+
+This change removes the process-global single SERVICE queue from the Scheme
+application binding. It does not identify test preparation time with runtime
+throughput. The original preparation failures and performance ledger remain
+separate evidence; no timing threshold, heap limit, semantic corpus or formal
+control is removed by this change.
+
+* Production execution
+
+=ascent_scheme::ProcessPool= owns a fixed population of exec-isolated workers.
+Each worker initializes the statically linked application with the existing
+=gerbil-scheme-rust= single-processor initializer, checks its actual processor
+population, and keeps the VM on its original OS thread. A handshake checks the
+child PID, protocol version, owner domain and compiled Scheme/build identity.
+There is no per-request process spawn, copied dynamic-library image, second VM
+inside a worker, or runtime Rust/C compilation of user DSL.
+
+An =Engine= lazily owns one resident process. A caller-owned =ProcessPool(12)=
+explicitly owns twelve resident VMs; no hidden global pool multiplies test
+processes. Its engine clones and all
+module, value, inference, explanation and provenance leases retain that owner.
+Explicit callers can select =pool.owner(index)= with =Engine::on_process=;
+rebinding creates fresh native module caches and lease tracking. Rust thread
+capacity remains a separate setting. A single engine's opaque Scheme state is
+not concurrently entered by twelve threads.
+
+Worker setup, GC roots, native conversions and teardown remain upstream-owned.
+The application transport carries only owned typed data using binary bincode
+frames. Exact integers, real bit patterns and typed failures are preserved;
+no JSON or Scheme heap pointers cross process boundaries. Python calls the
+same Rust owners through PyO3. Its child entry imports the same extension with
+the caller's import paths; no Python FFI implementation is added.
+
+A worker's exported identities use a distinct domain modulo 2^32. Allocation
+checks the u64 ceiling before publication, never wraps, and never silently
+restarts a failed worker with recycled handles. Foreign native references
+therefore cannot accidentally resolve to the same local ordinal in another VM.
+Logical fact/work limits remain the existing typed session contracts; native
+per-VM capacity bounds remain in the original Scheme implementation.
+
+* Interruption and publication
+
+Controlled requests retain their original parent Control. Every child
+checkpoint, including acceptance and recovery suspension/resumption, obtains
+its decision from that exact original controller. The implementation does not
+batch away budget or clock checks. Accepted publication retains its existing
+linearization semantics; cancellation cannot turn a committed update into a
+canceled response. Disconnected callers retain the original operation-specific
+cleanup branches for module, value, source-result and explanation leases.
+
+Checkpoint RPC is a possible performance cost, not an admitted optimization.
+The throughput experiment counts it explicitly. A dead worker is revoked;
+other worker processes remain independent. Normal owner teardown closes the
+socket and reaps the child; bounded fallback cleanup targets only that child.
+
+* Semantic qualification
+
+The existing complete native binding/archive suite continues to run with twelve
+Rust test threads and zero retries. Additional production-path coverage checks:
+
+- Twelve distinct process PIDs, domains and actual single-processor VMs.
+- Persistent lexical state, real callable application and complex native values.
+- Native handle domains and rejection of foreign references.
+- Cancellation during a running Scheme callback and recovery on that same VM.
+- Complete reachability, independent provenance replay, source-generation
+  revocation, input-fact rejection and timeout/cancellation rejection.
+- Real child-process failure without handle recycling or another VM's revocation.
+- Exact binary numeric/error round trips and rejection of truncated replies.
+
+The transport and scheduler are not claimed to have complete Lean source
+refinement merely because these tests pass. Existing Lean/Quint checks must
+still pass independently. Whole-VM cumulative allocation and previous compiler
+source-cost refinement gaps are not closed by adding process isolation.
+
+* Fixed-work production measurement
+
+The =process_throughput= Rust benchmark calls the public Engine, Module,
+ModuleValue and Session interfaces. It loads the original Scheme DSL once per
+session, warms it, then continuously replaces distinct input facts and obtains
+complete results. The independent Rust oracle checks every transitive closure
+tuple before an observation is published. All measured requests use the
+production default work/fact/time ceilings. No Rust Ascent production dependency
+or alternate evaluator is introduced.
+
+The matrix has Scheme populations 1, 3 and 12, each with one processor per VM,
+and a shared Rayon pool with 1, 3, 6 and 12 threads. Every configuration receives
+the same total work and five predetermined samples. Scheme clients keep
+independent admission resources; Rayon clients explicitly share the specified
+Rust pool. Startup/loading/warmup are recorded separately from measurement.
+
+Per-request traces retain latency, batch-relative completion time, replacement
+cost, run/export cost and the full-answer digest. Summary records include
+throughput, p50/p95 latency, native call overlap, queue time, service time and
+checkpoint counts. VM-call overlap includes waits inside an ABI call and is not
+a claim of twelve simultaneously executing physical CPU cores. Actual parallel
+benefit is the measured throughput ratio. Rayon ratios are reported against both
+one VM and one Rayon thread.
+
+The Python driver performs orchestration and admission only. It records binary
+hashes, source head, CPU population, every planned run and foreign-compiler
+observations. It retains failures, does not retry them into admission, and never
+normalizes a slow measurement. Startup and teardown remain visible in process
+wall time. An optional input of the existing macOS experiment workflow runs this
+matrix on the three-core runner after all compilation; it adds no mandatory ABBA
+or new required CR performance threshold. Existing three-core/240-second source
+qualification and twelve-thread native tests remain unchanged.
+
+* Initial local evidence
+
+Strict package Clippy passed before final end-to-end execution. Early failed
+builds are retained: the inherited Nix cc wrapper could not find SDK libiconv,
+and the isolated prefix initially lacked compiled dependency carriers. The local
+build now uses the existing Apple toolchain/SDK and preinstalled dependency
+carriers, with fresh application outputs. This is not evidence of a cold-build
+speedup or a fresh dependency-source qualification.
+
+Runtime semantic, throughput and exact-head CI results must be appended only
+from completed runs. This initial record does not claim those gates have passed.
+
+* Completed local native semantic run
+
+After replacing the hidden global population with caller-owned processes, the
+complete native suite ran 54/54 tests at twelve test threads, with zero retries,
+zero skipped tests and no leaky status. Runtime was 172.843 seconds, independently
+of compilation. The new twelve-process production test passed in that run.
+
+Earlier failures remain retained: nonblocking accepted sockets caused EAGAIN on
+Darwin; the subsequent candidate still had an ASP test-layout violation and a
+complex-cell timeout under the hidden global population. The repaired run moved
+unit bodies to tests/unit, named the reply dispatcher, and removed hidden VM
+multiplication. It did not change the old complex-cell workload or its deadline.
+
+These results precede the final exact-head remote CI and release-profile
+throughput experiment. They do not establish runtime speedup or complete source
+refinement of the binary decoder and process scheduler.
+
+The final Rust/PyO3 Scheme interface also passed strict Clippy. A development
+profile semantic smoke used twelve resident VM processes and twelve Rayon
+threads through the new benchmark: complete answers matched, twelve VM calls
+overlapped, and the Rayon measured window had zero native VM calls. Foreign
+compiler activity and the development profile exclude these smoke timings from
+performance admission.
+
+The Linux source lane now invokes the existing =prepare-semantic-library=
+recipe before its unchanged timed source execution, matching the documented
+=test= dependency and the macOS controller's existing separation. Preparation
+remains separately visible; no Case is removed and no runtime timeout is raised.
+The prior macOS 240.238-second timeout remains a failure and is not claimed fixed
+by the process-runtime change.

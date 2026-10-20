@@ -1,5 +1,9 @@
 //! Typed failures and resource-exhaustion results.
 /// Admission or incomplete-evaluation failure; never negative logical evidence.
+#[cfg_attr(
+    feature = "process-runtime",
+    derive(serde::Serialize, serde::Deserialize)
+)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
     InvalidProgram(String),

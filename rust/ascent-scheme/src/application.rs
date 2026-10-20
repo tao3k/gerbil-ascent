@@ -19,7 +19,7 @@ impl Runtime {
         // SAFETY: build.rs packages this compiler-generated graph, containing
         // exactly the pinned bridge and ASCENT application exports.
         let program = unsafe { LinkedGerbilProgram::from_linker(___LNK_ascent__hybrid) };
-        GerbilRuntime::initialize_program(program)
+        GerbilRuntime::initialize_program_single_processor(program)
             .map(|runtime| {
                 // SAFETY: the process-lived callback takes only integer request
                 // identities; registration and calls stay on the VM owner thread.

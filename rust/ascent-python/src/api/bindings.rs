@@ -17,6 +17,47 @@ use std::{
     time::Duration,
 };
 
+/// Caller-owned resident VMs; capacities are independent from Rayon threads.
+#[pyclass(name = "ProcessPool", frozen)]
+pub(super) struct ProcessPool(ascent_scheme::ProcessPool);
+#[pymethods]
+impl ProcessPool {
+    #[new]
+    #[pyo3(signature=(owners=12))]
+    fn new(py: Python<'_>, owners: usize) -> PyResult<Self> {
+        py.detach(|| ascent_scheme::ProcessPool::new(owners))
+            .map(Self)
+            .map_err(super::types::source_error)
+    }
+    #[pyo3(signature=(index, workers=1))]
+    fn engine(&self, index: usize, workers: usize) -> PyResult<Engine> {
+        let owner = self.0.owner(index).map_err(super::types::source_error)?;
+        ascent_scheme::Engine::new(workers)
+            .map(|engine| Engine(engine.on_process(owner)))
+            .map_err(super::types::source_error)
+    }
+    fn identities(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        super::packets::write(
+            py,
+            &gerbil_ascent::Data::List(
+                self.0
+                    .receipts()
+                    .into_iter()
+                    .map(|receipt| {
+                        gerbil_ascent::Data::object([
+                            ("pid", gerbil_ascent::Data::from(u64::from(receipt.pid))),
+                            ("domain", gerbil_ascent::Data::from(receipt.domain)),
+                            (
+                                "processors",
+                                gerbil_ascent::Data::from(u64::from(receipt.processors)),
+                            ),
+                        ])
+                    })
+                    .collect(),
+            ),
+        )
+    }
+}
 #[pyclass(name = "Engine", frozen)]
 pub(super) struct Engine(pub(super) ascent_scheme::Engine);
 #[pymethods]
@@ -52,6 +93,22 @@ impl Engine {
     #[getter]
     fn max_input_bytes(&self) -> Option<usize> {
         self.0.max_input_bytes()
+    }
+    fn process_identity(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let receipt = py
+            .detach(|| self.0.process_receipt())
+            .map_err(super::types::source_error)?;
+        super::packets::write(
+            py,
+            &gerbil_ascent::Data::object([
+                ("pid", gerbil_ascent::Data::from(u64::from(receipt.pid))),
+                ("domain", gerbil_ascent::Data::from(receipt.domain)),
+                (
+                    "processors",
+                    gerbil_ascent::Data::from(u64::from(receipt.processors)),
+                ),
+            ]),
+        )
     }
     fn describe(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let result = py
@@ -373,8 +430,23 @@ impl Snapshot {
             .collect()
     }
 }
+#[pyo3::pyfunction]
+fn _scheme_process_worker(path: std::path::PathBuf, domain: u64) -> PyResult<()> {
+    ascent_scheme::serve_process_worker(path, domain).map_err(super::types::source_error)
+}
 #[pymodule(name = "_core")]
 fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let sys = module.py().import("sys")?;
+    let executable: std::path::PathBuf = sys.getattr("executable")?.extract()?;
+    let paths: Vec<String> = sys.getattr("path")?.extract()?;
+    let mut arguments: Vec<std::ffi::OsString> = vec![
+        "-c".into(),
+        "import sys; sys.path[:0]=sys.argv[1:-2]; from ascent._core import _scheme_process_worker; _scheme_process_worker(sys.argv[-2], int(sys.argv[-1]))".into(),
+    ];
+    arguments.extend(paths.into_iter().map(std::ffi::OsString::from));
+    ascent_scheme::configure_worker(ascent_scheme::WorkerProgram::new(executable, arguments))
+        .map_err(super::types::source_error)?;
+    module.add_function(pyo3::wrap_pyfunction!(_scheme_process_worker, module)?)?;
     module.add(
         "EngineError",
         module.py().get_type::<super::types::EngineError>(),
@@ -402,6 +474,7 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Atom>()?;
     module.add_class::<Program>()?;
     module.add_class::<Engine>()?;
+    module.add_class::<ProcessPool>()?;
     module.add_function(pyo3::wrap_pyfunction!(super::scheme::_scheme_call, module)?)?;
     module.add_class::<Session>()?;
     module.add_class::<Snapshot>()?;

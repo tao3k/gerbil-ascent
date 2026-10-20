@@ -67,6 +67,9 @@ impl Control {
         let id = i64::try_from(id.index()?).map_err(|_| Error::Closed)?;
         scope(id).map(Self).map(Some).ok_or(Error::Closed)
     }
+    pub(crate) fn numeric_id(&self) -> i64 {
+        self.0.id
+    }
     pub(crate) fn id(&self) -> Data {
         Data::Integer(self.0.id.into())
     }
@@ -109,7 +112,7 @@ fn interruption(entry: &Entry) -> i32 {
         0
     }
 }
-fn checkpoint(id: i64, work: i64) -> i32 {
+pub(crate) fn checkpoint(id: i64, work: i64) -> i32 {
     let Some(scope) = scope(id) else {
         return 5;
     };
@@ -160,6 +163,7 @@ fn reason(code: i32) -> Result<()> {
     }
 }
 // No VM entry, Scheme object or unwinding crosses this callback boundary.
-pub(crate) extern "C" fn ascent_hybrid_checkpoint(id: i64, work: i64, _facts: i64) -> i32 {
-    checkpoint(id, work)
+pub(crate) extern "C" fn ascent_hybrid_checkpoint(id: i64, work: i64, facts: i64) -> i32 {
+    crate::process_worker::remote_checkpoint(id, work, facts)
+        .unwrap_or_else(|| checkpoint(id, work))
 }

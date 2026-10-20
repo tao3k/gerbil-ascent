@@ -5,10 +5,15 @@ mod dag;
 mod ffi;
 mod values;
 pub use dag::Dag;
+mod process_wire;
+mod process_worker;
 mod service;
 pub use application::Runtime;
 pub(crate) use application::{failure, scheme_error};
-pub use service::call;
+pub use process_worker::serve as serve_process_worker;
+pub use service::{
+    ProcessOwner, ProcessPool, ProcessReceipt, ProcessStatistics, WorkerProgram, configure_worker,
+};
 
 #[cfg(test)]
 asp_rust::asp_rust_cargo_test_gate!(

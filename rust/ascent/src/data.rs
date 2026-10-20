@@ -5,6 +5,10 @@ use num_traits::{Signed, ToPrimitive};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 /// Owned typed packets for deterministic workflow identities and detached observations.
+#[cfg_attr(
+    feature = "process-runtime",
+    derive(serde::Serialize, serde::Deserialize)
+)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Data {
     Null,

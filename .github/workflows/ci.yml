@@ -344,7 +344,7 @@ jobs:
         run: |
           set -o pipefail
           gerbil env cargo nextest run --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/scheme-binding-tests.log"
-          ! grep -E 'ASCENT-PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/scheme-binding-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/scheme-binding-tests.log"
       - name: Preserve actual archive work and generated compiler inputs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -410,7 +410,15 @@ jobs:
           set -o pipefail
           test -x "$ASCENT_SCHEME_WORKER"
           GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 240s .cache/ascent/python-scheme-runtime/bin/python python/qualification/process_pool.py 2>&1 | tee "$RUNNER_TEMP/scheme-python-process-tests.log"
-          ! grep -E 'ASCENT-PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)' "$RUNNER_TEMP/scheme-python-process-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)' "$RUNNER_TEMP/scheme-python-process-tests.log"
+      - name: Qualify the default installed PyO3 worker entry
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          set -o pipefail
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" env -u ASCENT_SCHEME_WORKER timeout 240s .cache/ascent/python-scheme-runtime/bin/python python/qualification/process_pool.py 2>&1 | tee "$RUNNER_TEMP/scheme-python-default-process-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)' "$RUNNER_TEMP/scheme-python-default-process-tests.log"
   oracle:
     needs: repository-hygiene
     runs-on: ubuntu-latest

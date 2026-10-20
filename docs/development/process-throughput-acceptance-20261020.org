@@ -362,3 +362,37 @@ suite is being rerun without retries. Neither the prior 58 passing assertions
 nor the prior green head is reported as the current candidate's acceptance.
 The expanded installed-wheel qualification, exact-head CI and version-two
 sustained experiment must complete before reporting final current-head results.
+
+* Scoped candidate rejection and request-generation repair
+
+The scoped candidate's complete local run recorded 62 Cases in 370.815 seconds:
+60 passed and two failed, without forced-stop, shutdown-error or leak markers.
+The actual twelve-process failure/recovery Case passed. The failures were an
+ASP broad-public-function finding in =serve= and the complex-cell Case returning
+=Closed= during execution. The worker has been split into initialization,
+execution and lifecycle steps; neither the style rule nor Case was disabled.
+
+Source audit also identified a missing request-generation guard in the shared
+slot. Reusing phase values alone allowed a previous =COMPLETE= observation to
+be confused with a new ABI call. The child now publishes the current original
+Control identity after resetting the phase; the parent acquires that identity
+before observing the phase. A regression leaves an old completion in place and
+checks that it cannot finish the subsequent request. Interrupted nonblocking
+peer probes are handled transparently instead of being converted to a closed
+controller. These are concrete repairs, not a claim that the earlier =Closed=
+observation has been completely explained before the next native run.
+
+Strict all-target native Clippy for these fixes passed in 51.25 seconds.
+The next local semantic build was blocked before execution by Apple's linker,
+not admitted as a test result. Its saved native crash report identifies
+=EXC_BAD_ACCESS / SIGBUS= and excessive recursion in =AtomFileConsolidator::markLive=
+on a 544-KiB dispatch-worker stack. The same saved input set linked successfully
+with Xcode's already-installed =ld-classic=, preserving dead stripping. Local
+validation therefore records that explicit linker and a deployment target
+matching the installed SDK; no repository workaround or upstream SDK patch is
+added. Remote standard-toolchain acceptance remains independent.
+
+Installed Scheme-profile wheel qualification covers both the explicitly selected
+Rust helper and the default PyO3 worker entry. Both must retain the same twelve
+resident owner identities, original source/input ceilings, actual single-processor
+VM population, real calls/applications, and normal reaping of all twelve children.

@@ -15,6 +15,7 @@ const COMPLETE: u32 = 3;
 #[repr(C, align(64))]
 struct Slot {
     phase: AtomicU32,
+    generation: AtomicI64,
     code: AtomicI32,
     id: AtomicI64,
     work: AtomicI64,
@@ -38,6 +39,7 @@ impl Checkpoints {
         unsafe {
             slot.0.as_ptr().write(Slot {
                 phase: AtomicU32::new(IDLE),
+                generation: AtomicI64::new(0),
                 code: AtomicI32::new(0),
                 id: AtomicI64::new(0),
                 work: AtomicI64::new(0),
@@ -78,8 +80,12 @@ impl Checkpoints {
         // unmap it while a borrow is alive. Other processes only use atomics.
         unsafe { self.0.as_ref() }
     }
-    pub(crate) fn begin(&self) {
+    pub(crate) fn begin(&self, generation: i64) {
         self.slot().phase.store(IDLE, Ordering::Release);
+        // The parent must acquire this new request identity before looking at
+        // phase. Otherwise COMPLETE from the previous ABI call can be mistaken
+        // for completion of this call (the phase values alone have an ABA gap).
+        self.slot().generation.store(generation, Ordering::Release);
     }
     pub(crate) fn complete(&self) {
         self.slot().phase.store(COMPLETE, Ordering::Release);
@@ -106,12 +112,17 @@ impl Checkpoints {
     }
     pub(crate) fn serve(
         &self,
+        generation: i64,
         mut decide: impl FnMut(i64, i64) -> i32,
         mut closed: impl FnMut() -> io::Result<bool>,
     ) -> io::Result<()> {
         let slot = self.slot();
         let mut waiting = Wait::default();
         loop {
+            if slot.generation.load(Ordering::Acquire) != generation {
+                waiting.poll(&mut closed)?;
+                continue;
+            }
             match slot.phase.load(Ordering::Acquire) {
                 REQUEST => {
                     let code = decide(

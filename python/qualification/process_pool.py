@@ -59,4 +59,5 @@ if __name__ == '__main__':
         except ProcessLookupError:
             continue
         raise AssertionError(f'owned worker not reaped: {pid}')
-    print('PROCESS-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 reaped=12')
+    entry = 'selected-rust-worker' if os.environ.get('ASCENT_SCHEME_WORKER') else 'default-pyo3-worker'
+    print(f'PROCESS-PYTHON-OK entry={entry} owners=12 processors=1 clients=12 calls=120 applications=120 reaped=12')

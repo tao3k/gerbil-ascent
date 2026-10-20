@@ -470,6 +470,7 @@ fn receive_native_reply(
                 if shared_checkpoints {
                     checkpoints
                         .serve(
+                            control.map_or(0, Control::numeric_id),
                             |id, work| {
                                 counters.checkpoints.fetch_add(1, Ordering::Relaxed);
                                 if control.map(Control::numeric_id) == Some(id) {

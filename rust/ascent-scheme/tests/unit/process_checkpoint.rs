@@ -7,10 +7,12 @@ fn mapped_checkpoints_preserve_every_signed_transition_and_response() {
     let parent = Checkpoints::create(&path).unwrap();
     let child = Checkpoints::open(&path).unwrap();
     std::fs::remove_file(path).unwrap();
+    child.begin(19);
     let responder = std::thread::spawn(move || {
         let mut sequence = Vec::new();
         parent
             .serve(
+                19,
                 |id, work| {
                     sequence.push((id, work));
                     i32::try_from(work).unwrap()
@@ -67,4 +69,35 @@ fn bound_controller_keeps_original_accept_suspend_work_and_cancel_decisions() {
             checkpoint(original.numeric_id(), work)
         );
     }
+}
+
+#[test]
+fn previous_completion_cannot_finish_the_next_request_generation() {
+    use std::{sync::mpsc, time::Duration};
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("control");
+    let parent = Checkpoints::create(&path).unwrap();
+    let child = Checkpoints::open(&path).unwrap();
+    child.begin(19);
+    child.complete();
+    let (finished, done) = mpsc::channel();
+    let responder = std::thread::spawn(move || {
+        parent
+            .serve(
+                20,
+                |id, work| {
+                    assert_eq!((id, work), (20, -1));
+                    0
+                },
+                || Ok(false),
+            )
+            .unwrap();
+        finished.send(()).unwrap();
+    });
+    assert!(done.recv_timeout(Duration::from_millis(50)).is_err());
+    child.begin(20);
+    assert_eq!(child.request(20, -1, || Ok(false)).unwrap(), 0);
+    child.complete();
+    done.recv_timeout(Duration::from_secs(2)).unwrap();
+    responder.join().unwrap();
 }

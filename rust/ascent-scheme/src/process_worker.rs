@@ -23,9 +23,13 @@ pub(crate) fn remote_checkpoint(id: i64, work: i64, facts: i64) -> Option<i32> {
         }
         if let Some(checkpoints) = &remote.checkpoints {
             return Some(
-                checkpoints
-                    .request(id, work, || remote.socket.borrow().peer_closed())
-                    .unwrap_or(5),
+                match checkpoints.request(id, work, || remote.socket.borrow().peer_closed()) {
+                    Ok(code) => code,
+                    Err(error) => {
+                        eprintln!("ASCENT-CHECKPOINT-TRANSPORT-ERROR {error}");
+                        5
+                    }
+                },
             );
         }
         let mut socket = remote.socket.borrow_mut();
@@ -52,6 +56,22 @@ pub fn serve(path: impl AsRef<Path>, domain: u64) -> Result<()> {
     let socket = Rc::new(RefCell::new(Connection::new(
         UnixStream::connect(path).map_err(|e| crate::failure(&e.to_string()))?,
     )));
+    let runtime = initialize(&socket, domain)?;
+    loop {
+        let request = match socket.borrow_mut().receive() {
+            Ok(Frame::Request(request)) => request,
+            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+            _ => return Err(crate::failure("invalid process owner request")),
+        };
+        execute(&runtime, &socket, &checkpoints, &request)?;
+    }
+    crate::service::trace_retirement(std::process::id(), "vm-cleanup-begin");
+    drop(runtime);
+    crate::service::trace_retirement(std::process::id(), "vm-cleanup-end");
+    Ok(())
+}
+
+fn initialize(socket: &Rc<RefCell<Connection>>, domain: u64) -> Result<Runtime> {
     let runtime = Runtime::initialize()?;
     runtime.call(&Data::object([
         ("operation", Data::from("process-domain")),
@@ -76,51 +96,51 @@ pub fn serve(path: impl AsRef<Path>, domain: u64) -> Result<()> {
             identity: crate::build_identity(),
         })
         .map_err(|e| crate::failure(&e.to_string()))?;
-    loop {
-        let request = match socket.borrow_mut().receive() {
-            Ok(Frame::Request(request)) => request,
-            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
-            _ => return Err(crate::failure("invalid process owner request")),
-        };
-        // Kernel checkpoints are frequent. Expansion, loading and arbitrary
-        // callbacks keep the sleeping socket exchange, so idle owner threads
-        // never burn a core while the VM performs unrelated preparation.
-        let shared_checkpoints = request.get("executionControl").is_some()
-            && matches!(
-                request.get("operation").and_then(|v| v.text().ok()),
-                Some("source-run" | "source-replace")
-            );
-        if let Some(id) = request.get("executionControl") {
-            let id = i64::try_from(id.index()?).map_err(|_| gerbil_ascent::Error::Closed)?;
-            REMOTE.with(|remote| {
-                *remote.borrow_mut() = Some(Remote {
-                    id,
-                    checkpoints: shared_checkpoints.then(|| Rc::clone(&checkpoints)),
-                    socket: Rc::clone(&socket),
-                });
+    Ok(runtime)
+}
+
+fn execute(
+    runtime: &Runtime,
+    socket: &Rc<RefCell<Connection>>,
+    checkpoints: &Rc<Checkpoints>,
+    request: &Data,
+) -> Result<()> {
+    // Kernel checkpoints are frequent. Expansion, loading and arbitrary
+    // callbacks keep the sleeping socket exchange, so idle owner threads
+    // never burn a core while the VM performs unrelated preparation.
+    let shared_checkpoints = request.get("executionControl").is_some()
+        && matches!(
+            request.get("operation").and_then(|v| v.text().ok()),
+            Some("source-run" | "source-replace")
+        );
+    if let Some(id) = request.get("executionControl") {
+        let id = i64::try_from(id.index()?).map_err(|_| gerbil_ascent::Error::Closed)?;
+        REMOTE.with(|remote| {
+            *remote.borrow_mut() = Some(Remote {
+                id,
+                checkpoints: shared_checkpoints.then(|| Rc::clone(checkpoints)),
+                socket: Rc::clone(socket),
             });
-        }
-        if shared_checkpoints {
-            checkpoints.begin();
-        }
-        socket
-            .borrow_mut()
-            .send(&Frame::Entered { shared_checkpoints })
-            .map_err(|e| crate::failure(&e.to_string()))?;
-        let start = Instant::now();
-        let value = runtime.call(&request);
-        let elapsed_ns = u64::try_from(start.elapsed().as_nanos()).unwrap_or(u64::MAX);
-        REMOTE.with(|remote| *remote.borrow_mut() = None);
-        if shared_checkpoints {
-            checkpoints.complete();
-        }
-        socket
-            .borrow_mut()
-            .send(&Frame::Reply { value, elapsed_ns })
-            .map_err(|e| crate::failure(&e.to_string()))?;
+        });
     }
-    crate::service::trace_retirement(std::process::id(), "vm-cleanup-begin");
-    drop(runtime);
-    crate::service::trace_retirement(std::process::id(), "vm-cleanup-end");
+    if shared_checkpoints {
+        let id = request.field("executionControl")?.index()?;
+        checkpoints.begin(i64::try_from(id).map_err(|_| gerbil_ascent::Error::Closed)?);
+    }
+    socket
+        .borrow_mut()
+        .send(&Frame::Entered { shared_checkpoints })
+        .map_err(|e| crate::failure(&e.to_string()))?;
+    let start = Instant::now();
+    let value = runtime.call(request);
+    let elapsed_ns = u64::try_from(start.elapsed().as_nanos()).unwrap_or(u64::MAX);
+    REMOTE.with(|remote| *remote.borrow_mut() = None);
+    if shared_checkpoints {
+        checkpoints.complete();
+    }
+    socket
+        .borrow_mut()
+        .send(&Frame::Reply { value, elapsed_ns })
+        .map_err(|e| crate::failure(&e.to_string()))?;
     Ok(())
 }

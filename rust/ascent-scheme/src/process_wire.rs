@@ -51,8 +51,14 @@ impl Connection {
         };
         // SAFETY: one valid pollfd borrowed for this nonblocking call; its socket
         // remains owned by the connection for the entire syscall.
-        if unsafe { libc::poll(&raw mut fd, 1, 0) } < 0 {
-            return Err(std::io::Error::last_os_error());
+        loop {
+            if unsafe { libc::poll(&raw mut fd, 1, 0) } >= 0 {
+                break;
+            }
+            let error = std::io::Error::last_os_error();
+            if error.kind() != std::io::ErrorKind::Interrupted {
+                return Err(error);
+            }
         }
         if fd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
             return Ok(true);
@@ -75,7 +81,10 @@ impl Connection {
             return Ok(count == 0);
         }
         let error = std::io::Error::last_os_error();
-        if error.kind() == std::io::ErrorKind::WouldBlock {
+        if matches!(
+            error.kind(),
+            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
+        ) {
             Ok(false)
         } else {
             Err(error)

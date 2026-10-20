@@ -103,7 +103,8 @@ def main():
                              and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks)
                              and value["clients"] == "12" for value in samples)
                      and "ASCENT-PROCESS-FORCED-STOP" not in stderr
-                     and "ASCENT-PROCESS-SHUTDOWN-ERROR" not in stderr and len(identities) == owners
+                     and "ASCENT-PROCESS-SHUTDOWN-ERROR" not in stderr
+                     and "ASCENT-CHECKPOINT-TRANSPORT-ERROR" not in stderr and len(identities) == owners
                      and len({value["pid"] for value in identities}) == owners
                      and all(value["processors"] == "1" for value in identities) and not audit and not errors)
             row = {"key": key, "workload": name, "mode": mode, "vms": owners, "rust_threads": threads,

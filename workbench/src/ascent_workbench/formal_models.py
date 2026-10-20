@@ -755,6 +755,9 @@ CONFIGURATIONS['ClueQueryResume'] = {
     'constants': 'Mutation = "none"', 'invariants': 'Safety',
 }
 FAULTS['ClueQueryResume'] = (
+    ('ignore-transitive-change', 'SummaryCurrentOnly', 12),
+    ('ignore-scope-witness', 'SummaryCurrentOnly', 12),
+    ('erase-understanding', 'UnderstandingSurvivesCompaction', 12),
     ('replay-all', 'ExactReads', 12),
     ('reuse-changed-contract', 'ExactReads', 12),
     ('keep-removed-read', 'ExactReads', 12),

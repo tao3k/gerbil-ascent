@@ -585,6 +585,8 @@ FAULTS['AnchoredEvidenceSlice'] = (
     ('hide-truncation', 'HonestPresentation', 12),
     ('gap-as-absent', 'Gaps', 12),
     ('mask-gap', 'Gaps', 12),
+    ('hide-discovery', 'DiscoveryExact', 12),
+    ('invent-discovery', 'DiscoveryExact', 12),
     ('count-only-delta', 'ExactDelta', 12),
     ('select-action', 'Open', 12),
     ('close-scope', 'Open', 12),

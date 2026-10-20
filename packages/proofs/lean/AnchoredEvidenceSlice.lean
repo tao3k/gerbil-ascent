@@ -27,9 +27,39 @@ theorem empty_anchors_do_not_select_everything {Factor Witness : Type}
   rintro ⟨⟨_, impossible⟩, _⟩
   exact impossible
 
+/- Empty anchors may discover the available factor vocabulary. This branch
+   supplies neither a matching witness nor a prescribed investigation. -/
+def unboundDiscovery {Factor Witness : Type} (requested : Factor → Prop)
+    (factor : Witness → Factor → Prop) (f : Factor) :=
+  (¬ ∃ r, requested r) ∧ ∃ w, factor w f
+
+theorem unbound_discovery_exact {Factor Witness : Type}
+    (factor : Witness → Factor → Prop) (f : Factor) :
+    unboundDiscovery (fun _ : Factor => False) factor f ↔ ∃ w, factor w f := by
+  constructor
+  · intro discovered
+    exact discovered.2
+  · intro known
+    exact ⟨fun ⟨_, impossible⟩ => impossible, known⟩
+
+theorem discovery_does_not_invent_a_hit {Factor Witness : Type}
+    (requested : Factor → Prop) (factor : Witness → Factor → Prop)
+    (f : Factor) (w : Witness) (discovered : unboundDiscovery requested factor f) :
+    ¬ conjunctiveMatch requested factor w := by
+  intro matched
+  exact discovered.1 matched.1
+
+theorem bound_query_is_not_unbound_discovery {Factor Witness : Type}
+    (requested : Factor → Prop) (factor : Witness → Factor → Prop)
+    (f : Factor) (bound : ∃ r, requested r) :
+    ¬ unboundDiscovery requested factor f := fun discovered => discovered.1 bound
+
 #print axioms conjunctive_first_query_hit
 #print axioms conjunction_cannot_mix_witnesses
 #print axioms empty_anchors_do_not_select_everything
+#print axioms unbound_discovery_exact
+#print axioms discovery_does_not_invent_a_hit
+#print axioms bound_query_is_not_unbound_discovery
 
 def anchor {Factor Chain : Type} (exposed : Factor → Prop)
     (association : Factor → Chain → Prop) (applicable : Chain → Prop) (c : Chain) :=

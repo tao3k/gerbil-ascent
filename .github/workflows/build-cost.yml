@@ -107,7 +107,7 @@ jobs:
           GERBIL_BUILD_CORES: "3"
         run: |
           gerbil env cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker
-          gerbil env cargo bench --no-run --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-benchmark-build.jsonl"
+          gerbil env cargo bench --no-run --profile release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-benchmark-build.jsonl"
       - name: Measure sustained production interface after all compilation
         if: ${{ inputs.process_throughput }}
         run: |

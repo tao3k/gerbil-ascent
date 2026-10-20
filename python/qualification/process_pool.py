@@ -18,7 +18,10 @@ def qualify():
             executable = Path(f"/proc/{row['pid']}/exe")
             if executable.exists():
                 assert executable.samefile(worker), 'explicit Rust worker was ignored'
-    engines = [pool.engine(i) for i in range(12)]
+    engines = [pool.engine(i, backend='scheme', max_source_scopes=8,
+                           max_input_bytes=16384) for i in range(12)]
+    assert all(engine.max_source_scopes == 8 for engine in engines)
+    assert all(engine.max_input_bytes == 16384 for engine in engines)
     assert [engine.process_identity() for engine in engines] == identities
     modules = [engine.dsl(
         f'(def marker {i}) (def (answer x) (+ marker x)) '
@@ -42,6 +45,8 @@ def qualify():
         module.close()
     for engine in engines:
         engine.shutdown()
+    # Release all scope leases before retiring their common owner population.
+    del module, engine, modules, engines
     return [row['pid'] for row in identities]
 
 

@@ -225,15 +225,167 @@ fn report_sample(
         digest.finalize()
     );
 }
+// Continuous overload qualification is separate from equal-work speedup.
+// Retain only twelve summaries, never one record per completed soak request.
+fn run_soak(
+    sessions: &mut [Session],
+    pool: &ProcessPool,
+    groups: usize,
+    width: usize,
+    first_task: usize,
+    duration: std::time::Duration,
+    header: &str,
+) {
+    let clients = sessions.len();
+    let ready = Arc::new(Barrier::new(clients + 1));
+    let start = Arc::new(Barrier::new(clients + 1));
+    let epoch = Arc::new(std::sync::OnceLock::<Instant>::new());
+    let next = Arc::new(AtomicUsize::new(first_task));
+    let (count, latency, maximum, histogram, minimum, elapsed) = std::thread::scope(|scope| {
+        let mut handles = Vec::new();
+        for session in sessions {
+            let ready = ready.clone();
+            let start = start.clone();
+            let epoch = epoch.clone();
+            let next = next.clone();
+            handles.push(scope.spawn(move || {
+                ready.wait();
+                start.wait();
+                let mut count = 0_u64;
+                let mut latency = 0_u128;
+                let mut maximum = 0_u128;
+                let mut histogram = vec![0_u64; 65_536];
+                while epoch.get().unwrap().elapsed() < duration {
+                    let task = next.fetch_add(1, Ordering::Relaxed);
+                    let row = execute(session, task, groups, width);
+                    count += 1;
+                    latency += row.latency_ns;
+                    maximum = maximum.max(row.latency_ns);
+                    let bucket = usize::try_from((row.latency_ns / 100_000).min(65_535)).unwrap();
+                    histogram[bucket] += 1;
+                }
+                (count, latency, maximum, histogram)
+            }));
+        }
+        ready.wait();
+        pool.reset_statistics();
+        epoch.set(Instant::now()).unwrap();
+        start.wait();
+        let mut total = (0_u64, 0_u128, 0_u128, vec![0_u64; 65_536]);
+        let mut minimum = u64::MAX;
+        for handle in handles {
+            let (count, latency, maximum, histogram) = handle.join().unwrap();
+            total.0 += count;
+            total.1 += latency;
+            total.2 = total.2.max(maximum);
+            minimum = minimum.min(count);
+            for (sum, count) in total.3.iter_mut().zip(histogram) {
+                *sum += count;
+            }
+        }
+        (
+            total.0,
+            total.1,
+            total.2,
+            total.3,
+            minimum,
+            epoch.get().unwrap().elapsed(),
+        )
+    });
+    report_soak(
+        pool,
+        duration,
+        header,
+        SoakSample {
+            count,
+            latency,
+            maximum,
+            histogram,
+            minimum,
+            elapsed,
+        },
+    );
+}
+struct SoakSample {
+    count: u64,
+    latency: u128,
+    maximum: u128,
+    histogram: Vec<u64>,
+    minimum: u64,
+    elapsed: std::time::Duration,
+}
+fn report_soak(
+    pool: &ProcessPool,
+    duration: std::time::Duration,
+    header: &str,
+    sample: SoakSample,
+) {
+    let SoakSample {
+        count,
+        latency,
+        maximum,
+        histogram,
+        minimum,
+        elapsed,
+    } = sample;
+    assert!(count > 0 && minimum > 0 && elapsed >= duration);
+    assert_eq!(histogram.iter().sum::<u64>(), count);
+    let p50 = percentile_bounds(&histogram, count, 50, maximum);
+    let p95 = percentile_bounds(&histogram, count, 95, maximum);
+    let stats: Vec<_> = (0..pool.receipts().len())
+        .map(|i| pool.owner(i).unwrap().statistics())
+        .collect();
+    eprintln!(
+        "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={}",
+        duration.as_nanos(),
+        elapsed.as_nanos(),
+        f64::from(u32::try_from(count).unwrap()) / elapsed.as_secs_f64(),
+        latency / u128::from(count),
+        p50.0,
+        p50.1,
+        p95.0,
+        p95.1,
+        stats
+            .iter()
+            .map(|s| s.maximum_overlapping_calls)
+            .max()
+            .unwrap(),
+        stats.iter().map(|s| s.calls).sum::<u64>(),
+        stats.iter().map(|s| s.checkpoints).sum::<u64>()
+    );
+}
+// Exact bucket counts bound each quantile. The overflow bucket's upper bound
+// is the observed maximum; it is never reported as a precise percentile.
+fn percentile_bounds(
+    histogram: &[u64],
+    count: u64,
+    percentile: u64,
+    maximum: u128,
+) -> (u128, u128) {
+    let rank = (u128::from(count) * u128::from(percentile)).div_ceil(100);
+    let mut seen = 0_u128;
+    for (index, count) in histogram.iter().enumerate() {
+        seen += u128::from(*count);
+        if seen >= rank {
+            let lower = u128::try_from(index).unwrap() * 100_000;
+            let upper = if index + 1 == histogram.len() {
+                maximum
+            } else {
+                lower + 100_000
+            };
+            return (lower, upper);
+        }
+    }
+    panic!("soak histogram does not account for every completed request");
+}
 fn arguments() -> Vec<String> {
     let args: Vec<_> = std::env::args()
         .skip(1)
         .filter(|a| a != "--bench")
         .collect();
-    assert_eq!(
-        args.len(),
-        8,
-        "worker-executable vm|rayon owners rayon-threads tasks groups width samples"
+    assert!(
+        args.len() == 8 || args.len() == 9,
+        "worker-executable vm|rayon owners rayon-threads tasks groups width samples [soak-seconds]"
     );
     args
 }
@@ -322,6 +474,28 @@ fn main() {
             );
         }
     }
+    if let Some(seconds) = args.get(8) {
+        let duration = std::time::Duration::from_secs(seconds.parse().unwrap());
+        assert!(!duration.is_zero());
+        run_soak(
+            &mut sessions,
+            &pool,
+            groups,
+            width,
+            samples * tasks + clients,
+            duration,
+            &format!("mode={mode} vms={owners} rust_threads={threads} clients={clients}"),
+        );
+    }
+    close_sessions(sessions, retained);
+    drop(engine);
+    drop(pool);
+}
+
+fn close_sessions(
+    sessions: Vec<Session>,
+    retained: Vec<(Engine, ascent_scheme::Module, ascent_scheme::ModuleValue)>,
+) {
     for session in sessions {
         match session {
             Session::Scheme(s) => s.close(),
@@ -333,6 +507,4 @@ fn main() {
         module.close();
         scoped.shutdown();
     }
-    drop(engine);
-    drop(pool);
 }

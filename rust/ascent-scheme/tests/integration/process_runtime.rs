@@ -30,7 +30,11 @@ fn twelve_resident_processes_keep_values_limits_and_cancellation_owner_affine() 
     let modules = prepare_modules(&pool);
     verify_values(&modules);
     verify_running_cancellation(&pool.owner(0).unwrap());
-    verify_sources(&modules[0].0);
+    std::thread::scope(|scope| {
+        for (engine, _) in &modules {
+            scope.spawn(move || verify_sources(engine));
+        }
+    });
     // Same numeric ordinal in another process must never authenticate this owner.
     let owner = modules[0]
         .1
@@ -258,4 +262,28 @@ fn verify_provenance(
         proof.graph().is_err(),
         "source replacement revokes retained provenance"
     );
+}
+
+#[test]
+fn pool_drop_preserves_external_engine_and_value_leases() {
+    let pool = ProcessPool::with_program(1, &program()).unwrap();
+    let engine = Engine::new(1).unwrap().on_process(pool.owner(0).unwrap());
+    let receipt = engine.process_receipt().unwrap();
+    let module = engine.load_definitions("(def (marker) 42)").unwrap();
+    drop(pool);
+    let value = module.call("marker", &[], None).unwrap();
+    assert_eq!(
+        value
+            .graph()
+            .unwrap()
+            .field("root")
+            .unwrap()
+            .field("value")
+            .unwrap(),
+        &Data::from("42")
+    );
+    assert_eq!(engine.process_receipt().unwrap().pid, receipt.pid);
+    value.close();
+    module.close();
+    engine.shutdown();
 }

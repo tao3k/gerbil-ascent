@@ -5,6 +5,7 @@ mod dag;
 mod ffi;
 mod values;
 pub use dag::Dag;
+mod process_checkpoint;
 mod process_wire;
 mod process_worker;
 mod service;

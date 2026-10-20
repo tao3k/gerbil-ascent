@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--expected-cpus", type=int)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    receipt = {"schema": "ascent.production-process-throughput.v1", "host": platform.platform(),
+    receipt = {"schema": "ascent.production-process-throughput.v2", "host": platform.platform(),
                "logical_cpus": os.cpu_count(), "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                "benchmark_sha256": hashlib.sha256(args.benchmark.read_bytes()).hexdigest(),
                "worker_sha256": hashlib.sha256(args.worker.read_bytes()).hexdigest(), "runs": []}
@@ -50,7 +50,7 @@ def main():
     for name, tasks, groups, width in cases:
         for mode, owners, threads in modes:
             key = f"{name}-{mode}-vm{owners}-threads{threads}"
-            command = [str(args.benchmark.resolve()), str(args.worker.resolve()), mode, str(owners), str(threads), str(tasks), str(groups), str(width), "5"]
+            command = [str(args.benchmark.resolve()), str(args.worker.resolve()), mode, str(owners), str(threads), str(tasks), str(groups), str(width), "5", "30"]
             audit, errors, stop = [], [], threading.Event()
             def sample():
                 while not stop.is_set():
@@ -83,17 +83,32 @@ def main():
             (args.output / f"{key}.stderr").write_text(stderr)
             samples = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SAMPLE ")]
             identities = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-OWNER ")]
-            valid = (status == 0 and len(samples) == 5
+            soaks = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SOAK ")]
+            soak_valid = (len(soaks) == 1 and soaks[0]["mode"] == mode
+                          and soaks[0]["vms"] == str(owners)
+                          and soaks[0]["rust_threads"] == str(threads)
+                          and soaks[0]["clients"] == "12"
+                          and int(soaks[0]["requested_ns"]) == 30_000_000_000
+                          and int(soaks[0]["wall_ns"]) >= 30_000_000_000
+                          and int(soaks[0]["completed_requests"]) > 0
+                          and int(soaks[0]["minimum_client_requests"]) > 0
+                          and soaks[0]["completed_requests"] == soaks[0]["checked_requests"]
+                          and int(soaks[0]["histogram_resolution_ns"]) == 100_000
+                          and int(soaks[0]["histogram_buckets"]) == 65_536
+                          and 0 <= int(soaks[0]["p50_lower_ns"]) <= int(soaks[0]["p50_upper_ns"])
+                          and 0 <= int(soaks[0]["p95_lower_ns"]) <= int(soaks[0]["p95_upper_ns"]))
+            valid = (status == 0 and soak_valid and len(samples) == 5
                      and {value["sample"] for value in samples} == {str(i) for i in range(5)}
                      and all(value["mode"] == mode and value["vms"] == str(owners)
                              and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks)
                              and value["clients"] == "12" for value in samples)
-                     and "ASCENT-PROCESS-FORCED-STOP" not in stderr and len(identities) == owners
+                     and "ASCENT-PROCESS-FORCED-STOP" not in stderr
+                     and "ASCENT-PROCESS-SHUTDOWN-ERROR" not in stderr and len(identities) == owners
                      and len({value["pid"] for value in identities}) == owners
                      and all(value["processors"] == "1" for value in identities) and not audit and not errors)
             row = {"key": key, "workload": name, "mode": mode, "vms": owners, "rust_threads": threads,
                    "tasks": tasks, "groups": groups, "width": width, "command": command, "status": status,
-                   "process_wall_seconds": time.monotonic()-started, "samples": samples, "owners": identities,
+                   "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "owners": identities,
                    "foreign_compilers": audit, "audit_errors": errors, "valid": valid}
             if valid:
                 row["median_throughput_per_second"] = statistics.median(float(value["throughput_per_s"]) for value in samples)

@@ -8,6 +8,7 @@ license.workspace = true
 gerbil-scheme.workspace = true
 gerbil-scheme-sys.workspace = true
 gerbil-ascent = { workspace = true, features = ["process-runtime"] }
+libc = "=0.2.190"
 bincode.workspace = true
 serde.workspace = true
 tempfile = "=3.27.0"

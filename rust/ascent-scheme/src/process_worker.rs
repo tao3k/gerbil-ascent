@@ -1,26 +1,43 @@
 //! Exec child entry; the upstream owner and all GC roots stay on this thread.
 use crate::{
     Runtime,
-    process_wire::{self, Frame},
+    process_checkpoint::Checkpoints,
+    process_wire::{Connection, Frame},
 };
 use gerbil_ascent::{Data, Result};
-use std::{cell::RefCell, os::unix::net::UnixStream, path::Path, time::Instant};
+use std::{cell::RefCell, os::unix::net::UnixStream, path::Path, rc::Rc, time::Instant};
+struct Remote {
+    id: i64,
+    checkpoints: Option<Rc<Checkpoints>>,
+    socket: Rc<RefCell<Connection>>,
+}
 thread_local! {
-    static REMOTE: RefCell<Option<(i64, UnixStream)>> = const { RefCell::new(None) };
+    static REMOTE: RefCell<Option<Remote>> = const { RefCell::new(None) };
 }
 pub(crate) fn remote_checkpoint(id: i64, work: i64, facts: i64) -> Option<i32> {
     REMOTE.with(|remote| {
         let mut remote = remote.borrow_mut();
-        let (expected, stream) = remote.as_mut()?;
-        if id != *expected {
+        let remote = remote.as_mut()?;
+        if id != remote.id {
             return None;
         }
-        let code = process_wire::send(stream, &Frame::Checkpoint { id, work, facts })
-            .and_then(|()| process_wire::receive(stream));
-        Some(match code {
-            Ok(Frame::Decision(code)) => code,
-            _ => 5,
-        })
+        if let Some(checkpoints) = &remote.checkpoints {
+            return Some(
+                checkpoints
+                    .request(id, work, || remote.socket.borrow().peer_closed())
+                    .unwrap_or(5),
+            );
+        }
+        let mut socket = remote.socket.borrow_mut();
+        Some(
+            match socket
+                .send(&Frame::Checkpoint { id, work, facts })
+                .and_then(|()| socket.receive())
+            {
+                Ok(Frame::Decision(code)) => code,
+                _ => 5,
+            },
+        )
     })
 }
 /// Serve the private owner socket. Intended for the installed worker executable
@@ -28,7 +45,13 @@ pub(crate) fn remote_checkpoint(id: i64, work: i64, facts: i64) -> Option<i32> {
 /// # Errors
 /// Propagates protocol, lifecycle, domain or native processor population errors.
 pub fn serve(path: impl AsRef<Path>, domain: u64) -> Result<()> {
-    let mut socket = UnixStream::connect(path).map_err(|e| crate::failure(&e.to_string()))?;
+    let checkpoints = Rc::new(
+        Checkpoints::open(&path.as_ref().with_extension("control"))
+            .map_err(|e| crate::failure(&e.to_string()))?,
+    );
+    let socket = Rc::new(RefCell::new(Connection::new(
+        UnixStream::connect(path).map_err(|e| crate::failure(&e.to_string()))?,
+    )));
     let runtime = Runtime::initialize()?;
     runtime.call(&Data::object([
         ("operation", Data::from("process-domain")),
@@ -43,38 +66,61 @@ pub fn serve(path: impl AsRef<Path>, domain: u64) -> Result<()> {
             "one active processor required per process VM",
         ));
     }
-    process_wire::send(
-        &mut socket,
-        &Frame::Ready {
-            protocol: 1,
+    socket
+        .borrow_mut()
+        .send(&Frame::Ready {
+            protocol: 2,
             pid: std::process::id(),
             processors,
             domain,
             identity: crate::build_identity(),
-        },
-    )
-    .map_err(|e| crate::failure(&e.to_string()))?;
+        })
+        .map_err(|e| crate::failure(&e.to_string()))?;
     loop {
-        let request = match process_wire::receive(&mut socket) {
+        let request = match socket.borrow_mut().receive() {
             Ok(Frame::Request(request)) => request,
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
             _ => return Err(crate::failure("invalid process owner request")),
         };
+        // Kernel checkpoints are frequent. Expansion, loading and arbitrary
+        // callbacks keep the sleeping socket exchange, so idle owner threads
+        // never burn a core while the VM performs unrelated preparation.
+        let shared_checkpoints = request.get("executionControl").is_some()
+            && matches!(
+                request.get("operation").and_then(|v| v.text().ok()),
+                Some("source-run" | "source-replace")
+            );
         if let Some(id) = request.get("executionControl") {
             let id = i64::try_from(id.index()?).map_err(|_| gerbil_ascent::Error::Closed)?;
-            let control = socket
-                .try_clone()
-                .map_err(|e| crate::failure(&e.to_string()))?;
-            REMOTE.with(|remote| *remote.borrow_mut() = Some((id, control)));
+            REMOTE.with(|remote| {
+                *remote.borrow_mut() = Some(Remote {
+                    id,
+                    checkpoints: shared_checkpoints.then(|| Rc::clone(&checkpoints)),
+                    socket: Rc::clone(&socket),
+                });
+            });
         }
-        process_wire::send(&mut socket, &Frame::Entered)
+        if shared_checkpoints {
+            checkpoints.begin();
+        }
+        socket
+            .borrow_mut()
+            .send(&Frame::Entered { shared_checkpoints })
             .map_err(|e| crate::failure(&e.to_string()))?;
         let start = Instant::now();
         let value = runtime.call(&request);
         let elapsed_ns = u64::try_from(start.elapsed().as_nanos()).unwrap_or(u64::MAX);
         REMOTE.with(|remote| *remote.borrow_mut() = None);
-        process_wire::send(&mut socket, &Frame::Reply { value, elapsed_ns })
+        if shared_checkpoints {
+            checkpoints.complete();
+        }
+        socket
+            .borrow_mut()
+            .send(&Frame::Reply { value, elapsed_ns })
             .map_err(|e| crate::failure(&e.to_string()))?;
     }
+    crate::service::trace_retirement(std::process::id(), "vm-cleanup-begin");
+    drop(runtime);
+    crate::service::trace_retirement(std::process::id(), "vm-cleanup-end");
     Ok(())
 }

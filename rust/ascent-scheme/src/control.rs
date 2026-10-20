@@ -67,6 +67,9 @@ impl Control {
         let id = i64::try_from(id.index()?).map_err(|_| Error::Closed)?;
         scope(id).map(Self).map(Some).ok_or(Error::Closed)
     }
+    pub(crate) fn checkpoint(&self, work: i64) -> i32 {
+        checkpoint_scope(&self.0, work)
+    }
     pub(crate) fn numeric_id(&self) -> i64 {
         self.0.id
     }
@@ -116,6 +119,9 @@ pub(crate) fn checkpoint(id: i64, work: i64) -> i32 {
     let Some(scope) = scope(id) else {
         return 5;
     };
+    checkpoint_scope(&scope, work)
+}
+fn checkpoint_scope(scope: &Scope, work: i64) -> i32 {
     let Ok(mut entry) = scope.entry.lock() else {
         return 5;
     };

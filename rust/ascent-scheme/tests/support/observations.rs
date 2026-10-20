@@ -168,13 +168,25 @@ impl Evidence {
         limits: &Limits,
         cancel: &Cancellation,
     ) -> Result<SourceObservation> {
-        let data = self.inner.run(queries, limits, cancel)?;
+        let data = self
+            .inner
+            .run(queries, limits, cancel)
+            .inspect_err(|error| {
+                eprintln!("OBSERVE-RUN-FAIL stage=execute error={error:?}");
+            })?;
         let handle = u64::try_from(data.field("resultHandle")?.index()?).unwrap();
-        let result = self.inner.result(handle)?;
+        let result = self.inner.result(handle).inspect_err(|error| {
+            eprintln!("OBSERVE-RUN-FAIL stage=result-lookup error={error:?}");
+        })?;
         let queries = queries.map_or_else(|| self.inner.queries(), |q| Ok(q.to_vec()))?;
         let relations = queries
             .into_iter()
-            .map(|q| Ok((q.clone(), rows(&result.rows(&q)?, handle)?)))
+            .map(|q| {
+                let native = result.rows(&q).inspect_err(|error| {
+                    eprintln!("OBSERVE-RUN-FAIL stage=result-rows query={q} error={error:?}");
+                })?;
+                Ok((q.clone(), rows(&native, handle)?))
+            })
             .collect::<Result<_>>()?;
         // Keep the result lease retained until the explicit result() request.
         self.results.lock().unwrap().insert(handle, result);

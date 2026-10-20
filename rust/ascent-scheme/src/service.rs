@@ -1,7 +1,7 @@
 //! Persistent exec-isolated Scheme owners. One upstream VM and thread per child.
 use crate::{
     control::Control,
-    process_wire::{self, Frame},
+    process_wire::{self, Connection, Frame},
 };
 use gerbil_ascent::{Data, Error, Result};
 use std::{
@@ -104,9 +104,11 @@ struct Call {
 }
 struct Worker {
     parent: u32,
+    pid: u32,
     sender: Option<mpsc::SyncSender<Call>>,
     child: Arc<Mutex<Child>>,
     thread: Option<thread::JoinHandle<()>>,
+    drained: mpsc::Receiver<bool>,
     done: mpsc::Receiver<()>,
 }
 impl Drop for Worker {
@@ -114,18 +116,38 @@ impl Drop for Worker {
         if self.parent != std::process::id() {
             return;
         }
+        trace_retirement(self.pid, "owner-drop-begin");
+        let deadline = Instant::now() + Duration::from_secs(2);
         self.sender.take();
-        if self.done.recv_timeout(Duration::from_secs(2)).is_err()
+        // The drain guard bounds active/failed requests, not the upstream VM's
+        // destructor. Never kill a quiescent VM partway through native cleanup.
+        let graceful = matches!(self.drained.recv_timeout(Duration::from_secs(2)), Ok(true));
+        if !graceful
+            && self
+                .done
+                .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                .is_err()
             && let Ok(mut child) = self.child.lock()
         {
-            eprintln!(
-                "ASCENT-PROCESS-FORCED-STOP pid={} reason=owner-shutdown-timeout",
-                child.id()
-            );
-            let _ = child.kill();
+            match child.try_wait() {
+                Ok(Some(_)) => trace_retirement(child.id(), "already-exited"),
+                Ok(None) => {
+                    eprintln!(
+                        "ASCENT-PROCESS-FORCED-STOP pid={} reason=owner-shutdown-timeout",
+                        child.id()
+                    );
+                    let _ = child.kill();
+                }
+                Err(error) => eprintln!(
+                    "ASCENT-PROCESS-SHUTDOWN-ERROR pid={} error={error}",
+                    child.id()
+                ),
+            }
         }
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
+        if let Some(thread) = self.thread.take()
+            && thread.join().is_err()
+        {
+            eprintln!("ASCENT-PROCESS-SHUTDOWN-ERROR reason=supervisor-panicked");
         }
     }
 }
@@ -312,7 +334,7 @@ fn accept_worker(
                 let ready = process_wire::receive(&mut socket).map_err(io_error)?;
                 match ready {
                     Frame::Ready {
-                        protocol: 1,
+                        protocol: 2,
                         pid,
                         processors: 1,
                         domain: found,
@@ -357,6 +379,9 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
         .tempdir()
         .map_err(io_error)?;
     let socket_path = directory.path().join("owner.sock");
+    let checkpoints =
+        crate::process_checkpoint::Checkpoints::create(&socket_path.with_extension("control"))
+            .map_err(io_error)?;
     let listener = UnixListener::bind(&socket_path).map_err(io_error)?;
     listener.set_nonblocking(true).map_err(io_error)?;
     let mut child = Command::new(&program.executable)
@@ -380,24 +405,26 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
     drop(directory);
     let child = Arc::new(Mutex::new(child));
     let (sender, incoming) = mpsc::sync_channel::<Call>(64);
+    let (quiesced, drained) = mpsc::channel();
     let (finished, done) = mpsc::channel();
     let counters = Arc::new(Counters::default());
     let child_owner = child.clone();
+    let child_pid = receipt.pid;
     let work_counters = counters.clone();
     let work_activity = activity.clone();
     let thread = thread::Builder::new()
         .name(format!("ascent-process-{}", receipt.pid))
         .spawn(move || {
-            run(socket, incoming, &work_counters, &work_activity);
-            loop {
-                let stopped = child_owner
-                    .lock()
-                    .map_or(true, |mut child| !matches!(child.try_wait(), Ok(None)));
-                if stopped {
-                    break;
-                }
-                thread::sleep(Duration::from_millis(1));
-            }
+            let graceful = run(
+                socket,
+                incoming,
+                &work_counters,
+                &work_activity,
+                &quiesced,
+                &checkpoints,
+            );
+            trace_retirement(child_pid, "request-transport-closed");
+            await_child(&child_owner, child_pid, graceful);
             let _ = finished.send(());
         });
     let thread = match thread {
@@ -417,36 +444,54 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
         activity,
         worker: Arc::new(Mutex::new(Worker {
             parent: std::process::id(),
+            pid: child_pid,
             sender: Some(sender),
             child,
             thread: Some(thread),
+            drained,
             done,
         })),
     })
 }
 fn receive_native_reply(
-    socket: &mut UnixStream,
+    socket: &mut Connection,
     control: Option<&Control>,
     counters: &Counters,
     activity: &Activity,
     entered: &mut bool,
+    checkpoints: &crate::process_checkpoint::Checkpoints,
 ) -> Result<Result<Data>> {
     loop {
-        match process_wire::receive(socket).map_err(io_error)? {
-            Frame::Entered if !*entered => {
+        match socket.receive().map_err(io_error)? {
+            Frame::Entered { shared_checkpoints } if !*entered => {
                 *entered = true;
                 let active = activity.active.fetch_add(1, Ordering::AcqRel) + 1;
                 activity.maximum.fetch_max(active, Ordering::AcqRel);
+                if shared_checkpoints {
+                    checkpoints
+                        .serve(
+                            |id, work| {
+                                counters.checkpoints.fetch_add(1, Ordering::Relaxed);
+                                if control.map(Control::numeric_id) == Some(id) {
+                                    control.map_or(5, |value| value.checkpoint(work))
+                                } else {
+                                    5
+                                }
+                            },
+                            || socket.peer_closed(),
+                        )
+                        .map_err(io_error)?;
+                }
             }
             Frame::Checkpoint { id, work, facts: _ } if *entered => {
                 let expected = control.map(Control::numeric_id);
                 let code = if expected == Some(id) {
-                    crate::control::checkpoint(id, work)
+                    control.map_or(5, |value| value.checkpoint(work))
                 } else {
                     5
                 };
                 counters.checkpoints.fetch_add(1, Ordering::Relaxed);
-                process_wire::send(socket, &Frame::Decision(code)).map_err(io_error)?;
+                socket.send(&Frame::Decision(code)).map_err(io_error)?;
             }
             Frame::Reply { value, elapsed_ns } if *entered => {
                 counters.calls.fetch_add(1, Ordering::Relaxed);
@@ -458,11 +503,15 @@ fn receive_native_reply(
     }
 }
 fn run(
-    mut socket: UnixStream,
+    socket: UnixStream,
     incoming: mpsc::Receiver<Call>,
     counters: &Counters,
     activity: &Activity,
-) {
+    quiesced: &mpsc::Sender<bool>,
+    checkpoints: &crate::process_checkpoint::Checkpoints,
+) -> bool {
+    let mut socket = Connection::new(socket);
+    let mut graceful = true;
     for call in incoming {
         let admitted = call.control.as_ref().map_or(Ok(()), Control::check);
         if let Err(error) = admitted {
@@ -484,13 +533,16 @@ fn run(
         );
         let mut entered = false;
         let result = (|| {
-            process_wire::send(&mut socket, &Frame::Request(call.request)).map_err(io_error)?;
+            socket
+                .send(&Frame::Request(call.request))
+                .map_err(io_error)?;
             receive_native_reply(
                 &mut socket,
                 call.control.as_ref(),
                 counters,
                 activity,
                 &mut entered,
+                checkpoints,
             )
         })();
         if entered {
@@ -504,17 +556,20 @@ fn run(
             }
             Err(error) => {
                 let _ = call.reply.send(Err(error));
+                graceful = false;
                 break;
             }
         }
     }
-    let _ = socket.shutdown(std::net::Shutdown::Both);
+    let _ = quiesced.send(graceful);
+    let _ = socket.shutdown();
+    graceful
 }
-fn release_abandoned(socket: &mut UnixStream, request: &Data, value: &Data) {
+fn release_abandoned(socket: &mut Connection, request: &Data, value: &Data) {
     if let Some(cleanup) = abandoned_request(request, value)
-        && process_wire::send(socket, &Frame::Request(cleanup)).is_ok()
+        && socket.send(&Frame::Request(cleanup)).is_ok()
     {
-        while let Ok(frame) = process_wire::receive(socket) {
+        while let Ok(frame) = socket.receive() {
             if matches!(frame, Frame::Reply { .. }) {
                 break;
             }
@@ -584,3 +639,53 @@ fn abandoned_request(request: &Data, value: &Data) -> Option<Data> {
         _ => None,
     }
 }
+
+pub(crate) fn trace_retirement(pid: u32, event: &str) {
+    if std::env::var_os("ASCENT_PROCESS_TRACE").is_some() {
+        eprintln!("ASCENT-PROCESS-RETIRE pid={pid} event={event}");
+    }
+}
+
+fn await_child(child: &Mutex<Child>, pid: u32, graceful: bool) {
+    // Active/failed calls keep nonblocking status checks so their drain guard
+    // can acquire the child and stop it. A quiescent VM uses the upstream
+    // synchronous cleanup contract and one ordinary wait, without polling.
+    loop {
+        let status = child.lock().map(|mut child| {
+            if graceful {
+                child.wait().map(Some)
+            } else {
+                child.try_wait()
+            }
+        });
+        match status {
+            Ok(Ok(None)) => thread::sleep(Duration::from_millis(1)),
+            Ok(Ok(Some(status))) => {
+                if graceful && !status.success() {
+                    eprintln!("ASCENT-PROCESS-SHUTDOWN-ERROR pid={pid} status={status}");
+                }
+                break;
+            }
+            _ => {
+                eprintln!("ASCENT-PROCESS-SHUTDOWN-ERROR pid={pid} reason=wait-status-unavailable");
+                break;
+            }
+        }
+    }
+}
+impl Drop for ProcessPool {
+    fn drop(&mut self) {
+        // Start independent idle retirements together. Leased owners stay live
+        // after the pool disappears; only the last ownership scope may drain.
+        for owner in &self.owners {
+            if Arc::strong_count(&owner.worker) == 1
+                && let Ok(mut worker) = owner.worker.lock()
+            {
+                worker.sender.take();
+            }
+        }
+    }
+}
+#[cfg(test)]
+#[path = "../tests/unit/process_retirement.rs"]
+mod retirement_tests;

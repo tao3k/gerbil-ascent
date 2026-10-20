@@ -29,12 +29,18 @@ impl ProcessPool {
             .map(Self)
             .map_err(super::types::source_error)
     }
-    #[pyo3(signature=(index, workers=1))]
-    fn engine(&self, index: usize, workers: usize) -> PyResult<Engine> {
+    #[pyo3(signature=(index, workers=1, *, max_source_scopes=None, max_input_bytes=None, backend=None))]
+    fn engine(
+        &self,
+        index: usize,
+        workers: usize,
+        max_source_scopes: Option<&Bound<'_, PyAny>>,
+        max_input_bytes: Option<&Bound<'_, PyAny>>,
+        backend: Option<&str>,
+    ) -> PyResult<Engine> {
         let owner = self.0.owner(index).map_err(super::types::source_error)?;
-        ascent_scheme::Engine::new(workers)
-            .map(|engine| Engine(engine.on_process(owner)))
-            .map_err(super::types::source_error)
+        let engine = Engine::new(Some(workers), max_source_scopes, max_input_bytes, backend)?;
+        Ok(Engine(engine.0.on_process(owner)))
     }
     fn identities(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         super::packets::write(

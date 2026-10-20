@@ -146,6 +146,7 @@ dependencies = [
  "gerbil-scheme",
  "gerbil-scheme-aot-build",
  "gerbil-scheme-sys",
+ "libc",
  "num-bigint",
  "num-rational",
  "serde",

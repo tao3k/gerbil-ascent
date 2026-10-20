@@ -52,7 +52,7 @@ linearization semantics; cancellation cannot turn a committed update into a
 canceled response. Disconnected callers retain the original operation-specific
 cleanup branches for module, value, source-result and explanation leases.
 
-Checkpoint RPC is a possible performance cost, not an admitted optimization.
+Checkpoint transport is a possible performance cost, not an admitted optimization.
 The throughput experiment counts it explicitly. A dead worker is revoked;
 other worker processes remain independent. Normal owner teardown closes the
 socket and reaps the child; bounded fallback cleanup targets only that child.
@@ -182,3 +182,183 @@ Darwin forced-stop observations on that entry have not been relabeled as passes.
 The first release throughput dispatch for =258a89f5= stopped before measurement:
 =Cargo bench= rejected =--release=. Commit =ef201391= uses the supported
 =--profile release= option. No timing from the failed dispatch is admitted.
+
+* First isolated fixed-work result
+
+Run [[https://github.com/tao3k/gerbil-ascent/actions/runs/39368776246][39368776246]], commit =ef201391=, completed all fourteen controls on a
+three-CPU macOS runner. Each control used twelve caller/session streams and five
+samples. The small workload completed 240 requests per sample (four chains of
+width eight); closure completed 120 (sixteen chains of width twelve). Full answer
+hashes matched across all configurations. Compiler observations and audit errors
+were zero. The following are medians of per-sample measurements, not pooled
+quantiles. VM speedups use one VM; Rayon speedups use one Rayon thread. Cross-
+backend throughput ratios are not parallel speedups.
+
+| Workload | Backend | Capacity | Requests/s | p50 ms | p95 ms | Within-backend speedup |
+|----------+---------+----------+------------+--------+--------+------------------------|
+| small | vm | 1 | 12.79 | 912.18 | 1109.82 | 1.000 |
+| small | vm | 3 | 37.35 | 292.81 | 468.83 | 2.920 |
+| small | vm | 12 | 32.07 | 372.15 | 582.46 | 2.507 |
+| small | rayon | 1 | 10631.46 | 0.97 | 1.91 | 1.000 |
+| small | rayon | 3 | 12389.81 | 0.87 | 1.43 | 1.165 |
+| small | rayon | 6 | 12960.95 | 0.84 | 1.44 | 1.219 |
+| small | rayon | 12 | 12953.19 | 0.81 | 1.70 | 1.218 |
+| closure | vm | 1 | 9.28 | 1308.20 | 1382.24 | 1.000 |
+| closure | vm | 3 | 28.97 | 397.22 | 527.14 | 3.122 |
+| closure | vm | 12 | 31.94 | 363.69 | 511.88 | 3.443 |
+| closure | rayon | 1 | 2348.55 | 4.99 | 5.29 | 1.000 |
+| closure | rayon | 3 | 3196.62 | 3.45 | 4.57 | 1.361 |
+| closure | rayon | 6 | 2611.13 | 3.60 | 8.37 | 1.112 |
+| closure | rayon | 12 | 3751.59 | 2.94 | 3.56 | 1.597 |
+
+The small VM workload had about 3,411 checkpoint RPCs per request. One VM spent
+77.65 ms/request inside native calls, including checkpoint waits, and 859.36 ms
+in its queue; twelve VMs reduced queueing to 0.89 ms but increased native-call
+elapsed time to 355.26 ms/request. This identifies control transport and service
+contention as investigation targets; these elapsed counters are not CPU time
+and do not isolate every cause. Every original checkpoint was retained.
+
+The closure workload had about 3,197 checkpoint RPCs/request. Source-run exports
+relations and a retained result handle rather than eagerly exporting every
+proof; the Rust result also retains its snapshot. The benchmark changes neither
+backend's provenance options. Independent provenance and generation revocation
+remain semantic acceptance, not an inference from equal row hashes.
+
+The first result proves fixed-work execution, not stable sustained Rayon
+performance: several Rayon batches lasted only tens of milliseconds. Per-sample
+throughput variation is retained in the artifact, including the small VM12
+negative result and the Rayon six-thread closure result. A second experiment
+adds a separate thirty-second continuously saturated interval per configuration,
+with twelve persistent client threads and the same resident owners. Every soak
+request still performs replacement, execution, full independent answer checking
+and result release. Its completed request counts intentionally differ, so those
+soak counts are never used as equal-work speedups.
+
+Continuous-load latency uses fixed 100-microsecond buckets (65,536 per caller).
+Only twelve bounded summaries are retained, not a row per completed request.
+Quantiles are reported as lower/upper intervals; the overflow bucket uses the
+observed maximum rather than pretending an exact quantile. Request limits,
+cancellation, result/proof ownership and the original gate deadlines are
+unchanged. No new required CR timing check is introduced.
+
+The installed Scheme-profile wheel also completed 120 concurrent native calls
+and 120 closure applications through twelve explicitly selected Rust workers;
+all twelve children were reaped normally. The native integration test now
+checks source replacement, provenance verification, revocation, cancellation
+and resource rejection concurrently in all twelve VM owners.
+
+* Remaining production costs and retained stress failure
+
+For finite work/fact ceilings, =Evidence.run= still requests the current
+=source-projection= and runs the Rust admission execution before invoking the
+Scheme session. Replacement also preserves its original admission path. These
+are real production costs and remain in the measurements. The comparison does
+not claim the two backends perform an identical number of internal operations;
+it fixes source inputs, request counts and complete answers. No admission pass
+was deleted to improve the Scheme number.
+
+The expanded local twelve-thread native suite retained a failure: 53/54 Cases
+passed in 230.333 seconds, while the unchanged 3,000-complex-cell run exhausted
+its original one-second limit. Several shutdowns also emitted forced-stop
+markers. This is not a clean semantic receipt, and no timeout or Case was
+weakened. The subsequent transport candidate keeps generated bincode bytes and
+one original controller decision per checkpoint, while using buffered reads
+and stack scratch for fixed control packets. Retirement now checks an already
+exited child before reporting a forced stop and also rejects abnormal exit
+statuses. Optional retirement tracing records actual transport/VM cleanup
+boundaries; it does not manufacture progress or bypass VM cleanup.
+
+* Native retirement root cause and phase correction
+
+The buffered candidate completed all 56 native Cases in 159.898 seconds with
+twelve test threads and zero retries. Its strict retirement audit still failed:
+several workers reached =vm-cleanup-begin= and were killed by the newly introduced
+two-second supervisor timer before =vm-cleanup-end=. That run remains rejected
+as full acceptance despite its passing Case assertions.
+
+A bounded twelve-process diagnostic captured the native stack inside
+=___cleanup_dyn_module -> dlclose -> notifyDebuggerUnload=, including synchronous
+dyld notifications. Only the selected owned supervisor was paused to preserve
+the child for sampling; this invalidates timing admission. That child completed
+native cleanup and exited normally. Its observed 4.476-second diagnostic interval
+includes the sampler and is not a performance measurement. The other eleven
+children still hit the artificial timer; their parent test exit status zero is
+not evidence that those children shut down correctly.
+
+The repair distinguishes active request drain from quiescent native destruction.
+The existing two-second drain deadline still bounds active or broken requests;
+it is not restarted to grant an additional interval. Once the request queue has
+quiesced, the upstream runtime completes its ordinary destructor and the parent
+reaps its actual status. No =mem::forget=, immediate process exit, skipped GC or
+successful label for a killed VM is used. Enclosing test/CI deadlines remain
+unchanged. Pool destruction initiates independent unleased retirements together,
+while engines/values retained outside the pool keep their owner process alive.
+A separate regression covers natural cleanup longer than the artificial timer.
+
+The installed Python pool factory reuses the original Engine constructor's
+backend and source/input ceiling validation. Its qualification explicitly selects
+=scheme=, checks both retained ceilings, and still exercises twelve resident VMs.
+
+* Checkpoint transport experiments and exact rejection records
+
+A diagnostic with twelve simultaneous copies of the 3,000-complex-cell Case
+located its timeout in =execute=, rather than result lookup or graph export.
+All twelve copies failed under their unchanged limits. This is diagnostic
+local stress, not a clean-host throughput receipt. It does not identify a
+single source function as the entire root cause.
+
+The first shared-checkpoint candidate was rejected. Its complete scheduled
+native run recorded 60 Cases: 58 passed, the complex-cell Case timed out, and
+the process-failure Case was interrupted after a confirmed peer-exit hang.
+Total supervisor elapsed time was 580.658 seconds. Passing assertions and
+partial measurements from that candidate are not acceptance.
+
+Native sampling found the parent polling during module expansion. The revised
+transport therefore uses the shared exchange only for =source-run= and
+=source-replace=. Loading, expansion and other operations retain the sleeping
+binary socket exchange. The shared exchange sends every signed work transition
+to the original bound parent Control, waits for that exact decision, and only
+then returns to Scheme. It does not cache positive decisions or sample the
+cancellation clock less frequently. The bound entry avoids the process-global
+weak-entry lookup, while executing the same =checkpoint_scope= body.
+
+The peer-exit hang had a platform-specific application cause. A minimal Darwin
+socket-pair probe after closing the peer reported zero events for =poll(events=0)=
+and =revents=17= for =poll(events=POLLIN)=. The failed child was already a zombie;
+the parent had not observed EOF. Liveness now declares read interest and peeks
+without consuming protocol bytes. Regression coverage checks an idle live peer,
+a pending valid frame, and EOF after closing the peer. No SDK patch is needed.
+
+The shared file contains only a private, fixed-size atomic request/decision
+slot, never Scheme pointers. Each process owns its own mapping lifetime.
+Acquire/release publication orders the signed work payload and response;
+a subsequent checkpoint cannot overtake its decision. The application still
+uses the released upstream VM initializer, GC and value conversions. This is
+an application control transport, not a second Scheme evaluator.
+
+These tests and implementation arguments are not a Lean proof of Rust/POSIX
+weak-memory or process-lifetime refinement. That source-refinement gap remains
+explicit. Existing formal CI is an independent obligation, and its success
+alone does not close this new transport's source-equivalence boundary.
+
+* Prior-head repeated fixed-work observation
+
+Commit =3d67b3510768daa96d692ee94e8d777180f8f3a9= completed full CI run
+=39371000357=. Its separate macOS source-semantic run =39371000301= failed the
+unchanged 240-second gate; the two workflow results must not be conflated.
+Fixed-work experiment =39371253206= admitted all fourteen configurations with
+matching answers. It measured small VM1/3/12 medians of 17.73/56.69/58.37
+requests/second, and closure VM1/3/12 medians of 15.73/51.16/54.05. These differ
+substantially from the earlier recorded control. They are retained as a second
+machine observation, not attributed to a transport optimization or described
+as evidence that variance has been resolved. Neither prior-head run includes
+the new thirty-second sustained window.
+
+* Current candidate validation boundary
+
+Strict =ascent-scheme --all-targets= Clippy completed with =-D warnings= in
+99 seconds for the scoped transport and EOF fix. The full twelve-thread native
+suite is being rerun without retries. Neither the prior 58 passing assertions
+nor the prior green head is reported as the current candidate's acceptance.
+The expanded installed-wheel qualification, exact-head CI and version-two
+sustained experiment must complete before reporting final current-head results.

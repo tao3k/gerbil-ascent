@@ -579,6 +579,7 @@ FAULTS['AnchoredEvidenceSlice'] = (
     ('ack-collapsed', 'Acknowledged', 12),
     ('ack-before-delivery', 'DeliveryAcknowledged', 12),
     ('reuse-unverified-delivery', 'VerifiedReuse', 12),
+    ('drop-query-on-replay', 'QueryRetained', 12),
     ('drop-first-hit', 'FirstHit', 12),
     ('invent-hit', 'SoundHit', 12),
     ('dump-graph', 'Local', 12),

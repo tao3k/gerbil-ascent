@@ -97,6 +97,16 @@ theorem verified_hint_preserves_prior {Witness : Type} (prior : Witness → Prop
 #print axioms unverified_hint_cannot_suppress
 #print axioms verified_hint_preserves_prior
 
+def resumeRead {Query Witness : Type} (query : Query) (verified : Bool)
+    (prior : Witness → Prop) : Query × (Witness → Prop) :=
+  (query, confirmedRead verified prior)
+
+theorem unconfirmed_read_preserves_query {Query Witness : Type}
+    (query : Query) (prior : Witness → Prop) :
+    (resumeRead query false prior).1 = query := rfl
+
+#print axioms unconfirmed_read_preserves_query
+
 def anchor {Factor Chain : Type} (exposed : Factor → Prop)
     (association : Factor → Chain → Prop) (applicable : Chain → Prop) (c : Chain) :=
   applicable c ∧ ∃ f, exposed f ∧ association f c

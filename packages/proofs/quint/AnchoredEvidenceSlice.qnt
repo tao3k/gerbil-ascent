@@ -13,7 +13,7 @@ module AnchoredEvidenceSlice {
     sameWitness: bool,
     sufficient: bool, full: bool, acknowledged: bool, queried: bool, hit: bool, visible: Set[int],
     references: Set[int], expandable: Set[int], complete: bool, absent: bool,
-    status: str, selectedAction: bool, explorationOpen: bool
+    status: str, discovered: Set[int], selectedAction: bool, explorationOpen: bool
   }
   var q: State
   action init = q' = {
@@ -23,7 +23,7 @@ module AnchoredEvidenceSlice {
     sameWitness: true,
     sufficient: true, full: true, acknowledged: false, queried: false, hit: false, visible: Set(),
     references: Set(), expandable: Set(), complete: false, absent: false,
-    status: "unqueried", selectedAction: false, explorationOpen: true
+    status: "unqueried", discovered: Set(), selectedAction: false, explorationOpen: true
   }
   // Factor 2 is unassociated. 0/1 and 2/3 are opposite-polarity witness families.
   action Prepare = {
@@ -78,6 +78,9 @@ module AnchoredEvidenceSlice {
       acknowledged: (valid(q) and q.sufficient and q.full) or Mutation == "ack-collapsed",
       absent: Mutation == "gap-as-absent" and not(ready(q)),
       status: if (Mutation == "mask-gap") "hit" else outcome(q),
+      discovered: if (Mutation == "invent-discovery") Set(2)
+        else if (Mutation == "hide-discovery") Set()
+        else if (valid(q) and q.exposed.size() == 0) associations.map(a => a.factor) else Set(),
       added: if (Mutation == "count-only-delta" and result.size() == q.prior.size())
         Set() else result.exclude(q.prior),
       removed: q.prior.intersect(family(scoped)).exclude(result), retained: result.intersect(q.prior),
@@ -100,6 +103,8 @@ module AnchoredEvidenceSlice {
       q.removed == q.prior.intersect(family(q.scope)).exclude(q.items) and
       q.retained == q.items.intersect(q.prior))
   val Open = not(q.selectedAction) and q.explorationOpen
+  val DiscoveryExact = not(q.queried) or q.discovered ==
+    (if (valid(q) and q.exposed.size() == 0) associations.map(a => a.factor) else Set())
   val Safety = FirstHit and SoundHit and Local and Family and Traceable and
-    HonestPresentation and Acknowledged and Gaps and ExactDelta and Open
+    HonestPresentation and Acknowledged and Gaps and ExactDelta and Open and DiscoveryExact
 }

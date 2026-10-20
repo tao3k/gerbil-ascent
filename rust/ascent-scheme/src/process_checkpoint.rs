@@ -86,9 +86,11 @@ impl Checkpoints {
         // phase. Otherwise COMPLETE from the previous ABI call can be mistaken
         // for completion of this call (the phase values alone have an ABA gap).
         self.slot().generation.store(generation, Ordering::Release);
+        wake(&self.slot().phase);
     }
     pub(crate) fn complete(&self) {
         self.slot().phase.store(COMPLETE, Ordering::Release);
+        wake(&self.slot().phase);
     }
     pub(crate) fn request(
         &self,
@@ -100,14 +102,16 @@ impl Checkpoints {
         slot.id.store(id, Ordering::Relaxed);
         slot.work.store(work, Ordering::Relaxed);
         slot.phase.store(REQUEST, Ordering::Release);
+        wake(&slot.phase);
         let mut waiting = Wait::default();
         loop {
-            if slot.phase.load(Ordering::Acquire) == DECISION {
+            let phase = slot.phase.load(Ordering::Acquire);
+            if phase == DECISION {
                 let code = slot.code.load(Ordering::Relaxed);
                 slot.phase.store(IDLE, Ordering::Release);
                 return Ok(code);
             }
-            waiting.poll(&mut closed)?;
+            waiting.poll(&mut closed, &slot.phase, phase)?;
         }
     }
     pub(crate) fn serve(
@@ -120,7 +124,10 @@ impl Checkpoints {
         let mut waiting = Wait::default();
         loop {
             if slot.generation.load(Ordering::Acquire) != generation {
-                waiting.poll(&mut closed)?;
+                let phase = slot.phase.load(Ordering::Acquire);
+                if slot.generation.load(Ordering::Acquire) != generation {
+                    waiting.poll(&mut closed, &slot.phase, phase)?;
+                }
                 continue;
             }
             match slot.phase.load(Ordering::Acquire) {
@@ -131,9 +138,14 @@ impl Checkpoints {
                     );
                     slot.code.store(code, Ordering::Relaxed);
                     slot.phase.store(DECISION, Ordering::Release);
+                    wake(&slot.phase);
+                    #[cfg(target_os = "linux")]
+                    {
+                        waiting = Wait::default();
+                    }
                 }
                 COMPLETE => return Ok(()),
-                _ => waiting.poll(&mut closed)?,
+                phase => waiting.poll(&mut closed, &slot.phase, phase)?,
             }
         }
     }
@@ -150,24 +162,87 @@ impl Drop for Checkpoints {
 #[derive(Default)]
 struct Wait(u32);
 impl Wait {
-    fn poll(&mut self, closed: &mut impl FnMut() -> io::Result<bool>) -> io::Result<()> {
+    fn poll(
+        &mut self,
+        closed: &mut impl FnMut() -> io::Result<bool>,
+        phase: &AtomicU32,
+        observed: u32,
+    ) -> io::Result<()> {
         self.0 = self.0.wrapping_add(1);
-        if self.0.is_multiple_of(1024) && closed()? {
-            return Err(io::Error::new(
-                io::ErrorKind::BrokenPipe,
-                "checkpoint peer exited",
-            ));
-        }
-        // No sleeping VM or idle-owner polling: this exchange exists only while
-        // a native request is executing. Yield lets oversubscribed owners run.
-        if self.0.is_multiple_of(32) {
-            std::thread::yield_now();
-        } else {
+        #[cfg(target_os = "linux")]
+        {
+            if self.0 >= 32 {
+                if closed()? {
+                    return Err(io::Error::new(
+                        io::ErrorKind::BrokenPipe,
+                        "checkpoint peer exited",
+                    ));
+                }
+                return wait(phase, observed);
+            }
             std::hint::spin_loop();
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = (phase, observed);
+            if self.0.is_multiple_of(1024) && closed()? {
+                return Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "checkpoint peer exited",
+                ));
+            }
+            if self.0.is_multiple_of(32) {
+                std::thread::yield_now();
+            } else {
+                std::hint::spin_loop();
+            }
         }
         Ok(())
     }
 }
+
+// FUTEX_PRIVATE_FLAG would be incorrect: the two processes map the same backing
+// file at independent virtual addresses. The kernel keys this wait by shared
+// backing storage. The atomic comparison prevents a lost wake between observing
+// a phase and sleeping; EINTR/spurious wakeups always recheck the protocol.
+#[cfg(target_os = "linux")]
+fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
+    let timeout = libc::timespec {
+        tv_sec: 0,
+        tv_nsec: 1_000_000,
+    };
+    // SAFETY: phase is a valid aligned atomic in a live shared mapping. The
+    // kernel only reads it; the borrowed relative timespec lives through syscall.
+    let status = unsafe {
+        libc::syscall(
+            libc::SYS_futex,
+            phase.as_ptr(),
+            libc::FUTEX_WAIT,
+            observed,
+            &raw const timeout,
+        )
+    };
+    if status >= 0 {
+        return Ok(());
+    }
+    let error = io::Error::last_os_error();
+    match error.raw_os_error() {
+        Some(libc::EAGAIN | libc::EINTR | libc::ETIMEDOUT) => Ok(()),
+        _ => Err(error),
+    }
+}
+fn wake(phase: &AtomicU32) {
+    #[cfg(target_os = "linux")]
+    // SAFETY: phase is borrowed from the live shared mapping; WAKE does not
+    // access any payload. Wake is a scheduling hint, not an execution decision;
+    // even a missed hint is bounded by wait's peer-liveness interval.
+    unsafe {
+        libc::syscall(libc::SYS_futex, phase.as_ptr(), libc::FUTEX_WAKE, 1);
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = phase;
+}
+
 #[cfg(test)]
 #[path = "../tests/unit/process_checkpoint.rs"]
 mod tests;

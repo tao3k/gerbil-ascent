@@ -396,3 +396,33 @@ Installed Scheme-profile wheel qualification covers both the explicitly selected
 Rust helper and the default PyO3 worker entry. Both must retain the same twelve
 resident owner identities, original source/input ceilings, actual single-processor
 VM population, real calls/applications, and normal reaping of all twelve children.
+
+* Exact scoped-generation receipts and Linux scheduling follow-up
+
+For =ef5e78a3edc8dcd9764892d5b347b319e3e0b5c1=, the complete local native suite
+passed all 63 Cases with twelve test workers, zero retries and zero skips in
+194.855 seconds. There were no forced-stop, shutdown-error or transport-error
+markers. This uses the explicitly recorded installed classic linker. Its
+17-minute-23-second preceding Cargo cold build is not runtime throughput.
+
+CI run =39383692224= must be read by individual step verdicts: later wheel steps
+are intentionally allowed to continue after a semantic failure. Both installed
+Scheme-profile process-entry qualifications passed, including 120 real calls,
+120 callable applications and reaping twelve children each. Strict Clippy,
+formal, the original Scheme performance lane and all three oracles passed.
+The full Linux native run recorded 62/63 passing Cases in 60.941 seconds; the
+complex-cell Case exhausted its unchanged one-second evaluation budget. The
+separate complete Scheme source lane also hit its original overall deadline.
+Consequently this run is not full CI acceptance. A prior progress inference
+from a later running step was corrected after reading actual step conclusions.
+
+The Linux follow-up replaces the shared slot's active-yield wait with a bounded
+process-shared =FUTEX_WAIT=/=FUTEX_WAKE= exchange. It never uses the process-private
+futex flag, because each process maps the same backing file independently.
+The wait compares the observed atomic phase, preventing lost wakes. Generation
+publication precedes observation, and interrupted/spurious wakes recheck the
+protocol. A one-millisecond wait interval detects a dead peer; it is not an
+execution allowance and does not replace any checkpoint decision. The original
+parent controller still runs once for every signed work transition. This
+scheduling repair requires fresh Linux semantic and current-head CI receipts;
+Mac success alone does not admit it.

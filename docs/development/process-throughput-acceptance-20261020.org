@@ -498,3 +498,15 @@ deployment target. The chosen flags and linker diagnostics are retained with
 the experiment. No SDK patch, build.ss orchestration, execution deadline,
 resource ceiling, semantic Case, performance threshold or concurrency count
 is changed by this compiler-invocation correction.
+
+* Retained classic-linker build failure
+
+Experiment =39394403373= at =b046e8b2= still failed before measurement. Xcode's
+classic linker was found and selected; the visible linker output contains
+compact-unwind warnings, while Cargo returned nonzero through the Gerbil
+process wrapper. No native linker crash report was captured. The previous
+SIGBUS diagnosis is not asserted as the complete cause of this new failure.
+The initial worker build now also preserves Cargo's structured compiler
+messages, as the benchmark build already does. This changes diagnostics only;
+it is not claimed as a performance repair or acceptance of the failed run.
+No timing result is extracted from either failed build.

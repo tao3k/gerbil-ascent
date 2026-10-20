@@ -149,6 +149,8 @@ class FormalTests(unittest.TestCase):
             "mix-witnesses": "SoundHit",
             "invalid-declaration-hit": "SoundHit",
             "ack-collapsed": "Acknowledged",
+            "ack-before-delivery": "DeliveryAcknowledged",
+            "reuse-unverified-delivery": "VerifiedReuse",
             "drop-first-hit": "FirstHit", "invent-hit": "SoundHit", "dump-graph": "Local",
             "hide-counter": "Family", "wrong-chain": "Traceable",
             "hide-truncation": "HonestPresentation", "gap-as-absent": "Gaps",

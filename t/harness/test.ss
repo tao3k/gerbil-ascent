@@ -49,9 +49,10 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; Exhaustive corpora own independent processes. Darwin starts one ordinary
-;; wave before them to avoid the initial expansion burst while retaining
-;; overlap with remaining work; other hosts keep their native order. Capacity, isolation, module coverage and runtime options are equal.
+;; Exhaustive corpora own independent processes. Darwin overlaps them with
+;; the final ordinary wave to avoid both a long exhaustive tail and sustained
+;; exhaustive/ordinary allocation contention. Other hosts keep their native
+;; order. Capacity, isolation, module coverage and runtime options are equal.
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -100,8 +101,8 @@
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
         (let* ((ordinary (preparation-refined-batches profiled compatible))
-               (warmup (min (length ordinary) (testing-interface-worker-count (length files)))))
-          (if defer? (append (take ordinary warmup) (map list isolated) (drop ordinary warmup))
+               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
+          (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))
                      (append (map list isolated) ordinary))))
       (testing-interface-test-file-batches profiled files)))
     (unless (or (null? files)

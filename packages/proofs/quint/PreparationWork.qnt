@@ -63,11 +63,13 @@ module PreparationWork {
   // state-transition counterexample rather than a constant-FALSE TLC config.
   val IndexedDispatchExact = not(q.rootsProjected) or IndexedAliasesExact
   // Same finite entries and multiplicity; source-bound Lean retains arbitrary weights.
+  // Eight ordinary batches and capacity two distinguish first-wave from tail overlap.
   pure def source_queue(defer: bool): List[int] = if (Mutation == "drop-isolated-source")
-    List(0, 1, 2, 3) else if (defer) List(0, 1).concat(List(4, 5)).concat(List(2, 3))
-    else List(4, 5).concat(List(0, 1, 2, 3))
-  pure val SourceQueueExact = source_queue(true) == List(0, 1, 4, 5, 2, 3) and
-    source_queue(false) == List(4, 5, 0, 1, 2, 3)
+    List(0, 1, 2, 3, 4, 5, 6, 7)
+    else if (defer) List(0, 1, 2, 3, 4, 5).concat(List(8, 9)).concat(List(6, 7))
+    else List(8, 9).concat(List(0, 1, 2, 3, 4, 5, 6, 7))
+  pure val SourceQueueExact = source_queue(true) == List(0, 1, 2, 3, 4, 5, 8, 9, 6, 7) and
+    source_queue(false) == List(8, 9, 0, 1, 2, 3, 4, 5, 6, 7)
   val SourceQueueCoverage = q.sourceStarts == 0 or SourceQueueExact
   pure def source_live_ratio(darwin: bool, isolated: bool): int =
     if (Mutation == "compact-isolated-source" and isolated) 80

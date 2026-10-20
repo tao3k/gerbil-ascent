@@ -516,3 +516,44 @@ raised. The actual SDK read both Scheme files and the source Suite passed its
 queue, capacity, GC and isolation Cases. The copied local reference metadata
 still fails the separate late-import Case, so that Suite is not counted as a
 complete local semantic pass. Fresh-checkout full CI remains authoritative.
+
+* Retained early-overlap failure and final-wave candidate
+
+At44886be865b1e77819275fcea0d4ca85f7334df8, main CI39464383862 passed every
+job: full Scheme semantics, original performance gates, formal and conformance,
+Rust/PyO3, consumers and all oracles. Linux retained174 modules,1412 Cases,
+90 batches and90 single-processor GC50 receipts; its168-second source stage
+is slower than595 and is not evidence of acceleration. The two production
+Python entries each completed120 calls with12 clients,12 single-processor
+owners and12 reaped processes. Consumers passed224 tests with19 existing
+skips. The broad local workbench attempt remains unadmitted:19 imports lacked
+the installed ascent PyO3 package.
+
+Mac run39464383898 failed at240.21638075 seconds, exit124, with no foreign
+compiler or audit errors. It started55 batches and completed43;675 Cases
+completed. The two exhaustive first Cases started at36.78 seconds, proving
+the first-wave placement worked. The semi-naive first Case finished only at
+199.76 seconds and its Actor Case was still incomplete at the deadline.
+Moving exhaustive work early fixed late admission but worsened aggregate
+progress:595 completed86 batches and1386 Cases. This candidate is not accepted.
+Sampled VM SELF CPU lower bounds were566.33 seconds versus581.20 at595;
+these are not allocation or total CPU counters. Mac build/preparation/warm
+costs were533/320/13 seconds, with no matched speedup claim.
+
+The next candidate overlaps only the final worker-width ordinary tail:
+prefix=max(0,ordinary_batch_count-worker_capacity). For88 ordinary batches
+and12 workers this places the unchanged isolated corpora after76 ordinary
+batches, rather than after12 or88. It does not introduce a barrier or change
+capacity, heap, GC, data, Contract checks, cancellation, provenance or deadlines.
+Lean retains arbitrary-prefix permutation and weighted work preservation and
+proves the unqueued ordinary tail no larger than capacity. Quint now uses
+eight ordinary entries and capacity two, distinguishing first-wave and tail
+placements rather than using a symmetric four-entry example. Full exact-head
+CI and native macOS admission remain necessary; latency, cumulative allocation
+and full native source refinement are not proved by these placement controls.
+
+Focused final-wave controls passed20 policy tests and the same three expected
+Quint counterexamples. LeanPoo Guard passed in16.6366 seconds under its original
+limits. Existing SDK source reading and native queue/GC/isolation Cases passed;
+the independent copied-reference import failure remains unadmitted locally.
+No unchanged failing route was retried for acceptance.

@@ -380,8 +380,8 @@ def groupsSchemeSource : String :=
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
   "        (let* ((ordinary (preparation-refined-batches profiled compatible))\n" ++
-  "               (warmup (min (length ordinary) (testing-interface-worker-count (length files)))))\n" ++
-  "          (if defer? (append (take ordinary warmup) (map list isolated) (drop ordinary warmup))\n" ++
+  "               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))\n" ++
+  "          (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))\n" ++
   "                     (append (map list isolated) ordinary))))\n" ++
   "      (testing-interface-test-file-batches profiled files)))\n" ++
   "    (unless (or (null? files)\n" ++
@@ -458,25 +458,36 @@ theorem staged_source_work (warmup : Nat) (weight : String → Nat)
   simp only [stagedBatches, List.flatten_append, sourceWork_append]
   omega
 
--- The prefix is a queue placement, not a completion barrier or a new worker cap.
-def orderedBatches (defer : Bool) (warmup : Nat) (ordinary : List (List String))
-    (isolated : List String) : List (List String) :=
-  if defer then stagedBatches warmup ordinary isolated else isolated.map (fun entry => [entry]) ++ ordinary
+-- Overlap only the final ordinary worker-width tail, without a barrier or new cap.
+def tailOverlapPrefix (entries workers : Nat) : Nat := entries - workers
 
-theorem host_policy_batch_count (defer : Bool) (warmup : Nat)
+theorem tail_overlap_prefix_bounded (entries workers : Nat) :
+    tailOverlapPrefix entries workers ≤ entries := Nat.sub_le _ _
+
+theorem tail_overlap_remaining_bounded (entries workers : Nat) :
+    entries - tailOverlapPrefix entries workers ≤ workers := by
+  unfold tailOverlapPrefix
+  omega
+
+def orderedBatches (defer : Bool) (workers : Nat) (ordinary : List (List String))
+    (isolated : List String) : List (List String) :=
+  if defer then stagedBatches (tailOverlapPrefix ordinary.length workers) ordinary isolated
+  else isolated.map (fun entry => [entry]) ++ ordinary
+
+theorem host_policy_batch_count (defer : Bool) (workers : Nat)
     (ordinary : List (List String)) (isolated : List String) :
-    (orderedBatches defer warmup ordinary isolated).length = ordinary.length + isolated.length := by
+    (orderedBatches defer workers ordinary isolated).length = ordinary.length + isolated.length := by
   cases defer
   · simp [orderedBatches, Nat.add_comm]
-  · exact staged_batch_count warmup ordinary isolated
+  · exact staged_batch_count _ ordinary isolated
 
-theorem host_policy_source_work (defer : Bool) (warmup : Nat) (weight : String → Nat)
+theorem host_policy_source_work (defer : Bool) (workers : Nat) (weight : String → Nat)
     (ordinary : List (List String)) (isolated : List String) :
-    sourceWork weight (orderedBatches defer warmup ordinary isolated).flatten =
+    sourceWork weight (orderedBatches defer workers ordinary isolated).flatten =
       sourceWork weight (isolated.map (fun entry => [entry]) ++ ordinary).flatten := by
   cases defer
   · rfl
-  · exact staged_source_work warmup weight ordinary isolated
+  · exact staged_source_work _ weight ordinary isolated
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split

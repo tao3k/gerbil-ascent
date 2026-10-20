@@ -182,7 +182,6 @@ module PreparationWork {
   val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration
   val CompleteCacheBundle = not(q.incompleteReuse)
   val ReuseCurrentInputs = not(q.staleReuse)
-  val SourceGcPolicy = source_vm_live_ratio == 80 and source_vm_live_ratio <= 100
   val PackedStartupCount = complete_packed_starts == 90 and complete_packed_starts < 146
   val BoundedSourceEntries = q.retainedEntryRoots <= SourceBatchLimit
   val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0

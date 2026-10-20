@@ -56,6 +56,7 @@
 ;;; The receiver runs after ordinary checks have been restored, including throws.
 ;; : (forall (a r) (-> (-> a) (-> a r) r))
 ;; : (-> InertDeclarationConstructor CheckedRootReceiver ValidatedRoot)
+;; BEGIN GENERATED DSL-ROOT
 (def (receive-inert-declarations construct receive)
   (call-with-values
    (lambda ()
@@ -67,20 +68,24 @@
 ;;; refinement only while validating; the published value retains no checker.
 ;; : (forall (c a) (-> c a a))
 ;; : (-> DeclarationRootContract OwnedDeclarationRoot ValidatedRoot)
-(def (validate-inert-root contract value)
-  (validate (if (null? (.ref value 'rules)) contract
+(def (validate-inert-root contract value (memoize-terms? #t))
+  (validate (if (or (not memoize-terms?) (null? (.ref value 'rules))) contract
               (gerbil-ascent-owned-root-contract contract)) value))
+;; A canonical tree can use the ordinary complete root contract without a
+;; fresh shared-Term memo descriptor. Both modes perform full root admission.
 ;; The producer may return a Program alone or a Program and its output handle.
 ;; Receive both outside the construction extent, validating before publication.
 ;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))
 ;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))
-(def (gerbil-ascent-construct-inert-program construct)
+(def (gerbil-ascent-construct-inert-program construct (memoize-terms? #t))
   (receive-inert-declarations construct
    (case-lambda
-     ((program) (validate-inert-root GerbilAscentProgramContract program))
+     ((program) (validate-inert-root GerbilAscentProgramContract program memoize-terms?))
      ((program output)
-      (let (checked (validate-inert-root GerbilAscentProgramContract program))
+      (let (checked (validate-inert-root GerbilAscentProgramContract program memoize-terms?))
         (values checked output))))))
+
+;; END GENERATED DSL-ROOT
 
 ;; : (forall (f) (-> (-> f) f))
 ;; : (-> InertFragmentConstructor ValidatedFragment)

@@ -223,6 +223,22 @@
 
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
+    (test-case "closed positive construction never borrows user callback validation"
+      (def (bad-rule!) (gerbil-ascent-rule '(99) []))
+      (check-exception
+       (relational-program (relation seed (value) (begin (bad-rule!) '((0))))
+         (rule (seed ?x) (seed ?x)) (limits 8 8 16)) true)
+      (check-exception
+       (relational-program (relation seed (value) '((0)))
+         (rule (seed ?x) (seed ?x)) (limits (begin (bad-rule!) 8) 8 16)) true)
+      (check-exception
+       (relational-program (relation seed (value) '((0)))
+         (rule (seed ?x) (seed ?x))
+         (rule (seed (value (begin (bad-rule!) 0)))) (limits 8 8 16)) true)
+      (check-exception
+       (relational-program (relation seed (value) '((0)))
+         (rule (seed ?x) (seed ?x)) (limits -1 8 16)) true)
+      (check-exception (bad-rule!) true))
     (test-case "checked calls preserve all literal and variable argument shapes"
       (let ((two (relational-operator-literal 2))
             (three (relational-operator-literal 3)))

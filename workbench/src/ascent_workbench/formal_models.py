@@ -55,6 +55,7 @@ MODEL_ORDER = ('DeltaClosure','RayonPublication',
  'TrajectoryRuleEvolution',
  'ModelApplicability',
  'ClosedDslLowering',
+ 'PositiveDslAdmission',
  'ClosedEvidenceScope',
  'EvidenceConsumption',
  'EvidenceInteraction')
@@ -95,6 +96,8 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                         'invariants': 'ChargedExpansion IsolatedDefinitions NoForeignReference '
                                       'LiveValues',
                         'constraint': 'ExplorationBound'},
+ 'PositiveDslAdmission': {'constants': 'Mutation = "none"',
+                          'invariants': 'CallbacksOutside ScopeRestored PublicationChecked FullEvaluationMatrix'},
  'ClosedDslLowering': {'constants': 'Mutation = "none"',
                        'invariants': 'WholeChoice NoRetry FailurePrivate'},
  'ClosedEvidenceScope': {'constants': 'Mutation = "none"',
@@ -257,6 +260,9 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
                         ('failed', 'ChargedExpansion', 12),
                         ('reset', 'ChargedExpansion', 12),
                         ('foreign', 'NoForeignReference', 12)),
+ 'PositiveDslAdmission': (('early', 'CallbacksOutside', 12),
+                           ('leak', 'ScopeRestored', 12),
+                           ('skip-root', 'PublicationChecked', 12)),
  'ClosedDslLowering': (('partial', 'WholeChoice', 12),
                        ('retry', 'NoRetry', 12),
                        ('rejectOwner', 'FailurePrivate', 12)),
@@ -623,7 +629,7 @@ FAULTS['PreparationAdmission'] = (
 MODEL_ORDER += ('PreparationWork',)
 CONFIGURATIONS['PreparationWork'] = {
     'constants': 'Mutation = "none"',
-    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle SourceGcPolicy PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
+    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained',
 }
 FAULTS['PreparationWork'] = (
     ('last-interface-alias-wins', 'IndexedDispatchExact', 12),

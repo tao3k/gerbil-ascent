@@ -45,13 +45,13 @@
       (let* ((command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
              (wrapped (single-thread-vm-command command)))
         (check-equal? (length wrapped) (length command))
-        (check-equal? (take wrapped 3) '("gxi" "-:max-heap=2048M,live-ratio=80" "-e"))
+        (check-equal? (take wrapped 3) (take command 3))
         (check-equal? (drop wrapped 4) (drop command 4))
         (check-equal? (string-suffix? "(native-main)" (list-ref wrapped 3)) #t)))
     (test-case "linked source VM preserves heap native GxTest argv and processor assertion"
       (let* ((command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
              (linked (source-vm-command command "/package/bin/ascent-develop")))
-        (check-equal? (take linked 3) '("/package/bin/ascent-develop" "-:max-heap=2048M,live-ratio=80" "--eval-plain"))
+        (check-equal? (take linked 3) '("/package/bin/ascent-develop" "-:max-heap=2048M" "--eval-plain"))
         (check-equal? (drop linked 3) (drop (single-thread-vm-command command) 3))
         (check-equal? (source-vm-command command #f) (single-thread-vm-command command))))
     (test-case "observed wide source batches are rejected before child admission"

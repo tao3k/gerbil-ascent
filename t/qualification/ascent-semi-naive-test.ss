@@ -4,16 +4,25 @@
  :gerbil-ascent/program/interface :gerbil-ascent/program/evaluate
  :gerbil-ascent/core/positive-plan :gerbil-ascent/program/index
  :gerbil-ascent/table/provider :gerbil-ascent/program/actor-round
+ (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
+ (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
+ (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+ (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
  :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle)
 (export ascent-semi-naive-test)
+;; BEGIN GENERATED DSL-WORKLOAD
 (def (declaration edges rules)
  (def (atom form) (gerbil-ascent-atom (car form) (map gerbil-ascent-variable (cdr form))))
  (gerbil-ascent-program
   (list (gerbil-ascent-relation 'edge 2 edges) (gerbil-ascent-relation 'p 2 []) (gerbil-ascent-relation 'q 2 []))
   (map (lambda (rule) (gerbil-ascent-rule (list (atom (car rule))) (map atom (cdr rule)))) rules)
   10000 10000 10000))
+(def (owned-declaration edges rules)
+ ;; This fixture supplies only closed integer rows and fixed rule data.
+ ;; Preserve the exact public schema, including callback-free Actor fields.
+ (gerbil-ascent-construct-inert-program (lambda () (declaration edges rules)) #f))
 (def (verify mask rules workers)
- (let* ((edges (graph-input mask)) (program (declaration edges rules))
+ (let* ((edges (graph-input mask)) (program (if (= workers 1) (declaration edges rules) (owned-declaration edges rules)))
         (actual (gerbil-ascent-evaluate-program program workers: workers)))
   (let-values (((expected _) (naive-positive edges rules)))
    (check-equal? (.ref actual 'finished) #t)
@@ -26,10 +35,18 @@
    (for-each (lambda (mask) (verify mask naive-rules 1)
      (verify mask (reverse naive-rules) 1)) (iota 512)))
   (test-case "Actor reschedules empty consumers and nonlinear mutual recursion"
+   (let* ((sample (owned-declaration (graph-input 511) naive-rules))
+          (relations (.ref sample 'relations))
+          (schema (gerbil-ascent-program-schema sample relations))
+          (analysis (gerbil-ascent-prepare-program relations (.ref sample 'rules) schema #f)))
+     (check-equal? (gerbil-ascent-actor-round-eligible?
+                    (apply append (vector->list (gerbil-ascent-activate-rules analysis))) (vector-ref schema 9) (vector-ref schema 5)
+                    (vector-ref schema 7) (vector-ref schema 3)) #t))
    (for-each (lambda (workers)
     (for-each (lambda (mask)
      (verify mask naive-rules workers)
      (verify mask (reverse naive-rules) workers)) (iota 512))) '(2 4)))
+;; END GENERATED DSL-WORKLOAD
   (test-case "first fresh occurrence partitions actual compiled join witnesses"
    (let* ((all (vector '((0 1) (1 2) (2 0)))) (delta (vector '((1 2) (2 0))))
           (sizes (vector 3)) (dsizes (vector 2)) (versions (vector 0)) (dversions (vector 0))

@@ -412,6 +412,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-heap", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "dsl-root", "program/objects.ss"),
+                ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
+                ("ExecutionPolicy.lean", "dsl-workload", "t/qualification/ascent-semi-naive-test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-support", "packages/proofs/quint/PreparationSupport.qnt"),
                 ("ExecutionPolicy.lean", "preparation-cargo-cache", ".github/workflows/ci.yml"),
@@ -441,6 +444,12 @@ def main() -> int:
                     end = "      # END GENERATED ARCHIVE CACHE\n"
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language.startswith("dsl-"):
+                    region = language.removeprefix("dsl-").upper()
+                    begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate generated DSL region: ' + language)
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language.startswith("lookup-"):
                     region = language.removeprefix("lookup-").upper()

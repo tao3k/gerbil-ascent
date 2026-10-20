@@ -52,6 +52,14 @@ class FormalTests(unittest.TestCase):
         })
         self.assertTrue(all(controls[name].expected == 12 for name in faults))
 
+    def test_positive_dsl_preserves_capture_scope_and_root_controls(self):
+        controls = {item.name: item for item in obligations(configuration("PositiveDslAdmission", {}))}
+        self.assertEqual(controls["correct"].expected, 0)
+        self.assertEqual({name: item.property for name, item in controls.items() if name != "correct"}, {
+            "early": "CallbacksOutside", "leak": "ScopeRestored", "skip-root": "PublicationChecked",
+        })
+        self.assertTrue(all(item.expected == 12 for name, item in controls.items() if name != "correct"))
+
     def test_archive_work_retains_source_lease_cache_and_cost_controls(self):
         controls = {item.name: item for item in obligations(configuration("ArchiveWork", {}))}
         self.assertEqual(controls["correct"].expected, 0)
@@ -107,11 +115,11 @@ class FormalTests(unittest.TestCase):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
         original = {name: items for name, items in plans.items()
-                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness"}}
+                    if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness", "PositiveDslAdmission"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)
         self.assertEqual(set(plans) - set(original),
-                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness"})
+                         {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness", "PositiveDslAdmission"})
         self.assertEqual(sum(len(v) for k, v in original.items()
                              if k not in {"TrajectoryExploration", "TrajectoryEvidenceChain",
                                           "TrajectoryRuleEvolution"}), 349)

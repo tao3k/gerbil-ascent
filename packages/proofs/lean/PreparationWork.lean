@@ -200,7 +200,6 @@ def interfacesQuintSource : String :=
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
-  "  pure val source_vm_live_ratio = 80\n" ++
   "  pure val complete_packed_starts =\n" ++
   "    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)\n" ++
   "}\n"
@@ -368,8 +367,6 @@ def groupsSchemeSource : String :=
   "           \"(let (n (##current-vm-processor-count)) (unless (= n 1) (error \\\"expected one processor per test VM\\\" n)) (displayln \\\"VM-RUNTIME processors=\\\" n)) \"\n" ++
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
-  "      ((string-prefix? \"-:max-heap=\" (car arguments))\n" ++
-  "       (cons (string-append (car arguments) \",live-ratio=80\") (wrap (cdr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
   "(def (source-test-batches profiled files mode)\n" ++
   "  (let (batches\n" ++

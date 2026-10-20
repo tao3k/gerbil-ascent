@@ -209,36 +209,36 @@
 ;;; resource bounds before its first solve; no evaluation happens here.
 (defsyntax (relational-collect stx)
   (syntax-case stx (relation lattice rule limits)
-    ((_ (declared ...) (lowered ...)
+    ((_ finish (declared ...) (lowered ...)
         (lattice name (column ...) rows mode) rest ...)
      (and (identifier? (syntax name))
           (identifier? (syntax mode))
           (andmap identifier? (syntax->list (syntax (column ...)))))
-     (syntax (relational-collect
+     (syntax (relational-collect finish
               (declared ...
                         (relational-checked-lattice
                          'name (length '(column ...)) rows 'mode))
               (lowered ...) rest ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ finish (declared ...) (lowered ...)
         (relation name (column ...) rows) rest ...)
      (and (identifier? (syntax name))
           (andmap identifier? (syntax->list (syntax (column ...)))))
-     (syntax (relational-collect
+     (syntax (relational-collect finish
               (declared ...
                         (relational-source
                          'name (length '(column ...)) rows))
               (lowered ...) rest ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ finish (declared ...) (lowered ...)
         (relation name (column ...)) rest ...)
      (and (identifier? (syntax name))
           (andmap identifier? (syntax->list (syntax (column ...)))))
-     (syntax (relational-collect
+     (syntax (relational-collect finish
               (declared ...
                         (relational-source
                          'name (length '(column ...)) []))
               (lowered ...) rest ...)))
-    ((_ (declared ...) (lowered ...) (rule head body ...) rest ...)
-     (syntax (relational-collect
+    ((_ finish (declared ...) (lowered ...) (rule head body ...) rest ...)
+     (syntax (relational-collect finish
               (declared ...)
               (lowered ...
                        (gerbil-ascent-rule
@@ -248,17 +248,17 @@
                                relational-reduce
                                body) ...)))
               rest ...)))
-    ((_ (declared ...) (lowered ...) (limits input derived output))
+    ((_ finish (declared ...) (lowered ...) (limits input derived output))
      (syntax (let (relations (list declared ...))
-               (gerbil-ascent-program
+               (finish
                 relations (list lowered ...) input derived output
                 (map (lambda (relation) (.ref relation 'name))
                      relations)))))
-    ((_ (declared ...) (lowered ...) bad rest ...)
+    ((_ finish (declared ...) (lowered ...) bad rest ...)
      (raise-syntax-error
       #f "expected relation, rule, or final limits clause"
       (syntax bad)))
-    ((_ (declared ...) (lowered ...))
+    ((_ finish (declared ...) (lowered ...))
      (raise-syntax-error
       #f "relational-program requires a final limits clause" stx))))
 
@@ -286,10 +286,53 @@
 ;;; Boundary: This frame lowers only syntax with inspectable rule dependencies.
 ;;; Source expressions stay lexical while rules reject host calls.
 ;;; Invariant: Evaluation cannot observe an undeclared changing relation.
+;; BEGIN GENERATED DSL-OWNED
+(defsyntax (relational-owned-program stx)
+  (syntax-case stx ()
+    ((_ relations rules input derived output handles)
+     ;; All user expressions run before the private construction extent.
+     ;; The selected rule syntax contains only canonical atoms and scalars.
+     (syntax (let ((relation-values relations)
+                   (input-limit input) (derived-limit derived)
+                   (output-limit output) (source-handles handles))
+               (gerbil-ascent-construct-inert-program
+                (lambda ()
+                  (gerbil-ascent-program relation-values rules input-limit derived-limit
+                                         output-limit source-handles)) #f))))))
+
+;; END GENERATED DSL-OWNED
+
 (defsyntax (relational-program stx)
+  (def (closed-positive? clauses)
+    (def has-rule? #f)
+    (def names
+      (let (index (make-hash-table-eq))
+        (for-each (lambda (form)
+          (when (and (pair? form) (list? form) (eq? (car form) 'relation)
+                     (pair? (cdr form)) (symbol? (cadr form)))
+            (hash-put! index (cadr form) #t))
+          (when (and (pair? form) (eq? (car form) 'rule)) (set! has-rule? #t))) clauses)
+        index))
+    (def (term? term)
+      (or (exact-integer? term) (boolean? term) (char? term)
+          (and (symbol? term)
+               (let (name (symbol->string term))
+                 (and (> (string-length name) 1) (char=? (string-ref name 0) #\?))))))
+    (def (atom? form)
+      (and (pair? form) (list? form) (symbol? (car form)) (hash-get names (car form))
+           (not (memq (car form) '(where compute not reduce)))
+           (andmap term? (cdr form))))
+    (and has-rule? (andmap (lambda (form)
+      (and (pair? form) (list? form)
+           (case (car form)
+             ((relation limits) #t)
+             ((rule) (and (pair? (cdr form)) (andmap atom? (cdr form))))
+             (else #f)))) clauses)))
   (syntax-case stx ()
     ((_ clause ...)
-     (syntax (relational-collect () () clause ...)))))
+     (if (closed-positive? (syntax->datum (syntax (clause ...))))
+       (syntax (relational-collect relational-owned-program () () clause ...))
+       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))
 
 ;; relational-fragment
 ;;   : (-> Syntax FirstClassFragmentExpression)

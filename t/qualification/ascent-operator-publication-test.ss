@@ -61,11 +61,13 @@
         (check-exception (produce) true)
         (immediate-check!)))
     (test-case "inert root admission rejects malformed Terms and retains nonatom contracts without callbacks"
-      (check-exception
-       (gerbil-ascent-construct-inert-program
-        (lambda ()
-          (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 []))
-            (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'seed '(99))) [])) 8 8 16))) true)
+      (for-each (lambda (memoize?)
+        (check-exception
+         (gerbil-ascent-construct-inert-program
+          (lambda ()
+            (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 []))
+              (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'seed '(99))) [])) 8 8 16))
+          memoize?) true)) '(#t #f))
       (let ((calls 0) (program #f))
         (set! program
           (gerbil-ascent-construct-inert-program

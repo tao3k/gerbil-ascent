@@ -222,3 +222,63 @@ Lean checks that its SDK arithmetic target is no larger than the default and
 that resizing retains the separate maximum; exact generated command source
 is checked by the existing renderer. This does not prove full GC source
 refinement or a performance benefit. Those remain empirical acceptance gates.
+
+* Failed tighter-GC candidate and declaration hot path
+
+The =06d55232= live-ratio80 candidate also failed: Linux reached180 seconds
+with89/90 batches completed; the semi-naive exhaustive batch remained active.
+The macOS240-second gate failed too. Strict Rust/PyO3, Python consumers, formal
+and original performance checks passed independently. The GC change is
+withdrawn, not retried or counted as accepted. Baseline max heaps, default
+SDK GC policy and original deadlines are restored.
+
+A bounded local diagnosis separated actual declaration construction from
+execution. On192 sampled worker/order inputs, live-ratio80 public declaration
+CPU was3.0595s, including1.8825s GC; subsequent evaluation CPU was0.0433s.
+The independent oracle CPU in a separate equal-size diagnostic was0.0192s.
+Thus the earlier broad label "Actor execution" hid declaration/Contract work.
+The SDK allocation statistics also produced negative evaluation deltas; none
+of these raw byte values is admitted as true cumulative allocation.
+
+Under the same default GC policy in one process,192 public declarations used
+1.8677s CPU/18 collections versus0.8040s/8 collections for the positive DSL
+root-admission candidate. This is a local attribution check, not isolated
+whole-suite or production throughput acceptance.
+
+The implementation now selects a callback-free positive atomic DSL subset.
+Source declarations and limit expressions are captured outside the borrowed
+construction extent. Rules containing host-value captures or other clause
+forms retain ordinary immediate validation. Empty rule sets also retain their
+original construction route. A local symbol index avoids a relation-by-atom
+linear membership scan during recognition. Canonical fresh trees use the
+ordinary complete root Contract without allocating a shared-Term memo
+refinement. Existing shared-graph callers retain their default memo behavior.
+Both branches always validate the complete root; no validation result is
+retained across publications. Source/budget callbacks and a later rule with
+an effectful value capture have explicit rejection controls.
+
+All3072 graph evaluations and3072 independent oracle calls remain. Worker1
+retains the public constructor corpus; workers2/4 use the identical original
+schema in a closed trusted construction extent. Plain DSL scalar field
+predicates would trigger ordered fallback, so they are deliberately not
+substituted for Actor coverage. The corpus explicitly asserts Actor
+eligibility through the evaluator's actual schema/activation path.
+
+Lean checks workload cardinality, conditional admission/error propagation and
+validation-count bounds. Exact renderings bind the construction extent,
+owned macro frame and full exhaustive driver source. The new Quint protocol
+checks pre-capture, scope restoration and mandatory root admission, including
+three failing mutations. All56 original models and377 original obligations
+remain. These controls do not prove the macro recognizer, Core native
+Contract implementation, Gerbil expansion, generic caches/SCC/message source
+refinement or true cumulative allocation. Complete exact-head CI and real
+macOS gains remain required; source-bound models are not full source closure.
+
+Focused pre-push checks passed on current source: three real GxTest modules,
+45 Cases, zero skips, including the complete3072-evaluation/oracle corpus,
+explicit Actor eligibility, DSL callback rejection and malformed Terms under
+both root-validation modes. ClosedDslLowering passed the unchanged LeanPoo
+Guard; the new Quint protocol and all three expected counterexamples passed.
+The11 formal inventory controls, five repository-policy controls and four
+source-orchestration controls passed. These are focused semantic receipts,
+not174-module/twelve-VM or isolated performance acceptance.

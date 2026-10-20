@@ -5,6 +5,7 @@ import Lean.Data.Json
 import PreparationWork
 import CompilerCost
 import LookupCost
+import ClosedDslLowering
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -425,6 +426,9 @@ def renderedSource (name : String) : IO String := do
   | "preparation-roots" => pure Ascent.PreparationWork.rootsSchemeSource
   | "preparation-support" => pure Ascent.PreparationWork.supportQuintSource
   | "preparation-batch-width" => pure Ascent.PreparationWork.batchWidthPythonSource
+  | "dsl-root" => pure Ascent.ClosedDslLowering.rootSchemeSource
+  | "dsl-owned" => pure Ascent.ClosedDslLowering.ownedMacroSchemeSource
+  | "dsl-workload" => pure Ascent.ClosedDslLowering.workloadSchemeSource
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
   | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource

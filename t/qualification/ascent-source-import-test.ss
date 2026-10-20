@@ -69,6 +69,25 @@
         (check-equal? (length batches) workers)
         (when (> workers 1)
           (check-equal? (and (member (cadr files) (car batches)) #t) #f))))
+    (test-case "bounded packing uses the admitted width without extra twelve-way splits"
+      (for-each (lambda (n)
+        (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota n)))
+               (heavy '("t/qualification/ascent-candidate-flow-test.ss"
+                        "t/qualification/ascent-semi-naive-test.ss"))
+               (files (list-sort string<? (append heavy normal)))
+               (profiled (source-test-interface "batched" "2G"))
+               (batches (source-test-batches profiled files "batched"))
+               (workers (testing-interface-worker-count (length files))))
+          (check-equal? (list-sort string<? (apply append batches)) files)
+          (check-equal? (preparation-batches-bounded? batches (length files) workers) #t)
+          (check-equal? (list (car batches) (cadr batches)) (map list heavy))
+          (when (and (= n 172) (= workers 12))
+            (check-equal? (length batches) 90)
+            (let (outer (testing-interface-test-file-batches profiled
+                         (striped-module-files normal workers)))
+              (check-equal? (+ 2 (length (apply append
+                (map (cut testing-interface-test-file-batches profiled <>) outer)))) 146)))))
+        '(0 1 11 12 13 143 144 145 172)))
     (test-case "exhaustive corpora are isolated without dropping or resizing other work"
       (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
              (heavy '("t/qualification/ascent-candidate-flow-test.ss"

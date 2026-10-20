@@ -5,6 +5,11 @@ mod input;
 mod ledger;
 mod observer;
 mod policy;
+#[cfg(feature = "python-sources")]
+mod python_sources;
+
+#[cfg(feature = "python-sources")]
+pub use python_sources::stage_python_sources;
 
 use gerbil_scheme_aot_build::{
     ProgramArchiveObserver, ProgramArchiveOperation, ProgramArchiveRequest,

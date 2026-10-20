@@ -200,6 +200,8 @@ def interfacesQuintSource : String :=
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
+  "  pure val complete_packed_starts =\n" ++
+  "    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -339,14 +341,17 @@ def runnerRecipeSource : String :=
   "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
 
--- The SDK eagerly prepares every module in one GxTest batch. Two native
--- partitions trade extra starts for a smaller retained source-entry set.
+-- The SDK eagerly prepares every module in one GxTest batch. Native
+-- groups retain SDK compatibility; bounded consecutive chunks fill the existing cap.
 def groupsSchemeSource : String :=
   "(def (preparation-refined-batches profiled compatible)\n" ++
-  "  (apply append\n" ++
-  "    (map (cut testing-interface-test-file-batches profiled <>)\n" ++
-  "      (testing-interface-test-file-batches profiled\n" ++
-  "        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))\n" ++
+  "  (if (null? compatible) []\n" ++
+  "    (let* ((workers (testing-interface-worker-count (length compatible)))\n" ++
+  "           (width (preparation-batch-width (preparation-batch-width (length compatible) workers) workers)))\n" ++
+  "      (apply append\n" ++
+  "        (map (cut group-n-consecutive width <>)\n" ++
+  "          (testing-interface-test-file-batches profiled\n" ++
+  "            (striped-module-files compatible workers)))))))\n" ++
   "(def (preparation-batch-width entries workers)\n" ++
   "  (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))\n" ++
   "(def (preparation-batches-bounded? batches entries workers)\n" ++
@@ -444,6 +449,16 @@ theorem oversized_batch_refused (groups : List (List String)) (entries workers :
     omega
 
 theorem complete_source_batch_width : nativeBatchWidth (nativeBatchWidth 174 12) 12 = 2 := by decide
+
+-- Full-selection shape: 172 compatible entries in four groups of fifteen and
+-- eight of fourteen, plus two independent exhaustive corpora. This is a startup
+-- count, not elapsed time or cumulative allocation; SDK balance is a premise.
+def completePackedStarts : Nat :=
+  2 + 4 * nativeBatchWidth 15 2 + 8 * nativeBatchWidth 14 2
+
+theorem complete_packing_start_count : completePackedStarts = 90 := by decide
+
+theorem complete_packing_fewer_starts : completePackedStarts < 146 := by decide
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -811,3 +826,6 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.complete_source_batch_width
 
 #print axioms Ascent.PreparationWork.oversized_batch_refused
+
+#print axioms Ascent.PreparationWork.complete_packing_start_count
+#print axioms Ascent.PreparationWork.complete_packing_fewer_starts

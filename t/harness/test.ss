@@ -9,7 +9,7 @@
 ;;; GxTest still owns export/Suite/Case discovery and verdicts in each child.
 ;;; The caller's unchanged deadline covers dispatch, startup and all workers.
 (import (only-in :clan/poo/object .cc)
-        (only-in :std/list/list partition)
+        (only-in :std/list/list partition group-n-consecutive)
         (only-in :std/string/misc string-contains)
         (only-in :std/string/uuid random-uuid uuid->string)
         (only-in :std/sync/wg make-wg wg-add! wg-wait!)
@@ -65,10 +65,13 @@
 ;; batches to release those contexts on VM exit without lowering concurrency.
 ;; BEGIN GENERATED PREPARATION GROUPS
 (def (preparation-refined-batches profiled compatible)
-  (apply append
-    (map (cut testing-interface-test-file-batches profiled <>)
-      (testing-interface-test-file-batches profiled
-        (striped-module-files compatible (testing-interface-worker-count (length compatible)))))))
+  (if (null? compatible) []
+    (let* ((workers (testing-interface-worker-count (length compatible)))
+           (width (preparation-batch-width (preparation-batch-width (length compatible) workers) workers)))
+      (apply append
+        (map (cut group-n-consecutive width <>)
+          (testing-interface-test-file-batches profiled
+            (striped-module-files compatible workers)))))))
 (def (preparation-batch-width entries workers)
   (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))
 (def (preparation-batches-bounded? batches entries workers)

@@ -123,3 +123,48 @@ short circuit. The fast predicate therefore does not waive input validation or
 capture an additional constructor environment. The source-level check covers
 empty, singleton, two-/three-field prefixes in indexed and unindexed modes;
 full compiled performance gates remain the authority for its actual benefit.
+
+* Bounded startup packing and current upstream revision
+
+The complete 174-module selection contains two isolated exhaustive corpora
+and 172 compatible entries. The existing second twelve-way balanced partition
+produces 146 fresh VM batches. It underfills the already admitted two-entry
+retention cap. Consecutive SDK chunks within each original compatible group
+produce 90 batches: four groups of fifteen contribute eight chunks each;
+eight groups of fourteen contribute seven each, plus two isolated corpora.
+No compatibility groups are merged. Twelve VM workers, one active processor
+per VM, source Suite discovery, original deadlines and maximum retained entry
+width remain unchanged. The actual source definitions with real SDK profiles
+reported =PACKED-STARTS 90 MODULES 174= and passed empty/boundary coverage.
+This is a startup-count reduction, not an elapsed-time or allocation claim.
+
+Lean renders the exact revised Scheme dispatch definitions and proves the
+concrete startup counts without additional axioms. Quint checks the same
+count alongside the existing entry retention controls. Generic SDK chunking,
+expansion and allocation source refinement remain outside those proofs.
+
+The process sampler previously filtered owned descendants by executable name
+and omitted =ascent-develop=. It now retains all owned descendants. Earlier
+candidate CPU/RSS samples cannot be treated as complete VM measurements.
+Foreign compiler admission is unchanged. No RSS value is relabeled as
+cumulative Scheme allocation.
+
+PR #18 advanced from =6bb8f6c= to =0126e6c8=. The increment adds owner-lifecycle
+models and sustained native acceptance diagnostics; it does not change runtime
+source code. Runtime dependencies use the new exact revision. The removed IR
+generator remains pinned separately as a build-only source input.
+Python source inventory orchestration now lives in the existing =ascent-build=
+dependency; =build.rs= contains only the entry point. The inventory includes
+the actual new helper source and its manifest. Strict ASP and Clippy policies
+are unchanged. Complete exact-head CI remains required.
+
+Local verification: all 26 compiler-cost controls, five repository-policy
+checks and four complete-source orchestration controls passed. The focused
+Lean file passed through the locked LeanPoo Guard. A strict local build-helper
+Clippy attempt reached its unchanged 240-second watchdog while compiling the
+upstream project harness; it is not a successful Clippy receipt. Existing
+unrelated formatting differences in =src/api/trajectory.rs= are preserved.
+Copied local compiled package artifacts lack the new artifact export; the
+failed source-suite attempts are retained. The successful packing check uses
+the actual current dispatch definitions and released SDK profiles directly;
+it does not stand in for full source semantics.

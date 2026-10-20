@@ -142,8 +142,7 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                 'processes': [{'pid': pid, 'ppid': parent, 'command': name,
                                'self_cpu_time': metrics[0], 'rss_kib': int(metrics[1]), 'state': metrics[2]}
                               for pid, parent, name, metrics in rows
-                              if pid in owned and Path(name).name in
-                              COMPILERS | {'gerbil', 'gxtest', 'timeout', 'just'}]})
+                              if pid in owned]})
             observe_progress()
 
     def observe_progress():

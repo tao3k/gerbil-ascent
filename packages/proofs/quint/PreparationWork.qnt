@@ -69,6 +69,14 @@ module PreparationWork {
   pure val SourceQueueExact = source_queue(true) == List(0, 1, 2, 3, 4, 5) and
     source_queue(false) == List(4, 5, 0, 1, 2, 3)
   val SourceQueueCoverage = q.sourceStarts == 0 or SourceQueueExact
+  pure def source_live_ratio(darwin: bool, isolated: bool): int =
+    if (Mutation == "compact-isolated-source" and isolated) 80
+    else if (Mutation == "ignore-ordinary-gc") 50
+    else if (darwin and not(isolated)) 80 else 50
+  pure val SourceGcExact = source_live_ratio(true, false) == 80 and
+    source_live_ratio(true, true) == 50 and source_live_ratio(false, false) == 50 and
+    source_live_ratio(false, true) == 50
+  val SourceGcIsolation = q.sourceStarts == 0 or SourceGcExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}

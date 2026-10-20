@@ -22,7 +22,7 @@
         (only-in :gerbil-ascent/t/harness/artifact-admission artifact-directory!)
         (only-in :gerbil-ascent/bindings/artifact artifact-development-program)
         (only-in :gerbil-ascent/build-modules gerbil-ascent-build-input-modules))
-(export main source-vm-command striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
+(export main source-live-ratio source-vm-command striped-module-files source-test-interface source-test-batches single-thread-vm-command preparation-batches-bounded?)
 (def (heap-mib heap)
   (let* ((n (string-length heap))
          (unit (and (> n 0) (string-ref heap (- n 1))))
@@ -77,7 +77,7 @@
 (def (preparation-batches-bounded? batches entries workers)
   (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))
     (andmap (lambda (batch) (<= (length batch) bound)) batches)))
-(def (single-thread-vm-command command)
+(def (single-thread-vm-command command (live-ratio #f))
   (let wrap ((arguments command))
     (cond
       ((null? arguments) (error "native test command has no expression" command))
@@ -85,6 +85,11 @@
        (cons "-e" (cons
          (string-append
            "(let (n (##current-vm-processor-count)) (unless (= n 1) (error \"expected one processor per test VM\" n)) (displayln \"VM-RUNTIME processors=\" n)) "
+           "(let (ratio (##get-live-percent)) "
+           (if live-ratio
+             (string-append "(unless (= ratio " (number->string live-ratio)
+               ") (error \"unexpected test VM live ratio\" ratio)) ") "")
+           "(displayln \"VM-GC-RUNTIME live-ratio=\" ratio)) "
            (cadr arguments))
          (cddr arguments))))
       (else (cons (car arguments) (wrap (cdr arguments)))))))
@@ -103,12 +108,28 @@
                   (testing-interface-worker-count (length files))))
       (error "source batch retains too many entry modules"))
     batches))
-;; END GENERATED PREPARATION GROUPS
-(def (source-vm-command command program)
+;;; Use the SDK's soft GC target only for memory-sensitive ordinary Darwin
+;;; batches. Isolated exhaustive declaration work keeps the default target.
+(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))
+  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))
+(def (source-vm-command command program (live-ratio #f))
   ;; Keep upstream GxTest, argv, heap options and its original explicit exit.
   ;; The package's admitted linked shell owns only the preloaded production
   ;; closure; Suite carriers are still expanded from source in each fresh VM.
-  (let (command (single-thread-vm-command command))
+  (unless (or (not live-ratio) (memv live-ratio '(50 80)))
+    (error "unsupported source VM live ratio" live-ratio))
+  (when (and live-ratio
+             (not (ormap (cut string-prefix? "-:max-heap=" <>) command)))
+    (error "native test command has no heap limit" command))
+  (let (command
+         (single-thread-vm-command
+          (if live-ratio
+            (map (lambda (argument)
+                   (if (string-prefix? "-:max-heap=" argument)
+                     (string-append argument ",live-ratio=" (number->string live-ratio))
+                     argument)) command)
+            command)
+          live-ratio))
     (if program
       (cons program
         (let replace ((arguments (cdr command)))
@@ -117,6 +138,8 @@
             ((equal? (car arguments) "-e") (cons "--eval-plain" (cdr arguments)))
             (else (cons (car arguments) (replace (cdr arguments)))))))
       command)))
+
+;; END GENERATED PREPARATION GROUPS
 
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
@@ -152,7 +175,8 @@
               (lambda (out)
                 ;; The canonical command includes compiled GxTest's explicit exit
                 ;; propagation. Process success is checked after draining output.
-                (run-process (append (source-vm-command (testing-interface-command-for profiled file '("-v" "5")) program) (cdr batch))
+                (run-process (append (source-vm-command (testing-interface-command-for profiled file '("-v" "5")) program
+                                    (source-live-ratio profiled file)) (cdr batch))
                   stdout-redirection: #t stderr-redirection: #t
                   coprocess:
                   (lambda (input)
@@ -164,6 +188,7 @@
                           ;; Framework lines remain in the separate Case log.
                           (when (or error-detail? (string-prefix? "CASE" line) (string-prefix? "MODULE" line)
                                     (string-prefix? "ERROR" line)
+                                    (string-prefix? "VM-GC-RUNTIME " line)
                                     ;; GxTest emits the exception immediately after
                                     ;; its ERROR context. Preserve the typed cause
                                     ;; even if another batch exhausts the deadline.

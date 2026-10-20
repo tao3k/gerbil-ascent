@@ -357,7 +357,7 @@ def groupsSchemeSource : String :=
   "(def (preparation-batches-bounded? batches entries workers)\n" ++
   "  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))\n" ++
   "    (andmap (lambda (batch) (<= (length batch) bound)) batches)))\n" ++
-  "(def (single-thread-vm-command command)\n" ++
+  "(def (single-thread-vm-command command (live-ratio #f))\n" ++
   "  (let wrap ((arguments command))\n" ++
   "    (cond\n" ++
   "      ((null? arguments) (error \"native test command has no expression\" command))\n" ++
@@ -365,6 +365,11 @@ def groupsSchemeSource : String :=
   "       (cons \"-e\" (cons\n" ++
   "         (string-append\n" ++
   "           \"(let (n (##current-vm-processor-count)) (unless (= n 1) (error \\\"expected one processor per test VM\\\" n)) (displayln \\\"VM-RUNTIME processors=\\\" n)) \"\n" ++
+  "           \"(let (ratio (##get-live-percent)) \"\n" ++
+  "           (if live-ratio\n" ++
+  "             (string-append \"(unless (= ratio \" (number->string live-ratio)\n" ++
+  "               \") (error \\\"unexpected test VM live ratio\\\" ratio)) \") \"\")\n" ++
+  "           \"(displayln \\\"VM-GC-RUNTIME live-ratio=\\\" ratio)) \"\n" ++
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
@@ -382,7 +387,38 @@ def groupsSchemeSource : String :=
   "                (preparation-batches-bounded? batches (length files)\n" ++
   "                  (testing-interface-worker-count (length files))))\n" ++
   "      (error \"source batch retains too many entry modules\"))\n" ++
-  "    batches))\n"
+  "    batches))\n" ++
+  ";;; Use the SDK's soft GC target only for memory-sensitive ordinary Darwin\n" ++
+  ";;; batches. Isolated exhaustive declaration work keeps the default target.\n" ++
+  "(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
+  "  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))\n" ++
+  "(def (source-vm-command command program (live-ratio #f))\n" ++
+  "  ;; Keep upstream GxTest, argv, heap options and its original explicit exit.\n" ++
+  "  ;; The package's admitted linked shell owns only the preloaded production\n" ++
+  "  ;; closure; Suite carriers are still expanded from source in each fresh VM.\n" ++
+  "  (unless (or (not live-ratio) (memv live-ratio '(50 80)))\n" ++
+  "    (error \"unsupported source VM live ratio\" live-ratio))\n" ++
+  "  (when (and live-ratio\n" ++
+  "             (not (ormap (cut string-prefix? \"-:max-heap=\" <>) command)))\n" ++
+  "    (error \"native test command has no heap limit\" command))\n" ++
+  "  (let (command\n" ++
+  "         (single-thread-vm-command\n" ++
+  "          (if live-ratio\n" ++
+  "            (map (lambda (argument)\n" ++
+  "                   (if (string-prefix? \"-:max-heap=\" argument)\n" ++
+  "                     (string-append argument \",live-ratio=\" (number->string live-ratio))\n" ++
+  "                     argument)) command)\n" ++
+  "            command)\n" ++
+  "          live-ratio))\n" ++
+  "    (if program\n" ++
+  "      (cons program\n" ++
+  "        (let replace ((arguments (cdr command)))\n" ++
+  "          (cond\n" ++
+  "            ((null? arguments) (error \"native test command has no expression\" command))\n" ++
+  "            ((equal? (car arguments) \"-e\") (cons \"--eval-plain\" (cdr arguments)))\n" ++
+  "            (else (cons (car arguments) (replace (cdr arguments)))))))\n" ++
+  "      command)))\n" ++
+  "\n"
 
 -- The source-bound change only orders the same ordinary and isolated batches.
 -- These are coverage/work bounds, not a proof of native scheduler/GC latency.
@@ -723,6 +759,23 @@ theorem source_gc_target_le_default (live minimum : Nat) :
     adjustedHeapWords live minimum 80 ≤ adjustedHeapWords live minimum 50 := by
   unfold adjustedHeapWords
   omega
+
+-- Workload-specific SDK targets; this model does not change the hard maximum.
+def sourceLiveRatio (darwin isolated : Bool) : Nat :=
+  if darwin && !isolated then 80 else 50
+theorem isolated_live_ratio (darwin : Bool) : sourceLiveRatio darwin true = 50 := by
+  cases darwin <;> rfl
+theorem source_live_ratio_valid (darwin isolated : Bool) :
+    sourceLiveRatio darwin isolated = 50 ∨ sourceLiveRatio darwin isolated = 80 := by
+  cases darwin <;> cases isolated <;> decide
+theorem source_gc_target_preserves_bound (darwin isolated : Bool) (live minimum : Nat) :
+    adjustedHeapWords live minimum (sourceLiveRatio darwin isolated) ≤
+      adjustedHeapWords live minimum 50 := by
+  cases darwin <;> cases isolated
+  · exact Nat.le_refl _
+  · exact Nat.le_refl _
+  · exact source_gc_target_le_default live minimum
+  · exact Nat.le_refl _
 
 theorem preparation_heap_policy_is_bounded :
     preparationHeapGiB = 3 ∧ 0 < preparationLiveRatio ∧ preparationLiveRatio ≤ 100 := by

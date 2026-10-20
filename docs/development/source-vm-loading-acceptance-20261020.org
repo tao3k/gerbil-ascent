@@ -436,3 +436,42 @@ Contract call. The new1411-Case exact-head CI is still required before claiming
 the Linux regression repaired. Native checker/decoder, mutable caches, full
 SCC/message/allocator source equivalence and true cumulative allocation remain
 open beyond these source-bound controls.
+
+* Scheduler-only limitation and ordinary-source GC candidate
+
+At =499e05919385320261c7df4a1d73b234fa1d9f3e=, Linux completed174 modules,
+1411 Cases and90 single-processor batches in91 seconds. Its added host-policy
+Case took9 milliseconds. macOS =39451775719= nevertheless timed out at240.2001
+seconds:73 batches started,61 completed and1000 Cases completed. No exhaustive
+corpus Case had started. The ordinary-first order was correct, with no Case,
+foreign-compiler or audit error. This is not a platform-feature selection bug.
+
+The identical2 GiB control's CPU was1.206781 seconds versus1.028532 at510;
+this is not a timing correction factor. The partial run sampled504.79 VM SELF
+CPU seconds versus410.86 for510's complete run. Compression/decompression
+increased3387078/2614789 pages, versus2261790/1591385 at510. Sampled RSS is
+not cumulative allocation. Ordering alone has not robustly repaired the gate.
+
+The next candidate uses only the released SDK's existing soft live-ratio:
+ordinary Darwin source batches request80, while isolated exhaustive batches
+and Linux request50. The2 GiB hard maximum,12 single-processor VMs, complete
+corpus, cancellation, provenance and deadlines are unchanged. This differs
+from the failed global80 experiment, which also made the declaration-heavy
+corpora collect at80 while running them at the front. It changes neither the
+framework's test discovery nor the Scheme evaluator or public Contract calls.
+
+The original native maximum-heap argument is retained verbatim before the
+appended live-ratio option. Missing hard limits and unsupported ratios reject
+before launch. Every VM reads its actual SDK live percentage and rejects an
+unexpected value, forwarding a VM-GC-RUNTIME receipt with real work logs.
+Real SDK command probes passed at50 and80, each reporting one processor and
+executing the original payload. Local policy/source-order Cases passed, while
+the unrelated copied-reference late-import failure remains unadmitted.
+
+Lean's explicit four-case proof retains the same maximum and shows the SDK
+soft target no larger than default. An earlier misdirected proof branch and
+its30-second guarded timeout are preserved; the explicit-case proof passed
+under the unchanged Guard. Quint's negative controls reject missing ordinary
+GC, applying compact GC to isolated work and dropping isolated corpora.
+The native GC getter probe and targeted controls are not complete current-head
+acceptance, a true allocation counter or native allocator source refinement.

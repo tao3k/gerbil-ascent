@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test test-suite test-case check-equal?)
+(import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :gerbil/expander import-module)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
-        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches source-vm-command single-thread-vm-command preparation-batches-bounded?)
+        (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches source-live-ratio source-vm-command single-thread-vm-command preparation-batches-bounded?)
         (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
@@ -54,6 +54,23 @@
         (check-equal? (take linked 3) '("/package/bin/ascent-develop" "-:max-heap=2048M" "--eval-plain"))
         (check-equal? (drop linked 3) (drop (single-thread-vm-command command) 3))
         (check-equal? (source-vm-command command #f) (single-thread-vm-command command))))
+    (test-case "ordinary Darwin GC targets preserve hard heaps and isolated work"
+      (let* ((profiled (source-test-interface "batched" "2G"))
+             (ordinary "t/qualification/scheme-relational-test.ss")
+             (heavy "t/qualification/ascent-semi-naive-test.ss")
+             (command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss")))
+        (check-equal? (source-live-ratio profiled ordinary #t) 80)
+        (check-equal? (source-live-ratio profiled heavy #t) 50)
+        (check-equal? (source-live-ratio profiled ordinary #f) 50)
+        (check-equal? (source-live-ratio profiled heavy #f) 50)
+        (for-each (lambda (ratio)
+          (let (actual (source-vm-command command #f ratio))
+            (check-equal? (cadr actual)
+              (string-append "-:max-heap=2048M,live-ratio=" (number->string ratio)))
+            (check-equal? (drop actual 4) (drop command 4))
+            (check-equal? (string-suffix? "(native-main)" (list-ref actual 3)) #t))) '(50 80))
+        (check-exception (source-vm-command '("gxi" "-e" "(native-main)") #f 80) true)
+        (check-exception (source-vm-command command #f 0) true)))
     (test-case "observed wide source batches are rejected before child admission"
       (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 15)))
         (check-equal? (preparation-batches-bounded? (list files) 174 12) #f)

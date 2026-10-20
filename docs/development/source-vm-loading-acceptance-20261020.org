@@ -475,3 +475,44 @@ under the unchanged Guard. Quint's negative controls reject missing ordinary
 GC, applying compact GC to isolated work and dropping isolated corpora.
 The native GC getter probe and targeted controls are not complete current-head
 acceptance, a true allocation counter or native allocator source refinement.
+
+* Staged exhaustive overlap and upstream owner retirement
+
+At59577c6b, main CI39458892974 passed all jobs, including formal conformance,
+Rust/PyO3 and Linux1412-Case source semantics. The independent macOS run
+39458892634 failed at240.2216863 seconds:90 batches started,86 completed,
+1390 Cases started and1386 completed. Its actual SDK receipts were88 ordinary
+VMs at80 and2 isolated VMs at50. The first semi-naive Case started at236.51
+seconds. There were no policy, Case, foreign-compiler or audit errors. The
+complete ordinary-first queue leaves exhaustive work on the critical tail;
+this is a retained failure, not successful full acceptance.
+
+The next candidate inserts the same two isolated batches after one ordinary
+worker-width prefix. This is FIFO placement without a barrier: exhaustive work
+can overlap remaining ordinary batches after early completions. Linux retains
+its original isolated-first queue. Both paths retain90 batches,174 modules,
+1412 Cases,12 single-processor VMs, all3072 evaluator/oracle comparisons, the
+same hard heap, GC targets, deadlines, cancellation and provenance checks.
+Lean proves arbitrary-prefix batch permutation, membership, count and weighted
+work preservation; Quint checks staged and early finite queues. These are
+source-bound scheduling controls, not a latency or native scheduler proof.
+
+The four runtime dependencies now pin gerbil-scheme-rust PR18 revision
+29e99ab486ca72f2ea63a27de4abaf97262e25e9. Its two commits since418adc8 guard
+cleanup on confirmed quiescence and root balance and bound shutdown while
+real owner joins wait for native TLS retirement. Upstream Linux/macOS jobs
+passed; same-VM SMP qualification remains explicitly skipped by upstream for
+SDK capability. The retired IR generator remains build-only at its existing
+revision. This update is not evidence of faster source expansion. Cold
+preparation, true cumulative allocation, compiler-key invalidation and full
+checker/decoder/cache/SCC/message source equivalence remain open. Exact-head
+full CI and macOS runtime admission are still required for this candidate.
+
+Focused validation passed20 existing Python policy checks and the three
+expected Quint counterexamples (exit12). PreparationWork passed the unchanged
+LeanPoo Guard in7.9714 seconds, with no helper threads retained. Two earlier
+list-proof elaboration errors are retained in diagnostic logs; no limits were
+raised. The actual SDK read both Scheme files and the source Suite passed its
+queue, capacity, GC and isolation Cases. The copied local reference metadata
+still fails the separate late-import Case, so that Suite is not counted as a
+complete local semantic pass. Fresh-checkout full CI remains authoritative.

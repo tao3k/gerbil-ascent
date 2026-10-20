@@ -379,8 +379,9 @@ def groupsSchemeSource : String :=
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (let (ordinary (preparation-refined-batches profiled compatible))\n" ++
-  "          (if defer? (append ordinary (map list isolated))\n" ++
+  "        (let* ((ordinary (preparation-refined-batches profiled compatible))\n" ++
+  "               (warmup (min (length ordinary) (testing-interface-worker-count (length files)))))\n" ++
+  "          (if defer? (append (take ordinary warmup) (map list isolated) (drop ordinary warmup))\n" ++
   "                     (append (map list isolated) ordinary))))\n" ++
   "      (testing-interface-test-file-batches profiled files)))\n" ++
   "    (unless (or (null? files)\n" ++
@@ -422,36 +423,60 @@ def groupsSchemeSource : String :=
 
 -- The source-bound change only orders the same ordinary and isolated batches.
 -- These are coverage/work bounds, not a proof of native scheduler/GC latency.
-def deferIsolated (ordinary : List (List String)) (isolated : List String) : List (List String) :=
-  ordinary ++ isolated.map (fun entry => [entry])
-theorem deferred_batch_count (ordinary : List (List String)) (isolated : List String) :
-    (deferIsolated ordinary isolated).length = ordinary.length + isolated.length := by
-  simp [deferIsolated]
-theorem deferred_batch_membership (ordinary : List (List String)) (isolated : List String)
-    (batch : List String) :
-    batch ∈ deferIsolated ordinary isolated ↔
-      batch ∈ isolated.map (fun entry => [entry]) ++ ordinary := by
-  simp only [deferIsolated, List.mem_append, or_comm]
-theorem deferred_source_work (weight : String → Nat) (ordinary : List (List String))
-    (isolated : List String) :
-    sourceWork weight (deferIsolated ordinary isolated).flatten =
-      sourceWork weight ((isolated.map (fun entry => [entry])) ++ ordinary).flatten := by
-  simp [deferIsolated, List.flatten_append, sourceWork_append, Nat.add_comm]
-
--- Both platform policies retain the complete same work, with no capacity change.
-def orderedBatches (defer : Bool) (ordinary : List (List String))
+def stagedBatches (warmup : Nat) (ordinary : List (List String))
     (isolated : List String) : List (List String) :=
-  if defer then deferIsolated ordinary isolated else isolated.map (fun entry => [entry]) ++ ordinary
-theorem host_policy_batch_count (defer : Bool) (ordinary : List (List String))
+  ordinary.take warmup ++ isolated.map (fun entry => [entry]) ++ ordinary.drop warmup
+
+theorem staged_batch_permutation (warmup : Nat) (ordinary : List (List String))
     (isolated : List String) :
-    (orderedBatches defer ordinary isolated).length = ordinary.length + isolated.length := by
-  cases defer <;> simp [orderedBatches, deferIsolated, Nat.add_comm]
-theorem host_policy_source_work (defer : Bool) (weight : String → Nat)
+    (stagedBatches warmup ordinary isolated).Perm
+      (isolated.map (fun entry => [entry]) ++ ordinary) := by
+  unfold stagedBatches
+  have h : (ordinary.take warmup ++ isolated.map (fun entry => [entry])).Perm
+      (isolated.map (fun entry => [entry]) ++ ordinary.take warmup) := List.perm_append_comm
+  have h' := h.append_right (ordinary.drop warmup)
+  simpa only [List.append_assoc, List.take_append_drop] using h'
+
+theorem staged_batch_count (warmup : Nat) (ordinary : List (List String))
+    (isolated : List String) :
+    (stagedBatches warmup ordinary isolated).length = ordinary.length + isolated.length := by
+  have h := (staged_batch_permutation warmup ordinary isolated).length_eq
+  simpa [Nat.add_comm] using h
+
+theorem staged_batch_membership (warmup : Nat) (ordinary : List (List String))
+    (isolated : List String) (batch : List String) :
+    batch ∈ stagedBatches warmup ordinary isolated ↔
+      batch ∈ isolated.map (fun entry => [entry]) ++ ordinary :=
+  (staged_batch_permutation warmup ordinary isolated).mem_iff
+
+theorem staged_source_work (warmup : Nat) (weight : String → Nat)
     (ordinary : List (List String)) (isolated : List String) :
-    sourceWork weight (orderedBatches defer ordinary isolated).flatten =
-      sourceWork weight (deferIsolated ordinary isolated).flatten := by
-  cases defer <;> simp [orderedBatches, deferIsolated, List.flatten_append,
-                        sourceWork_append, Nat.add_comm]
+    sourceWork weight (stagedBatches warmup ordinary isolated).flatten =
+      sourceWork weight (isolated.map (fun entry => [entry]) ++ ordinary).flatten := by
+  have split := sourceWork_append weight (ordinary.take warmup).flatten (ordinary.drop warmup).flatten
+  rw [← List.flatten_append, List.take_append_drop] at split
+  simp only [stagedBatches, List.flatten_append, sourceWork_append]
+  omega
+
+-- The prefix is a queue placement, not a completion barrier or a new worker cap.
+def orderedBatches (defer : Bool) (warmup : Nat) (ordinary : List (List String))
+    (isolated : List String) : List (List String) :=
+  if defer then stagedBatches warmup ordinary isolated else isolated.map (fun entry => [entry]) ++ ordinary
+
+theorem host_policy_batch_count (defer : Bool) (warmup : Nat)
+    (ordinary : List (List String)) (isolated : List String) :
+    (orderedBatches defer warmup ordinary isolated).length = ordinary.length + isolated.length := by
+  cases defer
+  · simp [orderedBatches, Nat.add_comm]
+  · exact staged_batch_count warmup ordinary isolated
+
+theorem host_policy_source_work (defer : Bool) (warmup : Nat) (weight : String → Nat)
+    (ordinary : List (List String)) (isolated : List String) :
+    sourceWork weight (orderedBatches defer warmup ordinary isolated).flatten =
+      sourceWork weight (isolated.map (fun entry => [entry]) ++ ordinary).flatten := by
+  cases defer
+  · rfl
+  · exact staged_source_work warmup weight ordinary isolated
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split

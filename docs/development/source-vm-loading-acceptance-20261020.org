@@ -110,3 +110,16 @@ that private copy's old locks were removed; original workspace locks stayed
 untouched. The original 1,200-second build/check watchdogs were not extended;
 their failures remain in local logs. No upstream or build.ss repair was inferred
 from this cache-copy problem.
+
+* Constructor candidate correction
+
+The identity-only prefix shortcut in =1a2d6bd3= does not target the failed
+unindexed fixture: =op-prepare= constructs distinct singleton prefix objects.
+That shortcut was withdrawn before claiming any performance acceptance.
+The replacement specializes zero-/one-field prefix shape checks using
+noncapturing predicates; wider prefixes retain the original width check.
+Malformed values still call length and reject, and andmap retains its original
+short circuit. The fast predicate therefore does not waive input validation or
+capture an additional constructor environment. The source-level check covers
+empty, singleton, two-/three-field prefixes in indexed and unindexed modes;
+full compiled performance gates remain the authority for its actual benefit.

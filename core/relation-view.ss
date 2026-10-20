@@ -592,16 +592,26 @@
                                            (rectangle-selection-ordinal b))) selected))))))
         (vector-ref routes (- (vector-length routes) 1)))
       plans)))
+;; Common frozen prefixes have zero or one field. These predicates capture
+;; no constructor environment; malformed values still use the original length
+;; operation, preserving its rejection and the enclosing andmap short circuit.
+(def (empty-rectangle-prefix? block)
+  (let (prefix (rectangle-prefix block))
+    (or (null? prefix) (zero? (length prefix)))))
+(def (singleton-rectangle-prefix? block)
+  (let (prefix (rectangle-prefix block))
+    (or (and (pair? prefix) (null? (cdr prefix))) (= (length prefix) 1))))
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
   (let* ((small? (or (null? blocks) (null? (cdr blocks)) (null? (cddr blocks))))
          (uniform? (or (null? blocks)
                        (let (prefix (rectangle-prefix (car blocks)))
-                         ;; Preserve first-prefix shape validation. Captured
-                         ;; aliases need no repeated prefix-spine traversal.
-                         (length prefix)
-                         (andmap (lambda (block)
-                           (let (other (rectangle-prefix block))
-                             (or (eq? prefix other) (= (length prefix) (length other))))) blocks))))
+                         (cond
+                           ((null? prefix) (andmap empty-rectangle-prefix? blocks))
+                           ((and (pair? prefix) (null? (cdr prefix)))
+                            (andmap singleton-rectangle-prefix? blocks))
+                           (else
+                            (let (width (length prefix))
+                              (andmap (lambda (block) (= width (length (rectangle-prefix block)))) blocks)))))))
          (self? (and indexed? uniform? (pair? blocks)
                      (andmap (lambda (block) (eq? (rectangle-left block) (rectangle-right block))) blocks)))
          (routes (and indexed? (pair? blocks) (rectangle-routing blocks small? self?)))

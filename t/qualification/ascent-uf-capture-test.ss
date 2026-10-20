@@ -66,6 +66,12 @@
       (check-exception
         (gerbil-ascent-rectangle-view (list (make-rectangle '(scope . invalid) '(0) '(1))) 1 2 #f)
         (lambda (_) #t))
+      (for-each (lambda (prefix)
+        (check-exception
+          (gerbil-ascent-rectangle-view
+            (list (make-rectangle prefix '(0) '(1))
+                  (make-rectangle '(scope . invalid) '(0) '(1))) 2 4 #f)
+          (lambda (_) #t))) '(() (scope)))
       ;; A prior width mismatch retains the original constructor short circuit.
       (check-equal? (relation-view-count
         (gerbil-ascent-rectangle-view

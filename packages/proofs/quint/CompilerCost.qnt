@@ -75,9 +75,9 @@ module CompilerCost {
       val expected = required.foldl(true, (ok, key) => ok and cached.foldl(false, (found, m) => found or m == key))
       actual == expected
     }))
-  pure val CacheEncodingPolicy = Set(0,1).forall(previous => Set(0,1).forall(next => {
-    val published = if (previous == next or Mutation == "skip-changed-cache-write") previous else next
-    published == next
+  pure val CacheEncodingPolicy = Set(0,1).forall(previous => Set(0,1).forall(replacement => {
+    val published = if (previous == replacement or Mutation == "skip-changed-cache-write") previous else replacement
+    published == replacement
   }))
   pure val PublicationPolicy = Set(false, true).forall(same => Set(false, true).forall(disjoint => Set(false, true).forall(unique => {
     val actual = (same or Mutation == "choose-copy-by-time") and

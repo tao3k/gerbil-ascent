@@ -62,6 +62,11 @@ module PreparationWork {
   // Check after native projection is requested, so a mutant has a concrete
   // state-transition counterexample rather than a constant-FALSE TLC config.
   val IndexedDispatchExact = not(q.rootsProjected) or IndexedAliasesExact
+  // Same finite entries and multiplicity; source-bound Lean retains arbitrary weights.
+  pure val DeferredSourceQueue = if (Mutation == "drop-isolated-source")
+    List(0, 1, 2, 3) else List(0, 1, 2, 3).concat(List(4, 5))
+  pure val SourceQueueExact = DeferredSourceQueue == List(0, 1, 2, 3, 4, 5)
+  val SourceQueueCoverage = q.sourceStarts == 0 or SourceQueueExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
   action UnadmitProduction = q' = {...q, productionAdmitted: false, rootsProjected: false}

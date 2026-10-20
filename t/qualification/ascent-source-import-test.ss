@@ -80,7 +80,7 @@
                (workers (testing-interface-worker-count (length files))))
           (check-equal? (list-sort string<? (apply append batches)) files)
           (check-equal? (preparation-batches-bounded? batches (length files) workers) #t)
-          (check-equal? (list (car batches) (cadr batches)) (map list heavy))
+          (check-equal? (reverse (take (reverse batches) 2)) (map list heavy))
           (when (and (= n 172) (= workers 12))
             (check-equal? (length batches) 90)
             (let (outer (testing-interface-test-file-batches profiled
@@ -99,16 +99,16 @@
                          (striped-module-files (list-sort string<? normal)
                            (testing-interface-worker-count (length files))))))
         (check-equal? (list-sort string<? (apply append batches)) files)
-        ;; The independent exhaustive jobs must start before ordinary stripes.
-        ;; Otherwise the original deadline can expire before either gets CPU.
-        (check-equal? batches (append (map list heavy)
-          (apply append (map (cut testing-interface-test-file-batches profiled <>) baseline))))
+        ;; Preserve every ordinary batch and isolated corpus, changing only order.
+        (check-equal? batches (append
+          (apply append (map (cut testing-interface-test-file-batches profiled <>) baseline))
+          (map list heavy)))
         (let* ((workers (testing-interface-worker-count (length normal)))
-               (ordinary (cddr batches))
+               (ordinary (take batches (- (length batches) 2)))
                (bound (ceiling (/ (length normal) (* workers workers)))))
           (check-equal? (<= (length ordinary) (* workers workers)) #t)
           (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))
-        (check-equal? (list (car batches) (cadr batches)) (map list heavy))
+        (check-equal? (reverse (take (reverse batches) 2)) (map list heavy))
         (for-each (lambda (file)
           (check-equal? (testing-interface-runtime-options-for profiled file)
                         (testing-interface-runtime-options-for profiled (car normal)))) heavy)

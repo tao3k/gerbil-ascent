@@ -608,6 +608,19 @@ jobs:
           export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
           export PATH="$JAVA_HOME/bin:$PATH"
           just check-formal
+  formal-conformance:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Lean and protocol verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi python3-venv
+          elan toolchain install leanprover/lean4:v4.34.0
+      - name: Check imported Lean proofs under the locked process Guard
+        run: just check-lean-proofs prepare-quint
       - name: Compare Quint and Lean outputs with the Scheme conformance corpus
         run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
   python-consumers:
@@ -649,7 +662,7 @@ jobs:
           .cache/ascent/python-projects/bin/ascent-workbench --help
   runtime-and-oracle:
     if: ${{ always() }}
-    needs: [scheme, rust-pyo3, oracle, formal, python-consumers]
+    needs: [scheme, rust-pyo3, oracle, formal, formal-conformance, python-consumers]
     runs-on: ubuntu-latest
     steps:
       - name: Require all independent qualification jobs
@@ -658,10 +671,12 @@ jobs:
           RUST_PYO3_RESULT: ${{ needs.rust-pyo3.result }}
           ORACLE_RESULT: ${{ needs.oracle.result }}
           FORMAL_RESULT: ${{ needs.formal.result }}
+          FORMAL_CONFORMANCE_RESULT: ${{ needs.formal-conformance.result }}
           PYTHON_CONSUMERS_RESULT: ${{ needs.python-consumers.result }}
         run: |
           test "$SCHEME_RESULT" = success
           test "$RUST_PYO3_RESULT" = success
           test "$ORACLE_RESULT" = success
           test "$FORMAL_RESULT" = success
+          test "$FORMAL_CONFORMANCE_RESULT" = success
           test "$PYTHON_CONSUMERS_RESULT" = success

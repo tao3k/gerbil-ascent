@@ -49,9 +49,9 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; Exhaustive corpora own independent processes. Queue them first so their
-;; solves overlap ordinary source preparation instead of waiting for a whole
-;; stripe to finish. Scheme profiles still own capacity and runtime options.
+;; Exhaustive corpora own independent processes. Queue ordinary batches first
+;; so repeated declaration allocation does not overlap every source expansion.
+;; Scheme profiles retain the same capacity, isolation and runtime options.
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -93,7 +93,7 @@
     (if (string=? mode "batched")
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (append (map list isolated) (preparation-refined-batches profiled compatible)))
+        (append (preparation-refined-batches profiled compatible) (map list isolated)))
       (testing-interface-test-file-batches profiled files)))
     (unless (or (null? files)
                 (preparation-batches-bounded? batches (length files)

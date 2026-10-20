@@ -373,13 +373,31 @@ def groupsSchemeSource : String :=
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (append (map list isolated) (preparation-refined-batches profiled compatible)))\n" ++
+  "        (append (preparation-refined-batches profiled compatible) (map list isolated)))\n" ++
   "      (testing-interface-test-file-batches profiled files)))\n" ++
   "    (unless (or (null? files)\n" ++
   "                (preparation-batches-bounded? batches (length files)\n" ++
   "                  (testing-interface-worker-count (length files))))\n" ++
   "      (error \"source batch retains too many entry modules\"))\n" ++
   "    batches))\n"
+
+-- The source-bound change only orders the same ordinary and isolated batches.
+-- These are coverage/work bounds, not a proof of native scheduler/GC latency.
+def deferIsolated (ordinary : List (List String)) (isolated : List String) : List (List String) :=
+  ordinary ++ isolated.map (fun entry => [entry])
+theorem deferred_batch_count (ordinary : List (List String)) (isolated : List String) :
+    (deferIsolated ordinary isolated).length = ordinary.length + isolated.length := by
+  simp [deferIsolated]
+theorem deferred_batch_membership (ordinary : List (List String)) (isolated : List String)
+    (batch : List String) :
+    batch ∈ deferIsolated ordinary isolated ↔
+      batch ∈ isolated.map (fun entry => [entry]) ++ ordinary := by
+  simp only [deferIsolated, List.mem_append, or_comm]
+theorem deferred_source_work (weight : String → Nat) (ordinary : List (List String))
+    (isolated : List String) :
+    sourceWork weight (deferIsolated ordinary isolated).flatten =
+      sourceWork weight ((isolated.map (fun entry => [entry])) ++ ordinary).flatten := by
+  simp [deferIsolated, List.flatten_append, sourceWork_append, Nat.add_comm]
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split

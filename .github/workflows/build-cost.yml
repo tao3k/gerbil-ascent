@@ -177,7 +177,8 @@ jobs:
             echo 'ASCENT_CACHE_SOURCE_PATHS'
           } >> "$GITHUB_OUTPUT"
       - name: Restore content-bound compiled preparation
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        id: preparation-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ${{ steps.preparation.outputs.cache_sources }}
@@ -220,8 +221,18 @@ jobs:
         id: semantic-preparation
         run: python3 tools/ci/build-cost-control.py --semantics-only --semantic-phase prepare --output "$RUNNER_TEMP/macos-semantics/prepare"
       - name: Verify warm semantic cache reuse
+        id: semantic-cache
         if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
         run: python3 tools/ci/build-cost-control.py --semantics-only --semantic-phase cache --output "$RUNNER_TEMP/macos-semantics/cache"
+      - name: Save admitted compilation before semantic execution
+        if: ${{ !cancelled() && steps.semantic-cache.outcome == 'success' && steps.preparation-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.preparation.outputs.cache_sources }}
+            .gerbil
+            .cache/ascent/compiled-library
+          key: ${{ steps.preparation-cache.outputs.cache-primary-key }}
       - name: Qualify complete source semantics with twelve single-thread VMs
         # A cache-check failure must not suppress full semantic verification.
         if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}

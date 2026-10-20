@@ -12,6 +12,7 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(controls["correct"].expected, 0)
         faults = {name: item.property for name, item in controls.items() if name != "correct"}
         self.assertEqual(faults, {
+            "drop-isolated-source": "SourceQueueCoverage",
             "last-interface-alias-wins": "IndexedDispatchExact",
             "reuse-unadmitted-interface": "InterfaceSelectionExact",
             "reuse-reloaded-interface": "InterfaceSelectionExact",

@@ -346,3 +346,58 @@ read-only image pages and avoiding repeated dynamic SDK bundle loading are
 mechanism hypotheses; exact-head complete semantics and timings must confirm
 any benefit. This does not close native loader/GC or cumulative allocation
 source refinement.
+
+* Rejected prelink candidate and preserved checks
+
+The SDK-test prelink candidate =2a425be4= did not improve acceptance. Its
+Linux source step passed in153 seconds, versus85 seconds for =5d2aa2df=;
+individual observations do not establish a stable causal regression. macOS
+run =39440606971= failed at240.2046 seconds:46 batches started,34 completed,
+549 Cases completed and the first exhaustive Case still unfinished. Foreign
+compiler and audit-error lists were empty. The two SDK imports are withdrawn.
+Every public Term constructor and complete publication Contract remains intact;
+no constructor-validation bypass is introduced.
+
+The main run =39440606957= passed all native semantics, original performance,
+oracles, Rust/PyO3 and Python consumers. Its formal proof/model step passed
+in12 minutes56 seconds, but the original15-minute job deadline cancelled the
+last movie-cast output comparison. The comparison is moved to an independent
+15-minute job, with imported Lean proofs first checked under the same locked
+180-second LeanPoo Guard. Proof contents and budgets are unchanged.
+
+The next runtime candidate changes only dispatch order: the same88 ordinary
+source batches precede the same two isolated exhaustive batches. Twelve
+workers,90 starts,174 source Suite carriers, the two-entry cap,2 GiB child
+maximum and original deadlines remain. No barrier or capacity reduction is
+added. This tests whether sustained exhaustive declaration allocation overlaps
+ordinary expansion at a high memory cost. It is not a demonstrated speedup.
+Source-bound Lean checks preserve membership, batch count and arbitrary
+weighted source work. Quint adds a missing-isolated-corpus control without
+removing any prior observation or cache control. These are conditional model
+controls, not native scheduler/GC source refinement.
+
+A separate confirmed reuse defect is that successful build/preparation products
+were not saved when later source semantics failed: the cache post-step was
+skipped in both =5d2aa2df= and =2a425be4=. Standard cache restore/save now
+saves the original content-bound compilation bundle immediately after complete
+preparation and warm-cache admission succeed. Source restore/admission, cache
+key and paths are unchanged. Semantic results are never reused, and a cache
+failure still cannot suppress the full source test. This repairs cross-run
+product retention; cold preparation and true cumulative allocation remain open.
+
+Local source-order controls passed within the source-import Suite, but its
+unrelated late-import Case failed against copied stale reference metadata.
+That local Suite is not admitted as a full pass. The local standard build also
+became idle without child compilers; removing an unheld copied object lock did
+not restore progress, so it was stopped and its native sample/log retained.
+Neither local failure establishes an upstream SDK defect. The48 compiler/cache,
+source-phase, repository and formal-policy controls passed; complete fresh
+exact-head CI remains required.
+
+The local complete Lean inventory hit its unchanged Guard at180.0929 seconds
+(return124, child CPU206.5020 seconds, peak RSS1658470400 bytes). The child
+was reaped and zero additional helper threads remained. This cold local
+failure is retained; no budget is raised and a warm rerun is not used for
+acceptance. The focused PreparationWork file passed the same locked Guard.
+The stronger finite queue control checks exact order and multiplicity by list
+equality instead of repeating set-membership searches in every solver state.

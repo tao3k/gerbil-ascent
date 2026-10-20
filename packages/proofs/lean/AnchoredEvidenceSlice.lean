@@ -61,6 +61,42 @@ theorem bound_query_is_not_unbound_discovery {Factor Witness : Type}
 #print axioms discovery_does_not_invent_a_hit
 #print axioms bound_query_is_not_unbound_discovery
 
+/- Rendering is not a recipient observation. These transport laws assume a
+   calibrated UTF-8 receiver window, not that an LLM remembers a shown fact. -/
+def delivered {Witness : Type} (rendered received : Witness → Prop) (w : Witness) :=
+  rendered w ∧ received w
+
+theorem rendering_does_not_prove_delivery {Witness : Type}
+    (rendered received : Witness → Prop) (w : Witness) (missing : ¬ received w) :
+    ¬ delivered rendered received w := fun shown => missing shown.2
+
+theorem wire_within_calibrated_receiver (bytes window receiver : Nat)
+    (framed : bytes ≤ window) (calibrated : window ≤ receiver) : bytes ≤ receiver :=
+  Nat.le_trans framed calibrated
+
+theorem overflowing_frame_strictly_reduces_budget (budget excess : Nat)
+    (positive : 0 < budget) (overflow : 0 < excess) : budget - excess < budget :=
+  Nat.sub_lt positive overflow
+
+#print axioms rendering_does_not_prove_delivery
+#print axioms wire_within_calibrated_receiver
+#print axioms overflowing_frame_strictly_reduces_budget
+
+def confirmedRead {Witness : Type} (verified : Bool) (prior : Witness → Prop) (w : Witness) :=
+  verified = true ∧ prior w
+
+theorem unverified_hint_cannot_suppress {Witness : Type} (prior : Witness → Prop)
+    (w : Witness) : ¬ confirmedRead false prior w := by
+  intro h
+  cases h.1
+
+theorem verified_hint_preserves_prior {Witness : Type} (prior : Witness → Prop)
+    (w : Witness) : confirmedRead true prior w ↔ prior w := by
+  exact ⟨fun h => h.2, fun h => ⟨rfl, h⟩⟩
+
+#print axioms unverified_hint_cannot_suppress
+#print axioms verified_hint_preserves_prior
+
 def anchor {Factor Chain : Type} (exposed : Factor → Prop)
     (association : Factor → Chain → Prop) (applicable : Chain → Prop) (c : Chain) :=
   applicable c ∧ ∃ f, exposed f ∧ association f c

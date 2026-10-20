@@ -143,4 +143,61 @@ theorem admitted_source_budget (before removed added limit count : Nat)
   dsimp only [prepareSourceCount] at accepted
   split at accepted <;> simp_all
 
+/-! A source understanding survives context loss independently of read hints.
+Its reuse remains conditional on current byte correspondence and a complete,
+current declared scope at every dependency. `adj` is origin-to-consumer;
+its correspondence with real source/ABI dependencies remains an obligation. -/
+def summaryReusable {Key : Type} (adj : Key → Key → Prop)
+    (basisCurrent scopeCurrent : Key → Prop) (consumer : Key) : Prop :=
+  ∀ origin, Reachable adj (fun key => key = origin) consumer →
+    basisCurrent origin ∧ scopeCurrent origin
+
+theorem summary_rejects_changed_dependency {Key : Type}
+    (adj : Key → Key → Prop) (basisCurrent scopeCurrent : Key → Prop)
+    (origin consumer : Key)
+    (path : Reachable adj (fun key => key = origin) consumer)
+    (changed : ¬ basisCurrent origin) :
+    ¬ summaryReusable adj basisCurrent scopeCurrent consumer := by
+  intro reusable
+  exact changed (reusable origin path).1
+
+theorem summary_rejects_unknown_scope {Key : Type}
+    (adj : Key → Key → Prop) (basisCurrent scopeCurrent : Key → Prop)
+    (origin consumer : Key)
+    (path : Reachable adj (fun key => key = origin) consumer)
+    (unknown : ¬ scopeCurrent origin) :
+    ¬ summaryReusable adj basisCurrent scopeCurrent consumer := by
+  intro reusable
+  exact unknown (reusable origin path).2
+
+theorem summary_change_propagates_to_caller {Key : Type}
+    (adj : Key → Key → Prop) (basisCurrent scopeCurrent : Key → Prop)
+    (origin callee caller : Key)
+    (path : Reachable adj (fun key => key = origin) callee)
+    (calls : adj callee caller) (changed : ¬ basisCurrent origin) :
+    ¬ summaryReusable adj basisCurrent scopeCurrent caller :=
+  summary_rejects_changed_dependency adj basisCurrent scopeCurrent origin caller
+    (Reachable.follow path calls) changed
+
+theorem summary_leaf_still_requires_witness {Key : Type}
+    (adj : Key → Key → Prop) (basisCurrent scopeCurrent : Key → Prop)
+    (root : Key) (reusable : summaryReusable adj basisCurrent scopeCurrent root) :
+    basisCurrent root ∧ scopeCurrent root :=
+  reusable root (Reachable.seed rfl)
+
+theorem summary_frame {Key : Type} (adj : Key → Key → Prop)
+    (beforeBasis afterBasis beforeScope afterScope : Key → Prop) (root : Key)
+    (same : ∀ origin, Reachable adj (fun key => key = origin) root →
+      (beforeBasis origin ↔ afterBasis origin) ∧
+      (beforeScope origin ↔ afterScope origin)) :
+    summaryReusable adj beforeBasis beforeScope root ↔
+      summaryReusable adj afterBasis afterScope root := by
+  constructor
+  · intro reusable origin path
+    exact ⟨((same origin path).1).mp (reusable origin path).1,
+      ((same origin path).2).mp (reusable origin path).2⟩
+  · intro reusable origin path
+    exact ⟨((same origin path).1).mpr (reusable origin path).1,
+      ((same origin path).2).mpr (reusable origin path).2⟩
+
 end Ascent.SourceUpdateFrame

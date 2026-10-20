@@ -162,3 +162,23 @@ benchmark has twelve caller/session streams for every 1/3/12 VM configuration
 and every Rayon configuration; the driver checks that receipt explicitly.
 Runtime algorithms, native semantic tests, work/fact budgets and deadlines are
 unchanged by this experiment-only correction.
+
+* Installed Python profile coverage
+
+The existing published/default wheel selects =rust-runtime=, which does not
+enter a Scheme VM. The =ProcessPool= API described here belongs to the explicit
+=scheme-runtime,rayon,extension-module= wheel profile. A successful default-wheel
+CI run is not acceptance of this separate profile. CI now builds and installs
+both wheels in separate environments and exercises twelve concurrent Scheme
+owners through the installed profile, including actual worker reaping.
+
+An explicit =ASCENT_SCHEME_WORKER= selects the installed =ascent-scheme-worker=
+executable before any language binding's default child entry. CI checks the
+actual Linux child executable, not merely its declared owner count. This also
+allows Python callers to reuse exactly the native process entry used by Rust.
+The Python-embedded child entry remains a separate lifecycle qualification;
+Darwin forced-stop observations on that entry have not been relabeled as passes.
+
+The first release throughput dispatch for =258a89f5= stopped before measurement:
+=Cargo bench= rejected =--release=. Commit =ef201391= uses the supported
+=--profile release= option. No timing from the failed dispatch is admitted.

@@ -327,7 +327,7 @@ jobs:
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo check --locked --manifest-path rust/Cargo.toml -p ascent-python --no-default-features --features scheme-runtime,rayon
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml -p ascent-python --all-targets --no-default-features --features scheme-runtime,rayon -- -D warnings
       - name: Install pinned process-isolated Rust test runner
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         run: |
@@ -393,6 +393,24 @@ jobs:
             .gerbil/lib
             .ci/gerbil-release/v19
           key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+      - name: Build installed PyO3 Scheme process profile
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --no-default-features --features scheme-runtime,rayon,extension-module --auditwheel repair --out ../.cache/ascent/scheme-wheels)
+          python3 -m venv .cache/ascent/python-scheme-runtime
+          .cache/ascent/python-scheme-runtime/bin/pip install --no-deps .cache/ascent/scheme-wheels/*.whl
+      - name: Qualify twelve resident VMs through installed PyO3
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          ASCENT_SCHEME_WORKER: ${{ github.workspace }}/rust/target/debug/ascent-scheme-worker
+        run: |
+          set -o pipefail
+          test -x "$ASCENT_SCHEME_WORKER"
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 240s .cache/ascent/python-scheme-runtime/bin/python python/qualification/process_pool.py 2>&1 | tee "$RUNNER_TEMP/scheme-python-process-tests.log"
+          ! grep -F 'ASCENT-PROCESS-FORCED-STOP' "$RUNNER_TEMP/scheme-python-process-tests.log"
   oracle:
     needs: repository-hygiene
     runs-on: ubuntu-latest

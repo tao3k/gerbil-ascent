@@ -34,11 +34,13 @@ impl WorkerProgram {
         }
     }
     fn discover() -> Result<Self> {
-        if let Some(program) = PROGRAM.get() {
-            return Ok(program.clone());
-        }
+        // A caller-selected installed executable takes precedence over a
+        // language binding's default child entry.
         if let Some(path) = std::env::var_os("ASCENT_SCHEME_WORKER") {
             return Ok(Self::new(path, vec![]));
+        }
+        if let Some(program) = PROGRAM.get() {
+            return Ok(program.clone());
         }
         let executable = std::env::current_exe().map_err(io_error)?;
         let directory = executable.parent().ok_or(Error::Closed)?;

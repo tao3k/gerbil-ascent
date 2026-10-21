@@ -486,8 +486,13 @@ def main():
             'revision': revision, 'manifest_sha256': digest(checkout / 'gerbil.pkg')}
     if development_paths:
         asp = dependencies / 'pkg/github.com/tao3k/asp-gerbil-scheme'
+        asp_baseline = '0f78289a7ae465a84370f5d94d8d14671f3c43af'
+        # The obsolete branch was removed; a clean seed need not contain its
+        # object. Fetch the bound revision before any timed control begins.
+        checked('git', '-C', str(asp), 'fetch', '--no-tags', 'origin', asp_baseline,
+                timeout=120)
         changes = subprocess.check_output(['git', '-C', str(asp), 'diff', '--name-only',
-            '0f78289a7ae465a84370f5d94d8d14671f3c43af',
+            asp_baseline,
             '31c7ddee27d775a6164cbe8f032c6405cc7b353d'], text=True, timeout=10).splitlines()
         if changes != ['gerbil.pkg']:
             raise RuntimeError('development dependency study changed ASP implementation')

@@ -1278,3 +1278,13 @@ These facts do not establish allocator/source equivalence or an end-to-end
 speedup. Three build cores, a 600-second semantic limit, twelve independent
 single-thread Scheme VMs, twelve Rust threads, and all original cancellation,
 resource, provenance, and performance requirements remain unchanged.
+
+The fixed dependency tuple also completed a fresh-prefix dependency installation
+and full native Core build, without an ASP package in that prefix. This confirms
+that pre-existing compiled Core/POO artifacts are not required to publish the
+prelude. It does not erase the expanded Core test failures recorded above.
+A clean shallow ASP clone did not contain the archived control commit; fetching
+its exact SHA succeeded and the implementation comparison again returned only
+=gerbil.pkg=. The experiment performs this bounded fetch before timed controls.
+The queued experiment =39551911119= was cancelled before measurement to apply
+this reproducibility correction; no timing result was admitted from it.

@@ -189,6 +189,8 @@ def measure(tree, command, log, env, *, semantic_diagnostics=False):
                 audit_errors.append(repr(error))
     usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = {'command': command, 'wall_seconds': wall, 'wall_nanoseconds': wall_ns, 'exit_code': result.returncode,
+               'environment': {key: env.get(key) for key in ('GERBIL_PATH', 'GERBIL_LOADPATH',
+                               'GERBIL_BUILD_CORES', 'ASCENT_GXTEST_TIMEOUT', 'ASCENT_TEST_LIBRARY')},
                'foreign_compilers': foreign, 'audit_errors': audit_errors, 'reference': reference,
                'child_usage_delta': {name: getattr(usage_after, name) - getattr(usage_before, name)
                                      for name in ['ru_utime', 'ru_stime', 'ru_minflt', 'ru_majflt',
@@ -290,6 +292,16 @@ def check_source_semantic_cache(root, output, env):
     return cache_error
 
 
+# BEGIN GENERATED PREPARATION RUNTIME-ENV
+def source_semantic_environment(root, env):
+    runtime = dict(env, GERBIL_PATH=str(root / '.gerbil'),
+                   GERBIL_LOADPATH=str(root / '.gerbil/lib'),
+                   GERBIL_BUILD_CORES='12', ASCENT_GXTEST_TIMEOUT='600s')
+    runtime.pop('ASCENT_TEST_LIBRARY', None)
+    return runtime
+# END GENERATED PREPARATION RUNTIME-ENV
+
+
 def run_source_semantics(root, output, env):
     """Execute the complete Suite under the current single 600-second bound."""
     try:
@@ -302,7 +314,7 @@ def run_source_semantics(root, output, env):
         if suite_interfaces:
             raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
         measure(root, ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'],
-                output / 'candidate-semantics.log', dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
+                output / 'candidate-semantics.log', source_semantic_environment(root, env), semantic_diagnostics=True)
         workload = source_semantic_workload(root, output / 'candidate-semantics.log')
         (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
     finally:
@@ -550,7 +562,7 @@ def main():
             try:
                 phases['semantics'] = measure(tree,
                     ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'],
-                    semantic_log, dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
+                    semantic_log, source_semantic_environment(tree, env), semantic_diagnostics=True)
             finally:
                 batches = tree / '.cache/ascent/test-modules'
                 if batches.exists():

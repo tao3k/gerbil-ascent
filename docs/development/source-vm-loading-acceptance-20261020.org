@@ -1053,3 +1053,52 @@ Performance ratios, the historical regression latch and full semantic
 workload checks remain unchanged. This is a source-transformation admission
 for a private reference experiment, not a proof of general module-identity
 or compiler equivalence.
+
+** Confirmed source-loading mismatch in the timed control
+
+Run =39537819691= reached the first baseline and then timed out at the
+unchanged 600-second bound, before either candidate control. It is not a
+candidate regression result. Build took =192.444907 s=, cold preparation
+=311.135365 s= (make =276.335131 s=), and warm preparation =11.632148 s=.
+There were no foreign compilers or audit errors. At timeout only 275 Cases
+had completed and 31 of 90 batches had started; the workers were progressing.
+
+The retained host data shows 7 GiB physical memory, zero swap, peak sampled
+owned RSS =3,428.86 MiB=, =15,386,754= additional compression events and
+=14,934,152= decompression events (16 KiB pages). These are repeated host-wide
+page events, not cumulative Scheme object allocation. They establish memory
+pressure in this failed control, without attributing every event to a VM.
+
+Source inspection found a concrete configuration mismatch: the ABBA runtime
+branch removed =GERBIL_LOADPATH= for the cold build and never restored the
+prepared library before invoking tests. Just then placed the source root
+first. Formal CI explicitly places =.gerbil/lib= first. The prepared files
+existed and the linked driver was selected, but neither fact determines which
+expander context is loaded.
+
+A fresh-process probe with the frozen SDK and unchanged ASCENT source confirms
+that source-first resolves =program/evaluate.ss=, whereas library-first
+resolves its installed =program/evaluate.ssi=. Native maximum RSS was
+=401,342,464 bytes= versus =238,272,512 bytes=; the one-module diagnostic is
+not an end-to-end speedup measurement. A separate native fixture compiles only
+a producer interface, verifies both actual context paths and proves that the
+Suite itself remains loaded from its source file in either environment.
+
+Both semantic control routes now call the same Lean-rendered environment
+selector: prepared library first, twelve VM workers, 600 seconds, and no
+compiled-Suite override. Just retains the source fallback. The native SDK
+fixture, kernel path-order lemmas and Quint reversed-order counterexample
+cover their stated boundaries; the resolver implementation remains an
+explicit SDK premise. Receipts record the relevant environment values so
+this mismatch cannot disappear behind an identical binary hash.
+
+This repairs the confirmed control invocation defect. Its full latency effect
+still requires a new complete matched experiment; the failed control is
+retained. It does not explain the historical 279/238.74-second pair, whose
+formal CI paths both already put the prepared library first. No concurrency,
+heap, cancellation, provenance, deadline or performance-ratio gate changes.
+
+The corrected local formal run passes all 85 positive checks, 511 expected
+counterexamples and 58 source-render comparisons. The initial local Quint
+list-type error is retained in its failed log; the expression was corrected
+before publication, without changing model bounds.

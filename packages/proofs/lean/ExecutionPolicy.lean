@@ -404,6 +404,7 @@ def renderedSource (name : String) : IO String := do
   | "compiler-quint" => pure Ascent.CompilerCost.quintSource
   | "preparation-stale" => pure Ascent.CompilerCost.staleSchemeSource
   | "preparation-coverage" => pure Ascent.CompilerCost.coveragePythonSource
+  | "preparation-runtime-env" => pure Ascent.CompilerCost.sourceRuntimePythonSource
   | "preparation-pass-total" => pure Ascent.CompilerCost.passTotalPythonSource
   | "preparation-ggc" => pure Ascent.CompilerCost.ggcPythonSource
   | "preparation-restore-inputs" => pure Ascent.CompilerCost.restoreInputsYamlSource

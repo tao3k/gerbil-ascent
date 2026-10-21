@@ -2,6 +2,8 @@
 import importlib.util
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -15,6 +17,38 @@ SPEC.loader.exec_module(CONTROL)
 
 
 class SourceSemanticCiTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('gxi'), 'released SDK required')
+    def test_native_runtime_resolves_prepared_dependency_and_keeps_suite_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            source = root / 'sample/producer.ss'
+            source.parent.mkdir()
+            source.write_text('package: sample\n(export value)\n(def value 1)\n')
+            suite = root / 'sample/suite-test.ss'
+            suite.write_text('package: sample\n(import :sample/producer)\n(export)\n')
+            library = root / '.gerbil/lib'
+            library.mkdir(parents=True)
+            compile_expression = ('(import :gerbil/compiler) '
+                f'(compile-module {json.dumps(str(source))} '
+                f'[output-dir: {json.dumps(str(library))} invoke-gsc: #f optimize: #f])')
+            subprocess.run(['gxi', '-:p1,max-heap=1G,debug=q', '-e', compile_expression],
+                           capture_output=True, text=True, check=True, timeout=30)
+            interface = library / 'sample/producer.ssi'
+            self.assertTrue(interface.exists())
+            expression = ('(import :gerbil/expander) '
+                "(write (module-context-path (import-module ':sample/producer #f #f))) (newline) "
+                f'(write (module-context-path (import-module {json.dumps(str(suite))} #f #f))) (newline)')
+            inherited = dict(os.environ, GERBIL_PATH=str(root / '.gerbil'),
+                             GERBIL_LOADPATH=str(root), ASCENT_TEST_LIBRARY='forbidden')
+            old = subprocess.run(['gxi', '-:p1,max-heap=1G,debug=q', '-e', expression],
+                                 env=inherited, cwd=root, capture_output=True, text=True, check=True, timeout=30)
+            fixed = CONTROL.source_semantic_environment(root, inherited)
+            self.assertNotIn('ASCENT_TEST_LIBRARY', fixed)
+            new = subprocess.run(['gxi', '-:p1,max-heap=1G,debug=q', '-e', expression],
+                                 env=fixed, cwd=root, capture_output=True, text=True, check=True, timeout=30)
+            self.assertEqual(old.stdout.splitlines(), [json.dumps(str(source)), json.dumps(str(suite))])
+            self.assertEqual(new.stdout.splitlines(), [json.dumps(str(interface)), json.dumps(str(suite))])
+
     def test_timeout_preserves_batch_diagnostics_and_original_gate(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -29,6 +63,7 @@ class SourceSemanticCiTests(unittest.TestCase):
             self.assertEqual(measure.call_args.args[1],
                              ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'])
             self.assertEqual(measure.call_args.args[3]['GERBIL_BUILD_CORES'], '12')
+            self.assertEqual(measure.call_args.args[3]['GERBIL_LOADPATH'], str(root / '.gerbil/lib'))
             self.assertTrue(measure.call_args.kwargs['semantic_diagnostics'])
             self.assertEqual((output / 'semantic-batches/incomplete.log').read_text(), 'CASE still running\n')
 

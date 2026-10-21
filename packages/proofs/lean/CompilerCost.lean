@@ -151,6 +151,24 @@ theorem total_pass_retained (cost : Nat) (rows : List (List String × Nat)) :
     totalPasses ((["TOTAL"], cost) :: rows) = (["TOTAL"], cost) :: totalPasses rows := by
   simp [totalPasses]
 
+-- A prepared library precedes source fallback. The actual SDK resolver and
+-- filesystem remain premises, exercised by native context-path integration.
+def runtimeSearch (library source : String) : List String := [library, source]
+
+theorem prepared_library_first (library source : String) :
+    (runtimeSearch library source).head? = some library := rfl
+
+theorem suite_source_retained (library source : String) :
+    source ∈ runtimeSearch library source := by simp [runtimeSearch]
+
+def sourceRuntimePythonSource : String :=
+  "def source_semantic_environment(root, env):\n" ++
+  "    runtime = dict(env, GERBIL_PATH=str(root / '.gerbil'),\n" ++
+  "                   GERBIL_LOADPATH=str(root / '.gerbil/lib'),\n" ++
+  "                   GERBIL_BUILD_CORES='12', ASCENT_GXTEST_TIMEOUT='600s')\n" ++
+  "    runtime.pop('ASCENT_TEST_LIBRARY', None)\n" ++
+  "    return runtime\n"
+
 def passTotalPythonSource : String :=
   "def gcc_total_passes(rows):\n" ++
   "    return [row for row in rows if row['path'] == ['TOTAL']]\n"
@@ -460,3 +478,6 @@ end Ascent.CompilerCost
 
 #print axioms Ascent.CompilerCost.nested_pass_excluded
 #print axioms Ascent.CompilerCost.total_pass_retained
+
+#print axioms Ascent.CompilerCost.prepared_library_first
+#print axioms Ascent.CompilerCost.suite_source_retained

@@ -301,6 +301,11 @@
     },
     "faults": [
       [
+        "source-before-prepared-library",
+        "PolicyExact",
+        12
+      ],
+      [
         "sum-pass-walls",
         "PolicyExact",
         12

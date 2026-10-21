@@ -1,5 +1,0 @@
-;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
-;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(package: gerbil-ascent-dev
- depend:
- ("github.com/tao3k/asp-gerbil-scheme@31c7ddee27d775a6164cbe8f032c6405cc7b353d"))

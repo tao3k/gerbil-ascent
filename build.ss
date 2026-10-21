@@ -10,18 +10,19 @@
         (only-in :gerbil/runtime/loader add-load-path!)
         (only-in "bindings/artifact.ss"
                  observe-compiler-outputs reuse-compiler-outputs!
-                 source-snapshot artifact-receipt! artifact-invalidated-modules clean-compiled-resources!))
+                 source-snapshot artifact-receipt! artifact-invalidated-modules clean-compiled-resources!)
+        (only-in :asp-gerbil-scheme/building-api
+                 asp-gerbil-scheme-package-spec!
+                 asp-gerbil-scheme-library-package-prototype))
 
 
-(def (gerbil-ascent-build-spec)
-  (map (lambda (target)
-         (append target
-           (if (eq? (car target) exe:)
-             (cond-expand (darwin '("-cc" "gcc")) (else []))
-             [])
-           gerbil-ascent-compiler-options))
-    (append
-      (map (lambda (module) [gxc: module]) gerbil-ascent-library-modules)
+(asp-gerbil-scheme-package-spec!
+ (gerbil-ascent-library-package-spec
+  @ asp-gerbil-scheme-library-package-prototype)
+ (spec gerbil-ascent-build-spec)
+ (modules gerbil-ascent-library-modules)
+ (native-options-resolver (lambda () gerbil-ascent-compiler-options))
+ (extra-spec
   (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
          (c-options (string-append "-fPIC -I" c-dir))
          (module-link-options (cond-expand
@@ -39,8 +40,8 @@
             "-cc-options" ,c-options "-ld-options" ,module-link-options)
       (exe: "interface/entry" bin: "libascent"
             "-cc-options" ,c-options "-ld-options" ,library-link-options)
-      (exe: "interface/develop" bin: "ascent-develop"))))))
-(export gerbil-ascent-library-modules gerbil-ascent-build-spec main)
+      (exe: "interface/develop" bin: "ascent-develop")))))
+(export gerbil-ascent-library-modules main)
 (def (build-library spec . args)
   (def (run spec)
     (defbuild-script spec

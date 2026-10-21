@@ -34,11 +34,9 @@ test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_
 default:
     @just --list
 
-# The package CLI rewrites an unused version manifest and starts a second
-# interpreter. Invoke the standard build script with the same package prefix
-# and upstream build flags; std/make retains all scheduling/currentness.
+# Use the SDK package entrypoint; it owns profile flags and build dispatch.
 build:
-    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gxi_command }} build.ss compile ${GERBIL_BUILD_RELEASE+--release} ${GERBIL_BUILD_OPTIMIZED+--optimized} ${GERBIL_BUILD_DEBUG+--debug}
+    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
 
 # Linked production closure; upstream REPL utilities handle source reloads.
 develop:

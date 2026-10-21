@@ -316,6 +316,8 @@ def main():
     parser.add_argument('--baseline')
     parser.add_argument('--candidate')
     parser.add_argument('--semantics-only', action='store_true')
+    parser.add_argument('--verify-source-log', type=Path,
+                        help='verify an already completed native semantic run; do not launch or profile it')
     parser.add_argument('--semantic-phase', choices=('all', 'prepare', 'cache', 'run'), default='all',
                         help='separate source preparation, warm reuse and full runtime CI steps')
     parser.add_argument('--semantic-preparation', action='store_true',
@@ -326,6 +328,9 @@ def main():
                         help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.verify_source_log and (args.semantics_only or args.baseline or args.candidate or
+                                   args.work_only or args.semantic_preparation or args.semantic_runtime):
+        parser.error('--verify-source-log is independent of build experiments')
     if args.semantic_phase != 'all' and not args.semantics_only:
         parser.error('--semantic-phase requires --semantics-only')
     if args.semantic_preparation and args.semantics_only:
@@ -337,6 +342,11 @@ def main():
     root = Path.cwd()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    if args.verify_source_log:
+        workload = source_semantic_workload(root, args.verify_source_log)
+        (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
+        print('SOURCE-SEMANTICS-VERIFIED', flush=True)
+        return
     if args.semantics_only:
         if args.baseline or args.candidate:
             parser.error('--semantics-only does not accept build comparison revisions')

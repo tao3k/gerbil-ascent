@@ -144,6 +144,8 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
       GERBIL_BUILD_CORES: "3"
+      # Completion allowance, separate from unchanged timed performance gates.
+      ASCENT_GXTEST_TIMEOUT: "600s"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -219,7 +221,10 @@ jobs:
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_source_semantic_ci.py -v
       - name: Prepare complete source semantic dependencies
         id: semantic-preparation
-        run: python3 tools/ci/build-cost-control.py --semantics-only --semantic-phase prepare --output "$RUNNER_TEMP/macos-semantics/prepare"
+        run: |
+          mkdir -p "$RUNNER_TEMP/macos-semantics"
+          set -o pipefail
+          { time -p just prepare-semantic-library; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/prepare.log"
       - name: Verify warm semantic cache reuse
         id: semantic-cache
         if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
@@ -236,11 +241,19 @@ jobs:
       - name: Qualify complete source semantics with twelve single-thread VMs
         # A cache-check failure must not suppress full semantic verification.
         if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
-        run: python3 tools/ci/build-cost-control.py --semantics-only --semantic-phase run --output "$RUNNER_TEMP/macos-semantics/run"
+        env:
+          GERBIL_BUILD_CORES: "12"
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: |
+          set -o pipefail
+          { time -p timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
+          python3 tools/ci/build-cost-control.py --verify-source-log "$RUNNER_TEMP/macos-semantics/semantics.log" --output "$RUNNER_TEMP/macos-semantics/verified"
       - name: Preserve semantic diagnostics and every batch log
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: macos-semantics-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/macos-semantics
+          path: |
+            ${{ runner.temp }}/macos-semantics
+            .cache/ascent/test-modules
           include-hidden-files: true

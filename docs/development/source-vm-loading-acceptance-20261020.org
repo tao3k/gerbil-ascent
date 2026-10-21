@@ -557,3 +557,118 @@ Quint counterexamples. LeanPoo Guard passed in16.6366 seconds under its original
 limits. Existing SDK source reading and native queue/GC/isolation Cases passed;
 the independent copied-reference import failure remains unadmitted locally.
 No unchanged failing route was retried for acceptance.
+
+* Native CLI simplification and evidence freeze (2026-10-21)
+
+This change freezes runtime sources and the released SDK. It does not claim a
+macOS timeout fix or a performance improvement. Queue order, GC policy, twelve
+VM workers, one processor per VM, Rust's twelve test threads, cancellation,
+resource limits and provenance are unchanged.
+
+The ordinary macOS semantic job now invokes preparation and execution directly
+through the existing Just recipes. The build recipe delegates to =gerbil build=;
+the SDK owns build-profile dispatch. Single-file tests already use =gerbil test=.
+Directory tests retain the Scheme process pool because the SDK's =gxtest=
+prepares its module list and runs its harness in one VM. Replacing the pool with
+one directory invocation would remove the required process concurrency.
+
+The Python experiment controller no longer wraps ordinary preparation or semantic
+execution. Warm-cache verification remains separate. After successful native
+execution, a read-only log check retains the complete source-module inventory,
+prohibition on compiled Suite carriers, twelve-worker dispatch, bounded batch
+width and one-processor receipts for every batch. Native Case error checks remain
+in the existing test recipe. Batch logs are uploaded even on failure.
+
+At the user's request, the ordinary macOS semantic completion allowance is now
+600 seconds. This is not a speedup or cost admission. Historical 240-second
+failures remain failures. On-demand matched timing experiments and the original
+performance gates retain their existing bounds. Build capacity remains three;
+execution capacity remains twelve independent single-thread VMs.
+
+** Local qualification and limits
+
+The fixed release SDK successfully dispatched =gerbil build= with the debug
+profile and executed a native =gerbil test -v 5= Case in a disposable package.
+This checks the command entrypoints, not the complete project build.
+
+A bounded local running-process =sample= check produced a call graph for an
+owned child and reaped that child. Sandboxed attachment failed; the successful
+check ran outside the sandbox without sudo. The paused-process method and LLDB
+attachment did not qualify under the five-second bound. These tool checks are
+not application profiles and establish no application hotspot. Attaching a
+profiler can perturb dynamic-image unloading; an unload stack alone cannot prove
+an evaluation bottleneck.
+
+** Required phase evidence before implementation changes
+
+- Build: native build wall/user/system time and the compiler's actual job log.
+- Preparation: existing source-context-load, dependency-projection and make
+  phase receipts, separated from cache-hit runs.
+- Runtime: child dispatch, first Case, Case completion and native harness verdict.
+  Dispatch-to-first-Case includes startup, module expansion and setup; it must not
+  be reported as pure expansion time without additional source-bound evidence.
+- Exit: native harness verdict through child retirement and parent completion.
+  This interval includes pipe draining and scheduling as well as VM cleanup.
+  It must not be reported as pure loader time without a native stack/control.
+
+A complete cost decomposition and uninstrumented matched control are still
+required. True cumulative allocation and compiler/expander/allocator source
+refinement remain open. No full CI run or remote timing rerun is needed to claim
+these local tool checks; no such qualification is claimed here.
+
+** Existing-run phase evidence, without a new CI run
+
+The existing [[https://github.com/tao3k/gerbil-ascent/actions/runs/39468952907][macOS run 39468952907]] has head
+=9d476f39c7e2bc76019d571884da31ec5b6b693b=. Its artifact =inputs.json=
+confirms three build cores, twelve VM workers, one thread per VM and the fixed
+SDK receipt. The run remains a failed 240-second observation.
+
+| Boundary | Observed wall seconds | Scope |
+|----------+-----------------------+-------|
+| Package/support build job step | 427 | GitHub step duration; includes dependency/policy work |
+| Complete preparation command | 298.374 | Separate from the source runtime deadline |
+| Context loading inside preparation | 27.369 | Subphase of preparation |
+| make inside preparation | 261.687 | Subphase; not evidence of duplicate jobs |
+| Complete warm preparation command | 10.470 | Cache control; not a cold-build speedup |
+| Source semantic runtime | 240.243 | Timed out; 51 batches started, 39 completed |
+
+The job's preparation step is 300 seconds; this agrees with the 298.374-second
+command receipt to the available resolution. Builder-internal total is 293.563
+seconds, leaving 4.811 seconds outside the builder. Warm builder-internal work
+is 4.609 seconds, leaving 5.862 seconds outside the builder. These differences
+include command startup/retirement and do not identify individual functions.
+
+The existing one-second-resolution progress samples permit these elapsed
+boundaries for the 39 completed batches:
+
+| Per-batch interval | Median seconds | Maximum seconds |
+|--------------------+----------------+-----------------|
+| Dispatch to first MODULE | 17.524 | 32.020 |
+| First MODULE to HARNESS-OK | 7.913 | 163.806 |
+| HARNESS-OK to parent completion | 3.765 | 13.255 |
+
+Intervals overlap across concurrent VMs. Summing them is not critical-path wall
+time, and completed batches alone omit the twelve unfinished batches. The
+SDK's =gxtest= constructs =prepare-harness= before =test-run!=; the latter emits
+MODULE/CASE events. This binds the first interval to startup/preparation and the
+second to test execution, without claiming pure compiler or evaluator CPU.
+
+The longest completed individual Case, =complete mixed graphs Programs Fragments
+cold and controls match frozen consumers=, took about 147.970 elapsed seconds in
+this run. It is in =ascent-operator-publication-test.ss= and shares a batch with
+=ascent-lattice-frontier-test.ss=. The batch identifier alone therefore must not
+be treated as the responsible source module. Another completed Case, =stratified
+source cuts agree with independent negative and aggregate oracle=, took 105.839
+seconds. These are source-bound investigation targets, not permission to remove
+constructor validation, reduce fresh evaluations or weaken oracle coverage.
+
+The running-process sampler was also validated against an owned single-processor
+=gxi= from the fixed SDK. It produced evaluator/numeric native frames within the
+five-second bound (4.069 seconds including tool overhead); the interrupted child
+was reaped. No source-runtime stack or matched application control has yet been
+collected for those slow Cases, so their internal causal attribution remains open.
+
+Local Python checks ran 55 tests with 18 explicit SDK-dependent skips: 37 passed.
+The separate native CLI fixture passed build dispatch and one native test Case.
+The workflow parsed as YAML, all sixteen run scripts passed Bash syntax checks,
+and the patch passed whitespace validation. These are local checks only.

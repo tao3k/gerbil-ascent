@@ -48,6 +48,36 @@ class SourceSemanticCiTests(unittest.TestCase):
                     CONTROL.run_source_semantics(root, output, {})
             measure.assert_not_called()
 
+    def test_completed_native_log_is_verified_without_launching_a_process(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 't/qualification/entry-test.ss'
+            source.parent.mkdir(parents=True)
+            source.write_text('(export)\n')
+            log = root / 'native.log'
+            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
+                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n')
+            output = root / 'verified'
+            with patch.object(Path, 'cwd', return_value=root), \
+                    patch.object(sys, 'argv', ['control', '--verify-source-log', str(log), '--output', str(output)]), \
+                    patch.object(CONTROL.subprocess, 'run') as launch:
+                CONTROL.main()
+            launch.assert_not_called()
+            self.assertEqual(json.loads((output / 'source-runtime-workload.json').read_text())['cases'], 1)
+            for invalid in [log.read_text().replace('workers=12', 'workers=1'),
+                            log.read_text().replace('processors=1', 'processors=2'),
+                            log.read_text().replace('MODULE-OK t/qualification/entry-test.ss', '')]:
+                log.write_text(invalid)
+                with self.assertRaises(ValueError):
+                    CONTROL.source_semantic_workload(root, log)
+            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
+                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n')
+            compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/entry-test.ssi'
+            compiled.parent.mkdir(parents=True)
+            compiled.write_text('stale compiled Suite')
+            with self.assertRaisesRegex(ValueError, 'incomplete or compiled'):
+                CONTROL.source_semantic_workload(root, log)
+
     def invoke(self, root, arguments):
         output = root / arguments[-1]
         arguments = [*arguments[:-1], str(output)]

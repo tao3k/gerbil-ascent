@@ -136,7 +136,6 @@
     "interface/rule-module"
     "interface/value-graph"
     "rules/interface"
-    "rules/execution"
     "rules/module"
     "t/qualification/evidence-api-module"
     "interface/engine-api"))

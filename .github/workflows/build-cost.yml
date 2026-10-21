@@ -4,23 +4,11 @@ name: macOS semantics and build experiments
 on:
   pull_request:
     paths:
-      - build.ss
+      - '**/*.ss'
       - gerbil.pkg
       - dev/**
-      - build-modules.ss
+      - bindings/c/**
       - justfile
-      - t/harness/build.ss
-      - t/harness/test.ss
-      - t/qualification/ascent-source-import-test.ss
-      - bindings/build-entry.ss
-      - bindings/artifact.ss
-      - t/harness/library-spec.ss
-      - t/performance/ascent-scenario-performance-test.ss
-      - t/qualification/scheme-artifact-test.ss
-      - t/qualification/ascent-support-study-output.ss
-      - t/qualification/ascent-steensgaard-test.ss
-      - t/qualification/ascent-steensgaard-reference.ss
-      - t/performance/ascent-steensgaard-performance-test.ss
       - workbench/src/ascent_workbench/supervision.py
       - workbench/tests/test_supervision.py
       - tools/ci/build-cost-control.py
@@ -28,7 +16,6 @@ on:
       - packages/proofs/lean/ExecutionPolicy.lean
       - packages/proofs/lean/Preparation*.lean
       - packages/proofs/quint/Preparation*.qnt
-      - t/qualification/fixtures/preparation/**
       - .github/workflows/build-cost.yml
   workflow_dispatch:
     inputs:

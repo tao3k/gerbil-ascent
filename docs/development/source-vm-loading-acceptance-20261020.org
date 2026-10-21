@@ -1888,3 +1888,24 @@ its existing overall deadline; it is not labeled a pass. The same revision's
 remote formal and formal-conformance passed independently. A prior diagnostic
 PATH omission of /usr/sbin failed before model execution and was retained;
 only the invocation PATH was corrected.
+
+** Same workload, different preparation time
+
+The 99ff6a00 and 5761c5ff macOS preparation logs contain the same 250 compiled
+support module names and 565 distinct scheduled native compile-file paths in
+that preparation phase. No additional or missing support module explains the
+wall increase. Source-context loading was 31.034 versus 37.446 seconds; make
+was 223.498 versus 274.637 seconds. These logs do not contain exclusive native
+CPU/I/O/allocation observations, so they do not establish the cause of this
+variation and are not dismissed as jitter. Necessary dependency invalidation,
+actual compiler work and host service time still need matched work receipts.
+
+The snapshot model's Term-check counts describe membership occurrences, not
+receipt allocation or public .classify calls. Replacing .classify selects the
+compatibility fallback: its unchanged 70/28 assertion cannot measure allocation
+on the ordinary fast path. The model comments now state this boundary.
+
+The macOS workflow's selective source path filter omitted ordinary runtime
+Scheme edits. It now selects all Scheme sources, retaining explicit non-Scheme
+inputs. This ensures the corrected runtime head requests macOS qualification;
+it changes no semantic deadline, VM count, heap profile or performance limit.

@@ -6,7 +6,7 @@
 ;;; intentional. Shared current native Session isolates support-plan costs.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type validate .defgeneric)
-        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
         (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation
@@ -22,12 +22,12 @@
 (export reference-open-withdrawal-session reference-withdrawal-observe
         reference-withdrawal-session! ReplayWithdrawalSessionContract)
 
-(define-type (ReplayWithdrawalSessionContract @ YuanxuObjectContract.)
+(define-type (ReplayWithdrawalSessionContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/reference-withdrawal-replay
   proto: (.o)
   responsibilities:
-  (.o .observe: (yuanxu-predicate-contract 'ascent/observe procedure? (lambda (_v _c) []))
-      .withdraw: (yuanxu-predicate-contract 'ascent/withdraw procedure? (lambda (_v _c) []))))
+  (.o .observe: (poo-flow-predicate-contract 'ascent/observe procedure? (lambda (_v _c) []))
+      .withdraw: (poo-flow-predicate-contract 'ascent/withdraw procedure? (lambda (_v _c) []))))
 
 ;;; Copy source identity as well as declaration spines: strings are mutable.
 ;; : (-> ReasoningSnapshot Nat SourceDeclarations ReasoningSnapshot)

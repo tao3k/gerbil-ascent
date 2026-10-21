@@ -6,7 +6,7 @@
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop element?)
-        (only-in :yuanxu/types yuanxu-predicate-contract)
+        (only-in :core/types poo-flow-predicate-contract)
         (only-in :gerbil-ascent/program/types GerbilAscentRelationContract)
         (only-in :gerbil-ascent/table/provider
                  GerbilAscentIndexProviderContract gerbil-ascent-hash-index-provider)
@@ -89,10 +89,10 @@
        (let* ((responsibilities (.ref GerbilAscentRelationContract 'responsibilities))
               (new-index (.ref responsibilities 'index-provider))
               (new-storage (.ref responsibilities 'storage-provider))
-              (old-index (yuanxu-predicate-contract 'ascent/index-provider
+              (old-index (poo-flow-predicate-contract 'ascent/index-provider
                            (lambda (value) (element? GerbilAscentIndexProviderContract value))
                            (lambda (_value _context) [])))
-              (old-storage (yuanxu-predicate-contract 'ascent/storage-provider
+              (old-storage (poo-flow-predicate-contract 'ascent/storage-provider
                              (lambda (value) (element? GerbilAscentStorageProviderContract value))
                              (lambda (_value _context) []))))
          (def (checks index storage)

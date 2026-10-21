@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite check-equal?)
-        (only-in :yuanxu/observability/testing-case yuanxu-test-case)
+        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :gerbil-ascent/table/expression
@@ -35,7 +35,7 @@
     matrix))
 (def ascent-materialization-test
   (test-suite "Complete persistent relation materialization"
-    (yuanxu-test-case "all 512 graphs match independent composition closure and shortest distance"
+    (poo-flow-test-case "all 512 graphs match independent composition closure and shortest distance"
       (for-each
        (lambda (mask)
          (let* ((edges (filter (lambda (pair) (not (zero? (bitwise-and mask (arithmetic-shift 1 pair))))) (iota 9)))
@@ -64,7 +64,7 @@
             (lambda (slot) (check-equal? (.ref new slot) (.ref old slot)))
             '(two-hop-pairs at-most-two-hop-pairs closure-pairs shortest-distance-pairs))))
        (iota 512)))
-    (yuanxu-test-case "demanded snapshots remain independent after source withdrawal and replacement"
+    (poo-flow-test-case "demanded snapshots remain independent after source withdrawal and replacement"
       (for-each
        (lambda (radix)
          (let* ((edges (list (+ radix 2) (+ (* radix 2) 3) (+ radix 4) (+ (* radix 4) 3)))
@@ -79,7 +79,7 @@
            (check-equal? (.ref initial 'closure-pairs) before)
            (check-equal? (.ref initial 'at-most-two-hop-pairs) before)))
        '(8 513)))
-    (yuanxu-test-case "public neighbor overrides retain ordered callback traces and external composition"
+    (poo-flow-test-case "public neighbor overrides retain ordered callback traces and external composition"
       (let* ((source (.call UIntTrieSet .<-list '(1 5 6)))
              (left (.call UIntTrieSet .<-list '(2 3)))
              (calls [])
@@ -97,7 +97,7 @@
           (set! calls [])
           (check-equal? (run gerbil-ascent-table-expression-prototype) old)
           (check-equal? calls old-calls))))
-    (yuanxu-test-case "bounded closure retains exact failures across empty dense and sparse snapshots"
+    (poo-flow-test-case "bounded closure retains exact failures across empty dense and sparse snapshots"
       (for-each
        (lambda (radix)
          (for-each

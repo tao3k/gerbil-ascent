@@ -4,11 +4,11 @@
 
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .o .call .ref)
-        (only-in :core/observability/debug
+        (only-in :yuanxu/observability/debug
                  poo-flow-debug-memory-snapshot
-                 PooFlowDebugMemoryAnomaly?
-                 PooFlowDebugDurationAnomaly?)
-        (only-in :core/observability/testing-case
+                 YuanxuDebugMemoryAnomaly?
+                 YuanxuDebugDurationAnomaly?)
+        (only-in :yuanxu/observability/testing-case
                  poo-flow-testing-case-profile?)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile
                  ascent-ss-profile))
@@ -39,7 +39,7 @@
         (check-equal? (poo-flow-testing-case-profile? rejected-profile) #t)
         (check-equal?
          (with-catch
-          PooFlowDebugMemoryAnomaly?
+          YuanxuDebugMemoryAnomaly?
           (lambda ()
             (call-with-values
              (lambda ()
@@ -59,7 +59,7 @@
                 (max-duration-milliseconds 25)))
         (check-equal?
          (with-catch
-          PooFlowDebugDurationAnomaly?
+          YuanxuDebugDurationAnomaly?
           (lambda ()
             (.call bounded-profile .run bounded-profile
                    "stalled ASCENT operation"

@@ -17,18 +17,18 @@
                  relational-op-source relational-transform-output-arity)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
+        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in :std/list/list append-map delete-duplicates/hash take)
         (only-in :std/list/list-builder with-list-builder))
 
 (export relational-op-delta-change relational-op-prepare-change relational-op-change
         GerbilAscentChangePlanContract)
 
-(define-type (GerbilAscentChangePlanContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentChangePlanContract @ YuanxuObjectContract.)
   identity: 'ascent/operator-change-plan
   proto: (.o)
   responsibilities: (.o .change:
-    (poo-flow-predicate-contract 'ascent/change-method procedure? (lambda (_value _context) []))))
+    (yuanxu-predicate-contract 'ascent/change-method procedure?)))
 
 ;;; Closing the root with an empty input checks captures without borrowing or
 ;;; duplicating the request rows; only captured finite rows enter this table.

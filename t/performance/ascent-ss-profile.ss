@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :clan/poo/object .o)
-        (only-in :core/observability/testing-case
+        (only-in :yuanxu/observability/testing-case
                  poo-flow-default-testing-case-profile))
 
 (export ascent-ss-profile)

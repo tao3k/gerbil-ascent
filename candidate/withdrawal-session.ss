@@ -6,7 +6,7 @@
 ;;; and grounded support together. Native evaluation qualifies the initial cut.
 (import (only-in :clan/poo/object .o .ref object? .slot?)
         (only-in :clan/poo/mop define-type validate .defgeneric)
-        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
+        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in "datum.ss" candidate-copy-pairs reasoning-bounded-data?)
         (only-in "types.ss" reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation
@@ -33,11 +33,11 @@
        (andmap (lambda (slot) (and (.slot? candidate slot) (procedure? (.ref candidate slot))))
                '(.observe .withdraw .compact .support-size .heights))))
 
-(define-type (GerbilAscentWithdrawalSessionContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentWithdrawalSessionContract @ YuanxuObjectContract.)
   identity: 'ascent/grounded-withdrawal-session
   proto: (.o)
   responsibilities:
-  (.o .operations: (poo-flow-predicate-contract 'ascent/withdrawal-operations
+  (.o .operations: (yuanxu-predicate-contract 'ascent/withdrawal-operations
                     withdrawal-operations? (lambda (_v _c) []))))
 
 ;;; Copy source identity as well as declaration spines: strings are mutable.

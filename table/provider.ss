@@ -6,9 +6,9 @@
 ;;; lookup. Rules remain independent of the provider's private index value.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :core/types
-                 PooFlowNativeObjectContract.
-                 poo-flow-predicate-contract)
+        (only-in :yuanxu/types
+                 YuanxuObjectContract.
+                 yuanxu-predicate-contract)
         (only-in "funs.ss" gerbil-ascent-index-build
                  gerbil-ascent-index-extend!))
 
@@ -22,14 +22,13 @@
         gerbil-ascent-index-provider-lookup)
 
 (def +procedure+
-  (poo-flow-predicate-contract 'ascent/index-provider-procedure
-                               procedure?
-                               (lambda (_value _context) [])))
+  (yuanxu-predicate-contract 'ascent/index-provider-procedure
+                               procedure?))
 
 ;;; A provider controls physical lookup but cannot change relation semantics;
 ;;; build, extend, and lookup slots remain one validated receiver axis.
 (define-type (GerbilAscentIndexProviderContract
-              @ PooFlowNativeObjectContract.)
+              @ YuanxuObjectContract.)
   identity: 'ascent/index-provider
   proto: (.o)
   responsibilities: (.o .build-index: +procedure+

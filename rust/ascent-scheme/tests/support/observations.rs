@@ -230,9 +230,6 @@ impl RuleSession {
     ) -> Result<native::SchemeProvenance> {
         self.inner.provenance(handle, query, limits, cancel)
     }
-    pub fn program(&self) -> Result<gerbil_ascent::Program> {
-        self.inner.program()
-    }
     pub fn close(&self) {
         self.inner.close();
         self.results.lock().unwrap().clear();

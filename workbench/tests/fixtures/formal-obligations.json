@@ -301,6 +301,11 @@
     },
     "faults": [
       [
+        "policy-as-production-build",
+        "PolicyExact",
+        12
+      ],
+      [
         "source-before-prepared-library",
         "PolicyExact",
         12

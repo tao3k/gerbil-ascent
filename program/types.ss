@@ -4,7 +4,7 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :clan/poo/object .o .cc .ref)
+(import (only-in :clan/poo/object .o .cc .ref object-revision)
         (only-in :clan/poo/mop define-type element? Type. Any)
         (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :core/types
@@ -115,8 +115,32 @@
        extra-fields: 'delegate constraints: (list Any)
        responsibilities: (.o kind: (.cc Type. .element?: term-kind?) value: Any)))
 
+
+;; Retain public descriptor mutation and classifier instrumentation. POO revisions
+;; invalidate ordinary metadata edits; classifier identity also detects the
+;; existing direct instance instrumentation used by the semantic cost control.
+;; This caches descriptor identity only, never the result for an input value.
+(def (canonical-value-member contract view slots)
+  (let* ((fields (.ref contract 'responsibilities))
+         (descriptors (cons contract (map (cut .ref fields <>) slots)))
+         (sources (cons fields descriptors))
+         (revisions (map object-revision sources))
+         (classifiers (map (cut .ref <> '.classify) descriptors)))
+    (lambda (value)
+      (if (and (andmap (lambda (source revision) (= (object-revision source) revision))
+                       sources revisions)
+               (eq? fields (.ref contract 'responsibilities))
+               (andmap (lambda (slot descriptor) (eq? (.ref fields slot) descriptor))
+                       slots (cdr descriptors))
+               (andmap (lambda (descriptor classifier)
+                         (eq? (.ref descriptor '.classify) classifier))
+                       descriptors classifiers))
+        (element? view value)
+        (element? contract value)))))
+
+(def term-value? (canonical-value-member GerbilAscentTermContract +term-value+ '(kind value)))
 (def (terms-value? value)
-  (and (list? value) (andmap (cut element? +term-value+ <>) value)))
+  (and (list? value) (andmap term-value? value)))
 (def +terms+ (slot-contract 'ascent/terms terms-value?))
 
 ;;; Atom plans bind one relation name to ordered terms and one open planning
@@ -138,6 +162,10 @@
            relation: (.cc Type. .element?: symbol?)
            terms: (.cc Type. .element?: terms-value?)
            .plan: (.cc Type. .element?: procedure?))))
+
+(def atom-value?
+  (canonical-value-member GerbilAscentAtomContract +atom-value+
+                          '(ascent-clause-kind relation terms .plan)))
 
 (def +variables+
   (slot-contract 'ascent/variables
@@ -223,7 +251,7 @@
                  (lambda (value)
                    (and (list? value)
                         (andmap (lambda (clause)
-                                  (or (element? +atom-value+ clause)
+                                  (or (atom-value? clause)
                                       (element? GerbilAscentGuardContract clause)
                                       (element? GerbilAscentGeneratorContract clause)
                                       (element? GerbilAscentBindingContract clause)
@@ -236,7 +264,7 @@
                    (and (pair? value)
                         (list? value)
                         (andmap (lambda (head)
-                                  (element? +atom-value+ head))
+                                  (atom-value? head))
                                 value)))))
 
 ;;; A rule has at least one head and an ordered body. Shared body bindings

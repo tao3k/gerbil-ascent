@@ -1840,3 +1840,51 @@ True cumulative Scheme allocation, complete compiler/decoder source refinement,
 and full mutable-cache/SCC/message refinement remain open. Existing Lean/Quint
 admission and cost-accounting controls do not prove the new upstream value
 view equivalent at every source observation, or establish a cold-build win.
+
+** Mutable descriptor compatibility found by the full Suite
+
+The 5761c5ff full local diagnostic ran all 170 module entries but returned a
+nonzero verdict: the existing closure Contract control expected 70 classifier
+calls and observed 14. Its public Term classifier replacement was bypassed by
+the unguarded value view. The old assertion was not changed. This run used the
+native inactivity supervisor, so its longer execution is not a 600-second
+absolute-deadline acceptance receipt.
+
+The correction binds the canonical responsibility map, field descriptor
+identities, POO revisions and classifier dispatch identities. Any observed
+change selects the original complete public membership path. Revision checks
+precede reads of changed metadata; descriptor snapshots never cache a result
+for a candidate. The direct instance classifier instrumentation in the old
+cost control is also recognized. Eight focused Cases now pass, including root
+and field classifier replacement and supported field revision. The original
+nine-Case closure Suite passes with its 70/28 assertions unchanged. ASP policy
+still reports zero errors. Complete source refinement of these source guards
+remains an open obligation.
+
+After this correction, all four original local lifecycle gates passed again:
+chain CPU 8.388 to 5.755 ms, counters 13,370,928 to 9,217,288 bytes, 47/50 wins;
+diamond 6.988 to 4.276 ms, 12,205,432 to 8,675,104 bytes, 43 wins;
+duplicates 6.954 to 4.798 ms, 10,456,288 to 8,134,320 bytes, 44 wins;
+tiny 4.508 to 3.654 ms, 8,169,376 to 7,796,272 bytes. These remain scoped
+lifecycle controls, not isolated whole-Suite latency qualifications.
+
+A three-second native sample of the verified exhaustive semi-naive worker
+shows active object/prototype access, runtime tables/hashing, slot observation
+and GC scanning. It is execution work, not a compiler invocation or deadlock.
+The sample does not establish a whole-run percentage or justify upstream edits.
+
+At 5761c5ff, exact-head Linux full performance, formal, formal-conformance and
+both BYODS oracle lanes passed. Linux source semantics still timed out at the
+unchanged 180-second limit after 101 modules and 875 Cases; this is not full
+acceptance. Exact dependency-cache hits skipped installation in the Linux
+Scheme and Rust/PyO3 lanes, with unconditional readiness checks retained.
+The macOS dependency-only cache had no prior entry, so its first population
+is cold and supplies no measured warm-cache gain. macOS and the production
+throughput matrix were still running when this correction was prepared.
+
+The local complete Lean inventory passed 175 jobs through the locked Guard.
+The local complete formal run retained a PreparationWork TLC timeout under
+its existing overall deadline; it is not labeled a pass. The same revision's
+remote formal and formal-conformance passed independently. A prior diagnostic
+PATH omission of /usr/sbin failed before model execution and was retained;
+only the invocation PATH was corrected.

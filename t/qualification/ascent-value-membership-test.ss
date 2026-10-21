@@ -2,10 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
-        (only-in :clan/poo/object .o .cc .ref)
+        (only-in :clan/poo/object .o .cc .ref .putslot! object-instance $constant-slot-spec)
         (only-in :clan/poo/mop element?)
         (only-in :std/error exception->string)
-        (only-in :core/types poo-flow-contract-admit poo-flow-validation-evidence-accepted?)
+        (only-in :core/types poo-flow-contract-admit poo-flow-validation-evidence-accepted?
+                 poo-flow-classification-evidence)
         (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract))
 (export ascent-value-membership-test)
 
@@ -124,4 +125,32 @@
         (check-equal? (length seen) 3)
         (check-equal? (and (memq 'ascent/term-kind seen) #t) #t)
         (check-equal? (and (memq 'ascent/value seen) #t) #t)
-        (check-equal? (car seen) 'ascent/term)))))
+        (check-equal? (car seen) 'ascent/term)))
+    (test-case "live root and field classifier instrumentation remains authoritative"
+      (let* ((term (.o (:: @ (.ref GerbilAscentTermContract 'proto)) kind: 'variable value: 'x))
+             (kind (.ref (.ref GerbilAscentTermContract 'responsibilities) 'kind)))
+        (for-each (lambda (descriptor)
+          (let ((classifier (.ref descriptor '.classify)) (calls 0))
+            (try
+              (hash-put! (object-instance descriptor) '.classify
+                (lambda (candidate context)
+                  (set! calls (+ calls 1))
+                  (poo-flow-classification-evidence (.ref descriptor 'identity)
+                    candidate #f [] context)))
+              (check-equal? (nested-term? term) #f)
+              (check-equal? (> calls 0) #t)
+              (finally (hash-put! (object-instance descriptor) '.classify classifier))))
+          (check-equal? (nested-term? term) #t))
+          (list GerbilAscentTermContract kind))))
+    (test-case "supported field edits invalidate the canonical value view"
+      (let* ((term (.o (:: @ (.ref GerbilAscentTermContract 'proto)) kind: 'variable value: 'x))
+             (kind (.ref (.ref GerbilAscentTermContract 'responsibilities) 'kind))
+             (classifier (.ref kind '.classify)))
+        (try
+          (.putslot! kind '.classify
+            ($constant-slot-spec
+              (lambda (candidate context)
+                (poo-flow-classification-evidence (.ref kind 'identity) candidate #f [] context))))
+          (check-equal? (nested-term? term) #f)
+          (finally (.putslot! kind '.classify ($constant-slot-spec classifier))))
+        (check-equal? (nested-term? term) #t)))))

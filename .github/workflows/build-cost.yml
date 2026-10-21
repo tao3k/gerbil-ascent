@@ -170,11 +170,11 @@ jobs:
           printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # BEGIN GENERATED PREPARATION CACHE-INPUTS
-          compiler_inputs="$(git ls-files -s -- build.ss build-modules.ss gerbil.pkg bindings t/harness/build.ss t/harness/artifact-admission.ss t/harness/library-spec.ss | sha256sum | cut -d ' ' -f 1)"
+          compiler_inputs="$(git ls-files -s -- build.ss build-modules.ss gerbil.pkg dev/gerbil.pkg bindings t/harness/build.ss t/harness/artifact-admission.ss t/harness/library-spec.ss | sha256sum | cut -d ' ' -f 1)"
           printf 'compiler_inputs=%s\n' "$compiler_inputs" >> "$GITHUB_OUTPUT"
-          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
-          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> "$GITHUB_OUTPUT"
           # END GENERATED PREPARATION CACHE-INPUTS
           {
             echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
@@ -204,7 +204,7 @@ jobs:
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.preparation.outputs.source_bytes }}
-          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/build-cost.yml') }}
         run: |
           # BEGIN GENERATED PREPARATION CACHE-ADMISSION
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"

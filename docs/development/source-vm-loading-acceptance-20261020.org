@@ -1227,3 +1227,64 @@ developer host, not three-core performance measurements. Final CI and ABBA
 remain separately required. Logs are =/tmp/ascent-dev-production-build.log=,
 =/tmp/ascent-dev-aot-no-asp.log= and
 =/tmp/ascent-dev-rust-build-clippy-fixed-env.log=.
+
+** Core package-prelude publication and coherent controls (2026-10-21)
+The fixed Core =52130d2= source contains =module-system/source/module-prelude.ss=.
+Its =core-spec.ss= omitted that ordinary library from the published targets.
+Fresh Linux CI for ASCENT =44bd6695= failed to read =core/ops/progress.ssi=
+because that interface refers to the unpublished prelude. The five failing
+Scheme/oracle jobs have the same missing-library diagnostic. This is a
+publication defect, not evidence that the released SDK needs replacement.
+
+The isolated Core compatibility commit
+=75f84f9e8f9e4d45adea280db25768b287d654d7= adds exactly one target to
+=core-spec.ss= on top of =52130d2=. It changes no runtime source, package
+prelude declaration, resource policy, or compiler version. Core PR 19 has
+subsequently included the same target alongside substantial unrelated contract
+work; the compatibility branch does not overwrite or import that work.
+
+A clean Core build published the interface. An external consumer compiled a
+=defstruct= under that prelude and a new process outside the checkout imported
+its compiled interface and =:core/ops/progress= using only the published library
+paths. Both the constructor/accessor assertion and the watchdog entry control
+passed. These are ABI controls, not a claim of complete Core qualification.
+The expanded native Core controls retained three assertion failures: the
+source-build fixture expected 36 targets instead of the observed 37; its child
+source-input check returned 70; and an idle-stop check received a Contract type
+error. Separate watchdog diagnostics passed, while an isolated original suite
+reported a descendant PID-marker failure. These failures remain recorded;
+exit status zero and a MODULE-OK marker do not override an ERROR CHECK or
+ERROR HARNESS. A fresh dependency prefix is being used to distinguish source
+compatibility from mixed experimental artifacts before further conclusions.
+
+One local ASCENT preparation attempt started before the Core pin changed. It
+was terminated and marked STALE when =gerbil.pkg= changed; it is not acceptance
+evidence. Subsequent acceptance must use a fixed input tree and the exact pin.
+
+The controlled pre-split carrier is =9e713e6005ecc6bbce510cdf9ea90510729a90b4=.
+Relative to =4b9df10c= it changes only the dependency manifest: both sides now
+use Core =75f84f9=, and the pre-split ASP edge uses =0f78289a7ae465a84370f5d94d8d14671f3c43af=,
+whose POO requirement matches Core. The split side uses ASP =31c7ddee= only in
+=dev/gerbil.pkg=. The two ASP revisions differ in =gerbil.pkg= alone; their
+implementation is unchanged. The controller admits exactly this ASP edge
+removal and still rejects any other production-dependency difference or
+workload change. Broken Core =52130d2= is not an admissible speed baseline.
+The preserved ownership audit is documentation, outside the measured source set.
+
+Compiled/preparation cache keys now include =dev/gerbil.pkg=. The Lean source
+renderer and explicit membership lemmas describe this actual declared input.
+The focused compiler-cost, admission, and source-CI controls passed 42 tests.
+These facts do not establish allocator/source equivalence or an end-to-end
+speedup. Three build cores, a 600-second semantic limit, twelve independent
+single-thread Scheme VMs, twelve Rust threads, and all original cancellation,
+resource, provenance, and performance requirements remain unchanged.
+
+The fixed dependency tuple also completed a fresh-prefix dependency installation
+and full native Core build, without an ASP package in that prefix. This confirms
+that pre-existing compiled Core/POO artifacts are not required to publish the
+prelude. It does not erase the expanded Core test failures recorded above.
+A clean shallow ASP clone did not contain the archived control commit; fetching
+its exact SHA succeeded and the implementation comparison again returned only
+=gerbil.pkg=. The experiment performs this bounded fetch before timed controls.
+The queued experiment =39551911119= was cancelled before measurement to apply
+this reproducibility correction; no timing result was admitted from it.

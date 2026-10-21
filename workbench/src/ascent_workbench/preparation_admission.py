@@ -122,7 +122,7 @@ def development_dependency_paths(changed, before, after):
     paths = {'dev/gerbil.pkg', 'dev/build.ss', 'dev/production-build-test.ss'}
     if manifest not in changed:
         return set()
-    edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@f5b7c009d2cab61144a8af18008a0bfba3056584"'
+    edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@0f78289a7ae465a84370f5d94d8d14671f3c43af"'
     original = before(manifest)
     tools = after('dev/gerbil.pkg')
     if (original is None or original.count(edge) != 1

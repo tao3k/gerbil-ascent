@@ -66,9 +66,9 @@ jobs:
           # Restore matching source timestamps with compiled products; Git
           # verifies bytes and std/make retains every dependency check.
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
-          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
-          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
           {
             echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
             git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
@@ -111,7 +111,7 @@ jobs:
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
-          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
         run: |
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
@@ -225,9 +225,9 @@ jobs:
           # Restore matching source timestamps with compiled products; Git
           # verifies bytes and std/make retains every dependency check.
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
-          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
-          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
           {
             echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
             git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
@@ -270,7 +270,7 @@ jobs:
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
-          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
         run: |
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
@@ -468,9 +468,9 @@ jobs:
           # Restore matching source timestamps with compiled products; Git
           # verifies bytes and std/make retains every dependency check.
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
-          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
-          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
           {
             echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
             git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
@@ -513,7 +513,7 @@ jobs:
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
-          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
         run: |
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'

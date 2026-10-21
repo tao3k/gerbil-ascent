@@ -453,7 +453,8 @@ def main():
     allowed.update(development_paths)
     allowed.update(shared_paths)
     allowed.update({'docs/development/source-vm-loading-acceptance-20261020.org',
-                    'workbench/tests/test_source_semantic_ci.py', 'dev/README.org'})
+                    'workbench/tests/test_source_semantic_ci.py', 'dev/README.org',
+                    'docs/migration-audit-20261021.org'})
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}; '
                            'select a baseline with identical program sources before measuring compiler/cache changes')
@@ -486,7 +487,7 @@ def main():
     if development_paths:
         asp = dependencies / 'pkg/github.com/tao3k/asp-gerbil-scheme'
         changes = subprocess.check_output(['git', '-C', str(asp), 'diff', '--name-only',
-            'f5b7c009d2cab61144a8af18008a0bfba3056584',
+            '0f78289a7ae465a84370f5d94d8d14671f3c43af',
             '31c7ddee27d775a6164cbe8f032c6405cc7b353d'], text=True, timeout=10).splitlines()
         if changes != ['gerbil.pkg']:
             raise RuntimeError('development dependency study changed ASP implementation')

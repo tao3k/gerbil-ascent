@@ -32,3 +32,19 @@ with the same module order, C options and executable linker options as before.
 Development dependency installation is explicit. Keeping a manifest in a
 subdirectory alone does not make imports lazy or change Gerbil's dependency
 resolution. The production entry must also avoid ASP imports.
+
+** Published dependencies and local development
+The committed production manifest selects the dependency revision used by release
+and clean-checkout CI. Upstream commits do not automatically advance that
+selection. Development tools are an independent dependency category; =prepare-dev=
+does not remove production pins or select local dependency checkouts.
+
+In the installed Gerbil SDK, each package has one source directory and compiled
+module namespace per =GERBIL_PATH=. Distinct revisions cannot coexist there.
+Removing =@revision= allows the already selected version or repository default;
+it does not select a developer's local checkout. A local-source integration must
+use a separate artifact prefix, explicit source selection, and record actual
+source identities. It must not silently change the published dependency selection
+or skip dependency validation. Distinct semantic-version tags are resolved to the
+larger version by this SDK, without a major-version compatibility check; a
+successful install alone therefore does not establish compatibility.

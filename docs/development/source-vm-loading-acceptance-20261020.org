@@ -672,3 +672,201 @@ Local Python checks ran 55 tests with 18 explicit SDK-dependent skips: 37 passed
 The separate native CLI fixture passed build dispatch and one native test Case.
 The workflow parsed as YAML, all sixteen run scripts passed Bash syntax checks,
 and the patch passed whitespace validation. These are local checks only.
+
+* Source-attributed admission and compiler investigation (2026-10-21)
+
+The implementation remains at the frozen admission/snapshot behavior; the SDK
+remains =1cfb032= with patchset =618d76f9eb72=. All measurements below are local
+instrumented diagnosis unless explicitly identified as the existing GitHub run.
+They are not three-core CI latency admission or twelve-VM throughput results.
+
+** Actual wide-graph call costs
+
+A native =gxi -:p1,max-heap=2G,live-ratio=80,debug=q= command executed the original
+six publication scenarios, shape comparisons and both singleton solve oracles.
+Native =##exec-stats= reported approximately 8.163 GiB of cumulative interval
+allocation across those disjoint calls. Repeating with explicit lifecycle marks
+reported the same allocation to within 688 bytes. Timings differed; neither run
+is used to declare a speedup.
+
+The separate width-64 Program decomposition preserves the original constructors
+and calls the actual =relational-admit=, =relational-solve= and query interface:
+
+| Stage | Old facade allocated bytes | Current facade allocated bytes |
+|-------+----------------------------+--------------------------------|
+| Public compile | 607190880 | 104554016 |
+| relational-admit | 865781952 | 865752696 |
+| relational-solve | 74992 | 74992 |
+| Query | 3328 | 3328 |
+
+The measured solve calls took about 0.1 ms locally. Admission took about 0.9 s,
+including roughly 0.55 s in GC. These absolute times do not explain the CI's
+148 s by themselves. They identify admission reconstruction and recursive
+Contract evidence, rather than fixed-point work, as the allocation target.
+
+The source chain is =scheme-admit.ss: relational-admit= ->
+=scheme-snapshot.ss: relational-snapshot-program= -> public declaration copy
+constructors and complete Program validation -> =gerbil-ascent-make-engine=.
+The ordinary public Term, Atom, Rule and Program validation calls are still
+present. A running native sample of the original repeated verification call
+showed Gambit GC scanning plus compiled POO object/hash-table frames. It did
+not sample dynamic-module cleanup. The profiler child completed naturally and
+was reaped.
+
+The lifecycle-marked native command entered main at 2.639 s, reported all
+scenarios complete at 12.897 s and exited immediately afterward. The earlier
+unmarked command took 39.09 s. That discrepancy is retained; the marked run
+does not prove that initialization or unload always has negligible cost.
+
+** Actual native make work and reuse
+
+The existing failed GitHub run's log contains 253 distinct module compilation
+requests and reports =production-rebuilt=0=. Its restore step explicitly says
+=Cache not found for input keys=. There is no evidence of repeated compilation
+of an identical requested module in that preparation invocation.
+
+The same 253 modules were compiled through the fixed SDK's native =std/make=
+with three build workers, unchanged compiler options, a separate output library
+and the existing compiler-work observer. All 589 GSC calls and 589 corresponding
+C helpers succeeded, with no repeated input path within either class.
+
+| Observation | Result |
+|-------------+--------|
+| Instrumented native make elapsed | 208.917 s |
+| Parent GSC cumulative child CPU | 524.259 s |
+| Nested C helper cumulative child CPU | 436.538 s |
+| Native GCC cumulative GGC allocation | 20008276032 bytes |
+| Retained-output native make elapsed | 31.130 s |
+| Retained-output GSC/C records | 0 |
+| Retained resources with unchanged bytes and clocks | 1684 |
+
+GSC records contain their corresponding C helper. Their CPU/wall totals must
+not be added. C helper CPU is about 83.3% of the inclusive parent CPU; the
+remaining difference includes Scheme-to-C generation and helper overhead.
+Native GCC GGC allocation is not Scheme VM allocation or RSS. The observed and
+retained-output runs demonstrate avoided work, not accelerated cold compilation.
+
+** Compiler-cache compatibility correction
+
+The old compatibility prefix included =justfile=, the full workflow and
+=t/harness/test.ss=. A queue or diagnostic-step edit therefore prevented restore
+of all compatible native objects before make could inspect their freshness.
+The corrected prefix retains the package/dependency identity, build recipe,
+compiler options, C bindings and preparation/admission sources. Runtime-only
+orchestration is excluded from compatibility, while exact source keys still
+include it. Current checkout restoration, source/ABI admission, compiler-profile
+checks and native make freshness remain unchanged.
+
+Lean renders this exact compiler-input selection from one path list and proves
+that the three runtime/controller paths are excluded. Git-index mutation tests
+check unchanged compatibility but changed exact source identity for those edits,
+and changed compatibility for compiler, dependency and C ABI input edits.
+These results do not close true cold compilation, compiler source refinement
+or the admission allocation issue.
+
+** Blocked admission proposal: explicit review boundary
+
+No snapshot/admission implementation was changed. Automatic approval rejected
+using the existing private construction extent for a captured snapshot because
+it may alter immediate validation and exception ordering. That rejection is
+retained and is not bypassed by changing public Term constructors or by caching
+validation results.
+
+The proposed source-local change would first validate the complete caller
+Program, capture all caller getter data outside any private extent, construct
+only canonical owned declarations privately, then validate the complete copied
+Program with the ordinary full root Contract before publication. Public
+constructors would retain immediate validation; intermediate private validation
+would occur at a different time. Getter callbacks, malformed Terms, exception
+ordering and restoration after failure require explicit differential controls.
+This is a proposed change needing authorization, not a proven equivalence or an
+implemented speedup.
+
+** Authorized private snapshot construction and differential controls
+
+After the blocked proposal above, the user explicitly authorized the private
+snapshot refactor subject to strict differential verification. The implementation
+now validates the complete caller Program, captures caller slots in the ordinary
+checking environment, constructs only canonical owned positive declarations in
+the existing private extent, and validates the complete copied Program with the
+ordinary root Contract. The final call explicitly disables Term memoization.
+Nonatom descriptor copying retains ordinary constructor checks. Public Term,
+Atom, Rule and Program constructors are unchanged.
+
+The frozen snapshot copier is retained as a test-only source control from
+commit =9d476f39=, blob =a05ecd516c0787adbe2436466bccf95b3870668c=.
+Five added Cases compare complete ASTs, limits, independent naive closures on
+64 graph masks, getter traces, malformed Terms, getter/root failures, immediate
+public recursive checks, restoration after exceptions and mutable-input
+isolation. Both serial and twelve-worker evaluation requests are exercised;
+checked scalar predicates may select the serial fallback, so this is not a
+claim of Actor dispatch coverage. The existing independent Actor/Rayon controls
+remain required by full acceptance.
+
+All nine Cases in =scheme-closure-contract-test.ss= passed. The observed Term
+classifier count is 70 for the frozen copier and 28 for the candidate at 14
+positive Term occurrences: the caller and output root traversals are retained.
+Initial fixture failures are retained: descriptor writes alone did not clear
+already instantiated slots, while invalidating the entire global Type descriptor
+incorrectly regenerated its nominal prototype. The corrected counter replaces
+and restores only the cached classifier method; it never invalidates the Type
+prototype. Mutable value fixtures explicitly invalidate only their value object.
+
+A separate native control compiled the frozen copier under the identical public
+module identity into an isolated library. Before/after =relational-admit= calls
+therefore exercise the real public interface, not an alternative snapshot API.
+The unchanged original publication Suite also passed against both libraries.
+
+| Public width-64 admission | Frozen allocated bytes | Candidate allocated bytes |
+|---------------------------+------------------------+---------------------------|
+| Frozen Operator producer  | 865771184              | 366177776                 |
+| Current Operator producer | 865745744              | 366143520                 |
+
+The current producer's admission allocation decreases by about 57.7%. Solve
+still allocates 74992 bytes and query 3328 bytes in this fixture. Observed whole
+Suite durations were 11.952 s and 9.491 s, respectively, but unrelated sustained
+CPU-heavy Python jobs were present. These durations are retained diagnostic
+observations, not admitted wall-time improvements or evidence that the historical
+148-second Case is closed on the three-core runner.
+
+Lean proves the positive construction check-count relation and retains exact
+renderings of the current snapshot source and Quint model. Quint's original
+controls remain, with two additional required counterexamples for skipping a
+root and retaining intermediate work. These source bindings and count theorems
+are not an operational equivalence proof for Gambit callbacks, mutable POO
+objects, allocation or compiler execution. The strict state-level invariants
+conjoin the full cost predicate with the existing nonnegative attempt counter;
+no conditional bypass is used.
+
+** Remaining evidence boundaries
+
+True cold Scheme-to-C/C compilation acceleration remains open. Compatible-cache
+reuse avoids work but does not accelerate those compiler jobs. The 148-second
+historical Case is now tied to a measured admission-allocation cause and a native
+candidate reduction; isolated exact-head runtime acceptance is still required.
+Measured GCC GGC allocation, Gambit cumulative allocation and RSS remain distinct
+quantities. A complete kernel-checked correspondence from mutable callbacks,
+compiler execution and allocator behavior to the abstract cost model is not
+established. Checker/decoder equivalence, full mutable-index/SCC refinement and
+Actor/Rayon message conversion likewise cannot be called closed by these tests
+or whole-file rendering equality.
+
+** Local complete acceptance before publication
+
+The current native package built successfully. Complete semantic preparation
+also succeeded; its 581-module local support inventory differs from the frozen
+CI inventory, so the 232.47-second local preparation is not a matched improvement.
+The complete source semantic command then passed all 174 modules and 1417 Cases
+in 90 batches using twelve VM workers and the original per-child single-processor
+runtime setup. Its observed 193.00-second parent duration is not an isolated
+three-core performance result. No original Suite or performance threshold was
+removed. Focused compiler-cost tests passed all 27 checks, including the native
+SDK controls; formal-runner inventory tests passed all 11 checks.
+
+The complete Lean build passed all 182 jobs under locked LeanPoo Guard revision
+=6aae50a9867c12191abb2180fdf031b3a8f55060=, without additional helper threads,
+with the direct child reaped. Current snapshot, Quint and cache-input source
+renderings match byte-for-byte under the same Guard. The full ClosedDslLowering
+Quint exploration retained all old counterexamples and rejected both new
+root-skipping and retained-intermediate-work mutants. These local results precede
+the final integration commit; exact-head remote CI remains independently required.

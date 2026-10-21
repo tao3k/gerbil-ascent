@@ -37,6 +37,13 @@ module ClosedDslLowering {
     route' = route, attempts' = attempts, owner' = owner, rejected' = rejected
   }
   action step = any {Read, Reject, Construct, Finish, Idle}
+  // Canonical positive snapshot occurrences: caller root + copied root.
+  // The old copier also performs Term, Atom and Rule intermediate checks.
+  pure def snapshot_checks(terms: int, captured: bool): int =
+    if (not(captured) or Mutation == "retain-snapshot-intermediate") 5 * terms
+    else if (Mutation == "skip-snapshot-root") terms else 2 * terms
+  val SnapshotRoots = snapshot_checks(14, true) == 2 * 14 and attempts >= 0
+  val SnapshotWorkExact = snapshot_checks(14, false) - snapshot_checks(14, true) == 3 * 14 and attempts >= 0
   val WholeChoice = route != "closed" or recognized
   val NoRetry = attempts <= 1
   val FailurePrivate = not(rejected) or not(owner)

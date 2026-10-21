@@ -24,18 +24,10 @@
        (gerbil-ascent-literal value)))
     (else (error "unsupported relational term" (.ref term 'kind)))))
 
-(def (relational-copy-atom atom)
-  (unless (eq? (.ref atom 'ascent-clause-kind) 'atom)
-    (error "unsupported relational clause"))
-  (gerbil-ascent-atom
-   (.ref atom 'relation)
-   (map relational-copy-term (.ref atom 'terms))))
-
 ;;; Rebuild from the descriptor, never from the callback stored for the old
 ;;; evaluator. An unmarked guard or binding cannot cross admission.
 (def (relational-copy-clause clause)
   (case (.ref clause 'ascent-clause-kind)
-    ((atom) (relational-copy-atom clause))
     ((negation)
      (gerbil-ascent-negation
       (.ref clause 'relation)
@@ -88,16 +80,47 @@
     (else (error "unsupported relational clause"
                  (.ref clause 'ascent-clause-kind)))))
 
-(def (relational-copy-rule rule)
-  (gerbil-ascent-rule
-   (map relational-copy-atom (.ref rule 'heads))
-   (map relational-copy-clause (.ref rule 'body))))
+;;; Capture caller slots outside the private construction extent. Only closed
+;;; canonical builders may execute inside it; no caller getter or supplied
+;;; callback is retained. Nonatom descriptors keep their ordinary checked copy.
+(def (relational-capture-term term)
+  (case (.ref term 'kind)
+    ((variable)
+     (let (name (.ref term 'value))
+       (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))
+       (lambda () (gerbil-ascent-variable name))))
+    ((wildcard) (lambda () (gerbil-ascent-wildcard)))
+    ((literal)
+     (let (value (.ref term 'value))
+       (unless (relational-scalar? value)
+         (error "non-scalar relational literal" value))
+       (lambda () (gerbil-ascent-literal value))))
+    (else (error "unsupported relational term" (.ref term 'kind)))))
+
+(def (relational-capture-atom atom)
+  (unless (eq? (.ref atom 'ascent-clause-kind) 'atom)
+    (error "unsupported relational clause"))
+  (let ((name (.ref atom 'relation))
+        (terms (map relational-capture-term (.ref atom 'terms))))
+    (lambda () (gerbil-ascent-atom name (map (lambda (build) (build)) terms)))))
+
+(def (relational-capture-clause clause)
+  (if (eq? (.ref clause 'ascent-clause-kind) 'atom)
+    (relational-capture-atom clause)
+    (let (copied (relational-copy-clause clause)) (lambda () copied))))
+
+(def (relational-capture-rule rule)
+  (let ((heads (map relational-capture-atom (.ref rule 'heads)))
+        (body (map relational-capture-clause (.ref rule 'body))))
+    (lambda ()
+      (gerbil-ascent-rule (map (lambda (build) (build)) heads)
+                         (map (lambda (build) (build)) body)))))
 
 ;;; The engine constructor checks relation names, arities, rule bindings,
 ;;; dependencies and budgets before the admission value becomes observable.
 (def (relational-snapshot-program program)
   (validate GerbilAscentProgramContract program)
-  (gerbil-ascent-program
+  (let* ((relations
    (map (lambda (relation)
           (let* ((domain (.ref relation 'checked-domain))
                  (domains
@@ -122,9 +145,16 @@
                      (relational-finite-lattice name arity rows (vector-ref descriptor 1) domains)
                      (relational-checked-lattice name arity rows (vector-ref descriptor 1)))))
               (else (error "unsupported relational storage kind")))))
-        (.ref program 'relations))
-   (map relational-copy-rule (.ref program 'rules))
-   (.ref program 'max-input-facts)
-   (.ref program 'max-derived-facts)
-   (.ref program 'max-output-facts)
-   (.ref program 'source-handles)))
+        (.ref program 'relations)))
+         (rules (map relational-capture-rule (.ref program 'rules)))
+         (input-limit (.ref program 'max-input-facts))
+         (derived-limit (.ref program 'max-derived-facts))
+         (output-limit (.ref program 'max-output-facts))
+         (sources (.ref program 'source-handles)))
+    ;; The source has already passed the ordinary complete Program contract.
+    ;; This new, private tree passes that same complete contract after restoring
+    ;; ordinary constructor checks. No Term validation result is memoized.
+    (gerbil-ascent-construct-inert-program
+     (lambda ()
+       (gerbil-ascent-program relations (map (lambda (build) (build)) rules)
+         input-limit derived-limit output-limit sources)) #f)))

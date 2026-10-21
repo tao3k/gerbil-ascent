@@ -167,7 +167,7 @@ jobs:
           printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # BEGIN GENERATED PREPARATION CACHE-INPUTS
-          compiler_inputs="$(git ls-files -s -- build.ss build-modules.ss justfile gerbil.pkg bindings t/harness .github/workflows/build-cost.yml | sha256sum | cut -d ' ' -f 1)"
+          compiler_inputs="$(git ls-files -s -- build.ss build-modules.ss gerbil.pkg bindings t/harness/build.ss t/harness/artifact-admission.ss t/harness/library-spec.ss | sha256sum | cut -d ' ' -f 1)"
           printf 'compiler_inputs=%s\n' "$compiler_inputs" >> "$GITHUB_OUTPUT"
           source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
           printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"

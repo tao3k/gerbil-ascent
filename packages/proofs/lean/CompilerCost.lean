@@ -204,8 +204,24 @@ def observedCacheIdentity (profile : Profile) (_controller : String) : Profile :
 theorem observation_change_preserves_compiler_identity (profile : Profile) (a b : String) :
     observedCacheIdentity profile a = observedCacheIdentity profile b := rfl
 
+-- Compatibility restores compiled resources; exact source/resource admission
+-- still runs after restoring the current checkout. Runtime dispatch and the
+-- observation controller do not change the compiler recipe.
+def preparationCompatibilityInputs : List String :=
+  ["build.ss", "build-modules.ss", "gerbil.pkg", "bindings",
+   "t/harness/build.ss", "t/harness/artifact-admission.ss", "t/harness/library-spec.ss"]
+
+theorem runtime_dispatch_not_compiler_recipe :
+    "t/harness/test.ss" ∉ preparationCompatibilityInputs := by decide
+
+theorem observation_workflow_not_compiler_recipe :
+    ".github/workflows/build-cost.yml" ∉ preparationCompatibilityInputs := by decide
+
+theorem cli_wrapper_not_compiler_recipe :
+    "justfile" ∉ preparationCompatibilityInputs := by decide
+
 def cacheInputsYamlSource : String :=
-  "          compiler_inputs=\"$(git ls-files -s -- build.ss build-modules.ss justfile gerbil.pkg bindings t/harness .github/workflows/build-cost.yml | sha256sum | cut -d ' ' -f 1)\"\n          printf 'compiler_inputs=%s\\n' \"$compiler_inputs\" >> \"$GITHUB_OUTPUT\"\n          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
+  "          compiler_inputs=\"$(git ls-files -s -- " ++ String.intercalate " " preparationCompatibilityInputs ++ " | sha256sum | cut -d ' ' -f 1)\"\n          printf 'compiler_inputs=%s\\n' \"$compiler_inputs\" >> \"$GITHUB_OUTPUT\"\n          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
 
 def producerPythonSource : String :=
   "def producer_eligible(success, current, ordered, same_content, unique):\n    return success and current and ordered and same_content and unique\n"
@@ -420,3 +436,7 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.projection_completeness_exact
 
 #print axioms Ascent.CompilerCost.identical_cache_encoding_reuse
+
+#print axioms Ascent.CompilerCost.runtime_dispatch_not_compiler_recipe
+#print axioms Ascent.CompilerCost.observation_workflow_not_compiler_recipe
+#print axioms Ascent.CompilerCost.cli_wrapper_not_compiler_recipe

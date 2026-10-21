@@ -370,6 +370,8 @@ def main() -> int:
             # Compare generated executable definitions, not source digests or
             # captured test outputs. Runtime and Quint import these exact files.
             renderings = (
+                ("ExecutionPolicy.lean", "snapshot", "program/scheme-snapshot.ss"),
+                ("ExecutionPolicy.lean", "snapshot-quint", "packages/proofs/quint/ClosedDslLowering.qnt"),
                 ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
                 ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),

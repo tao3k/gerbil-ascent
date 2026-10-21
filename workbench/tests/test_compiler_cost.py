@@ -13,6 +13,42 @@ from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, g
 
 
 class CompilerCostTests(unittest.TestCase):
+    def test_runtime_only_edits_preserve_restore_compatibility_but_change_exact_source_key(self):
+        import hashlib
+        import re
+        workflow = Path('.github/workflows/build-cost.yml').read_text()
+        selection = re.search(r'compiler_inputs="\$\(git ls-files -s -- (.*?) \| sha256sum', workflow).group(1).split()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.check_output(['git', '-C', str(root), *args])
+            git('init', '-q')
+            inputs = ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'bindings/c/ascent.h',
+                      't/harness/build.ss', 't/harness/artifact-admission.ss', 't/harness/library-spec.ss',
+                      't/harness/test.ss', '.github/workflows/build-cost.yml', 'justfile']
+            for name in inputs:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('initial\n')
+            git('add', '.')
+            def compatibility():
+                return hashlib.sha256(git('ls-files', '-s', '--', *selection)).hexdigest()
+            def exact():
+                return hashlib.sha256(git('ls-files', '-s')).hexdigest()
+            compatible, current = compatibility(), exact()
+            for name in ['t/harness/test.ss', '.github/workflows/build-cost.yml', 'justfile']:
+                (root / name).write_text('changed runtime orchestration\n')
+                git('add', name)
+                self.assertEqual(compatibility(), compatible, name)
+                self.assertNotEqual(exact(), current, name)
+                current = exact()
+            for name in ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'bindings/c/ascent.h',
+                         't/harness/build.ss', 't/harness/artifact-admission.ss', 't/harness/library-spec.ss']:
+                previous = compatibility()
+                (root / name).write_text('changed compiler or dependency input\n')
+                git('add', name)
+                self.assertNotEqual(compatibility(), previous, name)
+
     def test_unknown_cc_options_are_not_the_observed_sdk_default(self):
         from ascent_workbench.preparation_work import cc_options_observed
         for unknown in [None, False, 0, [], {}]:

@@ -103,6 +103,26 @@ def oldCorpusTermChecks : Nat := 3072 * publicTermChecks 14
 def newCorpusTermChecks : Nat := 1024 * publicTermChecks 14 + 2048 * ownedTermChecks 14
  theorem corpus_term_check_reduction : newCorpusTermChecks * 2 = oldCorpusTermChecks := by decide
 
+-- Successful positive snapshots check the complete caller root and copied
+-- root. The frozen copier additionally checks Term/Atom/Rule intermediates.
+-- No theorem here identifies validation callbacks with arbitrary pure functions.
+def publicSnapshotTermChecks (terms : Nat) : Nat := terms + publicTermChecks terms
+def capturedSnapshotTermChecks (terms : Nat) : Nat := terms + ownedTermChecks terms
+
+theorem snapshot_both_roots_retained (terms : Nat) :
+    capturedSnapshotTermChecks terms = terms + terms := rfl
+
+theorem snapshot_intermediate_checks_removed (terms : Nat) :
+    capturedSnapshotTermChecks terms + 3 * terms = publicSnapshotTermChecks terms := by
+  simp [capturedSnapshotTermChecks, publicSnapshotTermChecks, publicTermChecks, ownedTermChecks]
+  omega
+
+-- A state-level TLC invariant keeps the complete cost predicate and adds
+-- a real nonnegative work counter. This is conjunction, never conditional
+-- admission: every state satisfying the new invariant satisfies the old one.
+theorem snapshot_state_invariant_not_weakened (cost : Prop) (attempts : Int) :
+    (cost ∧ 0 ≤ attempts) → cost := And.left
+
 -- Canonical construction is pure after captures. Capture failure propagates
 -- before construction, and complete root rejection cannot publish a value.
 def admittedConstruction {E C P : Type} (capture : Except E C)
@@ -252,6 +272,220 @@ def workloadSchemeSource : String :=
   "     (verify mask naive-rules workers)\n" ++
   "     (verify mask (reverse naive-rules) workers)) (iota 512))) '(2 4)))\n"
 
+def snapshotSchemeSource : String :=
+  ";;; -*- Gerbil -*-\n" ++
+  ";;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++
+  ";;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n" ++
+  "\n" ++
+  "\n" ++
+  ";;; Rebuild caller declarations into the checked scalar grammar before planning.\n" ++
+  ";;; This owner constructs no evaluator or retained session.\n" ++
+  "(import \"objects.ss\" \"scheme-checked.ss\"\n" ++
+  "        (only-in \"types.ss\" GerbilAscentProgramContract)\n" ++
+  "        (only-in :clan/poo/object .ref)\n" ++
+  "        (only-in :clan/poo/mop validate))\n" ++
+  "(export relational-snapshot-program)\n" ++
+  "\n" ++
+  ";;; Admission rebuilds only the checked relational grammar. This removes\n" ++
+  ";;; caller-owned row/rule lists before planning and rejects old host callbacks.\n" ++
+  "(def (relational-copy-term term)\n" ++
+  "  (case (.ref term 'kind)\n" ++
+  "    ((variable) (gerbil-ascent-variable (.ref term 'value)))\n" ++
+  "    ((wildcard) (gerbil-ascent-wildcard))\n" ++
+  "    ((literal)\n" ++
+  "     (let (value (.ref term 'value))\n" ++
+  "       (unless (relational-scalar? value)\n" ++
+  "         (error \"non-scalar relational literal\" value))\n" ++
+  "       (gerbil-ascent-literal value)))\n" ++
+  "    (else (error \"unsupported relational term\" (.ref term 'kind)))))\n" ++
+  "\n" ++
+  ";;; Rebuild from the descriptor, never from the callback stored for the old\n" ++
+  ";;; evaluator. An unmarked guard or binding cannot cross admission.\n" ++
+  "(def (relational-copy-clause clause)\n" ++
+  "  (case (.ref clause 'ascent-clause-kind)\n" ++
+  "    ((negation)\n" ++
+  "     (gerbil-ascent-negation\n" ++
+  "      (.ref clause 'relation)\n" ++
+  "      (map relational-copy-term (.ref clause 'terms))))\n" ++
+  "    ((aggregate)\n" ++
+  "     (let ((descriptor (.ref clause 'checked-operator))\n" ++
+  "           (terms (.ref clause 'terms)))\n" ++
+  "       (unless (and (vector? descriptor)\n" ++
+  "                    (= (vector-length descriptor) 6)\n" ++
+  "                    (eq? (vector-ref descriptor 0) 'reduce)\n" ++
+  "                    (eq? (vector-ref descriptor 2)\n" ++
+  "                         (.ref clause 'variable))\n" ++
+  "                    (eq? (vector-ref descriptor 3)\n" ++
+  "                         (.ref clause 'relation))\n" ++
+  "                    (equal? (vector-ref descriptor 4)\n" ++
+  "                            (.ref clause 'variables))\n" ++
+  "                    (equal? (vector-ref descriptor 5)\n" ++
+  "                            (relational-term-fingerprint terms))\n" ++
+  "                    (not (.ref clause 'output-pattern)))\n" ++
+  "         (error \"untrusted relational reduction\"))\n" ++
+  "       (relational-reducer\n" ++
+  "        (vector-ref descriptor 2) (vector-ref descriptor 1)\n" ++
+  "        (vector-ref descriptor 4) (vector-ref descriptor 3)\n" ++
+  "        (map relational-copy-term terms))))\n" ++
+  "    ((guard)\n" ++
+  "     (let (descriptor (.ref clause 'checked-operator))\n" ++
+  "       (unless (and (vector? descriptor)\n" ++
+  "                    (= (vector-length descriptor) 3)\n" ++
+  "                    (eq? (vector-ref descriptor 0) 'where)\n" ++
+  "                    (equal? (relational-operand-variables\n" ++
+  "                             (vector-ref descriptor 2))\n" ++
+  "                            (.ref clause 'variables)))\n" ++
+  "         (error \"untrusted relational filter\"))\n" ++
+  "       (relational-where (vector-ref descriptor 1)\n" ++
+  "                         (vector-ref descriptor 2))))\n" ++
+  "    ((binding)\n" ++
+  "     (let (descriptor (.ref clause 'checked-operator))\n" ++
+  "       (unless (and (vector? descriptor)\n" ++
+  "                    (= (vector-length descriptor) 4)\n" ++
+  "                    (eq? (vector-ref descriptor 0) 'compute)\n" ++
+  "                    (equal? (relational-operand-variables\n" ++
+  "                             (vector-ref descriptor 2))\n" ++
+  "                            (.ref clause 'variables))\n" ++
+  "                    (eq? (vector-ref descriptor 3)\n" ++
+  "                         (.ref clause 'variable)))\n" ++
+  "         (error \"untrusted relational projection\"))\n" ++
+  "       (relational-compute (vector-ref descriptor 3)\n" ++
+  "                            (vector-ref descriptor 1)\n" ++
+  "                            (vector-ref descriptor 2))))\n" ++
+  "    (else (error \"unsupported relational clause\"\n" ++
+  "                 (.ref clause 'ascent-clause-kind)))))\n" ++
+  "\n" ++
+  ";;; Capture caller slots outside the private construction extent. Only closed\n" ++
+  ";;; canonical builders may execute inside it; no caller getter or supplied\n" ++
+  ";;; callback is retained. Nonatom descriptors keep their ordinary checked copy.\n" ++
+  "(def (relational-capture-term term)\n" ++
+  "  (case (.ref term 'kind)\n" ++
+  "    ((variable)\n" ++
+  "     (let (name (.ref term 'value))\n" ++
+  "       (unless (symbol? name) (error \"ASCENT variable name must be a symbol\" name))\n" ++
+  "       (lambda () (gerbil-ascent-variable name))))\n" ++
+  "    ((wildcard) (lambda () (gerbil-ascent-wildcard)))\n" ++
+  "    ((literal)\n" ++
+  "     (let (value (.ref term 'value))\n" ++
+  "       (unless (relational-scalar? value)\n" ++
+  "         (error \"non-scalar relational literal\" value))\n" ++
+  "       (lambda () (gerbil-ascent-literal value))))\n" ++
+  "    (else (error \"unsupported relational term\" (.ref term 'kind)))))\n" ++
+  "\n" ++
+  "(def (relational-capture-atom atom)\n" ++
+  "  (unless (eq? (.ref atom 'ascent-clause-kind) 'atom)\n" ++
+  "    (error \"unsupported relational clause\"))\n" ++
+  "  (let ((name (.ref atom 'relation))\n" ++
+  "        (terms (map relational-capture-term (.ref atom 'terms))))\n" ++
+  "    (lambda () (gerbil-ascent-atom name (map (lambda (build) (build)) terms)))))\n" ++
+  "\n" ++
+  "(def (relational-capture-clause clause)\n" ++
+  "  (if (eq? (.ref clause 'ascent-clause-kind) 'atom)\n" ++
+  "    (relational-capture-atom clause)\n" ++
+  "    (let (copied (relational-copy-clause clause)) (lambda () copied))))\n" ++
+  "\n" ++
+  "(def (relational-capture-rule rule)\n" ++
+  "  (let ((heads (map relational-capture-atom (.ref rule 'heads)))\n" ++
+  "        (body (map relational-capture-clause (.ref rule 'body))))\n" ++
+  "    (lambda ()\n" ++
+  "      (gerbil-ascent-rule (map (lambda (build) (build)) heads)\n" ++
+  "                         (map (lambda (build) (build)) body)))))\n" ++
+  "\n" ++
+  ";;; The engine constructor checks relation names, arities, rule bindings,\n" ++
+  ";;; dependencies and budgets before the admission value becomes observable.\n" ++
+  "(def (relational-snapshot-program program)\n" ++
+  "  (validate GerbilAscentProgramContract program)\n" ++
+  "  (let* ((relations\n" ++
+  "   (map (lambda (relation)\n" ++
+  "          (let* ((domain (.ref relation 'checked-domain))\n" ++
+  "                 (domains\n" ++
+  "                  (and domain\n" ++
+  "                       (begin\n" ++
+  "                         (unless (and (vector? domain) (= (vector-length domain) 2)\n" ++
+  "                                      (eq? (vector-ref domain 0) 'finite-domain))\n" ++
+  "                           (error \"untrusted finite domain descriptor\"))\n" ++
+  "                         (vector-ref domain 1))))\n" ++
+  "                 (name (.ref relation 'name)) (arity (.ref relation 'arity))\n" ++
+  "                 (rows (.ref relation 'rows)))\n" ++
+  "            (case (.ref relation 'storage-kind)\n" ++
+  "              ((relation)\n" ++
+  "               (if domain (relational-finite-source name arity rows domains)\n" ++
+  "                   (relational-source name arity rows)))\n" ++
+  "              ((lattice)\n" ++
+  "               (let (descriptor (.ref relation 'checked-operator))\n" ++
+  "                 (unless (and (vector? descriptor) (= (vector-length descriptor) 2)\n" ++
+  "                              (eq? (vector-ref descriptor 0) 'lattice))\n" ++
+  "                   (error \"untrusted relational lattice\"))\n" ++
+  "                 (if domain\n" ++
+  "                     (relational-finite-lattice name arity rows (vector-ref descriptor 1) domains)\n" ++
+  "                     (relational-checked-lattice name arity rows (vector-ref descriptor 1)))))\n" ++
+  "              (else (error \"unsupported relational storage kind\")))))\n" ++
+  "        (.ref program 'relations)))\n" ++
+  "         (rules (map relational-capture-rule (.ref program 'rules)))\n" ++
+  "         (input-limit (.ref program 'max-input-facts))\n" ++
+  "         (derived-limit (.ref program 'max-derived-facts))\n" ++
+  "         (output-limit (.ref program 'max-output-facts))\n" ++
+  "         (sources (.ref program 'source-handles)))\n" ++
+  "    ;; The source has already passed the ordinary complete Program contract.\n" ++
+  "    ;; This new, private tree passes that same complete contract after restoring\n" ++
+  "    ;; ordinary constructor checks. No Term validation result is memoized.\n" ++
+  "    (gerbil-ascent-construct-inert-program\n" ++
+  "     (lambda ()\n" ++
+  "       (gerbil-ascent-program relations (map (lambda (build) (build)) rules)\n" ++
+  "         input-limit derived-limit output-limit sources)) #f)))\n"
+
+def snapshotQuintSource : String :=
+  "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++
+  "// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n" ++
+  "// Whole-source choice precedes construction; failure never retries another route.\n" ++
+  "module ClosedDslLowering {\n" ++
+  "  const Mutation: str\n" ++
+  "  var phase: str\n" ++
+  "  var recognized: bool\n" ++
+  "  var route: str\n" ++
+  "  var attempts: int\n" ++
+  "  var owner: bool\n" ++
+  "  var rejected: bool\n" ++
+  "  action init = all {\n" ++
+  "    phase' = \"reader\", recognized' = false, route' = \"none\",\n" ++
+  "    attempts' = 0, owner' = false, rejected' = false\n" ++
+  "  }\n" ++
+  "  action Read = { nondet complete = Set(false,true).oneOf(); all {\n" ++
+  "    phase == \"reader\", phase' = \"chosen\", recognized' = complete,\n" ++
+  "    route' = if (complete or Mutation == \"partial\") \"closed\" else \"macro\",\n" ++
+  "    attempts' = attempts, owner' = owner, rejected' = rejected\n" ++
+  "  }}\n" ++
+  "  action Reject = all {\n" ++
+  "    phase == \"reader\", phase' = \"terminal\", rejected' = true,\n" ++
+  "    recognized' = recognized, route' = route, attempts' = attempts,\n" ++
+  "    owner' = Mutation == \"rejectOwner\"\n" ++
+  "  }\n" ++
+  "  action Construct = all {\n" ++
+  "    phase == \"chosen\", phase' = \"executing\", attempts' = attempts + 1,\n" ++
+  "    recognized' = recognized, route' = route, owner' = owner, rejected' = rejected\n" ++
+  "  }\n" ++
+  "  action Finish = { nondet success = Set(false,true).oneOf(); all {\n" ++
+  "    phase == \"executing\", phase' = \"terminal\", owner' = success,\n" ++
+  "    attempts' = if (not(success) and Mutation == \"retry\") attempts + 1 else attempts,\n" ++
+  "    recognized' = recognized, route' = route, rejected' = not(success)\n" ++
+  "  }}\n" ++
+  "  action Idle = all {\n" ++
+  "    phase == \"terminal\", phase' = phase, recognized' = recognized,\n" ++
+  "    route' = route, attempts' = attempts, owner' = owner, rejected' = rejected\n" ++
+  "  }\n" ++
+  "  action step = any {Read, Reject, Construct, Finish, Idle}\n" ++
+  "  // Canonical positive snapshot occurrences: caller root + copied root.\n" ++
+  "  // The old copier also performs Term, Atom and Rule intermediate checks.\n" ++
+  "  pure def snapshot_checks(terms: int, captured: bool): int =\n" ++
+  "    if (not(captured) or Mutation == \"retain-snapshot-intermediate\") 5 * terms\n" ++
+  "    else if (Mutation == \"skip-snapshot-root\") terms else 2 * terms\n" ++
+  "  val SnapshotRoots = snapshot_checks(14, true) == 2 * 14 and attempts >= 0\n" ++
+  "  val SnapshotWorkExact = snapshot_checks(14, false) - snapshot_checks(14, true) == 3 * 14 and attempts >= 0\n" ++
+  "  val WholeChoice = route != \"closed\" or recognized\n" ++
+  "  val NoRetry = attempts <= 1\n" ++
+  "  val FailurePrivate = not(rejected) or not(owner)\n" ++
+  "}\n"
+
 end Ascent.ClosedDslLowering
 
 #print axioms Ascent.ClosedDslLowering.owned_checks_no_more
@@ -260,3 +494,8 @@ end Ascent.ClosedDslLowering
 #print axioms Ascent.ClosedDslLowering.rejected_root_not_published
 
 #print axioms Ascent.ClosedDslLowering.corpus_term_check_reduction
+
+#print axioms Ascent.ClosedDslLowering.snapshot_both_roots_retained
+#print axioms Ascent.ClosedDslLowering.snapshot_intermediate_checks_removed
+
+#print axioms Ascent.ClosedDslLowering.snapshot_state_invariant_not_weakened

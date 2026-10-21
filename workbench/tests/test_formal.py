@@ -117,7 +117,12 @@ class FormalTests(unittest.TestCase):
     def test_original_scope_and_all_controls_remain(self):
         plans = {model: obligations(configuration(model, {"ASCENT_FORMAL_GENERATION_CUTOFF": "4"}))
                  for model in MODEL_ORDER}
-        original = {name: items for name, items in plans.items()
+        snapshot_controls = {"skip-snapshot-root", "retain-snapshot-intermediate"}
+        self.assertEqual({item.name for item in plans["ClosedDslLowering"]},
+                         {"correct", "partial", "retry", "rejectOwner"} | snapshot_controls)
+        original = {name: tuple(item for item in items
+                                if not (name == "ClosedDslLowering" and item.name in snapshot_controls))
+                    for name, items in plans.items()
                     if name not in {"CachePublication", "ClueSubmission", "TrajectoryClueScope", "AnchoredEvidenceSlice", "ProgressiveEvidenceRead", "PreparationAdmission", "PreparationWork", "ArchiveWork", "EvidenceCheckpoint", "ClueQueryResume", "CompilerCost", "ModelApplicability", "CheckpointProjection", "ProgressWitness", "PositiveDslAdmission"}}
         self.assertEqual(len(original), 56)
         self.assertEqual(sum(map(len, original.values())), 377)

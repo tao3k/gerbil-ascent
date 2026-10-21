@@ -34,7 +34,7 @@ class ModuleLoadingTests(unittest.TestCase):
             self.assertEqual(engine.max_request_bytes, 4)
             self.assertIsNone(self.engine.max_request_bytes)
             with self.assertRaisesRegex(EngineError, 'caller request byte bound'):
-                engine.dsl('(define-evidence (make) (sources) (outputs))', trusted=True)
+                engine.dsl('(define-program (make) (sources) (outputs))', trusted=True)
             self.assertEqual(engine.describe()['abi'], 1)
             self.assertEqual(self.engine.describe()['abi'], 1)
 

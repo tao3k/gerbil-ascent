@@ -5,7 +5,7 @@
 (import (only-in :gerbil-ascent/candidate/datum
                  reasoning-bounded-data? candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/program scalar?)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-receipt-bound? reasoning-receipt-status
                  reasoning-receipt-query reasoning-receipt-rows))
 (export reasoning-compare-rows reasoning-compare-attempts reasoning-feedback?

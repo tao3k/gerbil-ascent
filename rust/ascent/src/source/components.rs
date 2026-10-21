@@ -1,6 +1,6 @@
 //! Explicit component scopes and binding authority for declarative Evidence.
 use super::{
-    evidence::{EvidenceProgram, definition, lower_entry},
+    program::{RuleProgram, definition, lower_entry},
     reader::{Datum, invalid, read_all},
 };
 use crate::{Component, Result};
@@ -31,7 +31,7 @@ impl Scope {
             || self.functions.contains_key(name)
     }
 }
-impl EvidenceProgram {
+impl RuleProgram {
     /// Select registry dependencies without interpreting source declarations.
     /// This is not source admission; callers must still validate the selected scopes.
     /// # Errors
@@ -201,7 +201,7 @@ fn linked_entry(
     constructor: Option<&str>,
     index: &BTreeMap<String, &Component>,
     scopes: &BTreeMap<String, Scope>,
-) -> Result<EvidenceProgram> {
+) -> Result<RuleProgram> {
     let scope = &scopes[id];
     let available = scope
         .entries

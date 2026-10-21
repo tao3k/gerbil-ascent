@@ -1,5 +1,5 @@
 ;;; Complete prior/current inputs; ASCENT derives insertion, withdrawal and retention.
-(define-evidence (make-history)
+(define-program (make-history)
   (sources current_row previous_row current_input previous_input
            proposal expected_parent observed_parent completed source_checked backend_checked)
   (outputs added removed retained changed_input added_input removed_input publishable publication_gap)

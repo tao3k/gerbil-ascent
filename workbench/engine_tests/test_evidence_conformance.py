@@ -5,7 +5,7 @@ import unittest
 from ascent import Engine, EngineError, FactLimits
 
 FIXTURE = Path(__file__).resolve().parents[2] / 't/qualification/fixtures/evidence-lifecycle/conformance.json'
-SOURCE = '''(define-evidence (make-evidence) (sources input) (outputs output)
+SOURCE = '''(define-program (make-evidence) (sources input) (outputs output)
   (relation input ((value exact-integer?)) INITIAL)
   (relation output ((value exact-integer?))) ((output X) <-- (input X)))'''
 
@@ -31,7 +31,7 @@ class EvidenceConformance(unittest.TestCase):
                 self.replay(limit, before, after, events, expected)
 
     def replay(self, limit, before, after, events, expected):
-        session = self.engine.evidence(definition(before), trusted=True, limits=FactLimits(input=limit or None))
+        session = self.engine.rules(definition(before), trusted=True, limits=FactLimits(input=limit or None))
         self.assertEqual(session.fact_limits['input'], limit or 'unlimited')
         result, proof = None, None
         generation, observed_source, proof_generation, proof_rows = 0, before, -1, 0
@@ -99,7 +99,7 @@ class EvidenceConformance(unittest.TestCase):
 
     def test_definition_reuse_keeps_sessions_and_limits_independent(self):
         source = definition(1).replace('make-evidence', 'make-a') + definition(2).replace('make-evidence', 'make-b')
-        manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
+        manifest = {'schema': 'ascent.rule-components.v1', 'components': [
             {'id': 'entry', 'source': 'entry.ss', 'exports': ['make-a', 'make-b'], 'dependencies': []}]}
         with self.engine.components(manifest, {'entry.ss': source}, 'entry', trusted=True) as factory:
             with factory.call('make-a') as declaration: a = declaration.open_session(limits=FactLimits(input=1))
@@ -115,7 +115,7 @@ class EvidenceConformance(unittest.TestCase):
 
     def test_scope_isolation_foreign_reference_and_failed_load(self):
         with self.assertRaises(EngineError): self.engine.dsl('(unknown-dsl-form)', trusted=True)
-        with self.engine.evidence(definition(1), trusted=True) as a, self.engine.evidence(definition(2), trusted=True) as b:
+        with self.engine.rules(definition(1), trusted=True) as a, self.engine.rules(definition(2), trusted=True) as b:
             receipt = a.run()
             result = a.result(receipt)
             value = result.reference('output', 0, 0)

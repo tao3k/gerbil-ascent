@@ -19,7 +19,7 @@ class ConstructorSessions(unittest.TestCase):
                   {'type': 'u8vector', 'value': [0, 255]},
                   {'type': 'number', 'value': '2/6'},
                   {'type': 'number', 'value': '1/3'}]
-        with self.engine.evidence(SOURCE, 'make-evidence', values, trusted=True) as session:
+        with self.engine.rules(SOURCE, 'make-evidence', values, trusted=True) as session:
             self.assertEqual(session.projection['status'], 'unsupported')
             self.assertEqual(session.fact_limits, {'input': 32, 'derived': 64, 'output': 96})
             self.assertEqual(set(session.queries), {'input', 'output'})
@@ -41,7 +41,7 @@ class ConstructorSessions(unittest.TestCase):
                     self.assertNotIn('1/3', str(proof.graph))
 
     def test_original_lattice_constructor_and_default_explanation(self):
-        with self.engine.evidence(LATTICE, 'make-lattice', [[0, 9], [0, 2], [1, 7]], trusted=True) as session:
+        with self.engine.rules(LATTICE, 'make-lattice', [[0, 9], [0, 2], [1, 7]], trusted=True) as session:
             first = session.run(queries=['best'])
             self.assertEqual(first['relations']['best'], [[0, 2], [1, 7]])
             with session.result(first) as result:
@@ -53,7 +53,7 @@ class ConstructorSessions(unittest.TestCase):
             self.assertEqual(session.run(queries=['best'])['relations']['best'], [[0, 12]])
 
     def test_original_graph_values_and_opaque_result_reference_replacement(self):
-        with self.engine.evidence(GRAPH, 'make-graph-values', trusted=True) as session:
+        with self.engine.rules(GRAPH, 'make-graph-values', trusted=True) as session:
             receipt = session.run()
             self.assertEqual(len(receipt['relations']['input']), 8)
             with session.result(receipt) as result:
@@ -72,7 +72,7 @@ class ConstructorSessions(unittest.TestCase):
                 with result.explanation('input') as proof: self.assertIn('unsupported', str(proof.graph))
 
     def test_independent_provenance_survives_result_release_and_fails_on_generation_change(self):
-        with self.engine.evidence(SOURCE, 'make-evidence', [1, 2], trusted=True) as session:
+        with self.engine.rules(SOURCE, 'make-evidence', [1, 2], trusted=True) as session:
             result = session.result(session.run(queries=['output']))
             explanation = result.explanation('output')
             proof = result.provenance('output')
@@ -104,7 +104,7 @@ class ConstructorSessions(unittest.TestCase):
         import os
         from unittest.mock import patch
         with patch.dict(os.environ, {'PATH': '', 'CARGO': '', 'RUSTC': ''}):
-            with self.engine.evidence(SOURCE, 'make-evidence', [7], trusted=True) as session:
+            with self.engine.rules(SOURCE, 'make-evidence', [7], trusted=True) as session:
                 receipt = session.run(queries=['output'])
                 self.assertEqual(receipt['relations']['output'], [[7]])
                 with session.result(receipt) as result:

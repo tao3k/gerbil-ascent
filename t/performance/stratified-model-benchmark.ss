@@ -5,7 +5,7 @@
                  benchmark-fixture-ref benchmark-fixture-contract-pass? benchmark-run/result)
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/finite-evidence candidate-finite-evidence)
         (only-in :gerbil-ascent/candidate/stratified-producer candidate-produce-stratified-proof)
         (only-in :gerbil-ascent/candidate/stratified-proof candidate-verify-stratified-proof)

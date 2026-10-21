@@ -6,7 +6,7 @@
 (import (only-in :gerbil-ascent/temporal/lens
                  temporal-lens temporal-source temporal-solve temporal-status
                  temporal-rows)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-rows reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))

@@ -20,7 +20,7 @@ except EngineError:
     pass
 else:
     raise AssertionError('malformed source accepted')
-source='(define-evidence (answer) (sources) (outputs value) (relation value ((x integer?)) ((7))))'
+source='(define-program (answer) (sources) (outputs value) (relation value ((x integer?)) ((7))))'
 with engine.dsl(source,trusted=True) as owner:
     with owner.run(result_format='typed-rows') as value:
         assert value.value()['relations']['value']==[[7]]
@@ -47,7 +47,7 @@ try:
     engine.dsl('(def (fail) (close-input-port (current-input-port)))',trusted=True)
 except EngineError: pass
 else: raise AssertionError('runtime procedure admitted')
-source='(define-evidence (answer) (sources) (outputs value) (relation value ((x integer?)) ((7))))'
+source='(define-program (answer) (sources) (outputs value) (relation value ((x integer?)) ((7))))'
 with engine.dsl(source,trusted=True) as owner:
     try:
         with owner.call({'method':'unknown'}) as failure: failure.value()

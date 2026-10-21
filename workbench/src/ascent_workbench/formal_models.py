@@ -1,8 +1,6 @@
-# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-"""Original complete Quint inventory, configurations and fault obligations."""
-
-MODEL_ORDER = ('DeltaClosure','RayonPublication',
+MODEL_ORDER = ('DeltaClosure',
+ 'RayonPublication',
  'MinimumHeight',
  'WithdrawalConcurrency',
  'WithdrawalSession',
@@ -49,19 +47,18 @@ MODEL_ORDER = ('DeltaClosure','RayonPublication',
  'EvidenceLifecycle',
  'DslOwnership',
  'EvidenceCacheAdmission',
- 'Trajectory',
- 'TrajectoryExploration',
- 'TrajectoryEvidenceChain',
- 'TrajectoryRuleEvolution',
- 'ModelApplicability',
  'ClosedDslLowering',
  'PositiveDslAdmission',
- 'ClosedEvidenceScope',
- 'EvidenceConsumption',
- 'EvidenceInteraction')
-
-CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants': 'Complete Partition FrontierExact NoOldWork UniqueWitness FailurePrivate'},
-'ActorRound': {'constants': 'Workers = {1,2}\n'
+ 'CachePublication',
+ 'PreparationAdmission',
+ 'PreparationWork',
+ 'ArchiveWork',
+ 'ProgressWitness',
+ 'CompilerCost')
+CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"',
+                  'invariants': 'Complete Partition FrontierExact NoOldWork UniqueWitness '
+                                'FailurePrivate'},
+ 'ActorRound': {'constants': 'Workers = {1,2}\n'
                              'GenerationCutoff = $actor_cutoff\n'
                              'RoundCutoff = $round_cutoff\n'
                              'Mutation = "none"',
@@ -83,32 +80,23 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                        'invariants': 'MapExact SnapshotExact PrivateStable HeldStable KeyCoverage '
                                      'BudgetBound RefusalSound RefusalStable'},
  'SessionPublication': {'constants': 'GenerationCutoff = $cutoff\nMutation = "none"',
-                              'invariants': 'TypeOK CommittedSnapshot CleanAligned PartialBounded',
-                              'properties': 'NoPrematurePublication',
-                              'constraint': 'ExplorationBound'},
- 'EvidenceLifecycle': {'constants': 'GenerationCutoff = $cutoff\n'
-                                          'InputLimit = 0\n'
-                                          'Mutation = "none"',
-                             'invariants': 'TypeOK CurrentResult IndependentExplanation '
-                                           'FrozenObservation RejectionAtomic ClosedOwners',
-                             'constraint': 'ExplorationBound'},
- 'DslOwnership': {'constants': 'ScopeCapacity = 2\nMutation = "none"',
-                        'invariants': 'ChargedExpansion IsolatedDefinitions NoForeignReference '
-                                      'LiveValues',
+                        'invariants': 'TypeOK CommittedSnapshot CleanAligned PartialBounded',
+                        'properties': 'NoPrematurePublication',
                         'constraint': 'ExplorationBound'},
+ 'EvidenceLifecycle': {'constants': 'GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = "none"',
+                       'invariants': 'TypeOK CurrentResult IndependentExplanation '
+                                     'FrozenObservation RejectionAtomic ClosedOwners',
+                       'constraint': 'ExplorationBound'},
+ 'DslOwnership': {'constants': 'ScopeCapacity = 2\nMutation = "none"',
+                  'invariants': 'ChargedExpansion IsolatedDefinitions NoForeignReference '
+                                'LiveValues',
+                  'constraint': 'ExplorationBound'},
  'PositiveDslAdmission': {'constants': 'Mutation = "none"',
-                          'invariants': 'CallbacksOutside ScopeRestored PublicationChecked FullEvaluationMatrix TermCheckCount'},
+                          'invariants': 'CallbacksOutside ScopeRestored PublicationChecked '
+                                        'FullEvaluationMatrix TermCheckCount'},
  'ClosedDslLowering': {'constants': 'Mutation = "none"',
-                       'invariants': 'WholeChoice NoRetry FailurePrivate SnapshotRoots SnapshotWorkExact'},
- 'ClosedEvidenceScope': {'constants': 'Mutation = "none"',
-                         'invariants': 'WholeScope FreshInvocation ChargedOnce'},
- 'EvidenceInteraction': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'EvidenceConsumption': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'Trajectory': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'TrajectoryExploration': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'TrajectoryEvidenceChain': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'TrajectoryRuleEvolution': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
- 'ModelApplicability': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
+                       'invariants': 'WholeChoice NoRetry FailurePrivate SnapshotRoots '
+                                     'SnapshotWorkExact'},
  'EvidenceCacheAdmission': {'constants': 'Mutation = "none"',
                             'invariants': 'ExactSource ExactBackend ExactPolicy FailureRevoked '
                                           'LiveAdmission'},
@@ -191,7 +179,9 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                                   'GroupedQueryExact FrozenPlanExact CompleteKeyExact '
                                   'TinyOwnerExact RoutedPointExact PointMemberExact '
                                   'CompactQueryExact CompactRangeExact CompactFallbackExact '
-                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact OwnerWorkspaceReuseExact'},
+                                  'CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete '
+                                  'StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact '
+                                  'OwnerWorkspaceReuseExact'},
  'RectangleCompaction': {'constants': 'Mutation = "none"',
                          'invariants': 'OrderedExact WeightedCount IndependentReaders'},
  'RectangleExport': {'constants': 'Mutation = "none"',
@@ -214,10 +204,37 @@ CONFIGURATIONS = {'DeltaClosure': {'constants': 'Mutation = "none"', 'invariants
                           'invariants': 'ReachExact SCCExact ParentRoots PrivateArcs RefusalAtomic '
                                         'ActiveExact DeltaExact ParentChains MemberPartition '
                                         'SizeExact WeightedDeltaExact DifferenceExact '
-                                        'ExcessWeightExact SparseMassExact'}}
-
-FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), ('allold', 'NoOldWork', 12), ('overlap', 'UniqueWitness', 12)),
-'ActorRound': (('early', 'CompletePublication', 12),
+                                        'ExcessWeightExact SparseMassExact'},
+ 'RayonPublication': {'constants': 'Mutation = "none"',
+                      'invariants': 'TypeOK ExactFacts Bounded JoinBarrier SnapshotSafe '
+                                    'CompletionExact'},
+ 'CachePublication': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
+ 'PreparationAdmission': {'constants': 'Mutation = "none"',
+                          'invariants': 'RetainedFailures NonRegression CurrentSource Complete '
+                                        'Accounted WarmCurrent NoUnresolved'},
+ 'PreparationWork': {'constants': 'Mutation = "none"',
+                     'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact '
+                                   'ImportsExact HeapLimitUnchanged HeapSelectionBounded '
+                                   'CumulativeCapabilityRequired AllocationNotNested '
+                                   'CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent '
+                                   'CompilerWorkComplete Complete Current OrderedCounter '
+                                   'InventoryDataOnly OnlyDemandedCompilation '
+                                   'SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact '
+                                   'CompleteCacheBundle PackedStartupCount BoundedSourceEntries '
+                                   'ExitedVmReleasesEntries OnlyConsumerRoots '
+                                   'UnadmittedCatalogPresent DemandedSupportRetained '
+                                   'CachedSupportRetained SourceQueueCoverage SourceGcIsolation'},
+ 'ArchiveWork': {'constants': 'Mutation = "none"',
+                 'invariants': 'LeaseExclusive NativeCostExact ProfilesShareWork SourceCurrent '
+                               'ReceiptComplete PrivateOutputStable'},
+ 'ProgressWitness': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
+ 'CompilerCost': {'constants': 'Mutation = "none"',
+                  'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly'}}
+FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
+                  ('early', 'Complete', 12),
+                  ('allold', 'NoOldWork', 12),
+                  ('overlap', 'UniqueWitness', 12)),
+ 'ActorRound': (('early', 'CompletePublication', 12),
                 ('stale', 'NoStaleCompletion', 12),
                 ('cancel', 'CompletePublication', 12)),
  'ActorRoundCredits': (('early', 'CompleteReturn', 12),),
@@ -249,74 +266,25 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
                        ('budget-events', 'RefusalSound', 12),
                        ('refusal-publish', 'RefusalStable', 12)),
  'SessionPublication': (('early', 'CommittedSnapshot', 12),
-                              ('bounded', 'CommittedSnapshot', 12),
-                              ('alias', 'CommittedSnapshot', 12)),
+                        ('bounded', 'CommittedSnapshot', 12),
+                        ('alias', 'CommittedSnapshot', 12)),
  'EvidenceLifecycle': (('stale', 'CurrentResult', 12),
-                             ('coupled', 'IndependentExplanation', 12),
-                             ('rewrite', 'FrozenObservation', 12),
-                             ('reject', 'RejectionAtomic', 12),
-                             ('close', 'ClosedOwners', 12)),
+                       ('coupled', 'IndependentExplanation', 12),
+                       ('rewrite', 'FrozenObservation', 12),
+                       ('reject', 'RejectionAtomic', 12),
+                       ('close', 'ClosedOwners', 12)),
  'DslOwnership': (('scope', 'IsolatedDefinitions', 12),
-                        ('failed', 'ChargedExpansion', 12),
-                        ('reset', 'ChargedExpansion', 12),
-                        ('foreign', 'NoForeignReference', 12)),
+                  ('failed', 'ChargedExpansion', 12),
+                  ('reset', 'ChargedExpansion', 12),
+                  ('foreign', 'NoForeignReference', 12)),
  'PositiveDslAdmission': (('early', 'CallbacksOutside', 12),
-                           ('leak', 'ScopeRestored', 12),
-                           ('skip-root', 'PublicationChecked', 12)),
+                          ('leak', 'ScopeRestored', 12),
+                          ('skip-root', 'PublicationChecked', 12)),
  'ClosedDslLowering': (('partial', 'WholeChoice', 12),
                        ('retry', 'NoRetry', 12),
                        ('rejectOwner', 'FailurePrivate', 12),
                        ('skip-snapshot-root', 'SnapshotRoots', 12),
                        ('retain-snapshot-intermediate', 'SnapshotWorkExact', 12)),
- 'ClosedEvidenceScope': (('partial', 'WholeScope', 12),
-                         ('cached', 'FreshInvocation', 12),
-                         ('rejectPublish', 'FreshInvocation', 12)),
- 'EvidenceInteraction': (('unknown', 'Safety', 12),
-                         ('observation', 'Safety', 12),
-                         ('stale', 'Safety', 12),
-                         ('missing-condition', 'Safety', 12),
-                         ('reuse-stale', 'Safety', 12),
-                         ('drop-parent', 'Safety', 12)),
- 'EvidenceConsumption': (('intent', 'Safety', 12),
-                         ('unconsumed', 'Safety', 12),
-                         ('stale', 'Safety', 12)),
- 'Trajectory': (('drift', 'Safety', 12),
-                ('stale', 'Safety', 12),
-                ('reject', 'Safety', 12),
-                ('unknown', 'Safety', 12),
-                ('premature', 'Safety', 12)),
- 'TrajectoryExploration': (('unknown', 'Safety', 12),
-                           ('stale', 'Safety', 12),
-                           ('write', 'Safety', 12),
-                           ('authorize', 'Safety', 12)),
- 'TrajectoryEvidenceChain': (('guess-equal', 'BoundComparison', 12),
-                             ('skip-check', 'CheckedResult', 12),
-                             ('drop-history', 'DurableHistory', 12),
-                             ('stale-packet', 'CurrentPacket', 12),
-                             ('stale-result', 'CheckedResult', 12),
-                             ('wrong-contract', 'CheckedResult', 12),
-                             ('write', 'ReadOnlyExplore', 12),
-                             ('close-options', 'AdvisoryOnly', 12),
-                             ('authorize', 'AdvisoryOnly', 12),
-                             ('force-next', 'OpenChoice', 12),
-                             ('context-leaks-result', 'ContextNoResult', 12),
-                             ('same-count-prefix', 'CurrentPacket', 12)),
- 'TrajectoryRuleEvolution': (('future-leak', 'PrefixIsolation', 12),
-                             ('late-snapshot', 'SnapshotIsolation', 12),
-                             ('erase-counterexample', 'DurableCounterexamples', 12),
-                             ('publish-unreviewed', 'ReviewedPublication', 12),
-                             ('publish-stale', 'ReviewedPublication', 12),
-                             ('ignore-counterexample', 'ReviewedPublication', 12),
-                             ('select-action', 'NoActionSelection', 12),
-                             ('ignore-rule-revision', 'ReviewedPublication', 12),
-                             ('same-count-replacement', 'ReviewedPublication', 12)),
- 'ModelApplicability': (('pass-shortcut', 'ExactScope', 12),
-                        ('ignore-proposal', 'ExactScope', 12),
-                        ('ignore-model', 'ExactScope', 12),
-                        ('ignore-assumptions', 'ExactScope', 12),
-                        ('missing-dimension', 'MissingVisible', 12),
-                        ('force-next', 'OpenExploration', 12),
-                        ('ignore-provenance', 'ExactScope', 12)),
  'EvidenceCacheAdmission': (('source', 'ExactSource', 12),
                             ('backend', 'ExactBackend', 12),
                             ('policy', 'ExactPolicy', 12),
@@ -520,314 +488,125 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12), ('early', 'Complete', 12), 
  'CountProbe': (('unmatched', 'PrefixCount', 12),
                 ('early', 'CompleteExact', 12),
                 ('refusal', 'PublishedOnlyComplete', 12),
-                ('resume', 'FailureTerminal', 12))}
-
-CONFIGURATIONS['RayonPublication'] = {
-    'constants': 'Mutation = "none"',
-    'invariants': 'TypeOK ExactFacts Bounded JoinBarrier SnapshotSafe CompletionExact',
-}
-FAULTS['RayonPublication'] = (
-    ('early', 'JoinBarrier', 12),
-    ('late', 'SnapshotSafe', 12),
-    ('digest', 'CompletionExact', 12),
-    ('uncapped', 'Bounded', 12),
-)
-
-# Physical cache macro microsteps and mandatory rejection controls.
-MODEL_ORDER += ('CachePublication',)
-CONFIGURATIONS['CachePublication'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-# Third tuple field: TLC invariant-violation exit code, not a step bound.
-FAULTS['CachePublication'] = (
-    ('late-revoke', 'RevokedAliases', 12),
-    ('early-publish', 'CompletePublication', 12),
-    ('mask-error', 'ErrorIdentity', 12),
-    ('mask-witness', 'ErrorIdentity', 12),
-    ('skip-witness', 'CompletePublication', 12),
-)
-
-MODEL_ORDER += ('ClueSubmission',)
-CONFIGURATIONS['ClueSubmission'] = {
-    'constants': 'Fault = "none"', 'invariants': 'Safe',
-}
-FAULTS['ClueSubmission'] = (
-    ('stale-cas', 'CompareAndSwap', 12),
-    ('drop-history', 'Durable', 12),
-    ('promote-hypothesis', 'HypothesisSeparation', 12),
-)
-
-MODEL_ORDER += ('ProgressiveEvidenceRead',)
-CONFIGURATIONS['ProgressiveEvidenceRead'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['ProgressiveEvidenceRead'] = (
-    ('replay-seen', 'NoReplay', 12),
-    ('ack-hidden', 'NoHiddenAcknowledgement', 12),
-    ('forget-on-rescope', 'PreserveSeen', 12),
-    ('reuse-stale', 'SourceBound', 12),
-    ('scope-is-removal', 'ScopeIsNotRemoval', 12),
-    ('close-exploration', 'Open', 12),
-)
-
-MODEL_ORDER += ('AnchoredEvidenceSlice',)
-CONFIGURATIONS['AnchoredEvidenceSlice'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['AnchoredEvidenceSlice'] = (
-    ('index-only-hit', 'SoundHit', 12),
-    ('mix-witnesses', 'SoundHit', 12),
-    ('invalid-declaration-hit', 'SoundHit', 12),
-    ('ack-collapsed', 'Acknowledged', 12),
-    ('ack-before-delivery', 'DeliveryAcknowledged', 12),
-    ('reuse-unverified-delivery', 'VerifiedReuse', 12),
-    ('drop-query-on-replay', 'QueryRetained', 12),
-    ('drop-first-hit', 'FirstHit', 12),
-    ('invent-hit', 'SoundHit', 12),
-    ('dump-graph', 'Local', 12),
-    ('hide-counter', 'Family', 12),
-    ('wrong-chain', 'Traceable', 12),
-    ('hide-truncation', 'HonestPresentation', 12),
-    ('gap-as-absent', 'Gaps', 12),
-    ('mask-gap', 'Gaps', 12),
-    ('hide-discovery', 'DiscoveryExact', 12),
-    ('invent-discovery', 'DiscoveryExact', 12),
-    ('count-only-delta', 'ExactDelta', 12),
-    ('select-action', 'Open', 12),
-    ('close-scope', 'Open', 12),
-)
-
-# Public Clue exchange shares the Scheme query contract, not an Agent policy.
-MODEL_ORDER += ('TrajectoryClueScope',)
-CONFIGURATIONS['TrajectoryClueScope'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['TrajectoryClueScope'] = (
-    ('mix-catalog-source', 'CurrentBinding', 12),
-    ('promote-hypothesis', 'ObservationAuthority', 12),
-    ('negate-absence', 'OpenWorld', 12),
-    ('accept-stale', 'CurrentBinding', 12),
-    ('accept-missing-receipt', 'CurrentBinding', 12),
-    ('drop-on-expand', 'ScopeConservative', 12),
-    ('close-scope', 'OpenExploration', 12),
-    ('force-choice', 'OpenExploration', 12),
-    ('drop-history', 'DurableHistory', 12),
-    ('hide-counterevidence', 'ConflictVisible', 12),
-    ('misattribute-counter', 'CorrectReferences', 12),
-    ('inherit-old-receipt', 'ObservationAuthority', 12),
-)
-
-# Build preparation admission uses the same generated predicate as CI.
-MODEL_ORDER += ('PreparationAdmission',)
-CONFIGURATIONS['PreparationAdmission'] = {
-    'constants': 'Mutation = "none"',
-    'invariants': 'RetainedFailures NonRegression CurrentSource Complete Accounted WarmCurrent NoUnresolved',
-}
-FAULTS['PreparationAdmission'] = (
-    ('drop-history', 'RetainedFailures', 12),
-    ('ignore-regression', 'NonRegression', 12),
-    ('ignore-source', 'CurrentSource', 12),
-    ('accept-incomplete', 'Complete', 12),
-    ('ignore-work', 'Accounted', 12),
-    ('ignore-warm', 'WarmCurrent', 12),
-)
-
-# Observation coverage is distinct from compiler/allocator source refinement.
-MODEL_ORDER += ('PreparationWork',)
-CONFIGURATIONS['PreparationWork'] = {
-    'constants': 'Mutation = "none"',
-    'invariants': 'InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation',
-}
-FAULTS['PreparationWork'] = (
-    ('compact-isolated-source', 'SourceGcIsolation', 12),
-    ('ignore-ordinary-gc', 'SourceGcIsolation', 12),
-    ('drop-isolated-source', 'SourceQueueCoverage', 12),
-    ('last-interface-alias-wins', 'IndexedDispatchExact', 12),
-    ('reuse-unadmitted-interface', 'InterfaceSelectionExact', 12),
-    ('reuse-reloaded-interface', 'InterfaceSelectionExact', 12),
-    ('reuse-compiling-interface', 'InterfaceSelectionExact', 12),
-    ('reuse-consumer-interface', 'InterfaceSelectionExact', 12),
-    ('reuse-missing-interface', 'InterfaceSelectionExact', 12),
-    ('expand-admitted-interface', 'InterfaceSelectionExact', 12),
-    ('drop-qualified-interface', 'InterfaceSelectionExact', 12),
-    ('drop-syntax-interface', 'InterfaceSelectionExact', 12),
-    ('reuse-unknown-interface', 'InterfaceSelectionExact', 12),
-
-    ('raise-heap-for-gc', 'HeapLimitUnchanged', 12),
-    ('skip-heap-cap', 'HeapSelectionBounded', 12),
-    ('occupancy-as-cumulative', 'CumulativeCapabilityRequired', 12),
-    ('key-by-generated-manifest', 'ContentKeyExact', 12),
-    ('key-by-commit', 'ContentKeyExact', 12),
-    ('reuse-missing-payload', 'CompleteCacheBundle', 12),
-    ('reuse-missing-receipt', 'CompleteCacheBundle', 12),
-    ('hide-compiler-failure', 'CompilerWorkComplete', 12),
-    ('hide-changed-input', 'CompilerWorkComplete', 12),
-    ('hide-job', 'JobsExact', 12),
-    ('forget-import', 'ImportsExact', 12),
-    ('sum-nested', 'AllocationNotNested', 12),
-    ('sum-helper-cpu', 'CompilerCpuPartition', 12),
-    ('restore-outputs-only', 'RestoredSourceClock', 12),
-    ('restore-stale-source', 'RestoredSourceCurrent', 12),
-    ('publish-partial', 'Complete', 12),
-    ('ignore-generation', 'Current', 12),
-    ('clamp-counter', 'OrderedCounter', 12),
-    ('ignore-negative-raw', 'OrderedCounter', 12),
-    ('bootstrap-inventory', 'InventoryDataOnly', 12),
-    ('eager-catalog', 'OnlyDemandedCompilation', 12),
-    ('compile-source-suite', 'SourceCarriersRemainSource', 12),
-    ('compile-source-consumer', 'SourceCarriersRemainSource', 12),
-    ('reuse-stale-input', 'ReuseCurrentInputs', 12),
-    ('expand-producer-catalog', 'OnlyConsumerRoots', 12),
-    ('prune-unadmitted-catalog', 'UnadmittedCatalogPresent', 12),
-    ('batch-source-roots', 'BoundedSourceEntries', 12),
-    ('retain-source-roots', 'ExitedVmReleasesEntries', 12),
-    ('drop-demanded-support', 'DemandedSupportRetained', 12),
-    ('drop-cached-support', 'CachedSupportRetained', 12),
-)
-
-# Actual upstream archive observations, stable across Cargo configurations.
-MODEL_ORDER += ('ArchiveWork',)
-CONFIGURATIONS['ArchiveWork'] = {
-    'constants': 'Mutation = "none"',
-    'invariants': 'LeaseExclusive NativeCostExact ProfilesShareWork SourceCurrent ReceiptComplete PrivateOutputStable',
-}
-FAULTS['ArchiveWork'] = (
-    ('omit-lease', 'LeaseExclusive', 12),
-    ('split-by-profile', 'ProfilesShareWork', 12),
-    ('count-hit-as-work', 'NativeCostExact', 12),
-    ('ignore-source', 'SourceCurrent', 12),
-    ('hide-pending', 'ReceiptComplete', 12),
-    ('hide-failure', 'ReceiptComplete', 12),
-    ('hide-unknown', 'ReceiptComplete', 12),
-    ('link-shared', 'PrivateOutputStable', 12),
-)
-
-# Checkpoint is an evidence projection, not a scheduler or native admission.
-MODEL_ORDER += ('EvidenceCheckpoint',)
-CONFIGURATIONS['EvidenceCheckpoint'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['EvidenceCheckpoint'] = (
-    ('invent-enumeration', 'EnumerationGrounded', 12),
-    ('ignore-enumeration-scope', 'EnumerationGrounded', 12),
-    ('omit-enumeration-member', 'EnumerationGrounded', 12),
-    ('count-duplicate-progress', 'ProgressIsCompletionCount', 12),
-    ('heartbeat-progress', 'ProgressIsCompletionCount', 12),
-    ('extend-terminal', 'TerminalImmutable', 12),
-    ('ignore-missing-binding', 'ExactSupport', 12),
-    ('ignore-command', 'ExactSupport', 12),
-    ('skip-closure', 'ExactSupport', 12),
-    ('erase-history', 'History', 12),
-    ('stale-cut', 'ExactSupport', 12),
-    ('guess-exit', 'AvailableAndSettled', 12),
-    ('recovery-authorizes', 'NoAuthority', 12),
-    ('force-choice', 'OpenChoice', 12),
-)
-
-# Projection must keep partial component evidence distinct from a closed goal.
-MODEL_ORDER += ('CheckpointProjection',)
-CONFIGURATIONS['CheckpointProjection'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['CheckpointProjection'] = (
-    ('promote-component', 'GoalRequiresOwnReceipt', 12),
-    ('display-completes', 'GoalRequiresOwnReceipt', 12),
-    ('erase-history', 'PreserveLedger', 12),
-    ('cache-erases-evidence', 'ExactSupport', 12),
-    ('ignore-closure', 'ExactSupport', 12),
-    ('hide-open', 'ExactOpen', 12),
-    ('force-choice', 'OpenChoice', 12),
-    ('hide-provenance-gap', 'ProvenanceGapVisible', 12),
-)
-
-# Declarative read resumption is not a stored answer or a prescribed path.
-MODEL_ORDER += ('ProgressWitness',)
-CONFIGURATIONS['ProgressWitness'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['ProgressWitness'] = (
-    ('wrong-actor', 'OnlyGroundedCompletion', 12),
-    ('stale-epoch', 'OnlyGroundedCompletion', 12),
-    ('heartbeat', 'OnlyGroundedCompletion', 12),
-    ('unattested', 'OnlyGroundedCompletion', 12),
-    ('changed-source', 'OnlyGroundedCompletion', 12),
-    ('conflicting-id', 'OnlyGroundedCompletion', 12),
-    ('cursor-missing', 'OnlyGroundedCompletion', 12),
-    ('cursor-conflicting', 'OnlyGroundedCompletion', 12),
-    ('active-conflicting', 'OnlyGroundedCompletion', 12),
-    ('duplicate', 'OnlyGroundedCompletion', 12),
-    ('resume-renews', 'NoInventedTime', 12),
-)
-
-# Declarative read resumption is not a stored answer or a prescribed path.
-MODEL_ORDER += ('ClueQueryResume',)
-CONFIGURATIONS['ClueQueryResume'] = {
-    'constants': 'Mutation = "none"', 'invariants': 'Safety',
-}
-FAULTS['ClueQueryResume'] = (
-    ('ignore-transitive-change', 'SummaryCurrentOnly', 12),
-    ('ignore-scope-witness', 'SummaryCurrentOnly', 12),
-    ('erase-understanding', 'UnderstandingSurvivesCompaction', 12),
-    ('replay-all', 'ExactReads', 12),
-    ('reuse-changed-contract', 'ExactReads', 12),
-    ('keep-removed-read', 'ExactReads', 12),
-    ('drop-query', 'Restored', 12),
-    ('freeze-results', 'CurrentFacts', 12),
-    ('guess-missing', 'MissingIsUnknown', 12),
-    ('pin-caller', 'CallerOwnsScope', 12),
-    ('authorize-resume', 'NoAuthority', 12),
-    ('erase-history', 'History', 12),
-)
-
-# Native compiler settings and scoped counters; distinct from the SDK's correctness.
-MODEL_ORDER += ('CompilerCost',)
-CONFIGURATIONS['CompilerCost'] = {
-    'constants': 'Mutation = "none"',
-    'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly',
-}
-FAULTS['CompilerCost'] = (
-    ('source-before-prepared-library', 'PolicyExact', 12),
-    ('sum-pass-walls', 'PolicyExact', 12),
-    ('skip-changed-cache-write', 'PolicyExact', 12),
-    ('projection-index-first-only', 'PolicyExact', 12),
-    ('missing-options-as-default', 'PolicyExact', 12),
-    ('skip-complete-admission', 'PolicyExact', 12),
-    ('retain-duplicate-admission', 'PolicyExact', 12),
-    ('retain-tiny-range-scan', 'PolicyExact', 12),
-    ('decode-net-as-heap-events', 'PolicyExact', 12),
-    ('accept-foreign-module-catalog', 'PolicyExact', 12),
-    ('ignore-source-cost-gap', 'PolicyExact', 12),
-    ('choose-copy-by-time', 'PolicyExact', 12),
-    ('ignore-writer-overlap', 'PolicyExact', 12),
-    ('accept-tied-writers', 'PolicyExact', 12),
-    ('reuse-unadmitted-projection', 'PolicyExact', 12),
-    ('reuse-other-suite-roots', 'PolicyExact', 12),
-    ('drop-projection-dependency', 'PolicyExact', 12),
-    ('drop-latency-controls', 'PolicyExact', 12),
-    ('attribute-non-c-output', 'PolicyExact', 12),
-    ('infer-flat-linker-output', 'PolicyExact', 12),
-    ('multiply-link-cost-by-edges', 'PolicyExact', 12),
-    ('execute-cached-source', 'PolicyExact', 12),
-    ('skip-head-admission', 'PolicyExact', 12),
-    ('promote-net-stack-counter', 'PolicyExact', 12),
-    ('ignore-producer-order', 'PolicyExact', 12),
-    ('match-producer-name', 'PolicyExact', 12),
-    ('ambiguous-producer', 'PolicyExact', 12),
-    ('reuse-changed-reference', 'PolicyExact', 12),
-    ('reuse-damaged-interface', 'PolicyExact', 12),
-    ('cross-parent-cost', 'PolicyExact', 12),
-    ('ambiguous-parent-cost', 'PolicyExact', 12),
-    ('count-link-metadata', 'PolicyExact', 12),
-    ('ignore-compiler-origin', 'PolicyExact', 12),
-    ('accept-multiple-targets', 'PolicyExact', 12),
-    ('host-boundary', 'PolicyExact', 12),
-    ('ignore-compiler-failure', 'PolicyExact', 12),
-    ('ignore-compiler-input', 'PolicyExact', 12),
-    ('publish-partial-ggc', 'PolicyExact', 12),
-    ('keep-unrequested-old-output', 'PolicyExact', 12),
-    ('clean-production', 'PolicyExact', 12),
-    ('promote-vm-counter', 'PolicyExact', 12),
-    ('sum-nested-passes', 'PolicyExact', 12),
-    ('record-failed-build', 'SuccessfulCommitOnly', 12),
-    ('reuse-old-options', 'CurrentOptionsOnly', 12),
-)
+                ('resume', 'FailureTerminal', 12)),
+ 'RayonPublication': (('early', 'JoinBarrier', 12),
+                      ('late', 'SnapshotSafe', 12),
+                      ('digest', 'CompletionExact', 12),
+                      ('uncapped', 'Bounded', 12)),
+ 'CachePublication': (('late-revoke', 'RevokedAliases', 12),
+                      ('early-publish', 'CompletePublication', 12),
+                      ('mask-error', 'ErrorIdentity', 12),
+                      ('mask-witness', 'ErrorIdentity', 12),
+                      ('skip-witness', 'CompletePublication', 12)),
+ 'PreparationAdmission': (('drop-history', 'RetainedFailures', 12),
+                          ('ignore-regression', 'NonRegression', 12),
+                          ('ignore-source', 'CurrentSource', 12),
+                          ('accept-incomplete', 'Complete', 12),
+                          ('ignore-work', 'Accounted', 12),
+                          ('ignore-warm', 'WarmCurrent', 12)),
+ 'PreparationWork': (('compact-isolated-source', 'SourceGcIsolation', 12),
+                     ('ignore-ordinary-gc', 'SourceGcIsolation', 12),
+                     ('drop-isolated-source', 'SourceQueueCoverage', 12),
+                     ('last-interface-alias-wins', 'IndexedDispatchExact', 12),
+                     ('reuse-unadmitted-interface', 'InterfaceSelectionExact', 12),
+                     ('reuse-reloaded-interface', 'InterfaceSelectionExact', 12),
+                     ('reuse-compiling-interface', 'InterfaceSelectionExact', 12),
+                     ('reuse-consumer-interface', 'InterfaceSelectionExact', 12),
+                     ('reuse-missing-interface', 'InterfaceSelectionExact', 12),
+                     ('expand-admitted-interface', 'InterfaceSelectionExact', 12),
+                     ('drop-qualified-interface', 'InterfaceSelectionExact', 12),
+                     ('drop-syntax-interface', 'InterfaceSelectionExact', 12),
+                     ('reuse-unknown-interface', 'InterfaceSelectionExact', 12),
+                     ('raise-heap-for-gc', 'HeapLimitUnchanged', 12),
+                     ('skip-heap-cap', 'HeapSelectionBounded', 12),
+                     ('occupancy-as-cumulative', 'CumulativeCapabilityRequired', 12),
+                     ('key-by-generated-manifest', 'ContentKeyExact', 12),
+                     ('key-by-commit', 'ContentKeyExact', 12),
+                     ('reuse-missing-payload', 'CompleteCacheBundle', 12),
+                     ('reuse-missing-receipt', 'CompleteCacheBundle', 12),
+                     ('hide-compiler-failure', 'CompilerWorkComplete', 12),
+                     ('hide-changed-input', 'CompilerWorkComplete', 12),
+                     ('hide-job', 'JobsExact', 12),
+                     ('forget-import', 'ImportsExact', 12),
+                     ('sum-nested', 'AllocationNotNested', 12),
+                     ('sum-helper-cpu', 'CompilerCpuPartition', 12),
+                     ('restore-outputs-only', 'RestoredSourceClock', 12),
+                     ('restore-stale-source', 'RestoredSourceCurrent', 12),
+                     ('publish-partial', 'Complete', 12),
+                     ('ignore-generation', 'Current', 12),
+                     ('clamp-counter', 'OrderedCounter', 12),
+                     ('ignore-negative-raw', 'OrderedCounter', 12),
+                     ('bootstrap-inventory', 'InventoryDataOnly', 12),
+                     ('eager-catalog', 'OnlyDemandedCompilation', 12),
+                     ('compile-source-suite', 'SourceCarriersRemainSource', 12),
+                     ('compile-source-consumer', 'SourceCarriersRemainSource', 12),
+                     ('reuse-stale-input', 'ReuseCurrentInputs', 12),
+                     ('expand-producer-catalog', 'OnlyConsumerRoots', 12),
+                     ('prune-unadmitted-catalog', 'UnadmittedCatalogPresent', 12),
+                     ('batch-source-roots', 'BoundedSourceEntries', 12),
+                     ('retain-source-roots', 'ExitedVmReleasesEntries', 12),
+                     ('drop-demanded-support', 'DemandedSupportRetained', 12),
+                     ('drop-cached-support', 'CachedSupportRetained', 12)),
+ 'ArchiveWork': (('omit-lease', 'LeaseExclusive', 12),
+                 ('split-by-profile', 'ProfilesShareWork', 12),
+                 ('count-hit-as-work', 'NativeCostExact', 12),
+                 ('ignore-source', 'SourceCurrent', 12),
+                 ('hide-pending', 'ReceiptComplete', 12),
+                 ('hide-failure', 'ReceiptComplete', 12),
+                 ('hide-unknown', 'ReceiptComplete', 12),
+                 ('link-shared', 'PrivateOutputStable', 12)),
+ 'ProgressWitness': (('wrong-actor', 'OnlyGroundedCompletion', 12),
+                     ('stale-epoch', 'OnlyGroundedCompletion', 12),
+                     ('heartbeat', 'OnlyGroundedCompletion', 12),
+                     ('unattested', 'OnlyGroundedCompletion', 12),
+                     ('changed-source', 'OnlyGroundedCompletion', 12),
+                     ('conflicting-id', 'OnlyGroundedCompletion', 12),
+                     ('cursor-missing', 'OnlyGroundedCompletion', 12),
+                     ('cursor-conflicting', 'OnlyGroundedCompletion', 12),
+                     ('active-conflicting', 'OnlyGroundedCompletion', 12),
+                     ('duplicate', 'OnlyGroundedCompletion', 12),
+                     ('resume-renews', 'NoInventedTime', 12)),
+ 'CompilerCost': (('source-before-prepared-library', 'PolicyExact', 12),
+                  ('sum-pass-walls', 'PolicyExact', 12),
+                  ('skip-changed-cache-write', 'PolicyExact', 12),
+                  ('projection-index-first-only', 'PolicyExact', 12),
+                  ('missing-options-as-default', 'PolicyExact', 12),
+                  ('skip-complete-admission', 'PolicyExact', 12),
+                  ('retain-duplicate-admission', 'PolicyExact', 12),
+                  ('retain-tiny-range-scan', 'PolicyExact', 12),
+                  ('decode-net-as-heap-events', 'PolicyExact', 12),
+                  ('accept-foreign-module-catalog', 'PolicyExact', 12),
+                  ('ignore-source-cost-gap', 'PolicyExact', 12),
+                  ('choose-copy-by-time', 'PolicyExact', 12),
+                  ('ignore-writer-overlap', 'PolicyExact', 12),
+                  ('accept-tied-writers', 'PolicyExact', 12),
+                  ('reuse-unadmitted-projection', 'PolicyExact', 12),
+                  ('reuse-other-suite-roots', 'PolicyExact', 12),
+                  ('drop-projection-dependency', 'PolicyExact', 12),
+                  ('drop-latency-controls', 'PolicyExact', 12),
+                  ('attribute-non-c-output', 'PolicyExact', 12),
+                  ('infer-flat-linker-output', 'PolicyExact', 12),
+                  ('multiply-link-cost-by-edges', 'PolicyExact', 12),
+                  ('execute-cached-source', 'PolicyExact', 12),
+                  ('skip-head-admission', 'PolicyExact', 12),
+                  ('promote-net-stack-counter', 'PolicyExact', 12),
+                  ('ignore-producer-order', 'PolicyExact', 12),
+                  ('match-producer-name', 'PolicyExact', 12),
+                  ('ambiguous-producer', 'PolicyExact', 12),
+                  ('reuse-changed-reference', 'PolicyExact', 12),
+                  ('reuse-damaged-interface', 'PolicyExact', 12),
+                  ('cross-parent-cost', 'PolicyExact', 12),
+                  ('ambiguous-parent-cost', 'PolicyExact', 12),
+                  ('count-link-metadata', 'PolicyExact', 12),
+                  ('ignore-compiler-origin', 'PolicyExact', 12),
+                  ('accept-multiple-targets', 'PolicyExact', 12),
+                  ('host-boundary', 'PolicyExact', 12),
+                  ('ignore-compiler-failure', 'PolicyExact', 12),
+                  ('ignore-compiler-input', 'PolicyExact', 12),
+                  ('publish-partial-ggc', 'PolicyExact', 12),
+                  ('keep-unrequested-old-output', 'PolicyExact', 12),
+                  ('clean-production', 'PolicyExact', 12),
+                  ('promote-vm-counter', 'PolicyExact', 12),
+                  ('sum-nested-passes', 'PolicyExact', 12),
+                  ('record-failed-build', 'SuccessfulCommitOnly', 12),
+                  ('reuse-old-options', 'CurrentOptionsOnly', 12))}

@@ -9,7 +9,7 @@
                  temporal-interval temporal-window-verdict temporal-lens temporal-source temporal-solve temporal-fork temporal-scope temporal-projection
                  temporal-status temporal-rows temporal-frontier temporal-verify
                  temporal-compare temporal-receipt temporal-evidence-verdicts)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-receipt-status reasoning-receipt-rows))
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-receipt-status reasoning-receipt-rows))
 (export ascent-temporal-lens-test)
 
 (def events '((a 0 0) (b 1 1) (c 3 3) (d 2 2)))

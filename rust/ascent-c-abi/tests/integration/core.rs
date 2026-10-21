@@ -1,7 +1,7 @@
 //! Real existing Core algorithms called through the fixed C ABI owner contract.
 use gerbil_scheme_python::{OwnedValue as V, ValueLimits, c_abi::ForeignCallable};
 use std::collections::BTreeMap;
-const SOURCE: &str = "(define-evidence (history)
+const SOURCE: &str = "(define-program (history)
  (sources current previous) (outputs added removed current)
  (relation current ((x exact-integer?)) ((1) (2)))
  (relation previous ((x exact-integer?)) ((1)))
@@ -159,13 +159,13 @@ fn evidence_runs_withdraws_and_retains_immutable_results_through_c_abi() {
 
 #[test]
 fn fixed_export_matches_existing_core_non_scalar_algorithm() {
-    let source = "(define-evidence (graphs) (sources) (outputs objects)
+    let source = "(define-program (graphs) (sources) (outputs objects)
       (relation objects (value) (((object-graph (ref 0) ((0 vector (ref 0))))))))";
     let call = ascent_c_abi::open(&captures(source)).unwrap();
     let observed = response(&call, &run());
     let core = gerbil_ascent::Engine::new(1).unwrap();
     let mut session = core
-        .open_evidence_sources(&[source], None, gerbil_ascent::FactLimits::default())
+        .open_declaration_sources(&[source], None, gerbil_ascent::FactLimits::default())
         .unwrap();
     let actual = session
         .run(
@@ -253,7 +253,7 @@ fn component_captures(exports: V) -> V {
         ]),
         map([
             ("id", text("entry")),
-            ("source", text("(define-evidence (make) (sources input) (outputs answer) (relation input ((x exact-integer?)) ((3) (7))) (relation answer ((x exact-integer?))) (include f))")),
+            ("source", text("(define-program (make) (sources input) (outputs answer) (relation input ((x exact-integer?)) ((3) (7))) (relation answer ((x exact-integer?))) (include f))")),
             ("exports", V::List(vec![text("make")])),
             ("dependencies", V::List(vec![map([
                 ("component", text("shared")),
@@ -389,7 +389,7 @@ fn precompiled_graph_closure_captures_and_state_cross_the_c_abi() {
 
 #[test]
 fn declarative_match_and_finite_for_execute_through_the_c_abi() {
-    let source = "(define-evidence (shapes) (sources seed packed) (outputs unpacked pair selected)
+    let source = "(define-program (shapes) (sources seed packed) (outputs unpacked pair selected)
       (relation seed ((n exact-integer?)) ((7)))
       (relation packed (value) '((#(2 9)) (#(3 10)) (#(4))))
       (relation unpacked ((x exact-integer?) (y exact-integer?)))

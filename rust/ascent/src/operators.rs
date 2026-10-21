@@ -38,7 +38,9 @@ pub enum Operator {
     VectorRef,
 }
 impl Operator {
-    pub(crate) fn named(name: &str) -> Option<Self> {
+    /// Resolve a supported operator name without executing a callback.
+    #[must_use]
+    pub fn named(name: &str) -> Option<Self> {
         Some(match name {
             "<" => Self::Less,
             "<=" => Self::LessEqual,
@@ -95,7 +97,9 @@ pub enum Reducer {
     Max,
 }
 impl Reducer {
-    pub(crate) fn named(name: &str) -> Option<Self> {
+    /// Resolve a supported operator name without executing a callback.
+    #[must_use]
+    pub fn named(name: &str) -> Option<Self> {
         Some(match name {
             "mean" => Self::Mean,
             "count" => Self::Count,

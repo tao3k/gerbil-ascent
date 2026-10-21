@@ -8,7 +8,7 @@
                  candidate weights support-phases contract-snapshot
                  study-cases study-repair-seed study-filter-seed)
         (only-in :gerbil-ascent/candidate/program candidate-variable? candidate-language-description)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-diagnostics reasoning-diagnostic-code
                  reasoning-diagnostic-path reasoning-verify-finite-receipt

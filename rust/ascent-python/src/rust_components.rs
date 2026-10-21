@@ -1,6 +1,6 @@
 //! Structured component declarations enter Rust scopes, never a Python linker.
-use crate::rust_api::{Evidence, Owner, error, packets};
-use gerbil_ascent::{Component, Data, Dependency, EvidenceProgram, FactLimits};
+use crate::rust_api::{Owner, RuleSession, error, packets};
+use gerbil_ascent::{Component, Data, Dependency, FactLimits, RuleProgram};
 use gerbil_scheme_python::ValueLimits;
 use pyo3::{
     Bound, PyAny, PyRef, PyResult, Python,
@@ -19,7 +19,7 @@ fn components(
     sources: &Data,
     entry: &str,
 ) -> gerbil_ascent::Result<Vec<Component>> {
-    if manifest.field("schema")?.text()? != "ascent.evidence-components.v1" {
+    if manifest.field("schema")?.text()? != "ascent.rule-components.v1" {
         return Err(gerbil_ascent::Error::InvalidProgram(
             "component manifest schema".into(),
         ));
@@ -53,7 +53,7 @@ fn components(
             })
         })
         .collect::<gerbil_ascent::Result<Vec<_>>>()?;
-    let selected: BTreeSet<_> = EvidenceProgram::component_dependencies(&components, entry)?
+    let selected: BTreeSet<_> = RuleProgram::component_dependencies(&components, entry)?
         .into_iter()
         .collect();
     for item in manifest.field("components")?.list()? {
@@ -97,7 +97,7 @@ impl Components {
             .map_err(error)?;
         let loaded = manifest
             .py()
-            .detach(|| EvidenceProgram::component_ids(&components, entry))
+            .detach(|| RuleProgram::component_ids(&components, entry))
             .map_err(error)?;
         if engine.0.is_closed() {
             return Err(PyValueError::new_err("engine owner closed"));
@@ -151,7 +151,7 @@ impl Components {
             .filter(|_| self.loaded.iter().any(|id| id == selected))
             .ok_or_else(|| {
                 error(gerbil_ascent::Error::InvalidProgram(
-                    "unselected Evidence component".into(),
+                    "unselected RuleSession component".into(),
                 ))
             })?;
         if target
@@ -160,11 +160,11 @@ impl Components {
             .is_some_and(|names| !names.iter().any(|name| name == constructor))
         {
             return Err(error(gerbil_ascent::Error::InvalidProgram(
-                "hidden Evidence constructor".into(),
+                "hidden RuleSession constructor".into(),
             )));
         }
         let entry = py
-            .detach(|| EvidenceProgram::read_components(&self.entries, selected, Some(constructor)))
+            .detach(|| RuleProgram::read_components(&self.entries, selected, Some(constructor)))
             .map_err(error)?;
         Ok(Declaration {
             engine: self.engine.clone(),
@@ -188,7 +188,7 @@ impl Components {
 #[pyclass(name = "Declaration", frozen)]
 pub(super) struct Declaration {
     engine: gerbil_ascent::Engine,
-    entry: EvidenceProgram,
+    entry: RuleProgram,
     scope: Arc<AtomicBool>,
     closed: AtomicBool,
 }
@@ -208,17 +208,14 @@ impl Declaration {
         &self,
         py: Python<'_>,
         limits: Option<PyRef<'_, Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         if self.closed() {
             return Err(PyValueError::new_err("declaration owner closed"));
         }
         let limits = limits.map(|p| p.0).unwrap_or_default();
-        py.detach(|| {
-            self.engine
-                .open_evidence_program(self.entry.clone(), limits)
-        })
-        .map(Evidence::owned)
-        .map_err(error)
+        py.detach(|| self.engine.open_rule_program(self.entry.clone(), limits))
+            .map(RuleSession::owned)
+            .map_err(error)
     }
     fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
         slf

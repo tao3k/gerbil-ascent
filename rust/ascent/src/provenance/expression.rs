@@ -70,9 +70,15 @@ pub(super) fn evaluate(
             if value.vector_items().is_some_and(|items| Some(items.len()) == width))));
     }
     if *op == Operator::VectorRef {
-        let index = integer(&right)?.to_usize().ok_or_else(|| Error::Evaluation("vector proof index".into()))?;
-        let Value::Object(value) = left else { return Err(Error::Evaluation("vector proof expects vector".into())); };
-        for _ in 0..value.graph().nodes.len() { step()?; }
+        let index = integer(&right)?
+            .to_usize()
+            .ok_or_else(|| Error::Evaluation("vector proof index".into()))?;
+        let Value::Object(value) = left else {
+            return Err(Error::Evaluation("vector proof expects vector".into()));
+        };
+        for _ in 0..value.graph().nodes.len() {
+            step()?;
+        }
         return value.vector_item(index);
     }
     if *op == Operator::StringEqual {

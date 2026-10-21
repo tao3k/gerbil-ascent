@@ -1,6 +1,6 @@
 (def (study-action-id study suffix)
   (string->symbol (string-append "study:" (symbol->string study) ":" suffix)))
-(define-evidence (make-actions)
+(define-program (make-actions)
   (sources DeclaredAction DeclaredRequires PremiseDepends DeclaredSatisfied DeclaredCurrent RecordedOutcome Hypothesis Prediction Observation ObservationEvidence PremiseEvidence ActionEvidence EvidenceReference ProcessExit
            DeclaredKind DeclaredStudyMember DeclaredSourcePremise StudySourceBinding StudySourceGap Capability
            StudyDeclaration StudyHypothesis StudyEvidence StudyExit SnapshotIdentity)

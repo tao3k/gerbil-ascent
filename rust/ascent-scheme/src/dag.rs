@@ -16,7 +16,7 @@ impl Runtime {
     /// Preserves native admission errors and rejects non-projectable programs.
     pub fn load_dag(&self, source: &str, constructor: &str, arguments: Vec<Data>) -> Result<Dag> {
         let loaded = self.call(&Data::object([
-            ("operation", Data::from("open-evidence")),
+            ("operation", Data::from("open-program")),
             ("source", Data::from(source)),
             ("constructor", Data::from(constructor)),
             ("arguments", Data::List(arguments)),

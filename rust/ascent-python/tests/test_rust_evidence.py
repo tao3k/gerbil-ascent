@@ -23,7 +23,7 @@ class EvidenceWheelTests(unittest.TestCase):
             (("review.ss", "review/receipts.ss"), "make-review"),
             (("history.ss",), "make-history"),
         ]:
-            owner = self.engine.evidence(self.source(*paths), constructor, trusted=True)
+            owner = self.engine.rules(self.source(*paths), constructor, trusted=True)
             try:
                 result = owner.run()
                 self.assertTrue(result["complete"])
@@ -32,7 +32,7 @@ class EvidenceWheelTests(unittest.TestCase):
                 owner.close()
 
     def test_history_withdrawal_and_generation_refs(self):
-        owner = self.engine.evidence(self.source("history.ss"), trusted=True)
+        owner = self.engine.rules(self.source("history.ss"), trusted=True)
         try:
             owner.replace({"previous_row": [["query", "old"]], "current_row": [["query", "new"]]})
             receipt = owner.run()
@@ -41,7 +41,7 @@ class EvidenceWheelTests(unittest.TestCase):
             result = owner.result(receipt)
             value = result.reference("added", 0, 1)
             self.assertEqual(value.scalar(), "new")
-            other = self.engine.evidence(self.source("history.ss"), trusted=True)
+            other = self.engine.rules(self.source("history.ss"), trusted=True)
             try:
                 with self.assertRaises(ValueError):
                     other.replace({"current_row": [["query", value]]})
@@ -67,12 +67,12 @@ class EvidenceWheelTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Engine(backend=backend)
         with self.assertRaises(ValueError):
-            self.engine.evidence(self.source("history.ss"))
+            self.engine.rules(self.source("history.ss"))
         with self.assertRaises(ValueError):
-            self.engine.evidence("(def answer (lambda () 1))", trusted=True)
+            self.engine.rules("(def answer (lambda () 1))", trusted=True)
 
     def test_result_rows_and_zero_budget_retain_only_completed_answers(self):
-        source = """(define-evidence (check)
+        source = """(define-program (check)
           (sources input) (outputs output)
           (relation input ((n integer?)) '((7)))
           (relation output ((n integer?)))
@@ -86,7 +86,7 @@ class EvidenceWheelTests(unittest.TestCase):
             self.assertTrue(pending.run(0)['complete'])
         with self.assertRaises(ValueError):
             pending.run()
-        with self.engine.evidence(source, trusted=True) as owner:
+        with self.engine.rules(source, trusted=True) as owner:
             receipt = owner.run()
             result = owner.result(receipt)
             self.assertEqual(result.rows('output')['rows'], [[7]])
@@ -95,9 +95,9 @@ class EvidenceWheelTests(unittest.TestCase):
                 result.rows('output')
 
     def test_component_value_release_does_not_destroy_an_opened_session(self):
-        manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
+        manifest = {'schema': 'ascent.rule-components.v1', 'components': [
             {'id': 'check', 'source': 'check.ss', 'dependencies': [], 'exports': ['make-check']}]}
-        source = """(define-evidence (make-check) (sources input) (outputs input)
+        source = """(define-program (make-check) (sources input) (outputs input)
                     (relation input ((n integer?))))"""
         with self.engine.components(manifest, {'check.ss': source}, 'check', trusted=True) as module:
             with module.call('make-check') as declaration:
@@ -116,11 +116,11 @@ class EvidenceWheelTests(unittest.TestCase):
         import ascent
         for name in ('Module', 'Declaration', 'Value', 'Result', 'Explanation'):
             self.assertTrue(hasattr(ascent, name))
-        for name in ('EvidenceComponents', 'EvidenceDeclaration', 'OwnedValue', 'EvidenceResult'):
+        for name in ('RuleComponents', 'RuleDeclaration', 'OwnedValue', 'RuleResult'):
             self.assertFalse(hasattr(ascent, name))
-        source = """(define-evidence (shapes) (sources) (outputs packed)
+        source = """(define-program (shapes) (sources) (outputs packed)
           (relation packed (value) '((#(2 9)) (#()) ((a b)) (()))))"""
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             receipt = session.run()
             self.assertEqual(receipt['scalarProjection'], 'partial')
             rows = receipt['relations']['packed']

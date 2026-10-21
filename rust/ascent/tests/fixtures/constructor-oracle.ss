@@ -1,12 +1,12 @@
 ;;; Existing Scheme constructors and evaluator are the independent oracle.
-(import :gerbil-ascent/evidence/interface
-        (only-in :gerbil-ascent/interface/evidence-module evidence-module-program)
+(import :gerbil-ascent/rules/interface
+        (only-in :gerbil-ascent/interface/rule-module rule-module-program)
         (only-in :clan/poo/object .ref))
 (include "evidence-source.ss")
 (include "constructor-lattice.ss")
 (include "constructor-graph-values.ss")
 (def (rows evidence query)
-  (let* ((session (gerbil-ascent-open-session (evidence-module-program evidence)))
+  (let* ((session (gerbil-ascent-open-session (rule-module-program evidence)))
          (result (gerbil-ascent-session-run-timeout session 1000000000)))
     (unless (.ref result 'finished) (error "Scheme constructor oracle timed out"))
     ((.ref result 'rows-of) query)))

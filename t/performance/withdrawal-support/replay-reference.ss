@@ -11,7 +11,7 @@
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-candidate-query reasoning-candidate-facts)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot candidate-content-digest)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot candidate-content-digest)
         (only-in :gerbil-ascent/candidate/program candidate-inspect candidate-program)
         (only-in :gerbil-ascent/candidate/funs candidate-bind-atom candidate-same-row-set?)
         (only-in :gerbil-ascent/candidate/provenance-graph candidate-positive-provenance

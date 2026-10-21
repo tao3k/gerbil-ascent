@@ -1,5 +1,5 @@
 ;;; Runtime lifecycle review, not execution authorization or a repair certificate.
-(define-evidence (make-lifecycle-review)
+(define-program (make-lifecycle-review)
   (sources candidate flag expected_flag requirement depends design source mechanism
            model_binding control satisfies measurement metric_requirement)
   (outputs configured missing_flag need missing dependency_path comparison model_context counterexample

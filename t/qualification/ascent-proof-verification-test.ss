@@ -5,7 +5,7 @@
         :gerbil-ascent/candidate/provenance
         (prefix-in :gerbil-ascent/t/performance/proof-verification/reference old-)
         :gerbil-ascent/t/performance/proof-verification/fixture
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate))
 (export ascent-proof-verification-test)
 

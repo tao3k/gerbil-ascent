@@ -109,12 +109,12 @@ class ModuleExecution(unittest.TestCase):
 
     def test_component_constructor_and_module_convenience_keep_independent_session(self):
         source=(ROOT/'rust/ascent/tests/fixtures/evidence-source.ss').read_text()
-        manifest={'schema':'ascent.evidence-components.v1','components':[
+        manifest={'schema':'ascent.rule-components.v1','components':[
             {'id':'entry','source':'entry.ss','exports':['make-evidence'],'dependencies':[]}]}
-        with self.engine.evidence_components(manifest,{'entry.ss':source},'entry','make-evidence',[1,2],trusted=True) as session:
+        with self.engine.rule_components(manifest,{'entry.ss':source},'entry','make-evidence',[1,2],trusted=True) as session:
             self.assertEqual(session.run(queries=['output'])['relations']['output'],[[1],[2]])
         with self.engine.components(manifest,{'entry.ss':source},'entry',trusted=True) as module:
-            session=module.evidence('make-evidence',[3])
+            session=module.rules('make-evidence',[3])
         with session:
             self.assertEqual(session.run(queries=['output'])['relations']['output'],[[3]])
 

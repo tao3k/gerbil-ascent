@@ -20,8 +20,8 @@ from .supervision import forward_output, stop_group
 
 ROOT = Path.cwd().resolve()
 API_FILES = (
-    "test_binding_modes.py", "test_computational_evidence.py", "test_datalog.py",
-    "test_review.py", "test_rule_source.py", "test_rule_sources.py", "test_uf_weighted.py",
+    "test_binding_modes.py", "test_datalog.py",
+    "test_rule_source.py", "test_rule_sources.py", "test_uf_weighted.py",
 )
 
 

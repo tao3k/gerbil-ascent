@@ -1,2 +1,2 @@
-"""ASCENT: Rust-owned execution and checked evidence through PyO3."""
+"""ASCENT rule execution, queries, incremental sessions and derivation provenance."""
 from ._core import *

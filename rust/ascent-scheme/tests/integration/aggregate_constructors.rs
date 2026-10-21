@@ -31,7 +31,7 @@ fn numeric(value: &Value) -> String {
 fn source(operator: &str) -> String {
     let variables = if operator == "count" { "'()" } else { "'(v)" };
     format!(
-        "(define-evidence (make values) (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 (map list values)) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'result)))) (list (gerbil-ascent-aggregate 'result 'input (list (gerbil-ascent-variable 'v)) {variables} gerbil-ascent-{operator})))) 32 64 96 '(input)))"
+        "(define-program (make values) (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 (map list values)) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'result)))) (list (gerbil-ascent-aggregate 'result 'input (list (gerbil-ascent-variable 'v)) {variables} gerbil-ascent-{operator})))) 32 64 96 '(input)))"
     )
 }
 #[test]
@@ -225,7 +225,7 @@ fn inexact_folds_are_deterministic_across_hash_orders_and_rayon_workers() {
 }
 #[test]
 fn native_negation_guard_and_lexically_captured_binding_lower_to_rust_clauses() {
-    let source = "(def (make cutoff delta) (ascent-evidence-module (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1) (2) (3) (4))) (gerbil-ascent-relation 'blocked 1 '((4))) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'y)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-negation 'blocked (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) (and (> v cutoff) (even? v)))) (gerbil-ascent-binding 'y '(x) (lambda (v) (+ v delta)))))) 32 64 96 '(input blocked)) #f))";
+    let source = "(def (make cutoff delta) (ascent-rule-module (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1) (2) (3) (4))) (gerbil-ascent-relation 'blocked 1 '((4))) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'y)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-negation 'blocked (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) (and (> v cutoff) (even? v)))) (gerbil-ascent-binding 'y '(x) (lambda (v) (+ v delta)))))) 32 64 96 '(input blocked)) #f))";
     let engine = Engine::new(1).unwrap();
     let module = engine.load_definitions(source).unwrap();
     let value = module
@@ -286,7 +286,7 @@ fn native_negation_guard_and_lexically_captured_binding_lower_to_rust_clauses() 
 #[test]
 fn bundled_execution_evidence_uses_original_native_dsl_and_explicit_source_authority() {
     let engine = Engine::new(1).unwrap();
-    let module = engine.module(":gerbil-ascent/evidence/execution").unwrap();
+    let module = engine.module(":gerbil-ascent/rules/execution").unwrap();
     let value = module.call("make-execution-evidence", &[], None).unwrap();
     let session = value.open_session(FactLimits::default()).unwrap();
     module.close();
@@ -544,7 +544,7 @@ fn trusted_callbacks_keep_native_semantics_and_do_not_claim_checked_provenance()
     let engine = Engine::new(1).unwrap();
     let make = |body: &str, extra: &str| {
         format!(
-            "(def counter 0) {extra} (def (counter-value) counter) (define-evidence (make values) (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 (map list values)) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'x)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) {body})))) ) 32 64 96 '(input)))"
+            "(def counter 0) {extra} (def (counter-value) counter) (define-program (make values) (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 (map list values)) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'x)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) {body})))) ) 32 64 96 '(input)))"
         )
     };
     let module = engine

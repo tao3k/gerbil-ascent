@@ -7,7 +7,7 @@
    (relational-op-project (relational-op-source 'contracts 3 []) '(0 1))
    'contract_dependencies))
 
-(define-evidence (make-investigation)
+(define-program (make-investigation)
    (sources inventory observation process field control_reference
      (contracts (relational-export investigation-contract-operator 'contracts)))
    (outputs inventory_count observation_count failed missing fields_per_observation

@@ -6,7 +6,7 @@
         :gerbil-ascent/candidate/stratified-producer
         (prefix-in :gerbil-ascent/t/performance/stratified-replay/reference-proof old-)
         (prefix-in :gerbil-ascent/t/performance/stratified-replay/reference-producer old-)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/finite-evidence candidate-finite-evidence finite-evidence-closure)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate))
 (export stratified-prepare stratified-consume stratified-expected)

@@ -23,14 +23,14 @@ impl Module {
 #[pymethods]
 impl Module {
     #[pyo3(signature=(export,*arguments,component=None,limits=None))]
-    fn evidence(
+    fn rules(
         &self,
         py: Python<'_>,
         export: &str,
         arguments: &Bound<'_, PyTuple>,
         component: Option<&str>,
         limits: Option<PyRef<'_, FactLimits>>,
-    ) -> PyResult<super::evidence::EvidenceSession> {
+    ) -> PyResult<super::program::RuleSession> {
         let policy = limits.map(|v| v.0).unwrap_or_default();
         let args = module_values::arguments(arguments)?;
         py.detach(|| {
@@ -38,7 +38,7 @@ impl Module {
                 .call(export, &args, component)
                 .and_then(|value| value.open_session(policy))
         })
-        .map(super::evidence::EvidenceSession)
+        .map(super::program::RuleSession)
         .map_err(source_error)
     }
     #[pyo3(signature=(export,*arguments,module=None,component=None))]
@@ -86,10 +86,10 @@ impl OwnedValue {
         &self,
         py: Python<'_>,
         limits: Option<PyRef<'_, super::sources::FactLimits>>,
-    ) -> PyResult<super::evidence::EvidenceSession> {
+    ) -> PyResult<super::program::RuleSession> {
         let limits = limits.map(|v| v.0).unwrap_or_default();
         py.detach(|| self.0.open_session(limits))
-            .map(super::evidence::EvidenceSession)
+            .map(super::program::RuleSession)
             .map_err(source_error)
     }
 

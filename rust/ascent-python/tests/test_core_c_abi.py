@@ -38,7 +38,7 @@ class CoreCAbiTests(unittest.TestCase):
         components = [
             {"id": "shared", "source": "(def f (ascent-fragment ((answer X) <-- (input X))))",
              "exports": ["f"], "dependencies": []},
-            {"id": "entry", "source": """(define-evidence (make)
+            {"id": "entry", "source": """(define-program (make)
               (sources input) (outputs answer)
               (relation input ((x exact-integer?)) ((3) (7)))
               (relation answer ((x exact-integer?))) (include f))""",
@@ -61,10 +61,10 @@ class CoreCAbiTests(unittest.TestCase):
             owner.run()
 
     def test_typed_rows_preserve_scalars_and_non_scalar_graphs(self):
-        source = """(define-evidence (typed) (sources) (outputs objects)
+        source = """(define-program (typed) (sources) (outputs objects)
           (relation objects (value)
             ((17) (#t) ((object-graph (ref 0) ((0 vector (ref 0))))))))"""
-        owner = self.engine.core_evidence(source, trusted=True)
+        owner = self.engine.core_rules(source, trusted=True)
         try:
             typed = owner.run(result_format="typed-rows").value()
             self.assertEqual(typed["resultFormat"], "typed-rows")
@@ -84,7 +84,7 @@ class CoreCAbiTests(unittest.TestCase):
 
     def test_diagnostics_are_opt_in_and_do_not_replace_execution(self):
         source = self.source("history.ss")
-        owner = self.engine.core_evidence(source, trusted=True, diagnostics=True)
+        owner = self.engine.core_rules(source, trusted=True, diagnostics=True)
         try:
             result = owner.run()
             answer = result.value()
@@ -101,7 +101,7 @@ class CoreCAbiTests(unittest.TestCase):
             self.assertIn("host.pythonProjection", host)
         finally:
             owner.close()
-        owner = self.engine.core_evidence(source, trusted=True)
+        owner = self.engine.core_rules(source, trusted=True)
         try:
             self.assertFalse(owner.diagnose().value()["enabled"])
         finally:
@@ -124,8 +124,8 @@ class CoreCAbiTests(unittest.TestCase):
             (("history.ss",), "make-history"),
         ]:
             source = self.source(*paths)
-            direct = self.engine.evidence(source, constructor, trusted=True)
-            foreign = self.engine.core_evidence(source, constructor, trusted=True)
+            direct = self.engine.rules(source, constructor, trusted=True)
+            foreign = self.engine.core_rules(source, constructor, trusted=True)
             try:
                 receipt = direct.run()
                 result = direct.result(receipt)
@@ -140,7 +140,7 @@ class CoreCAbiTests(unittest.TestCase):
                 foreign.close()
 
     def test_history_withdrawal_rollback_and_independent_results(self):
-        owner = self.engine.core_evidence(self.source("history.ss"), trusted=True)
+        owner = self.engine.core_rules(self.source("history.ss"), trusted=True)
         owner.run().value()
         owner.replace({"previous_row": [["q", "old"]], "current_row": [["q", "new"]]}).value()
         retained = owner.run()
@@ -166,10 +166,10 @@ class CoreCAbiTests(unittest.TestCase):
 
     def test_no_vm_or_backend_fallback_and_explicit_trust(self):
         with self.assertRaises(ValueError):
-            self.engine.core_evidence(self.source("history.ss"))
+            self.engine.core_rules(self.source("history.ss"))
         with self.assertRaises(ValueError):
-            self.engine.core_evidence("(import :gerbil/runtime)", trusted=True)
-        owner = self.engine.core_evidence(self.source("history.ss"), trusted=True)
+            self.engine.core_rules("(import :gerbil/runtime)", trusted=True)
+        owner = self.engine.core_rules(self.source("history.ss"), trusted=True)
         try:
             with self.assertRaises(ValueError):
                 owner.call({"method": "evaluate-arbitrary-code"}).value()
@@ -178,12 +178,12 @@ class CoreCAbiTests(unittest.TestCase):
             owner.close()
 
     def test_cyclic_non_scalar_execution_and_update_do_not_require_projection(self):
-        source = """(define-evidence (objects) (sources edge) (outputs objects)
+        source = """(define-program (objects) (sources edge) (outputs objects)
           (relation edge (value))
           (relation objects (value)
             (((object-graph (ref 0) ((0 vector (ref 0)))))
              ((object-graph (ref 0) ((0 opaque "external-object")))))))"""
-        owner = self.engine.core_evidence(source, trusted=True)
+        owner = self.engine.core_rules(source, trusted=True)
         try:
             result = owner.run().value()
             self.assertTrue(result["complete"])
@@ -198,7 +198,7 @@ class CoreCAbiTests(unittest.TestCase):
         def run(_):
             engine = Engine(backend="rust", workers=1)
             try:
-                owner = engine.core_evidence(source, trusted=True)
+                owner = engine.core_rules(source, trusted=True)
                 try:
                     return owner.run().value()["complete"]
                 finally:
@@ -210,7 +210,7 @@ class CoreCAbiTests(unittest.TestCase):
             self.assertEqual(list(pool.map(run, range(2))), [True, True])
 
     def test_parent_shutdown_blocks_child_calls(self):
-        owner = self.engine.core_evidence(self.source("history.ss"), trusted=True)
+        owner = self.engine.core_rules(self.source("history.ss"), trusted=True)
         result = owner.run()
         self.engine.close()
         self.assertTrue(result.value()["complete"])

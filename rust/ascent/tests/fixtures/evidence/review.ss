@@ -1,5 +1,5 @@
 ;;; Receipt closure is reusable; the review policy is explicit at this entry.
-(define-evidence (make-review)
+(define-program (make-review)
   (sources Candidate Failure Passed ReceiptInput CurrentInput ReceiptDepends Requires ClaimDepends Cause FailureBinding FailureClaim ReviewedLink)
   (outputs KnownFailure Established Reusable Missing Unusable Denial Need ReceiptPath CausalEvidence Decision)
   (relation Candidate ((candidate symbol?) (scope symbol?) (identity symbol?)))

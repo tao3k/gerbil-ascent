@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil-ascent/candidate/provenance
         (prefix-in :gerbil-ascent/t/performance/proof-verification/reference old-)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate))
 (export verification-prepare verification-consume verification-expected
         verification-verify!)

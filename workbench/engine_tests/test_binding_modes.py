@@ -8,7 +8,7 @@ import threading
 import unittest
 from ascent import Engine, EngineError
 
-SOURCE = '''(define-evidence (make) (sources input) (outputs output)
+SOURCE = '''(define-program (make) (sources input) (outputs output)
   (relation input ((x integer?)) ((1))) (relation output ((x integer?)))
   ((output X) <-- (input X)))'''
 
@@ -50,7 +50,7 @@ class BindingContract(unittest.TestCase):
     def test_wrong_os_thread_is_rejected(self):
         # The ordinary Rust session serializes state; the fixed C owner is
         # separately thread-affine and is not a VM or a cross-thread callback.
-        with self.engine.evidence(SOURCE, trusted=True) as session:
+        with self.engine.rules(SOURCE, trusted=True) as session:
             values, errors = [], []
             def run():
                 try:
@@ -88,7 +88,7 @@ class BindingContract(unittest.TestCase):
                 script = f'''from ascent import Engine
 with Engine() as independent:
     assert independent.describe()['schemeVm'] is False
-    with independent.evidence({SOURCE!r}, trusted=True) as session:
+    with independent.rules({SOURCE!r}, trusted=True) as session:
         assert session.run()['relations']['output'] == [[1]]
 '''
                 os.execv(sys.executable, [sys.executable, '-c', script])

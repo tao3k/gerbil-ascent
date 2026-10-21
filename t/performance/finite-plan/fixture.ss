@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil-ascent/candidate/finite-evidence
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (prefix-in :gerbil-ascent/t/performance/finite-plan/reference old-))
 (export finite-prepare finite-consume finite-verify!)
 (def (finite-prepare old? scenario)

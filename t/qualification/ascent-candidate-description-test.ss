@@ -6,7 +6,7 @@
         (only-in :gerbil-ascent/candidate/datum
                  reasoning-bounded-data? candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/program candidate-language-description)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt reasoning-receipt-status
                  reasoning-receipt-diagnostics reasoning-diagnostic-code
                  reasoning-diagnostic-path))

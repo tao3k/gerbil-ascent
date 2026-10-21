@@ -51,8 +51,8 @@ impl Drop for State {
 }
 /// Scheme session with one owner-serialized operation stream.
 #[derive(Clone)]
-pub struct Evidence(Arc<State>);
-impl Evidence {
+pub struct RuleSession(Arc<State>);
+impl RuleSession {
     pub(super) fn new(engine: &Engine, metadata: Data) -> Result<Self> {
         let owner = Self(Arc::new(State {
             engine: engine.clone(),
@@ -233,7 +233,7 @@ impl Evidence {
     /// Validate a retained result against this owner and committed generation.
     /// # Errors
     /// Rejects invalid handles and revoked sessions.
-    pub fn result(&self, handle: u64) -> Result<EvidenceResult> {
+    pub fn result(&self, handle: u64) -> Result<RuleResult> {
         self.check()?;
         if handle == 0 {
             return Err(crate::failure("invalid result handle"));
@@ -248,7 +248,7 @@ impl Evidence {
         )?;
         let mut results = self.0.results.lock().map_err(|_| Error::Closed)?;
         if let Some(result) = results.get(&handle).and_then(Weak::upgrade) {
-            let result = EvidenceResult(result);
+            let result = RuleResult(result);
             result.check()?;
             return Ok(result);
         }
@@ -260,7 +260,7 @@ impl Evidence {
             closed: AtomicBool::new(false),
         });
         results.insert(handle, Arc::downgrade(&result));
-        Ok(EvidenceResult(result))
+        Ok(RuleResult(result))
     }
     /// Replace native sources transactionally using their retained native values.
     /// # Errors
@@ -645,7 +645,7 @@ impl Evidence {
     }
 }
 struct ResultState {
-    owner: Evidence,
+    owner: RuleSession,
     handle: u64,
     generation: u64,
     closed: AtomicBool,
@@ -659,8 +659,8 @@ impl Drop for ResultState {
 }
 /// Generation-bound native result lease.
 #[derive(Clone)]
-pub struct EvidenceResult(Arc<ResultState>);
-impl EvidenceResult {
+pub struct RuleResult(Arc<ResultState>);
+impl RuleResult {
     /// Whether this lease was explicitly released.
     #[must_use]
     pub fn is_released(&self) -> bool {
@@ -745,7 +745,7 @@ impl EvidenceResult {
 }
 /// Independent recorded explanation, retaining its original generation metadata.
 pub struct Explanation {
-    owner: Evidence,
+    owner: RuleSession,
     handle: u64,
     generation: u64,
     graph: Arc<Data>,
@@ -795,7 +795,7 @@ impl Drop for Explanation {
 
 /// Checked derivation bound to native source authority, independent of the source result lease.
 pub struct SchemeProvenance {
-    owner: Evidence,
+    owner: RuleSession,
     generation: u64,
     proof: Option<gerbil_ascent::Provenance>,
     fingerprint: Option<String>,

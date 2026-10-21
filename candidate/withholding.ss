@@ -7,7 +7,7 @@
                  reasoning-snapshot-relations reasoning-snapshot-identity
                  reasoning-snapshot-generation make-candidate-rejection
                  make-reasoning-diagnostic)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot))
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot))
 (export reasoning-withhold-source-snapshot)
 
 ;;; BRINK section 3.2 finite transfer. A grounding is (head-atom body-atoms).

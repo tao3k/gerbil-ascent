@@ -3,11 +3,11 @@
 import unittest
 from ascent import Engine, EngineError
 
-COPY = '''(define-evidence (make-values) (sources input) (outputs input output)
+COPY = '''(define-program (make-values) (sources input) (outputs input output)
   (relation input (value) ((3))) (relation output (value))
   ((output X) <-- (input X)))'''
 
-GRAPHS = '''(define-evidence (graphs) (sources input) (outputs input)
+GRAPHS = '''(define-program (graphs) (sources input) (outputs input)
   (relation input (value)
     (((object-graph (ref 0) ((0 vector (ref 0)))))
      ((object-graph (ref 0) ((0 vector (ref 1) (ref 1)) (1 vector 17))))
@@ -26,7 +26,7 @@ class ModuleTests(unittest.TestCase):
         source = COPY.replace('((3))', '''(
           ((object-graph (ref 0) ((0 vector 1 (ref 1)) (1 symbol "a" #t))))
           ((object-graph (ref 0) ((0 u8vector 0 255)))) (1/3))''')
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             first = session.run()
             self.assertEqual(first['scalarProjection'], 'partial')
             with session.result(first) as result:
@@ -46,11 +46,11 @@ class ModuleTests(unittest.TestCase):
                     self.assertIn([[7]], [r['rows'] for r in proof.graph['sources'] if r['source']])
 
     def test_upstream_lattice_aggregate_and_operator(self):
-        source = '''(define-evidence (best) (sources input) (outputs best)
+        source = '''(define-program (best) (sources input) (outputs best)
           (relation input ((key integer?) (score integer?)) ((0 9) (0 2) (1 7)))
           (lattice best ((key integer?) (score integer?)) () min)
           ((best K V) <-- (input K V)))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual(session.run()['relations']['best'], [[0, 2], [1, 7]])
         graph = {'algorithm': 'projection', 'source': 'edge', 'width': 2,
                  'rows': [[0, 1], [1, 2]], 'output': 'targets', 'captures': {'columns': [1]}}
@@ -58,18 +58,18 @@ class ModuleTests(unittest.TestCase):
             self.assertEqual(session.run(result_format='typed-rows').value()['relations']['targets'], [[1], [2]])
             session.replace({'edge': [[3, 4]]}).value()
             self.assertEqual(session.run(result_format='typed-rows').value()['relations']['targets'], [[4]])
-        mean = '''(define-evidence (average) (sources input) (outputs average)
+        mean = '''(define-program (average) (sources input) (outputs average)
           (relation input ((value integer?)) ((1) (2) (4)))
           (relation average ((value number?)))
           ((average N) <-- (aggregate N gerbil-ascent-mean (V) (input V))))'''
-        with self.engine.evidence(mean, trusted=True) as session:
+        with self.engine.rules(mean, trusted=True) as session:
             self.assertAlmostEqual(session.run()['relations']['average'][0][0], 7 / 3)
 
     def test_closed_session_and_wrong_owner(self):
-        session = self.engine.evidence(COPY, trusted=True)
+        session = self.engine.rules(COPY, trusted=True)
         receipt = session.run()
         result = session.result(receipt)
-        with self.engine.evidence(COPY, trusted=True) as other:
+        with self.engine.rules(COPY, trusted=True) as other:
             other.run()
             with self.assertRaises(EngineError): other.result(receipt)
         session.close()
@@ -78,8 +78,8 @@ class ModuleTests(unittest.TestCase):
 
     def test_rejected_update_and_failed_constructor_preserve_runtime(self):
         for name in ('missing-constructor', 'identity'):
-            with self.assertRaises(EngineError): self.engine.evidence(COPY, name, trusted=True)
-        with self.engine.evidence(COPY, trusted=True) as session:
+            with self.assertRaises(EngineError): self.engine.rules(COPY, name, trusted=True)
+        with self.engine.rules(COPY, trusted=True) as session:
             first = session.run()
             with session.result(first) as result:
                 with self.assertRaises(EngineError): session.replace({'input': [[1, 2]]})
@@ -90,7 +90,7 @@ class ModuleTests(unittest.TestCase):
                 session.result(second).close()
 
     def test_shared_cyclic_and_opaque_native_values(self):
-        with self.engine.evidence(GRAPHS, trusted=True) as session:
+        with self.engine.rules(GRAPHS, trusted=True) as session:
             with session.result(session.run()) as result:
                 nodes = result.graph('input')['nodes']
                 self.assertTrue({'vector', 'hash-table', 'opaque', 'pair'} <= {n['type'] for n in nodes})
@@ -103,7 +103,7 @@ class ModuleTests(unittest.TestCase):
                 objects = session.run()['relations']['input']
                 index = next(i for i, row in enumerate(objects) if 'fixed-core-token' in str(row[0].graph))
                 reference = result.reference('input', index, 0)
-                with self.engine.evidence(GRAPHS, trusted=True) as other:
+                with self.engine.rules(GRAPHS, trusted=True) as other:
                     with self.assertRaises(EngineError): other.replace({'input': [[reference]]})
                 session.replace({'input': [[reference]]})
                 with self.assertRaises(EngineError): result.rows('input')
@@ -111,14 +111,14 @@ class ModuleTests(unittest.TestCase):
                 self.assertIn('fixed-core-token', str(updated.graph('input')))
 
     def test_execution_program_declares_observation_sources(self):
-        source = '''(define-evidence (execution)
+        source = '''(define-program (execution)
           (sources required_step observed_step) (outputs checked_step missing_step)
           (relation required_step ((step string?)))
           (relation observed_step ((step string?) (outcome string?) (capability string?)))
           (relation checked_step ((step string?))) (relation missing_step ((step string?)))
           ((checked_step S) <-- (observed_step S (lit "PASS") C))
           ((missing_step S) <-- (required_step S) (not (checked_step S))))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual({r['name'] for r in session.descriptors if r['source']}, {'required_step', 'observed_step'})
             session.replace({'required_step': [['finished'], ['missing']],
                              'observed_step': [['finished', 'PASS', 'test']]})

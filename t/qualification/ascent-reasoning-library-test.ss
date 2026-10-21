@@ -16,7 +16,7 @@
         (only-in :gerbil-ascent/candidate/withholding reasoning-withhold-source-snapshot)
         (only-in :gerbil-ascent/candidate/feedback reasoning-compare-rows
                  reasoning-feedback-status reasoning-feedback-reason reasoning-feedback-missing)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-bound?
                  reasoning-verify-finite-receipt

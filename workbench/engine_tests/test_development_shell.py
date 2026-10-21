@@ -8,7 +8,7 @@ import unittest
 
 from ascent import Engine, EngineError
 
-SOURCE = '''(define-evidence (make) (sources input) (outputs answer)
+SOURCE = '''(define-program (make) (sources input) (outputs answer)
   (relation input ((value exact-integer?)) ((1)))
   (relation answer ((value exact-integer?)))
   ((answer X) <-- (input X)))'''

@@ -1,11 +1,11 @@
 //! Original Scheme source admission followed by owned-data execution.
-use super::{Backend, Engine, Evidence, id, policy};
+use super::{Backend, Engine, RuleSession, id, policy};
 use gerbil_ascent::{Data, FactLimits, Result, SourceSession};
 
 /// Scheme callback session or a finite DAG transferred to the caller's Rayon pool.
 pub enum Source {
     Rayon(Box<SourceSession>),
-    Scheme(Evidence),
+    Scheme(RuleSession),
 }
 impl Engine {
     /// Admit original Scheme source text and select its owned execution path.
@@ -34,7 +34,7 @@ impl Engine {
         )?;
         let projection = loaded.field("projection")?;
         if self.backend() == Some(Backend::Scheme) {
-            return Evidence::new(self, loaded).map(Source::Scheme);
+            return RuleSession::new(self, loaded).map(Source::Scheme);
         }
         if projection.field("status")?.text()? != "supported" {
             if self.backend() == Some(Backend::Rayon) {
@@ -43,7 +43,7 @@ impl Engine {
                     "program requires Scheme callbacks; Rayon projection unavailable",
                 ));
             }
-            return Evidence::new(self, loaded).map(Source::Scheme);
+            return RuleSession::new(self, loaded).map(Source::Scheme);
         }
         let result = self
             .open_projection(&loaded, limits)

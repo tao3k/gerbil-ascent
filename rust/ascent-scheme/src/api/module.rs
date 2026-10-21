@@ -1,5 +1,5 @@
 //! Scheme module/value leases; no Scheme interpretation in Rust.
-use super::{Engine, Evidence, check, id, input};
+use super::{Engine, RuleSession, check, id, input};
 use gerbil_ascent::{Data, Error, FactLimits, ObjectInput, Result, ValueReference};
 use std::sync::{
     Arc,
@@ -222,20 +222,20 @@ impl ModuleValue {
             )?,
         )
     }
-    /// Open the retained native Program/Evidence directly, without rerunning its constructor.
+    /// Open the retained native Program/RuleSession directly, without rerunning its constructor.
     /// # Errors
     /// Rejects non-program values, invalid limits and revoked owners.
-    pub fn open_session(&self, limits: FactLimits) -> Result<Evidence> {
+    pub fn open_session(&self, limits: FactLimits) -> Result<RuleSession> {
         self.check()?;
         let receipt = self.owner.0.engine.invoke(
-            "value-evidence",
+            "value-program",
             [
                 ("owner", Data::from(self.owner.0.id)),
                 ("value", Data::from(self.handle)),
                 ("factLimits", super::policy(limits)),
             ],
         )?;
-        Evidence::new(&self.owner.0.engine, receipt)
+        RuleSession::new(&self.owner.0.engine, receipt)
     }
     /// Export admitted immutable data into a Rayon session, without VM entry during solving.
     /// The native session API remains available for Scheme callbacks and explanations.
@@ -244,7 +244,7 @@ impl ModuleValue {
     pub fn project_session(&self, limits: FactLimits) -> Result<gerbil_ascent::SourceSession> {
         self.check()?;
         let loaded = self.owner.0.engine.invoke(
-            "value-evidence",
+            "value-program",
             [
                 ("owner", Data::from(self.owner.0.id)),
                 ("value", Data::from(self.handle)),

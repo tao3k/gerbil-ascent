@@ -24,8 +24,6 @@ pub struct Engine {
     source_limit: Option<usize>,
     request_limit: Option<usize>,
     source_scopes: Arc<AtomicUsize>,
-    pub(crate) evidence_owners: Arc<AtomicUsize>,
-    pub(crate) trajectory_owners: Arc<AtomicUsize>,
 }
 impl Engine {
     /// # Errors
@@ -55,8 +53,6 @@ impl Engine {
                 source_limit: None,
                 request_limit: None,
                 source_scopes: Arc::default(),
-                evidence_owners: Arc::default(),
-                trajectory_owners: Arc::default(),
             })
         }
         #[cfg(feature = "rayon")]
@@ -79,8 +75,6 @@ impl Engine {
             source_limit: None,
             request_limit: None,
             source_scopes: Arc::default(),
-            evidence_owners: Arc::default(),
-            trajectory_owners: Arc::default(),
         }
     }
     fn sort_rows(&self, rows: &mut [Row]) {
@@ -245,7 +239,10 @@ impl Engine {
     pub fn shutdown(&self) {
         self.closed.store(true, Ordering::Release);
     }
-    pub(crate) fn check(&self) -> Result<()> {
+    /// Validate engine lifetime and process ownership.
+    /// # Errors
+    /// Rejects closed or inherited process owners.
+    pub fn check(&self) -> Result<()> {
         if self.is_closed() {
             Err(Error::Closed)
         } else {

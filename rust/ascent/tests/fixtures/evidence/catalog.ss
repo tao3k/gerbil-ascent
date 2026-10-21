@@ -1,5 +1,5 @@
 ;;; Python/C ABI loads these declarations; all expansion and inference belong to ASCENT.
-(define-evidence (make-catalog)
+(define-program (make-catalog)
   (sources dependency local_control_pass local_failure_model local_native_failure
     observed_failure observed_process observed_field observed_signal
     observed_control_reference observed_log_attachment observed_model_reference

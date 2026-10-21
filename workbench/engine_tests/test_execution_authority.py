@@ -4,10 +4,10 @@ import unittest
 from unittest.mock import patch
 from ascent import Cancellation, Engine, EngineError
 
-PLAIN = '''(define-evidence (make) (sources input) (outputs output)
+PLAIN = '''(define-program (make) (sources input) (outputs output)
   (relation input ((x integer?)) ((1))) (relation output ((x integer?)))
   ((output X) <-- (input X)))'''
-JOIN = '''(define-evidence (make) (sources input) (outputs output)
+JOIN = '''(define-program (make) (sources input) (outputs output)
   (relation input ((x integer?)) ((1))) (relation output ((x integer?) (y integer?)))
   ((output X Y) <-- (input X) (input Y)))'''
 
@@ -20,19 +20,19 @@ class ExecutionAuthority(unittest.TestCase):
         for source in ('(def (callback) (error "entered"))', '(def counter 0) (set! counter 1)'):
             with self.assertRaises(EngineError): self.engine.dsl(source, trusted=True)
         with patch('subprocess.Popen', side_effect=AssertionError('external execution')):
-            with self.engine.evidence(PLAIN, trusted=True) as session:
+            with self.engine.rules(PLAIN, trusted=True) as session:
                 self.assertEqual(session.run()['relations']['output'], [[1]])
                 self.assertFalse(self.engine.describe()['schemeVm'])
 
     def test_fresh_replace_is_transactional_without_an_initial_solve(self):
-        with self.engine.evidence(PLAIN, trusted=True) as session:
+        with self.engine.rules(PLAIN, trusted=True) as session:
             session.replace({'input': [[7]]})
             receipt = session.run()
             self.assertEqual(receipt['sourceGeneration'], 1)
             self.assertEqual(receipt['relations']['output'], [[7]])
 
     def test_cancel_during_replacement_preserves_result_and_generation(self):
-        with self.engine.evidence(JOIN, trusted=True) as session:
+        with self.engine.rules(JOIN, trusted=True) as session:
             receipt = session.run()
             with session.result(receipt) as held:
                 cancellation = Cancellation()
@@ -48,7 +48,7 @@ class ExecutionAuthority(unittest.TestCase):
                 self.assertEqual(after['relations']['output'], [[1, 1]])
 
     def test_deadline_during_replacement_preserves_result_and_generation(self):
-        with self.engine.evidence(JOIN, trusted=True) as session:
+        with self.engine.rules(JOIN, trusted=True) as session:
             receipt = session.run()
             with session.result(receipt) as held:
                 with self.assertRaisesRegex(EngineError, 'deadline'):
@@ -57,7 +57,7 @@ class ExecutionAuthority(unittest.TestCase):
                 self.assertEqual(session.run()['sourceGeneration'], 0)
 
     def test_zero_deadline_and_precancellation_reject_cached_native_results(self):
-        with self.engine.evidence(PLAIN, trusted=True) as session:
+        with self.engine.rules(PLAIN, trusted=True) as session:
             receipt = session.run()
             with session.result(receipt) as held:
                 with self.assertRaisesRegex(EngineError, 'deadline'): session.run(0)
@@ -68,7 +68,7 @@ class ExecutionAuthority(unittest.TestCase):
                 self.assertEqual(held.rows('output')['rows'], [[1]])
 
     def test_proof_survives_result_release_and_is_revoked_on_replace(self):
-        with self.engine.evidence(PLAIN, trusted=True) as session:
+        with self.engine.rules(PLAIN, trusted=True) as session:
             result = session.result(session.run())
             proof = result.explanation('output')
             self.addCleanup(proof.close)
@@ -88,7 +88,7 @@ class ExecutionAuthority(unittest.TestCase):
                     self.assertTrue(next_proof.verify())
 
     def test_proof_revoked_by_native_session_close(self):
-        with self.engine.evidence(PLAIN, trusted=True) as session:
+        with self.engine.rules(PLAIN, trusted=True) as session:
             with session.result(session.run()) as result: proof = result.explanation('output')
         self.addCleanup(proof.close)
         self.assertFalse(proof.current)
@@ -108,7 +108,7 @@ class ExecutionAuthority(unittest.TestCase):
     def test_canceled_queued_replace_never_commits_after_the_vm_becomes_free(self):
         # Rust has no VM callback queue. Exercise concurrent owner requests and
         # pre-cancellation without claiming an observed native-lock acquisition.
-        with self.engine.evidence(PLAIN, trusted=True) as session:
+        with self.engine.rules(PLAIN, trusted=True) as session:
             original = session.run()
             cancellation = Cancellation()
             cancellation.cancel()

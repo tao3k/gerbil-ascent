@@ -7,7 +7,7 @@
   (def (make-closure n) (lambda (x) (+ n x)))
   (def (return-values . items) (apply values items))
   (def (make-cycle) (let (v (make-vector 1)) (vector-set! v 0 v) v))
-  (define-evidence (make-evidence values)
+  (define-program (make-evidence values)
     (gerbil-ascent-program
       (list (gerbil-ascent-relation 'input 1 (map list values))
             (gerbil-ascent-relation 'output 1 []))

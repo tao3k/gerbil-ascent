@@ -5,7 +5,7 @@
 ;;; Private expected data is never included in a model input.
 (import :std/test :std/encoding/json
         :gerbil-ascent/program/higher-order :gerbil-ascent/program/scheme-language
-        :gerbil-ascent/program/session :gerbil-ascent/candidate/reasoning
+        :gerbil-ascent/program/session :gerbil-ascent/candidate/checked-program
         :gerbil-ascent/candidate/program :gerbil-ascent/candidate/finite-evidence
         :gerbil-ascent/candidate/stratified-provenance
         (only-in :clan/poo/object .ref)
@@ -26,7 +26,7 @@
     '(:gerbil-ascent/program/higher-order :gerbil-ascent/program/scheme-language))
    ((memq (car record) '(retained-delete retained-negation retained-reduction retained-lattice))
     '(:gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object))
-   (else '(:gerbil-ascent/candidate/reasoning :gerbil-ascent/candidate/program
+   (else '(:gerbil-ascent/candidate/checked-program :gerbil-ascent/candidate/program
            :gerbil-ascent/candidate/finite-evidence :gerbil-ascent/candidate/stratified-provenance))))
 ;; The compiler probe follows the actual imports of every frozen study case.
 (def (model-closure-source-roots)

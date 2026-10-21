@@ -1,6 +1,8 @@
 //! Dependency slicing and typed loading of inert Datalog; execution stays in the Rust engine.
 use super::{inference, parser};
-use crate::{Catalog, Data, Engine, EvidenceChain, FactLimits, Result, invalid_data as invalid};
+use crate::{
+    Cancellation, Catalog, Data, Engine, FactLimits, Limits, Result, invalid_data as invalid,
+};
 use std::collections::{BTreeMap, BTreeSet};
 /// Declarative input for a bounded reader, never a Python program or build request.
 pub struct DatalogRequest<'a> {
@@ -270,29 +272,33 @@ fn validate_operators(rules: &[Data], typed: bool) -> Result<()> {
     }
     Ok(())
 }
-/// Evaluate the admitted graph and confirm that unchanged completed evidence is reusable.
+/// Evaluate the admitted rule graph once and return actual execution observations.
 /// # Errors
 /// Rejects closed engines, unsafe syntax, resource exhaustion and unstable/incomplete evaluation.
 pub fn evaluate_datalog(engine: &Engine, request: &DatalogRequest<'_>) -> Result<(Data, Data)> {
     engine.check()?;
     let graph = read_datalog(request)?;
-    let sources = graph
-        .program
-        .field("relations")?
-        .list()?
-        .iter()
-        .filter(|r| r.get("source") == Some(&Data::Bool(true)))
-        .cloned()
-        .collect();
-    let mut chain = EvidenceChain::new(engine, Data::List(sources), true, FactLimits::default())?;
-    let result = chain.query(&graph.program)?;
-    let reused = chain.query(&graph.program)?;
-    if result.field("result")? != reused.field("result")?
-        || !result.field("result")?.field("complete")?.boolean()?
-    {
-        return Err(invalid("Datalog did not return a stable complete result"));
+    let catalog = Catalog::read(&graph.program)?;
+    let mut session = engine.open_catalog(
+        catalog.program,
+        BTreeMap::new(),
+        catalog.queries,
+        FactLimits::default(),
+    )?;
+    let result = session.run(None, &Limits::default(), &Cancellation::default())?;
+    if !result.complete {
+        return Err(invalid("incomplete Datalog result"));
     }
-    let rows = result.field("result")?.field("relations")?;
+    let retained = session.result(result.result_handle)?;
+    let source_identity = retained.identity()?;
+    let rows = Data::Map(
+        result
+            .relations
+            .iter()
+            .map(|(name, rows)| Ok((name.clone(), Catalog::project_rows(rows))))
+            .collect::<Result<_>>()?,
+    );
+    retained.close();
     let answers = graph
         .queries
         .map()?
@@ -307,16 +313,11 @@ pub fn evaluate_datalog(engine: &Engine, request: &DatalogRequest<'_>) -> Result
         })
         .collect::<Result<BTreeMap<_, _>>>()?;
     let receipt = Data::object([
-        ("sourceIdentity", result.field("sourceIdentity")?.clone()),
-        ("pathIdentity", result.field("pathIdentity")?.clone()),
-        (
-            "freshComponents",
-            result.field("freshComponents")?.list()?.len().into(),
-        ),
-        (
-            "repeatReusedComponents",
-            reused.field("reusedComponents")?.list()?.len().into(),
-        ),
+        ("sourceIdentity", source_identity.into()),
+        ("sourceGeneration", result.source_generation.into()),
+        ("runIndex", result.run_index.into()),
+        ("complete", result.complete.into()),
+        ("reused", result.reused.into()),
     ]);
     Ok((Data::Map(answers), receipt))
 }

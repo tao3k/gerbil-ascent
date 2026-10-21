@@ -52,20 +52,33 @@ fn append_strings(
     }
     Ok(Value::Text(output.into()))
 }
-fn vector_operator(operator: Operator, left: &Value, right: &Value, budget: &Budget) -> Result<Value> {
+fn vector_operator(
+    operator: Operator,
+    left: &Value,
+    right: &Value,
+    budget: &Budget,
+) -> Result<Value> {
     let index = integer(right)?.to_usize();
     if operator == Operator::VectorShape {
         return Ok(Value::Boolean(matches!(left, Value::Object(value)
             if value.vector_items().is_some_and(|items| Some(items.len()) == index))));
     }
     let index = index.ok_or_else(|| failure("vector index"))?;
-    let Value::Object(value) = left else { return Err(failure("vector-ref expects vector")); };
-    if !budget.work(value.graph().nodes.len()) { return Err(Error::StateLimit); }
+    let Value::Object(value) = left else {
+        return Err(failure("vector-ref expects vector"));
+    };
+    if !budget.work(value.graph().nodes.len()) {
+        return Err(Error::StateLimit);
+    }
     value.vector_item(index)
 }
 fn symbol_to_string(value: Value, budget: &Budget) -> Result<Value> {
-    let Value::Symbol(value) = value else { return Err(failure("symbol->string expects a symbol")); };
-    if !budget.work(value.len()) { return Err(Error::StateLimit); }
+    let Value::Symbol(value) = value else {
+        return Err(failure("symbol->string expects a symbol"));
+    };
+    if !budget.work(value.len()) {
+        return Err(Error::StateLimit);
+    }
     Ok(Value::Text(value))
 }
 

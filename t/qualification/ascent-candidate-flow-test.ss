@@ -4,7 +4,7 @@
 (import :std/test
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program gerbil-ascent-variable gerbil-ascent-program gerbil-ascent-atom gerbil-ascent-rule)
-        :gerbil-ascent/candidate/reasoning
+        :gerbil-ascent/candidate/checked-program
         :gerbil-ascent/candidate/types
         :gerbil-ascent/t/performance/candidate-flow/fixture
         (prefix-in :gerbil-ascent/t/performance/candidate-flow/reference-reasoning old-))

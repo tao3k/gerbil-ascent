@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :std/encoding/json
         :gerbil-ascent/candidate/feedback
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status
                  reasoning-receipt-bound? reasoning-receipt-query reasoning-receipt-rows))
 (export ascent-feedback-conformance-test)

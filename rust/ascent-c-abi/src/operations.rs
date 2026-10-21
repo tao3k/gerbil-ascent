@@ -26,7 +26,7 @@ impl Owner {
         let declaration = read_declaration(input)?;
         trace.record("open.dslReadAndLower", started);
         let started = trace.start();
-        let session = engine.open_evidence_program(declaration, read_limits(input)?)?;
+        let session = engine.open_rule_program(declaration, read_limits(input)?)?;
         trace.record("open.admissionAndInitialRun", started);
         Ok(Self {
             session,
@@ -48,7 +48,7 @@ fn validate_open(input: &Data) -> Result<()> {
     }
     fields(input, &expected)
 }
-fn read_declaration(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
+fn read_declaration(input: &Data) -> Result<gerbil_ascent::RuleProgram> {
     if let Some(graph) = input.get("graph") {
         return read_graph(graph);
     }
@@ -62,7 +62,7 @@ fn read_declaration(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
             .iter()
             .map(read_component)
             .collect::<Result<Vec<_>>>()?;
-        return gerbil_ascent::EvidenceProgram::read_components(
+        return gerbil_ascent::RuleProgram::read_components(
             &components,
             input.field("entry")?.text()?,
             constructor,
@@ -74,9 +74,9 @@ fn read_declaration(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
         .iter()
         .map(Data::text)
         .collect::<Result<Vec<_>>>()?;
-    gerbil_ascent::EvidenceProgram::read_sources(&sources, constructor)
+    gerbil_ascent::RuleProgram::read_sources(&sources, constructor)
 }
-fn read_graph(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
+fn read_graph(input: &Data) -> Result<gerbil_ascent::RuleProgram> {
     fields(
         input,
         &["algorithm", "source", "width", "rows", "output", "captures"],
@@ -142,7 +142,7 @@ fn read_graph(input: &Data) -> Result<gerbil_ascent::EvidenceProgram> {
             ));
         }
     };
-    graph.evidence(input.field("output")?.text()?)
+    graph.program(input.field("output")?.text()?)
 }
 fn read_component(input: &Data) -> Result<gerbil_ascent::Component> {
     fields(input, &["id", "source", "exports", "dependencies"])?;

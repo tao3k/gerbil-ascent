@@ -10,9 +10,9 @@
         (only-in :gerbil/runtime/gambit fx-)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :core/types
-                 PooFlowNativeObjectContract.
-                 poo-flow-predicate-contract)
+        (only-in :yuanxu/types
+                 YuanxuObjectContract.
+                 yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state
                  gerbil-ascent-eqrel-extension gerbil-ascent-eqrel-state?
                  gerbil-ascent-eqrel-insert! gerbil-ascent-eqrel-freeze
@@ -42,16 +42,16 @@
         gerbil-ascent-storage-extend)
 
 (def +make-state+
-  (poo-flow-predicate-contract 'ascent/storage-make-state procedure?
+  (yuanxu-predicate-contract 'ascent/storage-make-state procedure?
                                (lambda (_value _context) [])))
 (def +extend+
-  (poo-flow-predicate-contract 'ascent/storage-extend procedure?
+  (yuanxu-predicate-contract 'ascent/storage-extend procedure?
                                (lambda (_value _context) [])))
 
 ;;; Every storage provider owns a fresh state per evaluation. The shared POO
 ;;; declaration contains only constructor and extension behavior.
 (define-type (GerbilAscentStorageProviderContract
-              @ PooFlowNativeObjectContract.)
+              @ YuanxuObjectContract.)
   identity: 'ascent/storage-provider
   proto: (.o)
   responsibilities: (.o .make-state: +make-state+

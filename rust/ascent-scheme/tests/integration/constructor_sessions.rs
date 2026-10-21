@@ -356,7 +356,9 @@ fn complex_cells_cross_parallel_binding_and_publication_without_host_calls() {
         vec![1]
     };
     for workers in workers {
-        let engine = Engine::new(workers).unwrap();
+        let pool = ascent_scheme::ProcessPool::new(1).unwrap();
+        let owner = pool.owner(0).unwrap();
+        let engine = Engine::new(workers).unwrap().on_process(owner.clone());
         let module = engine.load_definitions(&source).unwrap();
         let mut values = (0..3000)
             .map(|n| Input::Vector(vec![number(n)]))
@@ -368,13 +370,25 @@ fn complex_cells_cross_parallel_binding_and_publication_without_host_calls() {
             .open_session(FactLimits::default())
             .unwrap();
         module.close();
-        let observed = session
-            .run(
-                None,
-                &SourceSession::default_limits(),
-                &Cancellation::default(),
-            )
-            .unwrap();
+        let before = owner.statistics();
+        let started = std::time::Instant::now();
+        let outcome = session.run(
+            None,
+            &SourceSession::default_limits(),
+            &Cancellation::default(),
+        );
+        let after = owner.statistics();
+        eprintln!(
+            "COMPLEX-CELL-RUN workers={workers} limit_ns={} elapsed_ns={} calls={} queue_ns={} service_ns={} checkpoints={} outcome={:?}",
+            SourceSession::default_limits().timeout.as_nanos(),
+            started.elapsed().as_nanos(),
+            after.calls - before.calls,
+            after.queue_ns - before.queue_ns,
+            after.service_ns - before.service_ns,
+            after.checkpoints - before.checkpoints,
+            outcome.as_ref().map(|_| ()),
+        );
+        let observed = outcome.unwrap();
         assert_eq!(observed.relations["output"].len(), 3000);
         assert_eq!(observed.relations["input"].len(), 3001);
         assert_eq!(

@@ -1288,3 +1288,102 @@ its exact SHA succeeded and the implementation comparison again returned only
 =gerbil.pkg=. The experiment performs this bounded fetch before timed controls.
 The queued experiment =39551911119= was cancelled before measurement to apply
 this reproducibility correction; no timing result was admitted from it.
+
+** Exact-head ABI and experiment follow-up (2026-10-21)
+At ASCENT =cfa7588b= the fresh-prefix native source run passed all 168 Suite
+modules and 1,371 Cases, with 12 workers, 86 independent batch VMs and two
+modules at most per batch. All 86 processor receipts equal =processors=1=.
+The 282-second local runtime was observed with foreign builds on the host and
+is not admitted as a timing improvement. The production build in that fresh
+prefix passed with 2,048 contexts and no ASP modules. The actual AOT expansion
+requires Cargo's Scheme runtime support; a pre-Cargo attempt correctly failed
+on the missing =gerbil-scheme-rust/scheme/runtime= import and is not a pass.
+The exact-head Rust/PyO3 and Python-consumer CI jobs subsequently passed.
+
+Exact-head CI =39552177925= passed repository policy, Lean/Quint, source
+conformance, both BYODS oracles, Rust/PyO3 and Python consumers. It did not pass
+the Linux 180-second complete semantic deadline, two existing scenario timing
+limits, or four fixtures in the independent other-oracle group. The scenario
+p95 observations were 1.594355 ms against 1 ms (nonpositive session update) and
+3.073736 ms against 2 ms (product session). All later performance targets were
+still executed. macOS run =39552177914= reached 76/86 completed batches before
+the existing 600-second deadline. No threshold or timeout was changed.
+
+Experiment =39552244961= was rejected, correctly, when candidate preparation
+compiled 131 production modules. The precise cause was the controller's
+outdated =just check-policy= build-phase command: before ASP separation that
+command built the package; after separation it checks policy only. The first
+baseline control completed build/preparation at 118.184/198.160 seconds, but
+these numbers have no matched complete candidate and establish no speedup.
+The controller now explicitly invokes =gerbil build=, then records policy as a
+separate phase, before preparation. Production-rebuild and warm-output checks
+remain mandatory. The production command is rendered from Lean; the Quint
+=policy-as-production-build= negative control rejects the prior mistake.
+The guarded Lean inventory passed 175 jobs and the focused source controls
+passed 52 tests. Compiler and allocator implementation equivalence remains open.
+
+A separate Core ABI defect is independently reproduced: importing source init
+preserves a held duration Contract, but source-first registration during later
+build projection can replace the canonical Contract and prototype. The held
+receipt remains descended from the original prototype and strict admission
+correctly rejects it. Moving registration out of runtime init syntax and into
+the real build entry preserves identity; an explicit build projection may
+still register its source package. The regression checks inert init import,
+unchanged Contract/prototype identities and validation of the held receipt.
+The old fixed Core candidate passed five existing watchdog/Ops/JsonSchema/Nix/
+rebuild controls and the final identity regression separately. An intermediate
+broader candidate exceeded its unchanged 60-second second-compile limit; it
+was not admitted. Its failure remains evidence, not a discarded retry.
+
+During this investigation the preserved concurrent branch selected the renamed
+Yuanxu repository at =45817d9=, including POO =0df023f= and updated publication
+fixtures. That dependency selection and ownership changes are retained. The
+runtime-registration repair is being validated on that exact new baseline in
+an isolated worktree; old Core results do not qualify the new tuple. No older
+Core pin is substituted for the concurrently selected implementation.
+
+A diagnostic native sample and 40 Scheme continuation samples of the unchanged
+product-session workload found repeated Core admission evidence construction,
+POO object instantiation/slot lookup and GC. This is source-level localization,
+not a proof of causation for all failed gates and not permission to cache
+validation, remove callbacks, or weaken provenance/resource admission.
+
+*** Final bounded runtime-registration repair and retained failures
+The new-tuple identity regression rejected the partial registration repair too:
+removing only init's registration still let build projection replace the
+canonical duration Contract. Final Yuanxu repair =44a99d4= removes both runtime
+registration sites and keeps source priority at the actual build entry. The
+strict regression then passed, including unchanged search order after explicit
+projection and validation of the pre-existing receipt. The original new-tuple
+source init fails the same regression's inert-import check. The production
+Scheme sources of the tested =45817d9= repair and its port onto PR 19's
+=94d6766= are identical; the port preserves that branch's existing CI/fixture
+metadata. The review is =https://github.com/tao3k/gebril-yuanxu/pull/20=.
+
+The expanded six-suite acceptance did NOT pass: its second compile exceeded
+the original 60-second limit. Inspection of the failed child output found
+exactly 38 selected targets after clean, with no extra or duplicate target.
+Temporary output paths alone are not evidence of an invalid cache or duplicate
+build. No artifact-issuance or SDK code was changed on that hypothesis. That
+cold-build resource failure remains open; the isolated ABI regression does not
+replace it. The interrupted old PR 20 CI runs were cancelled after the partial
+repair was disproved locally, before publishing the final repair.
+
+The latest local complete formal run also did NOT pass. Under the unchanged
+15-minute aggregate deadline, =PreparationWork-correct= was still enumerating
+states when its remaining budget expired: its last minute reported 31,933,489
+generated and 1,866,542 distinct states, with 248,411 queued. The run had
+completed 69 positive checks and 341 expected counterexamples; the incomplete
+obligations are not counted as passes. Its source/counterexample controls,
+CompilerCost group and the 175-job Lean inventory passed separately. The final
+combined local source tests passed 52/52. No unchanged retry or budget increase
+was used to promote the complete formal run.
+
+The final ASP placement control uses ASP =31c7ddee= on BOTH sides. A historical
+ASP pin to the previous POO revision cannot serve as a coherent control for
+Yuanxu's selected =0df023f= dependency. The production edge is present only on
+the pre-split control; the candidate carries the exact same ASP implementation
+in =dev/gerbil.pkg=. The transformation still rejects any different production
+dependency tuple. The native build specs match after replacing only checkout
+absolute roots; the referenced =runtime.c= and =ascent.h= bytes match as well.
+No original invalid comparison has been reclassified as a performance pass.

@@ -318,12 +318,12 @@ jobs:
       - name: Qualify Rust workspace semantics
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon
+        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon
       - name: Enforce strict workspace Clippy
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --no-default-features --features gerbil-ascent/default,gerbil-ascent/provider-protocol,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- -D warnings
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --no-default-features --features gerbil-ascent/default,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- -D warnings
       - name: Check the independent Scheme backend interface
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:

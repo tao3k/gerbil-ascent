@@ -20,7 +20,6 @@ tempfile = { version = "=3.27.0", optional = true }
 default = ["rayon"]
 process-runtime = ["dep:serde", "num-bigint/serde"]
 rayon = ["dep:rayon"]
-provider-protocol = ["dep:serde_json"]
 artifacts = ["dep:serde_json", "dep:tempfile"]
 
 [dev-dependencies]

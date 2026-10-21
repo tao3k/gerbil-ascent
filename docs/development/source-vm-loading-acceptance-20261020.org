@@ -1615,3 +1615,48 @@ not match candidate source; the original gxi fallback was retained. Other host
 builds were active. This is neither complete semantic acceptance nor a matched
 three-CPU performance experiment. The earlier accidental three-worker setup
 was cancelled, retained and not admitted.
+
+The default-Rayon all-target Clippy check exposed two line-limit failures: the
+expanded native conversion test (110/100) and the production throughput main
+(105/100). The integer checks now run in one helper on the same VM, and argument
+validation stays in the benchmark parser. No checks or workloads were removed.
+The existing Scheme-interface CI Clippy command now selects ascent-scheme as
+well as ascent-python and explicitly enables its Rayon feature, so benchmark
+owners receive the same strict check. No workflow step or job was added.
+The focused complete ascent-scheme all-target check passed after these changes.
+
+The retained parallel-closure receipts put most request wall time in replace:
+median 125.80ms with one Rayon worker and 88.60ms with three, versus about
+5.26ms/5.39ms for run/export. SourceSession.replace performs candidate evaluation
+before atomic commit, so the latter is not the full inference cost. These
+phases include shared-pool queueing and cannot alone identify exclusive kernel,
+allocation or serial-publication CPU costs.
+
+
+* Separate macOS compilation from semantic execution
+
+Run 39593583875 at source 394d719807bd9c319e05bf3b09a10ec6477c1303
+was cancelled by the former 30-minute parent job budget. Dependency installation
+took approximately 14 minutes, preparation took 375.35 seconds, and semantic
+execution received only approximately 400 of its allowed 600 seconds. The
+recorded 91 module completions and 809 successful Cases are incomplete evidence.
+This cancellation is distinct from the Linux 180-second semantic timeout.
+
+The workflow now has a 30-minute preparation job and a separate 20-minute
+semantic job. The proposed 45-minute combined-job patch was not applied.
+Preparation transfers its current compilation through an immutable artifact
+scoped to this source revision and workflow attempt. Tar retains source clocks,
+file modes and library contents; the consumer checks the source revision and
+compiler fingerprint before loading the compilation. The consumer does not
+install package dependencies or invoke the build again. Cache verification
+failure remains a failing preparation result but does not suppress a successfully
+prepared complete semantic run. The diagnostic uploads remain separate.
+
+The semantic command still executes the entire qualification directory with
+12 single-processor VM workers, the 600-second limit and the original child heap.
+No semantic test selection, performance threshold or runtime behavior changed.
+Local checks passed workflow parsing, shell syntax for all job commands, a
+producer/consumer archive round trip with source-clock preservation, and all
+seven existing source-semantic CI control tests using the frozen SDK. Remote
+execution of the split jobs remains required. Job separation does not establish
+a cold-build speedup, complete semantic acceptance or source-cost refinement.

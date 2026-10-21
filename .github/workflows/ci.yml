@@ -328,11 +328,11 @@ jobs:
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --no-default-features --features gerbil-ascent/default,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- -D warnings
-      - name: Check the independent Scheme backend interface
+      - name: Check Scheme backend and Rayon benchmark interfaces
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml -p ascent-python --all-targets --no-default-features --features scheme-runtime,rayon -- -D warnings
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml -p ascent-python -p ascent-scheme --all-targets --no-default-features --features ascent-python/scheme-runtime,ascent-python/rayon,ascent-scheme/rayon -- -D warnings
       - name: Install pinned process-isolated Rust test runner
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         run: |

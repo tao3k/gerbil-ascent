@@ -1764,3 +1764,79 @@ native dependency preparation is now using the existing CPU-progress build
 supervisor; semantic execution retains its original independent 600-second cap.
 The module catalog change intentionally invalidates the old compiled-profile
 cache; the first remote run may therefore require a cold dependency install.
+
+* Exact-head execution evidence and nested admission costs
+
+The split workflows at 99ff6a00 completed with failures, not full acceptance.
+Main run 39607544908 passed Rust/PyO3, Python consumers, hygiene, formal,
+formal-conformance and the two BYODS oracle lanes. Linux source semantics hit
+its unchanged 180-second limit after 81 modules and 670 Cases. macOS run
+39607544961 completed preparation and then reached the independent 600-second
+semantic limit after 138 modules and 1,159 Cases. The last observations were
+active exhaustive graph and complete-consumer Cases, not a shutdown deadlock.
+The macOS preparation steps took 627 seconds for cold dependencies, 177 seconds
+for the production build and 263 seconds for semantic preparation. These are
+one-run stage observations, not matched non-regression receipts.
+
+The original Linux performance limits for nonpositive, product and table
+expression workloads passed at 339.983, 1,321.994 and 1,361.042 microseconds,
+respectively. The subsequent withdrawal chain gate failed: CPU ratio 0.808
+exceeded 0.8 and allocation-counter ratio 0.831 exceeded 0.75. Later scenarios
+were therefore not accepted by that failed run.
+
+** Confirmed dependency-cache call-site cost
+
+The frozen SDK's generated gerbil/tools/gxpkg~0.scm pkg-install implementation
+calls install-it in both compatible installed-tag branches, and install-it
+performs dependency installation and pkg-build. Consequently deps --install
+is not an installed-prefix readiness check. The three Linux cache consumers
+now skip installation only after an exact dependency-cache hit. macOS can
+reuse the same dependency-only cache after a preparation-cache miss. Native
+interface imports remain unconditional; production build and source/compiled
+artifact admission remain unchanged. Keys retain the SDK identity and both
+production and development dependency declarations. No upstream or build.ss
+change is required for this call-site correction. Actual matched cold and warm
+preparation benefits still require new exact-head measurements.
+
+** Withdrawal initialization decomposition and candidate correction
+
+The unchanged eight-cut chain workflow spent 19,248,136 allocation-counter
+bytes opening the candidate, while the eight cuts together used roughly
+0.48 MB. A separate decomposition attributed 17,619,520 bytes to lowering and
+root admission, 1,138,544 to opening the Session, 78,784 to running it, 363,824
+to graph production and 624,920 to complete graph verification and retention.
+These inclusive diagnostic counters do not establish allocator refinement.
+
+Fresh lowering never shares caller-owned Term identities. Selecting the
+existing ordinary complete root Contract instead of shared-Term memo
+refinement saved approximately 0.74 MB, but did not close the original gate.
+A Term-only value-membership correction also failed the allocation gate
+(17,818,144 to 13,663,608 bytes). Both failures remain evidence.
+
+Nested Term and Atom membership now uses the upstream ObjectContract value
+Type for the Boolean classification consumed by the existing outer Contract.
+Required ancestry, required fields, field predicates, unknown-field delegation
+and full public Flow descriptors remain present. Explicit contextual admission
+still runs the full public obligations. No validation result is cached.
+The discarded inner contextual receipt construction is avoided; public result
+publication and provenance production, verification and retention are unchanged.
+
+Six dedicated Cases compare nested membership with the unchanged public
+admission descriptors across kinds, missing and malformed fields, opaque
+values, unknown getters, exact exception text, getter mutation/order and
+contextual obligation callbacks. All six passed locally. The unchanged ASP
+policy reported zero errors. These controls are not a source equivalence proof.
+
+All four original withdrawal gates then passed locally without threshold
+changes. Chain median CPU was 7.001 to 4.621 ms and allocation counters were
+13,370,592 to 9,216,568 bytes, with 41 wins in 50 pairs. Diamond was 6.604 to
+4.290 ms and 12,204,584 to 8,674,384 bytes (45 wins); duplicates was 5.453 to
+3.589 ms and 10,455,824 to 8,133,600 bytes (44 wins); tiny was 4.819 to
+4.444 ms and 8,168,400 to 7,795,808 bytes. These compare the existing fresh
+and retained lifecycle arms under the candidate, not whole-revision cold
+build latency. Full source semantics and exact-head CI remain required.
+
+True cumulative Scheme allocation, complete compiler/decoder source refinement,
+and full mutable-cache/SCC/message refinement remain open. Existing Lean/Quint
+admission and cost-accounting controls do not prove the new upstream value
+view equivalent at every source observation, or establish a cold-build win.

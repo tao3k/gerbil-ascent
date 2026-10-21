@@ -212,15 +212,29 @@ jobs:
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # END GENERATED PREPARATION CACHE-ADMISSION
+      - name: Restore declared dependency build
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.preparation.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Install declared Scheme dependencies
         # A compatible, admitted prefix already contains these exact declarations.
         # Reinstalling rebuilds Core and invalidates unchanged support interfaces.
-        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' && steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build current Scheme package
         run: gerbil build
       - name: Check development policy

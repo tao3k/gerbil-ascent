@@ -4,8 +4,9 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop define-type element?)
+(import (only-in :clan/poo/object .o .cc .ref)
+        (only-in :clan/poo/mop define-type element? Type. Any)
+        (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :core/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
@@ -62,15 +63,15 @@
                  (lambda (value)
                    (or (gerbil-ascent-canonical-set-storage-provider? value)
                        (element? GerbilAscentStorageProviderContract value)))))
-(def +term-kind+
-  (slot-contract 'ascent/term-kind
-                 (lambda (value)
-                   (memq value '(variable wildcard literal expression pattern)))))
+(def (term-kind? value)
+  (memq value '(variable wildcard literal expression pattern)))
+(def +term-kind+ (slot-contract 'ascent/term-kind term-kind?))
 (def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
 (def +plan+ (slot-contract 'ascent/clause-plan procedure?))
 ;; : (-> Symbol PredicateContract)
+(def (clause-kind? expected value) (eq? value expected))
 (def (clause-kind-contract kind)
-  (slot-contract 'ascent/clause-kind (lambda (value) (eq? value kind))))
+  (slot-contract 'ascent/clause-kind (cut clause-kind? kind <>)))
 
 ;;; Relation shape checks arity, source rows, and physical providers before
 ;;; the evaluator creates any mutable table state.
@@ -105,13 +106,18 @@
   proto: (.o)
   responsibilities: (.o kind: +term-kind+ value: +any+))
 
-(def +terms+
-  (slot-contract 'ascent/terms
-                 (lambda (value)
-                   (and (list? value)
-                        (andmap (lambda (term)
-                                  (element? GerbilAscentTermContract term))
-                                value)))))
+;; Nested membership consumes a Boolean, not a contextual receipt. Reuse
+;; the upstream value Type with the same ancestry, fields and kind predicate;
+;; explicit Term admission still uses the complete public Flow Contract above.
+(def +term-value+
+  (.cc ObjectContract. identity: 'ascent/term-value
+       required-prototype: (.ref GerbilAscentTermContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities: (.o kind: (.cc Type. .element?: term-kind?) value: Any)))
+
+(def (terms-value? value)
+  (and (list? value) (andmap (cut element? +term-value+ <>) value)))
+(def +terms+ (slot-contract 'ascent/terms terms-value?))
 
 ;;; Atom plans bind one relation name to ordered terms and one open planning
 ;;; slot; the evaluator consumes the lowered plan without row-loop dispatch.
@@ -120,6 +126,18 @@
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)
                       relation: +symbol+ terms: +terms+ .plan: +plan+))
+
+;; Rule membership also consumes only the Atom's value classification.
+;; The public Atom descriptor retains its original contextual responsibilities.
+(def +atom-value+
+  (.cc ObjectContract. identity: 'ascent/atom-value
+       required-prototype: (.ref GerbilAscentAtomContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'atom <>))
+           relation: (.cc Type. .element?: symbol?)
+           terms: (.cc Type. .element?: terms-value?)
+           .plan: (.cc Type. .element?: procedure?))))
 
 (def +variables+
   (slot-contract 'ascent/variables
@@ -205,7 +223,7 @@
                  (lambda (value)
                    (and (list? value)
                         (andmap (lambda (clause)
-                                  (or (element? GerbilAscentAtomContract clause)
+                                  (or (element? +atom-value+ clause)
                                       (element? GerbilAscentGuardContract clause)
                                       (element? GerbilAscentGeneratorContract clause)
                                       (element? GerbilAscentBindingContract clause)
@@ -218,7 +236,7 @@
                    (and (pair? value)
                         (list? value)
                         (andmap (lambda (head)
-                                  (element? GerbilAscentAtomContract head))
+                                  (element? +atom-value+ head))
                                 value)))))
 
 ;;; A rule has at least one head and an ordered body. Shared body bindings

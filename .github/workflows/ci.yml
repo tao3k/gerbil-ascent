@@ -75,6 +75,7 @@ jobs:
             echo 'ASCENT_CACHE_SOURCE_PATHS'
           } >> "$GITHUB_OUTPUT"
       - name: Restore declared dependency build
+        id: dependencies-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
@@ -91,12 +92,14 @@ jobs:
           rm -f .gerbil/lib/static/gerbil-ascent__*
           rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
-          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -234,6 +237,7 @@ jobs:
             echo 'ASCENT_CACHE_SOURCE_PATHS'
           } >> "$GITHUB_OUTPUT"
       - name: Restore declared dependency build
+        id: dependencies-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
@@ -250,12 +254,14 @@ jobs:
           rm -f .gerbil/lib/static/gerbil-ascent__*
           rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
-          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -477,6 +483,7 @@ jobs:
             echo 'ASCENT_CACHE_SOURCE_PATHS'
           } >> "$GITHUB_OUTPUT"
       - name: Restore declared dependency build
+        id: dependencies-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
@@ -493,12 +500,14 @@ jobs:
           rm -f .gerbil/lib/static/gerbil-ascent__*
           rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
-          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:

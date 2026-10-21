@@ -4,7 +4,7 @@
 
 (import (only-in "build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
         (only-in :std/build-script defbuild-script)
-        (only-in :std/make make-clean)
+        (only-in :std/make make-clean pkg-config-libs)
         (only-in :gerbil/compiler execute-pending-compile-jobs!)
         (only-in :std/source this-source-file)
         (only-in :gerbil/runtime/loader add-load-path!)
@@ -24,6 +24,8 @@
       (map (lambda (module) [gxc: module]) gerbil-ascent-library-modules)
   (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
          (c-options (string-append "-fPIC -I" c-dir))
+         (executable-link-options (string-append
+           (pkg-config-libs "openssl") " " (getenv "LDFLAGS" "")))
          (module-link-options (cond-expand
            (darwin "-Wl,-undefined,dynamic_lookup")
            (else "")))
@@ -31,7 +33,7 @@
            (cond-expand
              (darwin "-dynamiclib -Wl,-install_name,@rpath/libascent.dylib -Wl,-undefined,dynamic_lookup -Wl,-no_compact_unwind")
              (else "-shared"))
-           " " (getenv "LDFLAGS" ""))))
+           " " executable-link-options)))
     `((gxc: "interface/c-api" "-ld-options" ,module-link-options)
       (gxc: "interface/runtime"
             (extra-inputs: (,(path-expand "runtime.c" c-dir)
@@ -39,7 +41,8 @@
             "-cc-options" ,c-options "-ld-options" ,module-link-options)
       (exe: "interface/entry" bin: "libascent"
             "-cc-options" ,c-options "-ld-options" ,library-link-options)
-      (exe: "interface/develop" bin: "ascent-develop"))))))
+      (exe: "interface/develop" bin: "ascent-develop"
+            "-ld-options" ,executable-link-options))))))
 (export gerbil-ascent-library-modules gerbil-ascent-build-spec main)
 (def (build-library spec . args)
   (def (run spec)

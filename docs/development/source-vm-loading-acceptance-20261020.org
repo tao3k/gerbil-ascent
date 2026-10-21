@@ -1387,3 +1387,39 @@ in =dev/gerbil.pkg=. The transformation still rejects any different production
 dependency tuple. The native build specs match after replacing only checkout
 absolute roots; the referenced =runtime.c= and =ascent.h= bytes match as well.
 No original invalid comparison has been reclassified as a performance pass.
+
+** OpenSSL link declaration at the production build entry
+
+The first corrected ASP placement experiment at =d634efac= stopped during
+its baseline production build with =ld: library crypto not found=. Its host
+audit reported zero foreign compiler processes and no audit errors; no matched
+preparation or speedup result was produced. The direct =gerbil build= command
+did not inherit the OpenSSL search path previously supplied by the Just entry.
+This is a link declaration problem, not evidence of a compiler defect.
+
+The production =build.ss= now uses the existing =:std/make=
+=pkg-config-libs= helper for =openssl= and supplies its result to both linked
+executables, retaining the platform shared-library flags and caller =LDFLAGS=.
+The temporary workflow-level =LIBRARY_PATH= patch was withdrawn. The same
+generic link correction is applied to the experimental control; the SDK and
+all semantic, resource and performance limits remain unchanged. Native link
+verification explicitly removes =LIBRARY_PATH=. This correction alone does
+not establish preparation-cost admission or close the existing source-proof
+and runtime-performance gaps.
+
+Local verification completed with =LIBRARY_PATH= unset: the Crypto C probe
+linked and ran; =gxi build.ss= completed both forced executable links;
+=libascent= loaded with =ctypes.CDLL=; and =ascent-develop --eval-plain=
+printed its startup marker and exited zero. The host's =pkg-config= selected
+OpenSSL 4.0.3, confirmed in both artifacts by =otool -L=. No Homebrew prefix
+or OpenSSL version is hardcoded in the build script. This was functional link
+verification under concurrent host work, not an isolated timing measurement.
+The package-manager wrapper in this temporary diagnostic prefix stopped before
+compilation because its manually installed Yuanxu lacked a package manifest;
+that failure is retained separately and is not counted as a wrapper pass.
+
+The prior =d634efac= CI also exposed an unused Rust test helper and a missing
+frozen entry for the new =policy-as-production-build= formal counterexample.
+The unused helper is removed and the exact obligation is added without changing
+the existing inventory. The focused frozen-inventory test passes. These fixes
+do not turn the prior semantic timeouts or performance failures into passes.

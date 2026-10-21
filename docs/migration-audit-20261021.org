@@ -210,3 +210,36 @@ commits remain recoverable. Work continues in ASCENT #1, POO Flow #34, Parser
   argument containing =@SHA=. The checkout and stored tag already named the
   requested SHA; updating by package name completed at that same SHA. Nothing
   was uninstalled and no revision or validation was weakened.
+
+** Subsequent exact-source receipts
+
+ASCENT =71408ec3dc20510416ddbac9f5d4e8f5ed68b854= completed its full native
+production build and =check-production-build= with natural exit 0 and
+=PRODUCTION-BUILD-NO-ASP contexts=1508=. Parser's production build likewise
+completed without ASP installed, with =LIBRARY-PUBLICATION-READY= and exit 0.
+The Parser development policy pass completed with 589 warnings and zero errors;
+warnings were not suppressed. Catalog comparison now retains every target and
+option while normalizing filesystem enumeration order, and reports both sides
+of a mismatch rather than weakening the source inventory.
+
+POO's native consumer crate and Python feature compiled against that same ASCENT
+revision. Its full serial native test execution completed 55/55, zero ignored,
+zero filtered, with natural exit 0. This includes the migrated execution-policy
+provenance test. Its preceding isolated run still timed out with the original
+limits; both results are retained. No timing or caching improvement is claimed.
+An initial run was refused by the process/socket sandbox; another correctly
+refused an old worker at its identity handshake. The final run used the worker
+built from the same resolved ASCENT SHA and the selected SDK root.
+
+The original Core PR also exposed a test-directory VM heap overflow after build,
+prelude and bootstrap had already passed. Its CI now keeps the same 200 direct
+=t/*-test.ss= files and the same 1 GiB allowance, running them individually via
+the existing bounded test entry. The source-only test fixtures have a confined
+=core/t= native package; production sources are not prioritized over compiled
+Kernel artifacts to satisfy a fixture import. Full exact-head CI remains open.
+
+All work continues on the original PRs. POO's remote PR branch contains the
+migration, but its primary working checkout acquired roughly 580 concurrent
+uncommitted changes. That checkout was not reset, stashed, broadly staged or
+forcibly fast-forwarded. ASCENT's primary checkout was clean apart from its
+historical untracked validation output and was normally fast-forwarded.

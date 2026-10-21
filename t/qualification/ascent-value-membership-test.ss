@@ -4,8 +4,8 @@
 (import :std/test
         (only-in :clan/poo/object .o .cc .ref .putslot! object-instance $constant-slot-spec $thunk-slot-spec)
         (only-in :clan/poo/mop element?)
-        (only-in :core/types poo-flow-contract-admit poo-flow-validation-evidence-accepted?
-                 poo-flow-classification-evidence)
+        (only-in :yuanxu/types yuanxu-contract-admit yuanxu-validation-evidence-accepted?
+                 yuanxu-classification-evidence)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom)
         (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract))
 (export ascent-value-membership-test)
@@ -114,8 +114,8 @@
              (atom (.o (:: @ (.ref GerbilAscentAtomContract 'proto))
                        ascent-clause-kind: 'atom relation: 'input terms: []
                        .plan: (lambda args (void)))))
-        (check-equal? (poo-flow-validation-evidence-accepted?
-                       (poo-flow-contract-admit GerbilAscentAtomContract atom context)) #t)
+        (check-equal? (yuanxu-validation-evidence-accepted?
+                       (yuanxu-contract-admit GerbilAscentAtomContract atom context)) #t)
         (check-equal? (length seen) 5)
         (check-equal? (car seen) 'ascent/atom)
         (check-equal? (and (memq 'ascent/terms seen) #t) #t)))
@@ -127,8 +127,8 @@
              (term (.o (:: @ (.ref GerbilAscentTermContract 'proto)) kind: 'variable value: 'x)))
         (check-equal? (nested-term? term) #t)
         (check-equal? seen [])
-        (check-equal? (poo-flow-validation-evidence-accepted?
-                       (poo-flow-contract-admit GerbilAscentTermContract term context)) #t)
+        (check-equal? (yuanxu-validation-evidence-accepted?
+                       (yuanxu-contract-admit GerbilAscentTermContract term context)) #t)
         (check-equal? (length seen) 3)
         (check-equal? (and (memq 'ascent/term-kind seen) #t) #t)
         (check-equal? (and (memq 'ascent/value seen) #t) #t)
@@ -160,7 +160,7 @@
               (.putslot! field '.classify
                 ($constant-slot-spec
                   (lambda (candidate context)
-                    (poo-flow-classification-evidence (.ref field 'identity) candidate #f [] context))))
+                    (yuanxu-classification-evidence (.ref field 'identity) candidate #f [] context))))
               'variable)))
         (check-equal? calls 0)
         (try
@@ -177,7 +177,7 @@
               (hash-put! (object-instance descriptor) '.classify
                 (lambda (candidate context)
                   (set! calls (+ calls 1))
-                  (poo-flow-classification-evidence (.ref descriptor 'identity)
+                  (yuanxu-classification-evidence (.ref descriptor 'identity)
                     candidate #f [] context)))
               (check-equal? (nested-term? term) #f)
               (check-equal? (> calls 0) #t)
@@ -192,7 +192,7 @@
           (.putslot! kind '.classify
             ($constant-slot-spec
               (lambda (candidate context)
-                (poo-flow-classification-evidence (.ref kind 'identity) candidate #f [] context))))
+                (yuanxu-classification-evidence (.ref kind 'identity) candidate #f [] context))))
           (check-equal? (nested-term? term) #f)
           (finally (.putslot! kind '.classify ($constant-slot-spec classifier))))
         (check-equal? (nested-term? term) #t)))))

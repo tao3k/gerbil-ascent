@@ -9,11 +9,12 @@ edition = "2024"
 license = "Apache-2.0 AND LGPL-2.1-or-later"
 
 [workspace.dependencies]
-gerbil-scheme = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "29e99ab486ca72f2ea63a27de4abaf97262e25e9", features = ["external-program"] }
-gerbil-scheme-sys = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "29e99ab486ca72f2ea63a27de4abaf97262e25e9", features = ["external-program"] }
+gerbil-scheme = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "8c23217d1f838e71a972e606d6e38e6386f3b0a7", features = ["external-program"] }
+gerbil-scheme-sys = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "8c23217d1f838e71a972e606d6e38e6386f3b0a7", features = ["external-program"] }
+# The runtime branch retired this build-time compiler; keep its source pinned.
 gerbil-scheme-rust-ir = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "7ebc26dac9e32f982f9ab1455b664b01f2f6e007" }
-gerbil-scheme-aot-build = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "29e99ab486ca72f2ea63a27de4abaf97262e25e9" }
-gerbil-scheme-python = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "29e99ab486ca72f2ea63a27de4abaf97262e25e9", default-features = false }
+gerbil-scheme-aot-build = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "8c23217d1f838e71a972e606d6e38e6386f3b0a7" }
+gerbil-scheme-python = { git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "8c23217d1f838e71a972e606d6e38e6386f3b0a7", default-features = false }
 asp-rust = { git = "https://github.com/tao3k/asp-rust", rev = "2419414ee5379bad89506496e3eaab928df68daf", version = "0.1.2", default-features = false }
 gerbil-ascent = { path = "ascent", default-features = false }
 ascent = "=0.8.1"

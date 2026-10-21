@@ -10,7 +10,7 @@ module AnchoredEvidenceSlice {
     applicable: Set[int], exposed: Set[int], scope: Set[int], prior: Set[int],
     items: Set[int], added: Set[int], removed: Set[int], retained: Set[int],
     current: bool, receipts: bool, conditions: bool, declared: bool, evaluated: bool,
-    sameWitness: bool, hintVerified: bool,
+    sameWitness: bool, hintVerified: bool, queryOnly: bool, resolvedAnchors: Set[int],
     sufficient: bool, full: bool, transportFits: bool, acknowledged: bool, queried: bool, hit: bool, visible: Set[int],
     references: Set[int], expandable: Set[int], complete: bool, absent: bool,
     status: str, discovered: Set[int], selectedAction: bool, explorationOpen: bool
@@ -20,7 +20,7 @@ module AnchoredEvidenceSlice {
     applicable: Set(0, 1), exposed: Set(), scope: Set(), prior: Set(),
     items: Set(), added: Set(), removed: Set(), retained: Set(),
     current: true, receipts: true, conditions: true, declared: true, evaluated: true,
-    sameWitness: true, hintVerified: true,
+    sameWitness: true, hintVerified: true, queryOnly: false, resolvedAnchors: Set(),
     sufficient: true, full: true, transportFits: true, acknowledged: false, queried: false, hit: false, visible: Set(),
     references: Set(), expandable: Set(), complete: false, absent: false,
     status: "unqueried", discovered: Set(), selectedAction: false, explorationOpen: true
@@ -30,8 +30,9 @@ module AnchoredEvidenceSlice {
     nondet exposed = Set(Set(), Set(0), Set(1), Set(2), Set(0, 1)).oneOf()
     nondet applicable = Set(Set(), Set(0), Set(1), Set(0, 1)).oneOf()
     nondet prior = Set(Set(), Set(0, 1), Set(2, 3)).oneOf()
+    nondet queryOnly = Set(false, true).oneOf()
     all {not(q.queried),
-    q' = {...q, exposed: exposed, applicable: applicable, prior: prior}}
+    q' = {...q, exposed: exposed, applicable: applicable, prior: prior, queryOnly: queryOnly}}
   }
   action Gap = {
     nondet which = Set("source", "receipt", "condition", "declaration", "evaluation", "capacity", "detail", "witness", "transport", "prior-delivery").oneOf()
@@ -64,14 +65,16 @@ module AnchoredEvidenceSlice {
     else if (not(s.sufficient)) "presentation-gap"
     else if (not(s.transportFits)) "transport-gap" else "hit"
   action Query = {
-    val scoped = seeds(q.exposed, q.applicable)
+    val restored = if (Mutation == "drop-query-on-replay" and q.queryOnly and not(q.hintVerified))
+      Set() else q.exposed
+    val scoped = seeds(restored, q.applicable)
     val result = if (valid(q)) family(scoped) else Set()
     // Unverified presentation hints cannot suppress evidence; history remains.
     val prior = if (q.hintVerified or Mutation == "reuse-unverified-delivery") q.prior else Set()
     val shown = if (Mutation == "dump-graph") Set(0, 1, 2, 3)
       else if (Mutation == "hide-counter") result.exclude(Set(1, 3))
       else if (q.sufficient and q.full and q.transportFits) result else Set()
-    all {not(q.queried), q' = {...q, queried: true, scope: scoped, items: result,
+    all {not(q.queried), q' = {...q, queried: true, scope: scoped, items: result, resolvedAnchors: restored,
       hit: if (Mutation == "drop-first-hit") false
         else if (Mutation == "invalid-declaration-hit") ready({...q, declared: true})
         else if (Mutation == "mix-witnesses") ready({...q, sameWitness: true})
@@ -113,9 +116,10 @@ module AnchoredEvidenceSlice {
       q.retained == q.items.intersect(if (q.hintVerified) q.prior else Set()))
   val VerifiedReuse = not(q.queried and not(q.hintVerified)) or
     (q.retained == Set() and q.added == q.items)
+  val QueryRetained = not(q.queried and q.queryOnly) or q.resolvedAnchors == q.exposed
   val Open = not(q.selectedAction) and q.explorationOpen
   val DiscoveryExact = not(q.queried) or q.discovered ==
     (if (valid(q) and q.exposed.size() == 0) associations.map(a => a.factor) else Set())
   val Safety = FirstHit and SoundHit and Local and Family and Traceable and
-    HonestPresentation and Acknowledged and DeliveryAcknowledged and VerifiedReuse and Gaps and ExactDelta and Open and DiscoveryExact
+    HonestPresentation and Acknowledged and DeliveryAcknowledged and VerifiedReuse and QueryRetained and Gaps and ExactDelta and Open and DiscoveryExact
 }

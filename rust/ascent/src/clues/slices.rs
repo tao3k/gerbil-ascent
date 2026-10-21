@@ -20,7 +20,7 @@ fn request_fields(request: &Data) -> Result<&BTreeMap<String, Data>> {
     if fields.keys().any(|k| {
         !matches!(
             k.as_str(),
-            "questions" | "expand" | "checkpoint" | "displayBytes" | "bindings"
+            "questions" | "expand" | "checkpoint" | "displayBytes" | "bindings" | "readConfirmed"
         )
     }) {
         return Err(invalid("unknown slice request field"));
@@ -49,6 +49,7 @@ fn prior(
     source: &str,
     contract: &str,
     anchor: &str,
+    confirmed: bool,
 ) -> Result<(Vec<Row>, Vec<Row>, &'static str)> {
     let Some(checkpoint) = checkpoint else {
         return Ok((Vec::new(), Vec::new(), "initial"));
@@ -62,6 +63,9 @@ fn prior(
     }
     if body.field("schema")?.text()? != "clue-slice.v1" {
         return Err(invalid("unsupported slice checkpoint"));
+    }
+    if !confirmed {
+        return Ok((Vec::new(), Vec::new(), "initial"));
     }
     let source_changed = body.field("sourceIdentity")?.text()? != source;
     if source_changed
@@ -170,6 +174,16 @@ impl ClueExchange {
         let questions = claims("questions")?;
         let expansions = claims("expand")?;
         let checkpoint = fields.get("checkpoint");
+        let confirmed = fields
+            .get("readConfirmed")
+            .map_or(Ok(true), Data::boolean)?;
+        // Carrier confirmation affects display reuse, never the saved query.
+        // It is an observation for this read, not a sticky query preference.
+        let Data::Map(mut query) = query else {
+            return Err(invalid("slice query must be a map"));
+        };
+        query.remove("readConfirmed");
+        let query = Data::Map(query);
         let display_bytes = fields
             .get("displayBytes")
             .map_or(Ok(8192usize), Data::index)?;
@@ -190,8 +204,13 @@ impl ClueExchange {
             ),
         ])
         .digest();
-        let (previous, previous_relations, mode) =
-            prior(checkpoint, &self.identity, &self.read_contract, &anchor)?;
+        let (previous, previous_relations, mode) = prior(
+            checkpoint,
+            &self.identity,
+            &self.read_contract,
+            &anchor,
+            confirmed,
+        )?;
         let mut facts = self.facts.clone();
         facts.insert(
             "question".into(),

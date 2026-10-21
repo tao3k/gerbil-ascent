@@ -137,6 +137,63 @@ fn clues_checkpoint_only_restores_declared_query_in_a_new_owner() {
 }
 
 #[test]
+fn clues_unconfirmed_carrier_preserves_query_only_resume_without_sticky_replay() {
+    let engine = Engine::new(1).unwrap();
+    let mut owner = exchange(&engine);
+    let first = owner
+        .slice_selected(
+            ClueSelector {
+                sources: &[PROJECTION],
+                constructor: "select",
+            },
+            &Data::object([("bindings", list(&[&["mechanism", "old"]]))]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    let hint = at(&first, &["checkpoint"]).clone();
+    let replayed = owner
+        .slice(
+            &Data::object([
+                ("checkpoint", hint.clone()),
+                ("readConfirmed", false.into()),
+            ]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(
+        rows(&replayed, &["brief", "families"]),
+        rows(&first, &["brief", "families"])
+    );
+    assert_eq!(
+        at(&replayed, &["checkpoint", "body", "query"]),
+        at(&first, &["checkpoint", "body", "query"])
+    );
+    let resumed = owner
+        .slice(
+            &Data::object([("checkpoint", at(&replayed, &["checkpoint"]).clone())]),
+            &Limits::default(),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(rows(&resumed, &["brief", "families"]), []);
+    assert_eq!(
+        at(&resumed, &["brief", "delta", "added"]),
+        &Data::from(0usize)
+    );
+    assert!(
+        owner
+            .slice(
+                &Data::object([("checkpoint", hint), ("readConfirmed", "false".into()),]),
+                &Limits::default(),
+                &Cancellation::default()
+            )
+            .is_err()
+    );
+}
+
+#[test]
 fn clues_checkpoint_query_is_overridable_and_its_digest_is_checked() {
     let engine = Engine::new(1).unwrap();
     let mut owner = exchange(&engine);

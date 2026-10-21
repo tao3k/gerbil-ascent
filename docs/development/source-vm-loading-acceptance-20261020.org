@@ -2269,3 +2269,124 @@ Cold preparation, the four remaining macOS runtime modules, Linux's deadline,
 the five oracle deadlines, absolute scenario budgets and true cumulative Scheme
 allocation remain open. The SDK, compiler options, VM/thread counts, cancellation,
 resource charging, provenance and all acceptance thresholds remain unchanged.
+
+
+** Exact-head 2efbb5fc results and declaration source attribution
+
+The split workflows for =2efbb5fc2bf29fc533e5a104b9cac6a8a1788c18= completed
+with failures. Main run [[https://github.com/tao3k/gerbil-ascent/actions/runs/39670871035][39670871035]] passed hygiene, Rust/PyO3,
+Python consumers, formal, formal-conformance, BYODS and BYODS-scale. Linux
+full semantics, the other independent-oracle lane and performance failed.
+macOS run [[https://github.com/tao3k/gerbil-ascent/actions/runs/39670870833][39670870833]] passed preparation and failed full semantics.
+These are retained negatives, not successful full acceptance.
+
+Linux prepared 381 modules with four build cores: source-context loading
+44.275566 seconds, make 197.334284 seconds; its subsequent compatible-cache
+projection/make were 0.578512/0.985516 seconds. The original 180-second source
+gate dispatched 170 modules in 86 batches and recorded 81 completed modules
+and 675 completed Cases before exit 124. On macOS the three-core preparation
+recorded source context 46.395999 seconds, projection 50.780081 seconds, make
+13.720780 seconds and external preparation 72.50 seconds. This is compatible
+compiled-output reuse, not evidence that cold expansion is repaired. Its
+600-second, twelve single-thread VM source run completed 158/170 modules and
+1336 Cases before exit 124. Neither partial run proves complete semantics.
+
+The remote lifecycle failure moved from small to identity: baseline/prepared
+CPU 2.670/3.021 milliseconds violated the unchanged 10 percent plus 20
+microsecond tolerance. All seventeen absolute scenario budgets passed in this
+run. A local 1000-operation decomposition recorded capture 0.004100 seconds,
+prepare 0.392838 seconds, and explicit public validation 0.416863 seconds.
+The factory-created method has constant private getters, yet preparation was
+paying for discarded contextual validation receipts. A current metadata and
+admission-protocol guard now selects the existing compatible value Contract;
+changed hooks still use full public validation and its normalized result.
+Explicit public validation is unchanged. The analogous decomposition after
+this repair was capture 0.004456, prepare 0.034740, public validation 0.436625
+seconds. This diagnostic is not an end-to-end runtime throughput claim.
+
+A separate source diagnostic copies the exact declaration function from the
+semi-naive source Suite and brackets declaration construction, actual evaluation,
+independent naive evaluation and unchanged result assertions. It uses the same
+36 graph inputs at each step. CPU totals in seconds were:
+
+| Source candidate | Declaration | Evaluation | Naive oracle | Checks |
+|------------------+-------------+------------+--------------+--------|
+| Before constructor repair | 1.758329 | 0.007781 | 0.000727 | 0.002517 |
+| Fresh Term/Atom value checks | 0.582725 | 0.005864 | 0.000614 | 0.001388 |
+| Also positive Rule value checks | 0.166403 | 0.005427 | 0.000599 | 0.001608 |
+
+Declaration construction initially accounted for 99.38 percent of this probe's
+CPU and fell by 90.54 percent on the final candidate. This is one diagnostic
+subset, not the original complete 512-graph gate, not cold compilation, and not
+a matched macOS CI wall-time qualification. All 36 exact oracle comparisons
+passed. The failed diagnostic invocation using unsupported =-v5= ran no Cases;
+its usage output is retained separately. The SDK documents =-v 5=, used by the
+qualified run. No assertion or timeout was changed to obtain these samples.
+
+The constructor repair never caches successful validation. Factory records
+contain identity/revision only, and live values are checked each time. Only
+factory-owned positive Atom trees qualify for the Rule value view. Unknown
+clauses and protocol changes take public admission. Failure of the positive
+view must also take public admission: an Atom can fail its own view yet enter
+an alternative public clause descriptor. Ordinary Program/Fragment publication
+still executes the full public root Contract. Custom constructor dispatch,
+normalization, late obligations, caller getters and exceptions retain explicit
+semantic controls.
+
+The final local six-Suite control passed 78 Cases with no errors, including the
+unchanged 70/28 instrumentation expectations. The complete 175-job Lean Guard
+build and CompilerCost Quint inventory passed, including new mutants that drop
+public Rule fallback or ignore constructor overrides. Four emitted Scheme
+regions match the actual source byte-for-byte: declaration values, declaration
+dispatch, metadata/protocol guard and captured mapping indexes. All 106
+workbench tests passed; ASP reported the existing 81 warnings and zero errors.
+These are narrow conditional source laws and source bindings. They do not prove
+complete Core MOP, native compiler/allocator, mutable cache, SCC, decoder or
+Actor/Rayon source equivalence.
+
+The production matrix [[https://github.com/tao3k/gerbil-ascent/actions/runs/39670961922][39670961922]] for the same pushed head completed
+only 20/24 rows on three logical CPUs. Small VM1 timed out; large VM1 exited
+101 with worker timeout errors, and large VM3/VM12 exceeded the unchanged
+240-second row limit. Closure VM1/3/12 throughput was 4.700749/11.937376/
+15.637261 requests per second, with p95 2902.386875/1149.513042/995.153791
+milliseconds. Its valid closure VM12/VM1 ratio is 3.33; it does not establish
+an admitted complete-matrix speedup. The preceding 4c01c268 matrix completed
+23/24 rows and also failed large VM1. Its small VM12/VM1 ratio was 4.384 and
+closure ratio 4.120. These head-specific observations are not a matched proof
+of improvement between the heads.
+
+The pure Rust Rayon measurements have zero VM/native calls after projection,
+yet their throughput also changed substantially between these runs despite
+unchanged timed kernel source. Empty foreign-compiler audits alone do not
+identify the cause. Cross-run host capacity, compiler/IR and scheduler/cache
+variation remain unclosed. On macOS the Scheme production route still performs
+an authoritative buffered-socket handshake at each checkpoint. That is a
+source-backed transport hypothesis, not a measured complete IPC decomposition;
+no checkpoint, cancellation, limit or provenance semantics were relaxed.
+
+True cumulative Gambit allocation remains unqualified. Existing raw VM counter
+deltas are retained as diagnostics rather than promoted to cumulative bytes.
+Cold context loading/expansion, complete runtime deadlines, the independent
+oracle deadlines and complete production throughput remain required remote
+gates. The SDK, three-core macOS configuration, 600-second macOS source limit,
+twelve single-thread VM processes, twelve Rust test threads and all existing
+performance thresholds are unchanged.
+
+The final native-qualified lifecycle run passed all eight unchanged shape
+thresholds, each as an independent Case so a failed shape cannot hide later
+workloads. All eight native-library guards passed. CPU baseline/prepared
+medians in milliseconds were:
+
+| Shape | Baseline | Prepared |
+|-------+----------+----------|
+| single | 4.868 | 0.591 |
+| empty | 3.060 | 0.539 |
+| small | 0.491 | 0.292 |
+| identity | 1.166 | 1.111 |
+| unique | 1.924 | 1.260 |
+| fanout | 5.632 | 3.281 |
+| miss | 1.796 | 1.126 |
+| fix | 52.501 | 47.590 |
+
+The original 50-pair/64-request lifecycle and tolerance are unchanged. Raw
+allocation-counter deltas are not a true cumulative allocation receipt.

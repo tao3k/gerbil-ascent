@@ -8,11 +8,11 @@
                  yuanxu-classification-evidence)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider GerbilAscentIndexProviderContract)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-guard
                  gerbil-ascent-construct-inert-program)
-        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract
+        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract GerbilAscentGuardContract
                  GerbilAscentSessionContract gerbil-ascent-make-session-value
-                 GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value))
+                 GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value gerbil-ascent-make-rule-value gerbil-ascent-make-atom-value))
 (export ascent-value-membership-test)
 
 (def (nested-term? term)
@@ -39,6 +39,125 @@
 
 (def ascent-value-membership-test
   (test-suite "Nested value membership preserves public admission"
+    (test-case "owned public Term Atom and Rule constructors honor validation and normalization hooks"
+      (let* ((term (gerbil-ascent-variable 'x)) (atom (gerbil-ascent-atom 'r (list term))))
+        (for-each (lambda (root construct)
+          (let ((validator (.ref root '.validate)) (calls 0))
+            (try
+              (hash-put! (object-instance root) '.validate
+                (lambda (candidate) (set! calls (+ calls 1)) (validator candidate)))
+              (let (value (construct))
+                (check-equal? calls 1)
+                (check-equal? (eq? (validate root value) value) #t)
+                (check-equal? calls 2))
+              (hash-put! (object-instance root) '.validate (lambda (_) 'normalized-declaration))
+              (check-equal? (construct) 'normalized-declaration)
+              (finally (hash-put! (object-instance root) '.validate validator)))))
+          (list GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract)
+          (list (lambda () (gerbil-ascent-variable 'x))
+                (lambda () (gerbil-ascent-atom 'r (list term)))
+                (lambda () (gerbil-ascent-rule (list atom) (list atom)))))))
+    (test-case "positive Rule constructors and nested membership retain opaque clause admission"
+      (let* ((atom (gerbil-ascent-atom 'r (list (gerbil-ascent-variable 'x))))
+             (guard (gerbil-ascent-guard [] (lambda () #t)))
+             (value (gerbil-ascent-make-rule-value (.ref GerbilAscentRuleContract 'proto)
+                       (list atom) (list guard)))
+             (admit (.ref GerbilAscentGuardContract '.admit)) (calls 0))
+        (try
+          (hash-put! (object-instance GerbilAscentGuardContract) '.admit
+            (lambda args (set! calls (+ calls 1)) (raise 'opaque-clause-admission)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (gerbil-ascent-rule (list atom) (list guard)))) 'opaque-clause-admission)
+          (check-equal? calls 1)
+          (set! calls 0)
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (element? (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules) (list value))))
+            'opaque-clause-admission)
+          (check-equal? calls 1)
+          (finally (hash-put! (object-instance GerbilAscentGuardContract) '.admit admit)))))
+    (test-case "a failed positive Rule view still enters alternative public clause contracts"
+      (let* ((term (gerbil-ascent-variable 'x))
+             (atom (gerbil-ascent-atom 'r (list term)))
+             (bad (gerbil-ascent-make-atom-value (.ref GerbilAscentAtomContract 'proto)
+                    99 (list term) (lambda args #f)))
+             (value (gerbil-ascent-make-rule-value (.ref GerbilAscentRuleContract 'proto)
+                      (list atom) (list bad)))
+             (admit (.ref GerbilAscentGuardContract '.admit)) (calls 0))
+        (try
+          (hash-put! (object-instance GerbilAscentGuardContract) '.admit
+            (lambda args (set! calls (+ calls 1)) (raise 'alternative-clause-admission)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (element? (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules) (list value))))
+            'alternative-clause-admission)
+          (check-equal? calls 1)
+          (set! calls 0)
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (gerbil-ascent-rule (list atom) (list bad)))) 'alternative-clause-admission)
+          (check-equal? calls 1)
+          (finally (hash-put! (object-instance GerbilAscentGuardContract) '.admit admit)))))
+    (test-case "positive Rule checks preserve late root obligations from head admission"
+      (let* ((root GerbilAscentRuleContract)
+             (atom (gerbil-ascent-atom 'r (list (gerbil-ascent-variable 'x))))
+             (value (gerbil-ascent-make-rule-value (.ref root 'proto) (list atom) (list atom)))
+             (heads (.ref (.ref root 'responsibilities) 'heads))
+             (admit (.ref heads '.admit)) (obligations (.ref root '.obligations)) (seen []))
+        (def (observe thunk)
+          (set! seen [])
+          (hash-put! (object-instance root) '.obligations obligations)
+          (let (answer (with-catch (lambda (failure) failure) thunk)) (list answer (reverse seen))))
+        (try
+          (hash-put! (object-instance heads) '.admit
+            (lambda (candidate context)
+              (set! seen (cons 'heads-admit seen))
+              (let (evidence (admit candidate context))
+                (hash-put! (object-instance root) '.obligations
+                  (lambda args (set! seen (cons 'rule-obligation seen)) (raise 'late-rule-obligation)))
+                evidence)))
+          (check-equal? (observe (lambda () (gerbil-ascent-rule (list atom) (list atom))))
+                        '(late-rule-obligation (heads-admit rule-obligation)))
+          (check-equal? (observe (lambda () (element? (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules) (list value))))
+                        (observe (lambda () (element? root value))))
+          (finally
+            (hash-put! (object-instance heads) '.admit admit)
+            (hash-put! (object-instance root) '.obligations obligations)))))
+    (test-case "Atom construction preserves unowned Term getter traces and exceptions"
+      (for-each (lambda (raise?)
+        (def (construct emit)
+          (.o (:: @ (.ref GerbilAscentTermContract 'proto))
+              (kind (emit 'kind 'variable))
+              (value (if raise? (begin (emit 'value #f) (raise 'term-value)) (emit 'value 'x)))))
+        (check-equal?
+          (observe-term construct (lambda (term) (gerbil-ascent-atom 'r (list term))))
+          (observe-term construct (lambda (term)
+            (validate GerbilAscentAtomContract
+              (.o (:: @ (.ref GerbilAscentAtomContract 'proto))
+                  ascent-clause-kind: 'atom relation: 'r terms: (list term) .plan: (lambda args #f)))))))
+        '(#f #t)))
+    (test-case "Atom construction observes a late parent obligation from child admission"
+      (let* ((term (gerbil-ascent-variable 'x)) (admit (.ref GerbilAscentTermContract '.admit))
+             (obligations (.ref GerbilAscentAtomContract '.obligations)) (seen []))
+        (def (observe construct)
+          (set! seen [])
+          (hash-put! (object-instance GerbilAscentAtomContract) '.obligations obligations)
+          (let (answer (with-catch (lambda (failure) failure) construct))
+            (list answer (reverse seen))))
+        (try
+          (hash-put! (object-instance GerbilAscentTermContract) '.admit
+            (lambda (candidate context)
+              (set! seen (cons 'term-admit seen))
+              (let (evidence (admit candidate context))
+                (hash-put! (object-instance GerbilAscentAtomContract) '.obligations
+                  (lambda args (set! seen (cons 'atom-obligation seen)) (raise 'late-construction-obligation)))
+                evidence)))
+          (check-equal?
+            (observe (lambda () (gerbil-ascent-atom 'r (list term))))
+            (observe (lambda ()
+              (validate GerbilAscentAtomContract
+                (.o (:: @ (.ref GerbilAscentAtomContract 'proto))
+                    ascent-clause-kind: 'atom relation: 'r terms: (list term) .plan: (lambda args #f))))))
+          (finally
+            (hash-put! (object-instance GerbilAscentTermContract) '.admit admit)
+            (hash-put! (object-instance GerbilAscentAtomContract) '.obligations obligations)))))
     (test-case "owned Session publication preserves all five operations and contextual obligations"
       (let* ((operation (lambda args 'called))
              (session (gerbil-ascent-make-session-value operation operation operation operation operation))

@@ -2,6 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
+        (only-in :clan/poo/object .ref object-instance)
+        (only-in :clan/poo/mop validate)
         (only-in :gerbil-ascent/program/operator-analysis
                  capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows
                  analyze-operator-graph operator-analysis-checked-rows)
@@ -105,6 +107,51 @@
                        (cut relational-op-reference-change owned '((a)) '((b))) list))
         (hash-for-each (lambda (node facts)
           (check-equal? facts (hash-ref reference node))) rows)))
+    (test-case "prepared owners preserve root validation dispatch and explicit public admission"
+      (let* ((root GerbilAscentChangePlanContract)
+             (validator (.ref root '.validate)) (calls 0)
+             (transform (relational-op-function 1 (lambda (p) (relational-op-project p '(0))))))
+        (try
+          (hash-put! (object-instance root) '.validate
+            (lambda (candidate) (set! calls (+ calls 1)) (validator candidate)))
+          (let (plan (relational-op-prepare-change transform))
+            (check-equal? calls 1)
+            (check-equal? (eq? (validate root plan) plan) #t)
+            (check-equal? calls 2))
+          (hash-put! (object-instance root) '.validate (lambda (_) 'normalized-owner))
+          (check-equal? (relational-op-prepare-change transform) 'normalized-owner)
+          (finally (hash-put! (object-instance root) '.validate validator)))))
+    (test-case "prepared owners preserve field admission exceptions and root obligations"
+      (let* ((root GerbilAscentChangePlanContract)
+             (field (.ref (.ref root 'responsibilities) '.change))
+             (admit (.ref field '.admit)) (classifier (.ref field '.classify))
+             (obligations (.ref root '.obligations))
+             (transform (relational-op-function 1 (lambda (p) (relational-op-project p '(0)))))
+             (seen []))
+        (try
+          (hash-put! (object-instance field) '.admit
+            (lambda args (set! seen (cons 'field seen)) (raise 'field-admission)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (relational-op-prepare-change transform))) 'field-admission)
+          (check-equal? seen '(field))
+          (hash-put! (object-instance field) '.admit admit)
+          (set! seen [])
+          (hash-put! (object-instance field) '.classify
+            (lambda args (set! seen (cons 'classifier seen)) (raise 'field-classification)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (relational-op-prepare-change transform))) 'field-classification)
+          (check-equal? seen '(classifier))
+          (hash-put! (object-instance field) '.classify classifier)
+          (set! seen [])
+          (hash-put! (object-instance root) '.obligations
+            (lambda args (set! seen (cons 'root seen)) (raise 'root-obligation)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (relational-op-prepare-change transform))) 'root-obligation)
+          (check-equal? seen '(root))
+          (finally
+            (hash-put! (object-instance field) '.admit admit)
+            (hash-put! (object-instance field) '.classify classifier)
+            (hash-put! (object-instance root) '.obligations obligations)))))
     (test-case "captured mapping indexes retain bucket order and isolate failed requests"
       (let* ((transform (relational-op-function 1 (lambda (p)
                           (relational-op-flatmap p 1

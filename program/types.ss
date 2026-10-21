@@ -16,8 +16,11 @@
         (only-in :gerbil-ascent/table/storage
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
-(export gerbil-ascent-fact-limit?
+(export canonical-value-check-current?
+        gerbil-ascent-fact-limit?
         gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+        gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
+        gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
         gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
         gerbil-ascent-make-session-value
         GerbilAscentRelationContract
@@ -153,6 +156,9 @@
       (andmap (lambda (entry)
                 (eq? (vector-ref entry 2)
                      (.ref/cached (vector-ref entry 0) (vector-ref entry 1) (lambda () missing)))) entries))))
+;;; Capture metadata/method identities for a callback-free compatible value view.
+;;; The caller proves view compatibility; this predicate never admits a value.
+;; : (-> Contract [Symbol] (-> Boolean))
 (def (canonical-value-check-current? contract slots)
   (let ((metadata? (canonical-metadata-current? contract slots))
         (protocol? (canonical-validation-current? contract slots)))
@@ -224,10 +230,17 @@
 
 ;; END GENERATED OWNED RELATION VALUE
 
+;; BEGIN GENERATED OWNED DECLARATION VALUES
 (def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))
 (def (canonical-term-value? value)
   (if (term-value-current?) (element? +term-value+ value)
       (element? GerbilAscentTermContract value)))
+;;; Check fresh factory values without retaining any successful admission.
+;; : (-> Term Term)
+(def (gerbil-ascent-check-owned-term-value value)
+  (if (and (declared-value-shape? 'term value) (term-value-current?)
+           (element? +term-value+ value)) value
+      (validate GerbilAscentTermContract value)))
 (def (term-value? value)
   (if (declared-value-shape? 'term value)
     (canonical-term-value? value)
@@ -260,12 +273,23 @@
   (canonical-value-member GerbilAscentAtomContract +atom-value+
                           '(ascent-clause-kind relation terms .plan)))
 
+(def atom-value-check-current?
+  (canonical-value-check-current? GerbilAscentAtomContract
+                                  '(ascent-clause-kind relation terms .plan)))
+(def (owned-atom-fields? value)
+  (and (declared-value-shape? 'atom value) (term-value-current?)
+       (let (terms (.ref value 'terms))
+         (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms)))))
 (def (atom-value? value)
-  (if (and (declared-value-shape? 'atom value) (term-value-current?)
-           (let (terms (.ref value 'terms))
-             (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms))))
-    (canonical-atom-value? value)
-    (element? GerbilAscentAtomContract value)))
+  (if (owned-atom-fields? value) (canonical-atom-value? value)
+      (element? GerbilAscentAtomContract value)))
+;;; Unknown children or changed protocol dispatch use complete public admission.
+;; : (-> Atom Atom)
+(def (gerbil-ascent-check-owned-atom-value value)
+  (if (and (owned-atom-fields? value) (atom-value-check-current?)
+           (element? +atom-value+ value)) value
+      (validate GerbilAscentAtomContract value)))
+
 
 (def +variables+
   (slot-contract 'ascent/variables
@@ -374,6 +398,42 @@
   proto: (.o)
   responsibilities: (.o heads: +heads+ body: +clauses+))
 
+;;; Positive factory-owned Atom trees select a callback-free compatible view.
+;;; Opaque clauses and changed admission protocols always keep public dispatch.
+(def +rule-value+
+  (.cc ObjectContract. identity: 'ascent/rule-value
+       required-prototype: (.ref GerbilAscentRuleContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o heads: (.cc Type. .element?: (lambda (heads)
+             (and (pair? heads) (list? heads) (andmap atom-value? heads))))
+           body: (.cc Type. .element?: (lambda (body)
+             (and (list? body) (andmap atom-value? body)))))))
+(def rule-value-current?
+  (canonical-value-check-current? GerbilAscentRuleContract '(heads body)))
+(def (owned-rule-fields? value)
+  (and (declared-value-shape? 'rule value) (atom-value-check-current?)
+       (term-value-current?)
+       (let ((heads (.ref value 'heads)) (body (.ref value 'body)))
+         (and (list? heads) (list? body)
+              (andmap owned-atom-fields? heads) (andmap owned-atom-fields? body)))))
+;; : (-> Prototype [Atom] [Clause] Rule)
+(def (gerbil-ascent-make-rule-value prototype head-values body-values)
+  (remember-value-shape! 'rule
+    (.o (:: @ prototype) heads: head-values body: body-values)))
+(def (rule-value? value)
+  ;; A failed Atom may still enter another public clause descriptor. Preserve
+  ;; those classifier/admission callbacks rather than treating view failure as rejection.
+  (if (and (rule-value-current?) (owned-rule-fields? value)
+           (element? +rule-value+ value)) #t
+      (element? GerbilAscentRuleContract value)))
+;; : (-> Rule Rule)
+(def (gerbil-ascent-check-owned-rule-value value)
+  (if (and (rule-value-current?) (owned-rule-fields? value)
+           (element? +rule-value+ value)) value
+      (validate GerbilAscentRuleContract value)))
+
+
 (def +relations+
   (slot-contract 'ascent/relations
                  (lambda (value)
@@ -386,9 +446,9 @@
   (slot-contract 'ascent/rules
                  (lambda (value)
                    (and (list? value)
-                        (andmap (lambda (rule)
-                                  (element? GerbilAscentRuleContract rule))
-                                value)))))
+                        (andmap rule-value? value)))))
+
+;; END GENERATED OWNED DECLARATION VALUES
 
 ;;; A fragment publishes an export resolver rather than a mutable mapping.
 ;;; The constructor copies and checks labels before closing over them.

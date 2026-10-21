@@ -12,6 +12,8 @@
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+                 gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
+                 gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
                  gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
@@ -51,8 +53,16 @@
 ;;; Ordinary public constructors keep immediate validation. No validation result
 ;;; is cached across calls, and dynamic extent restores checks after failure.
 (def current-declaration-check (make-parameter validate))
+;; BEGIN GENERATED OWNED DECLARATION CHECK
 (def (declaration-check contract value)
-  ((current-declaration-check) contract value))
+  (let (check (current-declaration-check))
+    (cond
+      ((not (eq? check validate)) (check contract value))
+      ((eq? contract GerbilAscentTermContract) (gerbil-ascent-check-owned-term-value value))
+      ((eq? contract GerbilAscentAtomContract) (gerbil-ascent-check-owned-atom-value value))
+      ((eq? contract GerbilAscentRuleContract) (gerbil-ascent-check-owned-rule-value value))
+      (else (check contract value)))))
+;; END GENERATED OWNED DECLARATION CHECK
 
 ;;; Only canonical, callback-free producers may borrow this construction extent.
 ;;; The receiver runs after ordinary checks have been restored, including throws.
@@ -453,7 +463,7 @@
 
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (declaration-check GerbilAscentRuleContract
-            (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
+            (gerbil-ascent-make-rule-value Rule. head-atoms body-atoms)))
 
 ;;; Copy the signature before closure capture so a caller cannot rewrite an
 ;;; exported handle through the alist passed to this constructor.

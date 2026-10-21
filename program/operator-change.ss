@@ -16,8 +16,10 @@
                  operator-snapshot-transform operator-snapshot-checked-rows)
         (only-in "operator-descriptor.ss" relational-op-apply
                  relational-op-source relational-transform-output-arity)
-        (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric define-type validate)
+        (only-in "types.ss" canonical-value-check-current?)
+        (only-in :clan/poo/object .o .cc .ref)
+        (only-in :clan/poo/mop .defgeneric define-type validate element? Type. Any)
+        (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in :std/list/list append-map delete-duplicates/hash take)
         (only-in :std/list/list-builder with-list-builder))
@@ -31,6 +33,17 @@
   responsibilities: (.o .change:
     (yuanxu-predicate-contract 'ascent/change-method procedure?)))
 
+;; BEGIN GENERATED CAPTURE MAPPING INDEXES
+;; A freshly constructed method object has only constant factory-owned getters.
+;; Changed parent metadata/admission dispatch must take the complete public path.
+(def +change-plan-value+
+  (.cc ObjectContract. identity: 'ascent/change-plan-value
+       required-prototype: (.ref GerbilAscentChangePlanContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities: (.o .change: (.cc Type. .element?: procedure?))))
+(def change-plan-view-current?
+  (canonical-value-check-current? GerbilAscentChangePlanContract '(.change)))
+
 ;;; Closing the root with an empty input checks captures without borrowing or
 ;;; duplicating the request rows; only captured finite rows enter this table.
 (def (change-analysis transformer)
@@ -40,7 +53,6 @@
      (relational-op-source (gensym 'delta-input)
                           (relational-transform-input-arity transformer) [])))))
 
-;; BEGIN GENERATED CAPTURE MAPPING INDEXES
 ;;; Build ordered buckets from admitted private rows. Never expose these row
 ;;; tails: every public result is still independently copied before publication.
 (def (ordered-mapping-index node rows)
@@ -70,10 +82,11 @@
          (owned (operator-snapshot-transform snapshot))
          (rows (operator-snapshot-checked-rows snapshot))
          (indexes (capture-mapping-indexes rows)))
-    (validate GerbilAscentChangePlanContract
-      (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
-          (.change (lambda (before added (row-limit +inf.0))
-                     (delta-change/admitted owned rows before added row-limit indexes)))))))
+    (let (value (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
+                  (.change (lambda (before added (row-limit +inf.0))
+                             (delta-change/admitted owned rows before added row-limit indexes)))))
+      (if (and (change-plan-view-current?) (element? +change-plan-value+ value)) value
+          (validate GerbilAscentChangePlanContract value)))))
 
 ;; END GENERATED CAPTURE MAPPING INDEXES
 

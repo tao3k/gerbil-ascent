@@ -326,6 +326,16 @@
     },
     "faults": [
       [
+        "drop-rule-fallback",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-constructor-override",
+        "PolicyExact",
+        12
+      ],
+      [
         "reuse-term-validation-result",
         "PolicyExact",
         12

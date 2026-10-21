@@ -23,7 +23,9 @@ qualification is a required CI gate, separate from production compilation.
 =just check-production-build= executes the production build function and
 checks the SDK expansion registry. Any ASP module rejects the check, even
 when ASP artifacts are already installed for tests. This checks actual module
-loading rather than merely searching import declarations. A preloaded ASP
+loading rather than merely searching import declarations. The =aot= argument
+checks the real Rust/PyO3 hybrid entry's expansion closure; CI runs it after the
+existing complete Scheme binding tests. A preloaded ASP
 module is a negative control. =build.ss= uses =std/build-script= and =std/make=
 with the same module order, C options and executable linker options as before.
 

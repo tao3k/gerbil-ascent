@@ -350,6 +350,12 @@ jobs:
           set -o pipefail
           gerbil env cargo nextest run --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/scheme-binding-tests.log"
           ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/scheme-binding-tests.log"
+      - name: Verify the production AOT entry does not load ASP
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env gerbil interactive dev/production-build-test.ss aot
       - name: Preserve actual archive work and generated compiler inputs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

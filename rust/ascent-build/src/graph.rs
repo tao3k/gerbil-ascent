@@ -49,7 +49,7 @@ pub fn prepare(root: &Path, shared: &Lease, observer: &Observer) -> Result<(), S
     // the package's CLI/shared-library executable targets. std/make validates
     // the complete declared library inventory below on every configuration.
     let expression = format!(
-        "(import :std/make (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec) {:?} {:?}) (make (map (lambda (module) (normalize-spec module gerbil-ascent-compiler-options)) (append gerbil-ascent-library-modules [\"interface/hybrid\"])) srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?})",
+        "(import :std/make {:?} {:?}) (make (map (lambda (module) (cons gxc: (cons module gerbil-ascent-compiler-options))) (append gerbil-ascent-library-modules [\"interface/hybrid\"])) srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?})",
         root.join("build-modules.ss")
             .to_str()
             .ok_or("non-UTF8 inventory path")?,

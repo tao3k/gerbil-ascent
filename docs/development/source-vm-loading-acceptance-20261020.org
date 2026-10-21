@@ -1201,3 +1201,29 @@ head leases: =998e08d= (schema receipt), =f0babb0= (merged PR 11), and =0f78289=
 retains =main= and the active PR 13 branch. No implementation history was lost.
 The local recovery bundle and SHA-256 receipt are under
 =.cache/ascent/asp-branch-archive-20261021/= in the owned worktree.
+
+
+** AOT consumer boundary
+The Rust build crate also used ASP's =normalize-spec= solely to turn each
+module string into =(gxc: module . compiler-options)=. This remaining production
+edge was removed in the same integration: the SDK's =std/make= receives the
+same ordinary target data directly. The pinned gerbil-scheme-rust bridge and
+its SDK recipe remain unchanged. The =aot= mode of the development boundary
+check expands the actual =interface/hybrid.ss= entry and rejects any ASP context;
+CI runs it after the existing complete Scheme binding acceptance.
+
+The local complete formal run accepted 70 positive checks, 383 required
+counterexamples and 58 exact source renderings. This closes neither cumulative
+Scheme allocation nor compiler/allocator source refinement. ASP source policy
+accepted the unchanged selected production inputs with 143 warnings and zero
+errors; no warning severity was changed.
+
+
+The complete local production compile and both executable links subsequently
+passed the registry boundary check with 2,048 loaded contexts and no ASP.
+The real hybrid entry passed with 865 contexts and no ASP. Focused Clippy for
+=ascent-build= passed with =-D warnings=. These are functional receipts from the
+developer host, not three-core performance measurements. Final CI and ABBA
+remain separately required. Logs are =/tmp/ascent-dev-production-build.log=,
+=/tmp/ascent-dev-aot-no-asp.log= and
+=/tmp/ascent-dev-rust-build-clippy-fixed-env.log=.

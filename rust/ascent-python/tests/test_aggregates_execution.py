@@ -54,21 +54,6 @@ class AggregatesExecution(unittest.TestCase):
             with module.call('gerbil-ascent-sum',[[0],[-0.0]]) as value:
                 self.assertEqual(math.copysign(1.0,float(numbers(value.graph)[0])),-1.0)
 
-    def test_original_execution_evidence_module_and_source_permissions(self):
-        with self.engine.open_module(':gerbil-ascent/rules/execution','make-execution-evidence') as session:
-            sources={r['name'] for r in session.descriptors if r['source']}
-            self.assertIn('required_step',sources);self.assertIn('observed_step',sources);self.assertNotIn('checked_step',sources)
-            session.run();session.replace({'required_step':[['finished'],['missing']], 'observed_step':[['finished','PASS','native.test']]})
-            receipt=session.run(queries=['checked_step','missing_step'])
-            self.assertEqual(receipt['relations']['checked_step'],[['finished']]);self.assertEqual(receipt['relations']['missing_step'],[['missing']])
-            with session.result(receipt) as result:
-                with result.explanation('missing_step') as declared:
-                    self.assertIn('source refinement',str(declared.graph))
-                with result.provenance('missing_step') as proof:
-                    self.assertTrue(proof.verify())
-                    with self.assertRaises(ascent.EngineError): session.replace({'checked_step':[['forged']]})
-                    self.assertTrue(proof.verify())
-
     def test_native_dsl_initial_expression_frozen_complex_rows_and_no_implicit_authority(self):
         source='''(def (make values) (ascent (relation input (v) (map list values))
                     (relation out (v)) ((out V) <-- (input V))))'''

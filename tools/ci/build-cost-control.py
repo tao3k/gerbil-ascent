@@ -478,7 +478,7 @@ def main():
     receipt['checked_shared_reference_paths'] = sorted(shared_paths)
     receipt['checked_development_dependency_paths'] = sorted(development_paths)
     receipt['dependency_seed'] = {}
-    for package in ('poo-flow-core', 'gerbil-poo', 'asp-gerbil-scheme'):
+    for package in ('yuanxu', 'gerbil-poo', 'asp-gerbil-scheme'):
         checkout = dependencies / 'pkg/github.com/tao3k' / package
         revision = subprocess.check_output(['git', '-C', str(checkout), 'rev-parse', 'HEAD'],
                                            text=True, timeout=10).strip()

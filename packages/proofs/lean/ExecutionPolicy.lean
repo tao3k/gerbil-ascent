@@ -6,6 +6,7 @@ import PreparationWork
 import CompilerCost
 import LookupCost
 import ClosedDslLowering
+import FiniteOperators
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -411,6 +412,8 @@ def renderedSource (name : String) : IO String := do
   | "preparation-cache-admission" => pure Ascent.CompilerCost.cacheAdmissionYamlSource
   | "preparation-cache-inputs" => pure Ascent.CompilerCost.cacheInputsYamlSource
   | "preparation-producer" => pure Ascent.CompilerCost.producerPythonSource
+  | "capture-row-transport" => pure Ascent.OperatorCapture.rowTransportSchemeSource
+  | "owned-relation-value" => pure Ascent.CompilerCost.ownedRelationSchemeSource
   | "preparation-metadata-guard" => pure Ascent.CompilerCost.metadataGuardSchemeSource
   | "preparation-value-shape" => pure Ascent.CompilerCost.declarationShapeSchemeSource
   | "preparation-support-admission" => pure Ascent.CompilerCost.supportAdmissionSchemeSource

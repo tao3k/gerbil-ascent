@@ -379,7 +379,7 @@
   ;; Lowering creates fresh Terms per occurrence. Use the ordinary complete
   ;; root Contract rather than constructing an unused shared-Term refinement.
   (gerbil-ascent-construct-inert-program
-   (cut candidate-lower-program snapshot spec) #f))
+   (cut candidate-lower-program snapshot spec)))
 
 (def (candidate-lower-program snapshot spec)
   (let* ((source (reasoning-snapshot-relations snapshot))

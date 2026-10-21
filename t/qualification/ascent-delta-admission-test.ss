@@ -1,7 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :gerbil-ascent/program/operator
+(import :std/test
+        (only-in :gerbil-ascent/program/operator-analysis
+                 capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows
+                 analyze-operator-graph operator-analysis-checked-rows)
+        :gerbil-ascent/program/operator
         :gerbil-ascent/program/operator-change)
 (export ascent-delta-admission-test)
 
@@ -75,6 +79,32 @@
         (check-exception (relational-op-change plan [] '((0) (1)) 1) (lambda (_) #t))
         (let-values (((base grown delta) (relational-op-change plan '((0)) '((1)))))
           (check-equal? grown '((a) (b))))))
+    (test-case "captured source and mapping rows match independent owned-graph reanalysis"
+      (let* ((source (relational-op-source 'captured 1 '((a) (a))))
+             (inner (relational-op-function 1 (lambda (p)
+                      (relational-op-flatmap p 1 '(((a) (b)) ((b) (c)))))))
+             (transform (relational-op-function 1 (lambda (p)
+                          (relational-op-union source
+                            (relational-op-fix 1 (lambda (q)
+                              (relational-op-union (relational-op-apply inner p) q)))))))
+             (capture (capture-operator-transform transform))
+             (owned (operator-snapshot-transform capture))
+             (rows (operator-snapshot-checked-rows capture))
+             (input (relational-op-source 'probe 1 []))
+             (reference (operator-analysis-checked-rows
+                          (analyze-operator-graph (relational-op-apply owned input)))))
+        (check-equal? (hash-length rows) 2)
+        (hash-for-each (lambda (node facts)
+          (check-equal? facts (hash-ref reference node))) rows)
+        (hash-for-each (lambda (node facts)
+          (unless (eq? node input) (check-equal? facts (hash-ref rows node)))) reference)
+        (vector-set! (relational-op-data source) 1 '((mutated)))
+        (check-equal? (call-with-values
+                       (cut relational-op-delta-change owned '((a)) '((b))) list)
+                      (call-with-values
+                       (cut relational-op-reference-change owned '((a)) '((b))) list))
+        (hash-for-each (lambda (node facts)
+          (check-equal? facts (hash-ref reference node))) rows)))
     (test-case "prepared nested feedback and applications retain lexical identities"
       (let* ((inner (relational-op-function 1 (lambda (p) (relational-op-project p '(0)))))
              (transform (relational-op-function 1 (lambda (input)

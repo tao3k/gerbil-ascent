@@ -9,7 +9,7 @@
         (only-in :std/list/list take)
         (only-in :std/list/list-builder with-list-builder))
 (export analyze-operator-graph operator-analysis-checked-rows operator-analysis-free-cache free-parameters
-        snapshot-operator-transform)
+        capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows)
 (defstruct operator-analysis (checked-rows free-cache))
 
 ;; Cached dependency lists are ordered identity sets. Reuse a complete spine
@@ -135,14 +135,19 @@
 ;;; Clone the admitted graph through its constructors. The caller receives no
 ;;; internal node access: an execution plan keeps this graph behind its method.
 ;;; Identity memoization preserves shared children and each lexical binder.
-(def (snapshot-operator-transform transform)
+;; A capture owns both the copied graph and the already detached validated rows.
+;; No caller callback runs between analysis and copying. Transport rows when each
+;; private source/mapping node is issued; do not reanalyze that owned graph.
+(defstruct operator-snapshot (transform checked-rows))
+(def (capture-operator-transform transform)
   (unless (relational-transform? transform) (error "expected a relation transformer"))
   (let* ((root (relational-op-apply transform
                  (relational-op-source (gensym 'snapshot-input)
                    (relational-transform-input-arity transform) [])))
          (rows (operator-analysis-checked-rows (analyze-operator-graph root)))
          (memo (make-hash-table-eq))
-         (functions (make-hash-table-eq)))
+         (functions (make-hash-table-eq))
+         (copied-rows (make-hash-table-eq)))
     (def (copy-transform original)
       (or (hash-get functions original)
           (let (copied
@@ -178,6 +183,10 @@
                                (copy-node (car inputs)))))
                     ((apply) (relational-op-apply (copy-transform data) (copy-node (car inputs))))
                     (else (error "unbound parameter during operator snapshot")))))
+            ;; BEGIN GENERATED CAPTURE ROW TRANSPORT
+            (when (hash-key? rows node)
+              (hash-put! copied-rows copied (hash-ref rows node)))
+            ;; END GENERATED CAPTURE ROW TRANSPORT
             (hash-put! memo node copied)
             copied)))
-    (copy-transform transform)))
+    (make-operator-snapshot (copy-transform transform) copied-rows)))

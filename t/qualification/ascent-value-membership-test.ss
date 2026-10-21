@@ -3,12 +3,16 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
         (only-in :clan/poo/object .o .cc .ref .putslot! object-instance $constant-slot-spec $thunk-slot-spec)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/mop element? validate)
         (only-in :yuanxu/types yuanxu-contract-admit yuanxu-validation-evidence-accepted?
                  yuanxu-classification-evidence)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider GerbilAscentIndexProviderContract)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program
+                 gerbil-ascent-construct-inert-program)
         (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract
-                 GerbilAscentSessionContract gerbil-ascent-make-session-value))
+                 GerbilAscentSessionContract gerbil-ascent-make-session-value
+                 GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value))
 (export ascent-value-membership-test)
 
 (def (nested-term? term)
@@ -25,6 +29,13 @@
 (def (compare-term construct)
   (check-equal? (observe-term construct nested-term?)
                 (observe-term construct (cut element? GerbilAscentTermContract <>))))
+
+(def (nested-relation? relation)
+  (element? (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'relations) (list relation)))
+(def (plain-relation provider)
+  (.o (:: @ (.ref GerbilAscentRelationContract 'proto))
+      name: 'input arity: 1 rows: '((a)) field-predicates: [] storage-kind: 'relation
+      index-provider: provider storage-provider: gerbil-ascent-set-storage-provider))
 
 (def ascent-value-membership-test
   (test-suite "Nested value membership preserves public admission"
@@ -100,6 +111,206 @@
             (check-equal? (element? GerbilAscentSessionContract session) #t)
             (check-equal? (.ref session '.run) operation))
           (finally (.putslot! GerbilAscentSessionContract 'proto ($constant-slot-spec prototype))))))
+    (test-case "owned Relation field decisions equal the full public contract on current values"
+      (for-each (lambda (position alternatives)
+        (for-each (lambda (candidate)
+          (let (arguments (vector (.ref GerbilAscentRelationContract 'proto)
+                            'input 1 '((a)) [] #f
+                            gerbil-ascent-hash-index-provider gerbil-ascent-set-storage-provider))
+            (vector-set! arguments position candidate)
+            (let (relation (apply gerbil-ascent-make-relation-value (vector->list arguments)))
+              (check-equal? (nested-relation? relation) (element? GerbilAscentRelationContract relation))))) alternatives))
+        '(1 2 3 4 6 7)
+        (list (list 'input #f 0 "input" []) (list 0 1 -1 1.5 #f)
+              (list [] '((a)) '(a) (cons '(a) 'bad) #f #(a))
+              (list [] (list (lambda (_) #t)) '(invalid) #f (cons (lambda (_) #t) 'bad))
+              (list gerbil-ascent-hash-index-provider (.o (:: @ gerbil-ascent-hash-index-provider)) #f 0 [])
+              (list gerbil-ascent-set-storage-provider (.o (:: @ gerbil-ascent-set-storage-provider)) #f 0 []))))
+    (test-case "owned Relation values check current list contents without repeating caller predicates"
+      (let* ((rows (list (list 1) (list 2))) (calls 0)
+             (predicates (list (lambda (value) (set! calls (+ calls 1)) (exact-integer? value))))
+             (relation (gerbil-ascent-relation 'input 1 rows
+                         gerbil-ascent-hash-index-provider gerbil-ascent-set-storage-provider predicates)))
+        (check-equal? calls 2)
+        (check-equal? (nested-relation? relation) #t)
+        (check-equal? (element? GerbilAscentRelationContract relation) #t)
+        (check-equal? calls 2)
+        (set-car! predicates 'invalid)
+        (check-equal? (nested-relation? relation) #f)
+        (check-equal? (element? GerbilAscentRelationContract relation) #f)
+        (set-car! predicates (lambda (_) #t))
+        (set-cdr! rows 'improper)
+        (check-equal? (nested-relation? relation) #f)
+        (check-equal? (element? GerbilAscentRelationContract relation) #f)))
+    (test-case "caller Relation getters retain public demand order"
+      (def (observe predicate)
+        (let* ((seen [])
+               (emit (lambda (key value) (set! seen (cons key seen)) value))
+               (relation (.o (:: @ (.ref GerbilAscentRelationContract 'proto))
+                 (name (emit 'name 'input)) (arity (emit 'arity 0)) (rows (emit 'rows []))
+                 (field-predicates (emit 'predicates [])) (storage-kind (emit 'kind 'relation))
+                 (index-provider (emit 'index gerbil-ascent-hash-index-provider))
+                 (storage-provider (emit 'storage gerbil-ascent-set-storage-provider)))))
+          (list (predicate relation) (reverse seen))))
+      (let (expected (observe (cut element? GerbilAscentRelationContract <>)))
+        (check-equal? (car expected) #t)
+        (check-equal? (length (cadr expected)) 7)
+        (check-equal? (observe nested-relation?) expected)))
+    (test-case "edited producer Relation getters retain exact exceptions"
+      (let ((relation (gerbil-ascent-relation 'input 1 '((a)))) (calls 0))
+        (.putslot! relation 'rows ($thunk-slot-spec (lambda () (set! calls (+ calls 1)) (raise 'edited-relation))))
+        (check-equal? calls 0)
+        (check-equal? (with-catch (lambda (failure) failure) (lambda () (nested-relation? relation))) 'edited-relation)
+        (check-equal? calls 1)
+        (check-equal? (with-catch (lambda (failure) failure)
+                        (lambda () (element? GerbilAscentRelationContract relation))) 'edited-relation)
+        (check-equal? calls 2)))
+    (test-case "Relation construction preserves live validation normalization"
+      (let ((validator (.ref GerbilAscentRelationContract '.validate)) (sentinel (.o)) (calls 0))
+        (try
+          (hash-put! (object-instance GerbilAscentRelationContract) '.validate
+            (lambda args (set! calls (+ calls 1)) sentinel))
+          (check-equal? (gerbil-ascent-relation 'input 1 '((a))) sentinel)
+          (check-equal? calls 1)
+          (finally (hash-put! (object-instance GerbilAscentRelationContract) '.validate validator)))))
+    (test-case "Relation construction retains every live field classifier"
+      (for-each (lambda (slot)
+        (let* ((field (.ref (.ref GerbilAscentRelationContract 'responsibilities) slot))
+               (classifier (.ref field '.classify)) (calls 0))
+          (try
+            (hash-put! (object-instance field) '.classify
+              (lambda (candidate context)
+                (set! calls (+ calls 1))
+                (yuanxu-classification-evidence (.ref field 'identity) candidate #f [] context)))
+            (check-equal? (with-catch (lambda (_failure) 'raised)
+                            (lambda () (gerbil-ascent-relation 'input 1 '((a))) 'accepted)) 'raised)
+            (check-equal? (> calls 0) #t)
+            (finally (hash-put! (object-instance field) '.classify classifier)))))
+        '(name arity rows field-predicates storage-kind index-provider storage-provider)))
+    (test-case "Relation construction honors root and field admission and obligation dispatch"
+      (let (field (.ref (.ref GerbilAscentRelationContract 'responsibilities) 'rows))
+        (for-each (lambda (descriptor)
+          (for-each (lambda (slot)
+            (let ((original (.ref descriptor slot)) (calls 0))
+              (try
+                (hash-put! (object-instance descriptor) slot
+                  (lambda args (set! calls (+ calls 1)) (apply original args)))
+                (let (relation (gerbil-ascent-relation 'input 1 '((a))))
+                  (check-equal? (> calls 0) #t)
+                  (check-equal? (element? GerbilAscentRelationContract relation) #t))
+                (finally (hash-put! (object-instance descriptor) slot original)))))
+            '(.admit .obligations))) (list GerbilAscentRelationContract field))))
+    (test-case "custom providers enter complete admission once with identical callback order"
+      (let* ((provider (.o (:: @ gerbil-ascent-hash-index-provider)))
+             (classifier (.ref GerbilAscentIndexProviderContract '.classify))
+             (seen []))
+        (try
+          (hash-put! (object-instance GerbilAscentIndexProviderContract) '.classify
+            (lambda (candidate context) (set! seen (cons 'index seen)) (classifier candidate context)))
+          (validate GerbilAscentRelationContract (plain-relation provider))
+          (let (expected (reverse seen))
+            (check-equal? (> (length expected) 0) #t)
+            (set! seen [])
+            (gerbil-ascent-relation 'input 1 '((a)) provider)
+            (check-equal? (reverse seen) expected))
+          (finally (hash-put! (object-instance GerbilAscentIndexProviderContract) '.classify classifier)))))
+    (test-case "custom provider callbacks retain later obligation exceptions without duplicate effects"
+      (let* ((provider (.o (:: @ gerbil-ascent-hash-index-provider)))
+             (classifier (.ref GerbilAscentIndexProviderContract '.classify))
+             (storage (.ref (.ref GerbilAscentRelationContract 'responsibilities) 'storage-provider))
+             (obligations (.ref storage '.obligations)) (seen []))
+        (def (observe construct)
+          (set! seen [])
+          (hash-put! (object-instance storage) '.obligations obligations)
+          (let (answer (with-catch (lambda (failure) failure) (lambda () (construct) 'accepted)))
+            (list answer (reverse seen))))
+        (try
+          (hash-put! (object-instance GerbilAscentIndexProviderContract) '.classify
+            (lambda (candidate context)
+              (set! seen (cons 'index seen))
+              (hash-put! (object-instance storage) '.obligations
+                (lambda args (set! seen (cons 'storage-obligation seen)) (raise 'later-storage-obligation)))
+              (classifier candidate context)))
+          (let (expected (observe (lambda () (validate GerbilAscentRelationContract (plain-relation provider)))))
+            (check-equal? (car expected) 'later-storage-obligation)
+            (check-equal? (and (memq 'index (cadr expected)) #t) #t)
+            (check-equal? (observe (lambda () (gerbil-ascent-relation 'input 1 '((a)) provider))) expected))
+          (finally
+            (hash-put! (object-instance storage) '.obligations obligations)
+            (hash-put! (object-instance GerbilAscentIndexProviderContract) '.classify classifier)))))
+    (test-case "explicit contextual Relation admission retains all eight obligations"
+      (let* ((seen []) (relation (gerbil-ascent-relation 'input 1 '((a))))
+             (context (.o (.contract-obligations
+                       (lambda (contract _candidate) (set! seen (cons (.ref contract 'identity) seen)) [])))))
+        (check-equal? (yuanxu-validation-evidence-accepted?
+                       (yuanxu-contract-admit GerbilAscentRelationContract relation context)) #t)
+        (check-equal? (length seen) 8)
+        (check-equal? (car seen) 'ascent/relation)))
+    (test-case "nested membership retains complete element admission and obligation dispatch"
+      (let* ((term (gerbil-ascent-variable 'x))
+             (atom (gerbil-ascent-atom 'input (list term)))
+             (relation (gerbil-ascent-relation 'input 1 '((a)))))
+        (for-each (lambda (entry)
+          (let ((contract (car entry)) (value (cadr entry)) (predicate (caddr entry)))
+            (for-each (lambda (slot)
+              (let ((original (.ref contract slot)) (calls 0))
+                (try
+                  (hash-put! (object-instance contract) slot
+                    (lambda args (set! calls (+ calls 1)) (apply original args)))
+                  (check-equal? (predicate value) #t)
+                  (check-equal? (> calls 0) #t)
+                  (finally (hash-put! (object-instance contract) slot original)))))
+              '(.element? .admit .obligations))))
+          (list (list GerbilAscentTermContract term nested-term?)
+                (list GerbilAscentAtomContract atom
+                  (lambda (value) (element? (.ref (.ref GerbilAscentRuleContract 'responsibilities) 'heads) (list value))))
+                (list GerbilAscentRelationContract relation nested-relation?)))))
+    (test-case "a noncanonical Term admission cannot hide a later Atom obligation"
+      (let* ((term (gerbil-ascent-variable 'x))
+             (atom (gerbil-ascent-atom 'input (list term)))
+             (admit (.ref GerbilAscentTermContract '.admit))
+             (obligations (.ref GerbilAscentAtomContract '.obligations)) (seen []))
+        (def (observe predicate)
+          (set! seen [])
+          (hash-put! (object-instance GerbilAscentAtomContract) '.obligations obligations)
+          (let (answer (with-catch (lambda (failure) failure) (lambda () (predicate atom))))
+            (list answer (reverse seen))))
+        (try
+          (hash-put! (object-instance GerbilAscentTermContract) '.admit
+            (lambda (candidate context)
+              (set! seen (cons 'term-admit seen))
+              (let (evidence (admit candidate context))
+                (hash-put! (object-instance GerbilAscentAtomContract) '.obligations
+                  (lambda args (set! seen (cons 'atom-obligation seen)) (raise 'late-atom-obligation)))
+                evidence)))
+          (let (expected (observe (cut element? GerbilAscentAtomContract <>)))
+            (check-equal? (car expected) 'late-atom-obligation)
+            (check-equal? (and (memq 'term-admit (cadr expected)) #t) #t)
+            (check-equal? (observe (lambda (value)
+              (element? (.ref (.ref GerbilAscentRuleContract 'responsibilities) 'heads) (list value)))) expected))
+          (finally
+            (hash-put! (object-instance GerbilAscentTermContract) '.admit admit)
+            (hash-put! (object-instance GerbilAscentAtomContract) '.obligations obligations)))))
+    (test-case "private publication does not reuse a stale shared Term admission"
+      (let ((admit (.ref GerbilAscentTermContract '.admit)) (mutated? #f))
+        (try
+          (hash-put! (object-instance GerbilAscentTermContract) '.admit
+            (lambda (candidate context)
+              (let (evidence (admit candidate context))
+                (unless mutated?
+                  (set! mutated? #t)
+                  (.putslot! candidate 'kind ($constant-slot-spec 'invalid-kind)))
+                evidence)))
+          (check-exception
+            (gerbil-ascent-construct-inert-program
+              (lambda ()
+                (let (shared (gerbil-ascent-variable 'x))
+                  (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 '((0))))
+                    (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'seed (list shared)))
+                      (list (gerbil-ascent-atom 'seed (list shared))))) 8 8 16)))) true)
+          (check-equal? mutated? #t)
+          (finally (hash-put! (object-instance GerbilAscentTermContract) '.admit admit)))))
     (test-case "all kind classes and opaque values retain complete shape checks"
       (let (observed
              (observe-term

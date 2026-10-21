@@ -194,49 +194,10 @@ def selectorSchemeSource : String :=
   "       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))\n"
 
 def rootSchemeSource : String :=
-  "(def (receive-inert-declarations construct receive)\n" ++
-  "  (call-with-values\n" ++
-  "   (lambda ()\n" ++
-  "     (parameterize ((current-declaration-check (lambda (_contract value) value)))\n" ++
-  "       (construct)))\n" ++
-  "   receive))\n" ++
-  "\n" ++
-  ";;; Empty roots have no shared Terms. Rule-bearing roots borrow a fresh POO\n" ++
-  ";;; refinement only while validating; the published value retains no checker.\n" ++
-  ";; : (forall (c a) (-> c a a))\n" ++
-  ";; : (-> DeclarationRootContract OwnedDeclarationRoot ValidatedRoot)\n" ++
-  "(def (validate-inert-root contract value (memoize-terms? #t))\n" ++
-  "  (validate (if (or (not memoize-terms?) (null? (.ref value 'rules))) contract\n" ++
-  "              (gerbil-ascent-owned-root-contract contract)) value))\n" ++
-  ";; A canonical tree can use the ordinary complete root contract without a\n" ++
-  ";; fresh shared-Term memo descriptor. Both modes perform full root admission.\n" ++
-  ";; The producer may return a Program alone or a Program and its output handle.\n" ++
-  ";; Receive both outside the construction extent, validating before publication.\n" ++
-  ";; : (forall (p a) (-> (-> (Values p a)) (Values p a)))\n" ++
-  ";; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))\n" ++
-  "(def (gerbil-ascent-construct-inert-program construct (memoize-terms? #t))\n" ++
-  "  (receive-inert-declarations construct\n" ++
-  "   (case-lambda\n" ++
-  "     ((program) (validate-inert-root GerbilAscentProgramContract program memoize-terms?))\n" ++
-  "     ((program output)\n" ++
-  "      (let (checked (validate-inert-root GerbilAscentProgramContract program memoize-terms?))\n" ++
-  "        (values checked output))))))\n" ++
-  "\n"
+  "(def (receive-inert-declarations construct receive)\n  (call-with-values\n   (lambda ()\n     (parameterize ((current-declaration-check (lambda (_contract value) value)))\n       (construct)))\n   receive))\n\n;;; Publish through the public root descriptor once, after restoring ordinary\n;;; constructor checks. No responsibility override or Term result cache escapes.\n;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))\n;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))\n(def (gerbil-ascent-construct-inert-program construct)\n  (receive-inert-declarations construct\n   (case-lambda\n     ((program) (validate GerbilAscentProgramContract program))\n     ((program output)\n      (let (checked (validate GerbilAscentProgramContract program))\n        (values checked output))))))\n\n"
 
 def ownedMacroSchemeSource : String :=
-  "(defsyntax (relational-owned-program stx)\n" ++
-  "  (syntax-case stx ()\n" ++
-  "    ((_ relations rules input derived output handles)\n" ++
-  "     ;; All user expressions run before the private construction extent.\n" ++
-  "     ;; The selected rule syntax contains only canonical atoms and scalars.\n" ++
-  "     (syntax (let ((relation-values relations)\n" ++
-  "                   (input-limit input) (derived-limit derived)\n" ++
-  "                   (output-limit output) (source-handles handles))\n" ++
-  "               (gerbil-ascent-construct-inert-program\n" ++
-  "                (lambda ()\n" ++
-  "                  (gerbil-ascent-program relation-values rules input-limit derived-limit\n" ++
-  "                                         output-limit source-handles)) #f))))))\n" ++
-  "\n"
+  "(defsyntax (relational-owned-program stx)\n  (syntax-case stx ()\n    ((_ relations rules input derived output handles)\n     ;; All user expressions run before the private construction extent.\n     ;; The selected rule syntax contains only canonical atoms and scalars.\n     (syntax (let ((relation-values relations)\n                   (input-limit input) (derived-limit derived)\n                   (output-limit output) (source-handles handles))\n               (gerbil-ascent-construct-inert-program\n                (lambda ()\n                  (gerbil-ascent-program relation-values rules input-limit derived-limit\n                                         output-limit source-handles))))))))\n\n"
 
 def workloadSchemeSource : String :=
   "(def (declaration edges rules)\n" ++
@@ -248,7 +209,7 @@ def workloadSchemeSource : String :=
   "(def (owned-declaration edges rules)\n" ++
   " ;; This fixture supplies only closed integer rows and fixed rule data.\n" ++
   " ;; Preserve the exact public schema, including callback-free Actor fields.\n" ++
-  " (gerbil-ascent-construct-inert-program (lambda () (declaration edges rules)) #f))\n" ++
+  " (gerbil-ascent-construct-inert-program (lambda () (declaration edges rules))))\n" ++
   "(def (verify mask rules workers)\n" ++
   " (let* ((edges (graph-input mask)) (program (if (= workers 1) (declaration edges rules) (owned-declaration edges rules)))\n" ++
   "        (actual (gerbil-ascent-evaluate-program program workers: workers)))\n" ++
@@ -437,7 +398,7 @@ def snapshotSchemeSource : String :=
   "    (gerbil-ascent-construct-inert-program\n" ++
   "     (lambda ()\n" ++
   "       (gerbil-ascent-program relations (map (lambda (build) (build)) rules)\n" ++
-  "         input-limit derived-limit output-limit sources)) #f)))\n"
+  "         input-limit derived-limit output-limit sources)))))\n"
 
 def snapshotQuintSource : String :=
   "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++

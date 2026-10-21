@@ -236,9 +236,24 @@
   "ChangePlan": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "Frozen CompletePublication FailureAtomic"
+      "invariants": "Frozen CompletePublication FailureAtomic CapturedRows AdmissionOnce"
     },
     "faults": [
+      [
+        "omit-rows",
+        "CapturedRows",
+        12
+      ],
+      [
+        "borrow-rows",
+        "CapturedRows",
+        12
+      ],
+      [
+        "reanalyze",
+        "AdmissionOnce",
+        12
+      ],
       [
         "alias",
         "Frozen",
@@ -300,6 +315,21 @@
       "invariants": "TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly"
     },
     "faults": [
+      [
+        "reuse-term-validation-result",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-validation-protocol",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-custom-provider-fast-path",
+        "PolicyExact",
+        12
+      ],
       [
         "accept-missing-metadata-cache",
         "PolicyExact",

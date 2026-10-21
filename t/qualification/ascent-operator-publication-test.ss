@@ -8,9 +8,8 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-fragment gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-literal gerbil-ascent-guard
-                 gerbil-ascent-construct-inert-program)
-        (only-in :gerbil-ascent/program/types GerbilAscentProgramContract GerbilAscentFragmentContract
-                 gerbil-ascent-owned-root-contract)
+                 gerbil-ascent-construct-inert-program gerbil-ascent-construct-inert-fragment)
+        (only-in :gerbil-ascent/program/types GerbilAscentProgramContract GerbilAscentFragmentContract)
         :gerbil-ascent/t/performance/operator-publication/fixture)
 (export ascent-operator-publication-test)
 (def (immediate-check!)
@@ -35,15 +34,46 @@
         (let (fragment (relational-op-fragment root 'answer))
           (check-equal? (eq? (validate GerbilAscentFragmentContract fragment) fragment) #t)
           (immediate-check!))))
-    (test-case "private responsibility refinement preserves the parent prototype and all root slots"
+    (test-case "publication uses the exact public root prototype responsibilities and validation dispatch"
       (for-each (lambda (parent)
-        (let ((owned (gerbil-ascent-owned-root-contract parent))
-              (slots (.all-slots (.ref parent 'responsibilities))))
-          (check-equal? (eq? (.ref owned 'proto) (.ref parent 'proto)) #t)
-          (let (actual (.all-slots (.ref owned 'responsibilities)))
-            (check-equal? (length actual) (length slots))
-            (for-each (lambda (slot) (check-equal? (and (memq slot actual) #t) #t)) slots))))
+        (let ((validator (.ref parent '.validate)) (prototype (.ref parent 'proto))
+              (slots (.all-slots (.ref parent 'responsibilities))) (calls 0))
+          (try
+            (hash-put! (object-instance parent) '.validate
+              (lambda (candidate)
+                (set! calls (+ calls 1))
+                (check-equal? (eq? (.ref parent 'proto) prototype) #t)
+                (check-equal? (.all-slots (.ref parent 'responsibilities)) slots)
+                (immediate-check!)
+                (validator candidate)))
+            (let (value
+                  (if (eq? parent GerbilAscentProgramContract)
+                    (gerbil-ascent-construct-inert-program
+                      (lambda () (gerbil-ascent-program
+                        (list (gerbil-ascent-relation 'seed 1 '((0)))) [] 8 8 16)))
+                    (gerbil-ascent-construct-inert-fragment
+                      (lambda () (gerbil-ascent-fragment
+                        (list (gerbil-ascent-relation 'seed 1 '((0)))) [] '((answer . seed)) '(seed))))))
+              (check-equal? calls 1)
+              (check-equal? (eq? (validator value) value) #t))
+            (finally (hash-put! (object-instance parent) '.validate validator)))))
         (list GerbilAscentProgramContract GerbilAscentFragmentContract)))
+    (test-case "final inert publication retains the public rules classifier"
+      (let* ((field (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules))
+             (classifier (.ref field '.classify)) (calls 0))
+        (try
+          (hash-put! (object-instance field) '.classify
+            (lambda args (set! calls (+ calls 1)) (raise 'public-rules-classifier)))
+          (check-equal? (with-catch (lambda (failure) failure)
+            (lambda () (gerbil-ascent-construct-inert-program
+              (lambda () (gerbil-ascent-program
+                (list (gerbil-ascent-relation 'seed 1 []))
+                (list (gerbil-ascent-rule
+                  (list (gerbil-ascent-atom 'seed (list (gerbil-ascent-variable 'x))))
+                  (list (gerbil-ascent-atom 'seed (list (gerbil-ascent-variable 'x)))))) 8 8 16)))))
+            'public-rules-classifier)
+          (check-equal? calls 1)
+          (finally (hash-put! (object-instance field) '.classify classifier)))))
     (test-case "a new publication rechecks a previously published shared Term identity"
       (let (shared #f)
         (def (produce)
@@ -61,13 +91,11 @@
         (check-exception (produce) true)
         (immediate-check!)))
     (test-case "inert root admission rejects malformed Terms and retains nonatom contracts without callbacks"
-      (for-each (lambda (memoize?)
-        (check-exception
-         (gerbil-ascent-construct-inert-program
-          (lambda ()
-            (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 []))
-              (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'seed '(99))) [])) 8 8 16))
-          memoize?) true)) '(#t #f))
+      (check-exception
+       (gerbil-ascent-construct-inert-program
+        (lambda ()
+          (gerbil-ascent-program (list (gerbil-ascent-relation 'seed 1 []))
+            (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'seed '(99))) [])) 8 8 16))) true)
       (let ((calls 0) (program #f))
         (set! program
           (gerbil-ascent-construct-inert-program

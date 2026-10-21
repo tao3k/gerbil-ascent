@@ -298,7 +298,7 @@
                (gerbil-ascent-construct-inert-program
                 (lambda ()
                   (gerbil-ascent-program relation-values rules input-limit derived-limit
-                                         output-limit source-handles)) #f))))))
+                                         output-limit source-handles))))))))
 
 ;; END GENERATED DSL-OWNED
 

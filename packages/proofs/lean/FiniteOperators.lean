@@ -223,3 +223,35 @@ theorem inflationary_least_eq {α : Type} (step : Relation α → Relation α) :
     exact h s ((inflationary_closed_iff step s).mp hs)
 
 end Ascent.Operators
+
+
+namespace Ascent.OperatorCapture
+
+/-- The original analyzer already owns these finite row spines. Node keys model
+    identities; hash lookup soundness and complete traversal remain SDK/source
+    refinement obligations, rather than consequences of these table laws. -/
+abbrev RowTable (Row : Type) := Nat → Option (List Row)
+
+def transportRows {Row : Type} (source target : RowTable Row) (original owned : Nat) : RowTable Row :=
+  match source original with
+  | none => target
+  | some rows => fun key => if key = owned then some rows else target key
+
+theorem issued_rows_exact {Row : Type} (source target : RowTable Row) (original owned : Nat)
+    (rows : List Row) (validated : source original = some rows) :
+    transportRows source target original owned owned = some rows := by
+  simp [transportRows, validated]
+
+theorem other_nodes_unchanged {Row : Type} (source target : RowTable Row) (original owned key : Nat)
+    (different : key ≠ owned) :
+    transportRows source target original owned key = target key := by
+  cases entry : source original <;> simp [transportRows, entry, different]
+
+theorem missing_rows_not_invented {Row : Type} (source target : RowTable Row) (original owned : Nat)
+    (missing : source original = none) : transportRows source target original owned = target := by
+  simp [transportRows, missing]
+
+def rowTransportSchemeSource : String :=
+  "            (when (hash-key? rows node)\n              (hash-put! copied-rows copied (hash-ref rows node)))\n"
+
+end Ascent.OperatorCapture

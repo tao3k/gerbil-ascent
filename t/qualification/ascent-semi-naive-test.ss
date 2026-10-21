@@ -20,7 +20,7 @@
 (def (owned-declaration edges rules)
  ;; This fixture supplies only closed integer rows and fixed rule data.
  ;; Preserve the exact public schema, including callback-free Actor fields.
- (gerbil-ascent-construct-inert-program (lambda () (declaration edges rules)) #f))
+ (gerbil-ascent-construct-inert-program (lambda () (declaration edges rules))))
 (def (verify mask rules workers)
  (let* ((edges (graph-input mask)) (program (if (= workers 1) (declaration edges rules) (owned-declaration edges rules)))
         (actual (gerbil-ascent-evaluate-program program workers: workers)))

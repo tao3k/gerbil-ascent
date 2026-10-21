@@ -4,7 +4,8 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
+(import (only-in :std/list/list delete-duplicates/hash)
+        (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
         (only-in :clan/poo/mop define-type element? validate Type. Any)
         (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/types
@@ -16,8 +17,8 @@
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
 (export gerbil-ascent-fact-limit?
-        gerbil-ascent-owned-root-contract
         gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+        gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
         gerbil-ascent-make-session-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
@@ -135,9 +136,27 @@
            (andmap (lambda (descriptor classifier) (eq? (.ref/cached descriptor '.classify) classifier))
                    descriptors classifiers)))))
 (def (canonical-value-member contract view slots)
-  (let (current? (canonical-metadata-current? contract slots))
+  (let (current? (canonical-value-check-current? contract slots))
     (lambda (value)
       (if (current?) (element? view value) (element? contract value)))))
+(def (canonical-validation-current? contract slots)
+  (let* ((fields (.ref contract 'responsibilities))
+         (descriptors (delete-duplicates/hash (map (cut .ref fields <>) slots) table: (make-hash-table-eq)))
+         (missing (gensym 'missing-validation-protocol))
+         (entries
+          (apply append
+            (map (lambda (entry)
+                   (map (lambda (slot) (vector (car entry) slot (.ref (car entry) slot))) (cdr entry)))
+                 (cons (cons contract '(.element? .validate .admit .obligations value-contract))
+                       (map (lambda (field) (cons field '(.element? .admit .obligations value-contract))) descriptors))))))
+    (lambda ()
+      (andmap (lambda (entry)
+                (eq? (vector-ref entry 2)
+                     (.ref/cached (vector-ref entry 0) (vector-ref entry 1) (lambda () missing)))) entries))))
+(def (canonical-value-check-current? contract slots)
+  (let ((metadata? (canonical-metadata-current? contract slots))
+        (protocol? (canonical-validation-current? contract slots)))
+    (lambda () (and (metadata?) (protocol?)))))
 ;; END GENERATED PREPARATION METADATA-GUARD
 
 (def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
@@ -165,8 +184,50 @@
         relation: relation-name terms: atom-terms
         (.plan (lambda (atom-plan bound) (lower self atom-plan bound))))))
 
-(def canonical-term-value?
-  (canonical-value-member GerbilAscentTermContract +term-value+ '(kind value)))
+;; BEGIN GENERATED OWNED RELATION VALUE
+(def (gerbil-ascent-make-relation-value prototype relation-name column-count source-rows
+                                        predicates-value domain-value index-value storage-value)
+  (remember-value-shape! 'relation
+    (.o (:: @ prototype) name: relation-name arity: column-count rows: source-rows
+        field-predicates: predicates-value checked-domain: domain-value storage-kind: 'relation
+        index-provider: index-value storage-provider: storage-value)))
+
+(def +relation-value+
+  (.cc ObjectContract. identity: 'ascent/relation-value
+       required-prototype: (.ref GerbilAscentRelationContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o name: (.cc Type. .element?: symbol?)
+           arity: (.cc Type. .element?: (lambda (value) (and (exact-integer? value) (<= 0 value))))
+           rows: (.cc Type. .element?: list?)
+           field-predicates: (.cc Type. .element?: (lambda (value) (and (list? value) (andmap procedure? value))))
+           storage-kind: (.cc Type. .element?: (cut clause-kind? 'relation <>))
+           index-provider: (.cc Type. .element?: gerbil-ascent-canonical-hash-index-provider?)
+           storage-provider: (.cc Type. .element?: gerbil-ascent-canonical-set-storage-provider?))))
+(def +relation-slots+ '(name arity rows field-predicates storage-kind index-provider storage-provider))
+(def relation-metadata-current? (canonical-metadata-current? GerbilAscentRelationContract +relation-slots+))
+(def relation-protocol-current? (canonical-validation-current? GerbilAscentRelationContract +relation-slots+))
+;; These providers have no caller getter/callback on the selected path. Arbitrary
+;; providers must enter complete admission once, preserving all callback order.
+(def (owned-canonical-relation? value)
+  (and (declared-value-shape? 'relation value)
+       (gerbil-ascent-canonical-hash-index-provider? (.ref value 'index-provider))
+       (gerbil-ascent-canonical-set-storage-provider? (.ref value 'storage-provider))
+       (relation-metadata-current?)))
+(def (relation-value? value)
+  (if (and (owned-canonical-relation? value) (relation-protocol-current?))
+      (element? +relation-value+ value) (element? GerbilAscentRelationContract value)))
+(def (gerbil-ascent-check-owned-relation-value value)
+  (if (and (owned-canonical-relation? value) (relation-protocol-current?)
+           (element? +relation-value+ value)) value
+      (validate GerbilAscentRelationContract value)))
+
+;; END GENERATED OWNED RELATION VALUE
+
+(def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))
+(def (canonical-term-value? value)
+  (if (term-value-current?) (element? +term-value+ value)
+      (element? GerbilAscentTermContract value)))
 (def (term-value? value)
   (if (declared-value-shape? 'term value)
     (canonical-term-value? value)
@@ -200,7 +261,7 @@
                           '(ascent-clause-kind relation terms .plan)))
 
 (def (atom-value? value)
-  (if (and (declared-value-shape? 'atom value)
+  (if (and (declared-value-shape? 'atom value) (term-value-current?)
            (let (terms (.ref value 'terms))
              (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms))))
     (canonical-atom-value? value)
@@ -318,7 +379,7 @@
                  (lambda (value)
                    (and (list? value)
                         (andmap (lambda (relation)
-                                  (or (element? GerbilAscentRelationContract relation)
+                                  (or (relation-value? relation)
                                       (element? GerbilAscentLatticeContract relation)))
                                 value)))))
 (def +rules+
@@ -360,65 +421,6 @@
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))
 
-;;; Inert construction owns every generated Term until root publication.
-;;; Refine only nested responsibilities: ordinary public contracts stay exact.
-;;; A successful Term check may be reused by identity within this one root;
-;;; list shape, atom/rule shape and every other responsibility are still checked.
-;; gerbil-ascent-owned-root-contract
-;; : (forall (c) (-> c c))
-;; : (-> DeclarationRootContract OwnedDeclarationRootContract)
-;; | doc m%
-;;     Build an invocation-local POO responsibility refinement for a private
-;;     canonical declaration graph. No supplied callback can observe or mutate
-;;     its Terms before publication. Do not use for caller-owned declarations.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (gerbil-ascent-owned-root-contract GerbilAscentProgramContract)
-;;     ;; => a private root contract retaining all Program responsibilities
-;;     ```
-;;   %
-(def (gerbil-ascent-owned-root-contract root)
-  (let* ((accepted (make-hash-table-eq))
-         (owned-terms
-          (slot-contract 'ascent/terms
-            (lambda (value)
-              (and (list? value)
-                   (andmap (lambda (term)
-                             (or (hash-get accepted term)
-                                 (and (element? GerbilAscentTermContract term)
-                                      (begin (hash-put! accepted term #t) #t)))) value)))))
-         (owned-atom
-          (.o (:: @ GerbilAscentAtomContract)
-              proto: (.ref GerbilAscentAtomContract 'proto)
-              responsibilities:
-              (.o (:: @ (.ref GerbilAscentAtomContract 'responsibilities)) terms: owned-terms)))
-         (owned-heads
-          (slot-contract 'ascent/heads
-            (lambda (value)
-              (and (pair? value) (list? value) (andmap (cut element? owned-atom <>) value)))))
-         (owned-body
-          (slot-contract 'ascent/clauses
-            (lambda (value)
-              (and (list? value)
-                   (andmap (lambda (clause)
-                             (or (element? owned-atom clause)
-                                 (element? +clauses+ (list clause)))) value)))))
-         (owned-rule
-          (.o (:: @ GerbilAscentRuleContract)
-              proto: (.ref GerbilAscentRuleContract 'proto)
-              responsibilities:
-              (.o (:: @ (.ref GerbilAscentRuleContract 'responsibilities))
-                  heads: owned-heads body: owned-body)))
-         (owned-rules
-          (slot-contract 'ascent/rules
-            (lambda (value) (and (list? value) (andmap (cut element? owned-rule <>) value))))))
-    ;; The inherited proto slot is a constructor, not a shared constant.
-    ;; Bind the admitted parent's prototype explicitly on every refinement.
-    (.o (:: @ root) proto: (.ref root 'proto)
-        responsibilities: (.o (:: @ (.ref root 'responsibilities)) rules: owned-rules))))
-
 ;;; Session operations are the only mutable public boundary. A run returns an
 ;;; immutable result snapshot even when later appends extend the session.
 ;; Prototype identity outlives the descriptor's lazily materialized slot cache.
@@ -444,18 +446,8 @@
            .run: (.cc Type. .element?: procedure?))))
 (def session-metadata-current?
   (canonical-metadata-current? GerbilAscentSessionContract '(.append-source! .replace-source! .run)))
-(def +missing-session-protocol+ (gensym 'missing-session-protocol))
-(def +session-protocol+
-  (apply append
-    (map (lambda (entry)
-      (map (lambda (slot) (vector (car entry) slot (.ref (car entry) slot))) (cdr entry)))
-      (list (cons GerbilAscentSessionContract '(.validate .admit .obligations value-contract))
-            (cons +procedure+ '(.admit .obligations value-contract))))))
-(def (session-protocol-current?)
-  (andmap (lambda (entry)
-    (eq? (vector-ref entry 2)
-         (.ref/cached (vector-ref entry 0) (vector-ref entry 1)
-           (lambda () +missing-session-protocol+)))) +session-protocol+))
+(def session-protocol-current?
+  (canonical-validation-current? GerbilAscentSessionContract '(.append-source! .replace-source! .run)))
 (def (gerbil-ascent-make-session-value append! replace! replace-all! run! timeout!)
   (let (value (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
                 .append-source!: append! .replace-source!: replace!

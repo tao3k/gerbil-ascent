@@ -411,6 +411,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-support-admission", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-value-shape", "program/types.ss"),
                 ("ExecutionPolicy.lean", "preparation-metadata-guard", "program/types.ss"),
+                ("ExecutionPolicy.lean", "owned-relation-value", "program/types.ss"),
+                ("ExecutionPolicy.lean", "capture-row-transport", "program/operator-analysis.ss"),
                 ("ExecutionPolicy.lean", "preparation-output-target", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-job-allocation", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-audit-order", "tools/ci/build-cost-control.py"),
@@ -471,6 +473,18 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED LOOKUP {region}\n', f';; END GENERATED LOOKUP {region}\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate lookup source region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "owned-relation-value":
+                    begin, end = (';; BEGIN GENERATED OWNED RELATION VALUE\n',
+                                  ';; END GENERATED OWNED RELATION VALUE\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate owned relation region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "capture-row-transport":
+                    begin, end = ('            ;; BEGIN GENERATED CAPTURE ROW TRANSPORT\n',
+                                  '            ;; END GENERATED CAPTURE ROW TRANSPORT\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate capture row transport region')
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"preparation-metadata-guard", "preparation-value-shape", "preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()

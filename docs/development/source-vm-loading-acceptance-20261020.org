@@ -2070,3 +2070,120 @@ publication only. All 106 workbench control tests passed in 191.332 seconds.
 
 The dynamic-prototype version passed all 26 focused Cases, including the
 new public-proto mutation and unchanged nine-Case closure controls.
+
+
+** Exact-head results and default declaration cost (2026-10-22)
+
+Commit 8cb3de858b3f54bbf991cfb8228ad6b54ea2c37f completed repository hygiene,
+formal, formal conformance, Rust/PyO3, Python consumers, BYODS and BYODS-scale.
+Linux source semantics still hit 180 seconds (61 modules / 558 Case lines);
+macOS source semantics hit 600 seconds (94 modules / 849 Case lines). The
+nonpositive and product-session absolute gates passed at 764.83 us and
+1.354554 ms respectively. The remaining performance failure was change-plan
+small, which also failed on its immediate Yuanxu parent 0b6da040. This commit
+is not an all-green or complete source-semantic qualification.
+
+An earlier comparison used the older Core-based fee24d3b control. It cannot
+attribute a Yuanxu transition to the new optimization. The immediate 0b6da040
+Linux parent completed 42 modules / 378 Case lines before its deadline;
+partial completion counts are not throughput ratios. Uninstrumented preparation
+was 235.396 versus 161.449 seconds on Linux and 329.22 versus 275.14 seconds
+on macOS. These different-runner/cache observations are not matched speedups.
+The later macOS context load increased from 39.711 to 49.734 seconds while make
+decreased from 277.819 to 206.418 seconds; one aggregate number hides both.
+
+The fixed 512-Relation production workload was then split into Relation
+construction and Program admission. Three unchanged runs gave baseline CPU
+seconds 3.139181 / 3.462432 / 3.064088 for construction and 5.195248 / 5.424085 /
+5.038009 for admission. GC CPU was below 0.2 seconds per stage. This identifies
+repeated Contract/evidence work rather than establishing GC as the main cost.
+
+A callback-free Relation value view reduced the same stages to CPU seconds
+0.065425 / 0.026712 / 0.030743 and 0.011235 / 0.017195 / 0.047651. Every run
+checked all 512 names/rows. This is a focused same-host CPU diagnostic, not
+an isolated end-to-end latency, cold-build or full-Suite qualification.
+
+Only factory-issued constant-field Relations with the existing canonical
+provider identities may use the view. Current list values are checked on every
+call; no successful validation result is stored. Arbitrary providers/getters,
+changed metadata or changed admission dispatch use the complete public path.
+Explicit contextual admission remains public. Controls compare malformed live
+field values, mutable list spines, exact exceptions, all seven classifiers,
+normalization, root/field admission and obligations, and custom-provider late
+obligation effects without duplicate callbacks. The first factory candidate
+had self-shadowing name/arity/rows arguments and raised CyclicSlot; the original
+getter controls caught it. Distinct argument names fixed the candidate without
+changing those assertions. The corrected three-Suite run passed 42 Cases.
+
+** Complete membership protocol and public root publication
+
+The fixed Yuanxu implementation confirms that element? performs complete
+admission, not classification alone. Private guards therefore cover element?,
+admit, obligations and value-contract in addition to classifier/revision
+identity. An Atom fast path also requires callback-free current Term checks;
+a custom child admission can otherwise mutate a later parent obligation.
+Public root publication now uses the exact public descriptor, without private
+responsibility replacements or a Term-success memo table. The obsolete private
+mode argument is removed from all production callers and generated DSL sources.
+The original 70/28 assertions are retained. New controls require public rules
+classifiers and root validation dispatch to run, and reject a shared Term
+mutated after an earlier admission in the same publication.
+
+** Owned operator rows and retained negative ABI evidence
+
+Operator capture previously analyzed the caller graph, copied it, and analyzed
+the private copy again. The capture now transports already detached validated
+rows to each issued private source/mapping node. An independent complete
+reanalysis checks the copied row-map domain and values, and existing nested
+feedback, mutation, output-detachment and row-budget tests remain unchanged.
+All eight original local 50-pair lifecycle gates passed after this change,
+including small (CPU 0.509 to 0.557 ms under its existing tolerance). All shapes
+were executed even after a failure; no skipped shape was relabeled as passing.
+
+Lean binds the actual transport block and proves lookup preservation, unrelated
+node preservation and absence preservation. Quint retains the original capture,
+publication and failure invariants and rejects missing rows, borrowed rows and
+a duplicate-analysis mutation. These do not prove the entire clone traversal,
+Scheme hash implementation, compiler or arbitrary MOP equivalence. Native
+semantic evidence and narrow generated-source equality are reported separately.
+
+A partial local rebuild after deleting the private mode parameter mixed new
+callees with old optimized callers and exited 139. LLDB stopped in
+candidate-program +212 at an invalid tagged procedure load. The cached generated
+caller explicitly used (declare (not safe)) and called the removed
+construct-inert-program__% entry; higher-order also retained an old __0 call.
+The new callee defined only the one-argument entry. Source candidate/program
+still had one obsolete #f argument. The source call was fixed, the complete
+production graph and affected fixtures were rebuilt with existing SDK make,
+and generated production callers no longer reference either removed entry.
+The failed run, native debugger output and stale generated caller are retained;
+this is not evidence of an SDK failure and no SDK change was made.
+
+** Final local candidate receipts
+
+After the complete production and fixture rebuild, the four focused native
+Suites passed all 56 Cases, including the unchanged public 70/28 assertion
+controls, getter exception ordering, live nested admission callbacks and shared
+Term mutation. The complete guarded Lean inventory passed 175 jobs; CompilerCost
+and ChangePlan Quint policies and their negative mutants passed; all 106
+workbench tests passed; ASP reported 81 warnings and zero errors.
+
+The final complete-protocol, public-root implementation repeated the identical
+512-Relation diagnostic. Construction CPU seconds were 0.067716 / 0.042266 /
+0.032889; Program admission was 0.012807 / 0.019579 / 0.047492. These replace the
+intermediate candidate numbers as final local evidence. Numeric-only statistics
+avoid retaining complete diagnostic results. No cold-build, full-Suite wall-time
+or cumulative-allocation claim follows from this narrow CPU measurement.
+
+The pushed parent 8cb3de85 still failed Linux 180-second and macOS 600-second
+source semantics, and the small ChangePlan performance gate. Its independent
+nonpositive and product-session p95 gates passed at 764.83 microseconds and
+1.354554 milliseconds. Its production matrix admitted 23 of 24 rows; the large
+single-VM row timed out. Those failures are retained and do not qualify this
+candidate. Exact-head full CI and production measurements remain required.
+
+The immutable SDK, three build cores, twelve single-threaded VM workers, twelve
+Rust test threads and all original per-test/resource/performance limits remain
+unchanged. Actual Gambit cumulative allocation, complete MOP/decoder/cache/SCC
+and message source equivalence remain open; the added generated fragments and
+kernel laws do not close those wider obligations.

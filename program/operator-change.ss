@@ -12,7 +12,8 @@
                  relational-op-count-join! relational-op-count-fix!)
         (only-in "scheme-checked.ss" relational-copy-rows)
         (only-in "operator-analysis.ss" analyze-operator-graph
-                 operator-analysis-checked-rows snapshot-operator-transform)
+                 operator-analysis-checked-rows capture-operator-transform
+                 operator-snapshot-transform operator-snapshot-checked-rows)
         (only-in "operator-descriptor.ss" relational-op-apply
                  relational-op-source relational-transform-output-arity)
         (only-in :clan/poo/object .o .ref)
@@ -44,8 +45,9 @@
 ;;; Per-call inputs, budgets, environments and lookup registries remain local.
 ;; : (-> RelationalTransform ChangePlan)
 (def (relational-op-prepare-change transformer)
-  (let* ((owned (snapshot-operator-transform transformer))
-         (rows (change-analysis owned)))
+  (let* ((snapshot (capture-operator-transform transformer))
+         (owned (operator-snapshot-transform snapshot))
+         (rows (operator-snapshot-checked-rows snapshot)))
     (validate GerbilAscentChangePlanContract
       (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
           (.change (lambda (before added (row-limit +inf.0))

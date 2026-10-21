@@ -11,8 +11,8 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
-                 gerbil-ascent-owned-root-contract
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+                 gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
                  GerbilAscentTermContract
@@ -66,25 +66,16 @@
        (construct)))
    receive))
 
-;;; Empty roots have no shared Terms. Rule-bearing roots borrow a fresh POO
-;;; refinement only while validating; the published value retains no checker.
-;; : (forall (c a) (-> c a a))
-;; : (-> DeclarationRootContract OwnedDeclarationRoot ValidatedRoot)
-(def (validate-inert-root contract value (memoize-terms? #t))
-  (validate (if (or (not memoize-terms?) (null? (.ref value 'rules))) contract
-              (gerbil-ascent-owned-root-contract contract)) value))
-;; A canonical tree can use the ordinary complete root contract without a
-;; fresh shared-Term memo descriptor. Both modes perform full root admission.
-;; The producer may return a Program alone or a Program and its output handle.
-;; Receive both outside the construction extent, validating before publication.
+;;; Publish through the public root descriptor once, after restoring ordinary
+;;; constructor checks. No responsibility override or Term result cache escapes.
 ;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))
 ;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))
-(def (gerbil-ascent-construct-inert-program construct (memoize-terms? #t))
+(def (gerbil-ascent-construct-inert-program construct)
   (receive-inert-declarations construct
    (case-lambda
-     ((program) (validate-inert-root GerbilAscentProgramContract program memoize-terms?))
+     ((program) (validate GerbilAscentProgramContract program))
      ((program output)
-      (let (checked (validate-inert-root GerbilAscentProgramContract program memoize-terms?))
+      (let (checked (validate GerbilAscentProgramContract program))
         (values checked output))))))
 
 ;; END GENERATED DSL-ROOT
@@ -93,7 +84,7 @@
 ;; : (-> InertFragmentConstructor ValidatedFragment)
 (def (gerbil-ascent-construct-inert-fragment construct)
   (receive-inert-declarations construct
-    (lambda (fragment) (validate-inert-root GerbilAscentFragmentContract fragment))))
+    (lambda (fragment) (validate GerbilAscentFragmentContract fragment))))
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Lattice. (.ref GerbilAscentLatticeContract 'proto))
@@ -327,13 +318,11 @@
                    relation-name row)))
         field-predicates-value row)))
    source-rows)
-  (declaration-check GerbilAscentRelationContract
-            (.o (:: @ Relation.)
-                name: relation-name arity: column-count rows: source-rows
-                field-predicates: field-predicates-value
-                checked-domain: domain-descriptor
-                storage-kind: 'relation index-provider: provider-value
-                storage-provider: storage-value)))
+  (let ((value (gerbil-ascent-make-relation-value Relation. relation-name column-count source-rows
+                 field-predicates-value domain-descriptor provider-value storage-value))
+        (check (current-declaration-check)))
+    (if (eq? check validate) (gerbil-ascent-check-owned-relation-value value)
+        (check GerbilAscentRelationContract value))))
 
 (def (gerbil-ascent-lattice relation-name column-count source-rows
                             join-procedure

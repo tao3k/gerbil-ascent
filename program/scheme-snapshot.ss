@@ -157,4 +157,4 @@
     (gerbil-ascent-construct-inert-program
      (lambda ()
        (gerbil-ascent-program relations (map (lambda (build) (build)) rules)
-         input-limit derived-limit output-limit sources)) #f)))
+         input-limit derived-limit output-limit sources)))))

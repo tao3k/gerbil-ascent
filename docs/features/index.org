@@ -22,7 +22,6 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Assurance | [[file:assurance/acceptance.org][acceptance]] / [[file:assurance/byods.org][byods]] / [[file:assurance/compiler.org][compiler]] / [[file:assurance/design.org][design]] / [[file:assurance/proofs.org][proofs]] |
 | Bitmap Lattices | [[file:bitmap-lattices/acceptance.org][acceptance]] |
 | Candidate Feedback | [[file:candidate-feedback/acceptance.org][acceptance]] |
-| Interactive Evidence Reasoning | [[file:interactive-evidence-reasoning.org][Library design and research contract]] / [[file:evidence-responsibilities.org][Evidence responsibilities]] |
 | Closure Plan | [[file:closure-plan/design.org][design]] / [[file:closure-plan/proofs.org][proofs]] |
 | Compiler Lowering | [[file:compiler-lowering/compiler.org][compiler]] / [[file:compiler-lowering/proofs.org][proofs]] |
 | Equivalence | [[file:equivalence/acceptance.org][acceptance]] / [[file:equivalence/byods.org][byods]] / [[file:equivalence/compiler.org][compiler]] / [[file:equivalence/design.org][design]] / [[file:equivalence/proofs.org][proofs]] |
@@ -43,3 +42,5 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Source Lifecycle | [[file:source-lifecycle/byods.org][byods]] / [[file:source-lifecycle/compiler.org][compiler]] / [[file:source-lifecycle/proofs.org][proofs]] |
 | Steensgaard | [[file:steensgaard/acceptance.org][acceptance]] / [[file:steensgaard/byods.org][byods]] / [[file:steensgaard/design.org][design]] / [[file:steensgaard/proofs.org][proofs]] |
 | Transitive | [[file:transitive/acceptance.org][acceptance]] / [[file:transitive/byods.org][byods]] / [[file:transitive/compiler.org][compiler]] / [[file:transitive/design.org][design]] / [[file:transitive/proofs.org][proofs]] |
+
+Application Evidence and model interaction are maintained in [[https://github.com/tao3k/poo-flow][POO Flow]]. See [[file:../library-boundary.org][the Library boundary]].

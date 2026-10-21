@@ -11,7 +11,7 @@
         :gerbil-ascent/temporal/value
         :gerbil-ascent/temporal/projection
         (only-in :gerbil-ascent/candidate/finite-evidence finite-evidence-closure)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-stratified reasoning-stratified-evidence-finite

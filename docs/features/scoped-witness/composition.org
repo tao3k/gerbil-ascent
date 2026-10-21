@@ -134,4 +134,4 @@ it does not introduce probabilistic, weighted or open-world negation semantics.
 - Exact revision CI remains separate from these local receipts.
 
 [[file:acceptance.org][Scoped witness acceptance]];
-[[file:../../research/agent-inference/scoped-witness.org][research and paper correspondence]].
+[[file:../../research/logical-programming/scoped-witness.org][research and paper correspondence]].

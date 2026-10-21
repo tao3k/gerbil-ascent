@@ -48,7 +48,7 @@
               (let (path (path-expand directory root))
                 (displayln "cargo:rerun-if-changed=" path)
                 (collect-files path source? source)))
-    '("interface" "evidence" "program" "core" "table" "candidate" "applications"
+    '("interface" "rules" "program" "core" "table" "candidate" "applications"
       "rust/ascent/src" "rust/ascent-scheme/src" "rust/ascent-python/src"))
   (for-each (lambda (name)
               (let (path (path-expand name root))

@@ -42,6 +42,7 @@ benchmark suite. See `just --list` for focused checks.
 The engine studies logical programming, BYODS relation implementations, retained
 sessions, delta maintenance and derivation provenance. See the
 [Scheme DSL readings](docs/research/scheme-dsl/index.org),
+[logical programming and provenance](docs/research/logical-programming/index.org),
 [related-work matrix](docs/related-work-matrix.org) and
 [feature assurance](docs/features/index.org). Model efficacy and application
 Evidence research are maintained downstream in POO Flow.

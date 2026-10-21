@@ -11,7 +11,7 @@
         (only-in "types.ss" reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-candidate-query)
-        (only-in "reasoning.ss" reasoning-source-snapshot candidate-content-digest)
+        (only-in "checked-program.ss" reasoning-source-snapshot candidate-content-digest)
         (only-in "program.ss" candidate-inspect candidate-program)
         (only-in "funs.ss" candidate-bind-atom)
         (only-in "provenance-graph.ss" candidate-positive-provenance

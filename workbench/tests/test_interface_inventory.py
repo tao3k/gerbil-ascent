@@ -30,7 +30,9 @@ class InterfaceInventory(unittest.TestCase):
         tasks = inventory(directory)
         bindings = [path.name for backend,path in tasks if backend == 'pyo3']
         expected = {path.name for path in directory.glob("test_*.py") if path.is_file()}
-        self.assertGreaterEqual(len(expected),34)
+        owners=json.loads((ROOT/'workbench/tests/fixtures/python-consumer-owners.json').read_text())
+        self.assertEqual(expected,set(owners['core']))
+        self.assertGreaterEqual(len(expected)+len(owners['application']),len(owners['originalFiles']))
         self.assertEqual(set(bindings),expected)
         self.assertEqual(len(bindings),len(expected))
         self.assertTrue(set(API_FILES)<=set(bindings))

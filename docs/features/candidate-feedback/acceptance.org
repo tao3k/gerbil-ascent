@@ -5,7 +5,7 @@
 
 * Design and ownership
 
-[[file:../../research/agent-inference/candidate-feedback.org][candidate execution feedback reading]] motivates separating static admission, native completion and
+[[file:../../research/logical-programming/candidate-feedback.org][candidate execution feedback reading]] motivates separating static admission, native completion and
 semantic agreement. [[file:../../../candidate/feedback.ss][reasoning-compare-rows]] consumes the existing snapshot,
 proposal and receipt, plus a caller-owned finite reference for the full query
 row. It checks snapshot identity/generation/content and proposal content before
@@ -23,7 +23,7 @@ equivalence or a proof/certificate verification result.
 
 * Same-source gold executor comparison (scoped witness execution)
 
-The [[file:../../research/agent-inference/scoped-witness.org][MatLogic reading]] motivates distinguishing a scope specification error
+The [[file:../../research/logical-programming/scoped-witness.org][MatLogic reading]] motivates distinguishing a scope specification error
 from successful execution of that wrong specification. =reasoning-compare-attempts=
 accepts already executed candidate and gold proposals, retaining the exact
 existing executor and source boundary:

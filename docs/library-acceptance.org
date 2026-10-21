@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme-native Library admission and next gates
-#+STATUS: active contract; bounded model pilots completed
+#+STATUS: historical acceptance record; current scope is library-boundary.org
 #+DATE: 2026-10-01
 #+FILETAGS: :scheme-dsl:qualification:roadmap:
 
@@ -19,7 +19,7 @@ construction; no host procedure is called from a checked rule body.
 Admission inspects dependencies, modes, types and budgets; a successful
 solve yields a completed immutable result or an explicit failure.
 
-=candidate/reasoning.ss= accepts inert Scheme data from an untrusted
+=candidate/checked-program.ss= accepts inert Scheme data from an untrusted
 caller. It shares the admitted fixed scalar and relational semantics
 for its declared subset, but does not accept host =value= expressions,
 finite views, lattice declarations or arbitrary callbacks. A complete

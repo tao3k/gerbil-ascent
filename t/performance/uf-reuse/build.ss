@@ -43,7 +43,7 @@
     (make '("table/storage" "program/initialization" "program/view-replay" "program/view-state" "program/evaluate"
             "t/performance/uf-reuse/reference-view-replay"
             "t/performance/uf-reuse/reference-view-state"
-                        "t/performance/uf-reuse/reference-initialization"
+                        "t/performance/uf-dense/reference-initialization"
             "t/performance/uf-reuse/reference-evaluate"
             "t/performance/uf-reuse/reference-storage"
             "t/performance/uf-reuse/fixture"

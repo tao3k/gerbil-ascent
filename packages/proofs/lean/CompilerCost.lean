@@ -138,6 +138,23 @@ def compilerSchemeSource : String :=
   ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
   "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
 
+-- Each path is rooted at one GCC invocation. Nested rows remain inclusive;
+-- choosing one TOTAL never adds pass intervals or converts wall time to CPU.
+def totalPasses (rows : List (List String × Nat)) : List (List String × Nat) :=
+  rows.filter (fun row => row.1 == ["TOTAL"])
+
+theorem nested_pass_excluded (name : String) (cost : Nat) (rows : List (List String × Nat)) :
+    totalPasses ((["phase parsing", name], cost) :: rows) = totalPasses rows := by
+  simp [totalPasses]
+
+theorem total_pass_retained (cost : Nat) (rows : List (List String × Nat)) :
+    totalPasses ((["TOTAL"], cost) :: rows) = (["TOTAL"], cost) :: totalPasses rows := by
+  simp [totalPasses]
+
+def passTotalPythonSource : String :=
+  "def gcc_total_passes(rows):\n" ++
+  "    return [row for row in rows if row['path'] == ['TOTAL']]\n"
+
 def ggcPythonSource : String :=
   "    if len(totals) != 1 or type(totals[0]) is not int or totals[0] < 0:\n" ++
   "        raise ValueError('invalid GCC cumulative GGC total')\n"
@@ -440,3 +457,6 @@ end Ascent.CompilerCost
 #print axioms Ascent.CompilerCost.runtime_dispatch_not_compiler_recipe
 #print axioms Ascent.CompilerCost.observation_workflow_not_compiler_recipe
 #print axioms Ascent.CompilerCost.cli_wrapper_not_compiler_recipe
+
+#print axioms Ascent.CompilerCost.nested_pass_excluded
+#print axioms Ascent.CompilerCost.total_pass_retained

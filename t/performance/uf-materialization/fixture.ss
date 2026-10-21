@@ -7,7 +7,7 @@
         (prefix-in :gerbil-ascent/program/view-state current-)
         (prefix-in :gerbil-ascent/t/performance/uf-materialization/reference-view-state prior-)
         (prefix-in :gerbil-ascent/t/performance/uf-materialization/reference-relation-view old-)
-        (prefix-in :gerbil-ascent/t/performance/uf-materialization/reference-view-replay old-))
+        (prefix-in :gerbil-ascent/t/performance/uf-dense/reference-view-replay old-))
 (export ui-prepare ui-consume ui-expected materialized-rows)
 (def (size scenario) (case scenario ((dense grouped) 256) ((replay) 192) ((delta) 128) ((small) 1) (else 64)))
 (def (grouped? scenario) (memq scenario '(grouped replay)))

@@ -9,6 +9,7 @@ costs. This does not verify the SDK compiler or allocator.
 """
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import resource
@@ -150,6 +151,41 @@ def _gcc_ggc_bytes(report, source):
         raise ValueError('invalid GCC cumulative GGC total')
     # END GENERATED PREPARATION GGC
     return totals[0]
+
+
+
+# BEGIN GENERATED PREPARATION PASS-TOTAL
+def gcc_total_passes(rows):
+    return [row for row in rows if row['path'] == ['TOTAL']]
+# END GENERATED PREPARATION PASS-TOTAL
+
+
+def gcc_pass_costs(report, source):
+    """Source-bound inclusive GCC counters; pass rows are never additive."""
+    gcc_ggc_bytes(report, source)  # Admit compiler, origin, success and exact TOTAL first.
+    timers = report['runs'][0]['invocations'][0]['properties']['gcc/timeReport']['timevars']
+    rows = []
+    def visit(items, parent):
+        names = set()
+        for item in items:
+            name = item.get('name')
+            if not isinstance(name, str) or not name or name in names:
+                raise ValueError('missing or duplicate GCC pass name')
+            names.add(name)
+            elapsed = item.get('elapsed', {})
+            wall = elapsed.get('wall')
+            allocated = elapsed.get('ggc_mem')
+            if type(wall) not in (int, float) or not math.isfinite(wall) or wall < 0:
+                raise ValueError('invalid GCC pass wall time')
+            if type(allocated) is not int or allocated < 0:
+                raise ValueError('invalid GCC pass cumulative allocation')
+            path = [*parent, name]
+            rows.append({'path': path, 'wall_seconds': wall, 'ggc_bytes': allocated})
+            visit(item.get('children', []), path)
+    visit(timers, [])
+    total, = gcc_total_passes(rows)
+    return {'total': total, 'inclusive_passes': rows,
+            'scope': 'GCC internal wall intervals and cumulative GGC bytes; overlapping passes, not helper CPU or make elapsed time'}
 
 
 # BEGIN GENERATED PREPARATION COVERAGE
@@ -487,6 +523,8 @@ def summarize(directory):
                 'input_blocks': helper.get('input_blocks'),
                 'output_blocks': helper.get('output_blocks'),
                 'gcc_cumulative_ggc_bytes': helper.get('gcc_ggc_bytes'),
+                'gcc_pass_costs': (gcc_pass_costs(json.loads((directory / 'inputs' / helper['gcc_report']['sha256']).read_text()), helper['gcc_source'])
+                                   if 'gcc_report' in helper else None),
                 'gcc_report': helper.get('gcc_report'),
                 'requested_cc_options': helper.get('requested_cc_options'),
             })

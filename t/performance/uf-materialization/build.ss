@@ -28,7 +28,7 @@
   (add-load-path! library)
   (make '("core/relation-view" "program/view-replay" "program/view-state"
           "t/performance/uf-materialization/reference-relation-view"
-          "t/performance/uf-materialization/reference-view-replay"
+          "t/performance/uf-dense/reference-view-replay"
           "t/performance/uf-materialization/reference-view-state"
           "t/performance/uf-materialization/fixture" "t/performance/uf-materialization/runner")
     srcdir: (current-directory) libdir: library parallelize: (##cpu-count)))

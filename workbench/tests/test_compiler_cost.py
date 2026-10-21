@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import unittest
 
-from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_ggc_complete, generated_scheme_input, generated_source_producer, compiler_output_paths, compiler_allocation_total, source_cost_coverage
+from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_pass_costs, gcc_ggc_complete, generated_scheme_input, generated_source_producer, compiler_output_paths, compiler_allocation_total, source_cost_coverage
 
 
 class CompilerCostTests(unittest.TestCase):
@@ -48,6 +48,16 @@ class CompilerCostTests(unittest.TestCase):
                 (root / name).write_text('changed compiler or dependency input\n')
                 git('add', name)
                 self.assertNotEqual(compatibility(), previous, name)
+
+    def test_shared_frozen_carriers_keep_original_bodies_and_absolute_dependencies(self):
+        import hashlib
+        for name, digest in [
+            ('reference-initialization', 'c7f86dcef7295fe4f198eaad0b7b66f62ad4658f359d1457a89a4a755e95713e'),
+            ('reference-view-replay', '3ff78c5d8f9fc322ba279652eda0b233256d3a1d63c44411249247102f3a2893'),
+        ]:
+            body = Path('t/performance/uf-dense', name + '.ss').read_bytes()
+            self.assertEqual(hashlib.sha256(body).hexdigest(), digest)
+            self.assertNotIn(b'"reference-', body)
 
     def test_unknown_cc_options_are_not_the_observed_sdk_default(self):
         from ascent_workbench.preparation_work import cc_options_observed
@@ -385,6 +395,29 @@ class CompilerCostTests(unittest.TestCase):
                     {'name': 'nested pass', 'elapsed': {'ggc_mem': 200}},
                     {'name': 'TOTAL', 'elapsed': {'ggc_mem': 400}}]}}}],
             'artifacts': [{'location': {'uri': str(source)}, 'roles': ['analysisTarget']}]}]}
+
+    def test_pass_costs_keep_hierarchy_and_total_without_adding_overlap(self):
+        source = Path('/tmp/owner.c').resolve()
+        report = self.report(source)
+        timers = report['runs'][0]['invocations'][0]['properties']['gcc/timeReport']['timevars']
+        for item, wall in zip(timers, [2.0, 3.0, 4.0]):
+            item['elapsed']['wall'] = wall
+        timers[0]['children'] = [{'name': 'TOTAL', 'elapsed': {'wall': 1, 'ggc_mem': 150}}]
+        result = gcc_pass_costs(report, source)
+        self.assertEqual(result['total'], {'path': ['TOTAL'], 'wall_seconds': 4.0, 'ggc_bytes': 400})
+        self.assertEqual(result['inclusive_passes'][1]['path'], ['phase parsing', 'TOTAL'])
+        self.assertEqual(len(result['inclusive_passes']), 4)
+        self.assertNotIn('helper_cpu_seconds', result)
+        for bad in [None, True, -1, float('nan'), float('inf'), '1.0']:
+            invalid = copy.deepcopy(report)
+            invalid['runs'][0]['invocations'][0]['properties']['gcc/timeReport']['timevars'][0]['elapsed']['wall'] = bad
+            with self.subTest(wall=bad), self.assertRaisesRegex(ValueError, 'pass wall'):
+                gcc_pass_costs(invalid, source)
+        timers.append(copy.deepcopy(timers[0]))
+        with self.assertRaisesRegex(ValueError, 'duplicate GCC pass'):
+            gcc_pass_costs(report, source)
+        with self.assertRaisesRegex(ValueError, 'attribution'):
+            gcc_pass_costs(self.report(source), source.with_name('foreign.c'))
 
     def test_total_is_not_sum_of_overlapping_passes(self):
         source = Path('/tmp/owner.c').resolve()

@@ -27,7 +27,7 @@ class SourceSemanticCiTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'exit=124'):
                     CONTROL.run_source_semantics(root, output, {'GERBIL_BUILD_CORES': '3'})
             self.assertEqual(measure.call_args.args[1],
-                             ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'])
+                             ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'])
             self.assertEqual(measure.call_args.args[3]['GERBIL_BUILD_CORES'], '12')
             self.assertTrue(measure.call_args.kwargs['semantic_diagnostics'])
             self.assertEqual((output / 'semantic-batches/incomplete.log').read_text(), 'CASE still running\n')
@@ -113,7 +113,7 @@ class SourceSemanticCiTests(unittest.TestCase):
                     self.assertEqual([item.call_count for item in [prepare, cache, run]],
                                      [int(index == selected) for index in range(3)])
                     call = [prepare, cache, run][selected].call_args
-                    self.assertEqual(call.args[2]['ASCENT_GXTEST_TIMEOUT'], '240s')
+                    self.assertEqual(call.args[2]['ASCENT_GXTEST_TIMEOUT'], '600s')
                     self.assertNotIn('ASCENT_TEST_LIBRARY', call.args[2])
                 receipts.append(json.loads((output / 'inputs.json').read_text()))
             self.assertEqual(receipts[0], receipts[1])

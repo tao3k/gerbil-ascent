@@ -135,7 +135,12 @@ module CompilerCost {
     (scope == "gcc" or Mutation == "promote-vm-counter") != (scope == "gcc")))
   pure val TotalPolicy = Set(0, 1, 2).forall(totals =>
     (totals == 1 or Mutation == "sum-nested-passes") == (totals == 1))
-  action CheckPolicy = q' = {...q, violation: not(CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and ProjectionIndexPolicy and CacheEncodingPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  // Retain path identity: a nested TOTAL is not the invocation TOTAL.
+  pure val PassPathPolicy = Set(List("TOTAL"), List("phase parsing", "TOTAL"), List("phase parsing")).forall(path => {
+    val selected = path == List("TOTAL") or Mutation == "sum-pass-walls"
+    selected == (path == List("TOTAL"))
+  })
+  action CheckPolicy = q' = {...q, violation: not(PassPathPolicy and CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and ProjectionIndexPolicy and CacheEncodingPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

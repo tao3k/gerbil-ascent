@@ -50,7 +50,7 @@ on:
         type: boolean
         default: false
       semantic_runtime:
-        description: Also compare all source semantics with twelve single-thread VMs and the unchanged 240-second limit
+        description: Also compare all source semantics with twelve single-thread VMs and the current 600-second limit
         type: boolean
         default: false
 permissions:

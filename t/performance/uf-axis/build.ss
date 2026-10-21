@@ -44,7 +44,7 @@
     (make '("table/trrel-uf" "table/storage" "program/initialization" "program/view-replay" "program/view-state" "program/evaluate"
             "t/performance/uf-axis/reference-view-replay"
             "t/performance/uf-axis/reference-view-state"
-                        "t/performance/uf-axis/reference-initialization"
+                        "t/performance/uf-dense/reference-initialization"
             "t/performance/uf-axis/reference-evaluate"
             "t/performance/uf-axis/reference-trrel-uf"
             "t/performance/uf-axis/fixture"

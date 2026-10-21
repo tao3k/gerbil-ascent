@@ -898,3 +898,131 @@ cores with twelve VM workers and the 600-second bound. Step timestamps show
 execution. These complete-run observations do not establish overall speedup;
 they must not be replaced by the local admission-allocation saving. Final
 acceptance must use the corrected fixture's new exact-head CI.
+
+* Cold preparation investigation and frozen reference carriers (2026-10-21)
+
+The unresolved starting observation is macOS cold preparation =337.29 s=,
+including =36.448307 s= source-context loading and =290.415526 s= make, at
+=816eb639=. Its source semantics took =279.32 s= (user =626.18 s=, system
+=73.84 s=). At =6fd2e3a3= the same Scheme implementation and SDK took =238.74 s=
+(user =560.55 s=, system =57.17 s=), after a preparation cache hit. The earlier
+=5c08a266= semantic receipt was =239.603450 s= with =622.589578 s= aggregate
+CPU and five fewer Cases. These are different runner observations, not a
+matched speedup experiment. In particular, a preparation cache hit does not
+explain the =82.30 s= difference in semantic CPU. The historical logs lack
+per-VM GC/load CPU attribution, so they cannot identify its cause.
+
+** Actual compiler work and source attribution
+
+The preserved native =std/make= diagnostic used the frozen installed SDK,
+three build workers, the original compiler profile and 253 non-production
+module specs. It observed 589 GSC invocations and 589 SDK helper invocations,
+all successful, with distinct inputs at each stage. It is a local diagnostic,
+not the CI runner or the later 254-module preparation inventory. Its make
+receipt is =208.917076 s=; no ratio against the CI =290.415526 s= is admitted.
+
+Containing GSC child CPU is =524.258583 s=, including =436.538209 s= in nested
+SDK helpers. Those values must not be added. Within the =192.739266 s= span
+from the first to last GSC observation, three jobs were active for
+=158.695078 s=, two for =31.284280 s=, one for =2.712375 s=, and none for
+=0.047532 s=. This observation does not support speculative queue changes.
+It excludes time before the first and after the last compiler process.
+
+The source-bound decoder now retains actual GCC pass paths, inclusive wall
+intervals and cumulative GGC allocation for each C input and its existing
+producer chain. It validates compiler identity, successful invocation, origin
+and exact top-level TOTAL before decoding pass costs. Duplicate sibling pass
+names, missing/nonfinite/negative wall values and invalid allocation counters
+are rejected. The original retained reports decode all 589 helper jobs and
+=20,008,276,032 bytes= cumulative GCC GGC allocation.
+
+Across these independent invocations, GCC internal TOTAL wall intervals sum
+to =309.512101 s=. Selected inclusive categories are =247.451817 s= for
+optimization/code generation, =203.636437 s= for callgraph expansion,
+=59.204170 s= for parsing and =34.796918 s= for preprocessing. Categories
+can overlap; summing them is invalid. GCC internal wall time is neither
+helper CPU nor make elapsed time. The generated Lean selector and Quint
+negative control reject selecting nested pass paths as invocation TOTAL.
+The JSON reader, GCC implementation and Scheme allocator are still external
+premises; these selector proofs do not establish their source refinement.
+
+** Removed redundant reference compilation
+
+Distinct module identities are not duplicate make invocations. Four
+initialization modules nevertheless had byte-identical bodies and only
+absolute dependencies; two invocation-local replay modules also had
+byte-identical bodies and no imports. The axis, growth and reuse controls now
+import the existing frozen dense initialization carrier directly. The
+materialization control imports the existing frozen dense replay carrier.
+Four duplicate source files are removed, without wrapper modules, compiler
+hooks, new caches or changes to the retained algorithm bodies.
+
+The retained initialization SHA-256 is
+=c7f86dcef7295fe4f198eaad0b7b66f62ad4658f359d1457a89a4a755e95713e=;
+the replay SHA-256 is
+=3ff78c5d8f9fc322ba279652eda0b233256d3a1d63c44411249247102f3a2893=.
+Tests bind both unchanged bodies. Each constructor/export invocation still
+allocates its private state. Byte-identical evaluators whose relative imports
+select different historical providers are deliberately retained. Analysis
+modules with mutable weak caches retain separate ownership as well.
+
+In the original diagnostic, the four removed identities accounted for twelve
+GSC jobs and =10.194014 s= inclusive GSC child CPU, containing =8.522731 s=
+helper CPU. This is avoided historical work, not a measured end-to-end wall
+saving or closure of the remaining cold preparation cost. Full source Cases
+and original performance controls still qualify the shared carriers.
+
+The on-demand source runtime control also still contained a historical
+240-second deadline despite the authorized 600-second native semantic lane.
+Both paths now use 600 seconds, twelve single-thread VM workers and three
+build cores; performance ratio thresholds remain unchanged. This corrects
+experiment configuration and does not reinterpret any historical timeout.
+Rust test execution remains twelve threads; Rust Ascent remains a development
+dependency only. No SDK, cancellation, resource or provenance policy changed.
+
+** Rejected experiments and remaining obligations
+
+The initial literal-substitution experiment did not discriminate its lanes:
+the installed =gambuild-C= overwrites the environment variable and already
+selects literal substitution on Darwin/GCC. Its twelve raw observations are
+A/A controls, not optimization evidence. No corresponding flag is adopted.
+A separate fixed-C GCC GC-threshold control preserved exact output bytes but
+increased paired CPU by =3.02%=, =0.59%= and =3.62%= on its three selected
+inputs. That candidate is rejected, not retried until green.
+
+Remaining obligations are a matched full cold-preparation measurement for the
+shared carriers, the large unchanged compiler/code-generation remainder,
+historical semantic CPU-difference diagnosis, exact cumulative Scheme heap
+event allocation and compiler/expander/allocator source refinement. A cache
+hit, lower local allocation, source selector proof or green implementation CI
+cannot discharge those obligations. Current-head semantic, formal and
+performance CI must be checked separately after publication.
+
+The retained native event logs also contain 90 matching batch identities and
+1,417 matching completed Cases in both historical runs. Aggregated *overlapping*
+batch observation windows were: startup to first Case =1,184.663064 s= versus
+=983.003940 s=; first-to-last Case window =1,584.430129 s= versus
+=1,354.763158 s=; last Case to batch completion =260.444456 s= versus
+=214.850142 s=. These are parent-forwarded event windows across concurrent
+VMs, not a wall-time decomposition or measured loader/GC CPU. Their decreases
+span all three observable regions. Neither a single slow Case nor preparation
+cache state alone accounts for this evidence; historical phase CPU and GC
+observations remain missing.
+
+Local validation of this change passed the full native source inventory:
+174 modules, 1,417 Cases, 90 batches and twelve single-thread VM workers.
+The 133-second local verdict is semantic evidence on the developer host,
+with concurrent formal work; it is not the three-core CI latency control.
+The complete guarded Lean inventory built successfully (182 jobs), and the
+formal command passed 85 positive Quint checks, 510 expected counterexamples
+and 57 source-render comparisons. These checks establish their stated
+semantic/selector boundaries, not the unresolved compiler/allocator claims.
+
+The six focused compiler/preparation/reference test inventories passed all 64
+tests. An earlier broad local workbench invocation is retained as a failure:
+19 modules could not import =ascent= because that interpreter had no producer
+PyO3 wheel; the new mutation name was initially absent from the expected
+inventory (corrected); and the unchanged macOS orphan-process supervision
+test received =EPERM= on its final group kill. No supervision or cancellation
+handler is weakened to hide this failure. Wheel-backed complete Python tests
+and current-head CI remain separate acceptance obligations.

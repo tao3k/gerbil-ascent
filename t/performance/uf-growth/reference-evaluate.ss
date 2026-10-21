@@ -23,7 +23,7 @@
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "reference-initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
+        (only-in :gerbil-ascent/t/performance/uf-dense/reference-initialization make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-ref
                  lattice-frontier-stage! lattice-frontier-rows lattice-frontier-clear!)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-admit-source-row!

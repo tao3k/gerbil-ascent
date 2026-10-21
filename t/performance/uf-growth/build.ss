@@ -44,7 +44,7 @@
     (make '("table/trrel-uf" "table/storage" "program/initialization" "program/view-replay" "program/view-state" "program/evaluate"
             "t/performance/uf-growth/reference-view-replay"
             "t/performance/uf-growth/reference-view-state"
-                        "t/performance/uf-growth/reference-initialization"
+                        "t/performance/uf-dense/reference-initialization"
             "t/performance/uf-growth/reference-evaluate"
             "t/performance/uf-growth/reference-trrel-uf"
             "t/performance/uf-growth/fixture"

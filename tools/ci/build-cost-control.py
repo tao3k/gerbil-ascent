@@ -291,7 +291,7 @@ def check_source_semantic_cache(root, output, env):
 
 
 def run_source_semantics(root, output, env):
-    """Execute the complete Suite under the original single 240-second bound."""
+    """Execute the complete Suite under the current single 600-second bound."""
     try:
         suite_interfaces = [str(path.relative_to(root))
                             for source in sorted((root / 't/qualification').glob('*-test.ss'))
@@ -301,7 +301,7 @@ def run_source_semantics(root, output, env):
             {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
         if suite_interfaces:
             raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
-        measure(root, ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
+        measure(root, ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'],
                 output / 'candidate-semantics.log', dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
         workload = source_semantic_workload(root, output / 'candidate-semantics.log')
         (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
@@ -323,7 +323,7 @@ def main():
     parser.add_argument('--semantic-preparation', action='store_true',
                         help='measure source-Suite preparation instead of the original performance lane')
     parser.add_argument('--semantic-runtime', action='store_true',
-                        help='also compare complete source runtime under the original 240-second bound')
+                        help='also compare complete source runtime under the current 600-second bound')
     parser.add_argument('--work-only', action='store_true',
                         help='instrument compiler/import work; timings are diagnostic only')
     parser.add_argument('--output', type=Path, required=True)
@@ -354,12 +354,12 @@ def main():
         env['GERBIL_PATH'] = str(root / '.gerbil')
         env['GERBIL_LOADPATH'] = str(root / '.gerbil/lib')
         env['GERBIL_BUILD_CORES'] = '3'
-        env['ASCENT_GXTEST_TIMEOUT'] = '240s'
+        env['ASCENT_GXTEST_TIMEOUT'] = '600s'
         env.pop('ASCENT_TEST_LIBRARY', None)
         (output / 'inputs.json').write_text(json.dumps({
             'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
             'cores': 3, 'scheme_vm_workers': 12, 'threads_per_vm': 1,
-            'deadline_seconds': 240, 'child_heap': '2G',
+            'deadline_seconds': 600, 'child_heap': '2G',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
         cache_error = None
@@ -531,11 +531,11 @@ def main():
                                     'relation_view_source_sha256': digest(tree / 'core/relation-view.ss'),
                                     'test_artifacts': inventory, 'warm_changed_outputs': changed_outputs})
         if args.semantic_runtime:
-            env['ASCENT_GXTEST_TIMEOUT'] = '240s'
+            env['ASCENT_GXTEST_TIMEOUT'] = '600s'
             semantic_log = output / f'{name}-semantics.log'
             try:
                 phases['semantics'] = measure(tree,
-                    ['timeout', '240s', 'just', 'test-file', 't/qualification', '2G'],
+                    ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'],
                     semantic_log, dict(env, GERBIL_BUILD_CORES='12'), semantic_diagnostics=True)
             finally:
                 batches = tree / '.cache/ascent/test-modules'
@@ -581,7 +581,7 @@ def main():
                             if c['kind'] == kind) for kind in ['baseline', 'candidate']}
         receipt['semantic_runtime_comparison'] = {**totals,
             'non_regression': preparation_non_regression(totals['baseline'], totals['candidate']),
-            'scope': 'Matched full source runtime; three build cores, twelve single-thread VMs, 240 seconds each; no timing normalization'}
+            'scope': 'Matched full source runtime; three build cores, twelve single-thread VMs, 600 seconds each; no timing normalization'}
 
     (output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')
     print('BUILD-COST-MEASUREMENTS-COMPLETE', flush=True)

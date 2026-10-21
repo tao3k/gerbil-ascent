@@ -4,7 +4,7 @@
 (import :std/test :gerbil-ascent/core/relation-view :gerbil-ascent/program/view-replay
         :gerbil-ascent/table/trrel-uf
         :gerbil-ascent/t/performance/uf-materialization/fixture
-        (prefix-in :gerbil-ascent/t/performance/uf-materialization/reference-view-replay old-))
+        (prefix-in :gerbil-ascent/t/performance/uf-dense/reference-view-replay old-))
 (export ascent-uf-materialization-test)
 (def (stream view)
   (let (rows [])

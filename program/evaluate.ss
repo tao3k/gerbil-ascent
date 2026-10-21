@@ -4,7 +4,8 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
+(import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run)
+        (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
                  round-work-write! round-work-reset! round-work-commit-indices round-work-complete!
                  round-layout-view-staging? round-layout-lattice-staging?)
         (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
@@ -21,7 +22,6 @@
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
                  gerbil-ascent-commit-source-replacement!)
         (only-in :clan/poo/object .o .ref object?)
-        (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-ref
@@ -34,7 +34,7 @@
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
-        (only-in "types.ss" GerbilAscentSessionContract gerbil-ascent-fact-limit?)
+        (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-session-reuse! make-closure-seed-state session-reuse-affected)
@@ -58,7 +58,17 @@
 (import "execution-control.ss")
 
 (export gerbil-ascent-evaluate-program gerbil-ascent-make-engine
-        gerbil-ascent-make-updated-engine)
+        gerbil-ascent-make-updated-engine
+        gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state)
+
+(def (gerbil-ascent-make-engine-state program (analysis #f) (schema #f)
+                                     (measure-rule-times? #f) (plan-error #f) (reuse #f))
+  (%make-engine program #t analysis schema measure-rule-times? plan-error reuse))
+
+(def (gerbil-ascent-make-updated-engine-state previous candidate completed
+           analysis schema measure-rule-times? (source-cut #f) (publication #f))
+  (gerbil-ascent-make-engine-state candidate analysis schema measure-rule-times? #f
+    (gerbil-ascent-prepare-session-reuse previous candidate completed analysis source-cut publication)))
 
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
@@ -101,11 +111,16 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
-                                (schema-override #f)
-                                (measure-rule-times? #f)
-                                (plan-error #f)
-                                (reuse #f)
+                                (schema-override #f) (measure-rule-times? #f)
+                                (plan-error #f) (reuse #f)
                                 (workers 1) (canceled? #f))
+  (let (state (%make-engine program session? analysis-override schema-override
+                            measure-rule-times? plan-error reuse workers canceled?))
+    (if session? (engine-state-public state) state)))
+
+(def (%make-engine program session? (analysis-override #f)
+                   (schema-override #f) (measure-rule-times? #f)
+                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f))
   (unless (or (not canceled?) (procedure? canceled?))
     (error "invalid ASCENT cancellation predicate" canceled?))
   (when (and canceled? (or session? reuse measure-rule-times?))
@@ -798,9 +813,9 @@
                                        (.ref candidate 'relations)))))))
                 (when (and (eq? mode 'replace) (> next-count input-limit))
                   (error "ASCENT session input fact budget exceeded"))
-                (let (result ((.ref (gerbil-ascent-make-engine
-                                     candidate #t analysis schema
-                                     measure-rule-times?) '.run)))
+                (let (result ((engine-state-run
+                               (gerbil-ascent-make-engine-state
+                                candidate analysis schema measure-rule-times?))))
                   ;; Append charges after fresh callbacks, as in the original
                   ;; engine; replacement adopts its preflight occurrence total.
                   (set! source-count (or next-count (+ source-count 1)))
@@ -967,20 +982,11 @@
                        (quotient (* duration-nanoseconds (jiffies-per-second))
                                  1000000000)))
                   (run-retained! published))))
-          (validate GerbilAscentSessionContract
-                    (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
-                        (.append-source!
-                         (if single-set-source?
-                           append-single-set-source! append-source!))
-                        (.replace-source! replace-source!)
-                        (.run run-session!)
-                        (.run-timeout run-timeout!)
-                        (.analysis analysis)
-                        (.schema schema)
-                        (.native-publication (lambda () owned-publication))
-                        (.recomputed? (lambda () recompute-from-source?))
-                        (.source-additions source-additions)
-                        (.source-overrides source-overrides))))
+          (make-engine-state
+           (if single-set-source? append-single-set-source! append-source!)
+           replace-source! run-session! run-timeout! analysis schema
+           (lambda () owned-publication) (lambda () recompute-from-source?)
+           source-additions source-overrides))
           run!)))))
 
 ;; : (-> Program EvaluationResult)

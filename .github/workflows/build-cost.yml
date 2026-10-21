@@ -4,23 +4,11 @@ name: macOS semantics and build experiments
 on:
   pull_request:
     paths:
-      - build.ss
+      - '**/*.ss'
       - gerbil.pkg
       - dev/**
-      - build-modules.ss
+      - bindings/c/**
       - justfile
-      - t/harness/build.ss
-      - t/harness/test.ss
-      - t/qualification/ascent-source-import-test.ss
-      - bindings/build-entry.ss
-      - bindings/artifact.ss
-      - t/harness/library-spec.ss
-      - t/performance/ascent-scenario-performance-test.ss
-      - t/qualification/scheme-artifact-test.ss
-      - t/qualification/ascent-support-study-output.ss
-      - t/qualification/ascent-steensgaard-test.ss
-      - t/qualification/ascent-steensgaard-reference.ss
-      - t/performance/ascent-steensgaard-performance-test.ss
       - workbench/src/ascent_workbench/supervision.py
       - workbench/tests/test_supervision.py
       - tools/ci/build-cost-control.py
@@ -28,7 +16,6 @@ on:
       - packages/proofs/lean/ExecutionPolicy.lean
       - packages/proofs/lean/Preparation*.lean
       - packages/proofs/quint/Preparation*.qnt
-      - t/qualification/fixtures/preparation/**
       - .github/workflows/build-cost.yml
   workflow_dispatch:
     inputs:
@@ -140,10 +127,12 @@ jobs:
           path: ${{ runner.temp }}/build-cost
           include-hidden-files: true
 
-  macos-semantics:
+  macos-preparation:
     if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '' && !inputs.process_throughput) }}
     runs-on: macos-26
     timeout-minutes: 30
+    outputs:
+      prepared: ${{ steps.semantic-preparation.outcome == 'success' && steps.prepared-artifact.outcome == 'success' }}
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
       GERBIL_BUILD_CORES: "3"
@@ -210,14 +199,33 @@ jobs:
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # END GENERATED PREPARATION CACHE-ADMISSION
-      - name: Build current Scheme package and test support
+      - name: Restore declared dependency build
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.preparation.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Install declared Scheme dependencies
+        # A compatible, admitted prefix already contains these exact declarations.
+        # Reinstalling rebuilds Core and invalidates unchanged support interfaces.
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' && steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
-          just build
-          just check-policy
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Build current Scheme package
+        run: gerbil build
+      - name: Check development policy
+        run: just check-policy
       - name: Verify supported SDK compiler profile and allocation counters
         run: |
           PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
@@ -243,9 +251,75 @@ jobs:
             .gerbil
             .cache/ascent/compiled-library
           key: ${{ steps.preparation-cache.outputs.cache-primary-key }}
+      - name: Package current compilation without changing source clocks
+        if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/macos-semantics/head"
+          printf '%s\n' '${{ steps.preparation.outputs.toolchain }}' > "$RUNNER_TEMP/macos-semantics/toolchain"
+          git ls-files -z -- '*.ss' bindings/c ':(exclude)manifest.ss' > "$RUNNER_TEMP/prepared-inputs"
+          tar -cf "$RUNNER_TEMP/macos-semantics/prepared.tar" --null -T "$RUNNER_TEMP/prepared-inputs" .gerbil .cache/ascent/compiled-library
+      - name: Transfer this run's prepared compilation
+        id: prepared-artifact
+        if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-prepared-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/macos-semantics/prepared.tar
+            ${{ runner.temp }}/macos-semantics/head
+            ${{ runner.temp }}/macos-semantics/toolchain
+          compression-level: 1
+          retention-days: 1
+      - name: Preserve semantic diagnostics and every batch log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-preparation-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/macos-semantics/*.log
+            ${{ runner.temp }}/macos-semantics/cache
+            .cache/ascent/test-modules
+          include-hidden-files: true
+
+  macos-semantics:
+    needs: macos-preparation
+    # Cache diagnostics must not suppress a successfully prepared semantic run.
+    if: ${{ always() && !cancelled() && needs.macos-preparation.outputs.prepared == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      GERBIL_BUILD_CORES: "3"
+      ASCENT_GXTEST_TIMEOUT: "600s"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Install released SDK prerequisites
+        run: |
+          brew update
+          brew install gcc just openssl@3 zlib sqlite coreutils pkg-config
+          command -v gcc-16
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Install unchanged immutable SDK
+        env:
+          GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
+        run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Download this run's prepared compilation
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: macos-prepared-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/macos-semantics
+      - name: Verify source and SDK identity before loading compilation
+        run: |
+          test "$(cat "$RUNNER_TEMP/macos-semantics/head")" = "$(git rev-parse HEAD)"
+          fingerprint="$(sha256sum "$GERBIL_HOME/bin/gxi" "$GERBIL_HOME/bin/gsc" "$GERBIL_HOME/include/gambit.h" "$(command -v gcc-16)" "$(gcc-16 -print-prog-name=cc1)" "$(xcrun --find ld)" "$GERBIL_PREFIX/gerbil-build-receipt.json" | sha256sum | cut -d ' ' -f 1)"
+          test "$(cat "$RUNNER_TEMP/macos-semantics/toolchain")" = "$fingerprint"
+          tar -xf "$RUNNER_TEMP/macos-semantics/prepared.tar"
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
       - name: Qualify complete source semantics with twelve single-thread VMs
         # A cache-check failure must not suppress full semantic verification.
-        if: ${{ !cancelled() && steps.semantic-preparation.outcome == 'success' }}
+        if: ${{ !cancelled() && success() }}
         env:
           GERBIL_BUILD_CORES: "12"
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
@@ -259,6 +333,7 @@ jobs:
         with:
           name: macos-semantics-${{ github.sha }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/macos-semantics
+            ${{ runner.temp }}/macos-semantics/*.log
+            ${{ runner.temp }}/macos-semantics/verified
             .cache/ascent/test-modules
           include-hidden-files: true

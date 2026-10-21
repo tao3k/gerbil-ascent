@@ -11,7 +11,9 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
-                 gerbil-ascent-owned-root-contract GerbilAscentRelationContract
+                 gerbil-ascent-owned-root-contract
+                 gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+                 GerbilAscentRelationContract
                  GerbilAscentLatticeContract
                  GerbilAscentTermContract
                  GerbilAscentAtomContract
@@ -371,15 +373,15 @@
 (def (gerbil-ascent-variable name)
   (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))
   (declaration-check GerbilAscentTermContract
-            (.o (:: @ Term.) kind: 'variable value: name)))
+            (gerbil-ascent-make-term-value Term. 'variable name)))
 
 (def (gerbil-ascent-wildcard)
   (declaration-check GerbilAscentTermContract
-            (.o (:: @ Term.) kind: 'wildcard value: #f)))
+            (gerbil-ascent-make-term-value Term. 'wildcard #f)))
 
 (def (gerbil-ascent-literal literal-value)
   (declaration-check GerbilAscentTermContract
-            (.o (:: @ Term.) kind: 'literal value: literal-value)))
+            (gerbil-ascent-make-term-value Term. 'literal literal-value)))
 
 (def (gerbil-ascent-expression input-variables compute)
   (unless (and (list? input-variables)
@@ -387,8 +389,7 @@
                (procedure? compute))
     (error "invalid ASCENT head expression" input-variables compute))
   (declaration-check GerbilAscentTermContract
-            (.o (:: @ Term.) kind: 'expression
-                value: (vector input-variables compute))))
+            (gerbil-ascent-make-term-value Term. 'expression (vector input-variables compute))))
 
 (def (gerbil-ascent-pattern output-variables matcher)
   (unless (and (list? output-variables)
@@ -396,15 +397,11 @@
                (procedure? matcher))
     (error "invalid ASCENT pattern" output-variables matcher))
   (declaration-check GerbilAscentTermContract
-            (.o (:: @ Term.) kind: 'pattern
-                value: (vector output-variables matcher))))
+            (gerbil-ascent-make-term-value Term. 'pattern (vector output-variables matcher))))
 
 (def (gerbil-ascent-atom relation-name atom-terms)
   (declaration-check GerbilAscentAtomContract
-            (.o (:: self Atom.) ascent-clause-kind: 'atom
-                relation: relation-name terms: atom-terms
-                (.plan (lambda (atom-plan bound)
-                         (atom-clause-plan self atom-plan bound))))))
+    (gerbil-ascent-make-atom-value Atom. relation-name atom-terms atom-clause-plan)))
 
 (def (gerbil-ascent-guard input-variables guard-procedure
                           (operator-descriptor #f))

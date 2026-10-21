@@ -11,7 +11,11 @@
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
+        (only-in "evaluate.ss" gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state)
+        (only-in "engine-state.ss" engine-state-append-source! engine-state-replace-source! engine-state-run
+                 engine-state-run-timeout engine-state-analysis engine-state-schema
+                 engine-state-publication engine-state-recomputed?
+                 engine-state-source-additions engine-state-source-overrides)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
@@ -91,16 +95,16 @@
          (replay-on-timeout? #f)
          (replacement-active? #f)
          (last-result #f)
-         (engine (gerbil-ascent-make-engine initial-program #t #f #f
+         (engine (gerbil-ascent-make-engine-state initial-program #f #f
                                           measure-rule-times?))
-         (engine-analysis (.ref engine '.analysis))
-         (engine-schema (.ref engine '.schema))
+         (engine-analysis (engine-state-analysis engine))
+         (engine-schema (engine-state-schema engine))
          (engine-base-rows
           (list->vector (map (lambda (relation) (.ref relation 'rows))
                              initial-relations)))
-         (engine-append (.ref engine '.append-source!))
-         (engine-additions (.ref engine '.source-additions))
-         (engine-overrides (.ref engine '.source-overrides)))
+         (engine-append (engine-state-append-source! engine))
+         (engine-additions (engine-state-source-additions engine))
+         (engine-overrides (engine-state-source-overrides engine)))
     (for-each
      (lambda (relation index)
        (hash-put! positions (.ref relation 'name) (+ index 1)))
@@ -142,10 +146,10 @@
       (set! engine #f)
       (let* ((cut (prepare-source-cut rows))
              (candidate (source-snapshot-program cut))
-             (fresh (gerbil-ascent-make-engine candidate #t
+             (fresh (gerbil-ascent-make-engine-state candidate
                                               engine-analysis engine-schema
                                               measure-rule-times?))
-             (restored-result (and initialized? ((.ref fresh '.run)))))
+             (restored-result (and initialized? ((engine-state-run fresh)))))
         (adopt-engine! fresh cut)
         (set! pending (snapshot-copy rows))
         (set! partial? #f)
@@ -159,9 +163,9 @@
       (set! source-snapshot cut)
       (set! engine fresh)
       (set! replay-on-timeout? #f)
-      (set! engine-append (.ref fresh '.append-source!))
-      (set! engine-additions (.ref fresh '.source-additions))
-      (set! engine-overrides (.ref fresh '.source-overrides))
+      (set! engine-append (engine-state-append-source! fresh))
+      (set! engine-additions (engine-state-source-additions fresh))
+      (set! engine-overrides (engine-state-source-overrides fresh))
       (set! engine-base-rows (source-snapshot-rows cut)))
     (def (attempt thunk)
       (with-catch
@@ -240,7 +244,7 @@
              (outcome
               (attempt
                (lambda ()
-                 ((.ref engine '.replace-source!) name owned-rows)
+                 ((engine-state-replace-source! engine) name owned-rows)
                  (vector-set! pending index (cons owned-rows []))))))
         (unless (vector-ref outcome 0)
           (vector-set! pending index source-state)
@@ -286,12 +290,12 @@
         (let* ((cut (prepare-source-cut prospective))
                (candidate (source-snapshot-program cut))
                (fresh (if initialized?
-                       (gerbil-ascent-make-updated-engine
+                       (gerbil-ascent-make-updated-engine-state
                         committed candidate committed-result
                         engine-analysis engine-schema measure-rule-times? cut
-                        (and engine ((.ref engine '.native-publication))))
-                       (gerbil-ascent-make-engine candidate #t engine-analysis engine-schema measure-rule-times?)))
-               (result ((.ref fresh '.run))))
+                        (and engine ((engine-state-publication engine))))
+                       (gerbil-ascent-make-engine-state candidate engine-analysis engine-schema measure-rule-times?)))
+               (result ((engine-state-run fresh))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))
           ;; A trusted owner checks evidence against this completed prospective
@@ -317,7 +321,7 @@
         (let* ((next-pending
                 (if direct-appends? (engine-source-snapshot) pending))
                (outcome (attempt (lambda ()
-                  (let (result ((.ref engine '.run)))
+                  (let (result ((engine-state-run engine)))
                     (ascent-accept-publication!)
                     result)))))
           (unless (vector-ref outcome 0)
@@ -351,15 +355,15 @@
                    ;; committed round boundaries rather than return that
                    ;; already-complete validation snapshot.
                    (when (or replay-on-timeout?
-                             ((.ref engine '.recomputed?)))
+                             ((engine-state-recomputed? engine)))
                      (let* ((cut (prepare-source-cut next-pending))
                             (candidate (source-snapshot-program cut))
                             (fresh
-                             (gerbil-ascent-make-engine
-                              candidate #t engine-analysis engine-schema
+                             (gerbil-ascent-make-engine-state
+                              candidate engine-analysis engine-schema
                               measure-rule-times?)))
                        (adopt-engine! fresh cut)))
-                   (let (result ((.ref engine '.run-timeout) duration-nanoseconds))
+                   (let (result ((engine-state-run-timeout engine) duration-nanoseconds))
                      (when (.ref result 'finished) (ascent-accept-publication!))
                      result)))))
           (unless (vector-ref outcome 0)

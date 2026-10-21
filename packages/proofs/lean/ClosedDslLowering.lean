@@ -106,6 +106,11 @@ def newCorpusTermChecks : Nat := 1024 * publicTermChecks 14 + 2048 * ownedTermCh
 -- Successful positive snapshots check the complete caller root and copied
 -- root. The frozen copier additionally checks Term/Atom/Rule intermediates.
 -- No theorem here identifies validation callbacks with arbitrary pure functions.
+-- These are complete membership-check occurrences, not counts of receipt
+-- allocations or invocations of the mutable public .classify method. Canonical
+-- value views may perform the same membership checks without those receipts;
+-- instrumentation selects the compatibility path and cannot measure fast-path
+-- allocation. Native source refinement and allocator costs remain separate.
 def publicSnapshotTermChecks (terms : Nat) : Nat := terms + publicTermChecks terms
 def capturedSnapshotTermChecks (terms : Nat) : Nat := terms + ownedTermChecks terms
 

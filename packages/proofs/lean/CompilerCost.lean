@@ -7,6 +7,29 @@ JSON/S-expression readers and allocator implementation remain explicit premises.
 The source renderings below bind the deployed guards, not a proof of all SDK code. -/
 namespace Ascent.CompilerCost
 
+-- Native weak-table lookup and object revisions are external premises. This
+-- predicate binds the actual source admission guard, not the whole allocator.
+def declaredShapeCurrent (expected : String) (entry : Option (String × Nat)) (revision : Nat) : Bool :=
+  match entry with
+  | none => false
+  | some (kind, recorded) => expected == kind && revision == recorded
+
+theorem unissued_shape_falls_back (kind : String) (revision : Nat) :
+    declaredShapeCurrent kind none revision = false := rfl
+
+theorem edited_shape_falls_back (kind : String) (recorded current : Nat) (changed : current ≠ recorded) :
+    declaredShapeCurrent kind (some (kind, recorded)) current = false := by
+  simp [declaredShapeCurrent, changed]
+
+theorem wrong_shape_falls_back (expected actual : String) (revision : Nat) (different : expected ≠ actual) :
+    declaredShapeCurrent expected (some (actual, revision)) revision = false := by
+  simp [declaredShapeCurrent, different]
+
+def declarationShapeSchemeSource : String :=
+  "(def (declared-value-shape? kind value)\n" ++
+  "  (let (entry (hash-get declared-value-shapes value))\n" ++
+  "    (and entry (eq? kind (car entry)) (= (object-revision value) (cdr entry)))))\n"
+
 def hostLimit : Nat := 512
 -- Exact predicate in the pinned gambit.h: downgrade iff limit > 0 && labels > limit.
 def singleHost (labels limit : Nat) : Bool := limit == 0 || labels ≤ limit

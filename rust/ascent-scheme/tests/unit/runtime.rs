@@ -21,6 +21,7 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         let root = values::encode(&runtime.runtime, &packet).unwrap();
         assert_eq!(values::decode(root, 0).unwrap(), packet);
     }
+    check_integer_edges(&runtime);
     let call = |fields| runtime.call(&Data::Map(fields));
     let request = |operation: &str, fields: Vec<(&str, Data)>| {
         let mut out =
@@ -99,4 +100,22 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         .is_err()
     );
     assert!(call(request("describe", vec![])).is_ok());
+}
+
+fn check_integer_edges(runtime: &Runtime) {
+    // Exercise native fixnum edges and the exact arbitrary-precision fallback
+    // on both sides of the host word, including nested borrowed projections.
+    let integers = [
+        num_bigint::BigInt::from(0),
+        num_bigint::BigInt::from(isize::MIN),
+        num_bigint::BigInt::from(isize::MAX),
+        -(num_bigint::BigInt::from(1) << 61usize),
+        (num_bigint::BigInt::from(1) << 61usize) - 1,
+        num_bigint::BigInt::from(1) << 61usize,
+        num_bigint::BigInt::from(1) << 4096usize,
+        -(num_bigint::BigInt::from(1) << 4096usize),
+    ];
+    let packet = Data::List(integers.into_iter().map(Data::Integer).collect());
+    let root = values::encode(&runtime.runtime, &packet).unwrap();
+    assert_eq!(values::decode(root, 0).unwrap(), packet);
 }

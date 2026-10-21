@@ -376,8 +376,10 @@
 ;;; relations remain private to this one attempt.
 ;; : (-> ReasoningSnapshot ReasoningCandidate RelationalProgram)
 (def (candidate-program snapshot spec)
+  ;; Lowering creates fresh Terms per occurrence. Use the ordinary complete
+  ;; root Contract rather than constructing an unused shared-Term refinement.
   (gerbil-ascent-construct-inert-program
-   (cut candidate-lower-program snapshot spec)))
+   (cut candidate-lower-program snapshot spec) #f))
 
 (def (candidate-lower-program snapshot spec)
   (let* ((source (reasoning-snapshot-relations snapshot))

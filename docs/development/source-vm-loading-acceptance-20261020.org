@@ -1465,3 +1465,498 @@ in 83.445 milliseconds under a shared host; this diagnostic neither admits a
 performance gate nor establishes the previous continuation samples as a CPU
 time distribution. The remaining runtime/performance and source-proof gaps
 remain open until their complete current-head controls finish.
+
+* 2026-10-21: complete-head failures and production concurrency evidence
+
+The complete main CI for =18751d5c513fd7ae6e768f580866b9e1fb34d2d3=
+(run =39576599499=) passed Rust/PyO3, Python consumers, hygiene, formal,
+formal conformance, BYODS and BYODS scale. Scheme semantics, performance and
+other oracles failed. The macOS companion =39576599557= exhausted its current
+600-second semantic deadline. Linux retained its original 180-second deadline.
+The semantic dispatch was 168 modules, 86 batches and twelve workers. Linking
+success did not close either semantic deadline or the performance lane.
+
+The product-session original 1,000-sample performance fixture failed in Linux
+at p95 82.086145ms against its unchanged 2ms budget. Nonpositive-session p95
+was 39.729986ms against 1ms; reachability closure was 2.713976ms against 1ms.
+The other-oracle lane recorded 63 passing fixtures and five original-deadline
+timeouts. These are retained failures, not classified as noise or deadlock.
+
+The separate production experiments =39576701247= (bridge =cfbc10c4=) and
+=39577027133= (bridge =8c23217d=) both built successfully and rejected their
+incomplete measurement matrices. The first exhausted the unchanged 240-second
+experiment bound in small/one-VM and parallel-closure/one-VM. The older bridge
+also returned an actual request Timeout in parallel-closure/one-VM; its normal
+request limit was not increased. Neither complete matrix is admitted.
+
+The following are individually valid rows from the first experiment, not a
+claim that its complete matrix passed. Twelve clients share one caller-owned
+Rayon pool. Every VM owner reported one processor. The host has three CPUs.
+Every fixed request changes its source and checks complete output against the
+independent closure oracle; every valid row also completed the 30-second soak.
+
+| Workload | Backend | Workers | Requests/s | Request p95 ms |
+|----------+---------+---------+------------+----------------|
+| closure  | VM      |       1 |       6.18 |        2239.64 |
+| closure  | VM      |       3 |      17.10 |         982.05 |
+| closure  | VM      |      12 |      21.17 |         773.23 |
+| closure  | Rayon   |       1 |    2076.73 |           8.49 |
+| closure  | Rayon   |       3 |    2322.10 |           7.44 |
+| closure  | Rayon   |       6 |    2439.27 |           8.44 |
+| closure  | Rayon   |       8 |    3461.44 |           4.58 |
+| closure  | Rayon   |      12 |    2337.17 |           7.58 |
+| parallel-closure | VM |     3 |       1.32 |        9566.40 |
+| parallel-closure | VM |    12 |       1.36 |        9123.48 |
+| parallel-closure | Rayon |  1 |      77.95 |         159.25 |
+| parallel-closure | Rayon |  3 |      94.53 |         178.90 |
+| parallel-closure | Rayon |  6 |      85.03 |         229.21 |
+| parallel-closure | Rayon |  8 |      68.56 |         344.92 |
+| parallel-closure | Rayon | 12 |      69.14 |         333.62 |
+
+Closure twelve-VM throughput is approximately 3.43 times its valid one-VM row.
+Parallel-closure three-thread Rayon throughput is approximately 1.21 times its
+one-thread row; eight/twelve threads regress. A three-CPU host cannot qualify
+twelve-core scaling. These unpaired bridge experiments do not establish a
+causal benefit from changing the bridge REV, and no incomplete denominator is
+used for a VM speedup claim. Raw per-request phases, owners, hashes, failures
+and source-clean assertions remain in both Actions artifacts.
+
+* Weak identity backend: source evidence and isolated candidate
+
+A native sample of the original product workload identified Gambit's generic
+table probing as a major hotspot. The frozen Gambit source =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=
+selects its internal identity backend when =test: eq?= has no explicit custom
+hash. The released Gerbil weak-table wrapper supplies =eq?-hash= explicitly.
+A controlled 10,000-object lookup probe checked identical values across both
+existing APIs and observed 30.588ms versus 1.998ms. This is a diagnostic probe,
+not an end-to-end benchmark qualification or a change to the compiler/SDK.
+
+The authorized isolated POO commit
+=8f605b91dbcac0df917ccbfc537d3a22f83b756e= changes only two constructors:
+read-issuance storage remains weak on keys and values; dependency storage
+remains weak on keys. Existing SDK HashTable adaptation is reused. Producer
+authentication, birth closures, mutation checks, invalidation traversal and
+callback order are unchanged. Thirteen existing issuance/replay/weak-lifetime
+Cases passed. Full local POO preparation exhausted its original 300-second
+library stage under other host compilation, before full tests; that preparation
+failure is not reported as a semantic pass. Core maintenance commit
+=98c4bd6a2e14178291210bd2f46457db46ce7743= changes only the fixed POO dependency
+from the admitted Core =44a99d4=; it does not import other tasks' Core changes.
+
+The corresponding ASCENT analysis/schema tables retain their original SDK
+locked HashTable wrapper and the same mutexes while selecting the internal
+weak identity backend. Declaration identity checks, failed-build publication
+and per-operation locking remain unchanged.
+
+The original local 1,000-sample product gate still failed: baseline p95
+107.092ms, the private-engine diagnostic 49.381ms, and the POO-only diagnostic
+23.151ms, all against 2ms. Combining candidates did not qualify the gate either.
+A separate 1,000-call original-truth cost probe observed CPU p95 about 1.98ms,
+wall p95 about 32.33ms and zero in-call GCs. Other host builds were active;
+these observations do not close a dedicated-host latency gate. SDK allocation
+estimates jumped between roughly 1.77MB and 332MB without in-call collections;
+they are not promoted to verified cumulative Scheme allocator costs.
+
+* Latest bridge integration boundary
+
+The production bridge pins now select PR #18 =2cc3c66363462eed6778057bed9cbbe2c7a1f36d=.
+Its released-SDK Linux/macOS and fixed-owner lifecycle lanes passed; its Bazel
+lanes failed. ASCENT retains the existing frozen SDK and does not consume those
+failed Bazel configurations. The build-only legacy IR generator pin is unchanged.
+The new Scheme-owned service is an explicit upstream API, not a feature that
+silently replaces ASCENT's process pool on REV update. Twelve independent
+single-thread process VMs remain the required production ownership model.
+
+ASCENT's value transport reuses upstream fixnum construction, exact-big-integer
+fallback and root-borrowed snapshot projections. It introduces no JSON path,
+word-layout constants or handwritten FFI. Focused native tests include signed
+host-word edges, both fixnum boundaries, nested snapshots and signed 4,096-bit
+integers. Type checking against the new fixed bridge completed successfully;
+full native execution and exact-head CI remain separate acceptance obligations.
+No allocation probe, finite test, pool-size assertion or abstract Lean/Quint
+model establishes complete allocator, mutable-cache or scheduling source
+refinement. Those obligations must remain explicitly open until checked.
+
+The private-engine admission candidate is withdrawn from the implementation:
+its allocation reduction and finite method tests do not establish equivalence
+of every contextual responsibility. The production engine retains the original
+GerbilAscentSessionContract validation. The three admission-order/shape Cases
+remain as regression tests rather than evidence for bypassing that validation.
+
+* Concurrent socket fixture: retained failure and root controls
+
+The latest-bridge native unit run passed the original DSL/value test, including
+all new exact-integer edges, but failed the existing immediate EOF assertion.
+The failure was retained (11 passes, one failure); an instrumented unchanged
+assertion later happened to pass and was not accepted as a repair. Increasing
+the same assertion to 10,000 iterations reproduced the failure at attempt 2.
+Non-consuming MSG_PEEK returned EAGAIN after the local writer was dropped.
+Three explicit controls used the same compiled test: socket alone passed all
+10,000 checks; concurrent child spawn failed at attempt 0; concurrent Scheme
+initialization passed. The local Rust standard library source confirms that
+macOS socketpair creation and CLOEXEC setting are separate operations; a spawned
+process may also temporarily own inherited descriptors before exec. A local
+drop is not proof of the last kernel owner during that interval.
+
+The test fixtures now protect the complete short socketpair lifetime and the
+other test's spawn syscall with one test-only barrier. The original drop/EOF
+assertion is retained and strengthened to 10,000 iterations. The barrier is
+released before the three-second child-retirement workload, and no production
+transport, cancellation check, timeout, Rayon pool, VM ownership or test-thread
+count changes. The first implementation placed a test static in lib.rs and was
+rejected by the existing ASP facade rule; it was moved to the private transport
+module without relaxing that rule. All diagnostic failures remain retained.
+
+The combined local source run correctly dispatched 169 modules/86 batches to
+twelve single-processor workers. It still exhausted 600 seconds after 153 module
+completions and 1,255 successful Cases, with no recorded assertion failure. Its
+linked driver was rejected (=linked=0=) because the copied historical image did
+not match candidate source; the original gxi fallback was retained. Other host
+builds were active. This is neither complete semantic acceptance nor a matched
+three-CPU performance experiment. The earlier accidental three-worker setup
+was cancelled, retained and not admitted.
+
+The default-Rayon all-target Clippy check exposed two line-limit failures: the
+expanded native conversion test (110/100) and the production throughput main
+(105/100). The integer checks now run in one helper on the same VM, and argument
+validation stays in the benchmark parser. No checks or workloads were removed.
+The existing Scheme-interface CI Clippy command now selects ascent-scheme as
+well as ascent-python and explicitly enables its Rayon feature, so benchmark
+owners receive the same strict check. No workflow step or job was added.
+The focused complete ascent-scheme all-target check passed after these changes.
+
+The retained parallel-closure receipts put most request wall time in replace:
+median 125.80ms with one Rayon worker and 88.60ms with three, versus about
+5.26ms/5.39ms for run/export. SourceSession.replace performs candidate evaluation
+before atomic commit, so the latter is not the full inference cost. These
+phases include shared-pool queueing and cannot alone identify exclusive kernel,
+allocation or serial-publication CPU costs.
+
+
+* Separate macOS compilation from semantic execution
+
+Run 39593583875 at source 394d719807bd9c319e05bf3b09a10ec6477c1303
+was cancelled by the former 30-minute parent job budget. Dependency installation
+took approximately 14 minutes, preparation took 375.35 seconds, and semantic
+execution received only approximately 400 of its allowed 600 seconds. The
+recorded 91 module completions and 809 successful Cases are incomplete evidence.
+This cancellation is distinct from the Linux 180-second semantic timeout.
+
+The workflow now has a 30-minute preparation job and a separate 20-minute
+semantic job. The proposed 45-minute combined-job patch was not applied.
+Preparation transfers its current compilation through an immutable artifact
+scoped to this source revision and workflow attempt. Tar retains source clocks,
+file modes and library contents; the consumer checks the source revision and
+compiler fingerprint before loading the compilation. The consumer does not
+install package dependencies or invoke the build again. Cache verification
+failure remains a failing preparation result but does not suppress a successfully
+prepared complete semantic run. The diagnostic uploads remain separate.
+
+The semantic command still executes the entire qualification directory with
+12 single-processor VM workers, the 600-second limit and the original child heap.
+No semantic test selection, performance threshold or runtime behavior changed.
+Local checks passed workflow parsing, shell syntax for all job commands, a
+producer/consumer archive round trip with source-clock preservation, and all
+seven existing source-semantic CI control tests using the frozen SDK. Remote
+execution of the split jobs remains required. Job separation does not establish
+a cold-build speedup, complete semantic acceptance or source-cost refinement.
+
+
+* Completed split-job evidence at f2cd35a7
+
+macOS preparation job 119220342455 succeeded. SDK installation took 16 seconds,
+cache restoration took six seconds, and the combined dependency/build/policy
+step took 502 seconds. The restored compatible prefix did not prevent
+=gerbil deps --install= from compiling Core into a fresh =core-build-output-=
+directory. Subsequent preparation admitted zero support interfaces and checked
+380 modules. Its recorded phases were 32.720466 seconds loading source contexts,
+0.227612 seconds projecting resident contexts, 220.937232 seconds in make,
+and 5.269433 seconds publishing the support cache. Preparation completed in
+269.13 seconds; its production-rebuilt count was zero. These are observed
+phase costs, not evidence that all 380 modules were recompiled.
+
+The transferred artifact passed source and compiler identity checks in a fresh
+semantic job. Its package, library and static directories are ordinary
+directories. The full 600-second run completed 167 of 169 modules and 1,363
+Cases without a recorded assertion failure, then timed out. The remaining
+modules were ascent-candidate-flow-test and ascent-semi-naive-test. Both started
+approximately 390 seconds into execution. The latter completed its independent
+naive comparison around second 584 and entered its Actor comparison immediately
+before expiry. Queue order, case coverage and deadlines are unchanged.
+Linux still timed out at 180 seconds after 58 module completions and 470 Cases.
+The oracle-other lane passed 65 tests and timed out in three fixtures. Rust/PyO3,
+formal, formal-conformance and both BYODS lanes passed. Performance remained
+failed: nonpositive updates measured 2.783735ms against 1ms; product sessions
+4.009872ms against 2ms; table expressions 2.088047ms against 2ms. None of these
+failures is admitted as a pass.
+
+* Compatible dependencies and private execution state under acceptance
+
+Dependency installation now runs only on a missing compatible preparation
+cache. The existing compiler-input key includes both production and development
+dependency declarations; the source/SDK admission still precedes this decision.
+Cold prefixes retain the original native install commands. Production still
+runs gerbil build, while policy has its own step. The invalidation regression
+now explicitly changes dev/gerbil.pkg as well as gerbil.pkg and passes. This
+prevents reinstalling an already admitted dependency set from needlessly
+replacing support inputs. Exact-head remote timings remain required before
+claiming a cold or warm end-to-end improvement.
+
+Private evaluator state now uses a typed record of evaluator-owned closures and
+buffers. Public Engine publication and public Session publication retain their
+complete original GerbilAscentSessionContract; no caller-supplied method enters
+the private record. Recovery, nonpositive replay and Actor-session preflight
+consume this private state. Row admission, callback order, cancellation checks,
+budget charging, provenance and atomic publication remain in the same execution
+bodies. This differs from the earlier withdrawn weakened-Contract experiment.
+
+Before extracting the private record module, matched local compiled controls
+retained all 1,000 original product-result
+checks in each arm. Median user CPU was 1.5025ms for the original internal
+facade and 0.619ms for the candidate; summed in-call user CPU was 1.814322s and
+0.786244s. Wall p95 was 11.733ms and 10.934ms respectively, so this is not a
+2ms gate pass. Native loading samples separately showed dlopen/file validation
+waits. SDK allocation estimates remain unsuitable as true cumulative allocation
+receipts. Complete source semantics and exact-head CI are still required.
+
+* Rejected static-output interpretation
+
+The native logs scheduled 84 static-object jobs with the same paths across two
+links. That count alone does not count C compiler invocations: the frozen SDK
+checks file timestamps inside those jobs. Expanding the observation root to the
+whole library did not establish a repair and was withdrawn. Its 600-second
+local build timeout, during external compiler activity, remains a failure.
+A local temporary-prefix alias also differed from the SDK's canonical path:
+/tmp versus /private/tmp. Canonical paths are now passed to local diagnostic
+commands; the SDK and production build script are unchanged. This does not
+establish the same cause on CI. The strengthened existing artifact Case passed
+with both registered dynamic C and static object paths, rejecting an adjacent
+unregistered object; all 24 artifact Cases passed, including changed/missing
+output rejection. These finite checks do not prove cross-build source refinement.
+
+* Completed production throughput receipt at 394d7198
+
+Run 39593735400 used the fixed bridge revision 2cc3c663 on an audited three-CPU
+host and retained 12 concurrent clients. Twenty-three of 24 rows completed five
+samples and the sustained phase. The large-closure single-VM row timed out at
+its unchanged 240-second row budget after three samples, so the matrix remains
+incomplete. Small-workload median throughput for 1/3/12 single-thread VMs was
+11.793/42.439/44.536 requests/s; closure throughput was 11.439/22.310/25.697.
+Large-closure Rayon throughput for 1/3/6/8/12 threads was
+63.178/96.651/64.176/53.812/97.236 requests/s. Increasing thread count does not
+produce monotonic scaling on three CPUs. This receipt belongs to 394d7198,
+not to the later candidate or to a completed whole-matrix comparison.
+
+True cumulative Scheme allocation, complete compiler/decoder source refinement,
+and full mutable-cache/SCC/message refinement remain open. Green abstract
+models or isolated method checks do not close those obligations.
+
+
+The first private-state layout failed the unchanged ASP 1,000-line owner rule.
+Its record and full public Contract projection were extracted into
+program/engine-state.ss; the original rule now reports zero errors. The public
+wrapper signature retains ordinary compact formatting. All three public
+Contract Cases passed after extraction, and the eight source-CI/cache controls
+passed. The subsequent canonical-prefix local build also reached its diagnostic
+600-second build bound during other compiler activity. That build bound is not
+the semantic deadline and supplies no accepted timing comparison. Complete
+native dependency preparation is now using the existing CPU-progress build
+supervisor; semantic execution retains its original independent 600-second cap.
+The module catalog change intentionally invalidates the old compiled-profile
+cache; the first remote run may therefore require a cold dependency install.
+
+* Exact-head execution evidence and nested admission costs
+
+The split workflows at 99ff6a00 completed with failures, not full acceptance.
+Main run 39607544908 passed Rust/PyO3, Python consumers, hygiene, formal,
+formal-conformance and the two BYODS oracle lanes. Linux source semantics hit
+its unchanged 180-second limit after 81 modules and 670 Cases. macOS run
+39607544961 completed preparation and then reached the independent 600-second
+semantic limit after 138 modules and 1,159 Cases. The last observations were
+active exhaustive graph and complete-consumer Cases, not a shutdown deadlock.
+The macOS preparation steps took 627 seconds for cold dependencies, 177 seconds
+for the production build and 263 seconds for semantic preparation. These are
+one-run stage observations, not matched non-regression receipts.
+
+The original Linux performance limits for nonpositive, product and table
+expression workloads passed at 339.983, 1,321.994 and 1,361.042 microseconds,
+respectively. The subsequent withdrawal chain gate failed: CPU ratio 0.808
+exceeded 0.8 and allocation-counter ratio 0.831 exceeded 0.75. Later scenarios
+were therefore not accepted by that failed run.
+
+** Confirmed dependency-cache call-site cost
+
+The frozen SDK's generated gerbil/tools/gxpkg~0.scm pkg-install implementation
+calls install-it in both compatible installed-tag branches, and install-it
+performs dependency installation and pkg-build. Consequently deps --install
+is not an installed-prefix readiness check. The three Linux cache consumers
+now skip installation only after an exact dependency-cache hit. macOS can
+reuse the same dependency-only cache after a preparation-cache miss. Native
+interface imports remain unconditional; production build and source/compiled
+artifact admission remain unchanged. Keys retain the SDK identity and both
+production and development dependency declarations. No upstream or build.ss
+change is required for this call-site correction. Actual matched cold and warm
+preparation benefits still require new exact-head measurements.
+
+** Withdrawal initialization decomposition and candidate correction
+
+The unchanged eight-cut chain workflow spent 19,248,136 allocation-counter
+bytes opening the candidate, while the eight cuts together used roughly
+0.48 MB. A separate decomposition attributed 17,619,520 bytes to lowering and
+root admission, 1,138,544 to opening the Session, 78,784 to running it, 363,824
+to graph production and 624,920 to complete graph verification and retention.
+These inclusive diagnostic counters do not establish allocator refinement.
+
+Fresh lowering never shares caller-owned Term identities. Selecting the
+existing ordinary complete root Contract instead of shared-Term memo
+refinement saved approximately 0.74 MB, but did not close the original gate.
+A Term-only value-membership correction also failed the allocation gate
+(17,818,144 to 13,663,608 bytes). Both failures remain evidence.
+
+Nested Term and Atom membership now uses the upstream ObjectContract value
+Type for the Boolean classification consumed by the existing outer Contract.
+Required ancestry, required fields, field predicates, unknown-field delegation
+and full public Flow descriptors remain present. Explicit contextual admission
+still runs the full public obligations. No validation result is cached.
+The discarded inner contextual receipt construction is avoided; public result
+publication and provenance production, verification and retention are unchanged.
+
+Six dedicated Cases compare nested membership with the unchanged public
+admission descriptors across kinds, missing and malformed fields, opaque
+values, unknown getters, exact exception text, getter mutation/order and
+contextual obligation callbacks. All six passed locally. The unchanged ASP
+policy reported zero errors. These controls are not a source equivalence proof.
+
+All four original withdrawal gates then passed locally without threshold
+changes. Chain median CPU was 7.001 to 4.621 ms and allocation counters were
+13,370,592 to 9,216,568 bytes, with 41 wins in 50 pairs. Diamond was 6.604 to
+4.290 ms and 12,204,584 to 8,674,384 bytes (45 wins); duplicates was 5.453 to
+3.589 ms and 10,455,824 to 8,133,600 bytes (44 wins); tiny was 4.819 to
+4.444 ms and 8,168,400 to 7,795,808 bytes. These compare the existing fresh
+and retained lifecycle arms under the candidate, not whole-revision cold
+build latency. Full source semantics and exact-head CI remain required.
+
+True cumulative Scheme allocation, complete compiler/decoder source refinement,
+and full mutable-cache/SCC/message refinement remain open. Existing Lean/Quint
+admission and cost-accounting controls do not prove the new upstream value
+view equivalent at every source observation, or establish a cold-build win.
+
+** Mutable descriptor compatibility found by the full Suite
+
+The 5761c5ff full local diagnostic ran all 170 module entries but returned a
+nonzero verdict: the existing closure Contract control expected 70 classifier
+calls and observed 14. Its public Term classifier replacement was bypassed by
+the unguarded value view. The old assertion was not changed. This run used the
+native inactivity supervisor, so its longer execution is not a 600-second
+absolute-deadline acceptance receipt.
+
+The correction binds the canonical responsibility map, field descriptor
+identities, POO revisions and classifier dispatch identities. Any observed
+change selects the original complete public membership path. Revision checks
+precede reads of changed metadata; descriptor snapshots never cache a result
+for a candidate. The direct instance classifier instrumentation in the old
+cost control is also recognized. Eight focused Cases now pass, including root
+and field classifier replacement and supported field revision. The original
+nine-Case closure Suite passes with its 70/28 assertions unchanged. ASP policy
+still reports zero errors. Complete source refinement of these source guards
+remains an open obligation.
+
+After this correction, all four original local lifecycle gates passed again:
+chain CPU 8.388 to 5.755 ms, counters 13,370,928 to 9,217,288 bytes, 47/50 wins;
+diamond 6.988 to 4.276 ms, 12,205,432 to 8,675,104 bytes, 43 wins;
+duplicates 6.954 to 4.798 ms, 10,456,288 to 8,134,320 bytes, 44 wins;
+tiny 4.508 to 3.654 ms, 8,169,376 to 7,796,272 bytes. These remain scoped
+lifecycle controls, not isolated whole-Suite latency qualifications.
+
+A three-second native sample of the verified exhaustive semi-naive worker
+shows active object/prototype access, runtime tables/hashing, slot observation
+and GC scanning. It is execution work, not a compiler invocation or deadlock.
+The sample does not establish a whole-run percentage or justify upstream edits.
+
+At 5761c5ff, exact-head Linux full performance, formal, formal-conformance and
+both BYODS oracle lanes passed. Linux source semantics still timed out at the
+unchanged 180-second limit after 101 modules and 875 Cases; this is not full
+acceptance. Exact dependency-cache hits skipped installation in the Linux
+Scheme and Rust/PyO3 lanes, with unconditional readiness checks retained.
+The macOS dependency-only cache had no prior entry, so its first population
+is cold and supplies no measured warm-cache gain. macOS and the production
+throughput matrix were still running when this correction was prepared.
+
+The local complete Lean inventory passed 175 jobs through the locked Guard.
+The local complete formal run retained a PreparationWork TLC timeout under
+its existing overall deadline; it is not labeled a pass. The same revision's
+remote formal and formal-conformance passed independently. A prior diagnostic
+PATH omission of /usr/sbin failed before model execution and was retained;
+only the invocation PATH was corrected.
+
+** Same workload, different preparation time
+
+The 99ff6a00 and 5761c5ff macOS preparation logs contain the same 250 compiled
+support module names and 565 distinct scheduled native compile-file paths in
+that preparation phase. No additional or missing support module explains the
+wall increase. Source-context loading was 31.034 versus 37.446 seconds; make
+was 223.498 versus 274.637 seconds. These logs do not contain exclusive native
+CPU/I/O/allocation observations, so they do not establish the cause of this
+variation and are not dismissed as jitter. Necessary dependency invalidation,
+actual compiler work and host service time still need matched work receipts.
+
+The snapshot model's Term-check counts describe membership occurrences, not
+receipt allocation or public .classify calls. Replacing .classify selects the
+compatibility fallback: its unchanged 70/28 assertion cannot measure allocation
+on the ordinary fast path. The model comments now state this boundary.
+
+The macOS workflow's selective source path filter omitted ordinary runtime
+Scheme edits. It now selects all Scheme sources, retaining explicit non-Scheme
+inputs. This ensures the corrected runtime head requests macOS qualification;
+it changes no semantic deadline, VM count, heap profile or performance limit.
+
+** Corrected getter controls and producer-owned value shapes
+
+The earlier six/eight-Case getter evidence was insufficient: several fixtures
+used .kind/.value/.terms slot names instead of the actual kind/value/terms
+fields. Those passes are withdrawn as getter-order or exception evidence.
+The fixtures now use the real fields, avoid slot self-shadowing, require a
+successful positive object and executed getters, and compare the actual shared
+thrown sentinel rather than freshly formatted backtraces.
+
+A fresh-VM deferred-thunk control reproduced a real defect in 8e533f2e:
+a caller getter changed the later value Contract during admission; nested
+membership returned true while complete public admission returned false.
+A pre-admission descriptor revision guard alone does not handle this case.
+No test expectation or admission limit was relaxed.
+
+Only the two ASCENT value factories now issue constant-field shape entries.
+The private weak-key table stores a kind/revision pair, with no reference back
+to its key and no validation result. Public constructor validation still runs
+immediately. Arbitrary caller objects cannot register themselves through a
+registration API; edits invalidate the recorded POO revision. Atom membership
+also requires that every Term child has a current producer shape, so a nested
+caller getter cannot mutate a later obligation inside the fast traversal.
+Unowned, edited or noncanonical values use the complete original public path.
+The constructor helpers preserve the original prototype argument and fields.
+
+The independent deferred-thunk probe now returns false on both paths. Ten
+corrected Cases pass, including a producer-created positive Term/Atom, editing
+that Term to install a throwing getter, zero calls before admission, a real
+getter call during admission, live later-field mutation, root/field classifier
+replacement, exact thrown sentinels and contextual obligations. The original
+nine-Case closure Suite passes with 70/28 unchanged. ASP reports zero errors.
+
+After the ownership restriction, all four unchanged local lifecycle gates
+passed: chain CPU 8.011 to 5.376 ms, counters 13,375,200 to 9,221,304 bytes,
+46/50 wins; diamond 7.543 to 4.707 ms, 12,209,448 to 8,679,120 bytes, 44 wins;
+duplicates 7.087 to 5.031 ms, 10,460,816 to 8,138,080 bytes, 44 wins;
+tiny 4.203 to 4.076 ms, 8,173,392 to 7,800,288 bytes. These receipts qualify
+those lifecycle arms; they do not establish a whole-build improvement.
+
+The actual declared-value-shape? source block is now generated from the Lean
+CompilerCost policy, with missing issuance, wrong kind and changed revision
+fallback theorems. Quint checks the corresponding policy and rejects both
+accept-unissued-shape and ignore-shape-revision mutations. The focused model,
+all its counterexamples, the complete 175-job Lean inventory and the refreshed
+ExecutionPolicy file pass. An initial ExecutionPolicy file check read the old
+CompilerCost .olean and failed; the normal guarded library rebuild refreshed
+imports, without changing any proof limit. The native weak-table implementation,
+constructor/metadata source refinement, complete callback equivalence and true
+cumulative allocation remain separate open obligations. The generated selector
+is a narrow source binding, not a proof of those entire implementations.

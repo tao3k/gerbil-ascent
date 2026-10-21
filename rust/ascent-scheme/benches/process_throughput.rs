@@ -378,7 +378,7 @@ fn percentile_bounds(
     }
     panic!("soak histogram does not account for every completed request");
 }
-fn arguments() -> Vec<String> {
+fn arguments() -> (Vec<String>, [usize; 6]) {
     let args: Vec<_> = std::env::args()
         .skip(1)
         .filter(|a| a != "--bench")
@@ -387,23 +387,25 @@ fn arguments() -> Vec<String> {
         args.len() == 8 || args.len() == 9,
         "worker-executable vm|rayon owners rayon-threads tasks groups width samples [soak-seconds]"
     );
-    args
-}
-fn main() {
-    let args = arguments();
     let mode = &args[1];
     assert!(mode == "vm" || mode == "rayon");
     let number = |i: usize| args[i].parse::<usize>().unwrap();
-    let (owners, threads, tasks, groups, width, samples) = (
+    let parsed = [
         number(2),
         number(3),
         number(4),
         number(5),
         number(6),
         number(7),
-    );
+    ];
+    let [owners, threads, tasks, groups, width, samples] = parsed;
     assert!(owners > 0 && threads > 0 && tasks >= owners && groups > 0 && width > 1 && samples > 0);
     assert!(mode != "vm" || threads == 1);
+    (args, parsed)
+}
+fn main() {
+    let (args, [owners, threads, tasks, groups, width, samples]) = arguments();
+    let mode = &args[1];
     let startup = Instant::now();
     let pool = ProcessPool::with_program(owners, &WorkerProgram::new(&args[0], vec![])).unwrap();
     for receipt in pool.receipts() {

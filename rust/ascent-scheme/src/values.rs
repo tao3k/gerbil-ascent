@@ -2,8 +2,8 @@
 use crate::{failure, scheme_error};
 use gerbil_ascent::{Data, Result};
 use gerbil_scheme::{
-    BigIntegerBuffer, BinaryInteger, CollectionKind, GerbilRuntime, ObjectKind, RootedObjectBatch,
-    RootedSchemeObject, SchemeScalar, TableEquality,
+    BigIntegerBuffer, BinaryInteger, CollectionKind, GerbilRuntime, NativeError, ObjectKind,
+    RootedObjectBatch, RootedSchemeObject, SchemeObjectRef, SchemeScalar, TableEquality,
 };
 use num_bigint::{BigInt, Sign};
 use std::collections::BTreeMap;
@@ -19,6 +19,18 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
             .scalar_object(SchemeScalar::Flonum(f64::from_bits(*value)))
             .map_err(scheme_error),
         Data::Integer(value) => {
+            // Let the upstream ABI decide its fixnum range; larger exact values
+            // retain the arbitrary-precision transport. No word layout is copied.
+            if let Ok(number) = isize::try_from(value) {
+                match runtime.fixnum_value(number) {
+                    Ok(value) => return runtime.root_value(value).map_err(scheme_error),
+                    Err(NativeError::Status {
+                        operation: "gerbil_scheme_rust_fixnum_from_word",
+                        code,
+                    }) if code == gerbil_scheme_sys::GerbilStatus::InvalidValue as i32 => {}
+                    Err(error) => return Err(scheme_error(error)),
+                }
+            }
             let (sign, mut bytes) = value.to_bytes_le();
             if sign == Sign::NoSign {
                 bytes.clear();
@@ -69,31 +81,11 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
     if depth > 256 {
         return Err(failure("native result nesting bound"));
     }
-    match value.as_ref().kind().map_err(scheme_error)? {
-        ObjectKind::Void => Ok(Data::Null),
-        ObjectKind::Nil => Ok(Data::List(Vec::new())),
-        ObjectKind::Boolean | ObjectKind::Flonum => {
-            match value.as_ref().scalar().map_err(scheme_error)? {
-                SchemeScalar::Boolean(value) => Ok(Data::Bool(value)),
-                SchemeScalar::Flonum(value) => Ok(Data::Real(value.to_bits())),
-                _ => Err(failure("native scalar projection")),
-            }
-        }
-        ObjectKind::ExactInteger => {
-            let mut output = BigIntegerBuffer::default();
-            value
-                .as_ref()
-                .copy_big_integer(&mut output)
-                .map_err(scheme_error)?;
-            Ok(Data::Integer(BigInt::from_bytes_le(
-                if output.value().is_negative() {
-                    Sign::Minus
-                } else {
-                    Sign::Plus
-                },
-                output.value().magnitude(),
-            )))
-        }
+    let kind = value.as_ref().kind().map_err(scheme_error)?;
+    if let Some(decoded) = decode_leaf(value.as_ref(), kind)? {
+        return Ok(decoded);
+    }
+    match kind {
         ObjectKind::String => value
             .into_string()
             .map_err(scheme_error)?
@@ -111,12 +103,7 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
             let mut snapshot = RootedObjectBatch::default();
             collection.copy_into(&mut snapshot).map_err(scheme_error)?;
             let values = (0..snapshot.len())
-                .map(|index| {
-                    decode(
-                        snapshot.root_element(index).map_err(scheme_error)?,
-                        depth + 1,
-                    )
-                })
+                .map(|index| decode_element(&snapshot, index, depth + 1))
                 .collect::<Result<Vec<_>>>()?;
             Ok(Data::List(values))
         }
@@ -127,18 +114,54 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
                 .map_err(scheme_error)?;
             let mut values = BTreeMap::new();
             for index in (0..snapshot.len()).step_by(2) {
-                let key = decode(
-                    snapshot.root_element(index).map_err(scheme_error)?,
-                    depth + 1,
-                )?;
-                let item = decode(
-                    snapshot.root_element(index + 1).map_err(scheme_error)?,
-                    depth + 1,
-                )?;
+                let key = decode_element(&snapshot, index, depth + 1)?;
+                let item = decode_element(&snapshot, index + 1, depth + 1)?;
                 values.insert(key.text()?.into(), item);
             }
             Ok(Data::Map(values))
         }
         _ => Err(failure("unsupported native application result")),
     }
+}
+
+fn decode_leaf(value: SchemeObjectRef<'_>, kind: ObjectKind) -> Result<Option<Data>> {
+    let decoded = match kind {
+        ObjectKind::Void => Ok(Data::Null),
+        ObjectKind::Nil => Ok(Data::List(Vec::new())),
+        ObjectKind::Boolean | ObjectKind::Flonum => match value.scalar().map_err(scheme_error)? {
+            SchemeScalar::Boolean(value) => Ok(Data::Bool(value)),
+            SchemeScalar::Flonum(value) => Ok(Data::Real(value.to_bits())),
+            _ => Err(failure("native scalar projection")),
+        },
+        ObjectKind::ExactInteger => {
+            let mut output = BigIntegerBuffer::default();
+            value.copy_big_integer(&mut output).map_err(scheme_error)?;
+            Ok(Data::Integer(BigInt::from_bytes_le(
+                if output.value().is_negative() {
+                    Sign::Minus
+                } else {
+                    Sign::Plus
+                },
+                output.value().magnitude(),
+            )))
+        }
+        _ => return Ok(None),
+    }?;
+    Ok(Some(decoded))
+}
+
+fn decode_element(snapshot: &RootedObjectBatch<'_>, index: usize, depth: usize) -> Result<Data> {
+    if depth > 256 {
+        return Err(failure("native result nesting bound"));
+    }
+    let value = snapshot
+        .get(index)
+        .ok_or_else(|| failure("native snapshot index"))?;
+    let kind = value.kind().map_err(scheme_error)?;
+    if let Some(value) = decode_leaf(value, kind)? {
+        return Ok(value);
+    }
+    // Complex children need their own recursive root; scalar children borrow
+    // the snapshot's existing root, exactly as the upstream API recommends.
+    decode(snapshot.root_element(index).map_err(scheme_error)?, depth)
 }

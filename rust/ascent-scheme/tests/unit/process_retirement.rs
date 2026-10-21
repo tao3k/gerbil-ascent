@@ -7,7 +7,12 @@ use std::{
 };
 #[test]
 fn drained_owner_waits_for_natural_cleanup_and_reaps_its_child() {
-    let child = Command::new("sleep").arg("3").spawn().unwrap();
+    let child = {
+        // Release the fixture barrier after exec, before the three-second
+        // retirement workload. Other test execution remains concurrent.
+        let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+        Command::new("sleep").arg("3").spawn().unwrap()
+    };
     let pid = child.id();
     let child = Arc::new(Mutex::new(child));
     let watched = Arc::clone(&child);

@@ -149,3 +149,8 @@ fn decode(bytes: &[u8]) -> std::io::Result<Frame> {
 #[cfg(test)]
 #[path = "../tests/unit/process_wire.rs"]
 mod tests;
+
+// Test-only last-descriptor ownership barrier against concurrent fork/exec.
+// The production peer endpoint is created in its separate worker process.
+#[cfg(test)]
+pub(crate) static PROCESS_FIXTURE_SETUP: std::sync::Mutex<()> = std::sync::Mutex::new(());

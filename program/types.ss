@@ -4,8 +4,9 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop define-type element?)
+(import (only-in :clan/poo/object .o .cc .ref object-revision)
+        (only-in :clan/poo/mop define-type element? Type. Any)
+        (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/types
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
@@ -16,6 +17,7 @@
 
 (export gerbil-ascent-fact-limit?
         gerbil-ascent-owned-root-contract
+        gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
         GerbilAscentTermContract
@@ -61,15 +63,15 @@
                  (lambda (value)
                    (or (gerbil-ascent-canonical-set-storage-provider? value)
                        (element? GerbilAscentStorageProviderContract value)))))
-(def +term-kind+
-  (slot-contract 'ascent/term-kind
-                 (lambda (value)
-                   (memq value '(variable wildcard literal expression pattern)))))
+(def (term-kind? value)
+  (memq value '(variable wildcard literal expression pattern)))
+(def +term-kind+ (slot-contract 'ascent/term-kind term-kind?))
 (def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
 (def +plan+ (slot-contract 'ascent/clause-plan procedure?))
 ;; : (-> Symbol PredicateContract)
+(def (clause-kind? expected value) (eq? value expected))
 (def (clause-kind-contract kind)
-  (slot-contract 'ascent/clause-kind (lambda (value) (eq? value kind))))
+  (slot-contract 'ascent/clause-kind (cut clause-kind? kind <>)))
 
 ;;; Relation shape checks arity, source rows, and physical providers before
 ;;; the evaluator creates any mutable table state.
@@ -104,13 +106,72 @@
   proto: (.o)
   responsibilities: (.o kind: +term-kind+ value: +any+))
 
-(def +terms+
-  (slot-contract 'ascent/terms
-                 (lambda (value)
-                   (and (list? value)
-                        (andmap (lambda (term)
-                                  (element? GerbilAscentTermContract term))
-                                value)))))
+;; Nested membership consumes a Boolean, not a contextual receipt. Reuse
+;; the upstream value Type with the same ancestry, fields and kind predicate;
+;; explicit Term admission still uses the complete public Flow Contract above.
+(def +term-value+
+  (.cc ObjectContract. identity: 'ascent/term-value
+       required-prototype: (.ref GerbilAscentTermContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities: (.o kind: (.cc Type. .element?: term-kind?) value: Any)))
+
+
+;; Retain public descriptor mutation and classifier instrumentation. POO revisions
+;; invalidate ordinary metadata edits; classifier identity also detects the
+;; existing direct instance instrumentation used by the semantic cost control.
+;; This caches descriptor identity only, never the result for an input value.
+(def (canonical-value-member contract view slots)
+  (let* ((fields (.ref contract 'responsibilities))
+         (descriptors (cons contract (map (cut .ref fields <>) slots)))
+         (sources (cons fields descriptors))
+         (revisions (map object-revision sources))
+         (classifiers (map (cut .ref <> '.classify) descriptors)))
+    (lambda (value)
+      (if (and (andmap (lambda (source revision) (= (object-revision source) revision))
+                       sources revisions)
+               (eq? fields (.ref contract 'responsibilities))
+               (andmap (lambda (slot descriptor) (eq? (.ref fields slot) descriptor))
+                       slots (cdr descriptors))
+               (andmap (lambda (descriptor classifier)
+                         (eq? (.ref descriptor '.classify) classifier))
+                       descriptors classifiers))
+        (element? view value)
+        (element? contract value)))))
+
+(def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
+
+;; Only the constructors below issue a shape entry. It contains no candidate
+;; reference or validation result; weak keys do not retain declarations.
+(def (remember-value-shape! kind value)
+  (when (= (object-revision value) 0)
+    (hash-put! declared-value-shapes value (cons kind 0)))
+  value)
+;; BEGIN GENERATED PREPARATION VALUE-SHAPE
+(def (declared-value-shape? kind value)
+  (let (entry (hash-get declared-value-shapes value))
+    (and entry (eq? kind (car entry)) (= (object-revision value) (cdr entry)))))
+;; END GENERATED PREPARATION VALUE-SHAPE
+
+;; These factories own every field specification. Arbitrary caller objects
+;; cannot acquire a shape entry, and later POO edits invalidate it.
+(def (gerbil-ascent-make-term-value prototype tag payload)
+  (remember-value-shape! 'term
+    (.o (:: @ prototype) kind: tag value: payload)))
+(def (gerbil-ascent-make-atom-value prototype relation-name atom-terms lower)
+  (remember-value-shape! 'atom
+    (.o (:: self prototype) ascent-clause-kind: 'atom
+        relation: relation-name terms: atom-terms
+        (.plan (lambda (atom-plan bound) (lower self atom-plan bound))))))
+
+(def canonical-term-value?
+  (canonical-value-member GerbilAscentTermContract +term-value+ '(kind value)))
+(def (term-value? value)
+  (if (declared-value-shape? 'term value)
+    (canonical-term-value? value)
+    (element? GerbilAscentTermContract value)))
+(def (terms-value? value)
+  (and (list? value) (andmap term-value? value)))
+(def +terms+ (slot-contract 'ascent/terms terms-value?))
 
 ;;; Atom plans bind one relation name to ordered terms and one open planning
 ;;; slot; the evaluator consumes the lowered plan without row-loop dispatch.
@@ -119,6 +180,29 @@
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)
                       relation: +symbol+ terms: +terms+ .plan: +plan+))
+
+;; Rule membership also consumes only the Atom's value classification.
+;; The public Atom descriptor retains its original contextual responsibilities.
+(def +atom-value+
+  (.cc ObjectContract. identity: 'ascent/atom-value
+       required-prototype: (.ref GerbilAscentAtomContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'atom <>))
+           relation: (.cc Type. .element?: symbol?)
+           terms: (.cc Type. .element?: terms-value?)
+           .plan: (.cc Type. .element?: procedure?))))
+
+(def canonical-atom-value?
+  (canonical-value-member GerbilAscentAtomContract +atom-value+
+                          '(ascent-clause-kind relation terms .plan)))
+
+(def (atom-value? value)
+  (if (and (declared-value-shape? 'atom value)
+           (let (terms (.ref value 'terms))
+             (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms))))
+    (canonical-atom-value? value)
+    (element? GerbilAscentAtomContract value)))
 
 (def +variables+
   (slot-contract 'ascent/variables
@@ -204,7 +288,7 @@
                  (lambda (value)
                    (and (list? value)
                         (andmap (lambda (clause)
-                                  (or (element? GerbilAscentAtomContract clause)
+                                  (or (atom-value? clause)
                                       (element? GerbilAscentGuardContract clause)
                                       (element? GerbilAscentGeneratorContract clause)
                                       (element? GerbilAscentBindingContract clause)
@@ -217,7 +301,7 @@
                    (and (pair? value)
                         (list? value)
                         (andmap (lambda (head)
-                                  (element? GerbilAscentAtomContract head))
+                                  (atom-value? head))
                                 value)))))
 
 ;;; A rule has at least one head and an ordered body. Shared body bindings

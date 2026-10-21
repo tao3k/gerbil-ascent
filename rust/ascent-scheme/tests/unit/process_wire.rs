@@ -105,6 +105,7 @@ fn control_packets_keep_the_generated_codec_and_buffer_boundaries() {
 fn buffered_packets_do_not_lose_readahead_or_direction_changes() {
     use crate::process_wire::Connection;
     use std::os::unix::net::UnixStream;
+    let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
     let (left, right) = UnixStream::pair().unwrap();
     let mut writer = Connection::new(left);
     let mut reader = Connection::new(right);
@@ -130,13 +131,18 @@ fn buffered_packets_do_not_lose_readahead_or_direction_changes() {
 #[test]
 fn checkpoint_liveness_detects_eof_without_consuming_a_pending_frame() {
     use crate::process_wire::Connection;
-    let (first, second) = std::os::unix::net::UnixStream::pair().unwrap();
-    let mut reader = Connection::new(first);
-    let mut writer = Connection::new(second);
-    assert!(!reader.peer_closed().unwrap());
-    writer.send(&Frame::Decision(0)).unwrap();
-    assert!(!reader.peer_closed().unwrap());
-    assert!(matches!(reader.receive().unwrap(), Frame::Decision(0)));
-    drop(writer);
-    assert!(reader.peer_closed().unwrap());
+    for attempt in 0..10_000 {
+        // A concurrent fork temporarily owns every descriptor until exec,
+        // even when CLOEXEC is set. Keep the last-owner premise explicit.
+        let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+        let (first, second) = std::os::unix::net::UnixStream::pair().unwrap();
+        let mut reader = Connection::new(first);
+        let mut writer = Connection::new(second);
+        assert!(!reader.peer_closed().unwrap());
+        writer.send(&Frame::Decision(0)).unwrap();
+        assert!(!reader.peer_closed().unwrap());
+        assert!(matches!(reader.receive().unwrap(), Frame::Decision(0)));
+        drop(writer);
+        assert!(reader.peer_closed().unwrap(), "EOF attempt {attempt}");
+    }
 }

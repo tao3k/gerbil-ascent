@@ -414,6 +414,8 @@ def main():
                # Preserved Rust-only unit-test relocation. These Scheme-only
                # commands do not compile/execute Rust; independent CI covers it.
                'rust/ascent/src/clues/slices.rs',
+               # Preserved generated-Rust layout fix; not executed by Scheme controls.
+               'rust/ascent/src/graph/descriptor_stream.rs',
                'rust/ascent/tests/unit/clues/capacity.rs',
                'workbench/tests/test_compiler_cost.py',
                'workbench/tests/test_reference_cache.py',
@@ -474,6 +476,21 @@ def main():
     receipt['semantic_runtime_requested'] = args.semantic_runtime
     receipt['checked_shared_reference_paths'] = sorted(shared_paths)
     receipt['checked_development_dependency_paths'] = sorted(development_paths)
+    receipt['dependency_seed'] = {}
+    for package in ('poo-flow-core', 'gerbil-poo', 'asp-gerbil-scheme'):
+        checkout = dependencies / 'pkg/github.com/tao3k' / package
+        revision = subprocess.check_output(['git', '-C', str(checkout), 'rev-parse', 'HEAD'],
+                                           text=True, timeout=10).strip()
+        receipt['dependency_seed'][package] = {
+            'revision': revision, 'manifest_sha256': digest(checkout / 'gerbil.pkg')}
+    if development_paths:
+        asp = dependencies / 'pkg/github.com/tao3k/asp-gerbil-scheme'
+        changes = subprocess.check_output(['git', '-C', str(asp), 'diff', '--name-only',
+            'f5b7c009d2cab61144a8af18008a0bfba3056584',
+            '31c7ddee27d775a6164cbe8f032c6405cc7b353d'], text=True, timeout=10).splitlines()
+        if changes != ['gerbil.pkg']:
+            raise RuntimeError('development dependency study changed ASP implementation')
+        receipt['asp_implementation_unchanged_except_manifest'] = True
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(

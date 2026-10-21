@@ -1191,3 +1191,13 @@ layout. This integration preserves that commit and withdraws its local
 alternative generator-formatting change. No checker logic or equality
 comparison is relaxed. The guarded Lean inventory passed (175 jobs); final
 post-integration rendering and CI must still verify the adopted bytes.
+
+
+** ASP branch cleanup
+The user requested cleanup of the five ASP branches. Three obsolete heads were
+archived in a verified complete-history Git bundle before deletion with exact
+head leases: =998e08d= (schema receipt), =f0babb0= (merged PR 11), and =0f78289=
+(the pin-only PR 12 superseded by unpinned PR 13). PR 12 was closed. The remote
+retains =main= and the active PR 13 branch. No implementation history was lost.
+The local recovery bundle and SHA-256 receipt are under
+=.cache/ascent/asp-branch-archive-20261021/= in the owned worktree.

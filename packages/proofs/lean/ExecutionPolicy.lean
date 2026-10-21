@@ -412,6 +412,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-cache-admission" => pure Ascent.CompilerCost.cacheAdmissionYamlSource
   | "preparation-cache-inputs" => pure Ascent.CompilerCost.cacheInputsYamlSource
   | "preparation-producer" => pure Ascent.CompilerCost.producerPythonSource
+  | "capture-mapping-indexes" => pure Ascent.OperatorCapture.mappingIndexesSchemeSource
   | "capture-row-transport" => pure Ascent.OperatorCapture.rowTransportSchemeSource
   | "owned-relation-value" => pure Ascent.CompilerCost.ownedRelationSchemeSource
   | "preparation-metadata-guard" => pure Ascent.CompilerCost.metadataGuardSchemeSource

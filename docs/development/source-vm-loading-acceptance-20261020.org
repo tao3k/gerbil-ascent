@@ -2187,3 +2187,85 @@ Rust test threads and all original per-test/resource/performance limits remain
 unchanged. Actual Gambit cumulative allocation, complete MOP/decoder/cache/SCC
 and message source equivalence remain open; the added generated fragments and
 kernel laws do not close those wider obligations.
+
+** Exact-head 4c01c268 remote results and unresolved costs
+
+CI 39665533982 completed at this exact source. Hygiene, full formal checks,
+formal conformance, Rust/PyO3, Python consumers, BYODS and BYODS-scale passed.
+Linux source semantics, other oracle fixtures and performance failed; the
+aggregate therefore failed. No failed gate was rerun unchanged.
+
+Linux production compilation took 175 seconds. Its 381-module, four-core
+preparation recorded source-context loading 33.618941 seconds and make
+179.099601 seconds. The following cache-hit preparation had projection
+0.579230 seconds and make 0.787326 seconds. Full source semantics dispatched
+170 modules in 86 batches with twelve single-threaded VM processes; 64 module
+and 586 Case completion records preceded the original 180-second deadline.
+Five independent-oracle fixtures returned 124; 63 oracle tests passed. Their
+partial output does not establish semantic agreement for the timed-out cases.
+
+The separate macOS preparation job retained three build cores and recorded
+source-context loading 45.580607 seconds, make 245.620293 seconds and external
+preparation 311.03 seconds. This is slower than the parent observation of
+275.14 seconds. No matched cache/runner comparison has admitted a cold-preparation
+speedup. Both heads scheduled 212 unique source-module compilations in this
+job. Repeated link-job names alone do not establish repeated native compilation;
+actual compiler commands and configuration identity remain necessary evidence.
+
+The macOS runtime job used twelve single-threaded VMs and the original
+600-second limit. It completed 166/170 modules with 1385 Case completion
+records and no observed assertion error, then returned 124. Outstanding Cases
+belonged to ascent-semi-naive, ascent-storage-round, ascent-candidate-flow and
+ascent-view-lattice-round. A completed view-lattice-round Case took 466.864
+seconds. No completed module remained waiting for process retirement at the
+cut. This timeout remains an execution failure, not successful full semantics.
+
+A separate product-session diagnostic bracketed the actual public open, initial
+solve, append and updated-solve calls with process CPU observations over 1000
+sessions. Opening and appending dominate; the two solve calls contribute much
+less. Instrumentation makes these attribution measurements diagnostic rather
+than benchmark acceptance. All native metadata/protocol guards remained current.
+The weak schema and analysis caches had 117 entries before forced collection
+and zero afterward. These observations reject initial guard invalidation and
+persistent dead-key retention as explanations; no corresponding source or SDK
+change was made. A Rule/Relation/Lattice admission-hook probe observed zero
+calls on this route and cannot attribute its cost to declaration admission.
+
+** Frozen mapping indexes: source repair and bounded qualification
+
+The original small lifecycle gate failed remotely with baseline/candidate CPU
+0.735/0.891 milliseconds. A prepared capture still scanned immutable mapping
+rows or rebuilt ordered buckets for each request. Preparation now builds one
+private read-only mapping index per captured mapping node. Ordinary unprepared
+calls keep invocation-local on-demand indexes. Request input copying, row-limit
+checks, failure propagation and independent output copying remain unchanged.
+Both paths use one shared ordered-bucket builder.
+
+All eight original local lifecycle gates passed for the final shared builder.
+CPU medians in milliseconds were: single 5.594/0.806, empty 3.262/0.729,
+small 0.497/0.496, identity 1.304/1.334, unique 1.963/1.561,
+fanout 5.352/3.412, miss 1.837/1.376 and fix 51.665/50.311.
+Every original 50-pair/64-request workload and threshold was retained; each
+shape ran even if another failed. Counter deltas are not promoted to true
+cumulative Gambit allocation. These local CPU results require remote acceptance.
+
+Both delta Suites passed all 14 Cases. The added control preserves exact
+ordinary-path results, last-duplicate ordering, empty requests, recovery after
+a row-limit exception and publication mutation isolation. Its first hand-written
+expected order incorrectly retained the first duplicate; comparison with the
+unchanged ordinary evaluator caught this. The expectation now states the existing
+last-duplicate order, without changing any prior test assertion.
+
+Lean proves ordered-bucket equivalence to a stable scan and the narrow
+constructor-time index-build law, and the existing Guard checks the complete
+175-job inventory. The exact constructor/builder source rendering matches.
+Quint retains every prior invariant and rejects borrowed and rebuilt index
+mutants. All 106 workbench tests pass; ASP retains 81 warnings and zero errors.
+The initial renderer omitted IO.pure and failed type checking; the corrected
+renderer passed under the unchanged proof budget. The finite cost law and source
+binding do not prove the complete Scheme hash implementation or whole evaluator.
+
+Cold preparation, the four remaining macOS runtime modules, Linux's deadline,
+the five oracle deadlines, absolute scenario budgets and true cumulative Scheme
+allocation remain open. The SDK, compiler options, VM/thread counts, cancellation,
+resource charging, provenance and all acceptance thresholds remain unchanged.

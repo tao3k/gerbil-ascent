@@ -105,6 +105,27 @@
                        (cut relational-op-reference-change owned '((a)) '((b))) list))
         (hash-for-each (lambda (node facts)
           (check-equal? facts (hash-ref reference node))) rows)))
+    (test-case "captured mapping indexes retain bucket order and isolate failed requests"
+      (let* ((transform (relational-op-function 1 (lambda (p)
+                          (relational-op-flatmap p 1
+                            '(((0) (z)) ((1) (a)) ((0) (a)) ((0) (z)) ((2) (b)))))))
+             (plan (relational-op-prepare-change transform)))
+        (for-each (lambda (inputs)
+          (let ((before (car inputs)) (added (cadr inputs)))
+            (check-equal?
+              (call-with-values (cut relational-op-change plan before added) list)
+              (call-with-values (cut relational-op-delta-change transform before added) list))))
+          '((() ()) (((0)) ()) (((0)) ((1))) (((2) (0)) ((1) (0))) (() ((0) (2)))))
+        (check-exception (relational-op-change plan [] '((0)) 1) (lambda (_) #t))
+        (let-values (((base grown delta) (relational-op-change plan [] '((0)))))
+          ;; Existing normalization retains the last duplicate z, after a.
+          (check-equal? base [])
+          (check-equal? grown '((a) (z)))
+          (check-equal? delta '((a) (z)))
+          (set-car! (car grown) 'changed))
+        (let-values (((base grown delta) (relational-op-change plan [] '((0)))))
+          (check-equal? grown '((a) (z)))
+          (check-equal? delta '((a) (z))))))
     (test-case "prepared nested feedback and applications retain lexical identities"
       (let* ((inner (relational-op-function 1 (lambda (p) (relational-op-project p '(0)))))
              (transform (relational-op-function 1 (lambda (input)

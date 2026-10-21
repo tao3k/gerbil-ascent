@@ -254,4 +254,30 @@ theorem missing_rows_not_invented {Row : Type} (source target : RowTable Row) (o
 def rowTransportSchemeSource : String :=
   "            (when (hash-key? rows node)\n              (hash-put! copied-rows copied (hash-ref rows node)))\n"
 
+
+/-- Stable bucket semantics. Native hash lookup and key slicing remain explicit
+    implementation premises; callers may not mutate captured bucket spines. -/
+def scanBucket {Row : Type} (key : Nat) (entries : List (Nat × Row)) : List Row :=
+  (entries.filter (fun entry => entry.1 == key)).map Prod.snd
+
+def buildBucket {Row : Type} (key : Nat) (entries : List (Nat × Row)) : List Row :=
+  entries.foldr (fun entry bucket => if entry.1 == key then entry.2 :: bucket else bucket) []
+
+theorem ordered_bucket_matches_scan {Row : Type} (key : Nat) (entries : List (Nat × Row)) :
+    buildBucket key entries = scanBucket key entries := by
+  induction entries with
+  | nil => rfl
+  | cons entry entries ih =>
+    simp only [buildBucket, List.foldr_cons, scanBucket, List.filter_cons]
+    split <;> simp_all [buildBucket, scanBucket]
+
+def indexBuilds (prepared : Bool) (requests tables : Nat) : Nat :=
+  if prepared then tables else requests * tables
+
+theorem prepared_index_built_once (requests tables : Nat) :
+    indexBuilds true requests tables = tables := by simp [indexBuilds]
+
+def mappingIndexesSchemeSource : String :=
+  ";;; Build ordered buckets from admitted private rows. Never expose these row\n;;; tails: every public result is still independently copied before publication.\n(def (ordered-mapping-index node rows)\n  (let* ((width (vector-ref (relational-op-data node) 0))\n         (index (make-hash-table))\n         (keys (with-list-builder (put!)\n           (for-each (lambda (entry)\n             (let* ((key (take entry width)) (bucket (hash-get index key)))\n               (unless bucket (put! key))\n               (hash-put! index key (cons (list-tail entry width) (or bucket []))))) rows))))\n    (for-each (lambda (key) (hash-put! index key (reverse! (hash-ref index key)))) keys)\n    index))\n\n(def (capture-mapping-indexes checked-rows)\n  (let (indexes (make-hash-table-eq))\n    (hash-for-each (lambda (node rows)\n      (when (eq? (relational-op-kind node) 'flatmap)\n        (hash-put! indexes node (ordered-mapping-index node rows)))) checked-rows)\n    indexes))\n;;; Admission owns all descriptor metadata and row spines once. Captured\n;;; sources are fixed for this plan; callers create another plan to change them.\n;;; Inputs, budgets and environments remain invocation-owned. Captured mapping\n;;; indexes contain only private immutable rows; executions never modify them.\n;; : (-> RelationalTransform ChangePlan)\n(def (relational-op-prepare-change transformer)\n  (let* ((snapshot (capture-operator-transform transformer))\n         (owned (operator-snapshot-transform snapshot))\n         (rows (operator-snapshot-checked-rows snapshot))\n         (indexes (capture-mapping-indexes rows)))\n    (validate GerbilAscentChangePlanContract\n      (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))\n          (.change (lambda (before added (row-limit +inf.0))\n                     (delta-change/admitted owned rows before added row-limit indexes)))))))\n\n"
+
 end Ascent.OperatorCapture

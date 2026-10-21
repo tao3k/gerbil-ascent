@@ -413,6 +413,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-metadata-guard", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-relation-value", "program/types.ss"),
                 ("ExecutionPolicy.lean", "capture-row-transport", "program/operator-analysis.ss"),
+                ("ExecutionPolicy.lean", "capture-mapping-indexes", "program/operator-change.ss"),
                 ("ExecutionPolicy.lean", "preparation-output-target", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-job-allocation", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-audit-order", "tools/ci/build-cost-control.py"),
@@ -479,6 +480,12 @@ def main() -> int:
                                   ';; END GENERATED OWNED RELATION VALUE\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate owned relation region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "capture-mapping-indexes":
+                    begin, end = (';; BEGIN GENERATED CAPTURE MAPPING INDEXES\n',
+                                  ';; END GENERATED CAPTURE MAPPING INDEXES\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate captured mapping indexes region')
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language == "capture-row-transport":
                     begin, end = ('            ;; BEGIN GENERATED CAPTURE ROW TRANSPORT\n',

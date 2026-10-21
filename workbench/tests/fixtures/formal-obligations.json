@@ -236,9 +236,19 @@
   "ChangePlan": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "Frozen CompletePublication FailureAtomic CapturedRows AdmissionOnce"
+      "invariants": "Frozen CompletePublication FailureAtomic CapturedRows AdmissionOnce CapturedIndex IndexOnce"
     },
     "faults": [
+      [
+        "borrow-index",
+        "CapturedIndex",
+        12
+      ],
+      [
+        "rebuild-index",
+        "IndexOnce",
+        12
+      ],
       [
         "omit-rows",
         "CapturedRows",

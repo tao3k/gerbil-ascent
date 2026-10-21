@@ -40,18 +40,42 @@
      (relational-op-source (gensym 'delta-input)
                           (relational-transform-input-arity transformer) [])))))
 
+;; BEGIN GENERATED CAPTURE MAPPING INDEXES
+;;; Build ordered buckets from admitted private rows. Never expose these row
+;;; tails: every public result is still independently copied before publication.
+(def (ordered-mapping-index node rows)
+  (let* ((width (vector-ref (relational-op-data node) 0))
+         (index (make-hash-table))
+         (keys (with-list-builder (put!)
+           (for-each (lambda (entry)
+             (let* ((key (take entry width)) (bucket (hash-get index key)))
+               (unless bucket (put! key))
+               (hash-put! index key (cons (list-tail entry width) (or bucket []))))) rows))))
+    (for-each (lambda (key) (hash-put! index key (reverse! (hash-ref index key)))) keys)
+    index))
+
+(def (capture-mapping-indexes checked-rows)
+  (let (indexes (make-hash-table-eq))
+    (hash-for-each (lambda (node rows)
+      (when (eq? (relational-op-kind node) 'flatmap)
+        (hash-put! indexes node (ordered-mapping-index node rows)))) checked-rows)
+    indexes))
 ;;; Admission owns all descriptor metadata and row spines once. Captured
 ;;; sources are fixed for this plan; callers create another plan to change them.
-;;; Per-call inputs, budgets, environments and lookup registries remain local.
+;;; Inputs, budgets and environments remain invocation-owned. Captured mapping
+;;; indexes contain only private immutable rows; executions never modify them.
 ;; : (-> RelationalTransform ChangePlan)
 (def (relational-op-prepare-change transformer)
   (let* ((snapshot (capture-operator-transform transformer))
          (owned (operator-snapshot-transform snapshot))
-         (rows (operator-snapshot-checked-rows snapshot)))
+         (rows (operator-snapshot-checked-rows snapshot))
+         (indexes (capture-mapping-indexes rows)))
     (validate GerbilAscentChangePlanContract
       (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
           (.change (lambda (before added (row-limit +inf.0))
-                     (delta-change/admitted owned rows before added row-limit)))))))
+                     (delta-change/admitted owned rows before added row-limit indexes)))))))
+
+;; END GENERATED CAPTURE MAPPING INDEXES
 
 ;;; Constructor validation owns the method contract. Generic dispatch avoids
 ;;; rerunning graph/contract admission for every request on a prepared owner.
@@ -81,11 +105,11 @@
                                  (row-limit +inf.0))
   (unless (relational-transform? transformer)
     (error "expected a relation transformer" transformer))
-  (delta-change/admitted transformer (change-analysis transformer) before added row-limit))
+  (delta-change/admitted transformer (change-analysis transformer) before added row-limit #f))
 
 ;;; This private entry consumes either this call's admission or a plan's owned
-;;; admission. Every mutable environment/index is still invocation-owned.
-(def (delta-change/admitted transformer checked-rows before added row-limit)
+;;; admission. Every request-mutated environment/index is invocation-owned.
+(def (delta-change/admitted transformer checked-rows before added row-limit captured-indexes)
   (unless (or (eqv? row-limit +inf.0) (and (exact-integer? row-limit) (> row-limit 0)))
     (error "delta row limit must be positive" row-limit))
   (let* ((arity (relational-transform-input-arity transformer))
@@ -133,31 +157,13 @@
        (map (lambda (row)
               (map (lambda (column) (list-ref row column)) columns))
             rows)))
-    ;; Finite mapping descriptors own frozen rows. Publish an ordered lookup
-    ;; once per descriptor in this invocation, shared by base and frontiers.
-    ;; Index only on demand: an empty change never visits the mapping table.
+    ;; Ordinary calls publish indexes on demand in this invocation. Prepared
+    ;; owners instead read their immutable capture indexes; neither path shares
+    ;; a mutable request environment or publishes internal row spines.
     (def mapping-indexes #f)
     (def (mapping-index node)
       (or (and mapping-indexes (hash-get mapping-indexes node))
-          (let* ((data (relational-op-data node))
-                 (width (vector-ref data 0))
-                 (index (make-hash-table))
-                 (keys
-                  (with-list-builder (put!)
-                    (for-each
-                     (lambda (entry)
-                       (let* ((key (take entry width))
-                              (bucket (hash-get index key)))
-                         (unless bucket (put! key))
-                         (hash-put! index key
-                                    (cons (list-tail entry width)
-                                          (or bucket [])))))
-                     (hash-ref checked-rows node)))))
-            ;; These bucket spines belong to the index; table row tails do not.
-            ;; Retain descriptor order so append-map observes the same rows.
-            (for-each (lambda (key)
-                        (hash-put! index key (reverse! (hash-ref index key))))
-                      keys)
+          (let (index (ordered-mapping-index node (hash-ref checked-rows node)))
             (unless mapping-indexes
               (set! mapping-indexes (make-hash-table-eq)))
             (hash-put! mapping-indexes node index)
@@ -177,8 +183,8 @@
                                (hash-get mapping-indexes node)))
                ;; One query needs one scan. Multiple queries amortize an index;
                ;; a later singleton frontier reuses an already published one.
-               (index (or published
-                          (and (pair? (cdr rows)) (mapping-index node))))
+               (index (or (and captured-indexes (hash-get captured-indexes node))
+                          published (and (pair? (cdr rows)) (mapping-index node))))
                (lookup (if index
                          (lambda (row) (or (hash-get index row) []))
                          (cut scan-mapping node <>))))

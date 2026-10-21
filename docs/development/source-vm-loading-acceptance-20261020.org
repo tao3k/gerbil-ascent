@@ -1660,3 +1660,107 @@ producer/consumer archive round trip with source-clock preservation, and all
 seven existing source-semantic CI control tests using the frozen SDK. Remote
 execution of the split jobs remains required. Job separation does not establish
 a cold-build speedup, complete semantic acceptance or source-cost refinement.
+
+
+* Completed split-job evidence at f2cd35a7
+
+macOS preparation job 119220342455 succeeded. SDK installation took 16 seconds,
+cache restoration took six seconds, and the combined dependency/build/policy
+step took 502 seconds. The restored compatible prefix did not prevent
+=gerbil deps --install= from compiling Core into a fresh =core-build-output-=
+directory. Subsequent preparation admitted zero support interfaces and checked
+380 modules. Its recorded phases were 32.720466 seconds loading source contexts,
+0.227612 seconds projecting resident contexts, 220.937232 seconds in make,
+and 5.269433 seconds publishing the support cache. Preparation completed in
+269.13 seconds; its production-rebuilt count was zero. These are observed
+phase costs, not evidence that all 380 modules were recompiled.
+
+The transferred artifact passed source and compiler identity checks in a fresh
+semantic job. Its package, library and static directories are ordinary
+directories. The full 600-second run completed 167 of 169 modules and 1,363
+Cases without a recorded assertion failure, then timed out. The remaining
+modules were ascent-candidate-flow-test and ascent-semi-naive-test. Both started
+approximately 390 seconds into execution. The latter completed its independent
+naive comparison around second 584 and entered its Actor comparison immediately
+before expiry. Queue order, case coverage and deadlines are unchanged.
+Linux still timed out at 180 seconds after 58 module completions and 470 Cases.
+The oracle-other lane passed 65 tests and timed out in three fixtures. Rust/PyO3,
+formal, formal-conformance and both BYODS lanes passed. Performance remained
+failed: nonpositive updates measured 2.783735ms against 1ms; product sessions
+4.009872ms against 2ms; table expressions 2.088047ms against 2ms. None of these
+failures is admitted as a pass.
+
+* Compatible dependencies and private execution state under acceptance
+
+Dependency installation now runs only on a missing compatible preparation
+cache. The existing compiler-input key includes both production and development
+dependency declarations; the source/SDK admission still precedes this decision.
+Cold prefixes retain the original native install commands. Production still
+runs gerbil build, while policy has its own step. The invalidation regression
+now explicitly changes dev/gerbil.pkg as well as gerbil.pkg and passes. This
+prevents reinstalling an already admitted dependency set from needlessly
+replacing support inputs. Exact-head remote timings remain required before
+claiming a cold or warm end-to-end improvement.
+
+Private evaluator state now uses a typed record of evaluator-owned closures and
+buffers. Public Engine publication and public Session publication retain their
+complete original GerbilAscentSessionContract; no caller-supplied method enters
+the private record. Recovery, nonpositive replay and Actor-session preflight
+consume this private state. Row admission, callback order, cancellation checks,
+budget charging, provenance and atomic publication remain in the same execution
+bodies. This differs from the earlier withdrawn weakened-Contract experiment.
+
+Before extracting the private record module, matched local compiled controls
+retained all 1,000 original product-result
+checks in each arm. Median user CPU was 1.5025ms for the original internal
+facade and 0.619ms for the candidate; summed in-call user CPU was 1.814322s and
+0.786244s. Wall p95 was 11.733ms and 10.934ms respectively, so this is not a
+2ms gate pass. Native loading samples separately showed dlopen/file validation
+waits. SDK allocation estimates remain unsuitable as true cumulative allocation
+receipts. Complete source semantics and exact-head CI are still required.
+
+* Rejected static-output interpretation
+
+The native logs scheduled 84 static-object jobs with the same paths across two
+links. That count alone does not count C compiler invocations: the frozen SDK
+checks file timestamps inside those jobs. Expanding the observation root to the
+whole library did not establish a repair and was withdrawn. Its 600-second
+local build timeout, during external compiler activity, remains a failure.
+A local temporary-prefix alias also differed from the SDK's canonical path:
+/tmp versus /private/tmp. Canonical paths are now passed to local diagnostic
+commands; the SDK and production build script are unchanged. This does not
+establish the same cause on CI. The strengthened existing artifact Case passed
+with both registered dynamic C and static object paths, rejecting an adjacent
+unregistered object; all 24 artifact Cases passed, including changed/missing
+output rejection. These finite checks do not prove cross-build source refinement.
+
+* Completed production throughput receipt at 394d7198
+
+Run 39593735400 used the fixed bridge revision 2cc3c663 on an audited three-CPU
+host and retained 12 concurrent clients. Twenty-three of 24 rows completed five
+samples and the sustained phase. The large-closure single-VM row timed out at
+its unchanged 240-second row budget after three samples, so the matrix remains
+incomplete. Small-workload median throughput for 1/3/12 single-thread VMs was
+11.793/42.439/44.536 requests/s; closure throughput was 11.439/22.310/25.697.
+Large-closure Rayon throughput for 1/3/6/8/12 threads was
+63.178/96.651/64.176/53.812/97.236 requests/s. Increasing thread count does not
+produce monotonic scaling on three CPUs. This receipt belongs to 394d7198,
+not to the later candidate or to a completed whole-matrix comparison.
+
+True cumulative Scheme allocation, complete compiler/decoder source refinement,
+and full mutable-cache/SCC/message refinement remain open. Green abstract
+models or isolated method checks do not close those obligations.
+
+
+The first private-state layout failed the unchanged ASP 1,000-line owner rule.
+Its record and full public Contract projection were extracted into
+program/engine-state.ss; the original rule now reports zero errors. The public
+wrapper signature retains ordinary compact formatting. All three public
+Contract Cases passed after extraction, and the eight source-CI/cache controls
+passed. The subsequent canonical-prefix local build also reached its diagnostic
+600-second build bound during other compiler activity. That build bound is not
+the semantic deadline and supplies no accepted timing comparison. Complete
+native dependency preparation is now using the existing CPU-progress build
+supervisor; semantic execution retains its original independent 600-second cap.
+The module catalog change intentionally invalidates the old compiled-profile
+cache; the first remote run may therefore require a cold dependency install.

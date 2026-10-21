@@ -23,7 +23,7 @@ class CompilerCostTests(unittest.TestCase):
             def git(*args):
                 return subprocess.check_output(['git', '-C', str(root), *args])
             git('init', '-q')
-            inputs = ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'bindings/c/ascent.h',
+            inputs = ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'dev/gerbil.pkg', 'bindings/c/ascent.h',
                       't/harness/build.ss', 't/harness/artifact-admission.ss', 't/harness/library-spec.ss',
                       't/harness/test.ss', '.github/workflows/build-cost.yml', 'justfile']
             for name in inputs:
@@ -42,7 +42,7 @@ class CompilerCostTests(unittest.TestCase):
                 self.assertEqual(compatibility(), compatible, name)
                 self.assertNotEqual(exact(), current, name)
                 current = exact()
-            for name in ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'bindings/c/ascent.h',
+            for name in ['build.ss', 'build-modules.ss', 'gerbil.pkg', 'dev/gerbil.pkg', 'bindings/c/ascent.h',
                          't/harness/build.ss', 't/harness/artifact-admission.ss', 't/harness/library-spec.ss']:
                 previous = compatibility()
                 (root / name).write_text('changed compiler or dependency input\n')

@@ -79,6 +79,7 @@
     "program/execution-publication"
     "program/round-workspace"
     "program/execution-control"
+    "program/engine-state"
     "program/evaluate"
     "program/session"
     "program/source-cut"

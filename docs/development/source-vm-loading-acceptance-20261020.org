@@ -1026,3 +1026,30 @@ inventory (corrected); and the unchanged macOS orphan-process supervision
 test received =EPERM= on its final group kill. No supervision or cancellation
 handler is weakened to hide this failure. Wheel-backed complete Python tests
 and current-head CI remain separate acceptance obligations.
+
+** Rejected experiment setup and exact carrier-rewrite admission
+
+On-demand run =39536708174= rejected the comparison before collecting any
+sample: its original identical-source guard correctly detected the reference
+imports and deleted carriers as source changes. This is a configuration
+rejection, not a performance result, and the failed run is retained.
+
+The comparison now verifies this specific 14-file transformation instead of
+adding the Scheme paths to a blanket allowlist. All four removed bodies must
+match the two pinned original SHA-256 values, both original and retained
+canonical bodies must be identical, and the removed paths must be absent.
+Every changed consumer must equal its previous complete bytes after exactly
+one specified import replacement; any additional edit fails. Partial rewrites
+fail as well. Separate stateful caches and variant-dependent imports are not
+eligible. Resolved Git commit identities supply the bytes, not mutable branch
+names or working files. The receipt records every checked path.
+
+The actual =6fd2e3a3= and =b091c06d= Git trees pass all 14 checks with no
+unmatched changes. Negative controls alter each consumer/body, retain a
+removed copy, omit each required change, or alter a canonical body; all are
+rejected. The six preparation-admission tests and five source-semantic CI
+controls pass. Other runtime/workload changes retain the original rejection.
+Performance ratios, the historical regression latch and full semantic
+workload checks remain unchanged. This is a source-transformation admission
+for a private reference experiment, not a proof of general module-identity
+or compiler equivalence.

@@ -16,7 +16,7 @@ import threading
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'workbench/src'))
-from ascent_workbench.preparation_admission import qualify
+from ascent_workbench.preparation_admission import qualify, shared_reference_paths
 from ascent_workbench.preparation_policy import preparation_non_regression
 from ascent_workbench.preparation_work import gcc_ggc_bytes
 from ascent_workbench.preparation_work import install as install_work_observers
@@ -421,6 +421,19 @@ def main():
                'workbench/tests/test_preparation_admission.py',
                'workbench/tests/test_preparation_work.py',
                't/qualification/fixtures/preparation/unresolved.json'}
+    def revision_source(revision, name):
+        result = subprocess.run(['git', 'show', f'{revision}:{name}'], cwd=root,
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        if result.returncode == 128:
+            return None
+        result.check_returncode()
+        return result.stdout
+    shared_paths = shared_reference_paths(set(changed),
+        lambda name: revision_source(identities['baseline'], name),
+        lambda name: revision_source(identities['candidate'], name))
+    allowed.update(shared_paths)
+    allowed.update({'docs/development/source-vm-loading-acceptance-20261020.org',
+                    'workbench/tests/test_source_semantic_ci.py'})
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}; '
                            'select a baseline with identical program sources before measuring compiler/cache changes')
@@ -441,6 +454,7 @@ def main():
     preparation = ['just', 'prepare-semantic-library' if args.semantic_preparation else 'prepare-test-library']
     receipt['preparation_command'] = preparation
     receipt['semantic_runtime_requested'] = args.semantic_runtime
+    receipt['checked_shared_reference_paths'] = sorted(shared_paths)
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(

@@ -64,3 +64,47 @@ def qualify(controls, ledger):
     return {'schema': 'ascent.preparation-admission.v1', 'phases': phases,
             'unresolved_runs': unresolved, 'admitted': not failed,
             'scope': 'measurement admission only; collector/source refinement remains open'}
+
+
+# This is a bounded source transformation for private frozen test carriers,
+# not permission to edit production/workload algorithms in a compiler study.
+def shared_reference_paths(changed, before, after):
+    import hashlib
+    canonical = 't/performance/uf-dense/'
+    bodies = {
+        'reference-initialization': 'c7f86dcef7295fe4f198eaad0b7b66f62ad4658f359d1457a89a4a755e95713e',
+        'reference-view-replay': '3ff78c5d8f9fc322ba279652eda0b233256d3a1d63c44411249247102f3a2893',
+    }
+    deleted = {}
+    edits = {}
+    for lane in ('axis', 'growth', 'reuse'):
+        old = f't/performance/uf-{lane}/reference-initialization'
+        deleted[old + '.ss'] = 'reference-initialization'
+        edits[f't/performance/uf-{lane}/build.ss'] = (old, canonical + 'reference-initialization')
+        edits[f't/performance/uf-{lane}/reference-evaluate.ss'] = (
+            '"reference-initialization.ss"', ':gerbil-ascent/' + canonical + 'reference-initialization')
+    old = 't/performance/uf-materialization/reference-view-replay'
+    deleted[old + '.ss'] = 'reference-view-replay'
+    for name in ('t/performance/uf-materialization/build.ss',
+                 't/performance/uf-materialization/fixture.ss',
+                 't/qualification/ascent-uf-materialization-test.ss'):
+        edits[name] = (old, canonical + 'reference-view-replay')
+    edits['t/performance/uf-materialization/reference-view-state.ss'] = (
+        '"reference-view-replay.ss"', ':gerbil-ascent/' + canonical + 'reference-view-replay')
+    paths = set(deleted) | set(edits)
+    if not paths.intersection(changed):
+        return set()
+    if not paths.issubset(changed):
+        raise ValueError('incomplete frozen reference carrier rewrite')
+    for name, kind in deleted.items():
+        body = before(name)
+        if (body is None or hashlib.sha256(body).hexdigest() != bodies[kind]
+                or before(canonical + kind + '.ss') != body
+                or after(canonical + kind + '.ss') != body or after(name) is not None):
+            raise ValueError('frozen reference body or deletion differs: ' + name)
+    for name, (old, new) in edits.items():
+        body = before(name)
+        needle, replacement = old.encode(), new.encode()
+        if body is None or body.count(needle) != 1 or after(name) != body.replace(needle, replacement):
+            raise ValueError('frozen reference import rewrite differs: ' + name)
+    return paths

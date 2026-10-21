@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import unittest
 
-from ascent_workbench.preparation_admission import qualify, unresolved_failures
+from ascent_workbench.preparation_admission import qualify, unresolved_failures, shared_reference_paths
 from ascent_workbench.preparation_policy import (
     preparation_admitted, preparation_latch_failure, preparation_non_regression,
 )
@@ -16,6 +16,53 @@ LEDGER = ROOT / 't/qualification/fixtures/preparation/unresolved.json'
 
 
 class PreparationAdmissionTests(unittest.TestCase):
+    def test_shared_carriers_require_frozen_bodies_deletions_and_exact_import_edits(self):
+        baseline, candidate = {}, {}
+        canonical = 't/performance/uf-dense/'
+        edits = {}
+        for lane in ('axis', 'growth', 'reuse'):
+            old = f't/performance/uf-{lane}/reference-initialization'
+            body = (ROOT / (canonical + 'reference-initialization.ss')).read_bytes()
+            baseline[old + '.ss'] = body
+            baseline[canonical + 'reference-initialization.ss'] = body
+            candidate[canonical + 'reference-initialization.ss'] = body
+            edits[f't/performance/uf-{lane}/build.ss'] = (old, canonical + 'reference-initialization')
+            edits[f't/performance/uf-{lane}/reference-evaluate.ss'] = (
+                '"reference-initialization.ss"', ':gerbil-ascent/' + canonical + 'reference-initialization')
+        old = 't/performance/uf-materialization/reference-view-replay'
+        body = (ROOT / (canonical + 'reference-view-replay.ss')).read_bytes()
+        baseline[old + '.ss'] = body
+        baseline[canonical + 'reference-view-replay.ss'] = body
+        candidate[canonical + 'reference-view-replay.ss'] = body
+        for name in ('t/performance/uf-materialization/build.ss',
+                     't/performance/uf-materialization/fixture.ss',
+                     't/qualification/ascent-uf-materialization-test.ss'):
+            edits[name] = (old, canonical + 'reference-view-replay')
+        edits['t/performance/uf-materialization/reference-view-state.ss'] = (
+            '"reference-view-replay.ss"', ':gerbil-ascent/' + canonical + 'reference-view-replay')
+        for name, (old, new) in edits.items():
+            candidate[name] = (ROOT / name).read_bytes()
+            self.assertEqual(candidate[name].count(new.encode()), 1)
+            baseline[name] = candidate[name].replace(new.encode(), old.encode())
+        changed = (set(baseline) | set(candidate)) - {canonical + 'reference-initialization.ss',
+                                                    canonical + 'reference-view-replay.ss'}
+        self.assertEqual(len(changed), 14)
+        self.assertEqual(shared_reference_paths(changed, baseline.get, candidate.get), changed)
+        for name in changed:
+            bad = dict(candidate)
+            bad[name] = (candidate.get(name) or baseline[name]) + b'\n(extra-edit)\n'
+            with self.subTest(path=name), self.assertRaises(ValueError):
+                shared_reference_paths(changed, baseline.get, bad.get)
+            with self.assertRaises(ValueError):
+                shared_reference_paths(changed - {name}, baseline.get, candidate.get)
+        for name in [canonical + 'reference-initialization.ss', canonical + 'reference-view-replay.ss']:
+            bad = dict(candidate, **{name: candidate[name] + b'\n'})
+            with self.assertRaises(ValueError):
+                shared_reference_paths(changed, baseline.get, bad.get)
+        unknown = 'program/evaluate.ss'
+        self.assertNotIn(unknown, shared_reference_paths(changed | {unknown}, baseline.get, candidate.get))
+        self.assertEqual(shared_reference_paths({unknown}, baseline.get, candidate.get), set())
+
     def test_historical_40_percent_and_five_percent_regressions_reject(self):
         ledger = json.loads(LEDGER.read_text())
         self.assertEqual(unresolved_failures(ledger), [39084120171, 39088480174])

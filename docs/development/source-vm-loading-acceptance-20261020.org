@@ -870,3 +870,31 @@ renderings match byte-for-byte under the same Guard. The full ClosedDslLowering
 Quint exploration retained all old counterexamples and rejected both new
 root-skipping and retained-intermediate-work mutants. These local results precede
 the final integration commit; exact-head remote CI remains independently required.
+
+** First integration CI and native build-driver fixture correction
+
+At =816eb63944debed2febceae8d6a75fc91b5ac0d6=, Linux Scheme semantics,
+original performance gates, all oracle lanes and complete formal acceptance
+passed. The Rust workspace, Clippy, Scheme binding/archive checks and wheel
+build also passed. The original Python interface matrix then rejected the old
+=test_build_driver.py= fixture: it still intercepted =gxi build.ss= after Just
+had delegated dispatch to =gerbil build=. The fake package prefix therefore
+entered a real build instead of the old interpreter stub and failed with exit
+70. This failure is retained in CI run =39529628299=; it is not a runtime
+semantic pass or an infrastructure-flake claim.
+
+The corrected fixture intercepts the SDK entrypoint and checks exact =build=
+arguments, prefix, core count and unchanged flag environment. An additional
+real-SDK fixture runs Just against a minimal package and verifies actual
+=compile --debug --optimized --release= expansion, prefix and core count for
+absent, empty and nonempty flag values. The first local native fixture exposed
+that SDK ordering differs from the removed hand-written wrapper; its failure
+is retained. Both final native build-driver tests passed without changing the
+SDK, production dispatch, semantic thresholds or resource bounds.
+
+The first integration's complete macOS source semantics also passed on three
+cores with twelve VM workers and the 600-second bound. Step timestamps show
+337 seconds for cold dependency preparation and 279 seconds for full semantic
+execution. These complete-run observations do not establish overall speedup;
+they must not be replaced by the local admission-allocation saving. Final
+acceptance must use the corrected fixture's new exact-head CI.

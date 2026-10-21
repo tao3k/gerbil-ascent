@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - build.ss
+      - gerbil.pkg
+      - dev/**
       - build-modules.ss
       - justfile
       - t/harness/build.ss
@@ -84,6 +86,7 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
           test ! -e .gerbil/lib/gerbil-ascent
       - name: On-demand ABBA cold build and test preparation
         if: ${{ inputs.baseline != '' }}
@@ -212,6 +215,8 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+          just build
           just check-policy
       - name: Verify supported SDK compiler profile and allocation counters
         run: |

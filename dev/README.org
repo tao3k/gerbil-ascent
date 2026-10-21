@@ -1,0 +1,32 @@
+* Explicit development tools
+The root =gerbil.pkg= declares production dependencies only. This directory
+owns ASP's build-policy, test and benchmark dependency. ASP retains its POO
+dependency without selecting a revision; the production dependency graph
+selects POO before development tools are installed.
+
+** Native commands
+Run these commands from the repository root:
+#+begin_src sh
+gerbil deps --install
+gerbil build
+# Opt into development tools in the same standard package artifact prefix.
+(cd dev && GERBIL_PATH="$(pwd)/../.gerbil" gerbil deps --install)
+gerbil env gerbil interactive dev/build.ss
+gerbil test
+#+end_src
+When using a custom package prefix, pass its absolute path instead of
+=$(pwd)/../.gerbil=. =just prepare-dev= preserves the configured prefix;
+=just check-policy= explicitly runs the same policy entry. ASP source
+qualification is a required CI gate, separate from production compilation.
+
+** Boundary acceptance
+=just check-production-build= executes the production build function and
+checks the SDK expansion registry. Any ASP module rejects the check, even
+when ASP artifacts are already installed for tests. This checks actual module
+loading rather than merely searching import declarations. A preloaded ASP
+module is a negative control. =build.ss= uses =std/build-script= and =std/make=
+with the same module order, C options and executable linker options as before.
+
+Development dependency installation is explicit. Keeping a manifest in a
+subdirectory alone does not make imports lazy or change Gerbil's dependency
+resolution. The production entry must also avoid ASP imports.

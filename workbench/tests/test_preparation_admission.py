@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import unittest
 
-from ascent_workbench.preparation_admission import qualify, unresolved_failures, shared_reference_paths
+from ascent_workbench.preparation_admission import qualify, unresolved_failures, shared_reference_paths, development_dependency_paths
 from ascent_workbench.preparation_policy import (
     preparation_admitted, preparation_latch_failure, preparation_non_regression,
 )
@@ -16,6 +16,27 @@ LEDGER = ROOT / 't/qualification/fixtures/preparation/unresolved.json'
 
 
 class PreparationAdmissionTests(unittest.TestCase):
+    def test_dev_split_cannot_change_other_production_dependencies(self):
+        edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@f5b7c009d2cab61144a8af18008a0bfba3056584"'
+        original = b'(package: gerbil-ascent depend: ("core@fixed"' + edge + b'))\n'
+        before = {'gerbil.pkg': original}
+        after = {'gerbil.pkg': original.replace(edge, b'')}
+        for name in ('gerbil.pkg', 'build.ss', 'production-build-test.ss'):
+            after['dev/' + name] = (ROOT / 'dev' / name).read_bytes()
+        changed = set(after)
+        self.assertEqual(development_dependency_paths(changed, before.get, after.get), changed)
+        for replacement in (after['gerbil.pkg'].replace(b'core@fixed', b'core@other'),
+                            original, after['gerbil.pkg'] + b'; extra change'):
+            bad = dict(after, **{'gerbil.pkg': replacement})
+            with self.assertRaises(ValueError):
+                development_dependency_paths(changed, before.get, bad.get)
+        for missing in ('dev/gerbil.pkg', 'dev/build.ss', 'dev/production-build-test.ss'):
+            with self.assertRaises(ValueError):
+                development_dependency_paths(changed - {missing}, before.get, after.get)
+        bad = dict(after, **{'dev/gerbil.pkg': b'(depend: ("asp@other"))'})
+        with self.assertRaises(ValueError):
+            development_dependency_paths(changed, before.get, bad.get)
+
     def test_shared_carriers_require_frozen_bodies_deletions_and_exact_import_edits(self):
         baseline, candidate = {}, {}
         canonical = 't/performance/uf-dense/'

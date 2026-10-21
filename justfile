@@ -42,8 +42,15 @@ build:
 develop:
     {{ gerbil_environment }} GERBIL_PATH="{{ gerbil_package_prefix }}" "{{ gerbil_package_prefix }}/bin/ascent-develop"
 
+# Install tools explicitly, after production dependencies have selected their versions.
+prepare-dev:
+    cd dev && GERBIL_PATH="{{ gerbil_package_prefix }}" {{ gerbil_command }} deps --install
+
 check-policy:
-    ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
+    {{ gxi_command }} dev/build.ss
+
+check-production-build:
+    {{ gxi_command }} dev/production-build-test.ss compile
 
 # A new fixed study; the historical lookup baseline and its gates remain intact.
 performance-uf-selected:

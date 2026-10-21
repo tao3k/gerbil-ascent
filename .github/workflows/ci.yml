@@ -83,7 +83,7 @@ jobs:
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
             !.gerbil/bin/ascent-develop*
-          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
@@ -95,6 +95,7 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -115,7 +116,9 @@ jobs:
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
       - name: Build Scheme package
-        run: just check-policy
+        run: |
+          just check-production-build
+          just check-policy
       - name: Qualify compiled performance contracts and benchmarks
         if: ${{ matrix.lane == 'performance' }}
         run: |
@@ -239,7 +242,7 @@ jobs:
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
             !.gerbil/bin/ascent-develop*
-          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
@@ -251,6 +254,7 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -475,7 +479,7 @@ jobs:
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
             !.gerbil/bin/ascent-develop*
-          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
@@ -487,6 +491,7 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0

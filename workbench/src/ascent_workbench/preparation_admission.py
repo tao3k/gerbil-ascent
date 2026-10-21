@@ -108,3 +108,28 @@ def shared_reference_paths(changed, before, after):
         if body is None or body.count(needle) != 1 or after(name) != body.replace(needle, replacement):
             raise ValueError('frozen reference import rewrite differs: ' + name)
     return paths
+
+
+def development_dependency_paths(changed, before, after):
+    """Admit only removal of the ASP production edge in this build-cost study.
+
+    Tool entrypoints are outside the measured production/workload source set.
+    This does not admit changes to any other production dependency or a change
+    to the ASP implementation; the upstream one-manifest-only diff is recorded
+    separately with the SDK and dependency seed identities.
+    """
+    manifest = 'gerbil.pkg'
+    paths = {'dev/gerbil.pkg', 'dev/build.ss', 'dev/production-build-test.ss'}
+    if manifest not in changed:
+        return set()
+    edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@f5b7c009d2cab61144a8af18008a0bfba3056584"'
+    original = before(manifest)
+    tools = after('dev/gerbil.pkg')
+    if (original is None or original.count(edge) != 1
+            or after(manifest) != original.replace(edge, b'')
+            or not paths.issubset(changed)
+            or any(before(path) is not None or after(path) is None for path in paths)
+            or tools is None
+            or b'github.com/tao3k/asp-gerbil-scheme@31c7ddee27d775a6164cbe8f032c6405cc7b353d' not in tools):
+        raise ValueError('development dependency split differs from the bound transformation')
+    return paths | {manifest}

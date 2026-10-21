@@ -404,6 +404,7 @@ def main():
                'workbench/src/ascent_workbench/supervision.py',
                'workbench/tests/test_supervision.py',
                'packages/proofs/lean/ExecutionPolicy.lean',
+               'packages/proofs/lean/DescriptorKernel.lean',
                'packages/proofs/lean/lakefile.lean',
                'packages/proofs/lean/PreparationWork.lean',
                'packages/proofs/lean/CompilerCost.lean',
@@ -443,9 +444,14 @@ def main():
     shared_paths = shared_reference_paths(set(changed),
         lambda name: revision_source(identities['baseline'], name),
         lambda name: revision_source(identities['candidate'], name))
+    from ascent_workbench.preparation_admission import development_dependency_paths
+    development_paths = development_dependency_paths(set(changed),
+        lambda name: revision_source(identities['baseline'], name),
+        lambda name: revision_source(identities['candidate'], name))
+    allowed.update(development_paths)
     allowed.update(shared_paths)
     allowed.update({'docs/development/source-vm-loading-acceptance-20261020.org',
-                    'workbench/tests/test_source_semantic_ci.py'})
+                    'workbench/tests/test_source_semantic_ci.py', 'dev/README.org'})
     if set(changed) - allowed:
         raise RuntimeError(f'unmatched runtime or workload source: {set(changed) - allowed}; '
                            'select a baseline with identical program sources before measuring compiler/cache changes')
@@ -467,6 +473,7 @@ def main():
     receipt['preparation_command'] = preparation
     receipt['semantic_runtime_requested'] = args.semantic_runtime
     receipt['checked_shared_reference_paths'] = sorted(shared_paths)
+    receipt['checked_development_dependency_paths'] = sorted(development_paths)
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(

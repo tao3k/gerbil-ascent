@@ -1147,3 +1147,47 @@ The running =92361034= experiment remains a frozen historical cohort with
 results must not be presented as measurements of the newer library scope.
 Final-head CI validates the current published inventory separately; removed
 application tests cannot be counted as a performance gain of this fix.
+
+
+* 2026-10-21: explicit development dependency boundary
+The production manifest no longer declares ASP. =dev/gerbil.pkg= pins ASP's
+one-manifest-only revision =31c7ddee27d775a6164cbe8f032c6405cc7b353d=;
+upstream PR 13 removes only ASP's POO revision constraint. Core PR 19 and its
+production revision remain unchanged. No SDK or runtime implementation changed.
+
+The production entry now projects its explicit module list directly into the
+SDK's ordinary BuildSpec. Before/after native S-expression comparison accepted
+all 135 targets, including compiler and linker options. The actual expansion
+registry contained no ASP modules (382 contexts); deliberately preloading ASP
+made that same check reject. This is a source-entry loading receipt, not yet a
+complete cold-build performance result.
+
+Existing ASP package declaration, testing extension and provider package tests
+passed with POO =fdeadfa40ca5cee5fe20308985aef1577f2eb49b=, selected by Core.
+A preliminary tagged =gerbil pkg update= invocation exposed the existing SDK
+CLI's tagged-argument post-update dependency lookup error; that failed command
+is retained in =/tmp/ascent-asp-unpinned-validation.log=. Subsequent native
+=gerbil deps --install=, build and semantic controls succeeded. The SDK was not
+modified. The completed semantic receipt is
+=/tmp/ascent-asp-fdead-semantics.log=.
+
+CI explicitly installs the development manifest after production dependencies,
+then requires the policy entry and the existing semantic/performance tests.
+The manifests are separate packages; opted-in tools reuse the standard artifact
+prefix rather than introducing a private package manager or scheduler.
+
+The current source cohort is compared with =4b9df10c=, not the retired 174-module
+cohort of experiment =39541671087=. The source-cost guard accepts only the exact
+ASP edge removal, creation of the three explicit development entry files, and
+otherwise unchanged production dependency declarations. Compilation, semantic,
+performance, cancellation, resource and provenance gates remain in force.
+The old historical regression latch remains unresolved. A green CI or a reduced
+loading context is not proof of cold preparation, cumulative allocation or
+compiler/source refinement closure.
+
+The exact formal rendering failure at =4b9df10c= was import formatting in the
+Lean-generated Rust descriptor checker. Concurrent commit =c51bb533= restores the Rust source to the exact generated
+layout. This integration preserves that commit and withdraws its local
+alternative generator-formatting change. No checker logic or equality
+comparison is relaxed. The guarded Lean inventory passed (175 jobs); final
+post-integration rendering and CI must still verify the adopted bytes.

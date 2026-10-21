@@ -179,7 +179,9 @@ impl ClueExchange {
             .map_or(Ok(true), Data::boolean)?;
         // Carrier confirmation affects display reuse, never the saved query.
         // It is an observation for this read, not a sticky query preference.
-        let mut query = query.map()?.clone();
+        let Data::Map(mut query) = query else {
+            return Err(invalid("slice query must be a map"));
+        };
         query.remove("readConfirmed");
         let query = Data::Map(query);
         let display_bytes = fields

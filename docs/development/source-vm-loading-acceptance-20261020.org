@@ -1465,3 +1465,153 @@ in 83.445 milliseconds under a shared host; this diagnostic neither admits a
 performance gate nor establishes the previous continuation samples as a CPU
 time distribution. The remaining runtime/performance and source-proof gaps
 remain open until their complete current-head controls finish.
+
+* 2026-10-21: complete-head failures and production concurrency evidence
+
+The complete main CI for =18751d5c513fd7ae6e768f580866b9e1fb34d2d3=
+(run =39576599499=) passed Rust/PyO3, Python consumers, hygiene, formal,
+formal conformance, BYODS and BYODS scale. Scheme semantics, performance and
+other oracles failed. The macOS companion =39576599557= exhausted its current
+600-second semantic deadline. Linux retained its original 180-second deadline.
+The semantic dispatch was 168 modules, 86 batches and twelve workers. Linking
+success did not close either semantic deadline or the performance lane.
+
+The product-session original 1,000-sample performance fixture failed in Linux
+at p95 82.086145ms against its unchanged 2ms budget. Nonpositive-session p95
+was 39.729986ms against 1ms; reachability closure was 2.713976ms against 1ms.
+The other-oracle lane recorded 63 passing fixtures and five original-deadline
+timeouts. These are retained failures, not classified as noise or deadlock.
+
+The separate production experiments =39576701247= (bridge =cfbc10c4=) and
+=39577027133= (bridge =8c23217d=) both built successfully and rejected their
+incomplete measurement matrices. The first exhausted the unchanged 240-second
+experiment bound in small/one-VM and parallel-closure/one-VM. The older bridge
+also returned an actual request Timeout in parallel-closure/one-VM; its normal
+request limit was not increased. Neither complete matrix is admitted.
+
+The following are individually valid rows from the first experiment, not a
+claim that its complete matrix passed. Twelve clients share one caller-owned
+Rayon pool. Every VM owner reported one processor. The host has three CPUs.
+Every fixed request changes its source and checks complete output against the
+independent closure oracle; every valid row also completed the 30-second soak.
+
+| Workload | Backend | Workers | Requests/s | Request p95 ms |
+|----------+---------+---------+------------+----------------|
+| closure  | VM      |       1 |       6.18 |        2239.64 |
+| closure  | VM      |       3 |      17.10 |         982.05 |
+| closure  | VM      |      12 |      21.17 |         773.23 |
+| closure  | Rayon   |       1 |    2076.73 |           8.49 |
+| closure  | Rayon   |       3 |    2322.10 |           7.44 |
+| closure  | Rayon   |       6 |    2439.27 |           8.44 |
+| closure  | Rayon   |       8 |    3461.44 |           4.58 |
+| closure  | Rayon   |      12 |    2337.17 |           7.58 |
+| parallel-closure | VM |     3 |       1.32 |        9566.40 |
+| parallel-closure | VM |    12 |       1.36 |        9123.48 |
+| parallel-closure | Rayon |  1 |      77.95 |         159.25 |
+| parallel-closure | Rayon |  3 |      94.53 |         178.90 |
+| parallel-closure | Rayon |  6 |      85.03 |         229.21 |
+| parallel-closure | Rayon |  8 |      68.56 |         344.92 |
+| parallel-closure | Rayon | 12 |      69.14 |         333.62 |
+
+Closure twelve-VM throughput is approximately 3.43 times its valid one-VM row.
+Parallel-closure three-thread Rayon throughput is approximately 1.21 times its
+one-thread row; eight/twelve threads regress. A three-CPU host cannot qualify
+twelve-core scaling. These unpaired bridge experiments do not establish a
+causal benefit from changing the bridge REV, and no incomplete denominator is
+used for a VM speedup claim. Raw per-request phases, owners, hashes, failures
+and source-clean assertions remain in both Actions artifacts.
+
+* Weak identity backend: source evidence and isolated candidate
+
+A native sample of the original product workload identified Gambit's generic
+table probing as a major hotspot. The frozen Gambit source =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=
+selects its internal identity backend when =test: eq?= has no explicit custom
+hash. The released Gerbil weak-table wrapper supplies =eq?-hash= explicitly.
+A controlled 10,000-object lookup probe checked identical values across both
+existing APIs and observed 30.588ms versus 1.998ms. This is a diagnostic probe,
+not an end-to-end benchmark qualification or a change to the compiler/SDK.
+
+The authorized isolated POO commit
+=8f605b91dbcac0df917ccbfc537d3a22f83b756e= changes only two constructors:
+read-issuance storage remains weak on keys and values; dependency storage
+remains weak on keys. Existing SDK HashTable adaptation is reused. Producer
+authentication, birth closures, mutation checks, invalidation traversal and
+callback order are unchanged. Thirteen existing issuance/replay/weak-lifetime
+Cases passed. Full local POO preparation exhausted its original 300-second
+library stage under other host compilation, before full tests; that preparation
+failure is not reported as a semantic pass. Core maintenance commit
+=98c4bd6a2e14178291210bd2f46457db46ce7743= changes only the fixed POO dependency
+from the admitted Core =44a99d4=; it does not import other tasks' Core changes.
+
+The corresponding ASCENT analysis/schema tables retain their original SDK
+locked HashTable wrapper and the same mutexes while selecting the internal
+weak identity backend. Declaration identity checks, failed-build publication
+and per-operation locking remain unchanged.
+
+The original local 1,000-sample product gate still failed: baseline p95
+107.092ms, the private-engine diagnostic 49.381ms, and the POO-only diagnostic
+23.151ms, all against 2ms. Combining candidates did not qualify the gate either.
+A separate 1,000-call original-truth cost probe observed CPU p95 about 1.98ms,
+wall p95 about 32.33ms and zero in-call GCs. Other host builds were active;
+these observations do not close a dedicated-host latency gate. SDK allocation
+estimates jumped between roughly 1.77MB and 332MB without in-call collections;
+they are not promoted to verified cumulative Scheme allocator costs.
+
+* Latest bridge integration boundary
+
+The production bridge pins now select PR #18 =2cc3c66363462eed6778057bed9cbbe2c7a1f36d=.
+Its released-SDK Linux/macOS and fixed-owner lifecycle lanes passed; its Bazel
+lanes failed. ASCENT retains the existing frozen SDK and does not consume those
+failed Bazel configurations. The build-only legacy IR generator pin is unchanged.
+The new Scheme-owned service is an explicit upstream API, not a feature that
+silently replaces ASCENT's process pool on REV update. Twelve independent
+single-thread process VMs remain the required production ownership model.
+
+ASCENT's value transport reuses upstream fixnum construction, exact-big-integer
+fallback and root-borrowed snapshot projections. It introduces no JSON path,
+word-layout constants or handwritten FFI. Focused native tests include signed
+host-word edges, both fixnum boundaries, nested snapshots and signed 4,096-bit
+integers. Type checking against the new fixed bridge completed successfully;
+full native execution and exact-head CI remain separate acceptance obligations.
+No allocation probe, finite test, pool-size assertion or abstract Lean/Quint
+model establishes complete allocator, mutable-cache or scheduling source
+refinement. Those obligations must remain explicitly open until checked.
+
+The private-engine admission candidate is withdrawn from the implementation:
+its allocation reduction and finite method tests do not establish equivalence
+of every contextual responsibility. The production engine retains the original
+GerbilAscentSessionContract validation. The three admission-order/shape Cases
+remain as regression tests rather than evidence for bypassing that validation.
+
+* Concurrent socket fixture: retained failure and root controls
+
+The latest-bridge native unit run passed the original DSL/value test, including
+all new exact-integer edges, but failed the existing immediate EOF assertion.
+The failure was retained (11 passes, one failure); an instrumented unchanged
+assertion later happened to pass and was not accepted as a repair. Increasing
+the same assertion to 10,000 iterations reproduced the failure at attempt 2.
+Non-consuming MSG_PEEK returned EAGAIN after the local writer was dropped.
+Three explicit controls used the same compiled test: socket alone passed all
+10,000 checks; concurrent child spawn failed at attempt 0; concurrent Scheme
+initialization passed. The local Rust standard library source confirms that
+macOS socketpair creation and CLOEXEC setting are separate operations; a spawned
+process may also temporarily own inherited descriptors before exec. A local
+drop is not proof of the last kernel owner during that interval.
+
+The test fixtures now protect the complete short socketpair lifetime and the
+other test's spawn syscall with one test-only barrier. The original drop/EOF
+assertion is retained and strengthened to 10,000 iterations. The barrier is
+released before the three-second child-retirement workload, and no production
+transport, cancellation check, timeout, Rayon pool, VM ownership or test-thread
+count changes. The first implementation placed a test static in lib.rs and was
+rejected by the existing ASP facade rule; it was moved to the private transport
+module without relaxing that rule. All diagnostic failures remain retained.
+
+The combined local source run correctly dispatched 169 modules/86 batches to
+twelve single-processor workers. It still exhausted 600 seconds after 153 module
+completions and 1,255 successful Cases, with no recorded assertion failure. Its
+linked driver was rejected (=linked=0=) because the copied historical image did
+not match candidate source; the original gxi fallback was retained. Other host
+builds were active. This is neither complete semantic acceptance nor a matched
+three-CPU performance experiment. The earlier accidental three-worker setup
+was cancelled, retained and not admitted.

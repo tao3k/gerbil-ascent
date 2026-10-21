@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Immutable declaration schema and rule-plan cache shared by evaluation engines.
-(import (only-in :clan/poo/object .ref)
+(import (only-in :gerbil/runtime/hash HashTable Locker make-locked-hash-table)
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-extension))
 
 (export gerbil-ascent-program-analysis
@@ -12,10 +13,18 @@
 ;; Program declarations are POO values. Their lowered rule plan is immutable
 ;; and can be shared; each evaluation still creates its own relation state.
 (def +program-analysis-cache+
-  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-program-analysis)))
+  (HashTable
+   (make-locked-hash-table
+    (HashTable (make-table test: eq? weak-keys: #t))
+    (Locker (make-mutex 'ascent-program-analysis)))))
 (def +program-schema-cache+
-  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-program-schema)))
+  (HashTable
+   (make-locked-hash-table
+    (HashTable (make-table test: eq? weak-keys: #t))
+    (Locker (make-mutex 'ascent-program-schema)))))
 
+;;; Omit a custom hash so Gambit selects its GC-aware identity backend.
+;;; Keep the SDK HashTable adapter and the same lock on primitive operations.
 ;;; Primitive table access owns its lock. Declaration inspection and caller
 ;;; builders stay outside critical sections; failed builds publish nothing.
 ;; : (-> Program Relations Rules (-> Analysis) Analysis)

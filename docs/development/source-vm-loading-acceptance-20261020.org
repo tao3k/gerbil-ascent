@@ -1130,3 +1130,20 @@ This checker-only change does not alter the Scheme, Rust, SDK, compiler or
 runtime inputs of the already running =92361034= performance experiment.
 That experiment remains bound to its exact measured commit; final-head CI
 must still validate the submission-order change separately.
+
+** Concurrent published library-boundary changes
+
+The normal push of checker-only commit =eda9f209= was rejected because PR #1
+had advanced through concurrent published commits ending at =b03efb55=. Those
+commits move application/Review ownership to POO Flow and change the library
+and qualification inventories. They are preserved as published ancestry;
+this thread does not restore retired code or fold those edits into its own
+checker commit. The automatic merge is =f45beae9=; its net changes relative to
+the published tip are only this report, the checker scheduler and its test.
+The combined formal-inventory manifest and scheduler tests pass locally.
+
+The running =92361034= experiment remains a frozen historical cohort with
+174 modules and 1,417 Cases, matching the 337/290-second observations. Its
+results must not be presented as measurements of the newer library scope.
+Final-head CI validates the current published inventory separately; removed
+application tests cannot be counted as a performance gain of this fix.

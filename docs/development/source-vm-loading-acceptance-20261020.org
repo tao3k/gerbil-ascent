@@ -1423,3 +1423,45 @@ frozen entry for the new =policy-as-production-build= formal counterexample.
 The unused helper is removed and the exact obligation is added without changing
 the existing inventory. The focused frozen-inventory test passes. These fixes
 do not turn the prior semantic timeouts or performance failures into passes.
+
+** Fixed dependency ABI and production Rayon coverage
+
+Exact-head CI for =d8b2d4eb= failed before runtime qualification: the
+preserved public-name refactor imports =:yuanxu/types=, while the selected
+=44a99d4= dependency publishes =:core/types=. The Linux Scheme and Rust/PyO3
+logs both identify this missing module. Formal and formal-conformance passed;
+Python consumers were skipped. This failure is not a new semantic timeout or
+a measured performance regression. A local lexical-import probe passed for the production operators, contract
+types, reference benchmark and observability suite against that fixed ABI.
+While that diagnosis was running, =7aeaf0e5= independently restored direct
+imports of the actual fixed exports on the PR branch. That concurrent repair
+is preserved; the local duplicate proposal was discarded. No compatibility
+module, upstream change or SDK change is introduced by this work.
+
+The production process benchmark retains the original small and closure cases
+and adds =parallel-closure=: 24 fixed requests, 256 independent chains of width
+16 per request, 3,840 input edges and 30,720 expected output rows. These inputs
+exceed the kernel's 512-row connection-splitting threshold; the original
+closure case has only 176 edges. The thread matrix is 1/3/6/8/12, alongside
+1/3/12 resident single-processor Scheme VMs, always with 12 request clients.
+Three admitted CPUs bound available CPU parallelism: twelve configured workers
+are an overload control, not a promise of twelve-fold speedup.
+
+Receipts bind the exact Cargo lock and Scheme bridge source revisions and
+report source replacement separately from run/export costs. Admission rejects
+missing, duplicate and cross-sample requests and impossible phase durations;
+three focused evidence tests pass. The production pool reports its actual
+thread count through the library API and the benchmark asserts the requested
+size. Cancellation, result completeness, independent expected closure, source
+replacement, resource limits, process identity and contamination checks remain.
+
+The pinned bridge =cfbc10c= is the current PR 18 head. Its specialized native
+numeric batch producer belongs to its instance-owner API; arbitrary ASCENT
+map/list requests do not automatically use that constructor. Merely changing
+the dependency revision therefore does not establish that optimization's
+benefit for this workload. Matched measurements are still required. The
+local Session Contract probe retained all validation and measured 100 calls
+in 83.445 milliseconds under a shared host; this diagnostic neither admits a
+performance gate nor establishes the previous continuation samples as a CPU
+time distribution. The remaining runtime/performance and source-proof gaps
+remain open until their complete current-head controls finish.

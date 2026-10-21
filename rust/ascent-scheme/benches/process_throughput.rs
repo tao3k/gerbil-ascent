@@ -414,6 +414,11 @@ fn main() {
     }
     // All Rayon clients share this one caller-owned Rust thread pool.
     let engine = Engine::new(threads).unwrap();
+    assert_eq!(
+        engine.threads(),
+        threads,
+        "actual caller-owned Rayon pool size"
+    );
     let clients = 12;
     assert!(tasks >= clients);
     let mut sessions = Vec::new();

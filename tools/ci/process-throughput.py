@@ -25,6 +25,32 @@ def fields(line):
     return dict(field.split("=", 1) for field in line.split()[1:])
 
 
+def request_phases(stdout, tasks, samples):
+    """Admit exact, unique fixed-work observations before reporting phase costs."""
+    lines = stdout.splitlines()
+    expected = "sample\ttask\tlatency_ns\tcompletion_ns\treplace_ns\trun_export_ns\tanswer_sha"
+    if not lines or lines[0] != expected:
+        raise ValueError("missing production request observations")
+    observed = {}
+    for line in lines[1:]:
+        sample, task, latency, completion, replace, run_export, answer = line.split("\t")
+        sample, task, latency, completion, replace, run_export = map(
+            int, (sample, task, latency, completion, replace, run_export))
+        key = sample, task
+        if (key in observed or not 0 <= sample < samples
+                or not sample * tasks <= task < (sample + 1) * tasks
+                or min(latency, completion, replace, run_export) < 0
+                or replace + run_export > latency or len(answer) != 64
+                or any(c not in "0123456789abcdef" for c in answer)):
+            raise ValueError("invalid or duplicate production request observation")
+        observed[key] = replace, run_export
+    if len(observed) != tasks * samples:
+        raise ValueError("incomplete production request observations")
+    return {"median_replace_ms": statistics.median(v[0] / 1e6 for v in observed.values()),
+            "median_run_export_ms": statistics.median(v[1] / 1e6 for v in observed.values()),
+            "checked_fixed_work_requests": len(observed)}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", type=Path, required=True)
@@ -33,10 +59,14 @@ def main():
     parser.add_argument("--expected-cpus", type=int)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    receipt = {"schema": "ascent.production-process-throughput.v2", "host": platform.platform(),
+    receipt = {"schema": "ascent.production-process-throughput.v3", "host": platform.platform(),
                "logical_cpus": os.cpu_count(), "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                "benchmark_sha256": hashlib.sha256(args.benchmark.read_bytes()).hexdigest(),
-               "worker_sha256": hashlib.sha256(args.worker.read_bytes()).hexdigest(), "runs": []}
+               "worker_sha256": hashlib.sha256(args.worker.read_bytes()).hexdigest(),
+               "cargo_lock_sha256": hashlib.sha256(Path("rust/Cargo.lock").read_bytes()).hexdigest(),
+               "scheme_bridge": sorted({line.strip() for line in Path("rust/Cargo.lock").read_text().splitlines()
+                                         if line.startswith('source = "git+https://github.com/tao3k/gerbil-scheme-rust?')}),
+               "runs": []}
     if args.expected_cpus is not None and os.cpu_count() != args.expected_cpus:
         raise SystemExit(f"expected {args.expected_cpus} CPUs, observed {os.cpu_count()}; no measurements admitted")
     source_paths = ["rust", "interface", "program", "core", "table", "bindings"]
@@ -45,8 +75,9 @@ def main():
     receipt["source_clean"] = tracked_clean and not untracked
     if not receipt["source_clean"]:
         raise SystemExit("runtime sources differ from the recorded head; no measurements admitted")
-    cases = [("small", 240, 4, 8), ("closure", 120, 16, 12)]
-    modes = [("vm", 1, 1), ("vm", 3, 1), ("vm", 12, 1)] + [("rayon", 1, threads) for threads in (1, 3, 6, 12)]
+    cases = [("small", 240, 4, 8), ("closure", 120, 16, 12),
+             ("parallel-closure", 24, 256, 16)]
+    modes = [("vm", 1, 1), ("vm", 3, 1), ("vm", 12, 1)] + [("rayon", 1, threads) for threads in (1, 3, 6, 8, 12)]
     for name, tasks, groups, width in cases:
         for mode, owners, threads in modes:
             key = f"{name}-{mode}-vm{owners}-threads{threads}"
@@ -97,6 +128,11 @@ def main():
                           and int(soaks[0]["histogram_buckets"]) == 65_536
                           and 0 <= int(soaks[0]["p50_lower_ns"]) <= int(soaks[0]["p50_upper_ns"])
                           and 0 <= int(soaks[0]["p95_lower_ns"]) <= int(soaks[0]["p95_upper_ns"]))
+            try:
+                phases = request_phases(stdout, tasks, 5)
+            except (ValueError, TypeError) as error:
+                phases = {}
+                errors.append(str(error))
             valid = (status == 0 and soak_valid and len(samples) == 5
                      and {value["sample"] for value in samples} == {str(i) for i in range(5)}
                      and all(value["mode"] == mode and value["vms"] == str(owners)
@@ -108,7 +144,10 @@ def main():
                      and len({value["pid"] for value in identities}) == owners
                      and all(value["processors"] == "1" for value in identities) and not audit and not errors)
             row = {"key": key, "workload": name, "mode": mode, "vms": owners, "rust_threads": threads,
-                   "tasks": tasks, "groups": groups, "width": width, "command": command, "status": status,
+                   "tasks": tasks, "groups": groups, "width": width,
+                   "input_edges_per_request": groups * (width - 1),
+                   "expected_rows_per_request": groups * width * (width - 1) // 2,
+                   "request_phases": phases, "command": command, "status": status,
                    "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "owners": identities,
                    "foreign_compilers": audit, "audit_errors": errors, "valid": valid}
             if valid:

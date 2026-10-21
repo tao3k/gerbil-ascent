@@ -7,8 +7,7 @@
                  gerbil-ascent-prepare-source-log-snapshot source-snapshot-program
                  source-snapshot-rows)
         (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop validate)
-        (only-in "types.ss" GerbilAscentSessionContract)
+        (only-in "types.ss" gerbil-ascent-make-session-value)
         (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state)
@@ -381,15 +380,9 @@
                 (set! partial? #f))
               (set! partial? #t))
             result))))
-    (validate GerbilAscentSessionContract
-              (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
-                  (.append-source!
-                   (if direct-appends? direct-append-source!
-                       append-source!))
-                  (.replace-source! replace-source!)
-                  (.replace-sources! replace-sources!)
-                  (.run run!)
-                  (.run-timeout run-timeout!)))))
+    (gerbil-ascent-make-session-value
+      (if direct-appends? direct-append-source! append-source!)
+      replace-source! replace-sources! run! run-timeout!)))
 
 (def (gerbil-ascent-session-append-source! session name row)
   ((.ref session '.append-source!) name row))

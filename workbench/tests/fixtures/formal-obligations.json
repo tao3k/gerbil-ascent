@@ -301,6 +301,21 @@
     },
     "faults": [
       [
+        "accept-missing-metadata-cache",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-unissued-shape",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-shape-revision",
+        "PolicyExact",
+        12
+      ],
+      [
         "policy-as-production-build",
         "PolicyExact",
         12

@@ -9,6 +9,10 @@ module CompilerCost {
   var q: State
   action init = q' = {wanted: 0, cached: 0, valid: false, active: false, attempt: 0,
                      failed: false, published: false, lastGood: true, staleReuse: false, violation: false}
+  pure val MetadataCachePolicy = Set(false,true).forall(revisions => Set(false,true).forall(fieldMap => Set(false,true).forall(mapping => Set(false,true).forall(classifiers => {
+    val selected = revisions and fieldMap and (mapping or Mutation == "accept-missing-metadata-cache") and classifiers
+    selected == (revisions and fieldMap and mapping and classifiers)
+  }))))
   pure val DeclarationShapePolicy = Set(false,true).forall(issued => Set(false,true).forall(kind => Set(false,true).forall(current => {
     val selected = (issued or Mutation == "accept-unissued-shape") and kind and
       (current or Mutation == "ignore-shape-revision")
@@ -153,7 +157,7 @@ module CompilerCost {
     val paths = if (Mutation == "source-before-prepared-library") List(1, 0) else List(0, 1)
     paths[0] == 0 and paths[1] == 1
   })
-  action CheckPolicy = q' = {...q, violation: not(DeclarationShapePolicy and BuildEntryPolicy and RuntimeSearchPolicy and PassPathPolicy and CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and ProjectionIndexPolicy and CacheEncodingPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
+  action CheckPolicy = q' = {...q, violation: not(MetadataCachePolicy and DeclarationShapePolicy and BuildEntryPolicy and RuntimeSearchPolicy and PassPathPolicy and CcObservationPolicy and LookupAdmissionPolicy and LookupCostPolicy and CounterInformationPolicy and ModuleDomainPolicy and SourceCoveragePolicy and PublicationPolicy and ProjectionPolicy and ProjectionIndexPolicy and CacheEncodingPolicy and AuditOrderPolicy and OutputTargetPolicy and LinkCostPolicy and RestoredProgramPolicy and NetCounterPolicy and ProducerPolicy and SupportPolicy and ParentPolicy and InputPolicy and OriginPolicy and HostPolicy and GgcPolicy and CleanPolicy and ScopePolicy and TotalPolicy)}
   action ChangeOptions = all {q.wanted < 2, q' = {...q, wanted: q.wanted + 1}}
   action Begin = all {not(q.active), q' = {...q, active: true, attempt: q.wanted, failed: false, published: false}}
   action Fail = all {q.active, q' = {...q, failed: true}}

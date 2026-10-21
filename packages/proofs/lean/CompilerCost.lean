@@ -30,6 +30,23 @@ def declarationShapeSchemeSource : String :=
   "  (let (entry (hash-get declared-value-shapes value))\n" ++
   "    (and entry (eq? kind (car entry)) (= (object-revision value) (cdr entry)))))\n"
 
+-- Cache misses cannot authorize a value-only check. The actual guarded
+-- source uses upstream cached reads; .ref/cached itself remains an SDK premise.
+def metadataGuard (revisions fields mapping classifiers : Bool) : Bool :=
+  revisions && fields && mapping && classifiers
+
+theorem missing_metadata_mapping_falls_back (revisions fields classifiers : Bool) :
+    metadataGuard revisions fields false classifiers = false := by
+  simp [metadataGuard]
+
+theorem changed_metadata_dispatch_falls_back (revisions fields mapping : Bool) :
+    metadataGuard revisions fields mapping false = false := by
+  simp [metadataGuard]
+
+def metadataGuardSchemeSource : String :=
+  "(def (canonical-metadata-current? contract slots)\n  (let* ((fields (.ref contract 'responsibilities))\n         (descriptors (cons contract (map (cut .ref fields <>) slots)))\n         (sources (cons fields descriptors))\n         (revisions (map object-revision sources))\n         (classifiers (map (cut .ref <> '.classify) descriptors)))\n    (lambda ()\n      (and (andmap (lambda (source revision) (= (object-revision source) revision)) sources revisions)\n           (eq? fields (.ref/cached contract 'responsibilities))\n           (andmap (lambda (slot descriptor) (eq? (.ref/cached fields slot) descriptor)) slots (cdr descriptors))\n           (andmap (lambda (descriptor classifier) (eq? (.ref/cached descriptor '.classify) classifier))\n                   descriptors classifiers)))))\n(def (canonical-value-member contract view slots)\n  (let (current? (canonical-metadata-current? contract slots))\n    (lambda (value)\n      (if (current?) (element? view value) (element? contract value)))))\n"
+
+
 def hostLimit : Nat := 512
 -- Exact predicate in the pinned gambit.h: downgrade iff limit > 0 && labels > limit.
 def singleHost (labels limit : Nat) : Bool := limit == 0 || labels ≤ limit

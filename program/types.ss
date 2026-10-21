@@ -4,8 +4,8 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :clan/poo/object .o .cc .ref object-revision)
-        (only-in :clan/poo/mop define-type element? Type. Any)
+(import (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
+        (only-in :clan/poo/mop define-type element? validate Type. Any)
         (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/types
                  YuanxuObjectContract.
@@ -18,6 +18,7 @@
 (export gerbil-ascent-fact-limit?
         gerbil-ascent-owned-root-contract
         gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
+        gerbil-ascent-make-session-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
         GerbilAscentTermContract
@@ -120,23 +121,24 @@
 ;; invalidate ordinary metadata edits; classifier identity also detects the
 ;; existing direct instance instrumentation used by the semantic cost control.
 ;; This caches descriptor identity only, never the result for an input value.
-(def (canonical-value-member contract view slots)
+;; BEGIN GENERATED PREPARATION METADATA-GUARD
+(def (canonical-metadata-current? contract slots)
   (let* ((fields (.ref contract 'responsibilities))
          (descriptors (cons contract (map (cut .ref fields <>) slots)))
          (sources (cons fields descriptors))
          (revisions (map object-revision sources))
          (classifiers (map (cut .ref <> '.classify) descriptors)))
+    (lambda ()
+      (and (andmap (lambda (source revision) (= (object-revision source) revision)) sources revisions)
+           (eq? fields (.ref/cached contract 'responsibilities))
+           (andmap (lambda (slot descriptor) (eq? (.ref/cached fields slot) descriptor)) slots (cdr descriptors))
+           (andmap (lambda (descriptor classifier) (eq? (.ref/cached descriptor '.classify) classifier))
+                   descriptors classifiers)))))
+(def (canonical-value-member contract view slots)
+  (let (current? (canonical-metadata-current? contract slots))
     (lambda (value)
-      (if (and (andmap (lambda (source revision) (= (object-revision source) revision))
-                       sources revisions)
-               (eq? fields (.ref contract 'responsibilities))
-               (andmap (lambda (slot descriptor) (eq? (.ref fields slot) descriptor))
-                       slots (cdr descriptors))
-               (andmap (lambda (descriptor classifier)
-                         (eq? (.ref descriptor '.classify) classifier))
-                       descriptors classifiers))
-        (element? view value)
-        (element? contract value)))))
+      (if (current?) (element? view value) (element? contract value)))))
+;; END GENERATED PREPARATION METADATA-GUARD
 
 (def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
 
@@ -429,3 +431,36 @@
   (.o .append-source!: +procedure+
       .replace-source!: +procedure+
       .run: +procedure+))
+
+;; This factory owns all field getters. It checks every mandatory procedure on
+;; each call, while explicit public/contextual admission keeps its full receipts.
+(def +session-value+
+  (.cc ObjectContract. identity: 'ascent/session-value
+       required-prototype: +session-prototype+
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o .append-source!: (.cc Type. .element?: procedure?)
+           .replace-source!: (.cc Type. .element?: procedure?)
+           .run: (.cc Type. .element?: procedure?))))
+(def session-metadata-current?
+  (canonical-metadata-current? GerbilAscentSessionContract '(.append-source! .replace-source! .run)))
+(def +missing-session-protocol+ (gensym 'missing-session-protocol))
+(def +session-protocol+
+  (apply append
+    (map (lambda (entry)
+      (map (lambda (slot) (vector (car entry) slot (.ref (car entry) slot))) (cdr entry)))
+      (list (cons GerbilAscentSessionContract '(.validate .admit .obligations value-contract))
+            (cons +procedure+ '(.admit .obligations value-contract))))))
+(def (session-protocol-current?)
+  (andmap (lambda (entry)
+    (eq? (vector-ref entry 2)
+         (.ref/cached (vector-ref entry 0) (vector-ref entry 1)
+           (lambda () +missing-session-protocol+)))) +session-protocol+))
+(def (gerbil-ascent-make-session-value append! replace! replace-all! run! timeout!)
+  (let (value (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
+                .append-source!: append! .replace-source!: replace!
+                .replace-sources!: replace-all! .run: run! .run-timeout: timeout!))
+    (if (and (session-metadata-current?) (session-protocol-current?)
+             (element? +session-value+ value))
+      value
+      (validate GerbilAscentSessionContract value))))

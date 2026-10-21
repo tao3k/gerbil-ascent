@@ -7,7 +7,8 @@
         (only-in :yuanxu/types yuanxu-contract-admit yuanxu-validation-evidence-accepted?
                  yuanxu-classification-evidence)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom)
-        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract))
+        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract
+                 GerbilAscentSessionContract gerbil-ascent-make-session-value))
 (export ascent-value-membership-test)
 
 (def (nested-term? term)
@@ -27,6 +28,78 @@
 
 (def ascent-value-membership-test
   (test-suite "Nested value membership preserves public admission"
+    (test-case "owned Session publication preserves all five operations and contextual obligations"
+      (let* ((operation (lambda args 'called))
+             (session (gerbil-ascent-make-session-value operation operation operation operation operation))
+             (seen [])
+             (context (.o (.contract-obligations
+                       (lambda (contract _candidate)
+                         (set! seen (cons (.ref contract 'identity) seen)) [])))))
+        (for-each (lambda (slot) (check-equal? (.ref session slot) operation))
+          '(.append-source! .replace-source! .replace-sources! .run .run-timeout))
+        (check-equal? (element? GerbilAscentSessionContract session) #t)
+        (check-equal? (yuanxu-validation-evidence-accepted?
+                       (yuanxu-contract-admit GerbilAscentSessionContract session context)) #t)
+        (check-equal? (length seen) 4)
+        (check-equal? (car seen) 'ascent/session)))
+    (test-case "invalid mandatory Session operations still raise during publication"
+      (let (operation (lambda args (void)))
+        (for-each (lambda (position)
+          (let (operations (list operation operation operation operation operation))
+            (set-car! (list-tail operations position) #f)
+            (check-equal? (with-catch (lambda (_failure) 'raised)
+                            (lambda () (apply gerbil-ascent-make-session-value operations) 'accepted))
+                          'raised))) '(0 1 3))))
+    (test-case "Session publication honors live validation dispatch and normalization"
+      (let* ((validator (.ref GerbilAscentSessionContract '.validate))
+             (operation (lambda args (void)))
+             (sentinel (.o)) (calls 0))
+        (try
+          (hash-put! (object-instance GerbilAscentSessionContract) '.validate
+            (lambda args (set! calls (+ calls 1)) sentinel))
+          (check-equal? (gerbil-ascent-make-session-value operation operation operation operation operation)
+                        sentinel)
+          (check-equal? calls 1)
+          (finally (hash-put! (object-instance GerbilAscentSessionContract) '.validate validator)))))
+    (test-case "Session publication honors root and field admission and obligation dispatch"
+      (let* ((operation (lambda args (void)))
+             (field (.ref (.ref GerbilAscentSessionContract 'responsibilities) '.run)))
+        (for-each (lambda (descriptor)
+          (for-each (lambda (slot)
+            (let ((original (.ref descriptor slot)) (calls 0))
+              (try
+                (hash-put! (object-instance descriptor) slot
+                  (lambda args (set! calls (+ calls 1)) (apply original args)))
+                (let (session (gerbil-ascent-make-session-value
+                                operation operation operation operation operation))
+                  (check-equal? (> calls 0) #t)
+                  (check-equal? (element? GerbilAscentSessionContract session) #t))
+                (finally (hash-put! (object-instance descriptor) slot original)))))
+            '(.admit .obligations))) (list GerbilAscentSessionContract field))))
+    (test-case "Session publication honors live field classifier rejection"
+      (let* ((field (.ref (.ref GerbilAscentSessionContract 'responsibilities) '.run))
+             (classifier (.ref field '.classify))
+             (operation (lambda args (void))) (calls 0))
+        (try
+          (hash-put! (object-instance field) '.classify
+            (lambda (candidate context)
+              (set! calls (+ calls 1))
+              (yuanxu-classification-evidence (.ref field 'identity) candidate #f [] context)))
+          (check-equal? (with-catch (lambda (_failure) 'raised)
+                          (lambda () (gerbil-ascent-make-session-value
+                                       operation operation operation operation operation) 'accepted))
+                        'raised)
+          (check-equal? (> calls 0) #t)
+          (finally (hash-put! (object-instance field) '.classify classifier)))))
+    (test-case "Session publication preserves a changed public prototype"
+      (let* ((prototype (.ref GerbilAscentSessionContract 'proto))
+             (replacement (.o)) (operation (lambda args (void))))
+        (try
+          (.putslot! GerbilAscentSessionContract 'proto ($constant-slot-spec replacement))
+          (let (session (gerbil-ascent-make-session-value operation operation operation operation operation))
+            (check-equal? (element? GerbilAscentSessionContract session) #t)
+            (check-equal? (.ref session '.run) operation))
+          (finally (.putslot! GerbilAscentSessionContract 'proto ($constant-slot-spec prototype))))))
     (test-case "all kind classes and opaque values retain complete shape checks"
       (let (observed
              (observe-term
@@ -133,6 +206,18 @@
         (check-equal? (and (memq 'ascent/term-kind seen) #t) #t)
         (check-equal? (and (memq 'ascent/value seen) #t) #t)
         (check-equal? (car seen) 'ascent/term)))
+    (test-case "missing metadata cache entries take complete public admission"
+      (let* ((term (gerbil-ascent-variable 'x))
+             (kind (.ref (.ref GerbilAscentTermContract 'responsibilities) 'kind))
+             (classifier (.ref kind '.classify))
+             (cache (object-instance kind)))
+        (try
+          (hash-remove! cache '.classify)
+          (check-equal? (hash-key? cache '.classify) #f)
+          (check-equal? (nested-term? term) #t)
+          ;; Complete fallback must run/repopulate the missing classifier.
+          (check-equal? (hash-key? cache '.classify) #t)
+          (finally (hash-put! cache '.classify classifier)))))
     (test-case "producer values remain checked and later edits restore full getter semantics"
       (let* ((term (gerbil-ascent-variable 'x))
              (atom (gerbil-ascent-atom 'input (list term)))

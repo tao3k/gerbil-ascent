@@ -411,6 +411,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-cache-admission" => pure Ascent.CompilerCost.cacheAdmissionYamlSource
   | "preparation-cache-inputs" => pure Ascent.CompilerCost.cacheInputsYamlSource
   | "preparation-producer" => pure Ascent.CompilerCost.producerPythonSource
+  | "preparation-metadata-guard" => pure Ascent.CompilerCost.metadataGuardSchemeSource
   | "preparation-value-shape" => pure Ascent.CompilerCost.declarationShapeSchemeSource
   | "preparation-support-admission" => pure Ascent.CompilerCost.supportAdmissionSchemeSource
   | "preparation-output-target" => pure Ascent.CompilerCost.outputTargetPythonSource

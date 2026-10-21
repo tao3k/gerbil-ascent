@@ -1960,3 +1960,113 @@ imports, without changing any proof limit. The native weak-table implementation,
 constructor/metadata source refinement, complete callback equivalence and true
 cumulative allocation remain separate open obligations. The generated selector
 is a narrow source binding, not a proof of those entire implementations.
+
+
+** Split CI and source-cost follow-up (2026-10-22)
+
+The fee24d3b PR run 39629362728 completed all 170 source modules and 1,384
+Cases on macOS in 534.02 seconds, with twelve one-processor VM workers on the
+three-core runner. Its Linux run still hit the unchanged 180-second deadline
+at 168 modules / 1,376 completed Cases. Nonpositive and product-session tail
+latency gates failed; six other-oracle fixtures hit their existing deadlines.
+These failures are retained. A later, independently integrated Yuanxu head
+0b6da040 hit the macOS 600-second deadline too; the earlier pass does not
+qualify this newer dependency/source combination.
+
+The same-source work-only experiment 39635713987 binds both identities to
+fee24d3b. It is attribution, not an ABBA speedup experiment. Preparation
+recorded 579 attributed native helper jobs, 756.738 inclusive GSC CPU seconds
+and 629.480 nested helper CPU seconds (about 83 percent). The top individual
+jobs are frozen UF/reference evaluator C compilations. Warm preparation
+recorded zero GSC/native-helper calls. The data establish actual C compiler
+work, not a repeated-compilation claim from scheduled-path counts. They do
+not isolate C parsing from optimization or justify changing reference flags.
+
+Preparation GCC cumulative GGC accounting was 19,651,058,488 bytes over all
+579 jobs; this is GCC GGC, not all native allocation or Scheme allocation.
+Three raw Scheme counter decreases and three negative SDK allocation
+estimates made cold preparation allocation incomplete. Warm preparation
+also had counter decreases and a negative estimate. The unchanged admission
+rejected the experiment. True cumulative Scheme allocation remains open.
+
+The fee24d3b production process matrix validated small VM 1/3/12 throughput
+of 18.009 / 58.458 / 68.343 requests per second and closure throughput of
+14.350 / 49.089 / 56.422. Twelve VMs achieved 3.80x / 3.93x relative to one
+VM on the three-core host. These are earlier-head results, not qualification
+of the current implementation; the complete matrix was not admitted.
+
+** Publication and metadata-read candidate
+
+The metadata guard now reuses the pinned POO .ref/cached demand/read path.
+A missing cache entry selects full public admission; it is never accepted as
+an unchanged descriptor. Descriptor identity/revision checks do not cache
+successful input validation. CompilerCost renders the exact guard source;
+Quint rejects accepting missing metadata. These are narrow selector/source
+bindings, not equivalence of the POO SDK cache implementation or the entire
+mutable evaluator. The frozen fault inventory was extended with the already
+implemented ownership/revision mutations; no previous fault was removed.
+
+A numeric-only, 100-cycle product probe attributed 65.839 ms CPU to Session
+publication out of 80.295 ms open-session CPU. Only numbers were retained by
+the observer. An earlier observer retained full exec-stats results and is
+withdrawn as GC attribution. A proposed predicate-hoisting optimization was
+also rejected: the SDK andmap already specializes two lists, and the direct
+membership control did not improve.
+
+The candidate constructs the same five constant-field Session operations,
+checks the three mandatory procedures immediately, and retains full public
+contextual admission. Changed declaration metadata, classifier, validation,
+admission or obligation dispatch selects original validate. Invalid fields
+also use that path, preserving its diagnostic behavior. New controls cover
+operation identity, four contextual obligations, immediate invalid-field
+rejection, replaced validation return normalization, and live classifier
+rejection. Complete end-to-end and latest-dependency qualification is still
+required; a focused publication CPU reduction is not a cold-build speedup.
+
+
+The freshly rebuilt Yuanxu integration passed the unchanged nine-Case closure
+Suite (including 70/28 classifier calls) and fifteen publication/value Cases.
+A focused same-VM, same-dependency 1,000-publication ABBA diagnostic measured
+full-validation CPU 0.912187 / 0.829560 seconds versus candidate 0.060525 /
+0.052767 seconds. GC CPU was 0.190726 / 0.174547 versus 0.027173 / 0 seconds.
+Every publication checked operation identity. This isolates publication and
+includes its GC; it does not qualify end-to-end tail latency, cold preparation
+or true cumulative allocation. Additional dynamic protocol controls accompany
+the candidate; their final count is recorded by the test harness.
+
+The production gerbil-scheme-rust pins now select acd1a624deb4bcfba2aa277bc383876fadde5467.
+All seven relevant upstream PR #18 checks completed successfully (same-VM SMP
+was explicitly skipped because the SDK lacks that capability). The SDK remains
+unchanged. ASCENT uses direct owner-thread rooted calls, so upstream async
+service/queue optimizations are not assumed to improve this path. The separate
+historical 7ebc26d build-only IR pin remains unchanged. Exact-head consumer CI
+and the production process/Rayon matrix must qualify the new runtime pin.
+
+
+The final focused run passed 25 Cases (nine original closure Cases plus
+sixteen value/publication Cases). The live protocol control checks its call
+counter before independently calling public membership, preventing the latter
+from masking a skipped factory fallback. The full guarded Lean inventory
+passed 175 jobs; CompilerCost Quint positive and all mutation checks passed;
+the rendered metadata guard exactly matched the checked-in Scheme region.
+
+Frozen Gambit ea114fc source also clarifies the raw allocation scope:
+lib/_kernel.scm:4126 delegates get-bytes-allocated! to bytes_allocated;
+lib/mem.c:7509 returns bytes_allocated_minus_occupied + bytes_occupied +
+occupied_words_still * word-size. bytes_occupied includes current movable
+heap/stack occupation; occupied_words_still is current VM still occupation,
+including decrements during reclamation. This is not a dedicated total of all
+allocation events. The exact contribution of each component to the observed
+three decreases is still unproven; treating the raw difference or its absolute
+value as true cumulative allocation would be unsound. The SDK is unchanged.
+
+
+Final review found that the candidate also needs the original dynamic Session
+prototype read. The factory now uses the current public proto, with a dedicated
+mutation control. The prior static-prototype diagnostic is not the final-source
+receipt. Corrected same-dependency ABBA CPU seconds were A1 0.897446,
+B1 0.069957, B2 0.050188, A2 0.812984, with 6/1/0/6 GCs. This still isolates
+publication only. All 106 workbench control tests passed in 191.332 seconds.
+
+The dynamic-prototype version passed all 26 focused Cases, including the
+new public-proto mutation and unchanged nine-Case closure controls.

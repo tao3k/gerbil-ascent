@@ -262,6 +262,9 @@ def source_semantic_workload(tree, log):
 # BEGIN GENERATED PREPARATION AUDIT-ORDER
 def control_order(work_only, baseline, candidate):
     return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']
+
+def control_build_command():
+    return ['gerbil', 'build']
 # END GENERATED PREPARATION AUDIT-ORDER
 
 
@@ -535,7 +538,8 @@ def main():
             # unchanged. Only this disposable prefix gets an observer entry.
             shutil.copy2(observer / 'gxi', tree / '.gerbil/bin/gxi')
         phases = {}
-        for phase, command in [('build', ['just', 'check-policy']),
+        for phase, command in [('build', control_build_command()),
+                               ('policy', ['just', 'check-policy']),
                                ('prepare', preparation)]:
             if args.work_only:
                 phase_trace = observer / phase

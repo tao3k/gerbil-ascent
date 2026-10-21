@@ -1,5 +1,7 @@
 // Generated from CompilerCost.lean; formal CI checks exact source.
 module CompilerPolicy {
+  pure def production_build(command: List[str]): bool =
+    command == ["gerbil", "build"]
   pure def producer_eligible(success: bool, current: bool, ordered: bool, same_content: bool, unique: bool): bool =
     success and current and ordered and same_content and unique
   pure def support_admitted(sources: bool, resources: bool): bool = sources and resources

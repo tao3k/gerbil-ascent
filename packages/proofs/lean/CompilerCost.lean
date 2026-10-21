@@ -212,9 +212,18 @@ def coveragePythonSource : String :=
   "def gcc_ggc_complete(expected, reported, failed, changed, errors):\n" ++
   "    return 0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0\n"
 
+def controlBuildCommand : List String := ["gerbil", "build"]
+
+theorem experiment_build_uses_production_entry :
+    controlBuildCommand = ["gerbil", "build"] := rfl
+
+theorem policy_is_not_production_build :
+    controlBuildCommand ≠ ["just", "check-policy"] := by decide
+
 def quintSource : String :=
   "// Generated from CompilerCost.lean; formal CI checks exact source.\n" ++
   "module CompilerPolicy {\n" ++
+  "  pure def production_build(command: List[str]): bool =\n    command == [" ++ String.intercalate ", " (controlBuildCommand.map (fun value => "\"" ++ value ++ "\"")) ++ "]\n" ++
   "  pure def producer_eligible(success: bool, current: bool, ordered: bool, same_content: bool, unique: bool): bool =\n" ++
   "    success and current and ordered and same_content and unique\n" ++
   "  pure def support_admitted(sources: bool, resources: bool): bool = sources and resources\n" ++
@@ -342,7 +351,7 @@ theorem distinct_program_controls_stay_abba (work : Bool) :
     auditOrder work false = [false, true, true, false] := by simp [auditOrder]
 
 def auditOrderPythonSource : String :=
-  "def control_order(work_only, baseline, candidate):\n    return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']\n"
+  "def control_order(work_only, baseline, candidate):\n    return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']\n\ndef control_build_command():\n    return [" ++ String.intercalate ", " (controlBuildCommand.map (fun value => "'" ++ value ++ "'")) ++ "]\n"
 
 
 def projectionReuse (current sameRoots complete : Bool) : Bool := current && sameRoots && complete

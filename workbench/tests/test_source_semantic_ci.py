@@ -17,6 +17,18 @@ SPEC.loader.exec_module(CONTROL)
 
 
 class SourceSemanticCiTests(unittest.TestCase):
+    def test_cost_control_builds_production_before_development_policy(self):
+        import ast
+        self.assertEqual(CONTROL.control_build_command(), ['gerbil', 'build'])
+        module = ast.parse((ROOT / 'tools/ci/build-cost-control.py').read_text())
+        loops = [node for node in ast.walk(module) if isinstance(node, ast.For)
+                 and ast.unparse(node.target) == '(phase, command)']
+        self.assertEqual(len(loops), 1)
+        phases = loops[0].iter.elts
+        self.assertEqual([item.elts[0].value for item in phases], ['build', 'policy', 'prepare'])
+        self.assertEqual(ast.unparse(phases[0].elts[1]), 'control_build_command()')
+        self.assertEqual(ast.literal_eval(phases[1].elts[1]), ['just', 'check-policy'])
+
     @unittest.skipUnless(shutil.which('gxi'), 'released SDK required')
     def test_native_runtime_resolves_prepared_dependency_and_keeps_suite_source(self):
         with tempfile.TemporaryDirectory() as directory:

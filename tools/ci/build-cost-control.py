@@ -262,6 +262,9 @@ def source_semantic_workload(tree, log):
 # BEGIN GENERATED PREPARATION AUDIT-ORDER
 def control_order(work_only, baseline, candidate):
     return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']
+
+def control_build_command():
+    return ['gerbil', 'build']
 # END GENERATED PREPARATION AUDIT-ORDER
 
 
@@ -485,18 +488,11 @@ def main():
         receipt['dependency_seed'][package] = {
             'revision': revision, 'manifest_sha256': digest(checkout / 'gerbil.pkg')}
     if development_paths:
-        asp = dependencies / 'pkg/github.com/tao3k/asp-gerbil-scheme'
-        asp_baseline = '0f78289a7ae465a84370f5d94d8d14671f3c43af'
-        # The obsolete branch was removed; a clean seed need not contain its
-        # object. Fetch the bound revision before any timed control begins.
-        checked('git', '-C', str(asp), 'fetch', '--no-tags', 'origin', asp_baseline,
-                timeout=120)
-        changes = subprocess.check_output(['git', '-C', str(asp), 'diff', '--name-only',
-            asp_baseline,
-            '31c7ddee27d775a6164cbe8f032c6405cc7b353d'], text=True, timeout=10).splitlines()
-        if changes != ['gerbil.pkg']:
+        # Both sides use exactly this implementation. Only its placement in
+        # the production or explicit development dependency graph differs.
+        if receipt['dependency_seed']['asp-gerbil-scheme']['revision'] != '31c7ddee27d775a6164cbe8f032c6405cc7b353d':
             raise RuntimeError('development dependency study changed ASP implementation')
-        receipt['asp_implementation_unchanged_except_manifest'] = True
+        receipt['asp_implementation_identical'] = True
     work_violations = []
     if args.work_only:
         receipt['work_observer_sha256'] = digest(
@@ -535,7 +531,8 @@ def main():
             # unchanged. Only this disposable prefix gets an observer entry.
             shutil.copy2(observer / 'gxi', tree / '.gerbil/bin/gxi')
         phases = {}
-        for phase, command in [('build', ['just', 'check-policy']),
+        for phase, command in [('build', control_build_command()),
+                               ('policy', ['just', 'check-policy']),
                                ('prepare', preparation)]:
             if args.work_only:
                 phase_trace = observer / phase

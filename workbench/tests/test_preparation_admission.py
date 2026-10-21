@@ -17,7 +17,7 @@ LEDGER = ROOT / 't/qualification/fixtures/preparation/unresolved.json'
 
 class PreparationAdmissionTests(unittest.TestCase):
     def test_dev_split_cannot_change_other_production_dependencies(self):
-        edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@0f78289a7ae465a84370f5d94d8d14671f3c43af"'
+        edge = b'\n  "github.com/tao3k/asp-gerbil-scheme@31c7ddee27d775a6164cbe8f032c6405cc7b353d"'
         original = b'(package: gerbil-ascent depend: ("core@fixed"' + edge + b'))\n'
         before = {'gerbil.pkg': original}
         after = {'gerbil.pkg': original.replace(edge, b'')}

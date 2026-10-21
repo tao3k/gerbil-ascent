@@ -17,6 +17,7 @@
 
 (export gerbil-ascent-fact-limit?
         gerbil-ascent-owned-root-contract
+        gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
         GerbilAscentTermContract
@@ -138,7 +139,37 @@
         (element? view value)
         (element? contract value)))))
 
-(def term-value? (canonical-value-member GerbilAscentTermContract +term-value+ '(kind value)))
+(def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
+
+;; Only the constructors below issue a shape entry. It contains no candidate
+;; reference or validation result; weak keys do not retain declarations.
+(def (remember-value-shape! kind value)
+  (when (= (object-revision value) 0)
+    (hash-put! declared-value-shapes value (cons kind 0)))
+  value)
+;; BEGIN GENERATED PREPARATION VALUE-SHAPE
+(def (declared-value-shape? kind value)
+  (let (entry (hash-get declared-value-shapes value))
+    (and entry (eq? kind (car entry)) (= (object-revision value) (cdr entry)))))
+;; END GENERATED PREPARATION VALUE-SHAPE
+
+;; These factories own every field specification. Arbitrary caller objects
+;; cannot acquire a shape entry, and later POO edits invalidate it.
+(def (gerbil-ascent-make-term-value prototype tag payload)
+  (remember-value-shape! 'term
+    (.o (:: @ prototype) kind: tag value: payload)))
+(def (gerbil-ascent-make-atom-value prototype relation-name atom-terms lower)
+  (remember-value-shape! 'atom
+    (.o (:: self prototype) ascent-clause-kind: 'atom
+        relation: relation-name terms: atom-terms
+        (.plan (lambda (atom-plan bound) (lower self atom-plan bound))))))
+
+(def canonical-term-value?
+  (canonical-value-member GerbilAscentTermContract +term-value+ '(kind value)))
+(def (term-value? value)
+  (if (declared-value-shape? 'term value)
+    (canonical-term-value? value)
+    (element? GerbilAscentTermContract value)))
 (def (terms-value? value)
   (and (list? value) (andmap term-value? value)))
 (def +terms+ (slot-contract 'ascent/terms terms-value?))
@@ -163,9 +194,16 @@
            terms: (.cc Type. .element?: terms-value?)
            .plan: (.cc Type. .element?: procedure?))))
 
-(def atom-value?
+(def canonical-atom-value?
   (canonical-value-member GerbilAscentAtomContract +atom-value+
                           '(ascent-clause-kind relation terms .plan)))
+
+(def (atom-value? value)
+  (if (and (declared-value-shape? 'atom value)
+           (let (terms (.ref value 'terms))
+             (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms))))
+    (canonical-atom-value? value)
+    (element? GerbilAscentAtomContract value)))
 
 (def +variables+
   (slot-contract 'ascent/variables

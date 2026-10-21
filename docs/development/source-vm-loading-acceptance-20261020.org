@@ -1909,3 +1909,54 @@ The macOS workflow's selective source path filter omitted ordinary runtime
 Scheme edits. It now selects all Scheme sources, retaining explicit non-Scheme
 inputs. This ensures the corrected runtime head requests macOS qualification;
 it changes no semantic deadline, VM count, heap profile or performance limit.
+
+** Corrected getter controls and producer-owned value shapes
+
+The earlier six/eight-Case getter evidence was insufficient: several fixtures
+used .kind/.value/.terms slot names instead of the actual kind/value/terms
+fields. Those passes are withdrawn as getter-order or exception evidence.
+The fixtures now use the real fields, avoid slot self-shadowing, require a
+successful positive object and executed getters, and compare the actual shared
+thrown sentinel rather than freshly formatted backtraces.
+
+A fresh-VM deferred-thunk control reproduced a real defect in 8e533f2e:
+a caller getter changed the later value Contract during admission; nested
+membership returned true while complete public admission returned false.
+A pre-admission descriptor revision guard alone does not handle this case.
+No test expectation or admission limit was relaxed.
+
+Only the two ASCENT value factories now issue constant-field shape entries.
+The private weak-key table stores a kind/revision pair, with no reference back
+to its key and no validation result. Public constructor validation still runs
+immediately. Arbitrary caller objects cannot register themselves through a
+registration API; edits invalidate the recorded POO revision. Atom membership
+also requires that every Term child has a current producer shape, so a nested
+caller getter cannot mutate a later obligation inside the fast traversal.
+Unowned, edited or noncanonical values use the complete original public path.
+The constructor helpers preserve the original prototype argument and fields.
+
+The independent deferred-thunk probe now returns false on both paths. Ten
+corrected Cases pass, including a producer-created positive Term/Atom, editing
+that Term to install a throwing getter, zero calls before admission, a real
+getter call during admission, live later-field mutation, root/field classifier
+replacement, exact thrown sentinels and contextual obligations. The original
+nine-Case closure Suite passes with 70/28 unchanged. ASP reports zero errors.
+
+After the ownership restriction, all four unchanged local lifecycle gates
+passed: chain CPU 8.011 to 5.376 ms, counters 13,375,200 to 9,221,304 bytes,
+46/50 wins; diamond 7.543 to 4.707 ms, 12,209,448 to 8,679,120 bytes, 44 wins;
+duplicates 7.087 to 5.031 ms, 10,460,816 to 8,138,080 bytes, 44 wins;
+tiny 4.203 to 4.076 ms, 8,173,392 to 7,800,288 bytes. These receipts qualify
+those lifecycle arms; they do not establish a whole-build improvement.
+
+The actual declared-value-shape? source block is now generated from the Lean
+CompilerCost policy, with missing issuance, wrong kind and changed revision
+fallback theorems. Quint checks the corresponding policy and rejects both
+accept-unissued-shape and ignore-shape-revision mutations. The focused model,
+all its counterexamples, the complete 175-job Lean inventory and the refreshed
+ExecutionPolicy file pass. An initial ExecutionPolicy file check read the old
+CompilerCost .olean and failed; the normal guarded library rebuild refreshed
+imports, without changing any proof limit. The native weak-table implementation,
+constructor/metadata source refinement, complete callback equivalence and true
+cumulative allocation remain separate open obligations. The generated selector
+is a narrow source binding, not a proof of those entire implementations.

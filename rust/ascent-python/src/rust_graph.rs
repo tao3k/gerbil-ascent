@@ -1,5 +1,5 @@
 //! Python owns graph leases; the Rust Library owns composition and admission.
-use crate::rust_api::{Evidence, Owner, cell, error};
+use crate::rust_api::{Owner, RuleSession, cell, error};
 use gerbil_ascent::{RelationalGraph, Row, Type};
 use pyo3::{Bound, PyAny, PyRef, PyResult, Python, pyclass, pymethods, types::PyAnyMethods};
 use std::sync::Arc;
@@ -230,15 +230,15 @@ impl Graph {
         py: Python<'_>,
         output: &str,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         self.check()?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
         let relation = self.relation()?;
         py.detach(|| {
             self.engine
-                .open_evidence_program(relation.evidence(output)?, limits)
+                .open_rule_program(relation.program(output)?, limits)
         })
-        .map(Evidence::owned)
+        .map(RuleSession::owned)
         .map_err(error)
     }
     fn close(&self) {

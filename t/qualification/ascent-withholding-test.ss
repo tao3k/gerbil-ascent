@@ -7,7 +7,7 @@
         (only-in :gerbil-ascent/candidate/types candidate-rejection?
                  candidate-rejection-diagnostic reasoning-diagnostic-code
                  reasoning-snapshot-valid? reasoning-snapshot-relations)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-verify-finite-receipt))
 (export ascent-withholding-test)

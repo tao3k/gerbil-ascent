@@ -108,7 +108,7 @@ fn inputs(root: &std::path::Path) {
         "candidate",
         "temporal",
         "interface",
-        "evidence",
+        "rules",
         "t/qualification/evidence-api-module.ss",
     ] {
         println!("cargo:rerun-if-changed={}", root.join(source).display());

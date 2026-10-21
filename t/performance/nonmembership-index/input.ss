@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot))
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot))
 (export absence-input)
 ;;; Identity rules admit exactly the input relation, independently of the
 ;;; certificate producer. Repeated body rows exercise late relation lookup.

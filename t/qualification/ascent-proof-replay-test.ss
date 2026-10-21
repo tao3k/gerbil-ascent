@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance
           candidate-positive-proof candidate-verify-positive-proof positive-proof-status positive-proof-nodes positive-proof-roots
           proof-node-id proof-node-kind proof-node-relation proof-node-row proof-node-label proof-node-inputs)

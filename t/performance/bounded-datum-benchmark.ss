@@ -7,7 +7,7 @@
         (rename-in (only-in :gerbil-ascent/t/performance/bounded-datum/reference reasoning-bounded-data?)
                    (reasoning-bounded-data? old-bounded?))
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance-graph
                  candidate-positive-provenance candidate-verify-positive-provenance
                  positive-provenance-witness positive-provenance-alternatives)

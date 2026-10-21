@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in "closed-source.ss" ascent-closed-dsl-forms? ascent-closed-dsl-parts
                  ascent-closed-dsl-core-name?)
-        (only-in "../evidence/declaration.ss" make-declared-evidence recorded-evidence-explanation)
+        (only-in "../rules/declaration.ss" make-declared-program recorded-rule-explanation)
         (only-in :std/list/list delete-duplicates/hash))
 (export ascent-closed-evidence-scope)
 
@@ -18,7 +18,7 @@
                                    (_ (cons value value)))) values))
 (def (definition? form)
   (match form
-    (['define-evidence [name] ['sources . sources] ['outputs . outputs] . clauses]
+    (['define-program [name] ['sources . sources] ['outputs . outputs] . clauses]
      (and (symbol? name) (not (ascent-closed-dsl-core-name? name))
           (list? sources) (andmap binding? sources)
           (list? outputs) (andmap binding? outputs)
@@ -26,12 +26,12 @@
     (_ #f)))
 (def (constructor form)
   (match form
-    (['define-evidence [name] ['sources . sources] ['outputs . outputs] . clauses]
-     ;; Match define-evidence: construction happens anew on each zero-arity
+    (['define-program [name] ['sources . sources] ['outputs . outputs] . clauses]
+     ;; Match define-program: construction happens anew on each zero-arity
      ;; export invocation, not when the source scope is admitted.
      (lambda ()
-       (make-declared-evidence (car (ascent-closed-dsl-parts `((ascent ,@clauses))))
-         (bindings sources) (bindings outputs) recorded-evidence-explanation)))))
+       (make-declared-program (car (ascent-closed-dsl-parts `((ascent ,@clauses))))
+         (bindings sources) (bindings outputs) recorded-rule-explanation)))))
 (def (ascent-closed-evidence-scope forms exports)
   (and (andmap definition? forms)
        (let (names (map (lambda (form) (caadr form)) forms))

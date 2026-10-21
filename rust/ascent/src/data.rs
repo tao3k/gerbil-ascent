@@ -134,7 +134,9 @@ impl Data {
         self.hash_into(&mut hash);
         format!("{:x}", hash.finalize())
     }
-    pub(crate) fn digest_slice(values: &[Self]) -> String {
+    /// Hash a typed list without allocating a second owned list.
+    #[must_use]
+    pub fn digest_slice(values: &[Self]) -> String {
         let mut hash = Sha256::new();
         hash.update(b"ascent.data.v1\0");
         Self::hash_list(values, &mut hash);

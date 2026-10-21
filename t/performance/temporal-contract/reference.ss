@@ -10,7 +10,7 @@
         (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :gerbil-ascent/temporal/graph temporal-cut-cyclic?)
         (only-in :gerbil-ascent/candidate/types reasoning-bounded-data?)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-verify-finite-receipt

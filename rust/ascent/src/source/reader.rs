@@ -3,14 +3,22 @@ use crate::{Error, Result};
 use std::iter::Peekable;
 use std::str::Chars;
 
+/// Owned inert Scheme syntax; decoding never evaluates expressions.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum Datum {
+pub enum Datum {
+    /// Unquoted atom.
     Atom(String),
+    /// Quoted UTF-8 text.
     Text(String),
+    /// Proper list.
     List(Vec<Self>),
+    /// Vector literal.
     Vector(Vec<Self>),
 }
-pub(crate) fn read(text: &str) -> Result<Datum> {
+/// Decode exactly one datum within the byte and nesting bounds.
+/// # Errors
+/// Rejects oversized input, malformed syntax, or trailing forms.
+pub fn read(text: &str) -> Result<Datum> {
     if text.len() > 65_536 {
         return Err(invalid("rule source byte bound"));
     }

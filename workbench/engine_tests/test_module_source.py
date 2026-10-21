@@ -5,7 +5,7 @@ from test_module_calls import decode
 
 SOURCE = '''
 (defrules copy-rule () ((_ from to) ((to X) <-- (from X))))
-(define-evidence (make-evidence)
+(define-program (make-evidence)
   (sources input) (outputs output)
   (relation input ((value exact-integer?)) ((1) (2)))
   (relation output ((value exact-integer?)))
@@ -19,14 +19,14 @@ class ModuleSourceTests(unittest.TestCase):
     def tearDownClass(cls): cls.engine.close()
 
     def test_authorization_required_by_python_and_native(self):
-        for operation in (self.engine.dsl, self.engine.evidence):
+        for operation in (self.engine.dsl, self.engine.rules):
             with self.assertRaisesRegex(EngineError, 'trusted'):
                 operation(SOURCE)
         self.assertFalse(hasattr(self.engine, 'request'))
         self.assertFalse(hasattr(self.engine, 'register_module'))
 
     def test_macro_import_constructor_update_withdrawal_and_explanation(self):
-        with self.engine.evidence(SOURCE, 'make-evidence', trusted=True) as session:
+        with self.engine.rules(SOURCE, 'make-evidence', trusted=True) as session:
             with session.result(session.run()) as result:
                 self.assertEqual(decode(result.graph('output')), [[1], [2]])
                 proof = result.explanation('output')
@@ -56,17 +56,17 @@ class ModuleSourceTests(unittest.TestCase):
                 with self.assertRaises(ValueError): function.apply(input)
         for code in ('(def (make n) (lambda (x) (+ n x)))', '(set! x 1)'):
             with self.assertRaises(EngineError): self.engine.dsl(code, trusted=True)
-        cyclic = '''(define-evidence (cycle) (sources) (outputs output)
+        cyclic = '''(define-program (cycle) (sources) (outputs output)
           (relation output (value) (( (object-graph (ref 0) ((0 vector (ref 0)))) ))))'''
-        with self.engine.evidence(cyclic, trusted=True) as session:
+        with self.engine.rules(cyclic, trusted=True) as session:
             with session.result(session.run()) as result:
                 graph = result.graph('output')
                 vector = next(node for node in graph['nodes'] if node['type'] == 'vector')
                 self.assertEqual(vector['items'], [{'ref': vector['id']}])
 
     def test_isolated_module_names_and_export_boundaries(self):
-        with self.engine.evidence(SOURCE, trusted=True) as first:
-            with self.engine.evidence(SOURCE.replace('((1) (2))', '((99))'), trusted=True) as second:
+        with self.engine.rules(SOURCE, trusted=True) as first:
+            with self.engine.rules(SOURCE.replace('((1) (2))', '((99))'), trusted=True) as second:
                 self.assertEqual(second.run()['relations']['output'], [[99]])
                 with self.assertRaises(EngineError): second.run(queries=['identity'])
             self.assertEqual(first.run()['relations']['output'], [[1], [2]])
@@ -75,7 +75,7 @@ class ModuleSourceTests(unittest.TestCase):
         for source in ('(import :gerbil/core)', '(module scene (import :gerbil/core))',
                        '(export make-evidence)', '(unknown-dsl-form)'):
             with self.assertRaises(EngineError): self.engine.dsl(source, trusted=True)
-        with self.engine.evidence(SOURCE, trusted=True) as session:
+        with self.engine.rules(SOURCE, trusted=True) as session:
             self.assertEqual(session.run()['relations']['output'], [[1], [2]])
 
     def test_consumer_definitions_have_no_scheme_import_module_or_build(self):

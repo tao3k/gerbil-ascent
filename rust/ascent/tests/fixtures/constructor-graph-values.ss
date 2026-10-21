@@ -1,4 +1,4 @@
-(define-evidence (make-graph-values)
+(define-program (make-graph-values)
   (let ((cycle (make-vector 1)) (shared (vector 17)) (table (make-hash-table-eq)))
     (vector-set! cycle 0 cycle)
     (hash-put! table 'same shared)

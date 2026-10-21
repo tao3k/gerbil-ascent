@@ -74,7 +74,9 @@ impl Hash for FrozenValue {
 }
 impl FrozenValue {
     pub(crate) fn vector_items(&self) -> Option<&[GraphItem]> {
-        let GraphItem::Reference(id) = self.graph.root else { return None; };
+        let GraphItem::Reference(id) = self.graph.root else {
+            return None;
+        };
         match self.graph.nodes.get(&id)? {
             ObjectNode::Vector(items) => Some(items),
             _ => None,
@@ -82,21 +84,38 @@ impl FrozenValue {
     }
     pub(crate) fn vector_item(&self, index: usize) -> Result<crate::Value> {
         use crate::Value;
-        let item = self.vector_items().and_then(|items| items.get(index))
+        let item = self
+            .vector_items()
+            .and_then(|items| items.get(index))
             .ok_or_else(|| Error::Evaluation("vector-ref outside vector".into()))?;
         match item {
             GraphItem::Number(value) => Value::number(value),
             GraphItem::Boolean(value) => Ok(Value::Boolean(*value)),
             GraphItem::Reference(id) => match self.graph.nodes.get(id) {
                 Some(ObjectNode::Text(value)) => Ok(Value::Text(value.as_str().into())),
-                Some(ObjectNode::Symbol { name, interned: true }) => Ok(Value::Symbol(name.as_str().into())),
-                _ => Self::new(self.owner, self.observation, ObjectGraph {
-                    root: item.clone(), nodes: self.graph.nodes.clone(),
-                }).map(Value::Object),
+                Some(ObjectNode::Symbol {
+                    name,
+                    interned: true,
+                }) => Ok(Value::Symbol(name.as_str().into())),
+                _ => Self::new(
+                    self.owner,
+                    self.observation,
+                    ObjectGraph {
+                        root: item.clone(),
+                        nodes: self.graph.nodes.clone(),
+                    },
+                )
+                .map(Value::Object),
             },
-            _ => Self::new(self.owner, self.observation, ObjectGraph {
-                root: item.clone(), nodes: self.graph.nodes.clone(),
-            }).map(Value::Object),
+            _ => Self::new(
+                self.owner,
+                self.observation,
+                ObjectGraph {
+                    root: item.clone(),
+                    nodes: self.graph.nodes.clone(),
+                },
+            )
+            .map(Value::Object),
         }
     }
     /// Freeze a validated observation and compute its cycle-safe structural key.

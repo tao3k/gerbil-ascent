@@ -35,10 +35,10 @@ Raw `compile_program` output keeps its original values; direct low-level callers
 remain responsible for the native wire contract. No unknown returned token is
 accepted as a new scalar.
 
-`evaluate` checks a repeated query within the same retained evidence chain,
-returns decoded answers and native source/path identities, and closes that
-chain. Callers needing reuse across different queries or source replacement
-can use the existing public `EvidenceChain` with `compile_program` contracts.
+`evaluate` runs the admitted query graph once, returns scalar answers and the
+actual source generation, run index, completion and reuse observations, then
+closes its session. Retained rule callers use `Engine.open` and source replacement.
+Application evidence sharing across different queries is owned by POO Flow.
 
 ## Checked Operators
 
@@ -63,13 +63,13 @@ Types, arity, unsafe bindings and recursive aggregation are checked by Scheme.
 Typed mode preserves native integers/booleans instead of tagged string cells.
 
 `ascent.operators.where/compute/reduce` also build these same inert JSON
-clauses directly for `Engine.open` and `EvidenceChain`. No arithmetic or reducer
+clauses directly for `Engine.open`. No arithmetic or reducer
 is implemented in Python. The engine delegates to its existing closed
 `relational-where`, `relational-compute` and `relational-reducer` constructors.
 The component graph includes aggregate dependencies, excludes nonrelational
 operators, and fingerprints operator names, literals, outputs and value inputs.
 Changing a scalar operator invalidates its component while an unchanged completed
-aggregate may be reused. Source replacement invalidates derived evidence.
+aggregate may be reused. Source replacement invalidates derived results.
 
 ## Deliberate Boundary
 

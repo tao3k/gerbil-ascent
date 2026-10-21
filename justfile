@@ -353,10 +353,7 @@ check-scoped-witness-conformance: prepare-quint
     cd packages/proofs/lean && lake build ScopedWitness && lake env lean --run ScopedWitness.lean ../../../.cache/ascent/scoped-witness-conformance/quint.json ../../../t/qualification/fixtures/scoped-witness/conformance.json
 
 # Library-maintainer gate; no Quint toolchain is required by Python consumers.
-check-evidence-conformance: prepare-quint
-    mkdir -p .cache/ascent/evidence-conformance
-    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/EvidenceLifecycle.qnt::EvidenceLifecycle conformance .exit > .cache/ascent/evidence-conformance/quint.json
-    cmp .cache/ascent/evidence-conformance/quint.json t/qualification/fixtures/evidence-lifecycle/conformance.json
+
 
 # Restore the declared dependency before importing its process Guard.
 prepare-lean:
@@ -798,3 +795,8 @@ check-dsl-closure:
     test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 15
     test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 1
     test "$(grep -cx 'OK' "$output_file")" -eq 1
+
+check-rule-conformance: prepare-quint
+    mkdir -p .cache/ascent/rule-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/EvidenceLifecycle.qnt::EvidenceLifecycle conformance .exit > .cache/ascent/rule-conformance/quint.json
+    cmp .cache/ascent/rule-conformance/quint.json t/qualification/fixtures/evidence-lifecycle/conformance.json

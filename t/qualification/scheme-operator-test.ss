@@ -25,7 +25,7 @@
                  relational-session-append-source!
                  relational-session-replace-source! relational-query
                  relational-op-delta-change)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows))
 

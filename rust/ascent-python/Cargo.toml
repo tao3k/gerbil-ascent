@@ -9,7 +9,7 @@ name = "ascent"
 crate-type = ["cdylib"]
 
 [dependencies]
-gerbil-ascent = { workspace = true, features = ["provider-protocol", "artifacts"] }
+gerbil-ascent = { workspace = true, features = ["artifacts"] }
 ascent-c-abi = { path = "../ascent-c-abi", optional = true }
 pyo3.workspace = true
 serde_json.workspace = true

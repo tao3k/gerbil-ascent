@@ -1,11 +1,11 @@
 //! Scheme result cells retain the exact source generation and owning result.
-use super::session::EvidenceResult;
+use super::session::RuleResult;
 use gerbil_ascent::{ObjectInput, Result};
 
 /// A source cell lease bound to its native result and generation.
 #[derive(Clone)]
 pub struct ResultValue {
-    pub(super) result: EvidenceResult,
+    pub(super) result: RuleResult,
     pub(super) relation: String,
     pub(super) row: usize,
     pub(super) column: usize,

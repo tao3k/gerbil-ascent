@@ -6,7 +6,7 @@
         (only-in :std/string/misc string-contains)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         :gerbil-ascent/candidate/withdrawal-session
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-bound? reasoning-receipt-rows)
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-generation reasoning-snapshot-identity
                  reasoning-snapshot-relations)

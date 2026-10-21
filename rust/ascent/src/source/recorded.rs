@@ -1,7 +1,7 @@
 //! Library recorded-module constructor lowering; no host procedure evaluation.
 use super::{
-    evidence::{EvidenceProgram, expand, lower_entry},
     lowering::{list, name},
+    program::{RuleProgram, expand, lower_entry},
     reader::{Datum, invalid},
 };
 use crate::Result;
@@ -11,7 +11,7 @@ pub(super) fn lower(
     selected: String,
     form: &Datum,
     fragments: &BTreeMap<String, Datum>,
-) -> Result<EvidenceProgram> {
+) -> Result<RuleProgram> {
     let [_, fragment, sources, limits @ ..] = list(form)? else {
         return Err(invalid(
             "recorded module requires fragment and source authority",

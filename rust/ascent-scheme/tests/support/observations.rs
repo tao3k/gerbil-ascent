@@ -81,16 +81,16 @@ impl ModuleValue {
     pub fn close(&self) {
         self.inner.close();
     }
-    pub fn open_session(&self, limits: FactLimits) -> Result<Evidence> {
-        self.inner.open_session(limits).map(|inner| Evidence {
+    pub fn open_session(&self, limits: FactLimits) -> Result<RuleSession> {
+        self.inner.open_session(limits).map(|inner| RuleSession {
             inner,
             results: std::sync::Mutex::default(),
         })
     }
 }
-pub struct Evidence {
-    inner: native::Evidence,
-    results: std::sync::Mutex<BTreeMap<u64, native::EvidenceResult>>,
+pub struct RuleSession {
+    inner: native::RuleSession,
+    results: std::sync::Mutex<BTreeMap<u64, native::RuleResult>>,
 }
 fn list(graph: &ObjectGraph, mut item: GraphItem) -> Result<Vec<GraphItem>> {
     let mut output = Vec::new();
@@ -161,7 +161,7 @@ pub fn rows(value: &Data, identity: u64) -> Result<Vec<Row>> {
         })
         .collect()
 }
-impl Evidence {
+impl RuleSession {
     pub fn run(
         &self,
         queries: Option<&[String]>,
@@ -202,13 +202,13 @@ impl Evidence {
             reused_relations: vec![],
         })
     }
-    pub fn result(&self, handle: u64) -> Result<EvidenceResult> {
+    pub fn result(&self, handle: u64) -> Result<RuleResult> {
         self.results
             .lock()
             .unwrap()
             .remove(&handle)
             .map_or_else(|| self.inner.result(handle), Ok)
-            .map(EvidenceResult)
+            .map(RuleResult)
     }
     pub fn replace(
         &self,
@@ -238,8 +238,8 @@ impl Evidence {
         self.results.lock().unwrap().clear();
     }
 }
-pub struct EvidenceResult(native::EvidenceResult);
-impl EvidenceResult {
+pub struct RuleResult(native::RuleResult);
+impl RuleResult {
     pub fn rows(&self, name: &str) -> Result<Vec<Row>> {
         rows(&self.0.rows(name)?, 0)
     }

@@ -11,7 +11,7 @@
                  relational-query relational-open-program-session
                  relational-program-session-run relational-program-transaction!
                  relational-program-query)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-bound?

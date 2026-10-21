@@ -1,7 +1,5 @@
 //! First-class immutable relation graphs lower to the checked Rust program IR.
-use crate::{
-    Atom, Clause, Error, EvidenceProgram, Program, Relation, Result, Row, Rule, Term, Type,
-};
+use crate::{Atom, Clause, Error, Program, Relation, Result, Row, Rule, RuleProgram, Term, Type};
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::Arc,
@@ -104,7 +102,7 @@ impl RelationalGraph {
     }
     /// # Errors
     /// Rejects conflicting source declarations and invalid output identities.
-    pub fn evidence(&self, output: &str) -> Result<EvidenceProgram> {
+    pub fn program(&self, output: &str) -> Result<RuleProgram> {
         if output.is_empty() || output.len() > 128 || output.starts_with("__ascent_") {
             return Err(invalid("invalid graph output name"));
         }
@@ -123,7 +121,7 @@ impl RelationalGraph {
             body: vec![Clause::positive(Atom::new(&root, vars(self.width)))],
         });
         crate::graph::Graph::build(program.clone())?;
-        Ok(EvidenceProgram {
+        Ok(RuleProgram {
             constructor: output.into(),
             sources: sources.into_keys().collect::<BTreeSet<_>>(),
             outputs: vec![output.into()],

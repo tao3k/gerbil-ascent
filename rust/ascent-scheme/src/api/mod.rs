@@ -9,7 +9,7 @@ mod sources;
 pub use engine::{Backend, Engine};
 pub use module::{Module, ModuleValue};
 pub use result_value::ResultValue;
-pub use session::{Evidence, EvidenceResult, Explanation, SchemeProvenance};
+pub use session::{Explanation, RuleResult, RuleSession, SchemeProvenance};
 pub use sources::Source;
 mod transport;
 use transport::{check, id, policy};

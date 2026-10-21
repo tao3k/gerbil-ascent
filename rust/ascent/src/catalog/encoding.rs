@@ -5,6 +5,30 @@ use crate::{
 };
 
 impl Catalog {
+    /// Project query rows to scalar observations. Text and symbols render as
+    /// strings; typed round trips must use `observe_rows` instead.
+    #[must_use]
+    pub fn project_rows(rows: &[crate::Row]) -> Data {
+        Data::List(
+            rows.iter()
+                .map(|row| {
+                    Data::List(
+                        row.iter()
+                            .map(|value| match value {
+                                Value::Integer(value) => Data::Integer(value.clone()),
+                                Value::Boolean(value) => Data::Bool(*value),
+                                Value::Symbol(value) | Value::Text(value) => {
+                                    Data::from(value.to_string())
+                                }
+                                Value::Object(value) => value.scheme_input(),
+                            })
+                            .collect(),
+                    )
+                })
+                .collect(),
+        )
+    }
+
     /// Observe typed input tuples, including owned graph identities, without
     /// projecting away values that cannot be represented as native scalars.
     /// # Errors

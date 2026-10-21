@@ -68,11 +68,11 @@ class UFLookupTests(unittest.TestCase):
                     for columns, key, wanted in (([], [], full), ([1], [0], [[0, 0], [1, 0]]),
                                                  ([0, 0], [0, 1], [])):
                         guards = ' '.join(f'(guard (C{c}) (lambda (v) (= v {k})))' for c, k in zip(columns, key))
-                        source = f'''(define-evidence (make) (sources input) (outputs selected)
+                        source = f'''(define-program (make) (sources input) (outputs selected)
                           (relation input ((x integer?) (y integer?)))
                           (relation selected ((x integer?) (y integer?)))
                           ((selected C0 C1) <-- (input C0 C1) {guards}))'''
-                        with self.engine.evidence(source, trusted=True) as selected:
+                        with self.engine.rules(source, trusted=True) as selected:
                             selected.replace({'input': full})
                             self.assertEqual(selected.run()['relations']['selected'], wanted)
 

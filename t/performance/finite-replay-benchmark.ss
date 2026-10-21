@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         :gerbil-ascent/candidate/finite-evidence
         (rename-in (only-in :gerbil-ascent/t/performance/finite-replay/reference
                            candidate-finite-evidence candidate-verify-finite-evidence

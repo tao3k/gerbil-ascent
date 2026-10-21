@@ -157,7 +157,7 @@
   (or (assq name operators) (memq name syntax-names)
       (memq name '(symbol? integer? exact-integer? boolean? string?
                    ascent ascent-fragment relation lattice macro fact facts include
-                   bounds index storage define-evidence sources outputs explain lit))))
+                   bounds index storage define-program sources outputs explain lit))))
 (def (ascent-closed-dsl-forms? forms) (andmap part? forms))
 (def (ascent-closed-dsl-parts forms)
   ;; Never catch execution errors and retry the macro route after partial work.

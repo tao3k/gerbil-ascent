@@ -35,7 +35,7 @@ mod api;
 #[path = "../benches/support/hybrid.rs"]
 pub mod benchmark;
 pub use api::{
-    Backend, Engine, Evidence, EvidenceResult, Explanation, Module, ModuleValue, ResultValue,
+    Backend, Engine, Explanation, Module, ModuleValue, ResultValue, RuleResult, RuleSession,
     SchemeProvenance, Source,
 };
 

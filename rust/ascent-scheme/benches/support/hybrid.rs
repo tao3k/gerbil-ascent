@@ -192,7 +192,7 @@ fn prepare(
     } else {
         let opened = runtime
             .call(&Data::object([
-                ("operation", Data::from("open-evidence")),
+                ("operation", Data::from("open-program")),
                 ("source", Data::from(source)),
                 ("constructor", Data::from("make")),
                 ("arguments", Data::List(vec![])),
@@ -207,7 +207,7 @@ fn prepare(
 }
 
 fn program_source(k: usize) -> String {
-    let mut source = "(define-evidence (make) (sources".to_string();
+    let mut source = "(define-program (make) (sources".to_string();
     for i in 0..k {
         write!(source, " edge{i}").unwrap();
     }

@@ -178,7 +178,7 @@ fn verify_running_cancellation(process: &ascent_scheme::ProcessOwner) {
     );
 }
 fn verify_sources(engine: &Engine) {
-    let source = "(define-evidence (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
+    let source = "(define-program (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
     let module = engine.load_definitions(source).unwrap();
     let value = module.call("make", &[], None).unwrap();
     let session = value.open_session(FactLimits::default()).unwrap();
@@ -227,7 +227,7 @@ fn verify_sources(engine: &Engine) {
     session.close();
 }
 fn verify_provenance(
-    session: &ascent_scheme::Evidence,
+    session: &ascent_scheme::RuleSession,
     input: &std::collections::BTreeMap<String, Vec<Vec<ObjectInput>>>,
 ) {
     let answer = session

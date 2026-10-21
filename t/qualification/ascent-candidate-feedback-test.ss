@@ -6,7 +6,7 @@
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
         (only-in :gerbil-ascent/candidate/program candidate-program candidate-inspect)
         :gerbil-ascent/candidate/feedback
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-proof reasoning-receipt-nonmembership
                  reasoning-receipt-diagnostics reasoning-diagnostic-code))

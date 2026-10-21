@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
         :gerbil-ascent/candidate/program
-        :gerbil-ascent/candidate/reasoning
+        :gerbil-ascent/candidate/checked-program
         :gerbil-ascent/candidate/types
         (prefix-in :gerbil-ascent/t/performance/candidate-flow/reference-program old-)
         (prefix-in :gerbil-ascent/t/performance/candidate-flow/reference-reasoning old-))

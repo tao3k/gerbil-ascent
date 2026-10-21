@@ -1,4 +1,4 @@
-(define-evidence (make-lattice inputs)
+(define-program (make-lattice inputs)
   (gerbil-ascent-program
    (list (gerbil-ascent-relation 'improve 2 inputs)
          (gerbil-ascent-lattice 'best 2 [] min))

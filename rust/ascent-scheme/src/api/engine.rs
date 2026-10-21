@@ -321,7 +321,7 @@ impl Engine {
                 .collect(),
         );
         let manifest = Data::object([
-            ("schema", Data::from("ascent.evidence-components.v1")),
+            ("schema", Data::from("ascent.rule-components.v1")),
             (
                 "components",
                 Data::List(

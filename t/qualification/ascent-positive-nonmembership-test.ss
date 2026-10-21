@@ -10,7 +10,7 @@
                  make-reasoning-snapshot make-reasoning-candidate
                  reasoning-snapshot-digest reasoning-snapshot-relations reasoning-candidate-query)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-candidate-digest

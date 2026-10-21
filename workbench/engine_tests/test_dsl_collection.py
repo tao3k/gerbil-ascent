@@ -3,7 +3,7 @@ import unittest
 from ascent import Engine, EngineError
 from test_module_calls import decode
 
-COPY = '''(define-evidence (make) (sources input) (outputs output)
+COPY = '''(define-program (make) (sources input) (outputs output)
   (relation input ((x integer?)) ((1))) (relation output ((x integer?)))
   ((output X) <-- (input X)))'''
 
@@ -15,21 +15,21 @@ class DSLCollectionTests(unittest.TestCase):
 
     def test_include_effects_and_declaration_order(self):
         source = '''(def nested (ascent-fragment (relation nested (x) ((2)))))
-          (define-evidence (make) (sources early late) (outputs early nested late)
+          (define-program (make) (sources early late) (outputs early nested late)
             (relation early (x) ((1))) (include nested) (relation late (x) ((3))))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual([r['name'] for r in session.descriptors], ['early', 'nested', 'late'])
             self.assertEqual(session.run()['relations'], {'early': [[1]], 'nested': [[2]], 'late': [[3]]})
         with self.assertRaises(EngineError):
             self.engine.dsl('(def observed []) (def (note x) (set! observed x))', trusted=True)
 
     def test_macro_scope_default_storage_and_rule_order(self):
-        source = '''(define-evidence (make) (sources input) (outputs output)
+        source = '''(define-program (make) (sources input) (outputs output)
           (relation input ((x integer?)) ((1)))
           (macro copied ((target ident))
             (relation target ((x integer?))) ((target x) <-- (input x)))
           (copied middle) (relation output ((x integer?))) ((output x) <-- (middle x)))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual([r['name'] for r in session.descriptors], ['input', 'middle', 'output'])
             self.assertEqual(session.run()['relations']['output'], [[1]])
             session.replace({'input': [[7]]})
@@ -37,10 +37,10 @@ class DSLCollectionTests(unittest.TestCase):
 
     def test_hygienic_relation_and_rule_identifiers(self):
         source = '''(defrules scene () ((_ n) (ascent-fragment (relation n ((x integer?))))))
-          (define-evidence (make) (sources input) (outputs output)
+          (define-program (make) (sources input) (outputs output)
             (include (scene input)) (relation output ((x integer?)))
             ((output provider) <-- (input provider)))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual([r['name'] for r in session.descriptors], ['input', 'output'])
             session.replace({'input': [[3]]})
             self.assertEqual(session.run()['relations']['output'], [[3]])
@@ -48,7 +48,7 @@ class DSLCollectionTests(unittest.TestCase):
     def test_empty_program_and_explicit_bounds(self):
         with self.engine.open_sources('(ascent (relation input (x)) (bounds 2 3 4))') as session:
             self.assertEqual(session.fact_limits, {'input': 2, 'derived': 3, 'output': 4})
-        with self.engine.evidence('(define-evidence (empty) (sources) (outputs))', trusted=True) as empty:
+        with self.engine.rules('(define-program (empty) (sources) (outputs))', trusted=True) as empty:
             self.assertEqual(empty.run()['relations'], {})
         with self.assertRaises(EngineError): self.engine.open_sources('(ascent-fragment)')
 
@@ -60,8 +60,8 @@ class DSLCollectionTests(unittest.TestCase):
             self.assertEqual(session.fact_limits, {'input': 1, 'derived': 2, 'output': 3})
 
     def test_retained_callable_reads_mutable_export_and_keeps_scope_isolation(self):
-        with self.engine.evidence(COPY, trusted=True) as owner:
-            with self.engine.evidence(COPY.replace('((1))', '((99))'), trusted=True) as other:
+        with self.engine.rules(COPY, trusted=True) as owner:
+            with self.engine.rules(COPY.replace('((1))', '((99))'), trusted=True) as other:
                 for value in (1, 7, 8):
                     before = owner.run()
                     result = owner.result(before)
@@ -87,13 +87,13 @@ class DSLCollectionTests(unittest.TestCase):
                     with self.assertRaises(ValueError): function.apply(wrong)
 
     def test_declarative_evidence_rules_sources_aliases_and_owned_explanation(self):
-        source = '''(define-evidence (make-study) (sources input) (outputs (visible copied) count best)
+        source = '''(define-program (make-study) (sources input) (outputs (visible copied) count best)
           (relation input ((x integer?)))
           (macro copy ((target ident)) (relation target ((x integer?))) ((target x) <-- (input x)))
           (copy copied) (relation count (n)) (lattice best (key score) [] max)
           ((count n) <-- (aggregate n gerbil-ascent-count () (input x)))
           ((best (lit 'input) x) <-- (input x)))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertEqual([r['name'] for r in session.descriptors if r['source']], ['input'])
             session.result(session.run(queries=[])).close()
             for values, maximum in (([2, 7], 7), ([2], 2), ([2, 7], 7)):
@@ -116,10 +116,10 @@ class DSLCollectionTests(unittest.TestCase):
             '(sources input) (relation input (x))',
             '(sources input) (outputs (answer input) (other input)) (relation input (x))'):
             with self.assertRaises(EngineError):
-                self.engine.evidence('(define-evidence (make-study) ' + clauses + ')', trusted=True)
-        source = '''(define-evidence (make-study) (sources) (outputs derived)
+                self.engine.rules('(define-program (make-study) ' + clauses + ')', trusted=True)
+        source = '''(define-program (make-study) (sources) (outputs derived)
           (relation derived (x)) (fact (derived (lit 3))))'''
-        with self.engine.evidence(source, trusted=True) as session:
+        with self.engine.rules(source, trusted=True) as session:
             self.assertFalse(any(r['source'] for r in session.descriptors))
             self.assertEqual(session.run()['relations']['derived'], [[3]])
             with self.assertRaises(EngineError): session.replace({'derived': [[9]]})

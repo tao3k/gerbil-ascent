@@ -11,6 +11,19 @@ pub struct Catalog {
     pub queries: Vec<String>,
 }
 impl Catalog {
+    /// Decode a typed scalar using the same admission as program sources.
+    /// # Errors
+    /// Rejects values outside the declared type.
+    pub fn scalar(value: &Data, kind: Type) -> Result<crate::Value> {
+        scalar(value, kind)
+    }
+    /// Decode an ordinary relation declaration.
+    /// # Errors
+    /// Rejects malformed source schema or rows.
+    pub fn read_relation(value: &Data) -> Result<Relation> {
+        read_relation(value)
+    }
+
     /// # Errors
     /// Rejects unknown fields, malformed types/terms and unrecognized operators.
     pub fn read(value: &Data) -> Result<Self> {

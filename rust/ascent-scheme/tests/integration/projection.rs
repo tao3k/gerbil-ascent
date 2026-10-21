@@ -238,7 +238,7 @@ fn engine_shutdown_reclaims_native_slots_while_revoked_leases_are_still_retained
 fn explicitly_typed_text_is_not_reinterpreted_as_a_symbol_on_source_replacement() {
     use gerbil_ascent::{ObjectInput, Value};
     let engine = ascent_scheme::Engine::new(1).unwrap();
-    let module=engine.load_definitions("(define-evidence (make) (sources input) (outputs out) (relation input ((x symbol?))) (relation out ((x symbol?))) ((out X) <-- (input X)))").unwrap();
+    let module=engine.load_definitions("(define-program (make) (sources input) (outputs out) (relation input ((x symbol?))) (relation out ((x symbol?))) ((out X) <-- (input X)))").unwrap();
     let session = module
         .call("make", &[], None)
         .unwrap()

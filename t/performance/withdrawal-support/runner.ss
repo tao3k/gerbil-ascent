@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit (only-in :clan/poo/object .ref)
         :gerbil-ascent/candidate/withdrawal-session
         :gerbil-ascent/t/performance/withdrawal-support/replay-reference
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-generation reasoning-snapshot-relations)
         (only-in :gerbil-ascent/candidate/funs candidate-same-row-set?))
 (export main qualify-withdrawal-support)

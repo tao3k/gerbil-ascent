@@ -39,7 +39,7 @@ pub struct SourceObservation {
 }
 /// Loaded native DSL owner, with atomic checked replacement and scoped results.
 pub struct SourceSession {
-    explanation: Option<crate::EvidenceExplanation>,
+    explanation: Option<crate::RuleExplanation>,
     session: Session,
     scope: Arc<Scope>,
     queries: Arc<[String]>,
@@ -63,30 +63,30 @@ impl Engine {
     /// Open declarative Evidence directly in Rust with explicit query bindings.
     /// # Errors
     /// Invalid definitions, unknown constructors and caller limits fail closed.
-    pub fn open_evidence_sources(
+    pub fn open_declaration_sources(
         &self,
         sources: &[&str],
         constructor: Option<&str>,
         limits: FactLimits,
     ) -> Result<SourceSession> {
         self.admit_source()?;
-        let entry = crate::EvidenceProgram::read_sources(sources, constructor)?;
-        self.open_evidence_program_inner(entry, limits)
+        let entry = crate::RuleProgram::read_sources(sources, constructor)?;
+        self.open_rule_program_inner(entry, limits)
     }
     /// Open a scoped, already lowered Evidence declaration in the Rust engine.
     /// # Errors
     /// Invalid programs, caller limits or initialization failures publish no owner.
-    pub fn open_evidence_program(
+    pub fn open_rule_program(
         &self,
-        entry: crate::EvidenceProgram,
+        entry: crate::RuleProgram,
         limits: FactLimits,
     ) -> Result<SourceSession> {
         self.admit_source()?;
-        self.open_evidence_program_inner(entry, limits)
+        self.open_rule_program_inner(entry, limits)
     }
-    fn open_evidence_program_inner(
+    fn open_rule_program_inner(
         &self,
-        entry: crate::EvidenceProgram,
+        entry: crate::RuleProgram,
         limits: FactLimits,
     ) -> Result<SourceSession> {
         let mut owner = self.open_source_program_inner(entry.program, limits)?;

@@ -1,0 +1,17 @@
+#+title: Logical programming and provenance research
+
+These readings concern rule semantics and generic derivation provenance.
+Application Evidence and model efficacy studies are owned by POO Flow; see
+[[file:../../library-boundary.org][the Library boundary]].
+
+| Library question | Reading | Native owner | Formal scope |
+|------------------+---------+--------------+--------------|
+| Grounded support and alternatives | [[file:weighted-provenance.org][Weighted provenance]] | candidate/provenance.ss | ProofDag and DerivationCounts |
+| Bounded nonmembership | [[file:why-not-explanations.org][Why-not explanations]] | candidate/nonmembership.ss | PositiveNonmembership and CertificateMaterial |
+| Derivation height | [[file:proof-height.org][Proof height]] | candidate/support-height.ss | MinimumHeight |
+| Source withdrawal | [[file:withholding.org][Withholding]] | candidate/withdrawal-session.ss | SourceUpdateFrame and DependencyInvalidation |
+| Scoped queries | [[file:scoped-witness.org][Scoped witnesses]] | generic rule/query admission | ScopedWitness |
+
+An abstract theorem is not native compiler correctness, external authentication,
+or a model-efficacy result. Native correspondence and resource acceptance remain
+separate executable gates.

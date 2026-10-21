@@ -6,7 +6,7 @@
         (only-in :gerbil-ascent/candidate/types
                  make-reasoning-candidate)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
-        (only-in :gerbil-ascent/candidate/reasoning
+        (only-in :gerbil-ascent/candidate/checked-program
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-snapshot-digest
                  reasoning-receipt-status reasoning-receipt-rows

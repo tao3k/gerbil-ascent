@@ -182,12 +182,12 @@ impl Engine {
                 Py::new(py, sources::SourceSession::owned(*session)).map(Py::into_any)
             }
             ascent_scheme::Source::Scheme(session) => {
-                Py::new(py, super::evidence::EvidenceSession(session)).map(Py::into_any)
+                Py::new(py, super::program::RuleSession(session)).map(Py::into_any)
             }
         }
     }
     #[pyo3(signature=(*texts, limits=None))]
-    fn open_rule_sources(
+    fn open_declaration_sources(
         &self,
         py: Python<'_>,
         texts: &Bound<'_, PyTuple>,
@@ -203,7 +203,7 @@ impl Engine {
                 Py::new(py, sources::SourceSession::owned(*session)).map(Py::into_any)
             }
             ascent_scheme::Source::Scheme(session) => {
-                Py::new(py, super::evidence::EvidenceSession(session)).map(Py::into_any)
+                Py::new(py, super::program::RuleSession(session)).map(Py::into_any)
             }
         }
     }
@@ -214,7 +214,7 @@ impl Engine {
         module: &str,
         constructor: &str,
         arguments: &Bound<'_, PyTuple>,
-    ) -> PyResult<super::evidence::EvidenceSession> {
+    ) -> PyResult<super::program::RuleSession> {
         let args = super::module_values::arguments(arguments)?;
         py.detach(|| {
             let module = self.0.module(module)?;
@@ -224,11 +224,11 @@ impl Engine {
             module.close();
             result
         })
-        .map(super::evidence::EvidenceSession)
+        .map(super::program::RuleSession)
         .map_err(super::types::source_error)
     }
     #[pyo3(signature=(manifest,sources,entry,constructor,*arguments,trusted=false))]
-    fn evidence_components(
+    fn rule_components(
         &self,
         manifest: &Bound<'_, PyAny>,
         sources: &Bound<'_, PyAny>,
@@ -236,7 +236,7 @@ impl Engine {
         constructor: &str,
         arguments: &Bound<'_, PyTuple>,
         trusted: bool,
-    ) -> PyResult<super::evidence::EvidenceSession> {
+    ) -> PyResult<super::program::RuleSession> {
         let py = arguments.py();
         if !trusted {
             return Err(PyValueError::new_err(
@@ -253,7 +253,7 @@ impl Engine {
             module.close();
             result
         })
-        .map(super::evidence::EvidenceSession)
+        .map(super::program::RuleSession)
         .map_err(super::types::source_error)
     }
     fn module(&self, py: Python<'_>, name: &str) -> PyResult<modules::Module> {
@@ -288,7 +288,7 @@ impl Engine {
         modules::load_components(&self.0, py, manifest, sources, entry, trusted)
     }
     #[pyo3(signature=(source,constructor,*arguments,trusted=false,limits=None))]
-    fn evidence(
+    fn rules(
         &self,
         py: Python<'_>,
         source: &str,
@@ -296,7 +296,7 @@ impl Engine {
         arguments: &Bound<'_, PyTuple>,
         trusted: bool,
         limits: Option<PyRef<'_, sources::FactLimits>>,
-    ) -> PyResult<super::evidence::EvidenceSession> {
+    ) -> PyResult<super::program::RuleSession> {
         if !trusted {
             return Err(PyValueError::new_err(
                 "trusted host Scheme execution must be explicitly authorized",
@@ -312,7 +312,7 @@ impl Engine {
             module.close();
             result
         })
-        .map(super::evidence::EvidenceSession)
+        .map(super::program::RuleSession)
         .map_err(super::types::source_error)
     }
     #[getter]
@@ -469,9 +469,9 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<driver::Observation>()?;
     module.add_class::<super::provenance::Provenance>()?;
     module.add_class::<super::provenance::ProvenanceLimits>()?;
-    module.add_class::<super::evidence::EvidenceSession>()?;
-    module.add_class::<super::evidence::EvidenceResult>()?;
-    module.add_class::<super::evidence::Explanation>()?;
+    module.add_class::<super::program::RuleSession>()?;
+    module.add_class::<super::program::RuleResult>()?;
+    module.add_class::<super::program::Explanation>()?;
     module.add_class::<modules::Module>()?;
     module.add_class::<super::types::OwnedValue>()?;
     module.add_class::<super::types::ResultValue>()?;

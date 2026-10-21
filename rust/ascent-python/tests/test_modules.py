@@ -45,7 +45,7 @@ class ModuleValues(unittest.TestCase):
             with self.assertRaises(ascent.EngineError): module.call('echo', reference)
 
     def test_components_only_load_the_dependency_closure(self):
-        manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
+        manifest = {'schema': 'ascent.rule-components.v1', 'components': [
             {'id': 'base', 'source': 'base.ss', 'exports': ['answer'], 'dependencies': []},
             {'id': 'entry', 'source': 'entry.ss', 'exports': ['build'],
              'dependencies': [{'component': 'base', 'bindings': ['answer']}]},

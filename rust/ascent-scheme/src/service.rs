@@ -592,7 +592,7 @@ fn abandoned_request(request: &Data, value: &Data) -> Option<Data> {
                 ])
             })
         }
-        "open" | "open-evidence" | "value-evidence" | "open-sources" | "open-rule-sources" => {
+        "open" | "open-program" | "value-program" | "open-sources" | "open-rule-sources" => {
             value.get("handle").map(|handle| {
                 Data::object([
                     ("operation", Data::from("close")),

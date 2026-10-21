@@ -1,5 +1,5 @@
 //! Saturated, fixed-work production API throughput; all native rows checked in Rust.
-use ascent_scheme::{Engine, Evidence, ProcessPool, WorkerProgram};
+use ascent_scheme::{Engine, ProcessPool, RuleSession, WorkerProgram};
 use gerbil_ascent::{
     Cancellation, Data, FactLimits, Limits, ObjectInput, Row, SourceSession, Value,
 };
@@ -12,9 +12,9 @@ use std::{
     },
     time::Instant,
 };
-const SOURCE: &str = "(define-evidence (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
+const SOURCE: &str = "(define-program (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
 enum Session {
-    Scheme(Evidence),
+    Scheme(RuleSession),
     Rayon(Box<SourceSession>),
 }
 struct Observation {

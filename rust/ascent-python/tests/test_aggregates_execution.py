@@ -55,7 +55,7 @@ class AggregatesExecution(unittest.TestCase):
                 self.assertEqual(math.copysign(1.0,float(numbers(value.graph)[0])),-1.0)
 
     def test_original_execution_evidence_module_and_source_permissions(self):
-        with self.engine.open_module(':gerbil-ascent/evidence/execution','make-execution-evidence') as session:
+        with self.engine.open_module(':gerbil-ascent/rules/execution','make-execution-evidence') as session:
             sources={r['name'] for r in session.descriptors if r['source']}
             self.assertIn('required_step',sources);self.assertIn('observed_step',sources);self.assertNotIn('checked_step',sources)
             session.run();session.replace({'required_step':[['finished'],['missing']], 'observed_step':[['finished','PASS','native.test']]})
@@ -72,7 +72,7 @@ class AggregatesExecution(unittest.TestCase):
     def test_native_dsl_initial_expression_frozen_complex_rows_and_no_implicit_authority(self):
         source='''(def (make values) (ascent (relation input (v) (map list values))
                     (relation out (v)) ((out V) <-- (input V))))'''
-        with self.engine.evidence(source,'make',[{'type':'vector','value':[1,2]},{'type':'vector','value':[1,2]}],trusted=True) as session:
+        with self.engine.rules(source,'make',[{'type':'vector','value':[1,2]},{'type':'vector','value':[1,2]}],trusted=True) as session:
             result=session.run();self.assertEqual(len(result['relations']['out']),1)
             with self.assertRaises(ascent.EngineError): session.replace({'input':[]})
 

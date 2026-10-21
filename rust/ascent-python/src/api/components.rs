@@ -26,7 +26,7 @@ pub(super) fn read(
 ) -> PyResult<Vec<Component>> {
     let manifest = manifest.cast::<PyDict>()?;
     fields(manifest, &["schema", "components"])?;
-    if field(manifest, "schema")?.extract::<String>()? != "ascent.evidence-components.v1" {
+    if field(manifest, "schema")?.extract::<String>()? != "ascent.rule-components.v1" {
         return Err(EngineError::new_err("unsupported component schema"));
     }
     let sources = sources.cast::<PyDict>()?;

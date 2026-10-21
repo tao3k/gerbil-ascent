@@ -6,7 +6,6 @@ use pyo3::{
     types::{
         PyAnyMethods, PyDict, PyDictMethods, PyModule, PyModuleMethods, PyTuple, PyTupleMethods,
     },
-    wrap_pyfunction,
 };
 use std::{
     collections::BTreeMap,
@@ -15,35 +14,15 @@ use std::{
 };
 #[path = "rust_bindings.rs"]
 mod bindings;
-#[path = "rust_clues.rs"]
-mod clues;
-#[path = "api/computational.rs"]
-mod computational;
-#[path = "api/conversation.rs"]
-mod conversation;
 #[path = "api/datalog.rs"]
 mod datalog;
-#[path = "api/derivations.rs"]
-mod derivations;
-#[path = "api/domain.rs"]
-mod domain;
-#[path = "api/evidence_conversation.rs"]
-mod evidence_conversation;
 #[path = "api/explanations.rs"]
 mod explanations;
 #[path = "rust_exports.rs"]
 mod exports;
 use explanations::{Explanation, explanation};
-#[path = "api/interaction.rs"]
-mod interaction;
 #[path = "transport.rs"]
 pub(super) mod packets;
-#[path = "api/review.rs"]
-mod review;
-#[path = "rust_sources.rs"]
-mod sources;
-#[path = "api/trajectory.rs"]
-mod trajectory;
 #[path = "rust_errors.rs"]
 mod types;
 pyo3::create_exception!(ascent, EngineError, pyo3::exceptions::PyValueError);
@@ -176,7 +155,7 @@ impl Owner {
         )
     }
     #[pyo3(signature=(source,constructor=None,*,trusted=false,limits=None,diagnostics=false))]
-    fn core_evidence(
+    fn core_rules(
         &self,
         source: &str,
         constructor: Option<&str>,
@@ -252,7 +231,7 @@ impl Owner {
                     "operations",
                     gerbil_ascent::Data::List(
                         [
-                            "open-evidence",
+                            "open-rules",
                             "open-components",
                             "open-sources",
                             "open-rule-sources",
@@ -261,7 +240,6 @@ impl Owner {
                             "source-replace",
                             "source-run",
                             "close",
-                            "evidence-dag",
                         ]
                         .into_iter()
                         .map(Into::into)
@@ -273,14 +251,14 @@ impl Owner {
         )
     }
     #[pyo3(signature=(source,constructor=None,*,trusted=false,limits=None))]
-    fn evidence(
+    fn rules(
         &self,
         py: Python<'_>,
         source: &str,
         constructor: Option<&str>,
         trusted: bool,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         if !trusted {
             return Err(PyValueError::new_err(
                 "explicit trusted DSL admission required",
@@ -297,9 +275,12 @@ impl Owner {
             ])),
         )?;
         let limits = limits.map(|p| p.0).unwrap_or_default();
-        py.detach(|| self.0.open_evidence_sources(&[source], constructor, limits))
-            .map(Evidence::owned)
-            .map_err(error)
+        py.detach(|| {
+            self.0
+                .open_declaration_sources(&[source], constructor, limits)
+        })
+        .map(RuleSession::owned)
+        .map_err(error)
     }
     #[pyo3(signature=(manifest,sources,entry,*,trusted=false))]
     fn components(
@@ -338,7 +319,7 @@ impl Owner {
         py: Python<'_>,
         texts: &Bound<'_, PyTuple>,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         let texts = texts
             .iter()
             .map(|t| t.extract::<String>())
@@ -354,7 +335,7 @@ impl Owner {
                 limits,
             )
         })
-        .map(Evidence::owned)
+        .map(RuleSession::owned)
         .map_err(error)
     }
     #[pyo3(signature=(*texts, limits=None))]
@@ -363,7 +344,7 @@ impl Owner {
         py: Python<'_>,
         texts: &Bound<'_, PyTuple>,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         let texts = texts
             .iter()
             .map(|t| t.extract::<String>())
@@ -379,7 +360,7 @@ impl Owner {
                 limits,
             )
         })
-        .map(Evidence::owned)
+        .map(RuleSession::owned)
         .map_err(error)
     }
     #[staticmethod]
@@ -414,7 +395,7 @@ impl Owner {
         py: Python<'_>,
         program: &Bound<'_, PyAny>,
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
-    ) -> PyResult<Evidence> {
+    ) -> PyResult<RuleSession> {
         if self.0.request_limit().is_some() {
             request_bound(
                 self.0.request_limit(),
@@ -427,7 +408,7 @@ impl Owner {
             self.0
                 .open_catalog(catalog.program, BTreeMap::new(), catalog.queries, limits)
         })
-        .map(Evidence::owned)
+        .map(RuleSession::owned)
         .map_err(error)
     }
     fn close(&self) {
@@ -446,14 +427,14 @@ impl Owner {
     }
 }
 
-#[pyclass(name = "EvidenceSession", frozen)]
-pub(super) struct Evidence {
+#[pyclass(name = "RuleSession", frozen)]
+pub(super) struct RuleSession {
     owner: Arc<Mutex<SourceSession>>,
     declarations: Vec<gerbil_ascent::Relation>,
     queries: Vec<String>,
     request_limit: Option<usize>,
 }
-impl Evidence {
+impl RuleSession {
     fn closed(&self, py: Python<'_>) -> PyResult<bool> {
         py.detach(|| {
             self.owner
@@ -472,7 +453,7 @@ impl Evidence {
     }
 }
 #[pymethods]
-impl Evidence {
+impl RuleSession {
     #[getter(closed)]
     fn is_closed(&self, py: Python<'_>) -> PyResult<bool> {
         self.closed(py)
@@ -915,26 +896,27 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Owner>()?;
     module.add_class::<Control>()?;
     module.add("EngineError", module.py().get_type::<EngineError>())?;
+    module.add_function(pyo3::wrap_pyfunction!(core_rows_equal, module)?)?;
     module.add_class::<crate::rust_components::Policy>()?;
     module.add_class::<crate::rust_components::Components>()?;
     module.add_class::<crate::rust_components::Declaration>()?;
     module.add_class::<crate::rust_graph::Graph>()?;
     module.add_class::<crate::closure_cuts::Closure>()?;
     module.add_class::<crate::closure_cuts::Cut>()?;
-    module.add_class::<Evidence>()?;
+    module.add_class::<RuleSession>()?;
     module.add_class::<ResultOwner>()?;
     module.add_class::<Reference>()?;
     module.add_class::<Object>()?;
     module.add_class::<Explanation>()?;
     module.add("EXECUTION_BACKEND", "rust")?;
-    let evidence = PyModule::new(module.py(), "ascent.evidence")?;
-    evidence.add_function(wrap_pyfunction!(derivations::identity, &evidence)?)?;
-    evidence.add_class::<computational::ComputationalEvidence>()?;
-    exports::evidence(&evidence)?;
-    module
-        .py()
-        .import("sys")?
-        .getattr("modules")?
-        .set_item("ascent.evidence", &evidence)?;
     Ok(())
+}
+
+#[pyo3::pyfunction(name = "rows_equal")]
+fn core_rows_equal(left: &Bound<'_, PyAny>, right: &Bound<'_, PyAny>) -> PyResult<bool> {
+    gerbil_ascent::rows_equal(
+        &packets::read(left).map_err(error)?,
+        &packets::read(right).map_err(error)?,
+    )
+    .map_err(error)
 }

@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance-graph
                  candidate-positive-provenance positive-provenance-status
                  positive-provenance-witness positive-provenance-alternatives)

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 /// Declared metadata template, independent of checked per-row provenance.
 #[derive(Clone, Debug)]
-pub struct EvidenceExplanation {
+pub struct RuleExplanation {
     template: ResultTemplate,
 }
 #[derive(Clone, Debug)]
@@ -22,7 +22,7 @@ enum Field {
     Argument(usize),
     Property(usize, String),
 }
-impl EvidenceExplanation {
+impl RuleExplanation {
     pub(super) fn read(form: &Datum) -> Self {
         Self {
             template: match compile(form) {

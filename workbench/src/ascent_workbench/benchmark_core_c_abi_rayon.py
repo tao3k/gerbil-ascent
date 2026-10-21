@@ -32,7 +32,7 @@ def measure(workers, rows, source, compute, result_format):
     started = time.perf_counter()
     cpu = time.process_time()
     engine = Engine(backend="rust", workers=workers)
-    owner = engine.core_evidence(source, trusted=True, diagnostics=True)
+    owner = engine.core_rules(source, trusted=True, diagnostics=True)
     try:
         runtime = owner.runtime().value()
         assert runtime["workers"] == workers and runtime["schemeVm"] is False

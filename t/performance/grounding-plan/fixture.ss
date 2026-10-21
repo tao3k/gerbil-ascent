@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil-ascent/candidate/provenance :gerbil-ascent/candidate/provenance-graph
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (prefix-in :gerbil-ascent/t/performance/grounding-plan/reference-proof old-)
         (prefix-in :gerbil-ascent/t/performance/grounding-plan/reference-graph graph-))
 (export grounding-prepare grounding-consume grounding-verify!)

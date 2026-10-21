@@ -4,7 +4,7 @@
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         :gerbil-ascent/candidate/annotations
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-candidate-digest))
 (export ascent-annotations-test)

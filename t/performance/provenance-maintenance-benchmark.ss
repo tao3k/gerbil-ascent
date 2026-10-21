@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance-graph candidate-positive-provenance
                  candidate-open-provenance-maintenance candidate-provenance-withdraw! provenance-maintenance-rows)
         (rename-in (only-in :gerbil-ascent/t/performance/provenance-maintenance/reference

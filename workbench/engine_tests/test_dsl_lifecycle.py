@@ -2,7 +2,7 @@
 import unittest
 from ascent import Engine, EngineError
 
-SOURCE = '''(define-evidence (make) (sources) (outputs answer)
+SOURCE = '''(define-program (make) (sources) (outputs answer)
   (relation answer ((value integer?)) ((42))))'''
 
 class EvidenceDSLLifecycle(unittest.TestCase):
@@ -19,7 +19,7 @@ class EvidenceDSLLifecycle(unittest.TestCase):
                     engine.dsl(SOURCE, trusted=True)
                 self.assertEqual(retained.run(result_format='typed-rows').value()['relations']['answer'], [[42]])
             with self.assertRaisesRegex(EngineError, 'source scope limit'):
-                engine.evidence(SOURCE, trusted=True)
+                engine.rules(SOURCE, trusted=True)
             with Engine() as unlimited:
                 self.assertIsNone(unlimited.max_source_scopes)
                 for _ in range(80):
@@ -27,7 +27,7 @@ class EvidenceDSLLifecycle(unittest.TestCase):
                         self.assertTrue(owner.run().value()['complete'])
                 self.assertEqual(unlimited.describe()['sourceScopes'], 80)
                 self.assertEqual(engine.describe()['sourceScopes'], 64)
-            manifest = {'schema': 'ascent.evidence-components.v1', 'components': [
+            manifest = {'schema': 'ascent.rule-components.v1', 'components': [
                 {'id': 'entry', 'source': 'entry.ss', 'exports': ['make'], 'dependencies': []}]}
             with Engine(max_source_scopes=1) as limited:
                 with limited.components(manifest, {'entry.ss': SOURCE}, 'entry', trusted=True) as factory:

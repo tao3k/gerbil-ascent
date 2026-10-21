@@ -1,6 +1,4 @@
 import DerivationCounts
-import ClueSubmission
-import AnchoredEvidenceSlice
 import CanonicalIndex
 import Withholding
 import ExecutionFeedback

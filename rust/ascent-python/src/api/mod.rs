@@ -13,31 +13,18 @@ mod components;
 mod module_values;
 mod modules;
 
-mod evidence;
+mod program;
 
 mod provenance;
 
 mod proof_observations;
 
-mod derivations;
 mod packets;
-mod trajectory;
-
-mod computational;
 
 mod exports;
 
-mod conversation;
-
 mod operators;
 
-mod review;
-
-mod domain;
-
 mod datalog;
-
-mod evidence_conversation;
-mod interaction;
 
 mod artifacts;

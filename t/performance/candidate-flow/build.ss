@@ -35,7 +35,7 @@
  (unless (member lane '("runner" "qualify")) (error "unknown Candidate flow lane" lane))
  (let* ((sources (flow-sources)) (source (string-append "t/performance/candidate-flow/" lane ".ss")))
   (add-load-path! library)
-  (make (append '("program/objects" "program/interface" "candidate/program" "candidate/reasoning"
+  (make (append '("program/objects" "program/interface" "candidate/program" "candidate/checked-program"
     "t/performance/candidate-flow/reference-objects" "t/performance/candidate-flow/reference-program" "t/performance/candidate-flow/reference-reasoning"
     "t/performance/candidate-flow/fixture")
     (if (equal? lane "qualify")

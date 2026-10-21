@@ -189,7 +189,9 @@ impl Relation {
             source,
         }
     }
-    pub(crate) fn accepts(&self, row: &[Value]) -> bool {
+    /// Check the declared arity and column types of an owned tuple.
+    #[must_use]
+    pub fn accepts(&self, row: &[Value]) -> bool {
         row.len() == self.columns.len()
             && row
                 .iter()
@@ -214,4 +216,13 @@ pub struct Program {
 pub struct Snapshot {
     pub generation: u64,
     pub relations: BTreeMap<String, Vec<Row>>,
+}
+
+impl Program {
+    /// Validate safety, dependency stratification and relational declarations.
+    /// # Errors
+    /// Rejects inadmissible rule graphs before execution.
+    pub fn validate(&self) -> crate::Result<()> {
+        crate::graph::Graph::build(self.clone()).map(|_| ())
+    }
 }

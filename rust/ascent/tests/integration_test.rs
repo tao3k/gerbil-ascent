@@ -19,16 +19,5 @@ mod scheme_expressions;
 #[path = "integration/provenance.rs"]
 mod provenance;
 
-#[path = "integration/workflows.rs"]
-mod workflows;
-
-#[path = "integration/interaction.rs"]
-mod interaction;
-
-#[path = "integration/clues/mod.rs"]
-mod clues;
-#[path = "integration/evidence_definitions.rs"]
-mod evidence_definitions;
-
-#[path = "integration/evidence_checkpoint.rs"]
-mod evidence_checkpoint;
+#[path = "integration/program_definitions.rs"]
+mod program_definitions;

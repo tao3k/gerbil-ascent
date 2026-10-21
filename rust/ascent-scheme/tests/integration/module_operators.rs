@@ -161,11 +161,11 @@ fn library_operators_compose_query_replace_and_preserve_failed_update() {
 fn registered_native_module_imports_constructor_and_scoped_export_bindings() {
     let engine = Engine::new(1).unwrap();
     engine.register_module(":consumer/targets",r"
-      (import :gerbil-ascent/evidence/interface)
+      (import :gerbil-ascent/rules/interface)
       (export make)
       (def (make inputs)
         (let (fragment (relational-op-fragment (relational-op-project (relational-op-source 'edge 2 inputs) '(1)) 'targets))
-          (ascent-evidence-module (relational-compose (list fragment) 32 64 96) #f
+          (ascent-rule-module (relational-compose (list fragment) 32 64 96) #f
             (list (cons 'targets (relational-export fragment 'targets)) (cons 'edge (relational-export fragment 'edge))))))").unwrap();
     let module = engine.module(":consumer/targets").unwrap();
     let constructor = module

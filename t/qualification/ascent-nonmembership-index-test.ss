@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/candidate/program candidate-inspect)
-        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot)
+        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :gerbil-ascent/t/performance/nonmembership-index/input absence-input)
         (only-in :gerbil-ascent/candidate/nonmembership candidate-positive-nonmembership candidate-verify-positive-nonmembership positive-nonmembership-closure positive-nonmembership-status)

@@ -177,6 +177,12 @@ def capacity(heap_mib: int = 1024) -> int:
     return detected if ceiling is None else min(detected, int(ceiling))
 
 
+def verification_schedule(configurations: list[Configuration]) -> list[Configuration]:
+    # Every model is already compiled and independent. Start larger obligation
+    # groups first so their serial checks do not form a late verification tail.
+    return sorted(configurations, key=lambda base: len(obligations(base)), reverse=True)
+
+
 class Runner:
     def __init__(self) -> None:
         self.started = time.monotonic()
@@ -299,7 +305,9 @@ class Runner:
 
     def check(self, base: Configuration) -> int:
         count = 0
-        for obligation in obligations(base):
+        checks = obligations(base)
+        print(f"QUINT-MODEL-START {base.model} obligations={len(checks)}", flush=True)
+        for obligation in checks:
             label = f"{base.model}-{obligation.name}"
             config = self.output / f"{label}.cfg"
             config.write_text(obligation.configuration.text())
@@ -319,7 +327,7 @@ class Runner:
         print(f"QUINT-CAPACITY workers={workers} models={len(configurations)}", flush=True)
         results = {}
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(self.check, base): base.model for base in configurations}
+            futures = {pool.submit(self.check, base): base.model for base in verification_schedule(configurations)}
             for future in as_completed(futures):
                 results[futures[future]] = future.result()
         print("ALL-QUINT-CHECK-OK", flush=True)

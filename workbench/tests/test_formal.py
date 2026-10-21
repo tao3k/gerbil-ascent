@@ -89,6 +89,21 @@ class FormalTests(unittest.TestCase):
                 self.assertEqual(checks[0].expected, 0)
                 self.assertTrue(all(item.expected == 12 for item in checks[1:]))
 
+    def test_verification_schedule_preserves_every_exact_obligation_and_duplicate(self):
+        from collections import Counter
+        from ascent_workbench.formal import verification_schedule
+        from ascent_workbench.formal_models import MODEL_ORDER
+        configs = [configuration(name, {}) for name in MODEL_ORDER]
+        ordered = verification_schedule(configs)
+        self.assertEqual(Counter(ordered), Counter(configs))
+        self.assertLess([base.model for base in ordered].index('PreparationWork'), 4)
+        def signature(configurations):
+            return Counter((base.model, item.name, item.configuration.text(), item.expected, item.property)
+                           for base in configurations for item in obligations(base))
+        self.assertEqual(signature(ordered), signature(configs))
+        repeated = [configs[0], configs[-1], configs[0]]
+        self.assertEqual(Counter(verification_schedule(repeated)), Counter(repeated))
+
     def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
         checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}
         self.assertEqual(checks.pop("correct").expected, 0)

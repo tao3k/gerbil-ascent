@@ -1102,3 +1102,31 @@ The corrected local formal run passes all 85 positive checks, 511 expected
 counterexamples and 58 source-render comparisons. The initial local Quint
 list-type error is retained in its failed log; the expression was corrected
 before publication, without changing model bounds.
+
+** Formal checker tail at the unchanged CI deadline
+
+At =92361034=, main CI run =39541657178= passed every semantic, performance,
+Rust/PyO3, Python and differential job, but the formal job reached its original
+15-minute job deadline. It had already passed all Quint obligations and was
+canceled just before the final source comparison. This is retained as a
+canceled formal gate and failed aggregate, not a green CI claim.
+
+The source submits independent model groups in inventory order. PreparationWork
+has 44 obligations but was 65th of 71 submitted groups; CompilerCost has 45
+and was last. In the failed log, capacity was four workers, PreparationWork's
+positive result arrived at =04:14:43=, all Quint checks finished at =04:15:44=,
+and the final source-comparison tail was canceled at =04:15:51=.
+
+Submission now starts groups with more obligations first, using a stable
+ordering. Every model still checks its obligations serially, on the same
+bounded worker pool with the same global deadline, Java heap, cutoffs and
+expected results. No CI topology or timeout changes. Tests preserve the exact
+multiset of configurations and complete obligation signatures, including
+duplicates. Real model-start records expose the ordering. The complete local
+inventory passes 85 positive checks, 511 expected counterexamples and all
+58 source comparisons after this change.
+
+This checker-only change does not alter the Scheme, Rust, SDK, compiler or
+runtime inputs of the already running =92361034= performance experiment.
+That experiment remains bound to its exact measured commit; final-head CI
+must still validate the submission-order change separately.

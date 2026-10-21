@@ -21,6 +21,9 @@ impl Engine {
     pub fn new(threads: usize) -> Result<Self> {
         native::Engine::new(threads).map(Self)
     }
+    pub fn on_process(self, process: native::ProcessOwner) -> Self {
+        Self(self.0.on_process(process))
+    }
     pub fn load_definitions(&self, source: &str) -> Result<Module> {
         self.0.load_definitions(source).map(Module)
     }

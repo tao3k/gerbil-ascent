@@ -6,9 +6,9 @@
 ;;; remain ordinary Scheme values; constructors check their declared arity.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type element?)
-        (only-in :core/types
-                 PooFlowNativeObjectContract.
-                 poo-flow-predicate-contract)
+        (only-in :yuanxu/types
+                 YuanxuObjectContract.
+                 yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
@@ -32,7 +32,7 @@
 
 ;; : (-> Symbol Procedure PredicateContract)
 (def (slot-contract identity predicate)
-  (poo-flow-predicate-contract identity predicate
+  (yuanxu-predicate-contract identity predicate
                                (lambda (_value _context) [])))
 
 (def +symbol+ (slot-contract 'ascent/symbol symbol?))
@@ -74,7 +74,7 @@
 
 ;;; Relation shape checks arity, source rows, and physical providers before
 ;;; the evaluator creates any mutable table state.
-(define-type (GerbilAscentRelationContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentRelationContract @ YuanxuObjectContract.)
   identity: 'ascent/relation
   proto: (.o)
   responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
@@ -85,7 +85,7 @@
 
 ;;; A lattice owns a join operation; key refinement semantics are distinct
 ;;; from ordinary set insertion even when source rows have the same shape.
-(define-type (GerbilAscentLatticeContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentLatticeContract @ YuanxuObjectContract.)
   identity: 'ascent/lattice
   proto: (.o)
   responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
@@ -100,7 +100,7 @@
 
 ;;; Terms retain tagged source intent until planning can resolve variables and
 ;;; construct executable expression and pattern operations.
-(define-type (GerbilAscentTermContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentTermContract @ YuanxuObjectContract.)
   identity: 'ascent/term
   proto: (.o)
   responsibilities: (.o kind: +term-kind+ value: +any+))
@@ -115,7 +115,7 @@
 
 ;;; Atom plans bind one relation name to ordered terms and one open planning
 ;;; slot; the evaluator consumes the lowered plan without row-loop dispatch.
-(define-type (GerbilAscentAtomContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentAtomContract @ YuanxuObjectContract.)
   identity: 'ascent/atom
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)
@@ -148,7 +148,7 @@
 
 ;;; Guards can inspect only previously bound variables, which the planner
 ;;; checks before the predicate reaches execution.
-(define-type (GerbilAscentGuardContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentGuardContract @ YuanxuObjectContract.)
   identity: 'ascent/guard
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'guard)
@@ -158,7 +158,7 @@
 
 ;;; Generators may publish one variable or a tuple; the output descriptor
 ;;; rejects duplicate names before rows enter the evaluator.
-(define-type (GerbilAscentGeneratorContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentGeneratorContract @ YuanxuObjectContract.)
   identity: 'ascent/generator
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
@@ -168,7 +168,7 @@
 
 ;;; Bindings compute one value from established inputs and introduce exactly
 ;;; one new variable to subsequent clauses.
-(define-type (GerbilAscentBindingContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentBindingContract @ YuanxuObjectContract.)
   identity: 'ascent/binding
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
@@ -179,7 +179,7 @@
 
 ;;; Negation is a read of a relation with no new binding; stratification
 ;;; ensures the referenced rows are stable before the check executes.
-(define-type (GerbilAscentNegationContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentNegationContract @ YuanxuObjectContract.)
   identity: 'ascent/negation
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
@@ -188,7 +188,7 @@
 
 ;;; Aggregates consume a relation group and publish one result or a pattern
 ;;; tuple after the stratum's contributing rows have stabilized.
-(define-type (GerbilAscentAggregateContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentAggregateContract @ YuanxuObjectContract.)
   identity: 'ascent/aggregate
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
@@ -223,7 +223,7 @@
 
 ;;; A rule has at least one head and an ordered body. Shared body bindings
 ;;; make a multi-head rule one logical derivation event.
-(define-type (GerbilAscentRuleContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentRuleContract @ YuanxuObjectContract.)
   identity: 'ascent/rule
   proto: (.o)
   responsibilities: (.o heads: +heads+ body: +clauses+))
@@ -255,7 +255,7 @@
 
 ;;; A fragment carries declarations, rules and instance-local public handles.
 ;;; It has no execution limits until composition into a bounded program.
-(define-type (GerbilAscentFragmentContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentFragmentContract @ YuanxuObjectContract.)
   identity: 'ascent/fragment
   proto: (.o)
   responsibilities:
@@ -264,7 +264,7 @@
 
 ;;; Program budgets bound accepted input, derived facts, and public output
 ;;; separately; source admission checks them before mutating a session.
-(define-type (GerbilAscentProgramContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentProgramContract @ YuanxuObjectContract.)
   identity: 'ascent/program
   proto: (.o)
   responsibilities:
@@ -339,7 +339,7 @@
 ;; Prototype identity outlives the descriptor's lazily materialized slot cache.
 ;; Rematerialization must not invalidate already published native Sessions.
 (def +session-prototype+ (.o))
-(define-type (GerbilAscentSessionContract @ PooFlowNativeObjectContract.)
+(define-type (GerbilAscentSessionContract @ YuanxuObjectContract.)
   identity: 'ascent/session
   proto: +session-prototype+
   responsibilities:

@@ -7,7 +7,7 @@
         (only-in :std/time/precise current-time-precise
                  PreciseTime-seconds PreciseTime-nseconds)
         (only-in :clan/poo/object .o .ref)
-        (only-in :core/observability/testing-case poo-flow-test-case/with)
+        (only-in :yuanxu/observability/testing-case yuanxu-test-case/with)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile ascent-ss-profile)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
                  ascent-rule-fixture-program)
@@ -70,7 +70,7 @@
 
 (def ascent-clock-memory-probe-test
   (test-suite "ASCENT timing and memory sampling diagnostic"
-    (poo-flow-test-case/with +poll-counters+ "counter polling with both clocks"
+    (yuanxu-test-case/with +poll-counters+ "counter polling with both clocks"
       (probe 'poll-only))
-    (poo-flow-test-case/with +collect-counters+ "forced collections with both clocks"
+    (yuanxu-test-case/with +collect-counters+ "forced collections with both clocks"
       (probe 'forced-collection))))

@@ -7,7 +7,7 @@
 ;;; separate owners; only this invocation emits private relation handles.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
+        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
         :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
         (only-in :gerbil-ascent/program/operator-lowering lower-operator-graph)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
@@ -31,13 +31,13 @@
         relational-op? relational-op-arity)
 
 (def +compiler-procedure+
-  (poo-flow-predicate-contract 'ascent/operator-compiler-procedure procedure?
+  (yuanxu-predicate-contract 'ascent/operator-compiler-procedure procedure?
                                (lambda (_value _context) [])))
 
 ;;; Only behavior lives in the prototype. Each call owns graph admission,
 ;;; private handles, memo tables and emitted relation/rule declarations.
 (define-type (GerbilAscentOperatorCompilerContract
-              @ PooFlowNativeObjectContract.)
+              @ YuanxuObjectContract.)
   identity: 'ascent/operator-compiler
   proto: (.o)
   responsibilities: (.o .make-relation: +compiler-procedure+

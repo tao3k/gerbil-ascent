@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit
         (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :yuanxu/observability/testing-case yuanxu-test-case)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/applications/steensgaard
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
@@ -41,7 +41,7 @@
     (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected)))
 (def ascent-steensgaard-performance-test
   (test-suite "Native Steensgaard application measurements"
-    (poo-flow-test-case "matched application solve and complete export include load store saturation"
+    (yuanxu-test-case "matched application solve and complete export include load store saturation"
       (unless (getenv "ASCENT_TEST_LIBRARY" #f)
         (error "matched performance samples require compiled native qualification"))
       (assert-native-library!)

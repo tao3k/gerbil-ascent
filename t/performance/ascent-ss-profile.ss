@@ -4,12 +4,12 @@
 
 (import (only-in :clan/poo/object .o)
         (only-in :yuanxu/observability/testing-case
-                 poo-flow-default-testing-case-profile))
+                 yuanxu-default-testing-case-profile))
 
 (export ascent-ss-profile)
 
 (def ascent-ss-profile
-  (.o (:: @ poo-flow-default-testing-case-profile)
+  (.o (:: @ yuanxu-default-testing-case-profile)
       (identity 'ascent/ss)
       (heap-limit-bytes 805306368)
       (live-growth-limit-bytes 268435456)

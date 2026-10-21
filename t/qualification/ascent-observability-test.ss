@@ -5,11 +5,11 @@
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .o .call .ref)
         (only-in :yuanxu/observability/debug
-                 poo-flow-debug-memory-snapshot
+                 yuanxu-debug-memory-snapshot
                  YuanxuDebugMemoryAnomaly?
                  YuanxuDebugDurationAnomaly?)
         (only-in :yuanxu/observability/testing-case
-                 poo-flow-testing-case-profile?)
+                 yuanxu-testing-case-profile?)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile
                  ascent-ss-profile))
 
@@ -28,15 +28,15 @@
                 ;; startup can have no such sample yet; request real collection
                 ;; instead of relying on interpreted import allocation pressure.
                 (collect-before-sample? #t)))
-        (let* ((before (poo-flow-debug-memory-snapshot 'zero-budget-before))
-               (observed (poo-flow-debug-memory-snapshot
+        (let* ((before (yuanxu-debug-memory-snapshot 'zero-budget-before))
+               (observed (yuanxu-debug-memory-snapshot
                           'zero-budget-preflight collect?: #t)))
           (displayln "NATIVE-MEMORY-SAMPLE before-heap=" (.ref before 'heap-size-bytes)
                      " collected-heap=" (.ref observed 'heap-size-bytes)
                      " collected-live=" (.ref observed 'live-bytes))
           (force-output)
           (check-equal? (> (.ref observed 'heap-size-bytes) 0) #t))
-        (check-equal? (poo-flow-testing-case-profile? rejected-profile) #t)
+        (check-equal? (yuanxu-testing-case-profile? rejected-profile) #t)
         (check-equal?
          (with-catch
           YuanxuDebugMemoryAnomaly?

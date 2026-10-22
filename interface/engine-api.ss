@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/encoding/json :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows)
         (only-in "rule-source.ss" ascent-read-rule-sources)
         (only-in "dsl-source.ss" ascent-load-dsl-sources)
         "rule-module.ss" "value-graph.ss"
@@ -678,7 +679,7 @@
               (program (gerbil-ascent-program
                 (map (lambda (relation)
                   (let (source (assq (.ref relation 'name) (source-state-sources state)))
-                    (if source (.o (:: @ relation) rows: (cdr source)) relation))) (.ref original 'relations))
+                    (if source (gerbil-ascent-relation-with-rows relation (cdr source)) relation))) (.ref original 'relations))
                 (.ref original 'rules) (.ref original 'max-input-facts)
                 (.ref original 'max-derived-facts) (.ref original 'max-output-facts) (.ref original 'source-handles))))
          (with-catch (lambda (_) (hash ("status" "unsupported") ("sourceGeneration" (source-state-generation state))))

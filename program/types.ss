@@ -22,6 +22,7 @@
         gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
         gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
         gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
+        gerbil-ascent-relation-with-rows
         gerbil-ascent-make-session-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
@@ -229,6 +230,19 @@
       (validate GerbilAscentRelationContract value)))
 
 ;; END GENERATED OWNED RELATION VALUE
+
+;;; Row-only private views retain the producer's field-specification ownership.
+;;; This is not a validation receipt: every root still checks the current rows.
+;;; POO's existing prototype dependency invalidation revokes the child's revision
+;;; on any supported ancestor edit. Unknown or changed producers remain ordinary
+;;; objects, preserving their getter and classifier protocols.
+;; BEGIN GENERATED OWNED ROW VIEW
+(def (gerbil-ascent-relation-with-rows relation replacement)
+  (let (value (.o (:: @ relation) rows: replacement))
+    (if (declared-value-shape? 'relation relation)
+      (remember-value-shape! 'relation value)
+      value)))
+;; END GENERATED OWNED ROW VIEW
 
 ;; BEGIN GENERATED OWNED DECLARATION VALUES
 (def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))

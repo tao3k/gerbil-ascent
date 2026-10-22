@@ -5,6 +5,7 @@
 ;;; Private source-only declaration preparation. Preparation is persistent:
 ;;; the caller adopts a cut only after evaluation and acceptance succeed.
 (import (only-in :clan/poo/object .o .ref)
+        (only-in "types.ss" gerbil-ascent-relation-with-rows)
         (only-in :std/iter for in-range)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
         (only-in "scheme-checked.ss" relational-scalar?))
@@ -102,7 +103,7 @@
                             declaration
                             (begin
                               (set! changed? #t)
-                              (.o (:: @ prototype) rows: replacement)))))
+                              (gerbil-ascent-relation-with-rows prototype replacement)))))
                       (.ref template 'relations) declarations
                       (iota (vector-length rows)))))
       (if changed?

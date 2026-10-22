@@ -2799,3 +2799,33 @@ retained; neither test expectations nor public aliases were changed to hide
 them. Only this candidate's new scheduling test was removed from that obsolete
 entry and placed in the production qualification that CI actually executes.
 The historical test file otherwise remains byte-identical to the baseline.
+
+** Exact-head CI receipts and redundant tool installation
+
+For candidate =7d525ea3eae5fcae3f0345146349325b5d12b44d=, both complete
+Scheme source suites passed: 170 modules and 1415 cases on Linux within its
+unchanged 180-second limit, and the same inventory on macOS within 600 seconds.
+The original performance lane, including grouped, unindexed and repeated-small
+controls, passed. The macOS source run nevertheless took over seven minutes;
+this is not called a runtime performance closure. Its admitted preparation
+cache accepted 245 support interfaces for the same 381-module inventory,
+recorded zero production recompilations and completed in 7.158489 seconds.
+This is a warm cache receipt, not a cold-expansion speedup.
+
+The main formal job was cancelled by its original 15-minute parent budget while
+still executing checks. Its tool-install step consumed 7 minutes 49 seconds,
+compared with 1 minute 23 seconds in the previous green 656e8483 run. The
+completed conformance job exposes the cause: APT downloaded 77.4 MB in seven
+minutes and installed 406 packages, including Debian Node 18/npm and a 46.5 MB
+Java 21 runtime. Lean itself downloaded and installed in about ten seconds.
+The full conformance job passed; the interrupted main formal job did not.
+
+The minimal follow-up reuses the runner's existing Node/npm and its documented
+=JAVA_HOME_21_X64= JDK, prints their actual versions, and exports that JDK through
+the standard GitHub environment/path files. Only elan, just and the existing
+Python support packages remain in the APT command. Both formal parent budgets,
+the complete model/counterexample inventory, Lean version, process Guard and
+proof limits remain unchanged. No SDK or runtime implementation change is made
+for this CI preparation repair. The seven CI-entry regressions passed before
+publication. A new exact-head full CI run is required; cancelled checks are
+not re-labelled as passing.

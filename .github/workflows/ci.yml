@@ -618,15 +618,19 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install Lean and protocol verification tools
         run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?runner Java 21 is required}"
+          "$JAVA_HOME/bin/java" -version
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+          node --version
+          npm --version
           sudo apt-get update
-          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi python3-venv
+          sudo apt-get install -y elan just python3-cffi python3-venv
           elan toolchain install leanprover/lean4:v4.34.0
       - name: Check Lean contracts, Quint protocols and counterexamples
         env:
           ASCENT_FORMAL_GENERATION_CUTOFF: '4'
         run: |
-          export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-          export PATH="$JAVA_HOME/bin:$PATH"
           just check-formal
   formal-conformance:
     needs: repository-hygiene
@@ -636,8 +640,14 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install Lean and protocol verification tools
         run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?runner Java 21 is required}"
+          "$JAVA_HOME/bin/java" -version
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+          node --version
+          npm --version
           sudo apt-get update
-          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless python3-cffi python3-venv
+          sudo apt-get install -y elan just python3-cffi python3-venv
           elan toolchain install leanprover/lean4:v4.34.0
       - name: Check imported Lean proofs under the locked process Guard
         run: just check-lean-proofs prepare-quint

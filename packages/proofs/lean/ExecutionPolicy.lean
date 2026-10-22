@@ -650,6 +650,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-interface-quint" => pure Ascent.PreparationWork.interfacesQuintSource
   | "preparation-interfaces" => pure Ascent.PreparationWork.interfacesSchemeSource
   | "proof-authority-rust" => pure Ascent.LookupCost.proofAuthorityRustSource
+  | "ordinal-extent-rust" => pure Ascent.LookupCost.ordinalExtentRustSource
   | "row-decode-rust" => pure Ascent.LookupCost.ownedRowRustSource
   | "row-cost-quint" => pure Ascent.LookupCost.ownedRowQuintSource
   | "lookup-materialization" => pure Ascent.LookupCost.materializationSchemeSource

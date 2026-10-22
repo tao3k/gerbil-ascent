@@ -89,6 +89,41 @@ def ownedRowQuintSource : String :=
   "  pure def TupleTemporaryCalls(rows: List[Row]): int = rows.foldl(0, (n,row) => n + (if (row.length() == 0) 0 else 1))\n  pure def TupleTemporaryBytes(rows: List[Row], valueBytes: int): int = rows.foldl(0, (n,row) => n + row.length() * valueBytes)\n  pure def TupleDirectCalls(rows: List[Row]): int = rows.length()\n  pure def TupleStagedCalls(rows: List[Row]): int = TupleDirectCalls(rows) + TupleTemporaryCalls(rows)\n"
 
 
+-- Representation denotation for the private single-column index. The complete
+-- Rust Vec/HashMap migration remains a separate source-refinement obligation.
+def ordinalRead (extent : Nat) (dense sparse : Nat → List α) (key : Nat) : List α :=
+  if key < extent then dense key else sparse key
+
+def ordinalGrow (old next : Nat) (dense sparse : Nat → List α) (key : Nat) : List α :=
+  if old ≤ key ∧ key < next then sparse key else dense key
+
+def ordinalRetire (next : Nat) (sparse : Nat → List α) (key : Nat) : List α :=
+  if key < next then [] else sparse key
+
+theorem ordinal_growth_preserves_lookup (old next key : Nat)
+    (dense sparse : Nat → List α) (monotone : old ≤ next) :
+    ordinalRead next (ordinalGrow old next dense sparse) (ordinalRetire next sparse) key =
+      ordinalRead old dense sparse key := by
+  by_cases before : key < old
+  · have after : key < next := Nat.lt_of_lt_of_le before monotone
+    have notAfter : ¬ old ≤ key := Nat.not_le_of_gt before
+    simp [ordinalRead, ordinalGrow, before, after, notAfter]
+  · by_cases after : key < next
+    · have beyond : old ≤ key := Nat.le_of_not_gt before
+      simp [ordinalRead, ordinalGrow, before, after, beyond]
+    · simp [ordinalRead, ordinalRetire, before, after]
+
+def ordinalExtentFits (target bound nativeLimit : Nat) : Bool :=
+  decide (target ≤ bound ∧ target ≤ nativeLimit)
+
+theorem ordinal_admission_bounds (target bound nativeLimit : Nat)
+    (admitted : ordinalExtentFits target bound nativeLimit = true) :
+    target ≤ bound ∧ target ≤ nativeLimit := by
+  simpa [ordinalExtentFits] using admitted
+
+theorem ordinal_spine_units_bound (keys target : Nat)
+    (admitted : target ≤ (keys + 1) * 2 + 4) : target ≤ 2 * keys + 6 := by omega
+
 -- All three components belong to one measured request. This does not attribute
 -- a host elapsed interval to CPU, waiting, GC, or the SDK scheduler.
 def sameRequestPartition (total replace exported validation : Nat) : Prop :=
@@ -101,6 +136,10 @@ theorem same_request_excludes_validation (total replace exported validation : Na
   omega
 
 theorem mixed_phase_maxima_rejected : ¬ sameRequestPartition 10 8 7 1 := by simp [sameRequestPartition]
+
+def ordinalExtentRustSource : String :=
+  "fn extent_fits(target: usize, bound: usize, native_limit: usize) -> bool {\n    target <= bound && target <= native_limit\n}\n"
+
 
 -- Only generation is consumed when no content fingerprint exists. Unsupported
 -- evidence still returns false; this choice creates no provenance authority.
@@ -124,6 +163,9 @@ end Ascent.LookupCost
 #print axioms Ascent.LookupCost.temporary_tuple_removed
 #print axioms Ascent.LookupCost.observed_closure_temporary_bytes
 
+#print axioms Ascent.LookupCost.ordinal_growth_preserves_lookup
+#print axioms Ascent.LookupCost.ordinal_admission_bounds
+#print axioms Ascent.LookupCost.ordinal_spine_units_bound
 #print axioms Ascent.LookupCost.same_request_excludes_validation
 #print axioms Ascent.LookupCost.mixed_phase_maxima_rejected
 

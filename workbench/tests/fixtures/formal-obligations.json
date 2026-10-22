@@ -2578,6 +2578,54 @@
       ]
     ]
   },
+  "OrdinalIndex": {
+    "configuration": {
+      "constants": "Mutation = \"none\"\nNativeLimit = 64",
+      "invariants": "ExactRows ExclusiveBins SpineBound NativeBound GuardExact SameRequestCost"
+    },
+    "faults": [
+      [
+        "unbounded-spine",
+        "GuardExact",
+        12
+      ],
+      [
+        "ignore-byte-limit",
+        "GuardExact",
+        12
+      ],
+      [
+        "drop-moved",
+        "ExactRows",
+        12
+      ],
+      [
+        "reverse-moved",
+        "ExactRows",
+        12
+      ],
+      [
+        "retain-moved",
+        "ExclusiveBins",
+        12
+      ],
+      [
+        "skip-sparse",
+        "ExactRows",
+        12
+      ],
+      [
+        "mix-phase-maxima",
+        "SameRequestCost",
+        12
+      ],
+      [
+        "drop-validation",
+        "SameRequestCost",
+        12
+      ]
+    ]
+  },
   "ProofAuthorityRead": {
     "configuration": {
       "constants": "Mutation = \"none\"",

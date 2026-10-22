@@ -5,6 +5,9 @@ use std::{collections::HashMap, num::NonZeroUsize, sync::Arc};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct Cell(NonZeroUsize);
 impl Cell {
+    pub(crate) fn ordinal(self) -> usize {
+        self.0.get() - 1
+    }
     pub fn owned(self) -> Self {
         self
     }
@@ -27,7 +30,7 @@ impl Values {
         })
     }
     pub fn scalar(&self, cell: Cell) -> &Scalar {
-        &self.values[cell.0.get() - 1]
+        &self.values[cell.ordinal()]
     }
     // BEGIN GENERATED OWNED ROW
     pub fn decode(&self, row: &[Cell]) -> crate::Row {

@@ -133,6 +133,8 @@ def obligations(base: Configuration) -> tuple[Obligation, ...]:
         successor = base.changed(SecondExpected=1)
         result.extend((Obligation("successor", successor),
                        Obligation("late-receipt", successor.changed(Mutation='"lateReceipt"'), 12, "ReceiptBound")))
+    if model == "OrdinalIndex":
+        result.append(Obligation("small-native-limit", base.changed(NativeLimit=16)))
     if model == "ReaderLifetime":
         result.append(Obligation("single-reader-global-fairness", base.changed(Readers="{1}", Mutation='"global"')))
         round_config = replace(base, specification="roundSpec", properties=("ReaderCompletion", "RoundCompletion"))
@@ -386,6 +388,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "proof-authority-rust", "rust/ascent-scheme/src/api/session.rs"),
+                ("ExecutionPolicy.lean", "ordinal-extent-rust", "rust/ascent/src/execution/ordinal.rs"),
                 ("ExecutionPolicy.lean", "capacity-rust", "rust/ascent/src/execution/work.rs"),
                 ("ExecutionPolicy.lean", "capacity-quint", "packages/proofs/quint/RequestScheduling.qnt"),
                 ("ExecutionPolicy.lean", "stage-fanout-rust", "rust/ascent/src/execution/kernels.rs"),
@@ -490,6 +493,11 @@ def main() -> int:
                     begin, end = '        // BEGIN GENERATED PROOF AUTHORITY READ\n', '        // END GENERATED PROOF AUTHORITY READ\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate proof authority read source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "ordinal-extent-rust":
+                    begin, end = '// BEGIN GENERATED ORDINAL EXTENT\n', '// END GENERATED ORDINAL EXTENT\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate ordinal extent source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"capacity-rust", "capacity-quint"}:
                     indent = "  " if language == "capacity-quint" else ""

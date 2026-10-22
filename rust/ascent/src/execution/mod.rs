@@ -5,6 +5,7 @@ mod facts;
 mod kernels;
 mod lattice;
 mod matching;
+mod ordinal;
 mod policy;
 mod values;
 pub(crate) use budget::Budget;

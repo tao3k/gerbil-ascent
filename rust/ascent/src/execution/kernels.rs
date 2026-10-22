@@ -1,5 +1,5 @@
 //! Rust-owned storage/index kernels and Rayon scheduling for Scheme AOT rules.
-use super::policy;
+use super::{ordinal::OrdinalRows, policy};
 use super::values::Row;
 use super::{Bindings, Budget, Cancellation, Cell, Fact, FactSet, Limits, Pattern};
 use crate::{
@@ -58,7 +58,7 @@ fn stage_fanout(eligible: bool, current: &(dyn Fn() -> bool + Sync)) -> bool {
 enum Lookup {
     One {
         column: usize,
-        rows: HashMap<Cell, Vec<Row>>,
+        rows: OrdinalRows,
     },
     Many {
         columns: Vec<usize>,
@@ -82,7 +82,7 @@ impl Index {
                 .map(|columns| match columns.as_slice() {
                     [column] => Lookup::One {
                         column: *column,
-                        rows: HashMap::new(),
+                        rows: OrdinalRows::default(),
                     },
                     _ => Lookup::Many {
                         columns: columns.clone(),
@@ -103,7 +103,7 @@ impl Index {
         for lookup in &mut self.keys {
             match lookup {
                 Lookup::One { column, rows } => {
-                    rows.entry(row[*column]).or_default().push(row.clone());
+                    rows.insert(row[*column], row.clone());
                 }
                 Lookup::Many { columns, rows } => {
                     rows.entry(columns.iter().map(|i| row[*i]).collect())
@@ -126,7 +126,7 @@ impl Index {
             Pattern::Wildcard => unreachable!("wildcard is not indexed"),
         };
         match &self.keys[slot] {
-            Lookup::One { column, rows } => rows.get(value(*column)),
+            Lookup::One { column, rows } => rows.get(*value(*column)),
             Lookup::Many { columns, rows } => {
                 let key: Key = columns.iter().map(|i| *value(*i)).collect();
                 rows.get(&key)

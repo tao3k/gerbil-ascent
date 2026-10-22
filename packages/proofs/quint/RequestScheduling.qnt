@@ -3,6 +3,10 @@
 module RequestScheduling {
   import ExecutionPolicy.* from "./ExecutionPolicy"
   const Mutation: str
+  // BEGIN GENERATED FANOUT CAPACITY
+  pure def fanout_capacity(workers: int, available: int): int =
+    if (workers < available) workers else available
+  // END GENERATED FANOUT CAPACITY
   // BEGIN GENERATED LIVE FANOUT
   pure def stage_fanout(eligible: bool, current: bool): bool = eligible and current
   pure def stage_probe(eligible: bool): int = if (eligible) 1 else 0
@@ -62,4 +66,11 @@ module RequestScheduling {
         reads == (if (eligible) 1 else 0)
     })))))))
   val StageExact = TypeOK and StagePolicy
+  pure val CapacityPolicy = Set(1,3,12).forall(workers => Set(1,3,12).forall(available => {
+    val capacity = if (Mutation == "pool-size-as-capacity") workers else fanout_capacity(workers,available)
+    capacity > 0 and capacity <= workers and capacity <= available and
+      capacity == (if (workers < available) workers else available) and
+      not(request_fanout(capacity,available,true,false,false))
+  }))
+  val CapacityExact = TypeOK and CapacityPolicy
 }

@@ -385,6 +385,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
+                ("ExecutionPolicy.lean", "capacity-rust", "rust/ascent/src/execution/work.rs"),
+                ("ExecutionPolicy.lean", "capacity-quint", "packages/proofs/quint/RequestScheduling.qnt"),
                 ("ExecutionPolicy.lean", "stage-fanout-rust", "rust/ascent/src/execution/kernels.rs"),
                 ("ExecutionPolicy.lean", "stage-link-rust", "rust/ascent/src/session.rs"),
                 ("ExecutionPolicy.lean", "stage-fanout-quint", "packages/proofs/quint/RequestScheduling.qnt"),
@@ -482,6 +484,13 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate generated DSL region: ' + language)
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"capacity-rust", "capacity-quint"}:
+                    indent = "  " if language == "capacity-quint" else ""
+                    begin, end = (f'{indent}// BEGIN GENERATED FANOUT CAPACITY\n',
+                                  f'{indent}// END GENERATED FANOUT CAPACITY\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate fanout capacity source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"stage-fanout-rust", "stage-link-rust", "stage-fanout-quint"}:
                     marker = "LIVE LINK" if language == "stage-link-rust" else "LIVE FANOUT"

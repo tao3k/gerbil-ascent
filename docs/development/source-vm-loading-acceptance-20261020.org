@@ -3419,3 +3419,68 @@ original -M1024/-T10000000 limits. The complete post-cleanup workbench suite
 passed all 113 cases in 69.096 seconds with no skips. It used the existing local
 Python development environment; the freshly built published-head wheel and all
 remote semantics/matrix/control qualifications remain separate required evidence.
+
+* Exact 266a792f admission and the hardware-capacity correction
+
+Every one of the eleven main CI jobs for 266a792f completed successfully in
+run 39792157234. The separate macOS run 39792157223 also completed successfully:
+170 modules, 1415 cases and 160.51 seconds at three CPUs with twelve single-thread
+VM processes and the original 600-second limit. Linux's source phase completed
+in 173 seconds within its unchanged 180-second limit; its complete job, including
+compiled closure qualification, passed. These different-host durations are not
+causal speedup estimates. All 1415 forwarded Linux Case intervals were matched;
+the longest was the directed-three-node candidate-flow check at 109.48 seconds.
+Forwarded wall intervals do not partition native CPU or allocation.
+
+The new Linux Rust setup selected only three new packages and completed in
+28 seconds. The retained 73fab2d5 run selected 399 and spent about 30 minutes
+37 seconds in setup. Mirror/image conditions differ; the known code correction
+removes the unnecessary distribution Node/npm dependency chain. Both installed
+PyO3 worker entries passed twelve owners, one processor per VM, twelve clients,
+120 calls/applications and twelve reaped child processes.
+
+The explicit three-core A/B/B/A control 39792348174 completed all eight valid
+arms with complete matching answers, unchanged executables and no compiler
+contamination. For twelve threads, the live-phase candidate's fixed-work
+throughput ratio was 0.890725 and p95 ratio 1.147263. Soak throughput ratio was
+1.112207 and p95 bound ratio approximately 0.8819. Thus the sustained improvement
+does not admit the fixed-work regression; 266a792f is not accepted as an overall
+performance closure. Its single-thread arms also retain their substantial
+bracketing variation rather than establishing a general improvement.
+
+The next correction uses min(pool workers, observed available CPU slots) only
+as the nested-fanout threshold. The pool still contains the full caller-selected
+worker count; external request admission is unchanged. A compiled barrier check
+keeps twelve actual pool workers and twelve concurrent evaluation guards under
+a three-slot hint, then verifies that retirement below three enables nested work.
+The observed capacity is exposed for diagnostics. If the host query is unavailable,
+the original pool-size advice remains; a live CPU-quota change after construction
+is outside this fixed-environment observation.
+
+Lean bounds this advisory capacity by both positive inputs and proves host
+saturation covers it. Quint retains the prior stage/queue/publication obligations
+and requires an additional pool-size-as-capacity counterexample. These source
+bindings do not impose an active-worker cap or a deadline/throughput guarantee.
+The correction still requires complete local checks, an isolated same-host control
+against 266a792f, the original full matrix and fresh exact-head CI.
+
+
+The original 24-row experiment for 266a792f (39792341150) admitted 23 rows.
+The large one-VM row exhausted the original 240-second row watchdog and remains
+invalid. Large-workload VM throughput was 2.605538 at three owners versus
+2.114922 at twelve; the twelve-owner p95 overflow bound is retained. Rayon large
+soak throughput at 1/3/6/8/12 threads was 57.436740/88.025598/96.578632/
+75.541971/95.549497 requests per second. Twelve threads therefore improved on
+one by 1.664 times but did not dominate six threads, particularly in p95 latency.
+These original-matrix observations are distinct from the same-host phase control.
+
+The capacity correction passed complete local qualification: 70 native binding
+cases at twelve threads with no retries or skips (57.475 seconds), 85 Rust-profile
+workspace cases, 66 serial cases and all three strict Clippy profiles. All 113
+workbench cases passed without skips (86.320 seconds). The complete guarded
+formal inventory passed 58 models, 72 positive checks and 422 required
+counterexamples, the Lean build and every source render. Original proof resource
+budgets remain unchanged. The two new compiled capacity checks cover positive
+pool/host bounds and twelve simultaneously held worker/evaluation guards under
+a three-slot advisory hint. Remote exact-head admission and performance results
+remain pending; no local duration is admitted as a matched performance gain.

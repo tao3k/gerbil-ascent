@@ -5,6 +5,13 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
+// BEGIN GENERATED FANOUT CAPACITY
+#[cfg(feature = "rayon")]
+pub(crate) fn fanout_capacity(workers: usize, available: usize) -> usize {
+    workers.min(available)
+}
+// END GENERATED FANOUT CAPACITY
+
 /// Distribute a caller-owned pool across requests or within one evaluation.
 /// This controls Rust-owned evaluation only; Scheme handles keep their owner.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

@@ -380,6 +380,30 @@ def stageRustSource : String := "#[cfg(feature = \"rayon\")]\n#[inline]\nfn stag
 def stageLinkRustSource : String := "            || self.engine.request_fanout(),\n"
 def stageQuintSource : String := "  pure def stage_fanout(eligible: bool, current: bool): bool = eligible and current\n  pure def stage_probe(eligible: bool): int = if (eligible) 1 else 0\n"
 
+
+-- This capacity is advice for nested work. Pool construction and external
+-- request admission retain the caller's worker population.
+def fanoutCapacity (workers available : Nat) : Nat := min workers available
+
+theorem capacity_pool_bound (workers available : Nat) :
+    fanoutCapacity workers available ≤ workers := Nat.min_le_left workers available
+
+theorem capacity_host_bound (workers available : Nat) :
+    fanoutCapacity workers available ≤ available := Nat.min_le_right workers available
+
+theorem capacity_positive (workers available : Nat)
+    (pool : 0 < workers) (host : 0 < available) :
+    0 < fanoutCapacity workers available := by
+  simp [fanoutCapacity, Nat.lt_min, pool, host]
+
+theorem host_saturation_covers_capacity (workers available pending : Nat)
+    (saturated : available ≤ pending) :
+    fanoutCapacity workers available ≤ pending :=
+  Nat.le_trans (capacity_host_bound workers available) saturated
+
+def capacityRustSource : String := "#[cfg(feature = \"rayon\")]\npub(crate) fn fanout_capacity(workers: usize, available: usize) -> usize {\n    workers.min(available)\n}\n"
+def capacityQuintSource : String := "  pure def fanout_capacity(workers: int, available: int): int =\n    if (workers < available) workers else available\n"
+
 end Ascent.ExecutionPolicy
 
 /-! The executable admission decision, not a model of elapsed-time prediction.
@@ -607,6 +631,8 @@ def renderedSource (name : String) : IO String := do
   | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
+  | "capacity-rust" => pure Ascent.ExecutionPolicy.capacityRustSource
+  | "capacity-quint" => pure Ascent.ExecutionPolicy.capacityQuintSource
   | "stage-fanout-rust" => pure Ascent.ExecutionPolicy.stageRustSource
   | "stage-link-rust" => pure Ascent.ExecutionPolicy.stageLinkRustSource
   | "stage-fanout-quint" => pure Ascent.ExecutionPolicy.stageQuintSource

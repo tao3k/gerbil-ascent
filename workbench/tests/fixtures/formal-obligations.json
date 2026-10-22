@@ -1899,7 +1899,7 @@
   "RequestScheduling": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact"
+      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact CapacityExact"
     },
     "faults": [
       [
@@ -1945,6 +1945,11 @@
       [
         "eager-stage-probe",
         "StageExact",
+        12
+      ],
+      [
+        "pool-size-as-capacity",
+        "CapacityExact",
         12
       ]
     ]

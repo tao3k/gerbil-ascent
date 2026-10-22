@@ -23,6 +23,7 @@ pub struct Engine {
     #[cfg(feature = "rayon")]
     pool: Arc<ThreadPool>,
     parallel: bool,
+    fanout_capacity: usize,
     process: u32,
     closed: Arc<AtomicBool>,
     source_limit: Option<usize>,
@@ -53,6 +54,7 @@ impl Engine {
             }
             Ok(Self {
                 parallel: false,
+                fanout_capacity: 1,
                 process: std::process::id(),
                 closed: Arc::default(),
                 source_limit: None,
@@ -73,9 +75,14 @@ impl Engine {
     #[must_use]
     #[cfg(feature = "rayon")]
     pub fn with_pool(pool: Arc<ThreadPool>) -> Self {
+        let workers = pool.current_num_threads();
+        let available =
+            std::thread::available_parallelism().map_or(workers, std::num::NonZeroUsize::get);
+        let fanout_capacity = work::fanout_capacity(workers, available);
         Self {
             pool,
             parallel: true,
+            fanout_capacity,
             process: *RUNTIME_PROCESS.get_or_init(std::process::id),
             closed: Arc::default(),
             source_limit: None,
@@ -101,8 +108,14 @@ impl Engine {
     pub fn pending_evaluations(&self) -> usize {
         self.work.pending()
     }
+    /// Observed capacity for nested fanout. Every configured pool worker
+    /// remains available for concurrent requests.
+    #[must_use]
+    pub fn fanout_capacity(&self) -> usize {
+        self.fanout_capacity
+    }
     fn request_fanout(&self) -> bool {
-        self.work.fanout(self.threads(), self.parallel)
+        self.work.fanout(self.fanout_capacity, self.parallel)
     }
     fn sort_rows(&self, rows: &mut [Row]) {
         #[cfg(not(feature = "rayon"))]
@@ -495,3 +508,7 @@ impl Session {
         Ok(snapshot)
     }
 }
+
+#[cfg(all(test, feature = "rayon"))]
+#[path = "../tests/unit/fanout_capacity.rs"]
+mod fanout_capacity_tests;

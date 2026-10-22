@@ -2390,3 +2390,88 @@ medians in milliseconds were:
 
 The original 50-pair/64-request lifecycle and tolerance are unchanged. Raw
 allocation-counter deltas are not a true cumulative allocation receipt.
+
+
+* PR-head alignment and retained declaration-history controls (2026-10-22)
+
+The selected gerbil-scheme-rust input is PR 18's head
+=85f374fdcd61b0ca75e47df07850fb75ba17f30b=, not main or a release.
+The head advanced from =2ddd0afa= during qualification; its incremental
+reselection change stops borrowing capacity payloads during reservation.
+The four active bridge dependencies and their lockfile sources are aligned.
+The retired build-time IR producer remains separately pinned at =7ebc26d=;
+this is not the runtime selection. The compiler SDK is unchanged.
+Locked Cargo metadata resolves successfully; this does not replace execution,
+PyO3, cancellation, resource or provenance acceptance.
+
+PR 18 adds optional capacity-reserved stateless owner reselection. Accepted
+work and affine lanes keep their owner. Host short/batch classification and
+native short/general execution are distinct declarations. ASCENT's resident
+process pool currently uses affine process owners; updating its dependency
+alone does not activate the private-image InstanceDispatcher router. No
+routing or throughput benefit is claimed from dependency resolution alone.
+
+A native four-round control retains each identical 513-relation, one-rule
+view declaration. The live Term, Atom, Rule and Relation metadata/protocol
+guards remain true in every round. Measured CPU seconds were:
+
+| Round | Current private shape table | Native identity shape table only |
+|-------+-----------------------------+----------------------------------|
+| 0     | 12.294068                   | 12.775134                        |
+| 1     | 21.180927                   | 21.609758                        |
+| 2     | 28.418421                   | 27.154941                        |
+| 3     | 33.909152                   | 33.432062                        |
+
+Both runs complete the same inventory assertions and explicit Case/HARNESS
+verdicts. GC CPU is about 0.5 seconds per round. These are diagnostic CPU
+attribution controls on a shared host, not isolated production latency or
+parallel-speedup admission. Changing only ASCENT's private shape-table backend
+does not remove the history-dependent growth and is not adopted as a fix.
+
+The native stack sample attributes 244 of 287 samples to system frames whose
+frozen-image call sites invoke =___gc_hash_table_ref/set=. That localization
+does not identify the owning table by itself. Inspecting the current dependency
+chain establishes that Yuanxu =39ed717= selects POO =c4b647e=, whose dependency
+and read-issuance tables still use Gerbil's explicit-hash weak-table wrapper.
+It does not include the previously isolated two-constructor fix =8f605b9=.
+The diagnostic prefix's generated object-state source agrees with that current
+input. This is a dependency-integration gap, not evidence of a stale loader.
+An isolated control on exactly =c4b647e= is being qualified before selecting a
+repair; no SDK or unrelated upstream implementation is changed on this
+hypothesis. Full Linux 180-second and macOS 600-second acceptance, production
+throughput and source/formal refinement remain distinct obligations.
+
+
+** Current-POO two-constructor control
+
+The isolated POO control keeps the exact =c4b647e= implementation and replaces
+only dependency-table and read-issuance-table construction with the SDK
+HashTable adapter over Gambit's implicit-hash identity table. Weak keys and
+weak values retain their respective original settings. The four retained
+513-relation declarations complete with CPU times =1.731087=, =1.730806=,
+=1.746260= and =1.605995= seconds. All inventory assertions, five live guards
+and Case/HARNESS verdicts pass, followed by natural process exit 0. This
+intervention removes the observed history growth in this workload; it does
+not isolate the relative contribution of the two tables.
+
+The unchanged 13-Case current-POO issued-read suite also passes, including
+forgery rejection, callbacks that edit payloads, foreign birth procedures,
+weak retirement, metadata replacement and final replay sweeps. The patch is
+prepared as =e0d8699= on the isolated current POO baseline. Yuanxu =36d09fb=
+changes only its dependency declaration to that patch. Both commits were published with explicit authorization as POO PR 14 and
+Yuanxu PR 21. Their review diffs contain exactly two constructor/import files
+and one dependency declaration respectively. Full cohort acceptance is pending.
+
+The new prefix has a separate startup cost: a native sample before the first
+Case attributes 97 samples to dynamic loading, including 92 loader/mapping
+samples. CPU timing inside declaration construction excludes that startup.
+No cold-loading improvement, true cumulative allocation, Linux 180-second
+closure or production 12-owner/Rayon throughput gain follows from the
+constructor numbers. The first full 170-module source attempt used the original 12 single-processor
+VMs, heap bounds and 600-second limit, but was stopped after its local prefix
+was found to lack the existing Yuanxu debug/testing-case modules. That setup
+failure is retained, not counted as a semantic pass. Both unchanged support
+modules were then built with the SDK standard make. Static import preflight
+also identified six missing ASCENT support fixtures, which must be compiled
+before another local full-source acceptance. Clean remote acceptance prepares
+the complete package cohort and remains required.

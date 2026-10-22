@@ -26,6 +26,23 @@ class BindingContract(unittest.TestCase):
         cls.engine.close()
         with cls().assertRaises(EngineError): cls.engine.describe()
 
+    def test_work_distribution_reaches_the_installed_twelve_thread_owner(self):
+        for distribution in ('adaptive', 'across-requests', 'within-request'):
+            with self.subTest(distribution=distribution):
+                with Engine(workers=12, work_distribution=distribution) as engine:
+                    self.assertEqual(engine.work_distribution, distribution)
+                    self.assertEqual(engine.describe()['workers'], 12)
+                    with engine.rules(SOURCE, trusted=True) as session:
+                        first = session.run()
+                        self.assertEqual(first['relations']['output'], [[1]])
+                        session.result(first).close()
+                        session.replace({'input': [[2]]})
+                        changed = session.run()
+                        self.assertEqual(changed['relations']['output'], [[2]])
+                        session.result(changed).close()
+        with self.assertRaises(ValueError):
+            Engine(workers=12, work_distribution='unknown')
+
     def test_result_memory_is_released_on_c_errors(self):
         with self.engine.dsl(SOURCE, trusted=True) as owner:
             for payload in ({}, {'operation': 'unknown'}, {'method': 'rows', 'handle': -1, 'query': 'output'}):

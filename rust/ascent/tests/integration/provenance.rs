@@ -5,7 +5,24 @@ use std::{collections::BTreeMap, time::Duration};
 const GRAPH: &str = "(ascent (relation edge ((x integer?) (y integer?))) (relation path ((x integer?) (y integer?))) ((path x y) <-- (edge x y)) ((path x z) <-- (path x y) (edge y z)))";
 #[test]
 fn independent_positive_graph_retains_recursive_alternatives_and_rejects_tampering() {
-    let engine = Engine::new(1).unwrap();
+    for distribution in [
+        gerbil_ascent::WorkDistribution::Adaptive,
+        gerbil_ascent::WorkDistribution::AcrossRequests,
+        gerbil_ascent::WorkDistribution::WithinRequest,
+    ] {
+        for threads in if cfg!(feature = "rayon") {
+            &[1, 12][..]
+        } else {
+            &[1][..]
+        } {
+            checked_recursive_provenance(*threads, distribution);
+        }
+    }
+}
+fn checked_recursive_provenance(threads: usize, distribution: gerbil_ascent::WorkDistribution) {
+    let engine = Engine::new(threads)
+        .unwrap()
+        .with_work_distribution(distribution);
     let mut session = engine
         .open_sources(&[GRAPH], FactLimits::default())
         .unwrap();

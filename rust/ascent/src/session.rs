@@ -1,6 +1,8 @@
 //! Caller-owned pools, source transactions and completed result publication.
 use crate::{
-    Cancellation, Error, Limits, Program, Result, Row, Snapshot, execution::evaluate, graph::Graph,
+    Cancellation, Error, Limits, Program, Result, Row, Snapshot,
+    execution::{evaluate, work},
+    graph::Graph,
 };
 #[cfg(feature = "rayon")]
 use rayon::{ThreadPool, slice::ParallelSliceMut};
@@ -11,6 +13,8 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
 };
+pub use work::WorkDistribution;
+
 static RUNTIME_PROCESS: OnceLock<u32> = OnceLock::new();
 
 /// Uses an explicit pool; never configures Rayon's process-global pool.
@@ -24,6 +28,7 @@ pub struct Engine {
     source_limit: Option<usize>,
     request_limit: Option<usize>,
     source_scopes: Arc<AtomicUsize>,
+    work: work::Work,
 }
 impl Engine {
     /// # Errors
@@ -53,6 +58,7 @@ impl Engine {
                 source_limit: None,
                 request_limit: None,
                 source_scopes: Arc::default(),
+                work: work::Work::default(),
             })
         }
         #[cfg(feature = "rayon")]
@@ -75,7 +81,28 @@ impl Engine {
             source_limit: None,
             request_limit: None,
             source_scopes: Arc::default(),
+            work: work::Work::default(),
         }
+    }
+    /// Choose fanout without changing pool size or source/result ownership.
+    /// Clones share the pending-evaluation ledger; independent Engines do not.
+    #[must_use]
+    pub fn with_work_distribution(mut self, distribution: WorkDistribution) -> Self {
+        self.work.distribution = distribution;
+        self
+    }
+    #[must_use]
+    pub fn work_distribution(&self) -> WorkDistribution {
+        self.work.distribution
+    }
+    /// Queued/running uncached evaluations, held through snapshot publication.
+    /// Retained results and outer provenance projection are separate scopes.
+    #[must_use]
+    pub fn pending_evaluations(&self) -> usize {
+        self.work.pending()
+    }
+    fn request_fanout(&self) -> bool {
+        self.work.fanout(self.threads(), self.parallel)
     }
     fn sort_rows(&self, rows: &mut [Row]) {
         #[cfg(not(feature = "rayon"))]
@@ -83,7 +110,7 @@ impl Engine {
         // Avoid splitting short sorts and one-worker pools. Large snapshots use
         // this caller-owned pool; final publication still rechecks the deadline.
         #[cfg(feature = "rayon")]
-        if self.parallel && self.threads() > 1 && rows.len() >= 16_384 {
+        if self.request_fanout() && self.threads() > 1 && rows.len() >= 16_384 {
             self.pool.install(|| rows.par_sort_unstable());
             return;
         }
@@ -366,20 +393,29 @@ impl Session {
             return Ok(last);
         }
         let started = std::time::Instant::now();
-        let execute = || {
-            evaluate(
-                &self.graph,
-                &self.sources,
-                limits,
-                cancellation,
-                self.engine.parallel,
-            )
-        };
+        let _evaluation = self.engine.work.enter()?;
         #[cfg(feature = "rayon")]
-        let evaluated = self.engine.pool.install(execute);
+        {
+            let pool = Arc::clone(&self.engine.pool);
+            pool.install(|| self.evaluate_and_publish(started, limits, cancellation))
+        }
         #[cfg(not(feature = "rayon"))]
-        let evaluated = execute();
-        let rows = match evaluated {
+        self.evaluate_and_publish(started, limits, cancellation)
+    }
+    fn evaluate_and_publish(
+        &mut self,
+        started: std::time::Instant,
+        limits: &Limits,
+        cancellation: &Cancellation,
+    ) -> Result<Arc<Snapshot>> {
+        let rows = match evaluate(
+            &self.graph,
+            &self.sources,
+            limits,
+            cancellation,
+            self.engine.request_fanout(),
+            started,
+        ) {
             Ok(rows) => rows,
             Err(error) => return self.reject(error),
         };
@@ -408,6 +444,11 @@ impl Session {
         limits: &Limits,
         cancellation: &Cancellation,
     ) -> Result<Arc<Snapshot>> {
+        #[cfg(feature = "rayon")]
+        debug_assert!(
+            self.engine.pool.current_thread_index().is_some(),
+            "snapshot publication must stay on the caller-owned Rayon pool"
+        );
         if self
             .graph
             .program

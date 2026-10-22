@@ -23,6 +23,11 @@ on:
         description: Measure resident production VM processes and Rayon on the same fixed work
         type: boolean
         default: false
+      work_distribution:
+        description: Rust-owned request fanout for the on-demand production matrix
+        type: choice
+        default: adaptive
+        options: [adaptive, across-requests, within-request]
       baseline:
         description: Baseline for on-demand ABBA; omit to run full macOS semantics
         required: false
@@ -102,8 +107,27 @@ jobs:
           printf 'RUSTFLAGS=%s\nMACOSX_DEPLOYMENT_TARGET=%s\n' "$RUSTFLAGS" "$MACOSX_DEPLOYMENT_TARGET" > "$RUNNER_TEMP/process-build-recipe.txt"
           gerbil env cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker --message-format=json > "$RUNNER_TEMP/process-worker-build.jsonl"
           gerbil env cargo bench --no-run --profile release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-benchmark-build.jsonl"
+      - name: Qualify complete macOS process semantics before measurement
+        if: ${{ inputs.process_throughput }}
+        env:
+          CARGO_BUILD_JOBS: "3"
+          GERBIL_BUILD_CORES: "3"
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+          RUSTFLAGS: "-C link-arg=-Wl,-ld_classic"
+        run: |
+          set -o pipefail
+          archive="$RUNNER_TEMP/cargo-nextest.tar.gz"
+          curl --fail --location --retry 3 --output "$archive" https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.140/cargo-nextest-0.9.140-universal-apple-darwin.tar.gz
+          printf '58e0a722f9444078fab447783f322acf15a2a771ba785b3fbbe8bacda31c3df9  %s\n' "$archive" | shasum -a 256 --check
+          mkdir -p "$RUNNER_TEMP/nextest"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/nextest"
+          export PATH="$RUNNER_TEMP/nextest:$PATH"
+          gerbil env cargo nextest run --release --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/process-binding-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/process-binding-tests.log"
       - name: Measure sustained production interface after all compilation
         if: ${{ inputs.process_throughput }}
+        env:
+          ASCENT_WORK_DISTRIBUTION: ${{ inputs.work_distribution || 'adaptive' }}
         run: |
           benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-benchmark-build.jsonl")"
           python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
@@ -117,6 +141,7 @@ jobs:
             ${{ runner.temp }}/process-benchmark-build.jsonl
             ${{ runner.temp }}/process-worker-build.jsonl
             ${{ runner.temp }}/process-build-recipe.txt
+            ${{ runner.temp }}/process-binding-tests.log
             ~/Library/Logs/DiagnosticReports/ld-*.ips
           include-hidden-files: true
       - name: Preserve every control and admission record

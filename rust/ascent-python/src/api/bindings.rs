@@ -29,7 +29,7 @@ impl ProcessPool {
             .map(Self)
             .map_err(super::types::source_error)
     }
-    #[pyo3(signature=(index, workers=1, *, max_source_scopes=None, max_input_bytes=None, backend=None))]
+    #[pyo3(signature=(index, workers=1, *, max_source_scopes=None, max_input_bytes=None, backend=None, work_distribution="adaptive"))]
     fn engine(
         &self,
         index: usize,
@@ -37,9 +37,16 @@ impl ProcessPool {
         max_source_scopes: Option<&Bound<'_, PyAny>>,
         max_input_bytes: Option<&Bound<'_, PyAny>>,
         backend: Option<&str>,
+        work_distribution: &str,
     ) -> PyResult<Engine> {
         let owner = self.0.owner(index).map_err(super::types::source_error)?;
-        let engine = Engine::new(Some(workers), max_source_scopes, max_input_bytes, backend)?;
+        let engine = Engine::new(
+            Some(workers),
+            max_source_scopes,
+            max_input_bytes,
+            backend,
+            work_distribution,
+        )?;
         Ok(Engine(engine.0.on_process(owner)))
     }
     fn identities(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
@@ -69,12 +76,13 @@ pub(super) struct Engine(pub(super) ascent_scheme::Engine);
 #[pymethods]
 impl Engine {
     #[new]
-    #[pyo3(signature = (workers=None, *, max_source_scopes=None, max_input_bytes=None, backend=None))]
+    #[pyo3(signature = (workers=None, *, max_source_scopes=None, max_input_bytes=None, backend=None, work_distribution="adaptive"))]
     fn new(
         workers: Option<usize>,
         max_source_scopes: Option<&Bound<'_, PyAny>>,
         max_input_bytes: Option<&Bound<'_, PyAny>>,
         backend: Option<&str>,
+        work_distribution: &str,
     ) -> PyResult<Self> {
         let backend = backend
             .map(|v| match v {
@@ -85,12 +93,27 @@ impl Engine {
             .transpose()?;
         let ceiling = super::types::ceiling(max_source_scopes)?;
         let bytes = super::types::ceiling(max_input_bytes)?;
+        let distribution = match work_distribution {
+            "adaptive" => engine::WorkDistribution::Adaptive,
+            "across-requests" => engine::WorkDistribution::AcrossRequests,
+            "within-request" => engine::WorkDistribution::WithinRequest,
+            _ => return Err(PyValueError::new_err("unknown work distribution")),
+        };
         ascent_scheme::Engine::new(workers.unwrap_or(1))
+            .map(|engine| engine.with_work_distribution(distribution))
             .map(|engine| backend.map_or(engine.clone(), |backend| engine.with_backend(backend)))
             .and_then(|engine| engine.with_source_scope_limit(ceiling))
             .and_then(|engine| engine.with_input_limit(bytes))
             .map(Self)
             .map_err(error)
+    }
+    #[getter]
+    fn work_distribution(&self) -> &'static str {
+        match self.0.work_distribution() {
+            gerbil_ascent::WorkDistribution::Adaptive => "adaptive",
+            gerbil_ascent::WorkDistribution::AcrossRequests => "across-requests",
+            gerbil_ascent::WorkDistribution::WithinRequest => "within-request",
+        }
     }
     #[getter]
     fn max_source_scopes(&self) -> Option<usize> {

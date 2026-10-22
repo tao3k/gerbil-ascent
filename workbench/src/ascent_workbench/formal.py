@@ -385,6 +385,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-rust", "rust/ascent-scheme/src/process_policy.rs"),
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
                 ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),

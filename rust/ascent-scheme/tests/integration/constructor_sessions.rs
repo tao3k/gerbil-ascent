@@ -371,6 +371,10 @@ fn complex_cells_cross_parallel_binding_and_publication_without_host_calls() {
             .unwrap();
         module.close();
         let before = owner.statistics();
+        eprintln!(
+            "COMPLEX-CELL-START workers={workers} vm_pid={}",
+            owner.receipt().pid
+        );
         let started = std::time::Instant::now();
         let outcome = session.run(
             None,

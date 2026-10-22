@@ -200,6 +200,132 @@ fn cancellation_and_deadline_during_large_evaluation_preserve_completed_snapshot
     );
 }
 
+// A queued request keeps its caller's deadline. A stale request must not
+// evaluate a failing expression and replace Timeout with an evaluation error.
+#[cfg(feature = "rayon")]
+#[test]
+fn deadline_spans_rayon_queue_and_preserves_completed_snapshot() {
+    use gerbil_ascent::{Expression, Operator};
+
+    let pool = Arc::new(
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .build()
+            .unwrap(),
+    );
+    let mut program = copy_program(1, 1);
+    for relation in &mut program.relations {
+        relation.columns = vec![Type::Any];
+    }
+    program.rules[0].body.push(Clause::Guard {
+        inputs: vec![0],
+        expression: Expression::Call(Operator::Even, vec![Expression::Term(Term::Variable(0))]),
+    });
+    let mut session = Engine::with_pool(pool.clone()).open(program).unwrap();
+    session
+        .replace("input", vec![vec![Value::from(2_i64)].into()])
+        .unwrap();
+    let before = session
+        .run(&Limits::default(), &Cancellation::default())
+        .unwrap();
+    session
+        .replace("input", vec![vec![Value::Text("invalid".into())].into()])
+        .unwrap();
+
+    let (entered, ready) = mpsc::sync_channel(1);
+    let (release, blocked) = mpsc::sync_channel(1);
+    pool.spawn(move || {
+        entered.send(()).unwrap();
+        blocked.recv_timeout(Duration::from_secs(2)).unwrap();
+    });
+    ready.recv_timeout(Duration::from_secs(2)).unwrap();
+    let timer = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(250));
+        release.send(()).unwrap();
+    });
+    let result = session.run(
+        &Limits {
+            timeout: Duration::from_millis(10),
+            ..Limits::default()
+        },
+        &Cancellation::default(),
+    );
+    timer.join().unwrap();
+    assert_eq!(result, Err(Error::Timeout));
+    assert_eq!(session.last_completed(), Some(before));
+}
+
+#[test]
+fn work_distribution_preserves_results_limits_and_population() {
+    use gerbil_ascent::WorkDistribution;
+    for distribution in [
+        WorkDistribution::Adaptive,
+        WorkDistribution::AcrossRequests,
+        WorkDistribution::WithinRequest,
+    ] {
+        for &threads in workers() {
+            let engine = Engine::new(threads)
+                .unwrap()
+                .with_work_distribution(distribution);
+            assert_eq!(engine.threads(), threads);
+            assert_eq!(engine.work_distribution(), distribution);
+            let mut session = engine.open(copy_program(1, 4)).unwrap();
+            session.replace("input", unary_rows(1024)).unwrap();
+            let complete = session
+                .run(&Limits::default(), &Cancellation::default())
+                .unwrap();
+            assert_eq!(complete.relations["output"], unary_rows(1024));
+            assert_eq!(engine.pending_evaluations(), 0);
+            // Reuse is still checked; failed recomputation cannot publish partial data.
+            assert_eq!(
+                session
+                    .run(&Limits::default(), &Cancellation::default())
+                    .unwrap(),
+                complete
+            );
+            session.replace("input", unary_rows(1025)).unwrap();
+            for (limits, cancellation, error) in [
+                (
+                    Limits {
+                        max_states: 1,
+                        ..Limits::default()
+                    },
+                    Cancellation::default(),
+                    Error::StateLimit,
+                ),
+                (
+                    Limits {
+                        max_facts: 1,
+                        ..Limits::default()
+                    },
+                    Cancellation::default(),
+                    Error::FactLimit,
+                ),
+                (
+                    Limits {
+                        timeout: Duration::ZERO,
+                        ..Limits::default()
+                    },
+                    Cancellation::default(),
+                    Error::Timeout,
+                ),
+            ] {
+                assert_eq!(session.run(&limits, &cancellation), Err(error));
+                assert_eq!(session.last_completed(), Some(complete.clone()));
+                assert_eq!(engine.pending_evaluations(), 0);
+            }
+            let cancellation = Cancellation::default();
+            cancellation.cancel();
+            assert_eq!(
+                session.run(&Limits::default(), &cancellation),
+                Err(Error::Canceled)
+            );
+            assert_eq!(engine.pending_evaluations(), 0);
+            assert_eq!(session.last_completed(), Some(complete));
+        }
+    }
+}
+
 #[test]
 fn independent_relation_shards_obey_one_global_fact_limit() {
     let mut program = copy_program(1, 8);

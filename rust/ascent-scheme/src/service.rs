@@ -79,6 +79,7 @@ struct Counters {
     queue_ns: AtomicU64,
     service_ns: AtomicU64,
     checkpoints: AtomicU64,
+    shared_checkpoints: AtomicU64,
 }
 /// Observed process identity and actual VM processor population.
 #[derive(Clone, Debug)]
@@ -94,6 +95,7 @@ pub struct ProcessStatistics {
     pub queue_ns: u64,
     pub service_ns: u64,
     pub checkpoints: u64,
+    pub shared_checkpoints: u64,
     pub maximum_overlapping_calls: usize,
 }
 struct Call {
@@ -250,6 +252,7 @@ impl ProcessOwner {
             queue_ns: self.counters.queue_ns.load(Ordering::Relaxed),
             service_ns: self.counters.service_ns.load(Ordering::Relaxed),
             checkpoints: self.counters.checkpoints.load(Ordering::Relaxed),
+            shared_checkpoints: self.counters.shared_checkpoints.load(Ordering::Relaxed),
             maximum_overlapping_calls: self.activity.maximum.load(Ordering::Relaxed),
         }
     }
@@ -297,6 +300,7 @@ impl ProcessPool {
                 &owner.counters.queue_ns,
                 &owner.counters.service_ns,
                 &owner.counters.checkpoints,
+                &owner.counters.shared_checkpoints,
             ] {
                 counter.store(0, Ordering::Relaxed);
             }
@@ -473,6 +477,7 @@ fn receive_native_reply(
                             control.map_or(0, Control::numeric_id),
                             |id, work| {
                                 counters.checkpoints.fetch_add(1, Ordering::Relaxed);
+                                counters.shared_checkpoints.fetch_add(1, Ordering::Relaxed);
                                 if control.map(Control::numeric_id) == Some(id) {
                                     control.map_or(5, |value| value.checkpoint(work))
                                 } else {

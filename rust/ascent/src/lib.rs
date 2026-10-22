@@ -42,7 +42,7 @@ pub use {
     object_graph::{GraphItem, ObjectGraph, ObjectNode, rows_graph},
     operators::{Expression, Operator, Reducer},
     relational_graph::RelationalGraph,
-    session::{Engine, Session},
+    session::{Engine, Session, WorkDistribution},
 };
 pub use {
     provenance::{

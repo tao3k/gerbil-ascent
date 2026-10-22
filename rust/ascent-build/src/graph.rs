@@ -25,7 +25,12 @@ pub fn process(
         || run_native_process(command, phase, true),
     )
 }
-pub fn prepare(root: &Path, shared: &Lease, observer: &Observer) -> Result<(), String> {
+pub fn prepare(
+    root: &Path,
+    prefix: &Path,
+    shared: &Lease,
+    observer: &Observer,
+) -> Result<(), String> {
     let workspace = source_workspace();
     for source in [
         root.join("build.ss"),
@@ -43,7 +48,7 @@ pub fn prepare(root: &Path, shared: &Lease, observer: &Observer) -> Result<(), S
             .arg(workspace.join("build.ss"))
             .arg("compile")
             .current_dir(&workspace)
-            .env("GERBIL_PATH", root.join(".gerbil")),
+            .env("GERBIL_PATH", prefix),
     )?;
     // This consumer needs compiled library carriers and its AOT entry, not
     // the package's CLI/shared-library executable targets. std/make validates
@@ -58,9 +63,7 @@ pub fn prepare(root: &Path, shared: &Lease, observer: &Observer) -> Result<(), S
             .to_str()
             .ok_or("non-UTF8 bridge path")?,
         root.to_str().ok_or("non-UTF8 root")?,
-        root.join(".gerbil/lib")
-            .to_str()
-            .ok_or("non-UTF8 library path")?,
+        prefix.join("lib").to_str().ok_or("non-UTF8 library path")?,
         shared
             .graph
             .join("build-deps")
@@ -77,10 +80,16 @@ pub fn prepare(root: &Path, shared: &Lease, observer: &Observer) -> Result<(), S
         gerbil_command("gxi")
             .args(["-:debug=q", "-e", &expression])
             .current_dir(root)
-            .env("GERBIL_PATH", root.join(".gerbil")),
+            .env("GERBIL_PATH", prefix),
     )
 }
-pub fn identify(root: &Path, out: &Path, gsc: &Path, observer: &Observer) -> Result<(), String> {
+pub fn identify(
+    root: &Path,
+    prefix: &Path,
+    out: &Path,
+    gsc: &Path,
+    observer: &Observer,
+) -> Result<(), String> {
     process(
         observer,
         "source-identity",
@@ -88,13 +97,14 @@ pub fn identify(root: &Path, out: &Path, gsc: &Path, observer: &Observer) -> Res
             .arg(root.join("interface/build-identity.ss"))
             .arg(root)
             .arg(out)
-            .arg(root.join(".gerbil/lib"))
+            .arg(prefix.join("lib"))
             .arg(
                 gsc.parent()
                     .and_then(|p| p.parent())
                     .ok_or("invalid GSC path")?
                     .join("lib"),
             )
-            .current_dir(root),
+            .current_dir(root)
+            .env("GERBIL_PATH", prefix),
     )
 }

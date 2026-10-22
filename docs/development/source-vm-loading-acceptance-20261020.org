@@ -2475,3 +2475,327 @@ modules were then built with the SDK standard make. Static import preflight
 also identified six missing ASCENT support fixtures, which must be compiled
 before another local full-source acceptance. Clean remote acceptance prepares
 the complete package cohort and remains required.
+
+** Exact-head production matrix: 656e8483 (2026-10-22)
+
+The full required CI passed for =656e8483d87296ed4b69b5853365d14626fb8cb8=:
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/39713003758][main CI]] and
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/39713003769][macOS acceptance]].
+The unchanged Linux source suite completed in 152 seconds; macOS completed
+170 modules and 1,415 Cases in 160.72 seconds. The native SDK was unchanged.
+The macOS preparation receipt remains 221.684590 seconds internally and
+224.88 seconds externally, including 26.522994 seconds of source context and
+187.186191 seconds of make. This does not close preparation cost admission.
+
+The separate [[https://github.com/tao3k/gerbil-ascent/actions/runs/39713139526][production-interface experiment]] failed overall: 23 of 24
+rows were valid. The large closure with one VM exceeded the unchanged
+240-second whole-row limit; its incomplete samples do not provide a valid
+baseline or speedup. No foreign compiler was observed in any measured row.
+The result retains every failed row; the experiment was not rerun.
+
+Sustained throughput below is checked requests per second over the original
+30-second soak. Every VM has one processor; all configurations have 12 clients
+on the same three-logical-CPU runner. Rayon thread counts remain actual pool
+sizes, including 12. These are observations for this head, not matched causal
+attribution across hosted runs.
+
+| Workload | VM 1 | VM 3 | VM 12 | Rayon 1 | Rayon 3 | Rayon 6 | Rayon 8 | Rayon 12 |
+|----------+------+------+-------+---------+---------+---------+---------+----------|
+| small | 17.370 | 62.904 | 65.101 | 16329.152 | 28674.160 | 29737.167 | 28501.934 | 30382.769 |
+| closure | 14.835 | 50.849 | 47.978 | 1976.158 | 3608.150 | 3682.560 | 3873.065 | 3645.150 |
+| parallel-closure | rejected | 1.932 | 1.553 | 85.863 | 87.981 | 91.064 | 103.132 | 76.680 |
+
+For the large closure, the fixed-work Rayon-12 request medians are
+99.558188 ms for replacement and 5.705646 ms for run/export. Replacement
+includes =SourceSession::replace -> candidate.run=, so this is not evidence
+that copying alone dominates. The VM path still executes every original
+controller checkpoint; frequent cross-process checkpoint exchanges remain an
+unclosed cost. Twelve workers on three CPUs are a saturation test, not a
+promise of twelvefold CPU speedup.
+
+The local prefix required a complete native test-library preparation: six
+compiled reference fixtures still imported the former Core observability
+owner although their sources imported Yuanxu. The existing
+=just prepare-semantic-library= rebuilt the whole cohort without adding
+build.ss dispatch. The unchanged Observability Cases then passed. The broad
+retained local cohort rebuilt 392 modules in 1152.420546 seconds; this shared-host,
+old-prefix observation is not comparable to clean CI's preparation inventory.
+The initially incomplete-prefix failures and the accidentally selected
+three-worker local run remain diagnostic failures, not acceptance receipts.
+
+The local 12-VM source-only attempt reached the unchanged 600-second limit
+with 168/170 modules and 1,402 completed Cases, without a typed assertion
+failure. It is failed acceptance, not a complete pass. The linked-shell
+admission marker was =linked=0=, whereas the qualified remote run recorded
+=linked=1=. The diagnostic prefix had no =bin/ascent-develop=: completing test
+libraries alone did not reproduce CI's preceding =gerbil build=. Before the
+limit, native stack samples captured GC scanning in storage-round and
+object/hash dispatch in candidate-flow. Neither this sample nor the unequal
+entry paths isolates a causal wall-time gain. The local prefix must complete
+the same native production build before matched acceptance.
+
+The old queue-deadline regression is now reproduced on the exact 656e8483
+Rust code with only the diagnostic test added. After a blocked one-worker
+pool released the queued request, it returned
+=Evaluation("operator expects exact integers")= instead of =Timeout=.
+The test exited 101 in 0.26 seconds. This is a failure receipt for the old
+code, not a pass for the candidate. The candidate threads the original caller
+Instant through the worker budget and retains the existing final publication
+checks. Its execution tests remain required.
+
+** Candidate scheduling scope (not performance acceptance)
+
+The candidate pins the four active gerbil-scheme-rust dependencies to PR #18
+=f9bf56c372def683ace7fd6da93e55a0c561df23=; the retired build-time IR pin and
+SDK are unchanged. Supported upstream CI passed at that head. Its bounded
+native-owner streams and short/batch router require =InstanceDispatcher=.
+ASCENT's exec-isolated =ProcessPool= does not invoke that router, so the REV
+update alone is not evidence of short-request routing integration or speedup.
+
+The candidate instead exposes Rust-owned =WorkDistribution= through the
+production Rust and both PyO3 profiles. Adaptive fanout uses the observed
+uncached evaluation population; explicit across-request and within-request
+modes support caller-selected scenarios without changing pool size or VM
+ownership. The ledger is advisory and spans core snapshot publication; it is
+not a resource authority, native routing quota or outer provenance ledger.
+Evaluation and original snapshot publication now share one owner-pool task:
+the previous implementation returned to a caller thread before publication.
+A debug assertion checks the actual publishing pool in exercised builds.
+This removes that particular pool boundary; it does not establish a measured
+gain or move caller input conversion into Rayon.
+
+The generated fanout predicate is kernel-checked by Lean. The queue and owner
+publication Quint model passes its positive configuration and seven fault
+controls using the existing invariant-violation protocol. These are scoped policy and lifecycle checks, not a proof of
+Rust atomics, host clocks, native index/cache refinement or complete source
+correctness. True cumulative allocation and the broader source-refinement
+obligations remain open. The existing on-demand production experiment accepts
+=work_distribution= with the same three choices, preserving all 24 workloads,
+12 clients, pool/VM counts, sample counts and original limits. Each receipt
+records the harness digest and verifies the child-reported selected policy.
+
+** Candidate local qualification and selected-prefix correction
+
+The candidate core passed 11 unit and 54 integration tests with Rayon, and
+11 unit and 53 integration tests without default features, in each case with
+12 test threads. The reproduced queue-deadline regression now passes. Resource
+and provenance assertions exercise all three fanout policies. Strict Clippy
+passed for both core configurations and the build consumer. These receipts
+precede full native/PyO3 and exact-head CI acceptance.
+
+The build consumer had hard-coded the repository's .gerbil prefix despite an
+explicit caller GERBIL_PATH. The candidate selects that prefix once and passes
+it through graph preparation, source identification and archive observations;
+Cargo tracks both prefix and load-path environment changes. No SDK change or
+additional build.ss orchestration was introduced. A fresh native dependency
+installation completed for both production and dev packages. The old diagnostic
+prefix is retired: its cross-prefix links and later-generation objects made it
+unsuitable for production acceptance. Its failed build/clean and 600-second
+unlinked semantic receipts remain failures, not evidence against the SDK.
+
+** Candidate Darwin checkpoint transport (acceptance pending)
+
+On macOS 14.4 or newer with the public wait symbols available, source-run and
+source-replace can use shared address comparison/wakeup. Older systems retain
+the sleeping socket fallback; arbitrary Scheme operations retain sockets.
+Every checkpoint still invokes the original controller with the original
+signed work transition. The protocol generation, ordering and one-millisecond
+peer-liveness wait bound are unchanged. There is no callback coalescing,
+checkpoint bypass or cached cancellation decision.
+
+A two-process diagnostic compiled the exact production checkpoint source and
+completed 4096 signed request/reply exchanges through shared-darwin-wait,
+including closed-peer rejection. This is protocol evidence, not native VM,
+resource/provenance or performance acceptance. The production twelve-owner
+integration test now requires each owner to exercise its selected controller
+transport during the existing source/resource/provenance assertions. Production
+benchmark receipts record actual shared callbacks and reject impossible or
+missing counts. The original complete matrix, limits and workloads remain
+required; no speedup is claimed from the protocol diagnostic.
+
+** Upstream scheduling head advanced during qualification
+
+PR #18 advanced from f9bf56c3 to d81933ba2c8bc7742bcc675f5d38afa44de51e30
+while local qualification was running. All supported upstream checks passed;
+the unsupported same-VM SMP configuration remains explicitly skipped upstream.
+The four active dependencies and six matching lock entries now select d81933ba;
+the fixed SDK and retired build-time IR remain unchanged. The f9bf Scheme/PyO3
+Clippy build was interrupted with status 130 before acceptance and its log is
+retained, rather than presenting an old-revision build as current evidence.
+
+The increment adds bounded pooled supply and producer-aware native routing.
+Only uncommitted Rust messages can be claimed by a progressing owner; accepted
+Scheme state remains fixed to its original owner, and work/slot credits remain
+held through native result projection. These APIs still belong to
+InstanceDispatcher. ASCENT's exec process owners do not silently acquire those
+routing guarantees. Its explicit Rayon fanout policies and shared-checkpoint
+change require their own production-interface qualification at this new pin.
+
+The d81933ba native Scheme/PyO3 and benchmark interfaces passed strict Clippy
+with all targets and unchanged -D warnings. An initial function-length failure
+(104/100 lines in the benchmark entry) was fixed by extracting the unchanged
+policy parser, without adding an allow attribute. Its failure log is retained.
+The actual upstream archive receipt accepted 262 source inputs, including 102
+from the canonical production prefix and zero from the retired diagnostic
+prefix. It recorded 93 object compilations for this configuration. This proves
+selected-prefix propagation through the exercised compiler path; it is neither
+cross-configuration cache acceptance nor a build-time speedup claim.
+
+The next test configuration accepted the same 262 observed inputs with zero
+changed inputs and zero object compilations: all 93 native objects, 92 module
+C carriers and the GSC linker were cache hits. This is an exercised
+cross-configuration reuse receipt, rather than a wall-time inference. Warm
+metadata operations still cost 27.760 seconds for graph staging, 15.476 seconds
+for source identity and 5.784 seconds for bridge preparation on the loaded local
+host. These operation durations are not an isolated benchmark or an additive
+elapsed-time total. The remaining warm metadata cost is explicitly open.
+
+** Full binding failure, sampled peer-probe cause, and complete repair check
+
+The first complete d81933ba binding run executed 62 tests with 12 workers and
+zero retries: 61 passed and one failed. The 3000-complex-cell publication case
+hit its unchanged one-second publication budget at the first owner-pool size.
+The twelve-process cancellation, recovery, limits and provenance case passed.
+A separate twelve-instance reproduction retained the same failure in all
+instances. This failed run remains a failure.
+
+The first short sample captured only post-timeout dynamic-module unloading and
+is inconclusive about evaluation. An isolated diagnostic binary then delayed
+only the pre-clock sampling point; the execution limit remained one second.
+That delay is absent from repository test sources and is not an acceptance run.
+Within the sampled VM execution stack, 929 of 946 observations were checkpoint
+callbacks; 805 descended through Connection.peer_closed into poll, 109 through
+Darwin wait and 14 through wake. These are sampled call stacks, not an exact CPU
+percentage or a calibrated end-to-end throughput comparison.
+
+The original socket control initially rejected a parent/worker identity
+mismatch before executing the case. Matching binaries from the same control
+build were then used without weakening identity admission. All twelve socket
+instances also hit the original limit. The failure therefore is not exclusive
+to the new wait primitive or evidence of an SDK compiler defect.
+
+The candidate peer probe now uses non-consuming, nonblocking recv peek for the
+ordinary empty-open and EOF observations. A positive peek still executes the
+original hangup/error poll: unread bytes cannot hide a closed peer. Descriptor
+flags and framed bytes remain unchanged. Permanent I/O errors fail closed.
+Neither controller frequency nor original signed decisions are coalesced.
+The wait/peer-liveness interval and all cancellation/work/publication authority
+remain unchanged. An independent frozen poll-first test covers queued data,
+read-ahead, half-close, complete close and descriptor flags, in addition to the
+original 10000 socket-lifecycle checks.
+
+The actual fast decision is generated from the kernel-checked Lean predicate
+AST into process_policy.rs and Quint. Stable-observation equivalence and
+state-dependent probe costs are checked; OS behavior and concurrent syscall
+linearization remain trusted boundaries. The cost statement is conditional on
+observed poll/peek costs. In particular, a buffered hangup deliberately costs
+one extra peek, so no universal speedup theorem is claimed.
+
+After the source repair, the complete binding suite passed all 63 tests with
+12 workers, zero retries and zero skips. The formerly failing case completed
+all original 1/4/8 owner-pool configurations, and the twelve resident process
+case passed with actual shared-controller use, running cancellation/recovery,
+resource ceilings and provenance checks. The test adapter's 5-6 second elapsed
+values include additional result lookup and row-export calls; they are not a
+one-second end-to-end latency claim. The original publication limit and
+acceptance point are unchanged. Loaded-host suite duration is not admitted as
+a matched performance speedup. Full source semantics, installed wheels,
+exact-head CI and the unchanged production matrix remain required.
+
+** Complete local acceptance after the peer-probe repair
+
+The canonical dependency prefix completed the unmodified native dependency
+installation for both production and development packages. The source suite
+then passed all 170 unique modules and 1415 cases using twelve single-threaded
+VM workers, linked library mode, and the original 600-second macOS limit. The
+local run took 381 seconds. Its streamed and retained transcripts repeat the
+same cases; they do not represent 2830 independent assertions. Preparation
+rebuilt 381 support modules with three compiler jobs, no production rebuilds,
+and took 654.914957 seconds on the shared local host. These timings are not an
+isolated performance comparison and do not close the preparation regression.
+
+The complete Rust workspace test command, excluding the separately qualified
+Scheme binding package, passed 80 tests with twelve test threads. Its first
+attempt failed the ASP file-inventory check because an earlier Python command
+had left untracked bytecode in the test directory. That generated file was
+quarantined outside the checkout; no inventory rule was relaxed. The original
+failure remains recorded. Strict workspace Clippy and the Scheme-profile
+PyO3/benchmark Clippy commands passed with unchanged =-D warnings=.
+
+The final peer EOF cost distinction also passed the existing LeanPoo rendering
+Guard: 27.213 seconds, 730120192 bytes maximum RSS, zero added helper threads.
+Generated runtime Rust, Scheme, checkpoint policy and Quint definitions matched
+byte for byte. This refines the pure peer-decision/cost model, not the complete
+OS socket implementation or its concurrent linearization.
+
+** Installed consumer failure and native command attribution
+
+The actual d81933ba Rust-profile wheel was built and installed into a fresh
+Python 3.14 environment. The full 23-group installed consumer matrix rejected
+its run after 8.553 seconds: 22 groups completed successfully, while
+=test_build_driver= hit the unchanged five-second real-output watchdog. Its
+120-second total budget was not exhausted. No consumer was removed or given a
+larger deadline, and this run is not recorded as an installed-interface pass.
+
+The original build-driver test also failed its existing 15-second subprocess
+limit when diagnosed separately. Earlier children completed in 9.300 and
+8.565 seconds. A native-command probe, without modifying the test, captured
+actual output timestamps and a three-second sample of its owned =gerbil=
+process. Fixture output first appeared after 9.724 seconds. Of 2485 sampled
+main-thread stacks, 1531 were under =___dynamic_load= / =dlopen= and 1449
+under =notifyDebuggerLoad=, including synchronous remote notification waits.
+These are call-stack counts, not CPU percentages or a causal speedup estimate.
+The first probe missed the process because macOS returned a short executable
+name; its incomplete result is retained. The corrected probe matched only the
+owned child. Neither probe is a replacement for full installed acceptance.
+
+This evidence does not justify patching the frozen SDK, changing the runtime
+limits, bypassing monitoring, or quietly rerunning the unchanged matrix until
+it passes. The clean-runner installed matrix remains required.
+
+** Scheduling dependency fixed for the final candidate
+
+The active bindings now select PR #18 revision
+=f89fe2a42730d60695fba25aaf13c72f38a30fef=, the observed next scheduling head.
+The retired build-time IR remains at =7ebc26dac9e32f982f9ab1455b664b01f2f6e007=;
+the SDK remains unchanged. Upstream Gerbil Release checks passed on Linux and
+macOS, as did the fixed-owner lifecycle and Quint checks. The macOS Bazel
+=cargo_check= exceeded its 300-second budget; that run's Clippy and Cargo test
+checks passed. It is not described as an entirely green upstream revision.
+The new commits add applied-policy readback and supply/release observations.
+They do not make ASCENT's exec process pool an InstanceDispatcher consumer.
+Local d81933ba receipts remain explicitly tied to that revision. Final candidate
+CI and the original production matrix must qualify the new fixed pin.
+
+The complete local formal command was also rejected at its original 15-minute
+budget. All 58 models started, with 71 successful positive configurations and
+367 expected counterexamples reported before termination. The unchanged
+=PreparationWork-correct= exploration was still progressing: 42,224,974
+generated states, 2,272,650 distinct states, and 146,136 queued states in its
+last retained progress record. No invariant counterexample was reported for
+that correct model; it nevertheless did not finish within the budget. The
+Lean build itself passed the original Guard in 71.066 seconds with zero added
+helper threads and maximum RSS 1504034816 bytes. The full formal command is
+not marked passed, and its unexecuted final source-comparison phase remains
+required on the independent CI runner. Its timeout was not increased and the
+model was not reduced to make it pass.
+
+** Correct installed Scheme-profile qualification entry
+
+The f89fe2a4 Scheme-profile wheel built and installed successfully. Its existing
+production qualification passed with twelve distinct resident process IDs,
+one processor per VM, 120 calls, 120 closure applications and all twelve owners
+reaped. This is actual installed-wheel execution, not method-name inspection.
+The new three-policy Rayon assertions were moved into that executed CI entry:
+twelve workers, exact recursive results, resource failure, retained snapshots,
+recovery and invalid-policy rejection. The original 240-second process test
+budget and both explicit/default worker checks remain unchanged.
+
+An additional manual invocation of the historical =tests/test_api.py= file was
+not an acceptance pass: that file expects an older constructor/protocol. The
+Rust profile was already keyword-only at baseline 656e8483, and the baseline
+Scheme profile already lacked its =open_rule_sources= alias. Its failures are
+retained; neither test expectations nor public aliases were changed to hide
+them. Only this candidate's new scheduling test was removed from that obsolete
+entry and placed in the production qualification that CI actually executes.
+The historical test file otherwise remains byte-identical to the baseline.

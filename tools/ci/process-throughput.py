@@ -61,15 +61,17 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     receipt = {"schema": "ascent.production-process-throughput.v3", "host": platform.platform(),
                "logical_cpus": os.cpu_count(), "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+               "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                "benchmark_sha256": hashlib.sha256(args.benchmark.read_bytes()).hexdigest(),
                "worker_sha256": hashlib.sha256(args.worker.read_bytes()).hexdigest(),
                "cargo_lock_sha256": hashlib.sha256(Path("rust/Cargo.lock").read_bytes()).hexdigest(),
                "scheme_bridge": sorted({line.strip() for line in Path("rust/Cargo.lock").read_text().splitlines()
                                          if line.startswith('source = "git+https://github.com/tao3k/gerbil-scheme-rust?')}),
+               "work_distribution": os.environ.get("ASCENT_WORK_DISTRIBUTION", "adaptive"),
                "runs": []}
     if args.expected_cpus is not None and os.cpu_count() != args.expected_cpus:
         raise SystemExit(f"expected {args.expected_cpus} CPUs, observed {os.cpu_count()}; no measurements admitted")
-    source_paths = ["rust", "interface", "program", "core", "table", "bindings"]
+    source_paths = ["rust", "interface", "program", "core", "table", "bindings", "tools/ci/process-throughput.py"]
     tracked_clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", *source_paths]).returncode == 0
     untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard", "--", *source_paths], text=True).splitlines()
     receipt["source_clean"] = tracked_clean and not untracked
@@ -115,6 +117,7 @@ def main():
             samples = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SAMPLE ")]
             identities = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-OWNER ")]
             soaks = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SOAK ")]
+            ready = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-READY ")]
             soak_valid = (len(soaks) == 1 and soaks[0]["mode"] == mode
                           and soaks[0]["vms"] == str(owners)
                           and soaks[0]["rust_threads"] == str(threads)
@@ -128,12 +131,29 @@ def main():
                           and int(soaks[0]["histogram_buckets"]) == 65_536
                           and 0 <= int(soaks[0]["p50_lower_ns"]) <= int(soaks[0]["p50_upper_ns"])
                           and 0 <= int(soaks[0]["p95_lower_ns"]) <= int(soaks[0]["p95_upper_ns"]))
+            transport = ready[0].get("checkpoint_transport") if len(ready) == 1 else None
+            try:
+                checkpoint_valid = transport in ("buffered-socket", "shared-futex", "shared-darwin-wait")
+                for observation in [*samples, *soaks]:
+                    total = int(observation.get("checkpoints", -1))
+                    shared = int(observation.get("shared_checkpoints", -1))
+                    checkpoint_valid = checkpoint_valid and 0 <= shared <= total
+                    if mode == "rayon":
+                        checkpoint_valid = checkpoint_valid and total == 0 and int(observation["native_calls"]) == 0
+                    elif transport == "buffered-socket":
+                        checkpoint_valid = checkpoint_valid and shared == 0
+                    else:
+                        checkpoint_valid = checkpoint_valid and shared > 0
+            except (ValueError, TypeError, KeyError) as error:
+                checkpoint_valid = False
+                errors.append(f"invalid checkpoint observations: {error}")
             try:
                 phases = request_phases(stdout, tasks, 5)
             except (ValueError, TypeError) as error:
                 phases = {}
                 errors.append(str(error))
-            valid = (status == 0 and soak_valid and len(samples) == 5
+            valid = (status == 0 and soak_valid and checkpoint_valid and len(samples) == 5
+                     and len(ready) == 1 and ready[0].get("work_distribution") == receipt["work_distribution"]
                      and {value["sample"] for value in samples} == {str(i) for i in range(5)}
                      and all(value["mode"] == mode and value["vms"] == str(owners)
                              and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks)
@@ -147,6 +167,7 @@ def main():
                    "tasks": tasks, "groups": groups, "width": width,
                    "input_edges_per_request": groups * (width - 1),
                    "expected_rows_per_request": groups * width * (width - 1) // 2,
+                   "checkpoint_transport": transport,
                    "request_phases": phases, "command": command, "status": status,
                    "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "owners": identities,
                    "foreign_compilers": audit, "audit_errors": errors, "valid": valid}

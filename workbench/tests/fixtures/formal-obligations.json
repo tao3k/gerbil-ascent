@@ -1891,6 +1891,49 @@
       ]
     ]
   },
+  "RequestScheduling": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication"
+    },
+    "faults": [
+      [
+        "reset-at-worker",
+        "NoExpiredAdmission",
+        12
+      ],
+      [
+        "caller-publish",
+        "OwnerPublication",
+        12
+      ],
+      [
+        "ignore-queued-cancel",
+        "NoCanceledAdmission",
+        12
+      ],
+      [
+        "early-retire",
+        "PendingExact",
+        12
+      ],
+      [
+        "publish-failed",
+        "HeldFailure",
+        12
+      ],
+      [
+        "short-fanout",
+        "FanoutExact",
+        12
+      ],
+      [
+        "unbounded-fanout",
+        "FanoutExact",
+        12
+      ]
+    ]
+  },
   "ScopedComposition": {
     "configuration": {
       "constants": "Mutation = \"none\"",
@@ -2433,6 +2476,44 @@
       [
         "missing",
         "Protected",
+        12
+      ]
+    ]
+  },
+  "CheckpointTransport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll"
+    },
+    "faults": [
+      [
+        "ignore-buffered-hangup",
+        "StablePeerDecision",
+        12
+      ],
+      [
+        "consume-peek",
+        "NoConsume",
+        12
+      ],
+      [
+        "fault-open",
+        "FaultClosed",
+        12
+      ],
+      [
+        "benign-closed",
+        "StablePeerDecision",
+        12
+      ],
+      [
+        "idle-poll",
+        "IdleNoPoll",
+        12
+      ],
+      [
+        "eof-poll",
+        "EofNoPoll",
         12
       ]
     ]

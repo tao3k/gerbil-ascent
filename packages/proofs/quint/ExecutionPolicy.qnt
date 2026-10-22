@@ -9,4 +9,6 @@ module ExecutionPolicy {
   pure def component_ready(remaining: int): bool = (remaining == 0)
   pure def round_continue(admitted: int, healthy: bool): bool = (healthy and (0 < admitted))
   pure def joined_round(assigned: int, completed: int, active: int, pending: int, failed: bool, joined: bool): bool = (not(failed) and (joined and ((assigned == completed) and ((active == 0) and (pending == 0)))))
+  pure def request_fanout(workers: int, pending: int, fanout_allowed: bool, across: bool, within: bool): bool = (fanout_allowed and (not(across) and (within or (pending < workers))))
+  pure def peer_probe(peek_eof: bool, peek_negative: bool, peek_benign: bool): int = if (peek_eof) 1 else if ((peek_negative and peek_benign)) 0 else -1
 }

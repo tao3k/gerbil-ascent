@@ -146,3 +146,109 @@ fn checkpoint_liveness_detects_eof_without_consuming_a_pending_frame() {
         assert!(reader.peer_closed().unwrap(), "EOF attempt {attempt}");
     }
 }
+
+#[test]
+fn peer_probe_preserves_buffered_hangup_half_close_and_descriptor_flags() {
+    use crate::process_wire::Connection;
+    use std::{
+        net::Shutdown,
+        os::{fd::AsRawFd, unix::net::UnixStream},
+    };
+    let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+    for queued in [false, true] {
+        for readahead in [false, true] {
+            for close in 0..3 {
+                if readahead && !queued {
+                    continue;
+                }
+                let (left, right) = UnixStream::pair().unwrap();
+                let mut reader = Connection::new(left);
+                let mut writer = Some(Connection::new(right));
+                if queued {
+                    writer.as_mut().unwrap().send(&Frame::Decision(10)).unwrap();
+                    writer.as_mut().unwrap().send(&Frame::Decision(11)).unwrap();
+                }
+                if readahead {
+                    assert!(matches!(reader.receive().unwrap(), Frame::Decision(10)));
+                }
+                match close {
+                    1 => writer
+                        .as_ref()
+                        .unwrap()
+                        .0
+                        .get_ref()
+                        .shutdown(Shutdown::Write)
+                        .unwrap(),
+                    2 => drop(writer.take()),
+                    _ => (),
+                }
+                let descriptor = reader.0.get_ref().as_raw_fd();
+                // SAFETY: F_GETFL only reads this live owned descriptor's flags.
+                let before = unsafe { libc::fcntl(descriptor, libc::F_GETFL) };
+                assert_eq!(
+                    reader.peer_closed().unwrap(),
+                    original_peer_closed(&reader).unwrap()
+                );
+                // SAFETY: the same descriptor remains owned and open.
+                assert_eq!(before, unsafe { libc::fcntl(descriptor, libc::F_GETFL) });
+                if queued {
+                    if !readahead {
+                        assert!(matches!(reader.receive().unwrap(), Frame::Decision(10)));
+                    }
+                    assert!(matches!(reader.receive().unwrap(), Frame::Decision(11)));
+                }
+                assert_eq!(reader.peer_closed().unwrap(), close != 0);
+            }
+        }
+    }
+}
+
+// Frozen pre-optimization control: independent poll-first observation.
+fn original_peer_closed(connection: &crate::process_wire::Connection) -> std::io::Result<bool> {
+    use std::os::fd::AsRawFd;
+    let mut fd = libc::pollfd {
+        fd: connection.0.get_ref().as_raw_fd(),
+        events: libc::POLLIN,
+        revents: libc::POLLIN,
+    };
+    // SAFETY: one valid pollfd borrowed for this nonblocking call; its socket
+    // remains owned by the connection for the entire syscall.
+    loop {
+        if unsafe { libc::poll(&raw mut fd, 1, 0) } >= 0 {
+            break;
+        }
+        let error = std::io::Error::last_os_error();
+        if error.kind() != std::io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+    if fd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
+        return Ok(true);
+    }
+    if fd.revents & libc::POLLIN == 0 {
+        return Ok(false);
+    }
+    let mut byte = 0_u8;
+    // SAFETY: the socket remains borrowed and byte is writable for one
+    // byte. PEEK preserves framed data; DONTWAIT never changes its mode.
+    let count = unsafe {
+        libc::recv(
+            fd.fd,
+            (&raw mut byte).cast(),
+            1,
+            libc::MSG_PEEK | libc::MSG_DONTWAIT,
+        )
+    };
+    if count >= 0 {
+        return Ok(count == 0);
+    }
+    let error = std::io::Error::last_os_error();
+    if matches!(
+        error.kind(),
+        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
+    ) {
+        Ok(false)
+    } else {
+        Err(error)
+    }
+}

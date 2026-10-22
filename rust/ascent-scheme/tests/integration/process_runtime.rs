@@ -2,6 +2,8 @@
 use ascent_scheme::{Engine, ProcessPool, WorkerProgram};
 use gerbil_ascent::{Cancellation, Data, Error, FactLimits, Limits, ObjectInput};
 use std::{collections::BTreeSet, time::Duration};
+#[path = "../support/source_cancellation.rs"]
+mod source_cancellation;
 fn program() -> WorkerProgram {
     WorkerProgram::new(env!("CARGO_BIN_EXE_ascent-scheme-worker"), vec![])
 }
@@ -30,11 +32,25 @@ fn twelve_resident_processes_keep_values_limits_and_cancellation_owner_affine() 
     let modules = prepare_modules(&pool);
     verify_values(&modules);
     verify_running_cancellation(&pool.owner(0).unwrap());
+    source_cancellation::verify(&modules[0].0, &pool.owner(0).unwrap());
     std::thread::scope(|scope| {
         for (engine, _) in &modules {
             scope.spawn(move || verify_sources(engine));
         }
     });
+    for owner in 0..12 {
+        let stats = pool.owner(owner).unwrap().statistics();
+        assert!(stats.checkpoints > 0);
+        assert!(stats.shared_checkpoints <= stats.checkpoints);
+        if ascent_scheme::benchmark::kernel_checkpoint_transport() == "buffered-socket" {
+            assert_eq!(stats.shared_checkpoints, 0);
+        } else {
+            assert!(
+                stats.shared_checkpoints > 0,
+                "source execution must exercise the shared controller"
+            );
+        }
+    }
     // Same numeric ordinal in another process must never authenticate this owner.
     let owner = modules[0]
         .1

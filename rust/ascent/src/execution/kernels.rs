@@ -829,15 +829,25 @@ pub(crate) fn evaluate(
     limits: &Limits,
     cancellation: &Cancellation,
     parallel: bool,
+    started: std::time::Instant,
 ) -> Result<Vec<Vec<crate::Row>>> {
     #[cfg(not(feature = "rayon"))]
     let _ = parallel;
+    // Queueing consumes the same caller budget as evaluation/publication.
+    // Reject before allocating indexes when a worker accepts stale work.
+    if cancellation.is_canceled() {
+        return Err(crate::Error::Canceled);
+    }
+    if started.elapsed() >= limits.timeout {
+        return Err(crate::Error::Timeout);
+    }
     let budget = Budget::new(
         limits,
         cancellation,
         sources.len(),
         graph.program.fact_limits,
         graph.program.relation_limit,
+        started,
     );
     evaluate_budgeted(graph, sources, &budget, parallel)
 }

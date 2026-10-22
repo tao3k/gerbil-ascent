@@ -208,7 +208,7 @@ fn report_sample(
         .map(|i| pool.owner(i).unwrap().statistics())
         .collect();
     eprintln!(
-        "PROCESS-SAMPLE {header} tasks={tasks} wall_ns={} throughput_per_s={:.6} p50_ns={} p95_ns={} max_overlapping_vm_calls={} native_calls={} queue_ns={} service_ns={} checkpoints={} answer_sha={:x}",
+        "PROCESS-SAMPLE {header} tasks={tasks} wall_ns={} throughput_per_s={:.6} p50_ns={} p95_ns={} max_overlapping_vm_calls={} native_calls={} queue_ns={} service_ns={} checkpoints={} shared_checkpoints={} answer_sha={:x}",
         elapsed.as_nanos(),
         f64::from(u32::try_from(tasks).unwrap()) / elapsed.as_secs_f64(),
         latencies[(tasks - 1) / 2],
@@ -222,6 +222,7 @@ fn report_sample(
         stats.iter().map(|s| s.queue_ns).sum::<u64>(),
         stats.iter().map(|s| s.service_ns).sum::<u64>(),
         stats.iter().map(|s| s.checkpoints).sum::<u64>(),
+        stats.iter().map(|s| s.shared_checkpoints).sum::<u64>(),
         digest.finalize()
     );
 }
@@ -336,7 +337,7 @@ fn report_soak(
         .map(|i| pool.owner(i).unwrap().statistics())
         .collect();
     eprintln!(
-        "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={}",
+        "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={} shared_checkpoints={}",
         duration.as_nanos(),
         elapsed.as_nanos(),
         f64::from(u32::try_from(count).unwrap()) / elapsed.as_secs_f64(),
@@ -351,7 +352,8 @@ fn report_soak(
             .max()
             .unwrap(),
         stats.iter().map(|s| s.calls).sum::<u64>(),
-        stats.iter().map(|s| s.checkpoints).sum::<u64>()
+        stats.iter().map(|s| s.checkpoints).sum::<u64>(),
+        stats.iter().map(|s| s.shared_checkpoints).sum::<u64>()
     );
 }
 // Exact bucket counts bound each quantile. The overflow bucket's upper bound
@@ -403,6 +405,17 @@ fn arguments() -> (Vec<String>, [usize; 6]) {
     assert!(mode != "vm" || threads == 1);
     (args, parsed)
 }
+fn work_distribution() -> (String, gerbil_ascent::WorkDistribution) {
+    let distribution_name =
+        std::env::var("ASCENT_WORK_DISTRIBUTION").unwrap_or_else(|_| "adaptive".into());
+    let distribution = match distribution_name.as_str() {
+        "across-requests" => gerbil_ascent::WorkDistribution::AcrossRequests,
+        "within-request" => gerbil_ascent::WorkDistribution::WithinRequest,
+        "adaptive" => gerbil_ascent::WorkDistribution::Adaptive,
+        value => panic!("unknown work distribution: {value}"),
+    };
+    (distribution_name, distribution)
+}
 fn main() {
     let (args, [owners, threads, tasks, groups, width, samples]) = arguments();
     let mode = &args[1];
@@ -415,7 +428,11 @@ fn main() {
         );
     }
     // All Rayon clients share this one caller-owned Rust thread pool.
-    let engine = Engine::new(threads).unwrap();
+    let (distribution_name, distribution) = work_distribution();
+    eprintln!("RAYON-WORK-DISTRIBUTION {distribution:?}");
+    let engine = Engine::new(threads)
+        .unwrap()
+        .with_work_distribution(distribution);
     assert_eq!(
         engine.threads(),
         threads,
@@ -455,7 +472,7 @@ fn main() {
     }
     let checkpoint_transport = compiled_checkpoint_transport();
     eprintln!(
-        "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} startup_ns={}",
+        "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} work_distribution={distribution_name} startup_ns={}",
         startup.elapsed().as_nanos()
     );
     println!("sample\ttask\tlatency_ns\tcompletion_ns\treplace_ns\trun_export_ns\tanswer_sha");
@@ -518,9 +535,5 @@ fn close_sessions(
 }
 
 fn compiled_checkpoint_transport() -> &'static str {
-    if cfg!(target_os = "linux") {
-        "shared-futex"
-    } else {
-        "buffered-socket"
-    }
+    ascent_scheme::benchmark::kernel_checkpoint_transport()
 }

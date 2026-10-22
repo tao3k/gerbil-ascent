@@ -52,6 +52,83 @@ def joinedRound : Predicate := .both (.negate (.flag "failed"))
   (.both (.flag "joined") (.both (.equal "assigned" "completed")
     (.both (.equal "active" .zero) (.equal "pending" .zero))))
 
+-- This is advisory fanout, not admission, fact accounting or priority.
+def requestFanout : Predicate := .both (.flag "fanout_allowed")
+  (.both (.negate (.flag "across"))
+    (.either (.flag "within") (.less "pending" "workers")))
+
+theorem across_requests_never_fans_out (numbers : String → Nat) (flags : String → Bool)
+    (across : flags "across" = true) : eval numbers flags requestFanout = false := by
+  simp [eval, requestFanout, across]
+
+theorem saturated_adaptive_never_fans_out (numbers : String → Nat) (flags : String → Bool)
+    (adaptive : flags "within" = false) (full : numbers "workers" ≤ numbers "pending") :
+    eval numbers flags requestFanout = false := by
+  simp [eval, requestFanout, Number.value, adaptive, Nat.not_lt.mpr full]
+
+-- Clock arithmetic assumes the same monotonic host clock throughout a call.
+-- It does not predict duration or prove the host Instant implementation.
+def callerExpired (queue work timeout : Nat) : Bool := decide (timeout ≤ queue + work)
+
+theorem queue_consumes_deadline (queue work timeout : Nat) (expired : timeout ≤ queue) :
+    callerExpired queue work timeout = true := by
+  simp only [callerExpired, decide_eq_true_eq]
+  omega
+
+theorem worker_reset_hides_expired_queue :
+    callerExpired 2 0 1 = true ∧ callerExpired 0 0 1 = false := by decide
+
+-- A normal socket observation is a trusted host primitive. These decisions
+-- are generated into the actual peer probe; they do not prove the OS syscall.
+def peerEof : Predicate := .flag "peek_eof"
+def peerTransient : Predicate := .both (.flag "peek_negative") (.flag "peek_benign")
+def peerProbe (flags : String → Bool) : Option Bool :=
+  if eval (fun _ => 0) flags peerEof then some true
+  else if eval (fun _ => 0) flags peerTransient then some false else none
+
+inductive PeerObservation where
+  | emptyOpen | emptyEof | emptyHangup | bufferedOpen | bufferedHangup
+  deriving DecidableEq
+
+def peerFlags (observed : PeerObservation) (name : String) : Bool :=
+  if name == "peek_eof" then observed == .emptyEof || observed == .emptyHangup
+  else if name == "peek_negative" || name == "peek_benign" then observed == .emptyOpen
+  else false
+
+def oldPeerClosed (observed : PeerObservation) : Bool :=
+  observed == .emptyEof || observed == .emptyHangup || observed == .bufferedHangup
+
+def newPeerClosed (observed : PeerObservation) : Bool :=
+  (peerProbe (peerFlags observed)).getD (observed == .bufferedHangup)
+
+theorem stable_peer_observation_exact (observed : PeerObservation) :
+    newPeerClosed observed = oldPeerClosed observed := by cases observed <;> rfl
+
+-- Empty EOF without a hangup bit (such as a write-half-close) still needs
+-- the legacy peek; a reported empty hangup does not.
+def oldPeerCost (observed : PeerObservation) (poll peek : Nat) : Nat :=
+  match observed with
+  | .emptyOpen | .emptyHangup | .bufferedHangup => poll
+  | .emptyEof | .bufferedOpen => poll + peek
+
+def newPeerCost (observed : PeerObservation) (poll peek : Nat) : Nat :=
+  match observed with
+  | .emptyOpen | .emptyEof | .emptyHangup => peek
+  | .bufferedOpen | .bufferedHangup => peek + poll
+
+theorem idle_probe_cost_lower (poll peek : Nat) (cheaper : peek < poll) :
+    newPeerCost .emptyOpen poll peek < oldPeerCost .emptyOpen poll peek := cheaper
+
+theorem buffered_probe_cost_equal (poll peek : Nat) :
+    newPeerCost .bufferedOpen poll peek = oldPeerCost .bufferedOpen poll peek := by
+  simp [newPeerCost, oldPeerCost, Nat.add_comm]
+
+-- The rare queued-hangup path deliberately pays one extra peek; no universal
+-- speedup is claimed from the idle-path observation.
+theorem hangup_probe_extra_peek (poll peek : Nat) :
+    newPeerCost .bufferedHangup poll peek = oldPeerCost .bufferedHangup poll peek + peek := by
+  simp [newPeerCost, oldPeerCost, Nat.add_comm]
+
 theorem old_lane_exact (numbers : String → Nat) (flags : String → Bool) :
     eval numbers flags oldLane = true ↔
       flags "has_pivot" = true ∧ flags "set_relation" = true ∧
@@ -112,6 +189,10 @@ def definitions : List Definition := [
   ⟨"round_continue", ["admitted"], ["healthy"], roundContinue⟩,
   ⟨"joined_round", ["assigned", "completed", "active", "pending"], ["failed", "joined"], joinedRound⟩]
 
+-- Scheme owns its Actor policy; Rust-owned request fanout is not a Scheme global.
+def rustOnlyDefinitions : List Definition := [
+  ⟨"request_fanout", ["workers", "pending"], ["fanout_allowed", "across", "within"], requestFanout⟩]
+
 def schemeName (name : String) : String := String.ofList (name.toList.map fun c => if c == '_' then '-' else c)
 def boundName (name : String) : String := "policy-" ++ schemeName name
 def schemeNumber : Number → String
@@ -145,7 +226,7 @@ def schemeSource : String :=
 
 def rustSource : String :=
   "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n// Generated by ExecutionPolicy.lean; edit the proved definitions there.\n// Some policies belong only to the Scheme owner.\n#![allow(dead_code, unused_parens)]\n" ++
-  String.join (definitions.map fun d =>
+  String.join ((definitions ++ rustOnlyDefinitions).map fun d =>
     let parameters := d.numbers.map (· ++ ": usize") ++ d.flags.map (· ++ ": bool")
     s!"#[rustfmt::skip]\n#[inline]\npub(crate) fn {d.name}({String.intercalate ", " parameters}) -> bool \{\n    {rust d.body}\n}\n")
 
@@ -157,11 +238,28 @@ def quint : Predicate → String
   | .either left right => s!"({quint left} or {quint right})"
   | .negate value => s!"not({quint value})"
 
+-- An if statement supplies the outer grouping; child expressions retain theirs.
+def rustCondition (predicate : Predicate) : String :=
+  match predicate with
+  | .both left right => rust left ++ " && " ++ rust right
+  | .either left right => rust left ++ " || " ++ rust right
+  | other => rust other
+
+def peerRustSource : String :=
+  "// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n// Generated by ExecutionPolicy.lean; OS observations remain host primitives.\n" ++
+  "pub(super) fn peer_probe(peek_eof: bool, peek_negative: bool, peek_benign: bool) -> Option<bool> {\n" ++
+  "    if " ++ rustCondition peerEof ++ " {\n        Some(true)\n    } else if " ++ rustCondition peerTransient ++
+  " {\n        Some(false)\n    } else {\n        None\n    }\n}\n"
+
+def peerQuintSource : String :=
+  "  pure def peer_probe(peek_eof: bool, peek_negative: bool, peek_benign: bool): int = if (" ++
+  quint peerEof ++ ") 1 else if (" ++ quint peerTransient ++ ") 0 else -1\n"
+
 def quintSource : String :=
   "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n// Generated by ExecutionPolicy.lean; edit the proved definitions there.\nmodule ExecutionPolicy {\n" ++
-  String.join (definitions.map fun d =>
+  String.join ((definitions ++ rustOnlyDefinitions).map fun d =>
     let parameters := d.numbers.map (· ++ ": int") ++ d.flags.map (· ++ ": bool")
-    s!"  pure def {d.name}({String.intercalate ", " parameters}): bool = {quint d.body}\n") ++ "}\n"
+    s!"  pure def {d.name}({String.intercalate ", " parameters}): bool = {quint d.body}\n") ++ peerQuintSource ++ "}\n"
 
 end Ascent.ExecutionPolicy
 
@@ -390,6 +488,7 @@ def renderedSource (name : String) : IO String := do
   | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
+  | "checkpoint-rust" => pure Ascent.ExecutionPolicy.peerRustSource
   | "quint" => pure Ascent.ExecutionPolicy.quintSource
   | "preparation-python" => pure Ascent.PreparationPolicy.pythonSource
   | "preparation-quint" => pure Ascent.PreparationPolicy.quintSource

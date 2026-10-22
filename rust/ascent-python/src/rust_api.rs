@@ -178,18 +178,26 @@ impl Owner {
         )
     }
     #[new]
-    #[pyo3(signature=(*,backend="rust",workers=1,max_source_scopes=None,max_request_bytes=None))]
+    #[pyo3(signature=(*,backend="rust",workers=1,max_source_scopes=None,max_request_bytes=None,work_distribution="adaptive"))]
     fn new(
         backend: &str,
         workers: usize,
         max_source_scopes: Option<&Bound<'_, PyAny>>,
         max_request_bytes: Option<&Bound<'_, PyAny>>,
+        work_distribution: &str,
     ) -> PyResult<Self> {
         let limit = crate::rust_components::ceiling(max_source_scopes)?;
         let bytes = crate::rust_components::ceiling(max_request_bytes)?;
         let workers = gerbil_scheme_python::select_backend(backend, None, Some(workers))
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let distribution = match work_distribution {
+            "adaptive" => gerbil_ascent::WorkDistribution::Adaptive,
+            "across-requests" => gerbil_ascent::WorkDistribution::AcrossRequests,
+            "within-request" => gerbil_ascent::WorkDistribution::WithinRequest,
+            _ => return Err(PyValueError::new_err("unknown work distribution")),
+        };
         Engine::new(workers)
+            .map(|engine| engine.with_work_distribution(distribution))
             .and_then(|engine| engine.with_source_limit(limit))
             .and_then(|engine| engine.with_request_limit(bytes))
             .map(Self)
@@ -202,6 +210,14 @@ impl Owner {
     #[getter]
     fn closed(&self) -> bool {
         self.0.is_closed()
+    }
+    #[getter]
+    fn work_distribution(&self) -> &'static str {
+        match self.0.work_distribution() {
+            gerbil_ascent::WorkDistribution::Adaptive => "adaptive",
+            gerbil_ascent::WorkDistribution::AcrossRequests => "across-requests",
+            gerbil_ascent::WorkDistribution::WithinRequest => "within-request",
+        }
     }
     #[getter]
     fn max_source_scopes(&self) -> Option<usize> {

@@ -52,6 +52,16 @@ impl Engine {
             max_input_bytes: None,
         })
     }
+    /// Select fanout for future loads; existing scopes keep their selection.
+    /// Scheme leases remain process-affine and share the same shutdown owner.
+    #[must_use]
+    pub fn with_work_distribution(mut self, distribution: gerbil_ascent::WorkDistribution) -> Self {
+        if self.core.work_distribution() != distribution {
+            self.loaded_modules = Arc::default();
+        }
+        self.core = self.core.with_work_distribution(distribution);
+        self
+    }
     /// Revoke this engine and release all native owner slots, including retained leases.
     pub fn shutdown(&self) {
         self.core.shutdown();

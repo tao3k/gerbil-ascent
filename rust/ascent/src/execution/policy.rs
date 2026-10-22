@@ -38,3 +38,8 @@ pub(crate) fn round_continue(admitted: usize, healthy: bool) -> bool {
 pub(crate) fn joined_round(assigned: usize, completed: usize, active: usize, pending: usize, failed: bool, joined: bool) -> bool {
     ((!failed) && (joined && ((assigned == completed) && ((active == 0) && (pending == 0)))))
 }
+#[rustfmt::skip]
+#[inline]
+pub(crate) fn request_fanout(workers: usize, pending: usize, fanout_allowed: bool, across: bool, within: bool) -> bool {
+    (fanout_allowed && ((!across) && (within || (pending < workers))))
+}

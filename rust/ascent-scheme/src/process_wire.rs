@@ -1,4 +1,6 @@
 //! Private, versioned binary packets between exec-isolated owners; never JSON.
+#[path = "process_policy.rs"]
+mod policy;
 use bincode::Options;
 use gerbil_ascent::{Data, Result};
 use serde::{Deserialize, Serialize};
@@ -44,50 +46,48 @@ impl Connection {
         receive(&mut self.0)
     }
     pub(crate) fn peer_closed(&self) -> std::io::Result<bool> {
-        let mut fd = libc::pollfd {
-            fd: self.0.get_ref().as_raw_fd(),
-            events: libc::POLLIN,
-            revents: libc::POLLIN,
-        };
-        // SAFETY: one valid pollfd borrowed for this nonblocking call; its socket
-        // remains owned by the connection for the entire syscall.
-        loop {
-            if unsafe { libc::poll(&raw mut fd, 1, 0) } >= 0 {
-                break;
-            }
-            let error = std::io::Error::last_os_error();
-            if error.kind() != std::io::ErrorKind::Interrupted {
-                return Err(error);
-            }
-        }
-        if fd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0 {
-            return Ok(true);
-        }
-        if fd.revents & libc::POLLIN == 0 {
-            return Ok(false);
-        }
         let mut byte = 0_u8;
-        // SAFETY: the socket remains borrowed and byte is writable for one
-        // byte. PEEK preserves framed data; DONTWAIT never changes its mode.
+        // SAFETY: one live borrowed socket and one writable byte. PEEK never
+        // consumes framed input; DONTWAIT does not change descriptor flags.
         let count = unsafe {
             libc::recv(
-                fd.fd,
+                self.0.get_ref().as_raw_fd(),
                 (&raw mut byte).cast(),
                 1,
                 libc::MSG_PEEK | libc::MSG_DONTWAIT,
             )
         };
-        if count >= 0 {
-            return Ok(count == 0);
+        let error = (count < 0).then(std::io::Error::last_os_error);
+        let benign = error.as_ref().is_some_and(|error| {
+            matches!(
+                error.kind(),
+                std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
+            )
+        });
+        if let Some(closed) = policy::peer_probe(count == 0, count < 0, benign) {
+            return Ok(closed);
         }
-        let error = std::io::Error::last_os_error();
-        if matches!(
-            error.kind(),
-            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
-        ) {
-            Ok(false)
-        } else {
-            Err(error)
+        if let Some(error) = error {
+            return Err(error);
+        }
+        // Queued bytes alone cannot establish liveness: a closed peer may
+        // leave a complete packet behind. Preserve the original hangup/error
+        // check in that case. The hot, empty-open case avoids Darwin poll.
+        let mut fd = libc::pollfd {
+            fd: self.0.get_ref().as_raw_fd(),
+            events: libc::POLLIN,
+            revents: libc::POLLIN,
+        };
+        loop {
+            // SAFETY: the connection owns this one pollfd throughout the
+            // nonblocking call. Interrupted probes retry without consuming data.
+            if unsafe { libc::poll(&raw mut fd, 1, 0) } >= 0 {
+                return Ok(fd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0);
+            }
+            let error = std::io::Error::last_os_error();
+            if error.kind() != std::io::ErrorKind::Interrupted {
+                return Err(error);
+            }
         }
     }
     pub(crate) fn shutdown(&self) -> std::io::Result<()> {

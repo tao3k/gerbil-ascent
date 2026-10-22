@@ -39,3 +39,17 @@ A wheel requires matching Gerbil syntax resources. It does not include a complet
 SDK. `ascent.build.runtime_identity()` exposes the compiled source and runtime
 resource hashes; the consumer harness rejects drift. See [building](BUILDING.md)
 and the [runtime contract](../rust/README.md).
+
+The Rust execution pool accepts `work_distribution="adaptive"` (default),
+`"across-requests"`, or `"within-request"` in `Engine` and `ProcessPool.engine`.
+These select Rust-owned evaluation fanout without changing the requested worker
+count or moving a Scheme lease between VM processes. Adaptive fanout is disabled
+when that engine observes at least as many queued/running uncached evaluations
+as pool workers. Across-request
+execution leaves each evaluation on one worker; it is not a priority scheduler.
+Within-request execution permits nested parallel joins under shared load.
+Cancellation, exact work/fact limits and failed-publication semantics are the
+same in every mode. Cloned Rust engines share the population ledger; separately
+constructed engines do not share that ledger even when given the same pool.
+This option does not activate gerbil-scheme-rust's in-process native-owner router
+inside ASCENT's exec-isolated process pool. The two ownership paths are distinct.

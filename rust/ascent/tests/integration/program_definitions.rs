@@ -109,7 +109,11 @@ fn rayon_guard_answers_preserve_large_input_cancellation_and_rollback() {
         (relation selected ((x exact-integer?)))
         ((selected X) <-- (input X) (if (X) (odd? X))))";
     let mut expected = None;
-    for workers in [1, 4] {
+    for &workers in if cfg!(feature = "rayon") {
+        &[1, 4][..]
+    } else {
+        &[1][..]
+    } {
         let engine = Engine::new(workers).unwrap();
         let mut session = engine
             .open_declaration_sources(&[source], None, gerbil_ascent::FactLimits::default())
@@ -220,7 +224,7 @@ fn first_class_relation_graphs_preserve_composition_and_withdrawal() {
         .unwrap()
         .union(&edge)
         .unwrap();
-    let engine = Engine::new(2).unwrap();
+    let engine = Engine::new(if cfg!(feature = "rayon") { 2 } else { 1 }).unwrap();
     let declaration = graph.program("path").unwrap();
     assert_eq!(declaration.sources, ["edge".to_owned()].into());
     let mut session = engine

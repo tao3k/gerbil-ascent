@@ -29,6 +29,12 @@ pub fn build() -> Result<(), String> {
         .join("../..")
         .canonicalize()
         .map_err(|e| e.to_string())?;
+    let configured = env::var_os("GERBIL_PATH").map_or_else(|| root.join(".gerbil"), PathBuf::from);
+    let prefix = if configured.is_absolute() {
+        configured
+    } else {
+        root.join(configured)
+    };
     let out = PathBuf::from(env::var_os("OUT_DIR").ok_or("missing OUT_DIR")?);
     inputs(&root);
     let shared = cache::Lease::acquire(&out)?;
@@ -39,21 +45,22 @@ pub fn build() -> Result<(), String> {
             .parent()
             .ok_or("missing shared root")?
             .join("inputs"),
-        &root.join(".gerbil/lib/static"),
+        &prefix.join("lib/static"),
         shared.wait_ns,
     )?;
-    let result = construct(&root, &out, &shared, &observer);
+    let result = construct(&root, &prefix, &out, &shared, &observer);
     let admission = observer.finish(result.is_ok());
     // Retain the compiler's original error even when the receipt also rejects.
     result.and(admission)
 }
 fn construct(
     root: &Path,
+    prefix: &Path,
     out: &Path,
     shared: &cache::Lease,
     observer: &observer::Observer,
 ) -> Result<(), String> {
-    graph::prepare(root, shared, observer)?;
+    graph::prepare(root, prefix, shared, observer)?;
     let gsc = discover_gambit_gsc_from_env()?;
     for source in [
         &shared.graph.join("program.json"),
@@ -81,12 +88,14 @@ fn construct(
         },
         || shared.publish(out, &receipt),
     )?;
-    graph::identify(root, out, &gsc, observer)
+    graph::identify(root, prefix, out, &gsc, observer)
 }
 
 fn inputs(root: &std::path::Path) {
     for key in [
         "GERBIL_HOME",
+        "GERBIL_PATH",
+        "GERBIL_LOADPATH",
         "GERBIL_GXI",
         "GERBIL_GSC",
         "SDKROOT",

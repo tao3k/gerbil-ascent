@@ -263,3 +263,9 @@ fn verify_rows(actual: &mut [Vec<Row>], expected: &[Row]) {
         assert_eq!(rows, expected);
     }
 }
+
+/// Available kernel-checkpoint transport; arbitrary Scheme calls keep sockets.
+#[must_use]
+pub fn kernel_checkpoint_transport() -> &'static str {
+    crate::process_checkpoint::shared_transport().unwrap_or("buffered-socket")
+}

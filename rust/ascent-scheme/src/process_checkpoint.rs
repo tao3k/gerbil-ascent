@@ -8,6 +8,23 @@ use std::{
     ptr::NonNull,
     sync::atomic::{AtomicI32, AtomicI64, AtomicU32, Ordering},
 };
+#[cfg(target_os = "macos")]
+#[path = "process_checkpoint_darwin.rs"]
+mod darwin;
+pub(crate) fn shared_transport() -> Option<&'static str> {
+    #[cfg(target_os = "linux")]
+    {
+        Some("shared-futex")
+    }
+    #[cfg(target_os = "macos")]
+    {
+        darwin::available().then_some("shared-darwin-wait")
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    {
+        None
+    }
+}
 const IDLE: u32 = 0;
 const REQUEST: u32 = 1;
 const DECISION: u32 = 2;
@@ -139,7 +156,7 @@ impl Checkpoints {
                     slot.code.store(code, Ordering::Relaxed);
                     slot.phase.store(DECISION, Ordering::Release);
                     wake(&slot.phase);
-                    #[cfg(target_os = "linux")]
+                    #[cfg(any(target_os = "linux", target_os = "macos"))]
                     {
                         waiting = Wait::default();
                     }
@@ -169,7 +186,7 @@ impl Wait {
         observed: u32,
     ) -> io::Result<()> {
         self.0 = self.0.wrapping_add(1);
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
             if self.0 >= 32 {
                 if closed()? {
@@ -182,7 +199,7 @@ impl Wait {
             }
             std::hint::spin_loop();
         }
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         {
             let _ = (phase, observed);
             if self.0.is_multiple_of(1024) && closed()? {
@@ -231,6 +248,10 @@ fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
         _ => Err(error),
     }
 }
+#[cfg(target_os = "macos")]
+fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
+    darwin::wait(phase, observed)
+}
 fn wake(phase: &AtomicU32) {
     #[cfg(target_os = "linux")]
     // SAFETY: phase is borrowed from the live shared mapping; WAKE does not
@@ -239,7 +260,9 @@ fn wake(phase: &AtomicU32) {
     unsafe {
         libc::syscall(libc::SYS_futex, phase.as_ptr(), libc::FUTEX_WAKE, 1);
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    darwin::wake(phase);
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = phase;
 }
 

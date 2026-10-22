@@ -174,6 +174,7 @@ fn delta_actual_kernel_witness_counts_exclude_all_old_and_duplicate_fresh_joins(
             3,
             crate::FactLimits::default(),
             None,
+            std::time::Instant::now(),
         );
         let actual = evaluate_budgeted(&graph, &sources, &budget, parallel).unwrap();
         for (i, relation) in ["edge", "p", "q"].iter().enumerate() {

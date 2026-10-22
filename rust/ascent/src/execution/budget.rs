@@ -66,6 +66,7 @@ impl Budget {
         relations: usize,
         policy: crate::FactLimits,
         relation_limit: Option<usize>,
+        start: Instant,
     ) -> Self {
         Self {
             relation_limit,
@@ -75,7 +76,7 @@ impl Budget {
                 Vec::new()
             },
             limits: limits.clone(),
-            start: Instant::now(),
+            start,
             cancellation: cancellation.clone(),
             failure: AtomicU8::new(0),
             facts: AtomicUsize::new(0),

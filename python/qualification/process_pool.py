@@ -4,7 +4,44 @@ import gc
 import os
 from pathlib import Path
 
-from ascent import ProcessPool
+from ascent import Atom, Engine, ProcessPool, Program, Term
+
+
+def qualify_rayon_modes():
+    for distribution in ("adaptive", "across-requests", "within-request"):
+        program = Program()
+        program.relation("edge", ["integer", "integer"], source=True)
+        program.relation("reach", ["integer", "integer"])
+        x, y, z = [Term.var(i) for i in range(3)]
+        program.rule(Atom("reach", [x, y]), [Atom("edge", [x, y])])
+        program.rule(Atom("reach", [x, z]),
+                     [Atom("reach", [x, y]), Atom("edge", [y, z])])
+        engine = Engine(workers=12, backend="rayon", work_distribution=distribution)
+        try:
+            assert engine.work_distribution == distribution
+            session = engine.open(program)
+            session.replace("edge", [[1, 2], [2, 3]])
+            first = session.run()
+            assert first.rows("reach") == [[1, 2], [1, 3], [2, 3]]
+            session.replace("edge", [[4, 5]])
+            try:
+                session.run(max_states=0)
+            except RuntimeError:
+                pass
+            else:
+                raise AssertionError("resource failure was ignored")
+            assert session.last_completed().rows("reach") == first.rows("reach")
+            session.replace("edge", [[4, 5]])
+            assert session.run().rows("reach") == [[4, 5]]
+        finally:
+            engine.shutdown()
+    try:
+        Engine(workers=12, work_distribution="unknown")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unknown work distribution was accepted")
+    print("RAYON-PYTHON-OK threads=12 modes=3 limits=preserved snapshots=preserved", flush=True)
 
 
 def qualify():
@@ -51,6 +88,7 @@ def qualify():
 
 
 if __name__ == '__main__':
+    qualify_rayon_modes()
     pids = qualify()
     gc.collect()
     for pid in pids:

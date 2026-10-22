@@ -60,13 +60,63 @@ pub(super) fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
             1_000_000,
         )
     };
-    if status >= 0 {
-        return Ok(());
-    }
-    let error = io::Error::last_os_error();
-    match error.raw_os_error() {
-        Some(libc::EAGAIN | libc::EINTR | libc::ETIMEDOUT) => Ok(()),
-        _ => Err(error),
+    let result = if status >= 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    };
+    finish_wait(phase, observed, result, || {
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    })
+}
+// This completes a wait attempt, never a controller decision. The caller
+// rechecks its phase and peer before waiting again. The shared AtomicU32 is
+// borrowed from our live, length-checked mapping; it is not an arbitrary address.
+// Apple's API documents EFAULT and ENOMEM as possible transient failures for a
+// valid address. Backoff retains the existing one-millisecond polling interval.
+// BEGIN GENERATED WAIT RESULT
+fn wait_immediate(code: Option<i32>) -> bool {
+    matches!(code, Some(libc::EAGAIN | libc::EINTR | libc::ETIMEDOUT))
+}
+fn wait_pressure(code: Option<i32>) -> bool {
+    matches!(code, Some(libc::EFAULT | libc::ENOMEM))
+}
+fn wait_backoff(pressure: bool, changed: bool) -> bool {
+    pressure && !changed
+}
+#[cfg(test)]
+const WAIT_ERROR_IDS: &[(i32, i32)] = &[
+    (libc::EAGAIN, 35),
+    (libc::EINTR, 4),
+    (libc::ETIMEDOUT, 60),
+    (libc::EFAULT, 14),
+    (libc::ENOMEM, 12),
+];
+// END GENERATED WAIT RESULT
+fn finish_wait(
+    phase: &AtomicU32,
+    observed: u32,
+    result: io::Result<()>,
+    backoff: impl FnOnce(),
+) -> io::Result<()> {
+    match result {
+        Ok(()) => Ok(()),
+        Err(error) => {
+            let code = error.raw_os_error();
+            if wait_immediate(code) {
+                Ok(())
+            } else if wait_pressure(code) {
+                if wait_backoff(
+                    true,
+                    phase.load(std::sync::atomic::Ordering::Acquire) != observed,
+                ) {
+                    backoff();
+                }
+                Ok(())
+            } else {
+                Err(error)
+            }
+        }
     }
 }
 pub(super) fn wake(phase: &AtomicU32) {
@@ -83,3 +133,7 @@ pub(super) fn wake(phase: &AtomicU32) {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../tests/unit/process_checkpoint_darwin.rs"]
+mod tests;

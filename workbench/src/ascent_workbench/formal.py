@@ -386,6 +386,12 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "checkpoint-rust", "rust/ascent-scheme/src/process_policy.rs"),
+                ("ExecutionPolicy.lean", "wait-result-rust", "rust/ascent-scheme/src/process_checkpoint_darwin.rs"),
+                ("ExecutionPolicy.lean", "wait-result-quint", "packages/proofs/quint/CheckpointTransport.qnt"),
+                ("ExecutionPolicy.lean", "checkpoint-flags-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-wait-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-publish-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-cost-quint", "packages/proofs/quint/CheckpointTransport.qnt"),
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
                 ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),
@@ -473,6 +479,22 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate generated DSL region: ' + language)
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"checkpoint-flags-rust", "checkpoint-wait-rust",
+                                  "checkpoint-publish-rust", "checkpoint-cost-quint"}:
+                    region = language.split("-")[1].upper()
+                    indent = "  " if language == "checkpoint-cost-quint" else ""
+                    begin, end = (f'{indent}// BEGIN GENERATED CHECKPOINT {region}\n',
+                                  f'{indent}// END GENERATED CHECKPOINT {region}\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate checkpoint source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"wait-result-rust", "wait-result-quint"}:
+                    indent = "" if language == "wait-result-rust" else "  "
+                    begin, end = (f'{indent}// BEGIN GENERATED WAIT RESULT\n',
+                                  f'{indent}// END GENERATED WAIT RESULT\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate wait-result source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"row-decode-rust", "row-cost-quint"}:
                     marker = "OWNED ROW" if language == "row-decode-rust" else "OWNED ROW COST"

@@ -101,3 +101,60 @@ fn previous_completion_cannot_finish_the_next_request_generation() {
     done.recv_timeout(Duration::from_secs(2)).unwrap();
     responder.join().unwrap();
 }
+
+#[test]
+fn invalid_control_extents_are_rejected_before_shared_wait() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("invalid-control");
+    let expected = u64::try_from(std::mem::size_of::<super::Slot>()).unwrap();
+    for size in [0, 1, expected - 1, expected + 1, 4096] {
+        let file = std::fs::File::create(&path).unwrap();
+        file.set_len(size).unwrap();
+        assert!(Checkpoints::open(&path).is_err(), "invalid extent {size}");
+    }
+}
+
+#[test]
+fn registered_notifications_preserve_contended_signed_generations() {
+    use std::{sync::Barrier, time::Duration};
+    assert_eq!((super::PARENT, super::CHILD), (1, 2));
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("contended-control");
+    let parent = Checkpoints::create(&path).unwrap();
+    let child = Checkpoints::open(&path).unwrap();
+    let retired = Barrier::new(2);
+    std::thread::scope(|threads| {
+        let retired = &retired;
+        threads.spawn(move || {
+            for generation in 1..=64 {
+                let mut seen = Vec::new();
+                parent
+                    .serve(
+                        generation,
+                        |id, work| {
+                            assert_eq!(id, generation);
+                            seen.push(work);
+                            std::thread::sleep(Duration::from_micros(250));
+                            i32::try_from(work).unwrap()
+                        },
+                        || Ok(false),
+                    )
+                    .unwrap();
+                assert_eq!(seen, [-2, 0, -3, 1, -1, 5]);
+                retired.wait();
+            }
+        });
+        for generation in 1..=64 {
+            child.begin(generation);
+            for work in [-2, 0, -3, 1, -1, 5] {
+                assert_eq!(
+                    child.request(generation, work, || Ok(false)).unwrap(),
+                    i32::try_from(work).unwrap()
+                );
+                std::thread::sleep(Duration::from_micros(250));
+            }
+            child.complete();
+            retired.wait();
+        }
+    });
+}

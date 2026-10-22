@@ -251,6 +251,84 @@ def peerRustSource : String :=
   "    if " ++ rustCondition peerEof ++ " {\n        Some(true)\n    } else if " ++ rustCondition peerTransient ++
   " {\n        Some(false)\n    } else {\n        None\n    }\n}\n"
 
+-- Native errno identity is checked against libc in the compiled Darwin tests.
+-- Outcomes complete a wait attempt, never an inference/controller decision.
+def waitImmediateErrors : List (Int × String) := [(35,"EAGAIN"),(4,"EINTR"),(60,"ETIMEDOUT")]
+def waitPressureErrors : List (Int × String) := [(14,"EFAULT"),(12,"ENOMEM")]
+def waitErrorMatches (errors : List (Int × String)) (code : Option Int) : Bool :=
+  errors.any (fun entry => code == some entry.1)
+def waitErrorClass (code : Option Int) : Nat :=
+  if waitErrorMatches waitImmediateErrors code then 0
+  else if waitErrorMatches waitPressureErrors code then 1 else 2
+def waitBackoff (pressure changed : Bool) : Bool := pressure && !changed
+
+theorem wait_pressure_rechecks (code : Option Int) (pressure : code = some 14 ∨ code = some 12) :
+    waitErrorClass code = 1 := by
+  rcases pressure with rfl | rfl <;> decide
+theorem wait_unknown_stays_fatal (code : Option Int)
+    (ordinary : waitErrorMatches waitImmediateErrors code = false)
+    (pressure : waitErrorMatches waitPressureErrors code = false) :
+    waitErrorClass code = 2 := by simp [waitErrorClass, ordinary, pressure]
+theorem changed_phase_never_backs_off (pressure : Bool) :
+    waitBackoff pressure true = false := by cases pressure <;> rfl
+
+-- This is the SC four-event argument for one pending, non-ABA exchange.
+-- OS atomic compare-and-wait, owned mapping lifetime and fair scheduling remain
+-- explicit host premises; this is not a whole VM/OS/allocator refinement.
+theorem sc_registration_prevents_missed_hint
+    (registered checked published inspected : Nat)
+    (registration : registered < checked) (publication : published < inspected) :
+    ¬ (inspected < registered ∧ checked < published) := by omega
+
+def waiterFlags (parent child : Bool) : UInt32 :=
+  (if parent then 1 else 0) ||| (if child then 2 else 0)
+theorem waiter_mask_exact (parent child : Bool) :
+    (((waiterFlags parent child &&& 1) != 0) = parent) ∧
+    (((waiterFlags parent child &&& 2) != 0) = child) := by
+  cases parent <;> cases child <;> decide
+theorem parent_registration_preserves_child (parent child : Bool) :
+    (waiterFlags parent child ||| 1) = waiterFlags true child := by
+  cases parent <;> cases child <;> decide
+theorem child_registration_preserves_parent (parent child : Bool) :
+    (waiterFlags parent child ||| 2) = waiterFlags parent true := by
+  cases parent <;> cases child <;> decide
+theorem parent_clear_preserves_child (parent child : Bool) :
+    (waiterFlags parent child &&& 4294967294) = waiterFlags false child := by
+  cases parent <;> cases child <;> decide
+theorem child_clear_preserves_parent (parent child : Bool) :
+    (waiterFlags parent child &&& 4294967293) = waiterFlags parent false := by
+  cases parent <;> cases child <;> decide
+
+def wakeHintCost (waiting : Bool) : Nat := if waiting then 1 else 0
+def addedNotificationAtomics (publications registrations : Nat) : Nat :=
+  publications + 3 * registrations
+theorem conditional_hint_never_adds_a_wake (waiting : Bool) :
+    wakeHintCost waiting ≤ 1 := by cases waiting <;> decide
+theorem awake_peer_removes_wake : wakeHintCost false = 0 := rfl
+
+def checkpointFlagsRustSource : String :=
+  "const PARENT: u32 = 1;\nconst CHILD: u32 = 2;\n"
+
+def checkpointWaitRustSource : String :=
+  "#[cfg(any(target_os = \"linux\", target_os = \"macos\"))]\nfn registered_wait(slot: &Slot, observed: u32, waiter: u32) -> io::Result<()> {\n    // Register before rechecking phase; publication and registration use one\n    // sequentially consistent order across both atomics.\n    slot.sleeping.fetch_or(waiter, Ordering::SeqCst);\n    let result = if slot.phase.load(Ordering::SeqCst) == observed {\n        wait(&slot.phase, observed)\n    } else {\n        Ok(())\n    };\n    slot.sleeping.fetch_and(!waiter, Ordering::SeqCst);\n    result\n}\n"
+
+def checkpointPublishRustSource : String :=
+  "fn publish(slot: &Slot, phase: u32, peer: u32) {\n    slot.phase.store(phase, Ordering::SeqCst);\n    if slot.sleeping.load(Ordering::SeqCst) & peer != 0 {\n        wake(&slot.phase);\n    }\n}\n"
+
+def checkpointCostQuintSource : String :=
+  "  pure def wake_hint(waiting: bool): int = if (waiting) 1 else 0\n  pure def added_notification_atomics(publications: int, registrations: int): int = publications + 3 * registrations\n"
+
+def waitErrorRustSource : String :=
+  String.join ([("immediate",waitImmediateErrors),("pressure",waitPressureErrors)].map fun (name,errors) =>
+    "fn wait_" ++ name ++ "(code: Option<i32>) -> bool {\n    matches!(code, Some(" ++
+    String.intercalate " | " (errors.map (fun entry => "libc::" ++ entry.2)) ++ "))\n}\n") ++
+  "fn wait_backoff(pressure: bool, changed: bool) -> bool {\n    pressure && !changed\n}\n#[cfg(test)]\nconst WAIT_ERROR_IDS: &[(i32, i32)] = &[\n" ++
+  String.join ((waitImmediateErrors ++ waitPressureErrors).map (fun entry =>
+    "    (libc::" ++ entry.2 ++ ", " ++ toString entry.1 ++ "),\n")) ++ "];\n"
+
+def waitErrorQuintSource : String :=
+  "  pure def wait_immediate(code: int): bool = Set(35,4,60).contains(code)\n  pure def wait_pressure(code: int): bool = Set(14,12).contains(code)\n  pure def wait_backoff(pressure: bool, changed: bool): bool = pressure and not(changed)\n"
+
 def peerQuintSource : String :=
   "  pure def peer_probe(peek_eof: bool, peek_negative: bool, peek_benign: bool): int = if (" ++
   quint peerEof ++ ") 1 else if (" ++ quint peerTransient ++ ") 0 else -1\n"
@@ -489,6 +567,12 @@ def renderedSource (name : String) : IO String := do
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
   | "checkpoint-rust" => pure Ascent.ExecutionPolicy.peerRustSource
+  | "wait-result-rust" => pure Ascent.ExecutionPolicy.waitErrorRustSource
+  | "wait-result-quint" => pure Ascent.ExecutionPolicy.waitErrorQuintSource
+  | "checkpoint-flags-rust" => pure Ascent.ExecutionPolicy.checkpointFlagsRustSource
+  | "checkpoint-wait-rust" => pure Ascent.ExecutionPolicy.checkpointWaitRustSource
+  | "checkpoint-publish-rust" => pure Ascent.ExecutionPolicy.checkpointPublishRustSource
+  | "checkpoint-cost-quint" => pure Ascent.ExecutionPolicy.checkpointCostQuintSource
   | "quint" => pure Ascent.ExecutionPolicy.quintSource
   | "preparation-python" => pure Ascent.PreparationPolicy.pythonSource
   | "preparation-quint" => pure Ascent.PreparationPolicy.quintSource

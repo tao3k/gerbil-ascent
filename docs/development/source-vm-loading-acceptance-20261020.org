@@ -3175,3 +3175,116 @@ The original Guard, exploration bounds, cancellation, resource and provenance
 assertions remain unchanged. Remote current-commit CI and the original production
 matrix must still qualify the published candidate; these local receipts do not
 close the large single-VM capacity gap or twelve-thread tail-latency regression.
+
+The 558b689e exact-head CI passed Scheme, original performance gates, Rust/PyO3,
+formal and all independent oracles. Its independent Python consumer job correctly
+rejected the frozen formal inventory: the new NoTupleTemporary invariant and
+tuple-temp counterexample had not been added to its checked-in fixture. The
+correction adds only those two obligations and verifies that every other model,
+invariant and fault entry is unchanged. The failed run is retained at
+https://github.com/tao3k/gerbil-ascent/actions/runs/39763530421 .
+The exact-head macOS run passed all 170 modules and 1415 cases in 424.48 seconds,
+with twelve single-thread VMs and the original 600-second limit. The preceding
+96e5ea6a run took 369.69 seconds with identical Scheme source on another runner.
+This approximately 14.8% wall increase remains unattributed. All 1415 forwarded
+case boundaries were matched; their timings include forwarding and scheduling
+and cannot isolate CPU, GC or allocation. CI success does not close that cost gap.
+
+After that inventory correction, the complete local Python byte-interface suite
+passed 9 tests and the complete workbench consumer suite passed 106 tests with
+no skipped cases. This used the existing installed local development wheel; the
+exact 558b689e producer wheel had separately passed its remote Rust/PyO3 job.
+The correction requires fresh exact-head remote qualification after publication.
+
+A private twelve-VM matched control stopped before measurement with
+=ASCENT-CHECKPOINT-TRANSPORT-ERROR Bad address (os error 14)=, followed by Closed.
+This was the existing baseline, not the conditional-notification candidate.
+Apple's SDK header explicitly documents EFAULT for both invalid pointers and
+transient failures on a valid address, and ENOMEM for temporary kernel waiter
+allocation failure:
+https://github.com/apple-oss-distributions/libplatform/blob/main/include/os/os_sync_wait_on_address.h .
+The previous wrapper incorrectly made both memory-pressure outcomes fatal.
+
+The revised wrapper only accepts its borrowed, live, length-checked AtomicU32.
+It rereads phase before pressure backoff, retains the existing one-millisecond
+interval, returns to the outer phase/peer loop and never supplies a controller
+decision. Invalid configuration and unknown errors remain fatal. Deterministic
+injection covers pressure, changed phase, ordinary interrupts and fatal errors;
+malformed mapping extents remain rejected before waiting. The complete initial
+post-fix binding suite passed 68/68 with twelve threads and zero retries.
+The observed EFAULT does not by itself prove which kernel pressure condition
+occurred; mapping lifetime is justified separately by the owned mapping borrow.
+
+The original 558b689e matrix still completed only 23/24 valid rows. On its
+three-core host, twelve/one Rayon gains were 2.039, 1.725 and 1.456 for small,
+ordinary closure and large closure. Large twelve-thread p95 was 576.3--576.4 ms,
+versus 213.1--213.2 ms at six threads. The large single-VM row again exceeded
+240 seconds. The unified Cargo command compiled 179 artifacts in one graph;
+its elapsed build phase was about 665 seconds on this runner. This is observed
+cost and a verified unit count, not a matched-host throughput or cold-build
+regression admission.
+
+The selected notification change retains every original controller invocation.
+It registers the pending waiter, rereads phase, and uses a sequentially consistent
+publication/registration order before conditionally requesting a kernel wake.
+The initial and final generation notifications remain unconditional, the spin
+limit stays 32 and the OS wait interval stays one millisecond. The new flag
+occupies existing padding in the 64-byte mapped slot. No VM handle crosses into
+Rayon, and every process still reports one native processor.
+
+The first private comparison incorrectly required identical total checkpoint
+counts across independent VM runs and was rejected. The original Scheme monitor
+in =interface/hybrid.ss= wakes every five milliseconds and sends zero-work
+checks, so its total varies with duration. That monitor and its cadence remain
+unchanged. A separate instrumented production run verified 72 generations:
+3318931 child requests matched 3318931 invocations of the original parent
+controller, with equal per-generation ordered tuple digests. This is a scoped
+runtime witness, not a mathematical proof over arbitrary executions.
+
+A subsequent fixed A/B/B/A diagnostic used frozen executable hashes, the real
+production interface, twelve clients and complete independent closure checks.
+Its error-corrected baseline and candidate both completed all arms. Median
+single-VM throughput was 2.865 versus 3.446 requests/second; twelve-VM throughput
+was 2.700 versus 3.237. Whole-lifetime system CPU averaged 8.841 versus 3.133
+seconds for one VM and 76.792 versus 68.687 for twelve. These are local twelve-
+core diagnostic observations including startup/cleanup, not the isolated
+three-core acceptance result. The original failed control and static-count
+rejection remain preserved.
+
+The same experiment also evaluated a larger request-lifetime population for
+Rayon. Twelve-thread throughput was 241.363 versus 240.237 requests/second and
+p95 worsened from 69.375 to 77.285 ms; that lifetime candidate was rejected.
+Its apparently faster one/three-thread arms do not establish a twelve-thread
+improvement. None of its Work, Session or SourceSession changes were promoted.
+The separately rejected ordinal-sort candidate also remains outside production.
+
+Lean proves the two-bit mask operations, the four-event SC ordering argument
+and the per-publication wake bound. Exact generated source checks bind the
+deployed registration, publication, flag constants and errno classifiers.
+The cost model explicitly includes one added flag load per publication and
+three atomic operations per registered wait; fewer wake attempts do not imply
+zero extra CPU work or monotonic speedup. The model retains all previous peer
+checks and requires counterexamples for unsafe error retry, a granted result
+from a wait, missing registration, early clear, reversed publication order and
+double wake. Owned mapping lifetime, Rust/compiler memory semantics, host atomic
+compare-and-wait behavior and fair scheduling remain explicit proof premises.
+
+The final current-source local suite passed 70/70 binding tests at twelve
+threads with no retries or skipped cases. It includes a 64-generation contended
+signed roundtrip, malformed mappings, transient/fatal error injection and the
+compiled platform-constant identity check. Strict all-target Scheme/PyO3 Clippy
+also passed with the exact CI Rust toolchain. These receipts still require
+full guarded formal, complete consumer and exact published-head CI/matrix
+qualification; the remaining large-VM timeout and Rayon tail gap are not closed
+by the local diagnostics.
+
+The final complete local guarded formal run passed all 58 models, 72 positive
+checks and 419 required counterexamples, then the Lean build and every generated
+source comparison. The focused Guard used the original -M1024/-T10000000 budgets
+and zero additional helper threads. Both complete strict Clippy profiles passed;
+the final Python suites passed 9 and 106 cases with no skipped cases. An additive
+inventory comparison confirmed that only OwnedLookup and CheckpointTransport
+changed, with every previous invariant and counterexample preserved in order.
+The exact new published commit must still pass fresh remote CI and the unchanged
+production matrix. No rejected request-lifetime, ordinal-sort or diagnostic
+instrumentation code is included in this candidate.

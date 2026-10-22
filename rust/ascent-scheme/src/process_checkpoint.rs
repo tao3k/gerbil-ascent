@@ -24,9 +24,14 @@ const IDLE: u32 = 0;
 const REQUEST: u32 = 1;
 const DECISION: u32 = 2;
 const COMPLETE: u32 = 3;
+// BEGIN GENERATED CHECKPOINT FLAGS
+const PARENT: u32 = 1;
+const CHILD: u32 = 2;
+// END GENERATED CHECKPOINT FLAGS
 #[repr(C, align(64))]
 struct Slot {
     phase: AtomicU32,
+    sleeping: AtomicU32,
     generation: AtomicI64,
     code: AtomicI32,
     id: AtomicI64,
@@ -51,6 +56,7 @@ impl Checkpoints {
         unsafe {
             slot.0.as_ptr().write(Slot {
                 phase: AtomicU32::new(IDLE),
+                sleeping: AtomicU32::new(0),
                 generation: AtomicI64::new(0),
                 code: AtomicI32::new(0),
                 id: AtomicI64::new(0),
@@ -113,8 +119,7 @@ impl Checkpoints {
         let slot = self.slot();
         slot.id.store(id, Ordering::Relaxed);
         slot.work.store(work, Ordering::Relaxed);
-        slot.phase.store(REQUEST, Ordering::Release);
-        wake(&slot.phase);
+        publish(slot, REQUEST, PARENT);
         let mut waiting = Wait::default();
         loop {
             let phase = slot.phase.load(Ordering::Acquire);
@@ -123,7 +128,7 @@ impl Checkpoints {
                 slot.phase.store(IDLE, Ordering::Release);
                 return Ok(code);
             }
-            waiting.poll(&mut closed, &slot.phase, phase)?;
+            waiting.poll(&mut closed, slot, phase, CHILD)?;
         }
     }
     pub(crate) fn serve(
@@ -138,7 +143,7 @@ impl Checkpoints {
             if slot.generation.load(Ordering::Acquire) != generation {
                 let phase = slot.phase.load(Ordering::Acquire);
                 if slot.generation.load(Ordering::Acquire) != generation {
-                    waiting.poll(&mut closed, &slot.phase, phase)?;
+                    waiting.poll(&mut closed, slot, phase, PARENT)?;
                 }
                 continue;
             }
@@ -149,15 +154,14 @@ impl Checkpoints {
                         slot.work.load(Ordering::Relaxed),
                     );
                     slot.code.store(code, Ordering::Relaxed);
-                    slot.phase.store(DECISION, Ordering::Release);
-                    wake(&slot.phase);
+                    publish(slot, DECISION, CHILD);
                     #[cfg(any(target_os = "linux", target_os = "macos"))]
                     {
                         waiting = Wait::default();
                     }
                 }
                 COMPLETE => return Ok(()),
-                phase => waiting.poll(&mut closed, &slot.phase, phase)?,
+                phase => waiting.poll(&mut closed, slot, phase, PARENT)?,
             }
         }
     }
@@ -177,8 +181,9 @@ impl Wait {
     fn poll(
         &mut self,
         closed: &mut impl FnMut() -> io::Result<bool>,
-        phase: &AtomicU32,
+        slot: &Slot,
         observed: u32,
+        waiter: u32,
     ) -> io::Result<()> {
         self.0 = self.0.wrapping_add(1);
         #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -190,13 +195,13 @@ impl Wait {
                         "checkpoint peer exited",
                     ));
                 }
-                return wait(phase, observed);
+                return registered_wait(slot, observed, waiter);
             }
             std::hint::spin_loop();
         }
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         {
-            let _ = (phase, observed);
+            let _ = (slot, observed, waiter);
             if self.0.is_multiple_of(1024) && closed()? {
                 return Err(io::Error::new(
                     io::ErrorKind::BrokenPipe,
@@ -247,6 +252,29 @@ fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
 fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
     darwin::wait(phase, observed)
 }
+// BEGIN GENERATED CHECKPOINT WAIT
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn registered_wait(slot: &Slot, observed: u32, waiter: u32) -> io::Result<()> {
+    // Register before rechecking phase; publication and registration use one
+    // sequentially consistent order across both atomics.
+    slot.sleeping.fetch_or(waiter, Ordering::SeqCst);
+    let result = if slot.phase.load(Ordering::SeqCst) == observed {
+        wait(&slot.phase, observed)
+    } else {
+        Ok(())
+    };
+    slot.sleeping.fetch_and(!waiter, Ordering::SeqCst);
+    result
+}
+// END GENERATED CHECKPOINT WAIT
+// BEGIN GENERATED CHECKPOINT PUBLISH
+fn publish(slot: &Slot, phase: u32, peer: u32) {
+    slot.phase.store(phase, Ordering::SeqCst);
+    if slot.sleeping.load(Ordering::SeqCst) & peer != 0 {
+        wake(&slot.phase);
+    }
+}
+// END GENERATED CHECKPOINT PUBLISH
 fn wake(phase: &AtomicU32) {
     #[cfg(target_os = "linux")]
     // SAFETY: phase is borrowed from the live shared mapping; WAKE does not

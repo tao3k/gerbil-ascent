@@ -1095,7 +1095,7 @@
   "OwnedLookup": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "FrozenExact OrderedExact RejectedStable"
+      "invariants": "FrozenExact OrderedExact RejectedStable NoTupleTemporary"
     },
     "faults": [
       [
@@ -1136,6 +1136,11 @@
       [
         "reject",
         "RejectedStable",
+        12
+      ],
+      [
+        "tuple-temp",
+        "NoTupleTemporary",
         12
       ]
     ]
@@ -2483,7 +2488,7 @@
   "CheckpointTransport": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll"
+      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake"
     },
     "faults": [
       [
@@ -2514,6 +2519,46 @@
       [
         "eof-poll",
         "EofNoPoll",
+        12
+      ],
+      [
+        "memory-fatal",
+        "TransientRechecks",
+        12
+      ],
+      [
+        "invalid-retry",
+        "FatalStaysFatal",
+        12
+      ],
+      [
+        "changed-sleep",
+        "ChangedNeverBackoff",
+        12
+      ],
+      [
+        "retry-grant",
+        "RetryNoDecision",
+        12
+      ],
+      [
+        "register-missing",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "registration-cleared",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "wake-before-phase",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "double-wake",
+        "NoExtraWake",
         12
       ]
     ]

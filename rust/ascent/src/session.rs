@@ -1,7 +1,7 @@
 //! Caller-owned pools, source transactions and completed result publication.
 use crate::{
     Cancellation, Error, Limits, Program, Result, Row, Snapshot,
-    execution::{evaluate, work},
+    execution::{EvaluatedRows, evaluate, work},
     graph::Graph,
 };
 #[cfg(feature = "rayon")]
@@ -454,7 +454,7 @@ impl Session {
     }
     fn publish(
         &mut self,
-        rows: Vec<Vec<Row>>,
+        rows: Vec<EvaluatedRows>,
         started: std::time::Instant,
         limits: &Limits,
         cancellation: &Cancellation,
@@ -469,7 +469,7 @@ impl Session {
             .program
             .fact_limits
             .output
-            .is_some_and(|limit| rows.iter().map(Vec::len).sum::<usize>() > limit)
+            .is_some_and(|limit| rows.iter().map(|rows| rows.len()).sum::<usize>() > limit)
         {
             return self.reject(Error::OutputFactLimit);
         }
@@ -480,8 +480,10 @@ impl Session {
             .iter()
             .zip(rows)
             .map(|(declaration, rows)| {
-                let mut rows = rows;
-                self.engine.sort_rows(&mut rows);
+                let (mut rows, ordered) = rows.into_rows();
+                if !ordered {
+                    self.engine.sort_rows(&mut rows);
+                }
                 (declaration.name.clone(), rows)
             })
             .collect();

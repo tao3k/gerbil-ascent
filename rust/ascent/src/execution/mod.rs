@@ -5,6 +5,7 @@ mod facts;
 mod kernels;
 mod lattice;
 mod matching;
+mod ordering;
 mod ordinal;
 mod policy;
 mod values;
@@ -21,3 +22,5 @@ mod reductions;
 pub use kernels::{compose_graphs, make_projection_graph, make_transitive_graph};
 
 pub(crate) mod work;
+
+pub(crate) use ordering::EvaluatedRows;

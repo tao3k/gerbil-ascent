@@ -16,7 +16,7 @@ pub(crate) type Row = Arc<[Cell]>;
 #[derive(Clone, Default, Debug)]
 pub(crate) struct Values {
     codes: HashMap<Scalar, Cell>,
-    values: Vec<Scalar>,
+    pub(super) values: Vec<Scalar>,
 }
 impl Values {
     pub fn intern(&mut self, value: &Scalar) -> Cell {

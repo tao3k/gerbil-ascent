@@ -2678,5 +2678,106 @@
         12
       ]
     ]
+  },
+  "RowViewShape": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "StampExact CurrentShape RowsPreserved NoEarlyGetter NoShapeAdmission FreshAdmission GetterOrder"
+    },
+    "faults": [
+      [
+        "claim-arbitrary",
+        "StampExact",
+        12
+      ],
+      [
+        "claim-stale-parent",
+        "StampExact",
+        12
+      ],
+      [
+        "forget-owner",
+        "StampExact",
+        12
+      ],
+      [
+        "skip-parent-invalidation",
+        "CurrentShape",
+        12
+      ],
+      [
+        "ignore-child-revision",
+        "CurrentShape",
+        12
+      ],
+      [
+        "drop-rows",
+        "RowsPreserved",
+        12
+      ],
+      [
+        "eager-getter",
+        "NoEarlyGetter",
+        12
+      ],
+      [
+        "cache-validation",
+        "FreshAdmission",
+        12
+      ],
+      [
+        "skip-getter",
+        "GetterOrder",
+        12
+      ],
+      [
+        "stamp-valid",
+        "NoShapeAdmission",
+        12
+      ]
+    ]
+  },
+  "RankedPublication": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OrderEmbedding DecodeExact OrderedPublication NoCanceledPublication NoFailedPublication"
+    },
+    "faults": [
+      [
+        "raw-code-order",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "reverse-rank",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "drop-prefix",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "wrong-decode",
+        "DecodeExact",
+        12
+      ],
+      [
+        "missing-order",
+        "OrderedPublication",
+        12
+      ],
+      [
+        "ignore-cancel",
+        "NoCanceledPublication",
+        12
+      ],
+      [
+        "ignore-failure",
+        "NoFailedPublication",
+        12
+      ]
+    ]
   }
 }

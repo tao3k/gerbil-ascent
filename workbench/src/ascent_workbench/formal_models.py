@@ -58,7 +58,9 @@ MODEL_ORDER = ('DeltaClosure',
  'PreparationWork',
  'ArchiveWork',
  'ProgressWitness',
- 'CompilerCost')
+ 'CompilerCost',
+ 'RowViewShape',
+ 'RankedPublication')
 CONFIGURATIONS = {'CheckpointTransport': {'constants': 'Mutation = "none"', 'invariants': 'TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake'},
  'RequestScheduling': {'constants': 'Mutation = "none"', 'invariants': 'TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact CapacityExact'},
  'DeltaClosure': {'constants': 'Mutation = "none"',
@@ -237,7 +239,9 @@ CONFIGURATIONS = {'CheckpointTransport': {'constants': 'Mutation = "none"', 'inv
                                'ReceiptComplete PrivateOutputStable'},
  'ProgressWitness': {'constants': 'Mutation = "none"', 'invariants': 'Safety'},
  'CompilerCost': {'constants': 'Mutation = "none"',
-                  'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly'}}
+                  'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly'},
+ 'RowViewShape': {'constants': 'Mutation = "none"', 'invariants': 'StampExact CurrentShape RowsPreserved NoEarlyGetter NoShapeAdmission FreshAdmission GetterOrder'},
+ 'RankedPublication': {'constants': 'Mutation = "none"', 'invariants': 'OrderEmbedding DecodeExact OrderedPublication NoCanceledPublication NoFailedPublication'}}
 FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
                   ('early', 'Complete', 12),
                   ('allold', 'NoOldWork', 12),
@@ -673,4 +677,10 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
                   ('promote-vm-counter', 'PolicyExact', 12),
                   ('sum-nested-passes', 'PolicyExact', 12),
                   ('record-failed-build', 'SuccessfulCommitOnly', 12),
-                  ('reuse-old-options', 'CurrentOptionsOnly', 12))}
+                  ('reuse-old-options', 'CurrentOptionsOnly', 12)),
+ 'RowViewShape': (('claim-arbitrary', 'StampExact', 12), ('claim-stale-parent', 'StampExact', 12),
+                  ('forget-owner', 'StampExact', 12), ('skip-parent-invalidation', 'CurrentShape', 12),
+                  ('ignore-child-revision', 'CurrentShape', 12), ('drop-rows', 'RowsPreserved', 12),
+                  ('eager-getter', 'NoEarlyGetter', 12), ('cache-validation', 'FreshAdmission', 12),
+                  ('skip-getter', 'GetterOrder', 12), ('stamp-valid', 'NoShapeAdmission', 12)),
+ 'RankedPublication': (('raw-code-order','OrderEmbedding',12), ('reverse-rank','OrderEmbedding',12), ('drop-prefix','OrderEmbedding',12), ('wrong-decode','DecodeExact',12), ('missing-order','OrderedPublication',12), ('ignore-cancel','NoCanceledPublication',12), ('ignore-failure','NoFailedPublication',12))}

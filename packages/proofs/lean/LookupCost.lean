@@ -82,6 +82,68 @@ def tupleTemporaryBytes (rows width valueBytes : Nat) : Nat := rows * width * va
 theorem observed_closure_temporary_bytes :
     tupleTemporaryBytes (24 * (256 * 16 * 15 / 2)) 2 64 = 94371840 := by decide
 
+-- A row view retains every inherited field and replaces only the row payload.
+-- Its stamp is an ownership witness, not an admission or a memoized Type result.
+structure RowView (α β : Type) where
+  inherited : α
+  rows : List β
+
+def replaceViewRows (parent : RowView α β) (rows : List β) : RowView α β :=
+  { parent with rows := rows }
+
+theorem row_view_replaces_only_rows (parent : RowView α β) (rows : List β) :
+    (replaceViewRows parent rows).inherited = parent.inherited ∧
+    (replaceViewRows parent rows).rows = rows := ⟨rfl, rfl⟩
+
+def ownedViewCurrent (stamped : Bool) (revision : Nat) : Bool :=
+  stamped && decide (revision = 0)
+
+theorem inherited_edit_revokes_view (stamped : Bool) (revision : Nat) :
+    ownedViewCurrent stamped (revision + 1) = false := by simp [ownedViewCurrent]
+
+-- Shape only selects the checker. Both paths must admit the current payload.
+def admitRowView (canonical generic : α → Bool) (owned : Bool) (payload : α) : Bool :=
+  if owned then canonical payload else generic payload
+
+theorem fresh_admission_matches_root (canonical generic : α → Bool)
+    (same : ∀ payload, canonical payload = generic payload)
+    (owned : Bool) (payload : α) :
+    admitRowView canonical generic owned payload = generic payload := by
+  cases owned <;> simp [admitRowView, same]
+
+theorem fresh_admission_not_identified_by_shape :
+    ownedViewCurrent true 0 = true ∧
+    admitRowView id id true false = false := by decide
+
+def rowViewSchemeSource : String :=
+  "(def (gerbil-ascent-relation-with-rows relation replacement)\n  (let (value (.o (:: @ relation) rows: replacement))\n    (if (declared-value-shape? 'relation relation)\n      (remember-value-shape! 'relation value)\n      value)))\n"
+
+
+-- A lexicographic order embedding: the premise is separately tested against
+-- actual Rust Value::cmp and rank construction. This is not compiler refinement.
+def rowLex (cmp : α → α → Ordering) : List α → List α → Ordering
+  | [], [] => .eq
+  | [], _ :: _ => .lt
+  | _ :: _, [] => .gt
+  | a :: as, b :: bs => match cmp a b with
+    | .eq => rowLex cmp as bs
+    | other => other
+
+theorem ranked_row_order (rank : α → Nat) (cmp : α → α → Ordering)
+    (preserves : ∀ a b, compare (rank a) (rank b) = cmp a b)
+    (xs ys : List α) :
+    rowLex compare (xs.map rank) (ys.map rank) = rowLex cmp xs ys := by
+  induction xs generalizing ys with
+  | nil => cases ys <;> rfl
+  | cons a as ih =>
+    cases ys with
+    | nil => rfl
+    | cons b bs =>
+      simp only [List.map, rowLex, preserves]
+      split <;> first | exact ih bs | rfl
+
+def rankedRowRustSource : String := "pub(super) fn compare(a: &Row, b: &Row, ranks: &[usize]) -> Ordering {\n    a.iter()\n        .map(|cell| ranks[cell.ordinal()])\n        .cmp(b.iter().map(|cell| ranks[cell.ordinal()]))\n}\n"
+
 def ownedRowRustSource : String :=
   "    pub fn decode(&self, row: &[Cell]) -> crate::Row {\n        row.iter()\n            .map(|cell| self.values[cell.0.get() - 1].clone())\n            .collect()\n    }\n"
 
@@ -171,3 +233,11 @@ end Ascent.LookupCost
 
 #print axioms Ascent.LookupCost.fingerprint_read_preserved
 #print axioms Ascent.LookupCost.metadata_read_suffices_without_fingerprint
+
+#print axioms Ascent.LookupCost.row_view_replaces_only_rows
+#print axioms Ascent.LookupCost.inherited_edit_revokes_view
+#print axioms Ascent.LookupCost.fresh_admission_not_identified_by_shape
+
+#print axioms Ascent.LookupCost.fresh_admission_matches_root
+
+#print axioms Ascent.LookupCost.ranked_row_order

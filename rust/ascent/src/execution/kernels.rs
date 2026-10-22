@@ -1,15 +1,13 @@
 //! Rust-owned storage/index kernels and Rayon scheduling for Scheme AOT rules.
-use super::{ordinal::OrdinalRows, policy};
 use super::values::Row;
 use super::{Bindings, Budget, Cancellation, Cell, Fact, FactSet, Limits, Pattern};
+use super::{ordering, ordinal::OrdinalRows, policy};
 use crate::{
     Result,
     graph::{Atom, Clause, Graph, Rule},
 };
 #[cfg(feature = "rayon")]
-use rayon::iter::{
-    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
-};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 #[cfg(feature = "rayon")]
 use rayon::slice::ParallelSlice;
 use smallvec::SmallVec;
@@ -840,7 +838,7 @@ pub(crate) fn evaluate(
     cancellation: &Cancellation,
     parallel: impl Fn() -> bool + Sync,
     started: std::time::Instant,
-) -> Result<Vec<Vec<crate::Row>>> {
+) -> Result<Vec<super::EvaluatedRows>> {
     #[cfg(not(feature = "rayon"))]
     let _ = parallel;
     // Queueing consumes the same caller budget as evaluation/publication.
@@ -867,7 +865,7 @@ fn evaluate_budgeted(
     sources: &[Vec<crate::Row>],
     budget: &Budget,
     parallel: impl Fn() -> bool + Sync,
-) -> Result<Vec<Vec<crate::Row>>> {
+) -> Result<Vec<super::EvaluatedRows>> {
     #[cfg(not(feature = "rayon"))]
     let _ = parallel;
     let (values, all) = initial_indexes(graph, sources, budget)?;
@@ -910,6 +908,21 @@ fn evaluate_budgeted(
         budget.result()?;
     }
     let values = round.store.values.into_inner().expect("joined value owner");
+    // Amortize actual-value ordering only for large reused vocabularies. Small
+    // outputs retain the existing decoded sort and allocate no ranking table.
+    let ranks = round
+        .store
+        .all
+        .iter()
+        .enumerate()
+        .any(|(relation, index)| {
+            (!graph.program.relations[relation].source
+                || graph.program.relations[relation].lattice.is_some())
+                && index.rows.len() >= 8192
+                && index.rows.len() / 2 >= values.values.len()
+        })
+        .then(|| ordering::ranks(&values));
+    budget.result()?;
     let rows = round
         .store
         .all
@@ -919,9 +932,9 @@ fn evaluate_budgeted(
             if graph.program.relations[relation].source
                 && graph.program.relations[relation].lattice.is_none()
             {
-                sources[relation].clone()
+                super::EvaluatedRows::new(sources[relation].clone(), false)
             } else {
-                decode_rows(index, &values, budget, &parallel)
+                decode_rows(index, &values, ranks.as_deref(), budget, &parallel)
             }
         })
         .collect();
@@ -931,9 +944,10 @@ fn evaluate_budgeted(
 fn decode_rows(
     index: Index,
     values: &super::Values,
+    ranks: Option<&[usize]>,
     budget: &Budget,
     parallel: &(dyn Fn() -> bool + Sync),
-) -> Vec<crate::Row> {
+) -> super::EvaluatedRows {
     let Index {
         rows,
         keys,
@@ -943,22 +957,7 @@ fn decode_rows(
     drop(lattice);
     drop(keys);
     drop(known);
-    let decode = |(i, row): (usize, Row)| {
-        ((i % CHUNK != 0 || budget.poll()) && budget.active()).then(|| values.decode(&row))
-    };
-    #[cfg(feature = "rayon")]
-    // Work may have arrived since evaluation entry. Recheck the same advisory
-    // population at this phase boundary; every decoder budget poll is retained.
-    if stage_fanout(rows.len() >= 8192, parallel) {
-        return rows
-            .into_par_iter()
-            .enumerate()
-            .filter_map(decode)
-            .collect();
-    }
-    #[cfg(not(feature = "rayon"))]
-    let _ = parallel;
-    rows.into_iter().enumerate().filter_map(decode).collect()
+    ordering::decode(rows, values, ranks, budget, parallel, CHUNK)
 }
 
 #[cfg(test)]

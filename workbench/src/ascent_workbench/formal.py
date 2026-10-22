@@ -383,6 +383,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "snapshot", "program/scheme-snapshot.ss"),
                 ("ExecutionPolicy.lean", "snapshot-quint", "packages/proofs/quint/ClosedDslLowering.qnt"),
                 ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
+                ("ExecutionPolicy.lean", "row-view-scheme", "program/types.ss"),
+                ("ExecutionPolicy.lean", "ranked-row-rust", "rust/ascent/src/execution/ordering.rs"),
                 ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
@@ -483,6 +485,11 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate archive cache region")
                     expected = expected.split(begin)[1].split(end)[0]
+                elif language == "row-view-scheme":
+                    begin, end = ';; BEGIN GENERATED OWNED ROW VIEW\n', ';; END GENERATED OWNED ROW VIEW\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate owned row view source region")
+                    expected = expected.split(begin)[1].split(end)[0]
                 elif language.startswith("dsl-"):
                     region = language.removeprefix("dsl-").upper()
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
@@ -493,6 +500,11 @@ def main() -> int:
                     begin, end = '        // BEGIN GENERATED PROOF AUTHORITY READ\n', '        // END GENERATED PROOF AUTHORITY READ\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate proof authority read source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "ranked-row-rust":
+                    begin, end = '// BEGIN GENERATED RANKED ROW ORDER\n', '// END GENERATED RANKED ROW ORDER\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate ranked row source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language == "ordinal-extent-rust":
                     begin, end = '// BEGIN GENERATED ORDINAL EXTENT\n', '// END GENERATED ORDINAL EXTENT\n'

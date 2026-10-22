@@ -1,0 +1,167 @@
+#+title: Ranked publication and owned row-view acceptance
+#+date: 2026-10-23
+
+* Scope and frozen configuration
+
+This change addresses measured execution/publication work, not only benchmark
+preparation. The SDK remains Gerbil 1cfb032 / Gambit ea114fc. The qualified
+Scheme/Rust bridge remains 079be2bc5a52d8cea225a76203d223f78bfd182f.
+Rayon stays the default and Rust Ascent stays a development-only oracle.
+Production Scheme DSL loading, typed C ABI/PyO3 transport, cancellation,
+resource limits and complete provenance fingerprint/replay remain unchanged.
+No public validation receipt is cached or treated as authority.
+
+The remote cohort retains three CPUs, twelve request clients, twelve resident
+single-thread VM processes, twelve Rust workers for the twelve-worker lane,
+macOS 600 seconds and Linux 180 seconds for complete Scheme semantics.
+The optional matrix still measures 1/3/12 VMs and 1/3/6/8/12 Rayon workers,
+with original fixed work, five samples, thirty-second soak and answer checks.
+Local qualification is on the shared developer host; it is not a three-CPU
+performance result.
+
+* Evidence before this candidate
+
+The ordinal-index experiment at 7eb5b48527a90aa77a2ca29b8cc26ae97faf1fbc
+completed the matched original ABBA control, run 39818704801, against
+0d1925d50cb9e7b203d5174963977585019e0e91. It changed neither Scheme sources,
+Cargo dependencies nor benchmark work between the two arms.
+
+| Lane | Sustained throughput ratio | P95 upper-bound ratio |
+|------+----------------------------+-----------------------|
+| 12 Rayon workers | 1.105478455 | 0.835820896 |
+| 1 Rayon worker | 0.968081629 | 1.103920348 |
+
+The twelve-worker sustained gain is 10.55%; the one-worker sustained result
+regresses 3.19%. These are scoped matched observations, not a global theorem.
+
+Its separate matrix run 39818658105 admitted 23 of 24 rows. The large one-VM
+row failed the unchanged request timeout during replace; it is not admitted.
+Large-soak results on that runner were:
+
+| Runtime | Workers/VMs | Requests/s | P95 upper ms | Maximum ms |
+|---------+-------------+------------+--------------+------------|
+| Scheme | 3 VMs | 3.218843 | 5033.8 | 5143.960042 |
+| Scheme | 12 VMs | 3.864128 | 4229.6 | 4651.503417 |
+| Rayon | 1 worker | 67.595831 | 215.4 | 253.000041 |
+| Rayon | 3 workers | 126.623340 | 121.0 | 152.413708 |
+| Rayon | 6 workers | 102.514863 | 181.7 | 269.915709 |
+| Rayon | 8 workers | 111.158907 | 159.4 | 297.736375 |
+| Rayon | 12 workers | 102.644170 | 204.4 | 341.932792 |
+
+The same actual longest twelve-worker request partitions 341.932792 ms into
+339.039584 ms replace, 0.812041 ms run/export and 2.081167 ms independent
+validation. Replace includes evaluation and atomic publication; it is not just
+input transport. The older 457.047250 ms maximum came from a different run
+without same-request phase telemetry; no causal improvement ratio is inferred
+from those two maxima.
+
+The earlier db24f305 main CI run 39820505015 still fails a supported provenance
+verification timeout in the twelve-owner test. Other component jobs passed,
+including complete Scheme semantics, performance, formal and fresh Python
+consumers. Its aggregate is failed. The separate macOS source run 39820505026
+passed. Neither is current-candidate acceptance.
+
+* Actual execution changes
+
+** Keep producer ownership in private row views
+
+Source projection and private source-snapshot replacement previously created
+ordinary row-only prototype views and lost the factory's controlled shape
+marker. Root validation therefore re-entered the expensive generic protocol.
+The new relation-with-rows helper retains that field-specification marker only
+when the producer is still a current owned relation. It never caches payload
+membership. Every ordinary program root still checks the current rows.
+
+POO's existing prototype dependency graph increments child revisions on
+supported parent edits. Both ancestor edits and direct view edits revoke the
+marker. Arbitrary caller objects and lattice objects keep their original
+protocol. Actor's deferred mutable pending-row getter is deliberately unchanged.
+The helper does not eagerly evaluate arbitrary caller getters.
+
+A native 32-construction diagnostic measured 691001024 allocated bytes for
+unmarked views and 113483000 for marked views, with typed observations equal.
+This diagnostic uses Gambit's time counters. It does not establish complete
+request allocation, transitive allocator source refinement or an end-to-end
+throughput gain.
+
+** Rank once, sort compact rows, then decode
+
+The previous publication path decoded every row and then repeatedly compared
+owned Values while sorting the result. Stack evidence shows actual Value
+comparison among the remaining large-workload costs. The new private ordering
+owner constructs a rank vector from actual Value::cmp, sorts encoded tuples
+using those ranks, and decodes once. Its private ordered handoff avoids repeating
+the full-value sort at publication.
+
+Interning order is never treated as value order. A rank table is only built
+when a derived relation has at least 8192 rows and at least twice as many rows
+as distinct interned values. Small outputs retain their previous path. Source
+rows retain their original representations, occurrence multiplicities and
+ordinary full-value sort. Aggregate evaluation/witness ordering is unchanged.
+The caller-owned Rayon pool and advisory fanout policy remain in use; sort and
+decode each recheck fanout at their own boundary. All original decoder polls,
+final deadline checks, admission counters and transactional rejection remain.
+
+* Acceptance and source correspondence
+
+The common Scheme baseline is
+1f96356bd1a435b268322bbac5f70feccfce8753. It contains the identical Scheme
+fix and semantic regression tests used by the ranked candidate. A subsequent
+matched control against this baseline isolates ranking from the Scheme fix
+and the already-present ordinal index.
+
+The seven new compiled Scheme cases exercise real ownership stamps, fresh
+mutable payload rejection, inherited/direct revision invalidation, arbitrary
+getter exception order, lattice admission and public constructor rejection.
+The complete Scheme run passes 171 modules with twelve VM workers in 86 seconds.
+The common-baseline native binding suite passes all 72 tests with twelve test
+threads in 50.312 seconds, zero skips; its strict Clippy checks pass.
+
+The new Rust tests compare the actual rank comparator with independently decoded
+Value ordering, including tuple prefixes and all Value variants; exercise a
+large real Session with source duplicates and retained snapshots; and preserve
+original fact/state/deadline/cancellation errors. Final candidate local receipts are:
+
+| Check | Result |
+|-------+--------|
+| Complete Rust workspace with Rayon | 92 tests passed; strict Clippy passed |
+| Complete serial Rust path | 73 tests passed; strict Clippy passed |
+| Scheme/PyO3 native bindings | 72 tests passed in 49.746 seconds; twelve threads; zero skipped |
+| Scheme/PyO3 strict Clippy | Passed |
+| Python workbench/driver | 117 tests passed in 127.830 seconds |
+
+The local Python environment contains an earlier built extension; this row
+qualifies the orchestration/receipt parser, not a fresh candidate wheel. Fresh
+Python-wheel and remote three-CPU acceptance remain separate exact-head checks.
+Negative local attempts remain failures: the first strict run caught an
+assertion-style error, later runs caught source-size/owner-cycle violations and
+unused methods in the independently compiled decoder test. The final source
+splits decoding into the publication owner and keeps value rank construction
+there, without suppressing the existing lints or editing the allocator test.
+
+Lean proves lexicographic preservation under an explicit actual-value rank
+embedding premise, and the row-view denotation and revision/admission lemmas.
+The generated comparator and row-view body are checked byte-for-byte against
+those declarations. Quint adds RowViewShape with ten required mutation
+counterexamples and RankedPublication with seven, while retaining every original
+model configuration and negative control. All Lean execution uses LeanPoo Guard
+with its original memory, heartbeats and helper-thread policy. The complete
+final formal run passes all 62 models, 77 positive checks and 456 required
+mutation counterexamples. Both new source renderings match.
+
+* Remaining boundaries
+
+Neither a source rendering nor a finite model proves the complete Rust sorting
+implementation, Vec/HashMap allocator, Scheme compiler, or upstream POO
+invalidation implementation. The rank-construction order-embedding premise has
+native comparisons; full compiler/container source refinement remains open.
+Actual cumulative allocation for an entire request is not closed by the local
+construction diagnostic or ranking-table size.
+
+The pure Rust-owned Rayon workload does not call the VM. Bridge revision
+alignment does not automatically route the external ProcessPool through the
+upstream in-process short-request dispatcher. Scheme checkpoint/IPC cost,
+three-CPU oversubscription and the failed one-VM large workload remain separate
+performance obligations. Neither full CI nor a local allocation reduction is
+accepted as latency closure. Current candidate speed and all-scenario admission
+require its own original matrix and matched control artifacts.

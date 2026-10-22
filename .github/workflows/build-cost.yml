@@ -29,7 +29,7 @@ on:
         default: adaptive
         options: [adaptive, across-requests, within-request]
       baseline:
-        description: Baseline for on-demand ABBA; omit to run full macOS semantics
+        description: Baseline for on-demand ABBA costs, or Rayon control with process_throughput
         required: false
       candidate:
         description: Optional candidate commit for a historical work diagnosis
@@ -81,10 +81,10 @@ jobs:
           test ! -e .gerbil/lib/gerbil-ascent
           test ! -e .gerbil/lib/asp-gerbil-scheme
       - name: Prepare source-comparison development tools
-        if: ${{ inputs.baseline != '' }}
+        if: ${{ inputs.baseline != '' && !inputs.process_throughput }}
         run: (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
       - name: On-demand ABBA cold build and test preparation
-        if: ${{ inputs.baseline != '' }}
+        if: ${{ inputs.baseline != '' && !inputs.process_throughput }}
         env:
           BASELINE: ${{ inputs.baseline }}
           CANDIDATE: ${{ inputs.candidate || github.event.pull_request.head.sha || github.sha }}
@@ -98,6 +98,24 @@ jobs:
           if [[ "$SEMANTIC_PREPARATION" == "true" ]]; then work_args+=(--semantic-preparation); fi
           if [[ "$SEMANTIC_RUNTIME" == "true" ]]; then work_args+=(--semantic-runtime); fi
           python3 tools/ci/build-cost-control.py --baseline "$BASELINE" --candidate "$CANDIDATE" --output "$RUNNER_TEMP/build-cost" "${work_args[@]}"
+      - name: Build the explicit Rayon control reference before measurement
+        if: ${{ inputs.process_throughput && inputs.baseline != '' }}
+        env:
+          BASELINE: ${{ inputs.baseline }}
+          CANDIDATE: ${{ inputs.candidate }}
+          CARGO_BUILD_JOBS: "3"
+          GERBIL_BUILD_CORES: "3"
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+          RUSTFLAGS: "-C link-arg=-Wl,-ld_classic"
+        run: |
+          reference="$(git rev-parse --verify --end-of-options "$BASELINE^{commit}")"
+          if [[ -n "$CANDIDATE" ]]; then
+            test "$(git rev-parse --verify --end-of-options "$CANDIDATE^{commit}")" = "$(git rev-parse HEAD)"
+          fi
+          git diff --exit-code "$reference" HEAD -- rust/Cargo.toml rust/Cargo.lock '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg rust/ascent-scheme
+          git worktree add --detach "$RUNNER_TEMP/process-reference" "$reference"
+          cargo build --release --locked --manifest-path "$RUNNER_TEMP/process-reference/rust/Cargo.toml" -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-reference-build.jsonl"
       - name: Build production process benchmark with the released SDK
         if: ${{ inputs.process_throughput }}
         env:
@@ -131,10 +149,15 @@ jobs:
       - name: Measure sustained production interface after all compilation
         if: ${{ inputs.process_throughput }}
         env:
+          BASELINE: ${{ inputs.baseline }}
           ASCENT_WORK_DISTRIBUTION: ${{ inputs.work_distribution || 'adaptive' }}
         run: |
-          benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-build.jsonl")"
-          python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
+          if [[ -n "$BASELINE" ]]; then
+            python3 tools/ci/rayon-control.py --reference-source "$RUNNER_TEMP/process-reference" --reference-build "$RUNNER_TEMP/process-reference-build.jsonl" --candidate-build "$RUNNER_TEMP/process-build.jsonl" --expected-cpus 3 --output "$RUNNER_TEMP/process-control"
+          else
+            benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-build.jsonl")"
+            python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
+          fi
       - name: Preserve production throughput and every negative observation
         if: ${{ always() && inputs.process_throughput }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -142,13 +165,15 @@ jobs:
           name: process-throughput-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/process-throughput
+            ${{ runner.temp }}/process-control
+            ${{ runner.temp }}/process-reference-build.jsonl
             ${{ runner.temp }}/process-build.jsonl
             ${{ runner.temp }}/process-build-recipe.txt
             ${{ runner.temp }}/process-binding-tests.log
             ~/Library/Logs/DiagnosticReports/ld-*.ips
           include-hidden-files: true
       - name: Preserve every control and admission record
-        if: ${{ always() && inputs.baseline != '' }}
+        if: ${{ always() && inputs.baseline != '' && !inputs.process_throughput }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: macos-build-cost-${{ github.sha }}-${{ github.run_attempt }}

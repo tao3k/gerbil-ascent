@@ -413,7 +413,9 @@ impl Session {
             &self.sources,
             limits,
             cancellation,
-            self.engine.request_fanout(),
+            // BEGIN GENERATED LIVE LINK
+            || self.engine.request_fanout(),
+            // END GENERATED LIVE LINK
             started,
         ) {
             Ok(rows) => rows,

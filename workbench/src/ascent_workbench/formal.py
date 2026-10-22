@@ -385,6 +385,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
+                ("ExecutionPolicy.lean", "stage-fanout-rust", "rust/ascent/src/execution/kernels.rs"),
+                ("ExecutionPolicy.lean", "stage-link-rust", "rust/ascent/src/session.rs"),
+                ("ExecutionPolicy.lean", "stage-fanout-quint", "packages/proofs/quint/RequestScheduling.qnt"),
                 ("ExecutionPolicy.lean", "checkpoint-rust", "rust/ascent-scheme/src/process_policy.rs"),
                 ("ExecutionPolicy.lean", "wait-result-rust", "rust/ascent-scheme/src/process_checkpoint_darwin.rs"),
                 ("ExecutionPolicy.lean", "wait-result-quint", "packages/proofs/quint/CheckpointTransport.qnt"),
@@ -479,6 +482,14 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate generated DSL region: ' + language)
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"stage-fanout-rust", "stage-link-rust", "stage-fanout-quint"}:
+                    marker = "LIVE LINK" if language == "stage-link-rust" else "LIVE FANOUT"
+                    indent = "            " if language == "stage-link-rust" else "  " if language == "stage-fanout-quint" else ""
+                    begin, end = (f'{indent}// BEGIN GENERATED {marker}\n',
+                                  f'{indent}// END GENERATED {marker}\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate live-stage source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"checkpoint-flags-rust", "checkpoint-wait-rust",
                                   "checkpoint-publish-rust", "checkpoint-cost-quint"}:

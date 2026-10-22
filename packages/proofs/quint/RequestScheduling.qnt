@@ -3,6 +3,10 @@
 module RequestScheduling {
   import ExecutionPolicy.* from "./ExecutionPolicy"
   const Mutation: str
+  // BEGIN GENERATED LIVE FANOUT
+  pure def stage_fanout(eligible: bool, current: bool): bool = eligible and current
+  pure def stage_probe(eligible: bool): int = if (eligible) 1 else 0
+  // END GENERATED LIVE FANOUT
   type State = {clock: int, phase: str, canceled: bool, entered: bool,
                 expiredAtEntry: bool, canceledAtEntry: bool,
                 failed: bool, snapshot: int, pending: int, publishedOnOwner: bool}
@@ -47,4 +51,15 @@ module RequestScheduling {
       actual == (fanout_allowed and not(across) and (within or pending < workers))
     })))))
   val FanoutExact = TypeOK and FanoutPolicy
+  pure val StagePolicy = Set(1,3,12).forall(workers => Set(1,3,12,13).forall(before =>
+    Set(1,3,12,13).forall(current => Set(false,true).forall(eligible =>
+    Set(false,true).forall(fanout_allowed => Set(false,true).forall(across => Set(false,true).forall(within => {
+      val policy = request_fanout(workers,
+        if (Mutation == "stale-stage-fanout") before else current, fanout_allowed, across, within)
+      val reads = if (Mutation == "eager-stage-probe") 1 else stage_probe(eligible)
+      stage_fanout(eligible,policy) ==
+        (eligible and fanout_allowed and not(across) and (within or current < workers)) and
+        reads == (if (eligible) 1 else 0)
+    })))))))
+  val StageExact = TypeOK and StagePolicy
 }

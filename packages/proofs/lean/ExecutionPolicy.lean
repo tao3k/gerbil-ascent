@@ -339,6 +339,47 @@ def quintSource : String :=
     let parameters := d.numbers.map (· ++ ": int") ++ d.flags.map (· ++ ": bool")
     s!"  pure def {d.name}({String.intercalate ", " parameters}): bool = {quint d.body}\n") ++ peerQuintSource ++ "}\n"
 
+
+-- A phase observes current advisory population. This does not reserve capacity
+-- against a later arrival, bound host scheduling or authorize publication.
+def stageFanout (eligible current : Bool) : Bool := eligible && current
+def stageProbe (eligible : Bool) : Nat := if eligible then 1 else 0
+
+theorem ineligible_stage_does_not_probe : stageProbe false = 0 := by rfl
+
+theorem eligible_stage_reads_current (current : Bool) :
+    stageFanout true current = current := by simp [stageFanout]
+
+theorem saturated_stage_does_not_fanout (numbers : String → Nat) (flags : String → Bool)
+    (eligible : Bool) (adaptive : flags "within" = false)
+    (full : numbers "workers" ≤ numbers "pending") :
+    stageFanout eligible (eval numbers flags requestFanout) = false := by
+  rw [saturated_adaptive_never_fans_out numbers flags adaptive full]
+  simp [stageFanout]
+
+theorem retired_population_can_fanout (numbers : String → Nat) (flags : String → Bool)
+    (enabled : flags "fanout_allowed" = true) (across : flags "across" = false)
+    (free : numbers "pending" < numbers "workers") :
+    stageFanout true (eval numbers flags requestFanout) = true := by
+  simp [stageFanout, eval, requestFanout, Number.value, enabled, across, free]
+
+def stageProbeCost : List Bool → Nat
+  | [] => 0
+  | eligible :: rest => stageProbe eligible + stageProbeCost rest
+
+theorem stage_probe_cost_bound (boundaries : List Bool) :
+    stageProbeCost boundaries ≤ boundaries.length := by
+  induction boundaries with
+  | nil => simp [stageProbeCost]
+  | cons eligible rest ih =>
+    cases eligible <;> simp_all [stageProbeCost, stageProbe] <;> omega
+
+-- The caller's observed population and Rust/atomic semantics remain premises.
+-- This source binds the lazy delegate read, not a universal latency theorem.
+def stageRustSource : String := "#[cfg(feature = \"rayon\")]\n#[inline]\nfn stage_fanout(eligible: bool, current: &(dyn Fn() -> bool + Sync)) -> bool {\n    eligible && current()\n}\n"
+def stageLinkRustSource : String := "            || self.engine.request_fanout(),\n"
+def stageQuintSource : String := "  pure def stage_fanout(eligible: bool, current: bool): bool = eligible and current\n  pure def stage_probe(eligible: bool): int = if (eligible) 1 else 0\n"
+
 end Ascent.ExecutionPolicy
 
 /-! The executable admission decision, not a model of elapsed-time prediction.
@@ -566,6 +607,9 @@ def renderedSource (name : String) : IO String := do
   | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
+  | "stage-fanout-rust" => pure Ascent.ExecutionPolicy.stageRustSource
+  | "stage-link-rust" => pure Ascent.ExecutionPolicy.stageLinkRustSource
+  | "stage-fanout-quint" => pure Ascent.ExecutionPolicy.stageQuintSource
   | "checkpoint-rust" => pure Ascent.ExecutionPolicy.peerRustSource
   | "wait-result-rust" => pure Ascent.ExecutionPolicy.waitErrorRustSource
   | "wait-result-quint" => pure Ascent.ExecutionPolicy.waitErrorQuintSource

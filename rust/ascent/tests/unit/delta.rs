@@ -176,7 +176,7 @@ fn delta_actual_kernel_witness_counts_exclude_all_old_and_duplicate_fresh_joins(
             None,
             std::time::Instant::now(),
         );
-        let actual = evaluate_budgeted(&graph, &sources, &budget, parallel).unwrap();
+        let actual = evaluate_budgeted(&graph, &sources, &budget, || parallel).unwrap();
         for (i, relation) in ["edge", "p", "q"].iter().enumerate() {
             assert_eq!(
                 actual[i].iter().cloned().collect::<BTreeSet<_>>(),
@@ -253,5 +253,90 @@ fn delta_provenance_retains_alternatives_discovered_after_the_head_fact() {
             .unwrap();
         missing.edges.remove(index);
         assert!(!proof.verify(&missing, &proof_limits, &cancel).unwrap());
+    }
+}
+
+#[cfg(feature = "rayon")]
+#[test]
+fn actual_stages_recheck_population_changes_after_first_eligible_boundary() {
+    use crate::execution::work::Work;
+    use std::sync::Mutex;
+    let probes = std::sync::atomic::AtomicUsize::new(0);
+    let current = || {
+        probes.fetch_add(1, Ordering::Relaxed);
+        true
+    };
+    assert!(!super::stage_fanout(false, &current));
+    assert_eq!(probes.load(Ordering::Relaxed), 0);
+    assert!(super::stage_fanout(true, &current));
+    assert_eq!(probes.load(Ordering::Relaxed), 1);
+    let graph = Graph::build(Program {
+        relations: vec![
+            Relation::new("edge", vec![Type::Integer; 2], true),
+            Relation::new("p", vec![Type::Integer; 2], false),
+            Relation::new("q", vec![Type::Integer; 2], false),
+        ],
+        rules: vec![
+            rule(("p", &[0, 1]), &[("edge", &[0, 1])]),
+            rule(("q", &[0, 1]), &[("edge", &[0, 1])]),
+        ],
+        relation_limit: None,
+        fact_limits: crate::FactLimits::default(),
+    })
+    .unwrap();
+    let edges: Vec<crate::Row> = (0..8192)
+        .map(|i| vec![Value::from(i), Value::from(i + 1)].into())
+        .collect();
+    let expected = edges.iter().cloned().collect::<BTreeSet<_>>();
+    for initially_busy in [false, true] {
+        let work = Work::default();
+        let _evaluation = work.enter().unwrap();
+        let arrivals = Mutex::new(Vec::new());
+        if initially_busy {
+            arrivals
+                .lock()
+                .unwrap()
+                .extend([work.enter().unwrap(), work.enter().unwrap()]);
+        }
+        let observed = Mutex::new(Vec::new());
+        let fanout = || {
+            let allowed = work.fanout(3, true);
+            let first = observed.lock().unwrap().is_empty();
+            observed.lock().unwrap().push(allowed);
+            if first {
+                if initially_busy {
+                    arrivals.lock().unwrap().clear();
+                } else {
+                    arrivals
+                        .lock()
+                        .unwrap()
+                        .extend([work.enter().unwrap(), work.enter().unwrap()]);
+                }
+            }
+            allowed
+        };
+        let budget = Budget::new(
+            &Limits::default(),
+            &Cancellation::default(),
+            3,
+            crate::FactLimits::default(),
+            None,
+            std::time::Instant::now(),
+        );
+        let rows =
+            evaluate_budgeted(&graph, &[edges.clone(), vec![], vec![]], &budget, fanout).unwrap();
+        let decisions = observed.lock().unwrap();
+        assert!(decisions.len() >= 5);
+        assert_eq!(decisions[0], !initially_busy);
+        assert!(
+            decisions[1..]
+                .iter()
+                .all(|decision| *decision == initially_busy)
+        );
+        assert_eq!(rows[0].iter().cloned().collect::<BTreeSet<_>>(), expected);
+        assert_eq!(rows[1].iter().cloned().collect::<BTreeSet<_>>(), expected);
+        assert_eq!(rows[2].iter().cloned().collect::<BTreeSet<_>>(), expected);
+        assert_eq!(budget.matches.load(Ordering::Relaxed), 2 * edges.len());
+        assert_eq!(budget.witnesses.load(Ordering::Relaxed), 2 * edges.len());
     }
 }

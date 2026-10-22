@@ -1899,7 +1899,7 @@
   "RequestScheduling": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication"
+      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact"
     },
     "faults": [
       [
@@ -1935,6 +1935,16 @@
       [
         "unbounded-fanout",
         "FanoutExact",
+        12
+      ],
+      [
+        "stale-stage-fanout",
+        "StageExact",
+        12
+      ],
+      [
+        "eager-stage-probe",
+        "StageExact",
         12
       ]
     ]

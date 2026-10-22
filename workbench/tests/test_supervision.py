@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from ascent_workbench.supervision import proc_group_cpu, darwin_process_cpu
+from ascent_workbench.supervision import proc_group_cpu, darwin_process_cpu, signal_group
 
 
 class BuildActivity(unittest.TestCase):
@@ -137,3 +137,35 @@ class SeparateStreams(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class GroupSignalRaces(unittest.TestCase):
+    def test_darwin_zombie_only_and_disappeared_groups_are_already_drained(self):
+        for snapshot in ('42 Z\n99 S\n', '99 S\n'):
+            with self.subTest(snapshot=snapshot), patch('sys.platform', 'darwin'), \
+                    patch('os.killpg', side_effect=PermissionError(1, 'no signal target')), \
+                    patch('subprocess.run', return_value=subprocess.CompletedProcess([], 0, stdout=snapshot)):
+                signal_group(42, 9)
+
+    def test_darwin_live_member_permission_failure_remains_fatal(self):
+        with patch('sys.platform', 'darwin'), patch('os.killpg', side_effect=PermissionError(1, 'live target')), \
+                patch('subprocess.run', return_value=subprocess.CompletedProcess([], 0, stdout='42 Z\n42 S\n')), \
+                self.assertRaises(PermissionError):
+            signal_group(42, 9)
+
+    def test_unverifiable_group_is_not_admitted_as_drained(self):
+        for failure in (subprocess.TimeoutExpired('ps', 1), OSError('unavailable')):
+            with self.subTest(failure=failure), patch('sys.platform', 'darwin'), \
+                    patch('os.killpg', side_effect=PermissionError(1, 'unknown target')), \
+                    patch('subprocess.run', side_effect=failure), self.assertRaises(PermissionError):
+                signal_group(42, 9)
+        with patch('sys.platform', 'darwin'), patch('os.killpg', side_effect=PermissionError(1, 'unknown target')), \
+                patch('subprocess.run', return_value=subprocess.CompletedProcess([], 0, stdout='malformed')), \
+                self.assertRaises(PermissionError):
+            signal_group(42, 9)
+
+    def test_other_platform_permission_failure_is_not_reinterpreted(self):
+        with patch('sys.platform', 'linux'), patch('os.killpg', side_effect=PermissionError(1, 'denied')), \
+                patch('subprocess.run') as observe, self.assertRaises(PermissionError):
+            signal_group(42, 9)
+        observe.assert_not_called()

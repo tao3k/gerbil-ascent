@@ -3334,3 +3334,88 @@ owners do not implicitly execute them after a revision update. Upstream's own
 selective-wake report retains CPU p99 regressions and keeps broadcast as default.
 Dependency compatibility is therefore not claimed as routing adaptation or a
 measured performance gain.
+
+* Live phase observations and isolated on-demand control
+
+The sampled twelve-thread owned-data path still entered nested Rayon result
+materialization. Source inspection found that the kernel retained the fanout
+Boolean observed at evaluation entry across later joins, publication and decoding.
+Meanwhile the existing evaluation population could grow or retire. The change
+passes a borrowed, Sync Rust policy callback and observes that same ledger at
+eligible phase boundaries. It preserves the existing ledger lifetime through
+snapshot publication, every budget poll, work/fact charge and final acceptance
+check. It neither reserves capacity against a subsequent arrival nor schedules
+Scheme objects on Rayon. The larger request-lifetime experiment remains rejected.
+
+The actual compiled regression creates two derived copies of 8192 source rows.
+It changes the real population from one to three and three to one after the first
+eligible boundary, requires at least five policy observations, checks
+both complete result sets independently and retains exactly 16384 matches and
+witnesses. An ineligible helper must perform zero callback reads; an eligible
+helper performs one. The universal Lean laws cover saturated and retired observed
+populations and bound policy reads by attempted boundaries. Exact renders bind
+the lazy Rust helper, production callback link and Quint leaf. RequestScheduling
+adds required stale-stage and eager-probe counterexamples without deleting its
+original queue, cancellation, failed-publication or owner checks. These are scoped
+selector/source bindings, with Rust/compiler, atomic observation and host behavior
+as premises; full mutable-cache, SCC and Actor/C ABI refinement remains open.
+
+The private decode-only A/B/B/A retained four valid twelve-thread arms, but its
+roughly one-percent fixed-work difference and drifting soak controls did not admit
+a benefit. Its single-thread candidate arm was contaminated by a foreign Lean
+compiler. The subsequent full-phase control was also rejected when unrelated
+GCC/Clang/Cargo work appeared during its first reference arm. Those observations
+are retained and are not resampled until a favorable outcome.
+
+The existing explicit process_throughput experiment now accepts its existing
+baseline input as a Rayon control reference. This mode creates a detached reference
+checkout, builds both executable pairs before measurement and requires identical
+Cargo dependencies, Scheme/C ABI inputs and production benchmark sources. It then
+runs fixed A/B/B/A at twelve and one Rayon threads with the original large workload,
+twelve clients, five fixed samples, thirty-second soak and 240-second row limit.
+The complete native binding prerequisite remains before measurement. The original
+24-row VM/Rayon matrix remains the default when no baseline is supplied; CR does
+not acquire a new mandatory comparison. The original single-row runner was
+extracted for reuse: its normalized admission AST is unchanged, SHA-256
+=8e8c91ff550b7e9b2d596574001556d5a045c03ce2a00f640fbedc7593fb6a2f=.
+Every invalid arm and compiler observation is retained, and a partial comparison
+has no admitted ratio. The existing ninety-minute experiment job is unchanged.
+
+A separate local checkout of e6e9bb4c built a coherent benchmark/worker pair using
+the selected canonical production prefix and frozen SDK. Its small native semantic
+smoke passed with twelve Rust threads and one single-processor VM. This validates
+the relocated-checkout/prefix path, not performance. The first diagnostic command
+incorrectly supplied a zero soak argument, which the original benchmark rejects;
+its fixed sample had completed, but that invocation remains failed. The corrected
+smoke omits the optional soak argument. All actual performance runs retain thirty
+seconds. The temporary managed checkout was archived after preserving its pair.
+
+** Verified Darwin supervision exit race
+
+The first complete 109-case workbench run failed one existing test: a child exiting
+7 with an orphan pipe owner was reported as exit 1 because final killpg raised
+EPERM. Apple XNU excludes zombies from process-group signal iteration and returns
+EPERM when the existing group contains no signalable member:
+https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/kern_sig.c .
+A single owned zombie-only group reproduced state Z and errno 1 before its normal
+reap. This is a caller cleanup interpretation defect, not an SDK/compiler failure.
+
+The supervisor now accepts Darwin EPERM only after a successful bounded process
+snapshot shows that the target group is absent or zombie-only. A live member,
+malformed/unavailable snapshot or non-Darwin permission error remains fatal.
+Signal escalation, the child wait budget and all watchdog limits are unchanged.
+The native zombie fixture then passed through the corrected helper; all eighteen
+supervision tests, including four new fail-closed controls, passed. The original
+failed full run remains retained; full post-fix qualification is still required.
+
+The final complete local qualification passed 70 binding cases at twelve threads
+with zero retries/skips (88.281 seconds), 83 Rust-profile workspace cases and
+66 serial cases. All three relevant strict all-target Clippy commands passed
+without lint allowances. The complete guarded formal run passed 58 models,
+72 positive checks and 421 required counterexamples, then the Lean build and
+all exact source renders, including the three live-stage bindings. The focused
+Lean Guard used 736083968 bytes and zero additional helper threads, within the
+original -M1024/-T10000000 limits. The complete post-cleanup workbench suite
+passed all 113 cases in 69.096 seconds with no skips. It used the existing local
+Python development environment; the freshly built published-head wheel and all
+remote semantics/matrix/control qualifications remain separate required evidence.

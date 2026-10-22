@@ -124,12 +124,32 @@ def proc_group_cpu(root: Path, group: int, ticks: int) -> dict[int, float]:
     return result
 
 
+def signal_group(group: int, signum: int) -> None:
+    try:
+        os.killpg(group, signum)
+    except PermissionError as denied:
+        if sys.platform != 'darwin':
+            raise
+        # XNU excludes zombies from group signalling, then reports EPERM when
+        # none were signallable. Accept only an absent or zombie-only group.
+        # A live member, unreadable snapshot or malformed result fails closed.
+        try:
+            snapshot = subprocess.run(['/bin/ps', '-A', '-o', 'pgid=,stat='],
+                                      capture_output=True, text=True, check=True, timeout=1)
+            members = [state for line in snapshot.stdout.splitlines() if line.strip()
+                       for pgid, state in [line.split()] if int(pgid) == group]
+        except (OSError, ValueError, subprocess.SubprocessError):
+            raise denied
+        if any(not state.startswith('Z') for state in members):
+            raise
+
+
 def stop_group(child: subprocess.Popen[bytes]) -> None:
     try:
-        os.killpg(child.pid, signal.SIGTERM)
+        signal_group(child.pid, signal.SIGTERM)
         child.wait(timeout=1)
     except subprocess.TimeoutExpired:
-        os.killpg(child.pid, signal.SIGKILL)
+        signal_group(child.pid, signal.SIGKILL)
         child.wait()
     except ProcessLookupError:
         pass
@@ -137,7 +157,7 @@ def stop_group(child: subprocess.Popen[bytes]) -> None:
         # A completed leader can leave compiler descendants holding pipe FDs.
         # The supervisor owns this process group, including those descendants.
         try:
-            os.killpg(child.pid, signal.SIGKILL)
+            signal_group(child.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
 

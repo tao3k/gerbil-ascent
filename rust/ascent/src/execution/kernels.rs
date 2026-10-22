@@ -47,6 +47,14 @@ fn project(terms: &[Pattern], bindings: &Bindings) -> Option<Row> {
     }
 }
 
+// BEGIN GENERATED LIVE FANOUT
+#[cfg(feature = "rayon")]
+#[inline]
+fn stage_fanout(eligible: bool, current: &(dyn Fn() -> bool + Sync)) -> bool {
+    eligible && current()
+}
+// END GENERATED LIVE FANOUT
+
 enum Lookup {
     One {
         column: usize,
@@ -167,13 +175,15 @@ fn ordered_reduction_rows<'a>(
     });
     std::borrow::Cow::Owned(ordered)
 }
-pub(crate) struct Store {
+pub(crate) struct Store<'a> {
     lattices: Vec<Option<crate::LatticeJoin>>,
     values: RwLock<super::Values>,
     all: Vec<Index>,
     delta: Vec<Index>,
     #[cfg(feature = "rayon")]
-    parallel: bool,
+    parallel: &'a (dyn Fn() -> bool + Sync),
+    #[cfg(not(feature = "rayon"))]
+    _parallel: std::marker::PhantomData<&'a ()>,
     initial_occurrences: Vec<bool>,
 }
 
@@ -207,7 +217,7 @@ impl Batch {
         .then_some(&store.delta[atom.relation]);
         let extend = |bindings: &[Bindings]| join_group(index, atom, bindings, budget, excluded);
         #[cfg(feature = "rayon")]
-        if store.parallel && self.0.len() >= TASK_ROWS * 2 {
+        if stage_fanout(self.0.len() >= TASK_ROWS * 2, store.parallel) {
             return Self(
                 self.0
                     .par_chunks(TASK_ROWS)
@@ -216,7 +226,7 @@ impl Batch {
             );
         }
         #[cfg(feature = "rayon")]
-        if store.parallel && self.0.len() == 1 {
+        if stage_fanout(self.0.len() == 1, store.parallel) {
             let prior = &self.0[0];
             let rows = index.candidates(atom, prior);
             if rows.len() >= TASK_ROWS * 2 {
@@ -457,7 +467,7 @@ fn join_group(
 
 struct Projection<'a> {
     rule: &'a Rule,
-    store: &'a Store,
+    store: &'a Store<'a>,
     budget: &'a Budget,
     unique: FactSet,
     pending: Vec<Fact>,
@@ -548,7 +558,7 @@ impl Projection<'_> {
 
 pub(crate) struct Round<'a> {
     graph: &'a Graph,
-    store: Store,
+    store: Store<'a>,
     budget: &'a Budget,
     stratum: usize,
     first: bool,
@@ -585,7 +595,7 @@ impl Round<'_> {
             1_usize
         };
         #[cfg(feature = "rayon")]
-        let completed = if self.store.parallel {
+        let completed = if stage_fanout(tasks.len() > 1, self.store.parallel) {
             tasks.par_iter().map(apply).sum()
         } else {
             tasks.iter().map(apply).sum()
@@ -625,10 +635,10 @@ impl Round<'_> {
             })
             .collect();
         #[cfg(feature = "rayon")]
-        let admitted: usize = if self.store.parallel
-            && tasks.len() > 1
-            && tasks.iter().map(|task| task.rows).sum::<usize>() >= 512
-        {
+        let admitted: usize = if stage_fanout(
+            tasks.len() > 1 && tasks.iter().map(|task| task.rows).sum::<usize>() >= 512,
+            self.store.parallel,
+        ) {
             tasks
                 .into_par_iter()
                 .map(|task| task.commit(self.budget))
@@ -828,7 +838,7 @@ pub(crate) fn evaluate(
     sources: &[Vec<crate::Row>],
     limits: &Limits,
     cancellation: &Cancellation,
-    parallel: bool,
+    parallel: impl Fn() -> bool + Sync,
     started: std::time::Instant,
 ) -> Result<Vec<Vec<crate::Row>>> {
     #[cfg(not(feature = "rayon"))]
@@ -856,7 +866,7 @@ fn evaluate_budgeted(
     graph: &Graph,
     sources: &[Vec<crate::Row>],
     budget: &Budget,
-    parallel: bool,
+    parallel: impl Fn() -> bool + Sync,
 ) -> Result<Vec<Vec<crate::Row>>> {
     #[cfg(not(feature = "rayon"))]
     let _ = parallel;
@@ -877,7 +887,9 @@ fn evaluate_budgeted(
             .map(|shapes| Index::new(shapes))
             .collect(),
         #[cfg(feature = "rayon")]
-        parallel,
+        parallel: &parallel,
+        #[cfg(not(feature = "rayon"))]
+        _parallel: std::marker::PhantomData,
     };
     let mut round = Round {
         graph,
@@ -909,7 +921,7 @@ fn evaluate_budgeted(
             {
                 sources[relation].clone()
             } else {
-                decode_rows(index, &values, budget, parallel)
+                decode_rows(index, &values, budget, &parallel)
             }
         })
         .collect();
@@ -920,7 +932,7 @@ fn decode_rows(
     index: Index,
     values: &super::Values,
     budget: &Budget,
-    parallel: bool,
+    parallel: &(dyn Fn() -> bool + Sync),
 ) -> Vec<crate::Row> {
     let Index {
         rows,
@@ -935,7 +947,9 @@ fn decode_rows(
         ((i % CHUNK != 0 || budget.poll()) && budget.active()).then(|| values.decode(&row))
     };
     #[cfg(feature = "rayon")]
-    if parallel && rows.len() >= 8192 {
+    // Work may have arrived since evaluation entry. Recheck the same advisory
+    // population at this phase boundary; every decoder budget poll is retained.
+    if stage_fanout(rows.len() >= 8192, parallel) {
         return rows
             .into_par_iter()
             .enumerate()

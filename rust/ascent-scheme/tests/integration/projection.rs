@@ -154,6 +154,15 @@ fn checked_native_proofs_revalidate_current_mutable_source_support() {
             .verify(&graph, &ProvenanceLimits::default(), &cancel)
             .is_err()
     );
+    // A foreign candidate must not hide mutation of this proof's same-generation
+    // source payload: live fingerprint admission precedes candidate rejection.
+    let mut foreign = (*graph).clone();
+    foreign.source_identity = foreign.source_identity.checked_add(1).unwrap();
+    assert!(
+        proof
+            .verify(&foreign, &ProvenanceLimits::default(), &cancel)
+            .is_err()
+    );
     assert!(proof.graph().is_err());
     let current = session
         .provenance(handle, "out", &ProvenanceLimits::default(), &cancel)

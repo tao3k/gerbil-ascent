@@ -27,7 +27,7 @@ struct Observation {
 }
 fn integer(value: &Value) -> usize {
     match value {
-        Value::Integer(v) => v.to_string().parse().unwrap(),
+        Value::Integer(v) => usize::try_from(v).unwrap(),
         _ => panic!("integer cell required"),
     }
 }
@@ -254,14 +254,16 @@ fn run_soak(
                 start.wait();
                 let mut count = 0_u64;
                 let mut latency = 0_u128;
-                let mut maximum = 0_u128;
+                let mut maximum = (0_u128, 0_u128, 0_u128, 0_usize);
                 let mut histogram = vec![0_u64; 65_536];
                 while epoch.get().unwrap().elapsed() < duration {
                     let task = next.fetch_add(1, Ordering::Relaxed);
                     let row = execute(session, task, groups, width);
                     count += 1;
                     latency += row.latency_ns;
-                    maximum = maximum.max(row.latency_ns);
+                    if row.latency_ns > maximum.0 {
+                        maximum = (row.latency_ns, row.replace_ns, row.run_export_ns, row.task);
+                    }
                     let bucket = usize::try_from((row.latency_ns / 100_000).min(65_535)).unwrap();
                     histogram[bucket] += 1;
                 }
@@ -272,13 +274,20 @@ fn run_soak(
         pool.reset_statistics();
         epoch.set(Instant::now()).unwrap();
         start.wait();
-        let mut total = (0_u64, 0_u128, 0_u128, vec![0_u64; 65_536]);
+        let mut total = (
+            0_u64,
+            0_u128,
+            (0_u128, 0_u128, 0_u128, 0_usize),
+            vec![0_u64; 65_536],
+        );
         let mut minimum = u64::MAX;
         for handle in handles {
             let (count, latency, maximum, histogram) = handle.join().unwrap();
             total.0 += count;
             total.1 += latency;
-            total.2 = total.2.max(maximum);
+            if maximum.0 > total.2.0 {
+                total.2 = maximum;
+            }
             minimum = minimum.min(count);
             for (sum, count) in total.3.iter_mut().zip(histogram) {
                 *sum += count;
@@ -310,7 +319,7 @@ fn run_soak(
 struct SoakSample {
     count: u64,
     latency: u128,
-    maximum: u128,
+    maximum: (u128, u128, u128, usize),
     histogram: Vec<u64>,
     minimum: u64,
     elapsed: std::time::Duration,
@@ -329,6 +338,11 @@ fn report_soak(
         minimum,
         elapsed,
     } = sample;
+    let (maximum, replace_ns, run_export_ns, task) = maximum;
+    let validation_ns = maximum
+        .checked_sub(replace_ns)
+        .and_then(|remaining| remaining.checked_sub(run_export_ns))
+        .expect("nonoverlapping phases of the same longest request");
     assert!(count > 0 && minimum > 0 && elapsed >= duration);
     assert_eq!(histogram.iter().sum::<u64>(), count);
     let p50 = percentile_bounds(&histogram, count, 50, maximum);
@@ -337,7 +351,7 @@ fn report_soak(
         .map(|i| pool.owner(i).unwrap().statistics())
         .collect();
     eprintln!(
-        "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={} shared_checkpoints={}",
+        "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={} shared_checkpoints={} slowest_schema=same-request-v1",
         duration.as_nanos(),
         elapsed.as_nanos(),
         f64::from(u32::try_from(count).unwrap()) / elapsed.as_secs_f64(),
@@ -354,6 +368,11 @@ fn report_soak(
         stats.iter().map(|s| s.calls).sum::<u64>(),
         stats.iter().map(|s| s.checkpoints).sum::<u64>(),
         stats.iter().map(|s| s.shared_checkpoints).sum::<u64>()
+    );
+    // Emitted after measurement. Keep the independent oracle and all original
+    // latency/histogram fields; this is one request, not unrelated phase maxima.
+    eprintln!(
+        "PROCESS-SLOWEST {header} task={task} total_ns={maximum} replace_ns={replace_ns} run_export_ns={run_export_ns} validation_ns={validation_ns}"
     );
 }
 // Exact bucket counts bound each quantile. The overflow bucket's upper bound

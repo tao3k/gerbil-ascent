@@ -1,0 +1,81 @@
+#+TITLE: Checked request costs and live provenance admission
+#+DATE: 2026-10-23
+
+* Measurement boundary
+The published three-CPU matrix at 5de560ad recorded 457.047250 ms for the
+longest large Rayon request with twelve clients and twelve Rust workers.
+This interval includes source replacement, run/export, integer extraction,
+independent expected-answer construction, sorting, equality checking, and SHA
+updates. It is not an isolated inference-kernel measurement. That historical
+receipt did not retain the phase partition of its longest request. Its
+independent phase medians cannot reconstruct that partition.
+
+The common benchmark now carries the total, replacement, run/export, and task
+identifier together whenever it selects a maximum. It emits the partition
+after measurement. The driver checks the identity, unique schema, maximum,
+nonnegative components, and exact sum. The original full answer oracle, input
+sizes, five fixed samples, thirty-second soak, compiler-isolation audit,
+twelve clients, and 240-second row limit remain required. Historical receipts
+without this partition remain explicitly unknown.
+
+* Remove avoidable fixture conversion
+Rust integer result cells now use checked integer conversion directly instead
+of formatting a decimal string and parsing it back. The large request has
+30,720 two-column output rows, so this removes 61,440 temporary string
+round trips from extraction. This is benchmark conversion work, not evidence
+of an inference-kernel speedup. Both arms of a kernel comparison use the same
+conversion and observation code.
+
+* Refuse unsupported proofs without unused projection
+Current live generation remains mandatory under the same cancellation and
+deadline control. Unsupported evidence has no fingerprint and cannot verify.
+This path uses the existing Scheme source-status RPC rather than materializing
+an unused program projection. Supported proofs still re-read the full projection
+and compare its fingerprint BEFORE rejecting foreign candidates. Same-generation
+mutable object changes cannot be detected from a generation counter alone.
+Eligible candidates then replay with the remaining deadline and recheck live
+fingerprint authority afterward. No fingerprint or replay result is cached.
+
+The two Scheme RPCs read source-state-generation through the same source lookup.
+A compiled native regression compares their actual generations across source
+replacement. Separate regressions preserve cancellation, an exhausted proof
+budget, closed owners, unsupported invalidation, and full fingerprint admission
+before foreign-candidate refusal after a same-generation payload mutation.
+These tests do not establish formal equivalence of all C ABI or Scheme behavior.
+
+The Lean-rendered Rust branch binds projection choice to fingerprint presence.
+The Quint model retains owner, generation, cancellation, deadline, fingerprint,
+unsupported refusal, and unused projection controls. Additional counterexamples
+reject skipping fingerprints for foreign candidates or verifying foreign proofs.
+It models admission; it is not a proof of the Scheme RPC implementation.
+
+* Frozen integration cohort
+The active gerbil-scheme-rust dependencies are pinned to
+079be2bc5a52d8cea225a76203d223f78bfd182f, captured from its existing PR.
+The retired artifact-IR dependency remains separately pinned. The native SDK
+remains Gerbil 1cfb032 / Gambit ea114fc. Updating the dependency does not claim
+that its optional short-request router is used by the external process pool.
+
+Twelve resident Scheme processes retain one single-threaded VM each. Rust
+retains twelve workers. The three-CPU configuration, Linux 180-second and macOS
+600-second source semantic limits, cancellation, resource limits, and provenance
+checks remain in place.
+
+* Evidence and unresolved acceptance
+Published head 4024319b passed all eleven main CI jobs and its macOS source
+semantics. Its separate matrix stopped at 69/70 native prerequisites: an
+unsupported proof verification exhausted its original one-second deadline.
+Its separate control experiment also stopped at 69/70, on verification after a
+same-generation mutable payload change. Neither run produced admitted performance data.
+These failures are retained rather than rerun to obtain green results.
+
+The first local twelve-logical-CPU diagnostic row was rejected because other
+Lean and Scheme compiler processes appeared during measurement. Subsequent
+rows were not run. Its elapsed times are excluded from benefit claims. The
+saved executable pairs and rejection log remain available for audit. This
+shared local host is not the three-CPU acceptance runner.
+
+Exact candidate tests, remote CI, and isolated matched performance results must
+be recorded before claiming end-to-end improvement. Remaining obligations
+include physical cumulative allocation, complete mutable-cache and SCC source
+refinement, Actor/Rayon message conversion, and the Scheme/C ABI source boundary.

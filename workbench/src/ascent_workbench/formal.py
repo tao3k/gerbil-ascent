@@ -385,6 +385,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
+                ("ExecutionPolicy.lean", "proof-authority-rust", "rust/ascent-scheme/src/api/session.rs"),
                 ("ExecutionPolicy.lean", "capacity-rust", "rust/ascent/src/execution/work.rs"),
                 ("ExecutionPolicy.lean", "capacity-quint", "packages/proofs/quint/RequestScheduling.qnt"),
                 ("ExecutionPolicy.lean", "stage-fanout-rust", "rust/ascent/src/execution/kernels.rs"),
@@ -484,6 +485,11 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate generated DSL region: ' + language)
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "proof-authority-rust":
+                    begin, end = '        // BEGIN GENERATED PROOF AUTHORITY READ\n', '        // END GENERATED PROOF AUTHORITY READ\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate proof authority read source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"capacity-rust", "capacity-quint"}:
                     indent = "  " if language == "capacity-quint" else ""

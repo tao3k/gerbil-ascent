@@ -88,6 +88,31 @@ def ownedRowRustSource : String :=
 def ownedRowQuintSource : String :=
   "  pure def TupleTemporaryCalls(rows: List[Row]): int = rows.foldl(0, (n,row) => n + (if (row.length() == 0) 0 else 1))\n  pure def TupleTemporaryBytes(rows: List[Row], valueBytes: int): int = rows.foldl(0, (n,row) => n + row.length() * valueBytes)\n  pure def TupleDirectCalls(rows: List[Row]): int = rows.length()\n  pure def TupleStagedCalls(rows: List[Row]): int = TupleDirectCalls(rows) + TupleTemporaryCalls(rows)\n"
 
+
+-- All three components belong to one measured request. This does not attribute
+-- a host elapsed interval to CPU, waiting, GC, or the SDK scheduler.
+def sameRequestPartition (total replace exported validation : Nat) : Prop :=
+  total = replace + exported + validation
+
+theorem same_request_excludes_validation (total replace exported validation : Nat)
+    (partition : sameRequestPartition total replace exported validation) :
+    total - (replace + exported) = validation := by
+  simp only [sameRequestPartition] at partition
+  omega
+
+theorem mixed_phase_maxima_rejected : ¬ sameRequestPartition 10 8 7 1 := by simp [sameRequestPartition]
+
+-- Only generation is consumed when no content fingerprint exists. Unsupported
+-- evidence still returns false; this choice creates no provenance authority.
+def proofAuthorityRead (hasFingerprint : Bool) : Bool := hasFingerprint
+
+theorem fingerprint_read_preserved : proofAuthorityRead true = true := rfl
+
+theorem metadata_read_suffices_without_fingerprint : proofAuthorityRead false = false := rfl
+
+def proofAuthorityRustSource : String :=
+  "        let status = if self.fingerprint.is_some() {\n            self.owner.current_projection(control)?\n        } else {\n            self.owner.current_status(control)?\n        };\n"
+
 end Ascent.LookupCost
 #print axioms Ascent.LookupCost.admission_deduplication
 #print axioms Ascent.LookupCost.canonical_columns_in_range
@@ -98,3 +123,9 @@ end Ascent.LookupCost
 #print axioms Ascent.LookupCost.tuple_erasure_exact
 #print axioms Ascent.LookupCost.temporary_tuple_removed
 #print axioms Ascent.LookupCost.observed_closure_temporary_bytes
+
+#print axioms Ascent.LookupCost.same_request_excludes_validation
+#print axioms Ascent.LookupCost.mixed_phase_maxima_rejected
+
+#print axioms Ascent.LookupCost.fingerprint_read_preserved
+#print axioms Ascent.LookupCost.metadata_read_suffices_without_fingerprint

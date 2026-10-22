@@ -51,6 +51,27 @@ def request_phases(stdout, tasks, samples):
             "checked_fixed_work_requests": len(observed)}
 
 
+def longest_request(traces, soaks, first_task=0):
+    """Admit one request's partition, never independent per-phase maxima."""
+    schema = soaks[0].get("slowest_schema") if len(soaks) == 1 else None
+    if not traces and schema is None:
+        return None  # Historical receipts did not capture this partition.
+    if schema != "same-request-v1" or len(traces) != 1 or len(soaks) != 1:
+        raise ValueError("missing or repeated same-request phase evidence")
+    trace, soak = traces[0], soaks[0]
+    if any(trace[k] != soak[k] for k in ("mode", "vms", "rust_threads", "clients")):
+        raise ValueError("foreign same-request phase evidence")
+    values = {k: int(trace[k]) for k in
+              ("task", "total_ns", "replace_ns", "run_export_ns", "validation_ns")}
+    if (min(values.values()) < 0
+            or not first_task <= values["task"] < first_task + int(soak["completed_requests"])
+            or values["total_ns"] != int(soak["max_ns"])
+            or sum(values[k] for k in ("replace_ns", "run_export_ns", "validation_ns"))
+            != values["total_ns"]):
+        raise ValueError("invalid same-request phase partition")
+    return values
+
+
 def run_case(args, case, configuration, work_distribution):
     """Run one original fixed-work row with exactly the shared admission rules."""
     name, tasks, groups, width = case
@@ -90,6 +111,7 @@ def run_case(args, case, configuration, work_distribution):
     samples = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SAMPLE ")]
     identities = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-OWNER ")]
     soaks = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SOAK ")]
+    slowest = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-SLOWEST ")]
     ready = [fields(line) for line in stderr.splitlines() if line.startswith("PROCESS-READY ")]
     soak_valid = (len(soaks) == 1 and soaks[0]["mode"] == mode
                   and soaks[0]["vms"] == str(owners)
@@ -122,8 +144,9 @@ def run_case(args, case, configuration, work_distribution):
         errors.append(f"invalid checkpoint observations: {error}")
     try:
         phases = request_phases(stdout, tasks, 5)
-    except (ValueError, TypeError) as error:
-        phases = {}
+        longest = longest_request(slowest, soaks, 5 * tasks + 12)
+    except (ValueError, TypeError, KeyError) as error:
+        phases, longest = {}, None
         errors.append(str(error))
     valid = (status == 0 and soak_valid and checkpoint_valid and len(samples) == 5
              and len(ready) == 1 and ready[0].get("work_distribution") == work_distribution
@@ -142,7 +165,7 @@ def run_case(args, case, configuration, work_distribution):
            "expected_rows_per_request": groups * width * (width - 1) // 2,
            "checkpoint_transport": transport,
            "request_phases": phases, "command": command, "status": status,
-           "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "owners": identities,
+           "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "slowest": slowest, "longest_request": longest, "owners": identities,
            "foreign_compilers": audit, "audit_errors": errors, "valid": valid}
     if valid:
         row["median_throughput_per_second"] = statistics.median(float(value["throughput_per_s"]) for value in samples)

@@ -554,6 +554,15 @@ impl RuleSession {
         let program = gerbil_ascent::Catalog::read(projection.field("program")?)?.program;
         Ok(Some((program, projection.digest())))
     }
+    fn current_status(&self, control: &crate::control::Control) -> Result<Data> {
+        self.0.engine.invoke(
+            "source-status",
+            [
+                ("handle", Data::from(self.0.handle)),
+                ("executionControl", control.id()),
+            ],
+        )
+    }
     fn current_projection(&self, control: &crate::control::Control) -> Result<Data> {
         self.0.engine.invoke(
             "source-projection",
@@ -813,7 +822,13 @@ impl SchemeProvenance {
         if self.closed.load(Ordering::Acquire) {
             return Err(Error::Closed);
         }
-        let status = self.owner.current_projection(control)?;
+        // BEGIN GENERATED PROOF AUTHORITY READ
+        let status = if self.fingerprint.is_some() {
+            self.owner.current_projection(control)?
+        } else {
+            self.owner.current_status(control)?
+        };
+        // END GENERATED PROOF AUTHORITY READ
         if id(&status, "sourceGeneration")? != self.generation {
             return Err(Error::Closed);
         }
@@ -926,3 +941,7 @@ fn owned_row(row: &[ObjectInput], columns: &[Type]) -> Result<gerbil_ascent::Row
         .collect::<Result<Vec<_>>>()
         .map(Into::into)
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/proof_authority.rs"]
+mod proof_authority_tests;

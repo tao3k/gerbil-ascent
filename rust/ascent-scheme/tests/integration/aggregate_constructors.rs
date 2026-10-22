@@ -5,6 +5,7 @@ use gerbil_ascent::{
 };
 use std::collections::BTreeMap;
 const FIXTURE: &str = include_str!("../../../../t/qualification/evidence-api-module.ss");
+const CAPTURED_GUARD_SOURCE: &str = "(def (make cutoff delta) (ascent-rule-module (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1) (2) (3) (4))) (gerbil-ascent-relation 'blocked 1 '((4))) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'y)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-negation 'blocked (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) (and (> v cutoff) (even? v)))) (gerbil-ascent-binding 'y '(x) (lambda (v) (+ v delta)))))) 32 64 96 '(input blocked)) #f))";
 fn integer(n: i64) -> Input {
     Input::Integer(n.into())
 }
@@ -225,7 +226,7 @@ fn inexact_folds_are_deterministic_across_hash_orders_and_rayon_workers() {
 }
 #[test]
 fn native_negation_guard_and_lexically_captured_binding_lower_to_rust_clauses() {
-    let source = "(def (make cutoff delta) (ascent-rule-module (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1) (2) (3) (4))) (gerbil-ascent-relation 'blocked 1 '((4))) (gerbil-ascent-relation 'out 1 '())) (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list (gerbil-ascent-variable 'y)))) (list (gerbil-ascent-atom 'input (list (gerbil-ascent-variable 'x))) (gerbil-ascent-negation 'blocked (list (gerbil-ascent-variable 'x))) (gerbil-ascent-guard '(x) (lambda (v) (and (> v cutoff) (even? v)))) (gerbil-ascent-binding 'y '(x) (lambda (v) (+ v delta)))))) 32 64 96 '(input blocked)) #f))";
+    let source = CAPTURED_GUARD_SOURCE;
     let engine = Engine::new(1).unwrap();
     let module = engine.load_definitions(source).unwrap();
     let value = module
@@ -282,7 +283,6 @@ fn native_negation_guard_and_lexically_captured_binding_lower_to_rust_clauses() 
             .unwrap()
     );
 }
-
 
 fn scalar_observation(value: &crate::support::ModuleValue) -> Option<String> {
     let graph = value.graph().unwrap();
@@ -518,4 +518,52 @@ fn trusted_callbacks_keep_native_semantics_and_do_not_claim_checked_provenance()
         let counter = module.call("counter-value", &[], None).unwrap();
         assert!(matches!(counter.graph().unwrap().root,GraphItem::Number(ref v) if v==changed));
     }
+}
+
+#[test]
+fn unsupported_proof_refusal_preserves_cancel_budget_and_generation() {
+    let engine = Engine::new(12).unwrap();
+    let module = engine.load_definitions(CAPTURED_GUARD_SOURCE).unwrap();
+    let value = module
+        .call("make", &[integer(1), integer(10)], None)
+        .unwrap();
+    let session = value.open_session(FactLimits::default()).unwrap();
+    let cancel = Cancellation::default();
+    let result = session
+        .run(None, &SourceSession::default_limits(), &cancel)
+        .unwrap();
+    let limits = ProvenanceLimits::default();
+    let proof = session
+        .provenance(result.result_handle, "out", &limits, &cancel)
+        .unwrap();
+    let graph = proof.graph().unwrap();
+    assert_eq!(graph.status, ProvenanceStatus::Unsupported);
+    assert!(!proof.verify(&graph, &limits, &cancel).unwrap());
+    let canceled = Cancellation::default();
+    canceled.cancel();
+    assert!(matches!(
+        proof.verify(&graph, &limits, &canceled),
+        Err(gerbil_ascent::Error::Canceled)
+    ));
+    let zero = ProvenanceLimits {
+        timeout: std::time::Duration::ZERO,
+        ..limits.clone()
+    };
+    assert!(matches!(
+        proof.verify(&graph, &zero, &cancel),
+        Err(gerbil_ascent::Error::Timeout)
+    ));
+    session
+        .replace(
+            BTreeMap::from([("input".into(), vec![vec![Input::Integer(3.into())]])]),
+            &SourceSession::default_limits(),
+            &cancel,
+        )
+        .unwrap();
+    assert!(matches!(
+        proof.verify(&graph, &limits, &cancel),
+        Err(gerbil_ascent::Error::Closed)
+    ));
+    proof.close();
+    assert!(matches!(proof.graph(), Err(gerbil_ascent::Error::Closed)));
 }

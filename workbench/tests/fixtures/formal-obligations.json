@@ -2577,5 +2577,58 @@
         12
       ]
     ]
+  },
+  "ProofAuthorityRead": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OwnerRequired GenerationRequired CancelRequired DeadlineRequired FingerprintRequired RefusalNeverVerified NoUnusedProjection ForeignStillProjects"
+    },
+    "faults": [
+      [
+        "allow-closed",
+        "OwnerRequired",
+        12
+      ],
+      [
+        "skip-generation",
+        "GenerationRequired",
+        12
+      ],
+      [
+        "skip-cancel",
+        "CancelRequired",
+        12
+      ],
+      [
+        "reset-deadline",
+        "DeadlineRequired",
+        12
+      ],
+      [
+        "skip-fingerprint",
+        "FingerprintRequired",
+        12
+      ],
+      [
+        "verify-unsupported",
+        "RefusalNeverVerified",
+        12
+      ],
+      [
+        "project-without-fingerprint",
+        "NoUnusedProjection",
+        12
+      ],
+      [
+        "skip-foreign-fingerprint",
+        "ForeignStillProjects",
+        12
+      ],
+      [
+        "verify-foreign",
+        "RefusalNeverVerified",
+        12
+      ]
+    ]
   }
 }

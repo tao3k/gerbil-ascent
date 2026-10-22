@@ -16,7 +16,12 @@
 (def (star n)
   (append (map (lambda (i) (list 0 i)) (iota (+ n 1)))
           (map (lambda (i) (list i i)) (iota n 1))))
+;; Match production DSL composition: all declarations remain present and the
+;; complete program is validated in the ordinary environment on scope exit.
+;; The separate public-constructor tests retain immediate validation coverage.
 (def (vl-program scenario)
+  (gerbil-ascent-construct-inert-program (lambda () (vl-program-declarations scenario))))
+(def (vl-program-declarations scenario)
   (if (eq? scenario 'set) (set-round-program 'serial)
     (let* ((v (gerbil-ascent-variable 'v)) (next (gerbil-ascent-variable 'next))
            (key (gerbil-ascent-literal 0)) (n (limit scenario))

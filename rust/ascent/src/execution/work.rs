@@ -29,10 +29,21 @@ impl Work {
         self.pending.load(Ordering::Acquire)
     }
     pub(crate) fn enter(&self) -> Result<Evaluation> {
-        self.pending
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |n| n.checked_add(1))
-            .map_err(|_| Error::InvalidProgram("evaluation population exhausted".into()))?;
-        Ok(Evaluation(self.pending.clone()))
+        let mut pending = self.pending.load(Ordering::Acquire);
+        loop {
+            let next = pending
+                .checked_add(1)
+                .ok_or_else(|| Error::InvalidProgram("evaluation population exhausted".into()))?;
+            match self.pending.compare_exchange_weak(
+                pending,
+                next,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(_) => return Ok(Evaluation(self.pending.clone())),
+                Err(actual) => pending = actual,
+            }
+        }
     }
     pub(crate) fn fanout(&self, workers: usize, enabled: bool) -> bool {
         request_fanout(

@@ -2829,3 +2829,76 @@ proof limits remain unchanged. No SDK or runtime implementation change is made
 for this CI preparation repair. The seven CI-entry regressions passed before
 publication. A new exact-head full CI run is required; cancelled checks are
 not re-labelled as passing.
+
+** Stable atomic API and compiler output pipe diagnosis
+
+The 7d525ea3 Linux Rust/PyO3 lane failed its unchanged strict Clippy gate:
+the runner's newer Rust marks =AtomicUsize::fetch_update= deprecated in favour
+of =try_update=. The local Rust 1.95 compiler had not emitted that warning.
+The follow-up uses the equivalent stable compare-exchange loop with the same
+Acquire/AcqRel orders and overflow rejection, rather than allowing the warning
+or requiring a newer minimum compiler. New twelve-thread and exhaustion checks
+exercise exact pending population, release and refusal without wrapping.
+
+The macOS production experiment failed before measurement, during compilation
+of the complete native test targets. Cargo reported =Resource temporarily
+unavailable (os error 35)=. The many compact-unwind messages were warnings,
+not this failure's root diagnostic. A bounded probe of the unchanged SDK
+compared direct execution and =gerbil env= with the same 16 MiB output workload
+and a briefly backpressured pipe. Direct execution kept descriptors blocking
+(flags 1), wrote all 16777216 bytes and exited zero. Through =gerbil env= both
+child output descriptors had flags 5 (including O_NONBLOCK), only 67055 bytes
+were collected, and the wrapper exited 70. This reproduces output backpressure
+failure without rebuilding or modifying the SDK.
+
+The experiment now calls Cargo directly in the existing SDK environment and
+passes the selected package prefix explicitly. Scheme dependency and package
+builds retain their native Gerbil commands. All three Cargo build/bench/nextest
+commands use the same flags and source inputs; the complete native tests still
+precede measurement, with twelve workers, zero retries and the same leak/error
+rejection. The superseded 83bf3cf6 production run was stopped before it reached
+the same known defective invocation. Neither failed run supplies throughput
+measurements, and neither is relabelled as a passing benchmark.
+
+** Source-suite construction cost, unchanged gate, and local complete check
+
+The 83bf3cf6 macOS source run reached its unchanged 600-second limit after
+1322 completed cases and 155 modules. It reported no assertion failure before
+termination; it remains a failed full run. The earlier 7d525ea3 run completed
+all 1415 cases, but took 441.90 seconds (892.73 user and 126.33 system seconds).
+The 656e8483 control took 160.72 seconds (391.29 user and 28.24 system).
+All three used the same 170-module inventory, 86 batches, twelve workers,
+at most two source modules per batch, one processor per VM, linked production
+code and the 2 GiB heap limit. This cost difference is not dismissed as jitter.
+
+A linked native Scheme diagnostic reproduced the exact eight view/lattice
+fixture scenarios and checked the original independent expected results.
+Its native timing reports put the dominant work in declaration construction:
+the view preparation alone reported about 12.88 GB allocated for the reference
+and 10.67 GB for the candidate. The reference run phase reported about 38 MB.
+A 2460-stack sample attributed 805 stacks to GC scanning; Scheme stacks included
+POO instantiation and slot observation. These are stack counts, not CPU shares.
+
+A separate, same-process control split the 512-relation input construction from
+engine work. Public item-by-item construction reported 12955313584 allocated
+bytes and 2.661396 CPU seconds. The existing production DSL composition entry,
+which validates the complete root in the ordinary environment on exit,
+reported 5384946144 bytes and 1.313147 CPU seconds. Complete projected results
+were equal. These are the selected SDK's native timing observations; their
+counter decoding and a full source-level cumulative-allocation proof remain
+open. Neither this control nor its roughly 58 percent allocation difference
+is presented as parallel-throughput acceptance.
+
+The common view/lattice fixture now uses that existing production composition
+entry. Every declaration, scenario, row, padding size, limit, expected result
+and old/new evaluator assertion remains present. Public constructors and their
+immediate-validation tests are unchanged. No successful validation result is
+cached. The updated complete local source suite passed all 170 modules and
+1415 cases with twelve single-thread VM workers under the original 600-second
+limit, finishing in 307 seconds. This shared-host elapsed time is a local
+receipt, not an isolated causal speedup estimate.
+
+The stable atomic follow-up passed 13 unit plus 54 integration tests with Rayon
+and 13 plus 53 without Rayon, with twelve test threads. Both strict all-target
+Clippy configurations passed. Current-head full CI, native bindings and the
+unaltered production matrix remain required after publication.

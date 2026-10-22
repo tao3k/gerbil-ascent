@@ -2951,3 +2951,104 @@ with =adaptive=, =across-requests= and =within-request=. Their run IDs are
 three logical CPUs, twelve clients, fixed samples, thirty-second soaks, row
 deadlines and complete process-binding qualification before timing. No result
 is inferred from a strategy name, a preparation-time change or a revision pin.
+
+* Full-matrix failures retained and observed upstream revision alignment
+
+The cab59007 =across-requests= production control completed all 24 original rows
+in run https://github.com/tao3k/gerbil-ascent/actions/runs/39746316099 .
+Twenty-three rows were valid. The large closure with one VM failed the original
+30-second per-request deadline in its first fixed-work sample; it was not a
+240-second row-controller timeout. Its startup took 33.786 seconds. No sample
+or sustained throughput is admitted for that row, and the complete matrix fails.
+The three- and twelve-VM large rows completed at 2.165 and 2.170 requests/second.
+Their p95 histograms overflow the fixed 6.5535-second range, so the reports retain
+the conservative upper bounds of 8.992 and 9.253 seconds rather than inventing
+precise p95 values.
+
+Within the same control, Rayon one/three/six/eight/twelve-thread sustained
+requests per second were:
+
+| Workload | 1 | 3 | 6 | 8 | 12 |
+|----------+---+---+---+---+----|
+| Small | 10747.872 | 15308.847 | 19555.809 | 16549.407 | 19005.631 |
+| Closure | 1551.358 | 2371.695 | 2627.473 | 2660.926 | 2453.856 |
+| Large closure | 57.108 | 78.919 | 84.335 | 80.769 | 77.038 |
+
+The twelve/one-thread ratios are 1.768, 1.582 and 1.349. Twelve threads remain
+8.65 percent below six threads for the large row and have a 266.4--266.5 ms p95
+versus 193.7--193.8 ms. Large-row fixed-work median replacement costs were
+192.758/110.057/138.596/142.747/198.102 ms, whereas run/export cost remained
+5.6--6.7 ms. Replacement includes checked candidate evaluation. Removing that
+transaction, changing its budget or retaining stale source authority is not an
+admissible performance fix. Separate runners prevent compiler interference;
+these cross-host controls do not establish a matched-host strategy ranking.
+
+The cab59007 adaptive control failed before measurement: 62 of 63 complete
+native binding tests passed, and
+=checked_native_proofs_revalidate_current_mutable_source_support= exhausted its
+original one-second first-verification budget. The run is
+https://github.com/tao3k/gerbil-ascent/actions/runs/39746310645 . It has no
+admitted throughput result and is not retried. Actual-API local attribution
+preserving that budget and stale-source assertion passed with one and twelve
+single-thread VMs. Twelve verifies took 33.905--49.402 ms (median 38.370 ms),
+with two RPCs and normally two checkpoint callbacks. The direct small-program
+projection reported about 2 ms and 4728584 allocated bytes for root construction,
+then about 27 us and 28080 bytes for wire conversion. This rules out high
+per-row checkpoint traffic for that local verification. It does not identify
+the three-core remote timeout's missing phase, and no cached proof admission,
+skipped authority check or expanded shared-transport eligibility is introduced.
+
+The d7b0d728 complete macOS source suite passed all 170 modules and 1415 cases
+in 387.88 seconds real, 753.74 user and 105.20 system. Its Scheme sources are
+identical to cab59007, whose corresponding times were 169.85/383.07/31.35.
+Matching all 1415 live Case boundaries shows broad changes, including the CFG
+case 33.050 to 83.349 seconds and the shared-reasoning case 20.381 to 59.982.
+These forwarded boundaries include scheduling/output latency and are not
+collector-only CPU measurements. Both complete passes remain preserved;
+variation of this size is not dismissed as noise or as a closed performance gate.
+
+Upstream PR #18 advanced once during measurement to
+=2369da298705dbe7c5d8045fb380d263c240161b=. Its complete comparison against
+f89fe2a4 changes qualification, native clock correlation, build declarations and
+documentation; it retains no production routing-policy change. ASCENT aligns
+its four active upstream dependencies and lock sources to this observed head.
+The retired build-time IR pin and frozen Gerbil/Gambit SDK stay unchanged.
+Earlier f89fe2a4 measurements retain their exact dependency/source identities;
+a documentation/qualification revision is not represented as an algorithmic
+speedup or as current-head CI acceptance.
+
+The original optional production job also installed the Scheme ASP development
+package despite using only production Scheme inputs and Rust's ASP test gate.
+Its native seed log shows production dependency completion at 08:25:20.927 and
+development completion at 08:28:17.089, an additional 176.162 seconds. The latter
+includes 416 ASP native compile jobs; these are not repeated production jobs.
+The production experiment now installs only =gerbil deps --install= and rejects
+an unexpectedly present ASP Scheme library. Optional source ABBA still explicitly
+installs =dev/gerbil.pkg= with the same native command. All 63 native binding
+checks, the Rust ASP gate, the complete source semantics/policy jobs and original
+performance matrix remain required. This preparation separation is not claimed
+as improved execution throughput; its fresh-run cost and complete native
+qualification remain to be measured.
+
+The within-request cab59007 control also completed 23 valid rows and rejected
+the large single-VM row on the same original first-sample replacement deadline,
+with startup 32.947 seconds. Run:
+https://github.com/tao3k/gerbil-ascent/actions/runs/39746321303 . Its Rayon
+one/three/six/eight/twelve-thread large-row rates were
+42.779/61.528/75.625/62.587/71.524 requests/second; the twelve/one ratio was
+1.672 and twelve remained 5.42 percent below six. Large-row twelve-thread p95
+was 640.6--640.7 ms. These separate-host absolute rates do not establish an
+across-versus-within winner. Their negative observations remain performance
+qualification failures rather than new thresholds.
+
+Published d7b0d728 subsequently passed every required main CI job in
+https://github.com/tao3k/gerbil-ascent/actions/runs/39750462904 . The separate
+macOS run 39750462886 also passed. This does not close either independent
+production-matrix failure or the retained provenance timeout. Local validation
+of the 2369da29 bridge alignment passed both complete strict Clippy profiles
+with CI Rust 1.99.1 (78 seconds and 14.03 seconds), then all 63 native binding
+tests with twelve concurrent test threads, zero retries and zero skips
+(54.385 seconds of test execution). No forced-stop, shutdown-error, checkpoint
+transport-error or process-leak marker was present. The optional workflow YAML
+also parsed with its production/development condition intact. Current-head
+remote CI and the unchanged full matrix remain mandatory after publication.

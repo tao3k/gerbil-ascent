@@ -78,8 +78,11 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
-          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
           test ! -e .gerbil/lib/gerbil-ascent
+          test ! -e .gerbil/lib/asp-gerbil-scheme
+      - name: Prepare source-comparison development tools
+        if: ${{ inputs.baseline != '' }}
+        run: (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
       - name: On-demand ABBA cold build and test preparation
         if: ${{ inputs.baseline != '' }}
         env:

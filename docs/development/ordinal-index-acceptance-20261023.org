@@ -84,3 +84,21 @@ in 75.451 seconds. Lean retained the original LeanPoo Guard, 1,024 MiB and
 10,000,000 heartbeat budgets; the focused LookupCost check reported zero
 additional helper threads. No abstract or finite-state result is relabeled as
 complete compiler, mutable-container, allocator, or C ABI source refinement.
+
+* CI preflight installation repair
+The Linux semantic job for 7eb5b485 failed before tests in the existing Just
+installer, reporting no release matching 1.56.0. The sibling performance job
+installed the same version successfully. The exact-tag official API lists the
+release and both required assets; the release-list API also includes it. The
+failed installer's response body was not recorded, so its precise API-side
+failure remains unknown. The pinned action bundle uses a release-list search
+and asset/version filtering instead of a direct exact-tag download.
+
+The replacement installer is pinned to
+a4d3f3f761dcd95cce1b72cb61cb6d1963438177. Its committed manifest supplies direct
+versioned URLs and SHA256 checksums for Just 1.56.0. Fallback installation is
+explicitly disabled. Both Linux x86_64 and macOS aarch64 archives were downloaded
+and matched those checksums; the macOS binary reported just 1.56.0. This changes
+only CI tool discovery, without upgrading Just, the SDK, or any runtime source.
+The original failed run remains recorded and is not relabeled as a semantic
+failure or success. Current-head acceptance must run with the repaired installer.

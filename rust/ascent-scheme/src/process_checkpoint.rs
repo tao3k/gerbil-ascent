@@ -13,17 +13,12 @@ use std::{
 mod darwin;
 pub(crate) fn shared_transport() -> Option<&'static str> {
     #[cfg(target_os = "linux")]
-    {
-        Some("shared-futex")
-    }
+    let (available, name) = (true, "shared-futex");
     #[cfg(target_os = "macos")]
-    {
-        darwin::available().then_some("shared-darwin-wait")
-    }
+    let (available, name) = (darwin::available(), "shared-darwin-wait");
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        None
-    }
+    let (available, name) = (false, "");
+    available.then_some(name)
 }
 const IDLE: u32 = 0;
 const REQUEST: u32 = 1;

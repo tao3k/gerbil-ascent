@@ -2902,3 +2902,52 @@ The stable atomic follow-up passed 13 unit plus 54 integration tests with Rayon
 and 13 plus 53 without Rayon, with twelve test threads. Both strict all-target
 Clippy configurations passed. Current-head full CI, native bindings and the
 unaltered production matrix remain required after publication.
+
+* Published full-suite result and Linux portability follow-up
+
+Revision =cab590072aadd6676911abfd8cbe5792fc0c0e3d= completed all 170
+Scheme modules and 1415 cases on both platforms. The macOS source phase took
+169.85 seconds real, 383.07 seconds user and 31.35 seconds system, with twelve
+single-thread VM workers under the unchanged 600-second deadline. The Linux
+full source lane passed its unchanged 180-second deadline. These are complete
+suite receipts; they do not establish cold preparation or sustained-throughput
+admission.
+
+The exact-head main run is
+https://github.com/tao3k/gerbil-ascent/actions/runs/39746058137 and the macOS
+run is https://github.com/tao3k/gerbil-ascent/actions/runs/39746058116 .
+Repository hygiene, the original Scheme performance lane, all three Rust Ascent
+oracle lanes, Python consumers, formal conformance and full formal qualification
+passed. Full formal qualification checked 58 models, 73 positive configurations
+and 410 required counterexamples. These remain policy/source-rendering and
+bounded-model evidence, not complete decoder, mutable-cache, SCC, OS-message or
+cumulative-allocation source refinement.
+
+The main run failed strict Clippy in the Linux checkpoint capability function.
+The later native-test and wheel steps run independently, so their execution
+must not be reported as proof that an earlier lint step passed. CI uses Rust
+1.99.1; the earlier local Rust 1.95 checks did not diagnose this platform-only
+=unnecessary_wraps= warning. The follow-up preserves the cross-platform optional
+capability contract, selecting the platform availability and transport name
+before constructing the option. Linux still selects =shared-futex=, macOS still
+checks runtime Darwin-wait availability, and unsupported platforms still fall
+back. No warning is suppressed and no checkpoint boundary, budget or callback
+is removed.
+
+An isolated copy of the exact CI toolchain checks the actual checkpoint source
+under =x86_64-unknown-linux-gnu=, including strict pedantic Clippy, without a
+Linux VM or container. That check passed. A macOS actual-source protocol control
+also passed 4096 signed request/reply exchanges and closed-peer rejection with
+Rust 1.99.1. These are focused controls; full current-head CI is still required
+after the portability follow-up is published. Both complete local all-target
+Clippy configurations then passed with Rust 1.99.1: the default Rust/PyO3
+workspace in 2 minutes 30 seconds, and the Scheme/PyO3 and Rayon benchmark
+configuration in 13.48 seconds. These durations are validation receipts rather
+than runtime-performance measurements.
+
+Three original production-matrix controls for the cab59007 runtime are running
+with =adaptive=, =across-requests= and =within-request=. Their run IDs are
+39746310645, 39746316099 and 39746321303. Each retains the original 24 rows,
+three logical CPUs, twelve clients, fixed samples, thirty-second soaks, row
+deadlines and complete process-binding qualification before timing. No result
+is inferred from a strategy name, a preparation-time change or a revision pin.

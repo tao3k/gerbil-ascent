@@ -3288,3 +3288,49 @@ changed, with every previous invariant and counterexample preserved in order.
 The exact new published commit must still pass fresh remote CI and the unchanged
 production matrix. No rejected request-lifetime, ordinal-sort or diagnostic
 instrumentation code is included in this candidate.
+
+* Exact 73fab2d5 qualification and the next dependency control
+
+The published 73fab2d5 head passed every job in CI run 39775151500,
+including the installed Rust/PyO3 wheel, independent Python consumers, original
+Scheme semantics/performance gates, all oracle lanes and complete guarded formal
+checks. Its separate macOS run 39775151459 passed all 170 modules and 1415
+cases in 363.92 seconds, with twelve single-thread VM processes and the unchanged
+600-second limit. These different-runner durations do not establish a causal
+speedup over the earlier 424.48-second run.
+
+The original three-core production matrix, run 39775182339, still failed with
+23/24 valid rows. Small-request VM throughput at 1/3/12 owners was
+13.894/74.429/91.967 requests/second; ordinary closure was
+12.354/58.371/63.785. Large closure was 1.938/1.368 requests/second at 3/12 VMs.
+The single-VM large replacement failed its original request deadline before
+producing a fixed-work sample; its exit was 101, not a successful or censored
+240-second row. No unchanged retry was dispatched.
+
+Rayon twelve/one-thread throughput ratios were 1.907, 1.487 and 1.459 for
+small, ordinary and large closure. Large twelve-thread p95 remained
+578.8--578.9 ms, versus 290.0--290.1 ms at three threads. The small/ordinary VM
+improvements do not close large-request capacity or twelve-thread tail gaps.
+Every valid row retained the Rust benchmark's independent complete-answer check.
+
+The prolonged Linux Rust job setup was separately identified in its completed
+log: apt selected 399 new packages, including distribution Node/npm dependencies,
+and fetched 30.9 MB in 29 minutes 59 seconds through repeated mirror delays.
+This was not ASCENT compilation. The minimal CI correction removes Node/npm
+from that apt command and reads the hosted runner's existing versions, as the
+successful formal job already does. Quint, semantic checks and budgets remain.
+
+Upstream PR 18 advanced during the fixed experiment. The next control fixes its
+four active dependencies and matching lock sources to
+9455ac5ca4e4f7c1c9b4d97aa003c472eca89cb1; the retired build-time IR stays at
+7ebc26dac9e32f982f9ab1455b664b01f2f6e007 and the SDK is unchanged. Complete local
+binding qualification passed 70/70 at twelve threads with zero retries/skips,
+followed by strict Scheme/PyO3 Clippy. The complete Rust-profile workspace passed
+82 cases and strict Clippy before any phase-fanout change.
+
+The new upstream owner-local supply, selective short wake and notified reselection
+APIs are opt-in InstanceDispatcher facilities. ASCENT's linked-program process
+owners do not implicitly execute them after a revision update. Upstream's own
+selective-wake report retains CPU p99 regressions and keeps broadcast as default.
+Dependency compatibility is therefore not claimed as routing adaptation or a
+measured performance gain.

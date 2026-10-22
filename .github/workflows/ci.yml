@@ -207,8 +207,10 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev nodejs npm python3-venv patchelf libsqlite3-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev python3-venv patchelf libsqlite3-dev
           just --version
+          node --version
+          npm --version
       - name: Restore immutable release archive
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:

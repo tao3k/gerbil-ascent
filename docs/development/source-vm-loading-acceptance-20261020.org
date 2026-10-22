@@ -3052,3 +3052,126 @@ tests with twelve concurrent test threads, zero retries and zero skips
 transport-error or process-leak marker was present. The optional workflow YAML
 also parsed with its production/development condition intact. Current-head
 remote CI and the unchanged full matrix remain mandatory after publication.
+
+* Derived-row materialization and one Cargo compilation graph
+
+Revision =96e5ea6ae5151a0d401caeac7205fb8de2f59e3e= passed every required
+main CI job in https://github.com/tao3k/gerbil-ascent/actions/runs/39754837529
+and the complete macOS workflow in run 39754837470. Its original independent
+24-row production control is run 39755082109; required CI success is not a
+production-throughput admission result.
+
+The prior d7b0d728 adaptive control finished 23 valid rows and rejected the
+large single-VM row at its unchanged 240-second row deadline. It had completed
+three exact fixed-work samples. The last completed sample serviced 24 requests
+in 57.259 seconds, including 56.943 seconds of native service and 628.337 seconds
+of aggregate caller queue time across twelve clients. Its p95 was 29.355 seconds,
+close to the separate 30-second request budget. This is completed, slow service,
+not a demonstrated deadlock. Its required five samples plus startup and soak do
+not fit the row budget at that service rate; neither deadline is increased.
+The exact run is https://github.com/tao3k/gerbil-ascent/actions/runs/39750620542 .
+
+Two isolated allocation candidates were rejected without publication. Retaining
+query-local delta-index buffers removed about 34.1 million requested bytes per
+24 large requests but only 1440 allocator calls out of approximately 2.70 million;
+no stable runtime improvement was established. Sharing every integer added
+184320 allocator calls: num-bigint 0.4.8 already stores this workload's small
+integers inline. No public integer type, index-cache lifetime, capacity policy
+or scheduling quota is changed by either experiment.
+
+The selected source candidate removes the temporary Vec in =Values::decode=,
+collecting the same ordered clones directly into the existing immutable Arc row.
+Rust documents a single allocation for Arc collection from a TrustedLen iterator:
+https://doc.rust-lang.org/src/alloc/sync.rs.html . Public rows, cells, integers,
+result ownership, polling boundaries and final publication checks are unchanged.
+The Rust standard-library implementation and allocator remain explicit premises.
+
+The private allocator-request control uses twelve clients, twelve Rust workers,
+24 large requests per sample and three recorded samples in fixed A/B/B/A order.
+Every request checks all 30720 derived rows against independent chain closure
+truth. The candidate removed exactly 737280 allocator calls per sample:
+=24 * 30720=. Calls fell from 2700134/2700135 to 1962854/1962855. Requested
+allocation bytes fell from about 528.99 million to 434.61 million, consistent
+with removing =737280 * 2 * 64 = 94371840= bytes of temporary tuple payload.
+Reallocation requests remain separately reported rather than added as disjoint
+physical heap bytes. Counts are actual Rust allocator API requests in this scope,
+not Gambit cumulative allocation, net stack occupancy or OS committed memory.
+Instrumented elapsed times are excluded from production speedup claims: the
+shared counting atomics themselves change contention, and the local twelve-core
+host is not the required isolated three-core runner.
+
+A dedicated native test target compiles the actual decoder source and compares
+its allocator boundary with the frozen Vec-then-Arc implementation. It checks
+arities zero through 32, order, duplicates, booleans versus integers, text versus
+symbols, heap integers, rational/inexact values, and rows retained after value-
+pool retirement. Thread-local accounting excludes allocations on other test
+threads. Each nonempty row must remove exactly one allocation and
+=arity * size_of(Value)= requested bytes; clone allocation is measured in both
+arms rather than assumed absent. The all-target strict Clippy profiles passed
+with CI Rust 1.99.1, without warning suppression.
+
+Lean now proves ordered tuple erasure and the scoped byte ledger, and renders
+the exact deployed decoder and Quint cost functions. The Quint lookup model
+retains its semantic invariants and adds a required counterexample for restoring
+temporary tuple allocation. The first full formal attempt misdeclared that new
+obligation's expected process exit as 1, which omitted the invariant; it failed
+and is retained. The corrected obligation requires the actual invariant and
+exit 12, and the complete focused model plus every original lookup fault passed.
+These are source-bound representation/cost controls, not complete refinement of
+the SDK, leaf value validity, standard allocator, mutable caches, SCC or messages.
+
+Build-artifact analysis also separates repeated packages from repeated units.
+The old worker command compiled 168 Cargo artifacts; the following benchmark
+command compiled 121 and reused 58. Only one final filename was written in both;
+most package repetition was a different feature/dependency context, including
+serde_core, typenum, regex and syn. The production job now requests the worker
+and benchmark in one native =cargo build --release= invocation so Cargo unifies
+the required graph before compiling it. Complete binding tests still run before
+measurement. No compiler wrapper or build.ss orchestration is added. Separate
+latest-REV archive observations already show 262 inputs, zero changed inputs and
+zero native archive object compilations, distinguishing archive reuse from Cargo
+feature-graph work. The new unified command and its unchanged repeat are qualified
+separately before publication; predecessor counts are not a new build-time result.
+
+The unified local production build produced both required executables in one
+179-artifact compilation with the existing release/compiler/linker settings.
+The identical repeat compiled zero artifacts, reused all 179 and finished in
+0.24 seconds. The first local build took 143 seconds; this is a twelve-core-host
+receipt with three compiler jobs, not a matched three-core build-time speedup.
+The native source-bound allocation test and both complete strict Clippy profiles
+passed. The corrected focused Quint lookup run checked all ten obligations,
+including the required temporary-allocation counterexample; no exploration bound
+was changed. Complete post-change core, binding, formal and remote qualification
+remain distinct acceptance stages.
+
+The 96e5ea6a original matrix completed 23 valid rows and failed the same large
+single-VM row at 240 seconds. Within its valid Rayon rows, one/three/six/eight/
+twelve-thread large rates were 44.436/67.012/81.850/112.803/110.747 requests per
+second. Twelve/eight throughput was 0.982, while p95 rose from 156.9--157.0 ms
+to 399.1--399.2 ms. Ordinary closure measured 1786.287 to 3711.839 requests per
+second from one to twelve threads, but the large Actor row remained inadmissible.
+The explicit production-only dependency seed completed in 425.575 seconds, with
+no development-tools step executed. This is a recorded phase time, not a matched-
+host claim that all cold preparation is solved.
+
+The first complete post-change local binding run passed 63 of 64 tests and
+failed ASP's test-layout rule: the new standalone allocation target initially
+contained implementation at the tests/ root. The target now lives under
+=tests/integration= and is explicitly declared in Cargo.toml, following the
+existing isolated archive target. Its original assertions remain present. The
+focused ASP gate, allocation test and strict all-target Clippy all passed after
+that structural fix. The failed complete run is retained; full current-source
+acceptance is still required rather than inferred from those focused checks.
+
+The complete final local binding run passed all 64 tests with twelve test threads,
+zero retries and no skipped cases. The source-bound allocator receipt covered
+33 widths, removed 32 temporary allocations and 33792 requested payload bytes,
+and recorded decoder SHA-256
+=4d3b9d209f177fa4e6d0e4b5af7961103e69f68343e7f49b7195695c0ad5c117=.
+Both complete core profiles also passed: 67 default-feature and 66 serial cases.
+The complete guarded formal command passed all 58 Quint models and 411 required
+counterexamples, followed by the Lean build and exact generated-source checks.
+The original Guard, exploration bounds, cancellation, resource and provenance
+assertions remain unchanged. Remote current-commit CI and the original production
+matrix must still qualify the published candidate; these local receipts do not
+close the large single-VM capacity gap or twelve-thread tail-latency regression.

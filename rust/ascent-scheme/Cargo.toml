@@ -52,3 +52,7 @@ path = "tests/integration/process_runtime.rs"
 name = "process_throughput"
 harness = false
 required-features = ["rayon"]
+
+[[test]]
+name = "row_materialization"
+path = "tests/integration/row_materialization.rs"

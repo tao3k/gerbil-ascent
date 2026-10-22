@@ -394,6 +394,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-interfaces", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-import", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "compiler-quint", "packages/proofs/quint/CompilerPolicy.qnt"),
+                ("ExecutionPolicy.lean", "row-decode-rust", "rust/ascent/src/execution/values.rs"),
+                ("ExecutionPolicy.lean", "row-cost-quint", "packages/proofs/quint/OwnedLookup.qnt"),
                 ("ExecutionPolicy.lean", "lookup-materialization", "core/relation-view.ss"),
                 ("ExecutionPolicy.lean", "lookup-admission", "core/relation-view.ss"),
                 ("ExecutionPolicy.lean", "lookup-study-profile", "t/performance/run.ss"),
@@ -471,6 +473,14 @@ def main() -> int:
                     begin, end = f';; BEGIN GENERATED DSL-{region}\n', f';; END GENERATED DSL-{region}'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate generated DSL region: ' + language)
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"row-decode-rust", "row-cost-quint"}:
+                    marker = "OWNED ROW" if language == "row-decode-rust" else "OWNED ROW COST"
+                    indent = "    " if language == "row-decode-rust" else "  "
+                    begin, end = (f'{indent}// BEGIN GENERATED {marker}\n',
+                                  f'{indent}// END GENERATED {marker}\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate owned row source region')
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language.startswith("lookup-"):
                     region = language.removeprefix("lookup-").upper()

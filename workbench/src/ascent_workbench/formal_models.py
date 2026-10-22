@@ -176,7 +176,7 @@ CONFIGURATIONS = {'CheckpointTransport': {'constants': 'Mutation = "none"', 'inv
                 'invariants': 'PrefixCount CompleteExact PublishedOnlyComplete FailureTerminal '
                               'Bounds'},
  'OwnedLookup': {'constants': 'Mutation = "none"',
-                 'invariants': 'FrozenExact OrderedExact RejectedStable'},
+                 'invariants': 'FrozenExact OrderedExact RejectedStable NoTupleTemporary'},
  'WeightedExport': {'constants': 'Mutation = "none"',
                     'invariants': 'FrozenExact OrderedExact IndependentReads AxisExact CountExact '
                                   'SharedPlanExact MembershipExact DifferenceExact '
@@ -327,7 +327,8 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
                  ('shared', 'OrderedExact', 12),
                  ('borrow', 'FrozenExact', 12),
                  ('retire', 'FrozenExact', 12),
-                 ('reject', 'RejectedStable', 12)),
+                 ('reject', 'RejectedStable', 12),
+                 ('tuple-temp', 'NoTupleTemporary', 12)),
  'WeightedExport': (('owner-buffer-stale', 'OwnerWorkspaceReuseExact', 12),
                     ('route-share', 'SharedAxisRouteExact', 12),
                     ('owner-occurrence', 'OwnerConstructionExact', 12),

@@ -3,6 +3,12 @@
 module OwnedLookup {
   const Mutation: str
   type Row = List[int]
+  // BEGIN GENERATED OWNED ROW COST
+  pure def TupleTemporaryCalls(rows: List[Row]): int = rows.foldl(0, (n,row) => n + (if (row.length() == 0) 0 else 1))
+  pure def TupleTemporaryBytes(rows: List[Row], valueBytes: int): int = rows.foldl(0, (n,row) => n + row.length() * valueBytes)
+  pure def TupleDirectCalls(rows: List[Row]): int = rows.length()
+  pure def TupleStagedCalls(rows: List[Row]): int = TupleDirectCalls(rows) + TupleTemporaryCalls(rows)
+  // END GENERATED OWNED ROW COST
   pure def Queries(i: int): (List[int],List[int]) =
     if (i == 0) (List(),List()) else if (i == 1) (List(0),List(0))
     else if (i == 2) (List(1),List(0)) else if (i == 3) (List(0,0),List(0,1))
@@ -38,6 +44,7 @@ module OwnedLookup {
   action Reject = all {not(Valid((List(0,1),List(0)))), not(q.rejected), q' = {...q, rejected: true,
     source: if (Mutation == "reject") List() else q.source}}
   action step = any {Read, Mutate, Retire, Reject}
+  val NoTupleTemporary = (if (Mutation == "tuple-temp") TupleStagedCalls(q.held) else TupleDirectCalls(q.held)) == q.held.length()
   val FrozenExact = q.source == q.held
   val OrderedExact = q.ready.exclude(q.mutated).forall(i => q.results.get(i) == Selected(q.held,i))
   val RejectedStable = q.rejected implies q.source == q.held

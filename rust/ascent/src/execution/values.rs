@@ -29,12 +29,13 @@ impl Values {
     pub fn scalar(&self, cell: Cell) -> &Scalar {
         &self.values[cell.0.get() - 1]
     }
+    // BEGIN GENERATED OWNED ROW
     pub fn decode(&self, row: &[Cell]) -> crate::Row {
         row.iter()
             .map(|cell| self.values[cell.0.get() - 1].clone())
-            .collect::<Vec<_>>()
-            .into()
+            .collect()
     }
+    // END GENERATED OWNED ROW
     pub fn pattern(&mut self, term: Term) -> Pattern {
         match term {
             Term::Variable(slot) => Pattern::Variable(slot),

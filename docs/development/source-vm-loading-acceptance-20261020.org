@@ -3484,3 +3484,40 @@ budgets remain unchanged. The two new compiled capacity checks cover positive
 pool/host bounds and twelve simultaneously held worker/evaluation guards under
 a three-slot advisory hint. Remote exact-head admission and performance results
 remain pending; no local duration is admitted as a matched performance gain.
+
+
+* macOS capture-pipe qualification repair
+
+The 5de560ad original matrix passed its complete native prerequisite and entered
+measurement in run 39801451335. The separate phase control 39801459973 did not
+reach measurement: its 70 assertions passed, but the unchanged strict gate
+rejected a LEAK marker on mapped_checkpoints_fail_closed_when_the_peer_disappears.
+That test only creates/maps a temporary file and exercises a closed-peer callback;
+it creates no child process. The failed run and its absent timing comparison are
+retained, with no performance ratio admitted.
+
+The pinned nextest 0.9.140 predates the macOS capture-pipe inheritance correction
+published in 0.9.145. The upstream fix coordinates pipe creation and process
+spawning so concurrent sibling tests cannot inherit capture writers:
+https://github.com/nextest-rs/nextest/pull/3553 . This documented source defect
+matches the pure test's misattributed handle symptom; the original remote failure
+has no descriptor-owner trace, so it does not establish per-incident descriptor
+identity. No Scheme/Gambit change is justified by this observation.
+
+Only the macOS runner pin and its verified release SHA-256 are updated to 0.9.145.
+The default leak interval, strict LEAK rejection, twelve concurrent tests,
+zero retries, SDK and all execution budgets remain unchanged. Linux retains its
+existing runner because its atomic close-on-exec pipe path is outside this defect.
+The downloaded macOS asset matches its official release digest. The complete
+local 70-case native suite and strict binding Clippy passed with the repaired
+runner, with no skipped cases or leaked-handle markers; all seven source-semantic
+CI policy checks and workflow YAML parsing passed. This is runner admission,
+not evidence of an end-to-end throughput improvement.
+
+At 5de560ad the macOS source semantics passed 170 modules and 1415 cases in
+339.16 seconds, within the original three-CPU/600-second/twelve-single-thread-VM
+configuration. Linux source semantics passed in 121 seconds inside a 124-second
+CI step, preserving its 180-second limit. The previous 266a792f macOS run took
+160.51 seconds with identical Scheme sources on a different runner. All 1415
+forwarded Case intervals matched in both runs; this retains execution variation
+as an open cost observation rather than attributing it to the Rayon-only change.

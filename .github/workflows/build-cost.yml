@@ -139,8 +139,8 @@ jobs:
         run: |
           set -o pipefail
           archive="$RUNNER_TEMP/cargo-nextest.tar.gz"
-          curl --fail --location --retry 3 --output "$archive" https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.140/cargo-nextest-0.9.140-universal-apple-darwin.tar.gz
-          printf '58e0a722f9444078fab447783f322acf15a2a771ba785b3fbbe8bacda31c3df9  %s\n' "$archive" | shasum -a 256 --check
+          curl --fail --location --retry 3 --output "$archive" https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.145/cargo-nextest-0.9.145-universal-apple-darwin.tar.gz
+          printf '52ecaedb4f5af9267ef7ed02bc937d2a15a94ff96cb663080e81311f798c9905  %s\n' "$archive" | shasum -a 256 --check
           mkdir -p "$RUNNER_TEMP/nextest"
           tar -xzf "$archive" -C "$RUNNER_TEMP/nextest"
           export PATH="$RUNNER_TEMP/nextest:$PATH"

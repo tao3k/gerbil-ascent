@@ -2,6 +2,7 @@
 mod application;
 mod control;
 mod dag;
+mod diagnostics;
 mod ffi;
 mod values;
 pub use dag::Dag;

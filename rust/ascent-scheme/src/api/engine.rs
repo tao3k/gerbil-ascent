@@ -209,7 +209,33 @@ impl Engine {
     ) -> Result<Data> {
         let mut request = BTreeMap::from([("operation".into(), Data::from(operation))]);
         request.extend(fields.into_iter().map(|(key, value)| (key.into(), value)));
-        self.process_owner()?.call(Data::Map(request))
+        let owner = self.process_owner()?;
+        let traced = crate::diagnostics::enabled();
+        let before = traced.then(|| (std::time::Instant::now(), owner.statistics()));
+        let action = traced.then(|| {
+            request
+                .get("action")
+                .and_then(|v| v.text().ok())
+                .unwrap_or("-")
+                .to_owned()
+        });
+        let result = owner.call(Data::Map(request));
+        if let Some((started, before)) = before {
+            let after = owner.statistics();
+            crate::diagnostics::emit(format!(
+                "ASCENT-RPC-PHASE pid={} worker={} operation={} action={} elapsed_us={} owner_queue_delta_us={} owner_service_delta_us={} owner_checkpoint_delta={} success={}",
+                std::process::id(),
+                owner.receipt().pid,
+                operation,
+                action.unwrap(),
+                started.elapsed().as_micros(),
+                after.queue_ns.saturating_sub(before.queue_ns) / 1000,
+                after.service_ns.saturating_sub(before.service_ns) / 1000,
+                after.checkpoints.saturating_sub(before.checkpoints),
+                result.is_ok()
+            ));
+        }
+        result
     }
     fn process_owner(&self) -> Result<&crate::ProcessOwner> {
         if self.process.get().is_none() {

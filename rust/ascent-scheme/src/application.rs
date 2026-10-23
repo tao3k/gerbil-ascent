@@ -52,6 +52,7 @@ impl Runtime {
         self.invoke_rooted(&Data::Map(payload))
     }
     fn invoke_rooted(&self, request: &Data) -> Result<Data> {
+        let _usage = crate::diagnostics::Request::start(&self.runtime, request);
         let request = values::encode(&self.runtime, request)?;
         // SAFETY: this linked export borrows a strong input and transfers one
         // fresh upstream root; gerbil-rs-rooted-call contains every exception.

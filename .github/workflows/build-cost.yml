@@ -136,6 +136,7 @@ jobs:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
           MACOSX_DEPLOYMENT_TARGET: "26.0"
           RUSTFLAGS: "-C link-arg=-Wl,-ld_classic"
+          ASCENT_PROCESS_TRACE: "1"
         run: |
           set -o pipefail
           archive="$RUNNER_TEMP/cargo-nextest.tar.gz"

@@ -410,6 +410,7 @@ impl RuleSession {
         limits: &gerbil_ascent::ProvenanceLimits,
         cancellation: &Cancellation,
     ) -> Result<SchemeProvenance> {
+        let trace = crate::diagnostics::Trace::new(self.0.handle);
         let control = crate::control::Control::new(
             &Limits {
                 timeout: limits.timeout,
@@ -418,21 +419,27 @@ impl RuleSession {
             },
             cancellation,
         )?;
-        let _gate = self.acquire(&control)?;
-        let generation = self.admit_proof_scope(handle, query, limits, cancellation, &control)?;
-        let program = self.proof_program(&control)?;
+        let _gate = trace.measure("gate", || self.acquire(&control))?;
+        let generation = trace.measure("scope", || {
+            self.admit_proof_scope(handle, query, limits, cancellation, &control)
+        })?;
+        let program = trace.measure("projection", || self.proof_program(&control))?;
         let Some((program, fingerprint)) = program else {
             control.check()?;
             return self.unsupported_provenance(generation, query, cancellation);
         };
-        let rows = self.proof_rows(handle, query, &control)?;
-        let (proof, session) =
-            self.replay_proof(program, &rows, query, limits, cancellation, &control)?;
-        if self.admit_proof_scope(handle, query, limits, cancellation, &control)? != generation {
+        let rows = trace.measure("rows", || self.proof_rows(handle, query, &control))?;
+        let (proof, session) = trace.measure("replay", || {
+            self.replay_proof(program, &rows, query, limits, cancellation, &control)
+        })?;
+        if trace.measure("scope-recheck", || {
+            self.admit_proof_scope(handle, query, limits, cancellation, &control)
+        })? != generation
+        {
             return Err(Error::Closed);
         }
         let retained = self.retain_proof(proof, session, generation, fingerprint)?;
-        retained.check_controlled(&control)?;
+        trace.measure("authority-recheck", || retained.check_controlled(&control))?;
         Ok(retained)
     }
     fn admit_proof_scope(

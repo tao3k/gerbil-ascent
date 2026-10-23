@@ -165,3 +165,25 @@ three-CPU oversubscription and the failed one-VM large workload remain separate
 performance obligations. Neither full CI nor a local allocation reduction is
 accepted as latency closure. Current candidate speed and all-scenario admission
 require its own original matrix and matched control artifacts.
+
+* Provenance timeout investigation
+
+The failed three-CPU matrix at 343c8c7c stopped before measuring any row:
+71 of 72 binding tests passed. The mean aggregate test timed out while creating
+its second proof, after replacing the source with an empty relation. Its one-second
+proof deadline is unchanged.
+
+Opt-in diagnostics reuse the frozen bridge's owner-local usage ABI, separating
+process CPU, GC CPU and GC wall time from RPC wall time and proof phases. Heap
+capacity and process RSS high-water are labeled explicitly; neither is live nor
+cumulative allocation. Owner counter deltas may include concurrent callers and
+are not independent per-request timing. Diagnostic output is disabled during
+performance measurement.
+
+The local release suite with these counters passed all 72 tests at 12 test
+threads in 49.051 seconds, without retries or skips. One projection took
+324.802 ms, including 320.031 ms of GC wall time and 124.460 ms of GC CPU time.
+This establishes an actual projection/GC stall; it does not identify the root
+cause of the remote mean failure or qualify a three-CPU fix. The previous
+instrumentation prototype's ASP failure is retained separately. No timeout,
+proof validation, cancellation or publication admission was relaxed.

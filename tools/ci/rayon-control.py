@@ -41,6 +41,17 @@ def head(root):
     return subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
 
 
+VM_INPUT_PATHS = ("rust/Cargo.toml", "rust/Cargo.lock", "*.ss", "bindings/c",
+                  "gerbil.pkg", "dev/gerbil.pkg", "rust/ascent-scheme",
+                  ":(exclude)program/rust-execution.ss")
+
+
+def verify_vm_inputs(reference, candidate, root):
+    # The build-only Rust kernel producer is part of the compared implementation.
+    subprocess.run(["git", "-C", str(root), "diff", "--exit-code", reference,
+                    candidate, "--", *VM_INPUT_PATHS], check=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--reference-source", type=Path, required=True)
@@ -60,14 +71,8 @@ def main():
                                             "--exclude-standard", "--", *source_paths], text=True)
         if untracked.strip():
             raise SystemExit("untracked runtime inputs; no measurement admitted")
-    # One dependency graph and one native DSL/C ABI/fixture cohort. The reference
-    # intentionally differs in Rust-owned phase scheduling, not program inputs.
-    for relative in ("rust/Cargo.lock", "rust/Cargo.toml"):
-        if (roots["reference"] / relative).read_bytes() != (roots["candidate"] / relative).read_bytes():
-            raise SystemExit("dependency controls differ; no measurement admitted")
-    subprocess.run(["git", "diff", "--exit-code", source_heads["reference"],
-                    source_heads["candidate"], "--", "*.ss", "bindings/c", "gerbil.pkg",
-                    "dev/gerbil.pkg", "rust/ascent-scheme"], check=True)
+    # One dependency graph and VM frontend cohort; compare Rust kernel generation.
+    verify_vm_inputs(source_heads["reference"], source_heads["candidate"], roots["candidate"])
     pairs = {"reference": artifacts(args.reference_build), "candidate": artifacts(args.candidate_build)}
     identities = {label: {name: {"path": str(path), "sha256": digest(path)}
                            for name, path in pair.items()} for label, pair in pairs.items()}

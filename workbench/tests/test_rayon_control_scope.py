@@ -1,5 +1,6 @@
 """Exercise the real comparison guard against independent source mutations."""
 import os
+import importlib.util
 from pathlib import Path
 import re
 import subprocess
@@ -7,6 +8,9 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
+SPEC = importlib.util.spec_from_file_location("rayon_control", ROOT / "tools/ci/rayon-control.py")
+CONTROL = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(CONTROL)
 
 
 class RayonControlScope(unittest.TestCase):
@@ -21,6 +25,7 @@ class RayonControlScope(unittest.TestCase):
             def git(*args):
                 return subprocess.check_output(['git', '-C', str(root), *args], text=True, stderr=subprocess.PIPE)
             git('init', '-q')
+            git('config', 'core.hooksPath', '/dev/null')
             git('config', 'user.name', 'Control fixture')
             git('config', 'user.email', 'fixture@example.invalid')
             for name in files:
@@ -33,8 +38,15 @@ class RayonControlScope(unittest.TestCase):
             (root / changed).write_text('candidate\n')
             git('add', changed)
             git('-c', 'commit.gpgsign=false', 'commit', '-qm', 'candidate')
-            return subprocess.run(['bash', '-c', command], cwd=root, env=dict(os.environ, reference=reference),
-                                  capture_output=True, text=True, timeout=10)
+            workflow = subprocess.run(['bash', '-c', command], cwd=root, env=dict(os.environ, reference=reference),
+                                      capture_output=True, text=True, timeout=10)
+            try:
+                CONTROL.verify_vm_inputs(reference, 'HEAD', root)
+                measurement = 0
+            except subprocess.CalledProcessError as error:
+                measurement = error.returncode
+            self.assertEqual(workflow.returncode, measurement, changed)
+            return workflow
 
     def test_kernel_implementation_changes_are_compared(self):
         for path in ['program/rust-execution.ss', 'rust/ascent/src/execution/matching.rs']:

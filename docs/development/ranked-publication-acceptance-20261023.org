@@ -274,3 +274,15 @@ only Scheme-input exception is the build-only Rust kernel IR producer, which is
 not part of the VM frontend library. All other Scheme and bridge inputs remain
 strictly equal. Remote performance and exact-head CI are required before this
 candidate can claim a latency or throughput improvement.
+
+* Control admission correction
+
+Run 39886414023 passed all 72 macOS binding prerequisites in 103.669 seconds,
+but stopped before any performance arm. Its Python driver's second source-cohort
+guard still rejected the build-only Rust producer allowed by the workflow.
+The correction applies the same dependency/VM cohort and producer exception in
+the driver; independent Git fixtures now execute both real guards and require
+the same decision for every allowed and forbidden change. No work, admission
+threshold, deadline or runtime implementation changes in this correction.
+The original full matrix at e43b30bb continues unchanged. Its result must retain
+that source head rather than being relabeled as a later metadata-only commit.

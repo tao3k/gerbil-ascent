@@ -3,12 +3,14 @@ name = "ascent-scheme"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+links = "ascent_scheme_program"
 
 [dependencies]
 gerbil-scheme.workspace = true
 gerbil-scheme-sys.workspace = true
+gerbil-scheme-python = { workspace = true, optional = true }
 gerbil-ascent = { workspace = true, features = ["process-runtime"] }
-libc = "=0.2.190"
+libc = "=0.2.186"
 bincode.workspace = true
 serde.workspace = true
 tempfile = "=3.27.0"
@@ -17,6 +19,7 @@ num-bigint.workspace = true
 [features]
 default = ["rayon"]
 rayon = ["gerbil-ascent/rayon"]
+instances = ["gerbil-scheme/isolated-instances", "ascent-build/instances", "dep:gerbil-scheme-python"]
 
 [build-dependencies]
 ascent-build = { path = "../ascent-build" }
@@ -61,3 +64,18 @@ path = "tests/integration/row_materialization.rs"
 name = "provenance_load"
 harness = false
 required-features = ["rayon"]
+
+[[test]]
+name = "instance_semantics"
+path = "tests/integration/instance_semantics.rs"
+required-features = ["instances"]
+
+[[test]]
+name = "instance_control"
+path = "tests/integration/instance_control.rs"
+required-features = ["instances"]
+
+[[test]]
+name = "instance_resources"
+path = "tests/integration/instance_resources.rs"
+required-features = ["instances"]

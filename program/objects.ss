@@ -14,6 +14,7 @@
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
                  gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
                  gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
+                 gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
                  gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
                  gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
                  GerbilAscentRelationContract
@@ -485,38 +486,6 @@
       (or (hash-get entries label)
           (error "unknown relational fragment export" label)))))
 
-;;; POO slots memoize their first value. Advance the declaration cursor only
-;;; as far as each request needs, retaining the original first-force order.
-;;; This index belongs to one construction; later calls inspect fresh objects.
-;; : (forall (a) (-> [a] (-> Symbol Boolean)))
-;; : (-> RelationDeclarations DeclaredNamePredicate)
-(def (declared-name-membership relations)
-  (let ((remaining relations) (names (make-hash-table-eq)))
-    (lambda (name)
-      (or (hash-get names name)
-          (let scan ()
-            (and (not (null? remaining))
-                 (let (found (.ref (car remaining) 'name))
-                   (set! remaining (cdr remaining))
-                   (hash-put! names found #t)
-                   (or (eq? found name) (scan)))))))))
-
-(def (checked-source-handles relations source-handle-values)
-  (unless (list? source-handle-values)
-    (error "invalid ASCENT source handles" source-handle-values))
-  (def seen (make-hash-table-eq))
-  (def declared? (declared-name-membership relations))
-  (let loop ((remaining source-handle-values) (copied []))
-    (if (null? remaining)
-      (reverse copied)
-      (let (name (car remaining))
-        (unless (and (symbol? name)
-                     (not (hash-get seen name))
-                     (declared? name))
-          (error "invalid or duplicate ASCENT source handle" name))
-        (hash-put! seen name #t)
-        (loop (cdr remaining) (cons name copied))))))
-
 (def (gerbil-ascent-fragment relation-values rule-values
                              (export-values []) (source-handle-values []))
   (declaration-check GerbilAscentFragmentContract
@@ -524,7 +493,7 @@
                 relations: relation-values rules: rule-values
                 exports: (fragment-export-resolver export-values)
                 source-handles:
-                (checked-source-handles relation-values
+                (gerbil-ascent-check-source-handles relation-values
                                         source-handle-values))))
 
 (def (gerbil-ascent-program declared-relations declared-rules
@@ -532,11 +501,6 @@
                                      (output-fact-limit +inf.0)
                                      (source-handle-values []))
   (declaration-check GerbilAscentProgramContract
-            (.o (:: @ Program.)
-                relations: declared-relations rules: declared-rules
-                source-handles:
-                (checked-source-handles declared-relations
-                                        source-handle-values)
-                max-input-facts: input-fact-limit
-                max-derived-facts: derived-fact-limit
-                max-output-facts: output-fact-limit)))
+    (gerbil-ascent-make-program-value Program. declared-relations declared-rules
+      source-handle-values
+      input-fact-limit derived-fact-limit output-fact-limit)))

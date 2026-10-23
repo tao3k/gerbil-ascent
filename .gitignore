@@ -32,3 +32,6 @@ python/src/ascent/.gerbil-resources.json
 *.whl
 *.bundle
 *.tar.gz
+
+# Build-owned upstream instance runtime assets.
+python/src/ascent/_owners/

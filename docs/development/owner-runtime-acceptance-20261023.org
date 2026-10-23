@@ -1,0 +1,170 @@
+#+TITLE: Independent VM owners and caller-owned publication
+#+DATE: 2026-10-23
+#+LANGUAGE: en
+
+* Scope and identities
+
+The SDK stays at Gerbil =1cfb032= / Gambit =ea114fc=. The bridge is pinned
+at gerbil-scheme-rust =6fb831e4528ab21d15c27f5e6723e35be2b90929= in existing
+PR 18. The preceding timer repair =9015091= completed exact-head CI, including both platform
+bindings, both Bazel bindings, the macOS lifecycle checks and Quint:
+https://github.com/tao3k/gerbil-scheme-rust/actions/runs/39923812650.
+The unsupported SMP job remains explicitly skipped.
+
+ASCENT preserves the intervening Core dependency commits through =77a406ed=,
+including the latest Core =acee203= functional-publication alignment.
+Controls built with the earlier =36d09fb= dependency prefix are diagnostic
+receipts for that cohort; they do not qualify the updated dependency cohort.
+
+* Production interfaces
+
+=ProcessPool= starts persistent exec workers. Each process enters one VM on
+one execution thread. =InstancePool= is an explicit macOS alternative using
+upstream independent images and fixed-owner native submissions in one
+process. Each instance also reports exactly one Scheme processor. Unsupported
+platforms do not silently select another implementation.
+
+Both interfaces serve the same Scheme DSL, module constructors, callable
+values, source sessions, exports and proofs. The library builds the archive;
+users load ordinary DSL without invoking a compiler. Rust does not implement
+another Scheme evaluator. Instance values use upstream rooted native type
+conversions. Process messages retain the typed binary protocol.
+
+Python exposes both leases through PyO3. The instance image and source carriers
+are packaged with the upstream ResourceTree and PackageManifest owners. Cargo
+links metadata passes the dependency-owned resource root to the wheel build;
+there is no target-directory scan. At admission, the library verifies the
+installed package against its compiled manifest and copies it into a private
+resource directory before binding module loading. An upstream owner-resource
+lease keeps the directory alive through actual native join; successful join
+publication follows its destruction. Quarantined owners retain their resources. It does not depend
+on the original Cargo output path after startup. The installed-wheel qualification
+runs the same 120 calls and 120 closure applications with twelve callers on
+each path. It additionally checks same-process, distinct-domain identities
+and joined shutdown receipts for instances.
+
+* Heartbeat isolation and native lifecycle
+
+The frozen macOS SDK uses process-global =SIGALRM= / =ITIMER_REAL= with an
+image-local interrupt handler. Loading another image can replace the earlier
+handler, and cleaning up one image can stop another image's heartbeat. This
+explains why independent VM ownership alone did not preserve non-yielding
+Scheme deadlines.
+
+The pinned bridge gives each image an independent timer notifier. It invokes
+only the SDK's asynchronous interrupt primitive; it never enters Scheme or GC.
+There is one additional OS notifier thread per VM, alongside its sole execution
+and collector owner. Resource measurements count these threads explicitly. Benchmark success also
+requires an explicit joined instance shutdown with no pending owners, panics
+or outstanding native roots.
+The notifier is joined through its actual native return before SDK cleanup and
+any image unmapping allowed by upstream policy. Host signal/timer state is not replaced by VM admission.
+
+A rejected libdispatch implementation is retained in external diagnostic
+receipts: it passed VM interruption but failed the original teardown thread
+count, and a delayed callback-return control exposed premature retirement.
+The joined notifier passes the unchanged mapping-release resource gate and
+single-owner, two-live-owner and concurrent-retirement deadline controls.
+No extra SDK release or relaxed teardown allowance is involved.
+
+* Caller authority and source projection
+
+The process worker performs ordinary work and monotonic-time checks against a
+request-local shared slot. A child publication transition remains a request:
+the original caller checks its cancellation, deadline and signed budget state
+before returning the publication decision. Stale wake registrations are fenced
+by their lease generation. Final authority is never granted by a delayed mirror.
+The previous per-checkpoint interprocess handshake is no longer production code;
+its signed-transition and lost-notification controls remain test fixtures.
+
+The Scheme projection optimization reuses only a private, factory-owned object
+graph. Every reuse still performs ordinary root Contract validation and creates
+a fresh wire value. Source replacement invalidates the generation. Foreign
+objects, changed protocols and changed references use the original ordered path.
+There is no cache of validation authority or provenance authority.
+
+* Measurement contract
+
+The production matrix has three unchanged workloads: small, closure and
+parallel-closure. Each uses the same total fixed work across all rows, five
+samples and a thirty-second sustained phase with twelve callers. Every answer
+is independently checked and matched by digest across configurations.
+
+The process and macOS instance populations are 1, 3 and 12. Each VM has one
+Scheme processor. These rows share one twelve-worker Rust coordinator pool;
+they do not construct an extra Rust pool for every caller. Rayon rows vary the
+shared execution pool across 1, 3, 6, 8 and 12 workers. The process benchmark
+reports both replacement and run/export phases for the same request.
+
+The driver records fixed-work QPS, sustained QPS, P95 bounds, maximum request
+latency, process-tree sampled RSS, actual OS thread populations and OS CPU
+accounting. Sampled RSS sums include shared pages; they are not physical unique
+memory. CPU accounting covers startup and teardown as well as execution. All
+compilation finishes before measurement; foreign compiler observations reject
+an affected row. Rejected observations are retained and never promoted by a
+later diagnostic run.
+
+The mean/provenance reproducer exercises both owner modes, with twelve clients,
+sixteen rounds and 384 proofs. Original proof deadlines, cancellation checks,
+source invalidation and archive-overlap checks remain intact. Allocation
+reductions and semantic test passes alone do not establish its three-CPU SLO.
+
+* Formal evidence boundary
+
+=OwnerAdmission.lean= and =OwnerAdmission.qnt= model caller-only publication,
+lagging cancellation/deadline mirrors, generation fencing and the separation
+between projection construction cost and fresh validation. Required fault
+mutants must be rejected. The complete existing formal inventory is retained.
+Exact source bindings detect drift in the resource transition and projection
+implementation. Historical transport fixtures are named as fixtures.
+
+These are not a proof of arbitrary Rust, Scheme, C, the mutable allocator or
+OS/VM refinement. Those host and source-equivalence obligations remain explicit.
+Native lifecycle controls and full semantics supply separate executable evidence;
+finite model checking is not relabeled as complete source refinement.
+
+* Acceptance ledger
+
+- Bridge timer revision =9015091=: all six supported exact-head CI jobs passed.
+  Resource-lease revision =6fb831e=: local formatting, strict workspace/all-feature
+  Clippy, full workspace and feature tests, and the original 32-owner native
+  resource gate passed. Its exact-head remote CI is still running at
+  https://github.com/tao3k/gerbil-scheme-rust/actions/runs/39934996304.
+- Local qualification cohort: Core =a5fe884= and POO =80b590b= built
+  successfully with the frozen SDK in an isolated prefix.
+- Complete formal inventory: passed after the lazy handle repair, including
+  existing negative controls and exact source bindings. Packaging and the new
+  host resource lease have separate native controls; no whole-host refinement
+  claim is made.
+- Workbench: 127 complete-suite tests passed before the final driver additions;
+  all 16 current throughput/configuration/retirement controls passed.
+- Coherent library tests: 31 bridge, 35 Rust kernel and 4 PyO3 library tests
+  passed with both ASP gates. A stale-worker handshake rejection is retained;
+  rebuilding its worker with the same feature graph qualified that control.
+- Shared semantics: all 42 process and 42 instance cases passed on current Core
+  before the final resource-lease change. At =6fb831e=, the three deadline
+  controls and two package-resource controls passed, including deletion of the
+  caller package before a real macro call and immediate private-directory
+  retirement after clean join. Final strict owner-feature Clippy passed.
+- Full Scheme: the first current-Core run reached all 173 modules and found a
+  declaration-name getter-order failure. Eager validation in a factory argument
+  caused it. The original lazy slot now performs the unchanged validation;
+  the frozen-constructor comparison and projection-cache, aggregate-admission
+  and Contract controls passed. The complete 173-module source suite then
+  passed with twelve single-thread VMs in 111 seconds on the local host.
+  The separate three-CPU exact-head receipt remains required.
+- Installed abi3 macOS wheel at =6fb831e=: twelve concurrent callers completed
+  120 calls and 120 closure applications on each owner path. Twelve process
+  workers were reaped or twelve instances joined cleanly. All three
+  twelve-thread Rust/PyO3 work-distribution controls passed on each invocation.
+  The wheel includes all 6,403 runtime resources (288,383,743 uncompressed
+  bytes). The local wheel uses the frozen SDK environment and installed
+  Homebrew shared dependencies; it is not a dependency-free deployment receipt.
+- A later remote dependency-only commit =77a406ed= was preserved after local
+  qualification. Its Core delta changes the source directory locator and
+  Funflow publication. The latest Core cohort must qualify in exact-head CI;
+  earlier local receipts are not relabeled.
+- Pending: complete final-head source/native semantics, three-CPU
+  mean/provenance on both paths, all 33 production rows, original performance
+  gates and exact ASCENT-head CI. No throughput admission or route selection
+  is claimed until these observations are complete.

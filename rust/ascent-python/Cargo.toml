@@ -25,6 +25,7 @@ asp-rust.workspace = true
 [features]
 default = ["rayon", "rust-runtime"]
 scheme-runtime = ["dep:ascent-scheme"]
+instances = ["scheme-runtime", "ascent-scheme/instances"]
 rust-runtime = ["dep:gerbil-scheme-python", "dep:ascent-c-abi"]
 rayon = ["gerbil-ascent/rayon"]
 extension-module = ["pyo3/extension-module"]

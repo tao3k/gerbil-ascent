@@ -399,11 +399,11 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "stage-link-rust", "rust/ascent/src/session.rs"),
                 ("ExecutionPolicy.lean", "stage-fanout-quint", "packages/proofs/quint/RequestScheduling.qnt"),
                 ("ExecutionPolicy.lean", "checkpoint-rust", "rust/ascent-scheme/src/process_policy.rs"),
-                ("ExecutionPolicy.lean", "wait-result-rust", "rust/ascent-scheme/src/process_checkpoint_darwin.rs"),
+                ("ExecutionPolicy.lean", "wait-result-rust", "rust/ascent-scheme/tests/unit/checkpoint_transport_darwin.rs"),
                 ("ExecutionPolicy.lean", "wait-result-quint", "packages/proofs/quint/CheckpointTransport.qnt"),
-                ("ExecutionPolicy.lean", "checkpoint-flags-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
-                ("ExecutionPolicy.lean", "checkpoint-wait-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
-                ("ExecutionPolicy.lean", "checkpoint-publish-rust", "rust/ascent-scheme/src/process_checkpoint.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-flags-rust", "rust/ascent-scheme/tests/unit/checkpoint_transport.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-wait-rust", "rust/ascent-scheme/tests/unit/checkpoint_transport.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-publish-rust", "rust/ascent-scheme/tests/unit/checkpoint_transport.rs"),
                 ("ExecutionPolicy.lean", "checkpoint-cost-quint", "packages/proofs/quint/CheckpointTransport.qnt"),
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
@@ -436,8 +436,10 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "owned-relation-value", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-aggregate-value", "program/types.ss"),
                 ("ExecutionPolicy.lean", "aggregate-constructor", "program/objects.ss"),
-                ("ExecutionPolicy.lean", "checkpoint-spin-policy", "rust/ascent-scheme/src/process_checkpoint.rs"),
-                ("ExecutionPolicy.lean", "checkpoint-spin-link", "rust/ascent-scheme/src/service.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-spin-policy", "rust/ascent-scheme/tests/unit/checkpoint_transport.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-publication-link", "rust/ascent-scheme/src/service.rs"),
+                ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
+                ("ExecutionPolicy.lean", "projection-object-reuse", "interface/projection-cache.ss"),
                 ("ExecutionPolicy.lean", "projection-allocation-probe", "tools/ci/projection-allocation.ss"),
                 ("ExecutionPolicy.lean", "owned-declaration-values", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-declaration-check", "program/objects.ss"),
@@ -575,13 +577,13 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate owned declaration region')
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"checkpoint-spin-policy", "checkpoint-spin-link"}:
+                elif language in {"checkpoint-spin-policy", "checkpoint-publication-link"}:
                     marker = language.upper().replace("-", " ")
                     begin, end = f'// BEGIN GENERATED {marker}\n', f'// END GENERATED {marker}\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate checkpoint waiting source region')
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language == "projection-allocation-probe":
+                elif language in {"projection-allocation-probe", "owner-control-rust", "projection-object-reuse"}:
                     pass  # The complete diagnostic is source-bound, not its printed byte report.
                 elif language == "owned-relation-value":
                     begin, end = (';; BEGIN GENERATED OWNED RELATION VALUE\n',

@@ -1,5 +1,6 @@
 """Installed Scheme-profile wheel: real calls through twelve resident VMs."""
 from concurrent.futures import ThreadPoolExecutor
+import argparse
 import gc
 import os
 from pathlib import Path
@@ -44,13 +45,16 @@ def qualify_rayon_modes():
     print("RAYON-PYTHON-OK threads=12 modes=3 limits=preserved snapshots=preserved", flush=True)
 
 
-def qualify():
-    pool = ProcessPool(12)
+def qualify(pool_type=ProcessPool, shared_process=False):
+    pool = pool_type(12)
     identities = pool.identities()
     assert len(identities) == 12
-    assert len({row['pid'] for row in identities}) == 12
+    assert len({row['domain'] for row in identities}) == 12
+    assert len({row['pid'] for row in identities}) == (1 if shared_process else 12)
+    if shared_process:
+        assert all(row['pid'] == os.getpid() for row in identities)
     assert all(row['processors'] == 1 for row in identities)
-    if worker := os.environ.get('ASCENT_SCHEME_WORKER'):
+    if not shared_process and (worker := os.environ.get('ASCENT_SCHEME_WORKER')):
         for row in identities:
             executable = Path(f"/proc/{row['pid']}/exe")
             if executable.exists():
@@ -84,18 +88,34 @@ def qualify():
         engine.shutdown()
     # Release all scope leases before retiring their common owner population.
     del module, engine, modules, engines
+    if shared_process:
+        gc.collect()
+        receipt = pool.shutdown()
+        assert receipt['pending'] == 0 and receipt['joined'] == 12 and receipt['panicked'] == 0
+        assert len(receipt['owners']) == 12
+        assert all(owner['status'] == 0 and owner['roots_before_cleanup'] == 0
+                   for owner in receipt['owners'])
     return [row['pid'] for row in identities]
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--instances', action='store_true')
+    args = parser.parse_args()
     qualify_rayon_modes()
-    pids = qualify()
-    gc.collect()
-    for pid in pids:
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            continue
-        raise AssertionError(f'owned worker not reaped: {pid}')
-    entry = 'selected-rust-worker' if os.environ.get('ASCENT_SCHEME_WORKER') else 'default-pyo3-worker'
-    print(f'PROCESS-PYTHON-OK entry={entry} owners=12 processors=1 clients=12 calls=120 applications=120 reaped=12')
+    if args.instances:
+        from ascent import InstancePool
+        pids = qualify(InstancePool, shared_process=True)
+        assert set(pids) == {os.getpid()}
+        print('INSTANCE-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 joined=12')
+    else:
+        pids = qualify()
+        gc.collect()
+        for pid in pids:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                continue
+            raise AssertionError(f'owned worker not reaped: {pid}')
+        entry = 'selected-rust-worker' if os.environ.get('ASCENT_SCHEME_WORKER') else 'default-pyo3-worker'
+        print(f'PROCESS-PYTHON-OK entry={entry} owners=12 processors=1 clients=12 calls=120 applications=120 reaped=12')

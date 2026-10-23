@@ -1,12 +1,17 @@
 //! Thin ASCENT application binding over gerbil-scheme-rust.
 mod application;
 mod control;
+pub(crate) use control::{Control, ascent_hybrid_checkpoint, controlled_request};
+mod control_state;
 mod dag;
 mod diagnostics;
 mod ffi;
 mod values;
 pub use dag::Dag;
+#[cfg(test)]
+#[path = "../tests/unit/checkpoint_transport.rs"]
 mod process_checkpoint;
+mod process_control;
 mod process_wire;
 mod process_worker;
 mod service;
@@ -39,6 +44,11 @@ pub use api::{
     Backend, Engine, Explanation, Module, ModuleValue, ResultValue, RuleResult, RuleSession,
     SchemeProvenance, Source,
 };
+
+#[cfg(all(feature = "instances", target_os = "macos"))]
+mod instances;
+#[cfg(all(feature = "instances", target_os = "macos"))]
+pub use instances::{InstanceOwner, InstancePool};
 
 mod identity;
 pub use identity::build_identity;

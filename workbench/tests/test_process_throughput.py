@@ -98,8 +98,8 @@ class DiagnosticAdmission(unittest.TestCase):
         for diagnostic in [False, True]:
             with self.subTest(diagnostic=diagnostic), tempfile.TemporaryDirectory() as directory:
                 args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
-                process = SimpleNamespace(returncode=0, communicate=lambda **_: self.complete_evidence())
-                with patch.dict(CONTROL.os.environ, {}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), \
+                process = SimpleNamespace(pid=123, returncode=0, communicate=lambda **_: self.complete_evidence())
+                with patch.dict(CONTROL.os.environ, {}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), patch.object(CONTROL, 'process_snapshot', return_value=[dict(pid=123,ppid=0,rss_kib=1024,command='benchmark')]), patch.object(CONTROL, 'thread_population', return_value={123:12}), patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
                         patch.object(CONTROL.subprocess, 'Popen', return_value=process) as launch:
                     row = CONTROL.run_case(args, ('small', 12, 4, 8), ('vm', 1, 1), 'adaptive', diagnostic=diagnostic)
                 self.assertEqual(row['valid'], not diagnostic)
@@ -127,3 +127,51 @@ class DiagnosticAdmission(unittest.TestCase):
             self.assertFalse(receipt['admitted'])
             self.assertEqual(receipt['runs'][0]['original_status'], 101)
         self.assertEqual(rows, before)
+
+
+class RuntimeIdentityAndResources(unittest.TestCase):
+    def test_instances_share_one_pid_but_require_distinct_domains(self):
+        owners = [dict(pid="8", domain=str(i+1), processors="1") for i in range(12)]
+        self.assertTrue(CONTROL.owner_identities_valid(owners, "instances", 12))
+        self.assertFalse(CONTROL.owner_identities_valid(owners, "vm", 12))
+        self.assertFalse(CONTROL.owner_identities_valid(owners[:-1] + [owners[0]], "instances", 12))
+        self.assertFalse(CONTROL.owner_identities_valid([{**owners[0], "processors": "2"}], "instances", 1))
+
+    def test_process_tree_does_not_charge_other_tasks_and_keeps_shared_rss_caveat(self):
+        snapshot = [dict(pid=1, ppid=0, rss_kib=10), dict(pid=2, ppid=1, rss_kib=20),
+                    dict(pid=3, ppid=2, rss_kib=30), dict(pid=4, ppid=0, rss_kib=900)]
+        self.assertEqual(CONTROL.process_tree_resources(snapshot, 1),
+                         dict(pids=[1,2,3], processes=3, rss_sum_kib=60, maximum_process_rss_kib=30))
+
+    def test_missing_cpu_accounting_is_not_reported_as_zero_cost(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "resource"
+            path.write_text("0.2 real 0.3 user 0.1 sys\n2048 maximum resident set size\n")
+            self.assertEqual(CONTROL.cpu_resources(path)["average_cpu_cores"], 2)
+            path.write_text("time: failed\n")
+            with self.assertRaises(ValueError):
+                CONTROL.cpu_resources(path)
+
+
+class ThreadResourceEvidence(unittest.TestCase):
+    def test_darwin_blank_user_rows_count_real_threads_and_exclude_other_processes(self):
+        output = "USER       PID   TT   %CPU STAT\ngu nt    70687   ??    0.0 S\n         70687         0.0 S\n         70687         0.0 S\nother    99999   ??    0.0 S\n"
+        self.assertEqual(CONTROL.parse_thread_counts(output, {70687}, True), {70687:3})
+
+    def test_linux_counts_threads_without_charging_foreign_pids(self):
+        self.assertEqual(CONTROL.parse_thread_counts("12\n12\n13\n14\n", {12,13}, False), {12:2,13:1})
+
+class OwnerConfigurationEvidence(unittest.TestCase):
+    def test_vm_processor_population_and_rust_coordinator_count_are_independent(self):
+        expected = [(mode, owners, 12) for mode in ('vm', 'instances') for owners in (1, 3, 12)]
+        expected += [('rayon', 1, threads) for threads in (1, 3, 6, 8, 12)]
+        self.assertEqual(CONTROL.configurations(True), expected)
+        self.assertEqual(CONTROL.configurations(False), [row for row in expected if row[0] != 'instances'])
+
+class JoinedOwnerEvidence(unittest.TestCase):
+    def test_pending_roots_missing_and_duplicate_receipts_never_qualify_native_teardown(self):
+        receipt = 'OWNER-SHUTDOWN mode=instances joined=12 pending=0 panicked=0 roots=0\n'
+        self.assertTrue(CONTROL.owner_shutdown_valid(receipt, 'instances', 12))
+        for rejected in ['', receipt + receipt, receipt.replace('pending=0', 'pending=1'), receipt.replace('roots=0', 'roots=1'), receipt.replace('joined=12', 'joined=11'), receipt.replace('panicked=0', 'panicked=1')]:
+            self.assertFalse(CONTROL.owner_shutdown_valid(rejected, 'instances', 12))

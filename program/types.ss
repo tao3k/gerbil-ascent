@@ -23,6 +23,8 @@
         gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
         gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
         gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
+        gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
+        gerbil-ascent-projection-tree-current? gerbil-ascent-check-projection-program
         gerbil-ascent-relation-with-rows
         gerbil-ascent-make-session-value
         GerbilAscentRelationContract
@@ -546,6 +548,71 @@
       max-input-facts: +fact-budget+
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))
+
+
+;;; POO slots memoize their first value. Advance the declaration cursor only
+;;; as far as each request needs, retaining the original first-force order.
+;;; This index belongs to one construction; later calls inspect fresh objects.
+;; : (forall (a) (-> [a] (-> Symbol Boolean)))
+;; : (-> RelationDeclarations DeclaredNamePredicate)
+(def (declared-name-membership relations)
+  (let ((remaining relations) (names (make-hash-table-eq)))
+    (lambda (name)
+      (or (hash-get names name)
+          (let scan ()
+            (and (not (null? remaining))
+                 (let (found (.ref (car remaining) 'name))
+                   (set! remaining (cdr remaining))
+                   (hash-put! names found #t)
+                   (or (eq? found name) (scan)))))))))
+
+(def (gerbil-ascent-check-source-handles relations source-handle-values)
+  (unless (list? source-handle-values)
+    (error "invalid ASCENT source handles" source-handle-values))
+  (def seen (make-hash-table-eq))
+  (def declared? (declared-name-membership relations))
+  (let loop ((remaining source-handle-values) (copied []))
+    (if (null? remaining)
+      (reverse copied)
+      (let (name (car remaining))
+        (unless (and (symbol? name)
+                     (not (hash-get seen name))
+                     (declared? name))
+          (error "invalid or duplicate ASCENT source handle" name))
+        (hash-put! seen name #t)
+        (loop (cdr remaining) (cons name copied))))))
+
+;;; Private projection objects may be reused; successful checks never are.
+;;; Foreign trees, callback-bearing protocols and edited factories keep the
+;;; original fresh-constructor path, including its getter/exception ordering.
+(def projection-program-current?
+  (canonical-value-check-current? GerbilAscentProgramContract
+    '(relations rules source-handles max-input-facts max-derived-facts max-output-facts)))
+(def (gerbil-ascent-make-program-value prototype relation-values rule-values handles input-limit derived-limit output-limit)
+  (remember-value-shape! 'program
+    (.o (:: @ prototype) relations: relation-values rules: rule-values
+        source-handles: (gerbil-ascent-check-source-handles relation-values handles)
+        max-input-facts: input-limit
+        max-derived-facts: derived-limit max-output-facts: output-limit)))
+(def (gerbil-ascent-projection-tree-current? program)
+  (and (declared-value-shape? 'program program)
+       (projection-program-current?) (relation-protocol-current?) (relation-metadata-current?)
+       (rule-value-current?) (atom-value-check-current?) (term-value-current?)
+       (aggregate-value-current?) (aggregate-predecessors-current?)
+       (let ((relations (.ref program 'relations)) (rules (.ref program 'rules))
+             (handles (.ref program 'source-handles)))
+         (and (list? relations) (andmap owned-canonical-relation? relations)
+              (list? handles) (andmap symbol? handles)
+              (list? rules)
+              (andmap (lambda (rule)
+                (and (declared-value-shape? 'rule rule)
+                     (let ((heads (.ref rule 'heads)) (body (.ref rule 'body)))
+                       (and (pair? heads) (list? heads) (andmap owned-atom-fields? heads)
+                            (list? body)
+                            (andmap (lambda (clause)
+                              (or (owned-atom-fields? clause) (owned-aggregate-fields? clause))) body))))) rules)))))
+(def (gerbil-ascent-check-projection-program program)
+  (validate GerbilAscentProgramContract program))
 
 ;;; Session operations are the only mutable public boundary. A run returns an
 ;;; immutable result snapshot even when later appends extend the session.

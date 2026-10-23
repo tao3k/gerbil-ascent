@@ -8,13 +8,35 @@ use std::{
     },
     time::Instant,
 };
+pub(crate) fn controlled_request(
+    request: Data,
+    timeout: std::time::Duration,
+    cancellation: &Cancellation,
+) -> Result<(Control, Data)> {
+    let control = Control::new(
+        &Limits {
+            timeout,
+            max_states: usize::MAX,
+            max_facts: usize::MAX,
+        },
+        cancellation,
+    )?;
+    let Data::Map(mut fields) = request else {
+        return Err(crate::failure("object required"));
+    };
+    if fields.contains_key("executionControl") {
+        return Err(crate::failure("conflicting execution control authority"));
+    }
+    fields.insert("executionControl".into(), control.id());
+    Ok((control, Data::Map(fields)))
+}
+
 struct Entry {
     cancellation: Cancellation,
     deadline: Instant,
-    work: usize,
-    max_work: usize,
-    accepted: bool,
-    suspended: bool,
+    state: crate::control_state::State,
+    remote: Option<Arc<crate::process_control::Shared>>,
+    closed: bool,
 }
 struct Scope {
     id: i64,
@@ -22,9 +44,63 @@ struct Scope {
 }
 static ENTRIES: OnceLock<Mutex<BTreeMap<i64, Weak<Scope>>>> = OnceLock::new();
 static NEXT: AtomicU64 = AtomicU64::new(1);
+#[cfg(all(feature = "instances", target_os = "macos"))]
+thread_local! {
+    static CURRENT: std::cell::RefCell<Option<(Control, Arc<AtomicU64>)>> = const { std::cell::RefCell::new(None) };
+}
+#[cfg(all(feature = "instances", target_os = "macos"))]
+pub(crate) struct Entered {
+    previous: Option<(Control, Arc<AtomicU64>)>,
+    _owner: std::marker::PhantomData<std::rc::Rc<()>>,
+}
+#[cfg(all(feature = "instances", target_os = "macos"))]
+impl Drop for Entered {
+    fn drop(&mut self) {
+        CURRENT.with(|current| current.replace(self.previous.take()));
+    }
+}
 #[derive(Clone)]
 pub(crate) struct Control(Arc<Scope>);
 impl Control {
+    pub(crate) fn lease(&self, shared: Arc<crate::process_control::Shared>) -> Result<Lease> {
+        let mut entry = self.0.entry.lock().map_err(|_| Error::Closed)?;
+        if entry.closed || entry.remote.is_some() {
+            return Err(Error::Closed);
+        }
+        reason(interruption(&entry))?;
+        shared.begin(self.numeric_id(), entry.state, entry.deadline)?;
+        let wake = Arc::new(CancelWake {
+            armed: Mutex::new(Some(self.numeric_id())),
+            shared: shared.clone(),
+        });
+        let subscription = match entry
+            .cancellation
+            .subscribe(std::task::Waker::from(wake.clone()))
+        {
+            Ok(subscription) => subscription,
+            Err(error) => {
+                shared.close();
+                return Err(error);
+            }
+        };
+        entry.remote = Some(shared.clone());
+        Ok(Lease {
+            control: self.clone(),
+            shared,
+            wake,
+            subscription: Some(subscription),
+            finished: false,
+        })
+    }
+
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    pub(crate) fn enter(&self, counter: Arc<AtomicU64>) -> Entered {
+        let previous = CURRENT.with(|current| current.replace(Some((self.clone(), counter))));
+        Entered {
+            previous,
+            _owner: std::marker::PhantomData,
+        }
+    }
     pub(crate) fn new(limits: &Limits, cancellation: &Cancellation) -> Result<Self> {
         if cancellation.is_canceled() {
             return Err(Error::Canceled);
@@ -46,11 +122,15 @@ impl Control {
             id,
             entry: Mutex::new(Entry {
                 cancellation: cancellation.clone(),
+                remote: None,
+                closed: false,
                 deadline,
-                work: 0,
-                max_work: limits.max_states,
-                accepted: false,
-                suspended: false,
+                state: crate::control_state::State {
+                    work: 0,
+                    maximum: limits.max_states,
+                    accepted: false,
+                    suspended: false,
+                },
             }),
         });
         ENTRIES
@@ -88,7 +168,16 @@ impl Control {
     }
     pub(crate) fn check(&self) -> Result<()> {
         let entry = self.0.entry.lock().map_err(|_| Error::Closed)?;
-        reason(interruption(&entry))
+        let code = interruption(&entry);
+        if let Some(remote) = &entry.remote {
+            if code == 1 {
+                remote.cancel(self.numeric_id());
+            }
+            if code == 2 {
+                remote.expire(self.numeric_id());
+            }
+        }
+        reason(code)
     }
 }
 impl Drop for Scope {
@@ -105,7 +194,9 @@ fn scope(id: i64) -> Option<Arc<Scope>> {
     weak.upgrade()
 }
 fn interruption(entry: &Entry) -> i32 {
-    if entry.accepted {
+    if entry.closed {
+        5
+    } else if entry.state.accepted {
         0
     } else if entry.cancellation.is_canceled() {
         1
@@ -116,6 +207,19 @@ fn interruption(entry: &Entry) -> i32 {
     }
 }
 pub(crate) fn checkpoint(id: i64, work: i64) -> i32 {
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    if let Some(code) = CURRENT.with(|current| {
+        current.borrow().as_ref().map(|(control, counter)| {
+            counter.fetch_add(1, Ordering::Relaxed);
+            if control.numeric_id() == id {
+                control.checkpoint(work)
+            } else {
+                5
+            }
+        })
+    }) {
+        return code;
+    }
     let Some(scope) = scope(id) else {
         return 5;
     };
@@ -125,39 +229,45 @@ fn checkpoint_scope(scope: &Scope, work: i64) -> i32 {
     let Ok(mut entry) = scope.entry.lock() else {
         return 5;
     };
-    if work == -2 {
-        entry.suspended = true;
-        return 0;
+    if entry.closed {
+        return 5;
     }
-    if work == -3 {
-        entry.suspended = false;
-        return 0;
+    let remote = entry.remote.clone();
+    if let Some(remote) = &remote {
+        // The VM is waiting for this socket decision: its resource state is stable.
+        let Ok(snapshot) = remote.snapshot(scope.id) else {
+            return 5;
+        };
+        if snapshot.maximum != entry.state.maximum || snapshot.accepted != entry.state.accepted {
+            return 5;
+        }
+        entry.state.work = snapshot.work;
+        entry.state.suspended = snapshot.suspended;
     }
-    if entry.suspended {
-        return 0;
+    let Entry {
+        cancellation,
+        deadline,
+        state,
+        remote: _,
+        closed: _,
+    } = &mut *entry;
+    let code = state.advance(work, |accepted| {
+        if accepted {
+            0
+        } else if cancellation.is_canceled() {
+            1
+        } else if Instant::now() >= *deadline {
+            2
+        } else {
+            0
+        }
+    });
+    if let Some(remote) = remote
+        && remote.publish(scope.id, *state).is_err()
+    {
+        return 5;
     }
-    let interrupted = interruption(&entry);
-    if interrupted != 0 {
-        return interrupted;
-    }
-    if entry.accepted {
-        return 0;
-    }
-    if work == -1 {
-        entry.accepted = true;
-        return 0;
-    }
-    let Ok(work) = usize::try_from(work) else {
-        return 3;
-    };
-    let Some(work) = entry.work.checked_add(work) else {
-        return 3;
-    };
-    if work > entry.max_work {
-        return 3;
-    }
-    entry.work = work;
-    0
+    code
 }
 fn reason(code: i32) -> Result<()> {
     match code {
@@ -172,4 +282,76 @@ fn reason(code: i32) -> Result<()> {
 pub(crate) extern "C" fn ascent_hybrid_checkpoint(id: i64, work: i64, facts: i64) -> i32 {
     crate::process_worker::remote_checkpoint(id, work, facts)
         .unwrap_or_else(|| checkpoint(id, work))
+}
+
+struct CancelWake {
+    armed: Mutex<Option<i64>>,
+    shared: Arc<crate::process_control::Shared>,
+}
+impl std::task::Wake for CancelWake {
+    fn wake(self: Arc<Self>) {
+        Self::wake_by_ref(&self);
+    }
+    fn wake_by_ref(self: &Arc<Self>) {
+        if let Ok(armed) = self.armed.lock() {
+            if let Some(id) = *armed {
+                self.shared.cancel(id);
+            }
+        } else {
+            self.shared.close();
+        }
+    }
+}
+
+pub(crate) struct Lease {
+    control: Control,
+    shared: Arc<crate::process_control::Shared>,
+    wake: Arc<CancelWake>,
+    subscription: Option<gerbil_ascent::CancellationSubscription>,
+    finished: bool,
+}
+impl Lease {
+    fn disarm(&mut self) {
+        if let Ok(mut armed) = self.wake.armed.lock() {
+            *armed = None;
+        }
+        self.subscription.take();
+    }
+    pub(crate) fn finish(mut self) -> Result<()> {
+        self.disarm();
+        let mut entry = self.control.0.entry.lock().map_err(|_| Error::Closed)?;
+        let state = self.shared.finish(self.control.numeric_id());
+        entry.remote = None;
+        match state {
+            Ok(state)
+                if state.maximum == entry.state.maximum
+                    && state.accepted == entry.state.accepted =>
+            {
+                entry.state = state;
+            }
+            Ok(_) => {
+                entry.closed = true;
+                return Err(Error::Closed);
+            }
+            Err(error) => {
+                entry.closed = true;
+                return Err(error);
+            }
+        }
+        self.finished = true;
+        Ok(())
+    }
+}
+impl Drop for Lease {
+    fn drop(&mut self) {
+        if !self.finished {
+            self.disarm();
+            // Revoke failed requests without waiting on a child-owned lock.
+            self.shared.close();
+            if let Ok(mut entry) = self.control.0.entry.lock() {
+                entry.remote = None;
+                entry.closed = true;
+            }
+        }
+    }
 }

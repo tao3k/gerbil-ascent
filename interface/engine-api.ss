@@ -2,10 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/encoding/json :gerbil-ascent/program/objects
-        (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows)
+        (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows
+                 gerbil-ascent-projection-tree-current?)
         (only-in "rule-source.ss" ascent-read-rule-sources)
         (only-in "dsl-source.ss" ascent-load-dsl-sources)
         "rule-module.ss" "value-graph.ss"
+        (only-in "projection-cache.ss" ascent-projection-program)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
 
 
@@ -27,7 +29,7 @@
 (export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call)
 (defstruct api-session (engine sources queries))
 (def sessions (make-hash-table-eqv))
-(defstruct source-state (queries descriptors generation last-result runs program explain results sources names))
+(defstruct source-state (queries descriptors generation last-result runs program explain results sources names projection-cache))
 (defstruct owned-result (generation value retained kind))
 (def next-result 0)
 (def source-sessions (make-hash-table-eqv))
@@ -165,10 +167,14 @@
             (error "fact limit must be a positive exact integer" key))
           (if (< limit declared) limit declared)))
       (shape policy [] '("input" "derived" "output"))
-      (.o (:: @ program)
-          max-input-facts: (ceiling "input" 'max-input-facts)
-          max-derived-facts: (ceiling "derived" 'max-derived-facts)
-          max-output-facts: (ceiling "output" 'max-output-facts)))))
+      ;; Empty caller ceilings leave owned, callback-free declarations intact.
+      ;; Foreign objects retain the original lazy getter path and ordering.
+      (if (and (= (hash-length policy) 0) (gerbil-ascent-projection-tree-current? program))
+        program
+        (.o (:: @ program)
+            max-input-facts: (ceiling "input" 'max-input-facts)
+            max-derived-facts: (ceiling "derived" 'max-derived-facts)
+            max-output-facts: (ceiling "output" 'max-output-facts))))))
 (def (program-limits program)
   (def (wire slot)
     (let (limit (.ref program slot)) (if (eqv? limit +inf.0) "unlimited" limit)))
@@ -341,7 +347,7 @@
       (hash-put! source-sessions next-handle
         (make-source-state queries descriptors 0 #f 0 program explain (make-hash-table-eqv)
           (map (lambda (r) (cons (.ref r 'name) (map (cut map identity <>) (.ref r 'rows))))
-               (.ref program 'relations)) names))
+               (.ref program 'relations)) names #f))
       (hash ("handle" next-handle) ("descriptors" descriptors) ("queries" exports)
             ("projection" projection) ("sourceGeneration" 0)
             ("factLimits" (program-limits program)))))
@@ -675,13 +681,11 @@
     ((source-projection)
      (shape request '("operation" "handle"))
      (let-values (((session state) (source-lookup request)))
-       (let* ((original (source-state-program state))
-              (program (gerbil-ascent-program
-                (map (lambda (relation)
-                  (let (source (assq (.ref relation 'name) (source-state-sources state)))
-                    (if source (gerbil-ascent-relation-with-rows relation (cdr source)) relation))) (.ref original 'relations))
-                (.ref original 'rules) (.ref original 'max-input-facts)
-                (.ref original 'max-derived-facts) (.ref original 'max-output-facts) (.ref original 'source-handles))))
+       (let-values (((program cache)
+          (ascent-projection-program (source-state-program state)
+            (source-state-sources state) (source-state-generation state)
+            (source-state-projection-cache state))))
+         (source-state-projection-cache-set! state cache)
          (with-catch (lambda (_) (hash ("status" "unsupported") ("sourceGeneration" (source-state-generation state))))
            (lambda () (hash ("status" "supported") ("sourceGeneration" (source-state-generation state))
              ("program" (ascent-engine-program-wire program (.ref program 'source-handles)
@@ -711,6 +715,7 @@
                           source)))
                   (source-state-sources state)))
            (source-state-generation-set! state (+ (source-state-generation state) 1))
+           (source-state-projection-cache-set! state #f)
            (source-state-last-result-set! state #f)
            (hash-clear! (source-state-results state))
            (hash ("updated" #t) ("sourceGeneration" (source-state-generation state)))))))

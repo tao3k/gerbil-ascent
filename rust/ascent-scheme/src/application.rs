@@ -60,16 +60,21 @@ impl Runtime {
             unsafe { self.runtime.bind_object_export(ascent_hybrid_call) }.map_err(scheme_error)?;
         let response = export.call(&request).into_result().map_err(scheme_error)?;
         let response = values::decode(response, 0)?;
-        let values = response.list()?;
-        if values.len() != 2 {
-            return Err(failure("native response arity"));
-        }
-        if values[0] == Data::Bool(true) {
-            Ok(values[1].clone())
-        } else {
-            Err(scheme_failure(values[1].text()?))
-        }
+        decode_response(response)
     }
+}
+pub(crate) fn decode_response(response: Data) -> Result<Data> {
+    let values = response.list()?;
+    if values.len() != 2 {
+        return Err(failure("native response arity"));
+    }
+    if values[0] != Data::Bool(true) {
+        return Err(scheme_failure(values[1].text()?));
+    }
+    let Data::List(mut values) = response else {
+        unreachable!("response kind was validated above")
+    };
+    Ok(values.swap_remove(1))
 }
 pub(crate) fn failure(message: &str) -> Error {
     Error::Evaluation(message.into())

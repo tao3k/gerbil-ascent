@@ -56,6 +56,7 @@ jobs:
     timeout-minutes: 90
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
+      ASCENT_OWNER_FEATURES: "ascent-scheme/rayon,ascent-scheme/instances,ascent-python/instances,ascent-python/rayon"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -117,6 +118,12 @@ jobs:
           git diff --exit-code "$reference" HEAD -- rust/Cargo.toml rust/Cargo.lock '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg rust/ascent-scheme ':(exclude)program/rust-execution.ss'
           git worktree add --detach "$RUNNER_TEMP/process-reference" "$reference"
           cargo build --release --locked --manifest-path "$RUNNER_TEMP/process-reference/rust/Cargo.toml" -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-reference-build.jsonl"
+      - name: Prepare the existing PyO3 build toolchain
+        if: ${{ inputs.process_throughput }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/owner-python"
+          "$RUNNER_TEMP/owner-python/bin/pip" install 'maturin>=1.9,<2'
+          printf 'PYO3_PYTHON=%s/owner-python/bin/python\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Build production process benchmark with the released SDK
         id: production
         if: ${{ inputs.process_throughput }}
@@ -129,8 +136,8 @@ jobs:
         run: |
           xcrun --find ld-classic
           printf 'RUSTFLAGS=%s\nMACOSX_DEPLOYMENT_TARGET=%s\n' "$RUSTFLAGS" "$MACOSX_DEPLOYMENT_TARGET" > "$RUNNER_TEMP/process-build-recipe.txt"
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --bench provenance_load --test archive_build --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
-      - name: Qualify complete macOS process semantics before measurement
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --lib --bin ascent-scheme-worker --bench process_throughput --bench provenance_load --test archive_build --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
+      - name: Qualify complete macOS process and instance semantics before measurement
         id: bindings
         if: ${{ inputs.process_throughput }}
         env:
@@ -148,8 +155,21 @@ jobs:
           mkdir -p "$RUNNER_TEMP/nextest"
           tar -xzf "$archive" -C "$RUNNER_TEMP/nextest"
           export PATH="$RUNNER_TEMP/nextest:$PATH"
-          cargo nextest run --release --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/process-binding-tests.log"
+          cargo nextest run --release --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/process-binding-tests.log"
           ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/process-binding-tests.log"
+      - name: Qualify installed PyO3 process and instance owner interfaces
+        if: ${{ inputs.process_throughput }}
+        env:
+          CARGO_BUILD_JOBS: "3"
+          GERBIL_BUILD_CORES: "3"
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+          RUSTFLAGS: "-C link-arg=-Wl,-ld_classic"
+        run: |
+          (cd python && "$RUNNER_TEMP/owner-python/bin/maturin" build --release --locked --no-default-features --features scheme-runtime,rayon,instances,extension-module --out "$RUNNER_TEMP/owner-wheels")
+          "$RUNNER_TEMP/owner-python/bin/pip" install --no-deps "$RUNNER_TEMP"/owner-wheels/*.whl
+          "$RUNNER_TEMP/owner-python/bin/python" python/qualification/process_pool.py
+          "$RUNNER_TEMP/owner-python/bin/python" python/qualification/process_pool.py --instances
       - name: Measure sustained production interface after all compilation
         if: ${{ inputs.process_throughput }}
         env:
@@ -160,13 +180,18 @@ jobs:
             python3 tools/ci/rayon-control.py --reference-source "$RUNNER_TEMP/process-reference" --reference-build "$RUNNER_TEMP/process-reference-build.jsonl" --candidate-build "$RUNNER_TEMP/process-build.jsonl" --expected-cpus 3 --output "$RUNNER_TEMP/process-control"
           else
             benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-build.jsonl")"
-            python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
+            python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --include-instances --output "$RUNNER_TEMP/process-throughput"
           fi
       - name: Diagnose resident mean provenance after all original measurements
         if: ${{ !cancelled() && inputs.process_throughput && inputs.baseline == '' && steps.production.outcome == 'success' && steps.bindings.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: python3 tools/ci/provenance-load.py --build "$RUNNER_TEMP/process-build.jsonl" --output "$RUNNER_TEMP/provenance-load" --expected-cpus 3
+      - name: Diagnose resident instance mean provenance with the same limits
+        if: ${{ !cancelled() && inputs.process_throughput && inputs.baseline == '' && steps.production.outcome == 'success' && steps.bindings.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: python3 tools/ci/provenance-load.py --build "$RUNNER_TEMP/process-build.jsonl" --output "$RUNNER_TEMP/instance-provenance-load" --expected-cpus 3 --owner-mode instances
       - name: Preserve production throughput and every negative observation
         if: ${{ always() && inputs.process_throughput }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -176,6 +201,7 @@ jobs:
             ${{ runner.temp }}/process-throughput
             ${{ runner.temp }}/process-control
             ${{ runner.temp }}/provenance-load
+            ${{ runner.temp }}/instance-provenance-load
             ${{ runner.temp }}/process-reference-build.jsonl
             ${{ runner.temp }}/process-build.jsonl
             ${{ runner.temp }}/process-build-recipe.txt

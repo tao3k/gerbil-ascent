@@ -2918,5 +2918,38 @@
         12
       ]
     ]
+  },
+  "OwnerAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CallerOnly LeaseFence BudgetExact"
+    },
+    "faults": [
+      [
+        "child-publishes",
+        "CallerOnly",
+        12
+      ],
+      [
+        "mirror-authority",
+        "CallerOnly",
+        12
+      ],
+      [
+        "ignore-deadline",
+        "CallerOnly",
+        12
+      ],
+      [
+        "unfenced-notice",
+        "LeaseFence",
+        12
+      ],
+      [
+        "ignore-budget",
+        "BudgetExact",
+        12
+      ]
+    ]
   }
 }

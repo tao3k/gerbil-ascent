@@ -1,5 +1,6 @@
 //! Execution ownership boundary for Scheme-generated composition and Rust kernels.
 mod budget;
+pub(crate) mod cancellation;
 mod expressions;
 mod facts;
 mod kernels;

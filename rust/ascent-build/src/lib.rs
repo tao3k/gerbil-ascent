@@ -2,9 +2,13 @@
 mod cache;
 mod graph;
 mod input;
+#[cfg(feature = "instances")]
+mod instance_resources;
 mod ledger;
 mod observer;
 mod policy;
+#[cfg(feature = "python-sources")]
+mod python_instances;
 #[cfg(feature = "python-sources")]
 mod python_sources;
 
@@ -88,6 +92,10 @@ fn construct(
         },
         || shared.publish(out, &receipt),
     )?;
+    #[cfg(feature = "instances")]
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        instance_resources::prepare(&gsc, &receipt, prefix, out, observer)?;
+    }
     graph::identify(root, prefix, out, &gsc, observer)
 }
 

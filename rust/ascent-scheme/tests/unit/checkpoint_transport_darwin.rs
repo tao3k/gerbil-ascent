@@ -37,9 +37,6 @@ fn api() -> Option<&'static Api> {
     })
     .as_ref()
 }
-pub(super) fn available() -> bool {
-    api().is_some()
-}
 pub(super) fn wait(phase: &AtomicU32, observed: u32) -> io::Result<()> {
     let Some(api) = api() else {
         // Only direct protocol diagnostics use this path. Production selects
@@ -135,5 +132,5 @@ pub(super) fn wake(phase: &AtomicU32) {
 }
 
 #[cfg(test)]
-#[path = "../tests/unit/process_checkpoint_darwin.rs"]
+#[path = "process_checkpoint_darwin.rs"]
 mod tests;

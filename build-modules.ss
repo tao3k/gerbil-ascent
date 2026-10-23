@@ -139,6 +139,7 @@
     "rules/interface"
     "rules/module"
     "t/qualification/evidence-api-module"
+    "interface/projection-cache"
     "interface/engine-api"))
 
 ;; Canonical production source admission includes the source-only ABI entries.

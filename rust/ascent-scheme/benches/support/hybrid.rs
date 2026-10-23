@@ -264,8 +264,8 @@ fn verify_rows(actual: &mut [Vec<Row>], expected: &[Row]) {
     }
 }
 
-/// Available kernel-checkpoint transport; arbitrary Scheme calls keep sockets.
+/// Every controlled process call uses the shared admission state; no per-checkpoint RPC.
 #[must_use]
 pub fn kernel_checkpoint_transport() -> &'static str {
-    crate::process_checkpoint::shared_transport().unwrap_or("buffered-socket")
+    "shared-local-control"
 }

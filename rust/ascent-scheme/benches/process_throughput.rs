@@ -1,5 +1,5 @@
 //! Saturated, fixed-work production API throughput; all native rows checked in Rust.
-use ascent_scheme::{Engine, ProcessPool, RuleSession, WorkerProgram};
+use ascent_scheme::{Engine, RuleSession};
 use gerbil_ascent::{
     Cancellation, Data, FactLimits, Limits, ObjectInput, Row, SourceSession, Value,
 };
@@ -12,6 +12,29 @@ use std::{
     },
     time::Instant,
 };
+#[path = "support/owners.rs"]
+mod owners;
+use owners::Pool;
+impl Pool {
+    fn reset_statistics(&self) {
+        match self {
+            Self::Process(pool) => pool.reset_statistics(),
+            #[cfg(all(feature = "instances", target_os = "macos"))]
+            Self::Instances(pool) => pool.reset_statistics(),
+        }
+    }
+    fn statistics(&self) -> Vec<ascent_scheme::ProcessStatistics> {
+        match self {
+            Self::Process(pool) => (0..pool.receipts().len())
+                .map(|i| pool.owner(i).unwrap().statistics())
+                .collect(),
+            #[cfg(all(feature = "instances", target_os = "macos"))]
+            Self::Instances(pool) => (0..pool.receipts().len())
+                .map(|i| pool.owner(i).unwrap().statistics())
+                .collect(),
+        }
+    }
+}
 const SOURCE: &str = "(define-program (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
 enum Session {
     Scheme(RuleSession),
@@ -140,7 +163,7 @@ fn execute(session: &mut Session, task: usize, groups: usize, width: usize) -> O
 }
 fn run_sample(
     sessions: &mut [Session],
-    pool: &ProcessPool,
+    pool: &Pool,
     tasks: usize,
     groups: usize,
     width: usize,
@@ -188,14 +211,8 @@ fn run_sample(
         (rows, elapsed)
     })
 }
-fn report_sample(
-    rows: &[Observation],
-    pool: &ProcessPool,
-    elapsed: std::time::Duration,
-    header: &str,
-) {
+fn report_sample(rows: &[Observation], pool: &Pool, elapsed: std::time::Duration, header: &str) {
     let tasks = rows.len();
-    let owners = pool.receipts().len();
     let mut latencies: Vec<_> = rows.iter().map(|r| r.latency_ns).collect();
     latencies.sort_unstable();
     let mut ordered: Vec<_> = rows.iter().collect();
@@ -204,9 +221,7 @@ fn report_sample(
     for row in &ordered {
         digest.update(row.digest.as_bytes());
     }
-    let stats: Vec<_> = (0..owners)
-        .map(|i| pool.owner(i).unwrap().statistics())
-        .collect();
+    let stats = pool.statistics();
     eprintln!(
         "PROCESS-SAMPLE {header} tasks={tasks} wall_ns={} throughput_per_s={:.6} p50_ns={} p95_ns={} max_overlapping_vm_calls={} native_calls={} queue_ns={} service_ns={} checkpoints={} shared_checkpoints={} answer_sha={:x}",
         elapsed.as_nanos(),
@@ -230,7 +245,7 @@ fn report_sample(
 // Retain only twelve summaries, never one record per completed soak request.
 fn run_soak(
     sessions: &mut [Session],
-    pool: &ProcessPool,
+    pool: &Pool,
     groups: usize,
     width: usize,
     first_task: usize,
@@ -324,12 +339,7 @@ struct SoakSample {
     minimum: u64,
     elapsed: std::time::Duration,
 }
-fn report_soak(
-    pool: &ProcessPool,
-    duration: std::time::Duration,
-    header: &str,
-    sample: SoakSample,
-) {
+fn report_soak(pool: &Pool, duration: std::time::Duration, header: &str, sample: SoakSample) {
     let SoakSample {
         count,
         latency,
@@ -347,9 +357,7 @@ fn report_soak(
     assert_eq!(histogram.iter().sum::<u64>(), count);
     let p50 = percentile_bounds(&histogram, count, 50, maximum);
     let p95 = percentile_bounds(&histogram, count, 95, maximum);
-    let stats: Vec<_> = (0..pool.receipts().len())
-        .map(|i| pool.owner(i).unwrap().statistics())
-        .collect();
+    let stats = pool.statistics();
     eprintln!(
         "PROCESS-SOAK {header} requested_ns={} wall_ns={} completed_requests={count} checked_requests={count} minimum_client_requests={minimum} throughput_per_s={:.6} mean_ns={} max_ns={maximum} p50_lower_ns={} p50_upper_ns={} p95_lower_ns={} p95_upper_ns={} histogram_resolution_ns=100000 histogram_buckets=65536 max_overlapping_vm_calls={} native_calls={} checkpoints={} shared_checkpoints={} slowest_schema=same-request-v1",
         duration.as_nanos(),
@@ -409,7 +417,7 @@ fn arguments() -> (Vec<String>, [usize; 6]) {
         "worker-executable vm|rayon owners rayon-threads tasks groups width samples [soak-seconds]"
     );
     let mode = &args[1];
-    assert!(mode == "vm" || mode == "rayon");
+    assert!(mode == "vm" || mode == "rayon" || mode == "instances");
     let number = |i: usize| args[i].parse::<usize>().unwrap();
     let parsed = [
         number(2),
@@ -421,7 +429,6 @@ fn arguments() -> (Vec<String>, [usize; 6]) {
     ];
     let [owners, threads, tasks, groups, width, samples] = parsed;
     assert!(owners > 0 && threads > 0 && tasks >= owners && groups > 0 && width > 1 && samples > 0);
-    assert!(mode != "vm" || threads == 1);
     (args, parsed)
 }
 fn work_distribution() -> (String, gerbil_ascent::WorkDistribution) {
@@ -435,11 +442,26 @@ fn work_distribution() -> (String, gerbil_ascent::WorkDistribution) {
     };
     (distribution_name, distribution)
 }
+fn prepare_session(value: &ascent_scheme::ModuleValue, mode: &str) -> Session {
+    if mode == "rayon" {
+        let mut session = value.project_session(FactLimits::default()).unwrap();
+        session
+            .run(
+                None,
+                &SourceSession::default_limits(),
+                &Cancellation::default(),
+            )
+            .unwrap();
+        Session::Rayon(Box::new(session))
+    } else {
+        Session::Scheme(value.open_session(FactLimits::default()).unwrap())
+    }
+}
 fn main() {
     let (args, [owners, threads, tasks, groups, width, samples]) = arguments();
     let mode = &args[1];
     let startup = Instant::now();
-    let pool = ProcessPool::with_program(owners, &WorkerProgram::new(&args[0], vec![])).unwrap();
+    let pool = Pool::start(mode, owners, &args[0]);
     for receipt in pool.receipts() {
         eprintln!(
             "PROCESS-OWNER pid={} processors={} domain={}",
@@ -462,34 +484,21 @@ fn main() {
     let mut sessions = Vec::new();
     let mut retained = Vec::new();
     for client in 0..clients {
-        let scoped = if mode == "vm" {
-            Engine::new(1).unwrap()
-        } else {
-            engine.clone()
-        }
-        .on_process(pool.owner(client % owners).unwrap());
+        let scoped = pool.bind(engine.clone(), client % owners);
         let module = scoped.load_definitions(SOURCE).unwrap();
         let value = module.call("make", &[], None).unwrap();
-        let session = if mode == "vm" {
-            Session::Scheme(value.open_session(FactLimits::default()).unwrap())
-        } else {
-            let mut session = value.project_session(FactLimits::default()).unwrap();
-            session
-                .run(
-                    None,
-                    &SourceSession::default_limits(),
-                    &Cancellation::default(),
-                )
-                .unwrap();
-            Session::Rayon(Box::new(session))
-        };
+        let session = prepare_session(&value, mode);
         sessions.push(session);
         retained.push((scoped, module, value));
     }
     for (i, session) in sessions.iter_mut().enumerate() {
         execute(session, samples * tasks + i, groups, width);
     }
-    let checkpoint_transport = compiled_checkpoint_transport();
+    let checkpoint_transport = if mode == "instances" {
+        "direct-owner"
+    } else {
+        compiled_checkpoint_transport()
+    };
     eprintln!(
         "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} work_distribution={distribution_name} startup_ns={}",
         startup.elapsed().as_nanos()
@@ -533,6 +542,7 @@ fn main() {
     }
     close_sessions(sessions, retained);
     drop(engine);
+    pool.finish();
     drop(pool);
 }
 

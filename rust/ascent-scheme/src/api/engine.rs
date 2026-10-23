@@ -17,13 +17,42 @@ pub enum Backend {
 #[derive(Clone)]
 pub struct Engine {
     core: gerbil_ascent::Engine,
-    process: Arc<std::sync::OnceLock<crate::ProcessOwner>>,
+    process: Arc<std::sync::OnceLock<Owner>>,
     backend: Option<Backend>,
     modules: Arc<Mutex<BTreeMap<String, String>>>,
     loaded_modules: Arc<Mutex<BTreeMap<String, Weak<super::module::Owner>>>>,
     owners: Arc<Owners>,
     max_source_scopes: Option<usize>,
     max_input_bytes: Option<usize>,
+}
+#[derive(Clone)]
+enum Owner {
+    Process(crate::ProcessOwner),
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    Instance(crate::InstanceOwner),
+}
+impl Owner {
+    fn call(&self, request: Data) -> Result<Data> {
+        match self {
+            Self::Process(owner) => owner.call(request),
+            #[cfg(all(feature = "instances", target_os = "macos"))]
+            Self::Instance(owner) => owner.call(request),
+        }
+    }
+    fn receipt(&self) -> crate::ProcessReceipt {
+        match self {
+            Self::Process(owner) => owner.receipt(),
+            #[cfg(all(feature = "instances", target_os = "macos"))]
+            Self::Instance(owner) => owner.receipt(),
+        }
+    }
+    fn statistics(&self) -> crate::ProcessStatistics {
+        match self {
+            Self::Process(owner) => owner.statistics(),
+            #[cfg(all(feature = "instances", target_os = "macos"))]
+            Self::Instance(owner) => owner.statistics(),
+        }
+    }
 }
 #[derive(Default)]
 struct Owners {
@@ -197,7 +226,17 @@ impl Engine {
     /// Bind this engine and all of its leases to one persistent process VM.
     #[must_use]
     pub fn on_process(mut self, process: crate::ProcessOwner) -> Self {
-        self.process = Arc::new(std::sync::OnceLock::from(process));
+        self.process = Arc::new(std::sync::OnceLock::from(Owner::Process(process)));
+        self.loaded_modules = Arc::default();
+        self.owners = Arc::default();
+        self
+    }
+    /// Bind all future modules and sessions to one independent in-process VM.
+    /// Existing modules retain their original owner. No fallback or runtime compilation occurs.
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    #[must_use]
+    pub fn on_instance(mut self, instance: crate::InstanceOwner) -> Self {
+        self.process = Arc::new(std::sync::OnceLock::from(Owner::Instance(instance)));
         self.loaded_modules = Arc::default();
         self.owners = Arc::default();
         self
@@ -240,10 +279,10 @@ impl Engine {
         }
         result
     }
-    fn process_owner(&self) -> Result<&crate::ProcessOwner> {
+    fn process_owner(&self) -> Result<&Owner> {
         if self.process.get().is_none() {
             let owner = crate::service::standalone_owner()?;
-            let _ = self.process.set(owner);
+            let _ = self.process.set(Owner::Process(owner));
         }
         self.process.get().ok_or(Error::Closed)
     }

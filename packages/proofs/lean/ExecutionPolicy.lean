@@ -4,6 +4,7 @@ import Std
 import Lean.Data.Json
 import PreparationWork
 import CompilerCost
+import OwnerAdmission
 import LookupCost
 import ClosedDslLowering
 import FiniteOperators
@@ -678,7 +679,9 @@ def renderedSource (name : String) : IO String := do
   | "owned-aggregate-value" => pure Ascent.CompilerCost.ownedAggregateSchemeSource
   | "aggregate-constructor" => pure Ascent.CompilerCost.aggregateConstructorSchemeSource
   | "checkpoint-spin-policy" => pure Ascent.CompilerCost.checkpointSpinRustSource
-  | "checkpoint-spin-link" => pure Ascent.CompilerCost.checkpointSpinLinkRustSource
+  | "checkpoint-publication-link" => pure Ascent.CompilerCost.checkpointPublicationLinkRustSource
+  | "owner-control-rust" => pure Ascent.OwnerAdmission.controlRustSource
+  | "projection-object-reuse" => pure Ascent.OwnerAdmission.projectionSchemeSource
   | "projection-allocation-probe" => pure Ascent.CompilerCost.projectionAllocationSchemeSource
   | "owned-declaration-values" => pure Ascent.CompilerCost.ownedDeclarationValuesSchemeSource
   | "owned-declaration-check" => pure Ascent.CompilerCost.ownedDeclarationCheckSchemeSource

@@ -22,6 +22,8 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         assert_eq!(values::decode(root, 0).unwrap(), packet);
     }
     check_integer_edges(&runtime);
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    bind_source_library(&runtime);
     let call = |fields| runtime.call(&Data::Map(fields));
     let request = |operation: &str, fields: Vec<(&str, Data)>| {
         let mut out =
@@ -118,4 +120,33 @@ fn check_integer_edges(runtime: &Runtime) {
     let packet = Data::List(integers.into_iter().map(Data::Integer).collect());
     let root = values::encode(&runtime.runtime, &packet).unwrap();
     assert_eq!(values::decode(root, 0).unwrap(), packet);
+}
+
+#[cfg(all(feature = "instances", target_os = "macos"))]
+fn bind_source_library(runtime: &Runtime) {
+    unsafe extern "C" {
+        fn ascent_hybrid_bind(root: i64) -> i64;
+    }
+    let input = Data::List(vec![
+        Data::Integer((crate::control::ascent_hybrid_checkpoint as *const () as usize).into()),
+        Data::from(concat!(env!("ASCENT_INSTANCE_PACKAGE"), "/_owners/lib")),
+    ]);
+    let fields = input
+        .list()
+        .unwrap()
+        .iter()
+        .map(|item| values::encode(&runtime.runtime, item).unwrap())
+        .collect::<Vec<_>>();
+    let input = runtime
+        .runtime
+        .collection_from_objects(
+            gerbil_scheme::CollectionKind::Vector,
+            &fields.iter().collect::<Vec<_>>(),
+        )
+        .unwrap()
+        .into_object();
+    // SAFETY: this same build-owned rooted export initializes only the
+    // module-source carrier policy, allowing comparison with linked setup.
+    let binding = unsafe { runtime.runtime.bind_object_export(ascent_hybrid_bind) }.unwrap();
+    drop(binding.call(&input).into_result().unwrap());
 }

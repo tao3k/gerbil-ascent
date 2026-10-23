@@ -699,3 +699,7 @@ FAULTS["CheckpointSpin"] = (('ignore-cpu-pressure', 'CpuPressure', 12), ('ignore
 FAULTS["AggregateAdmission"] += (('ignore-negative-raw', 'AllocationScope', 12), ('exceed-raw-bound', 'AllocationScope', 12))
 
 FAULTS["AggregateAdmission"] += (('ignore-counter-precision', 'AllocationScope', 12),)
+
+MODEL_ORDER += ("OwnerAdmission",)
+CONFIGURATIONS["OwnerAdmission"] = {'constants': 'Mutation = "none"', 'invariants': 'CallerOnly LeaseFence BudgetExact'}
+FAULTS["OwnerAdmission"] = (('child-publishes', 'CallerOnly', 12), ('mirror-authority', 'CallerOnly', 12), ('ignore-deadline', 'CallerOnly', 12), ('unfenced-notice', 'LeaseFence', 12), ('ignore-budget', 'BudgetExact', 12))

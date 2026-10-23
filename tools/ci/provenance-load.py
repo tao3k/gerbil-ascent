@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--build', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--expected-cpus', type=int, required=True)
+    parser.add_argument('--owner-mode', choices=('vm', 'instances'), default='vm')
     args = parser.parse_args()
     if os.cpu_count() != args.expected_cpus:
         raise SystemExit('diagnostic host CPU count differs from its declared cohort')
@@ -36,11 +37,12 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     root = Path(__file__).resolve().parents[2]
     receipt = {'schema': 'ascent.provenance-load-diagnostic.v1', 'diagnostic_only': True,
-               'performance_admitted': False, 'logical_cpus': os.cpu_count(),
+               'performance_admitted': False, 'owner_mode': args.owner_mode, 'logical_cpus': os.cpu_count(),
                'source_head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
                'source_clean': not subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--untracked-files=no'], text=True).strip(),
                'executables': {name: {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for name, path in binaries.items()}}
     command = [str(binaries[name]) for name in ['provenance_load', 'ascent-scheme-worker', 'archive_build']]
+    command.append(args.owner_mode)
     environment = dict(os.environ, ASCENT_PROCESS_TRACE='1', RUST_BACKTRACE='1')
     with (args.output / 'stdout').open('w') as stdout, (args.output / 'stderr').open('w') as stderr:
         process = subprocess.Popen(command, cwd=root, env=environment, stdout=stdout, stderr=stderr, start_new_session=True)
@@ -55,7 +57,7 @@ def main():
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait(timeout=5)
     lines = (args.output / 'stderr').read_text().splitlines()
-    complete = [line for line in lines if line.startswith('PROVENANCE-LOAD-COMPLETE ')]
+    complete = [line for line in lines if line.startswith(f'PROVENANCE-LOAD-COMPLETE mode={args.owner_mode} ')]
     receipt.update(status=status, semantic_checks_complete=status == 0 and len(complete) == 1,
                    completion=complete, command=command)
     (args.output / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')

@@ -18,9 +18,7 @@ pub(crate) enum Frame {
         identity: Data,
     },
     Request(Data),
-    Entered {
-        shared_checkpoints: bool,
-    },
+    Entered,
     Reply {
         value: Result<Data>,
         elapsed_ns: u64,
@@ -97,7 +95,7 @@ impl Connection {
 pub(crate) fn send(stream: &mut impl Write, value: &Frame) -> std::io::Result<()> {
     if matches!(
         value,
-        Frame::Entered { .. } | Frame::Checkpoint { .. } | Frame::Decision(_)
+        Frame::Entered | Frame::Checkpoint { .. } | Frame::Decision(_)
     ) {
         let mut bytes = [0_u8; 64];
         let mut body = Cursor::new(&mut bytes[8..]);

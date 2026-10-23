@@ -10,6 +10,11 @@ use std::{
 /// # Panics
 /// Rejects missing, changed, or unsupported source inventory inputs.
 pub fn stage_python_sources() {
+    if env::var_os("CARGO_FEATURE_INSTANCES").is_some()
+        && env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos")
+    {
+        super::python_instances::stage().expect("installed owner resources");
+    }
     if env::var_os("CARGO_FEATURE_RUST_RUNTIME").is_none() {
         return;
     }

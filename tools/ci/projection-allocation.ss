@@ -10,7 +10,8 @@
 (def handle
   (hash-ref (ascent-engine-call
     (hash ("operation" "owner-program") ("owner" owner)
-          ("constructor" "make-aggregate") ("arguments" '((1 2 4))))) "handle"))
+          ("constructor" "make-aggregate") ("arguments" '((1 2 4)))
+          ("factLimits" (hash)))) "handle"))
 (def (project)
   (let (value (ascent-engine-call (hash ("operation" "source-projection") ("handle" handle))))
     (unless (equal? (hash-ref value "status") "supported") (error "projection unsupported"))

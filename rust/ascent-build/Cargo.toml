@@ -14,6 +14,7 @@ serde_json.workspace = true
 sha2.workspace = true
 
 [features]
+instances = ["dep:gerbil-scheme-python"]
 python-sources = ["dep:gerbil-scheme-python", "dep:gerbil-scheme-compiler-source"]
 
 [lints.clippy]

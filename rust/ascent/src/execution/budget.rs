@@ -33,6 +33,16 @@ pub struct Cancellation(Arc<AtomicBool>);
 impl Cancellation {
     pub fn cancel(&self) {
         self.0.store(true, Ordering::Release);
+        super::cancellation::notify(&self.0);
+    }
+    /// Register a wakeup; an already canceled token is signaled before return.
+    /// # Errors
+    /// Returns notification identity exhaustion.
+    pub fn subscribe(
+        &self,
+        wake: std::task::Waker,
+    ) -> Result<super::cancellation::CancellationSubscription> {
+        super::cancellation::subscribe(&self.0, wake)
     }
     #[must_use]
     pub fn is_canceled(&self) -> bool {

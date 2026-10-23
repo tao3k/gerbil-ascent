@@ -75,3 +75,6 @@ pub mod artifacts;
 
 /// Bounded inert Scheme datum decoding; no evaluation or authority admission.
 pub mod syntax;
+
+#[doc(hidden)]
+pub use execution::cancellation::CancellationSubscription;

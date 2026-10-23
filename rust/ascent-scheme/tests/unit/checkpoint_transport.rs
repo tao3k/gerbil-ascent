@@ -9,17 +9,8 @@ use std::{
     sync::atomic::{AtomicI32, AtomicI64, AtomicU32, Ordering},
 };
 #[cfg(target_os = "macos")]
-#[path = "process_checkpoint_darwin.rs"]
+#[path = "checkpoint_transport_darwin.rs"]
 mod darwin;
-pub(crate) fn shared_transport() -> Option<&'static str> {
-    #[cfg(target_os = "linux")]
-    let (available, name) = (true, "shared-futex");
-    #[cfg(target_os = "macos")]
-    let (available, name) = (darwin::available(), "shared-darwin-wait");
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    let (available, name) = (false, "");
-    available.then_some(name)
-}
 const IDLE: u32 = 0;
 const REQUEST: u32 = 1;
 const DECISION: u32 = 2;
@@ -305,5 +296,5 @@ fn wake(phase: &AtomicU32) {
 }
 
 #[cfg(test)]
-#[path = "../tests/unit/process_checkpoint.rs"]
+#[path = "process_checkpoint.rs"]
 mod tests;

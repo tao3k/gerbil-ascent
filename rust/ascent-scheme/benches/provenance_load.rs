@@ -1,7 +1,5 @@
 //! Diagnostic load only: original mean/provenance semantics at twelve resident VMs.
-use ascent_scheme::{
-    Engine, Module, ModuleValue, ProcessPool, RuleSession, SchemeProvenance, WorkerProgram,
-};
+use ascent_scheme::{Engine, Module, ModuleValue, RuleSession, SchemeProvenance};
 use gerbil_ascent::{
     Cancellation, Error, FactLimits, Limits, ObjectInput, ProvenanceLimits, ProvenanceStatus,
     Result,
@@ -14,6 +12,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[path = "support/owners.rs"]
+mod owners;
+use owners::Pool;
 const CLIENTS: usize = 12;
 const ROUNDS: usize = 16;
 const FIXTURE: &str = include_str!("../../../t/qualification/evidence-api-module.ss");
@@ -27,7 +28,7 @@ fn numbers() -> ObjectInput {
             .collect(),
     )
 }
-fn sessions(pool: &ProcessPool) -> Result<(Vec<RuleSession>, Vec<KeepAlive>)> {
+fn sessions(pool: &Pool) -> Result<(Vec<RuleSession>, Vec<KeepAlive>)> {
     let engine = Engine::new(CLIENTS)?;
     if engine.threads() != CLIENTS {
         return Err(Error::Evaluation(
@@ -38,7 +39,7 @@ fn sessions(pool: &ProcessPool) -> Result<(Vec<RuleSession>, Vec<KeepAlive>)> {
     let mut sessions = Vec::new();
     let mut retained = Vec::new();
     for index in 0..CLIENTS {
-        let engine = engine.clone().on_process(pool.owner(index)?);
+        let engine = pool.bind(engine.clone(), index);
         let module = engine.module(":consumer/aggregate")?;
         let constructor = module.call("make-aggregate", &[numbers()], None)?;
         let session = constructor.open_session(FactLimits::default())?;
@@ -170,12 +171,16 @@ fn run_clients(sessions: Vec<RuleSession>, archive_test: &Path) -> Result<bool> 
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 2 {
+    if !(2..=3).contains(&args.len()) {
         return Err(Error::InvalidProgram(
-            "expected worker and archive-test executables".into(),
+            "expected worker, archive-test executables and optional vm|instances mode".into(),
         ));
     }
-    let pool = ProcessPool::with_program(CLIENTS, &WorkerProgram::new(&args[0], vec![]))?;
+    let mode = args.get(2).map_or("vm", String::as_str);
+    if mode != "vm" && mode != "instances" {
+        return Err(Error::InvalidProgram("unknown VM owner mode".into()));
+    }
+    let pool = Pool::start(mode, CLIENTS, &args[0]);
     let receipts = pool.receipts();
     if receipts.len() != CLIENTS || receipts.iter().any(|receipt| receipt.processors != 1) {
         return Err(Error::Evaluation(
@@ -184,25 +189,32 @@ fn main() -> Result<()> {
     }
     let pids: BTreeSet<_> = receipts.iter().map(|receipt| receipt.pid).collect();
     let domains: BTreeSet<_> = receipts.iter().map(|receipt| receipt.domain).collect();
-    if pids.len() != CLIENTS || domains.len() != CLIENTS {
+    if pids.len() != (if mode == "instances" { 1 } else { CLIENTS }) || domains.len() != CLIENTS {
         return Err(Error::Evaluation(
-            "distinct VM process/domain owners required".into(),
+            "owner mode requires exact process and VM domain identities".into(),
         ));
     }
     for (client, receipt) in receipts.iter().enumerate() {
         eprintln!(
-            "PROVENANCE-OWNER client={client} pid={} domain={} processors=1",
+            "PROVENANCE-OWNER mode={mode} client={client} pid={} domain={} processors=1",
             receipt.pid, receipt.domain
         );
     }
-    let (sessions, _retained) = sessions(&pool)?;
-    if !run_clients(sessions, Path::new(&args[1]))? {
+    let (sessions, retained) = sessions(&pool)?;
+    let complete = run_clients(sessions, Path::new(&args[1]))?;
+    for (engine, module, value) in retained {
+        value.close();
+        module.close();
+        engine.shutdown();
+    }
+    pool.finish();
+    if !complete {
         return Err(Error::Evaluation(
             "provenance load diagnostic failed; no retries".into(),
         ));
     }
     eprintln!(
-        "PROVENANCE-LOAD-COMPLETE proofs={} archive_overlap=true diagnostic_only=true",
+        "PROVENANCE-LOAD-COMPLETE mode={mode} proofs={} archive_overlap=true diagnostic_only=true",
         CLIENTS * ROUNDS * 2
     );
     Ok(())

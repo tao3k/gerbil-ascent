@@ -50,26 +50,31 @@ impl ProcessPool {
         Ok(Engine(engine.0.on_process(owner)))
     }
     fn identities(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        super::packets::write(
-            py,
-            &gerbil_ascent::Data::List(
-                self.0
-                    .receipts()
-                    .into_iter()
-                    .map(|receipt| {
-                        gerbil_ascent::Data::object([
-                            ("pid", gerbil_ascent::Data::from(u64::from(receipt.pid))),
-                            ("domain", gerbil_ascent::Data::from(receipt.domain)),
-                            (
-                                "processors",
-                                gerbil_ascent::Data::from(u64::from(receipt.processors)),
-                            ),
-                        ])
-                    })
-                    .collect(),
-            ),
-        )
+        identities(py, self.0.receipts())
     }
+}
+pub(super) fn identities(
+    py: Python<'_>,
+    owners: Vec<ascent_scheme::ProcessReceipt>,
+) -> PyResult<Py<PyAny>> {
+    super::packets::write(
+        py,
+        &gerbil_ascent::Data::List(
+            owners
+                .into_iter()
+                .map(|receipt| {
+                    gerbil_ascent::Data::object([
+                        ("pid", gerbil_ascent::Data::from(u64::from(receipt.pid))),
+                        ("domain", gerbil_ascent::Data::from(receipt.domain)),
+                        (
+                            "processors",
+                            gerbil_ascent::Data::from(u64::from(receipt.processors)),
+                        ),
+                    ])
+                })
+                .collect(),
+        ),
+    )
 }
 #[pyclass(name = "Engine", frozen)]
 pub(super) struct Engine(pub(super) ascent_scheme::Engine);
@@ -77,7 +82,7 @@ pub(super) struct Engine(pub(super) ascent_scheme::Engine);
 impl Engine {
     #[new]
     #[pyo3(signature = (workers=None, *, max_source_scopes=None, max_input_bytes=None, backend=None, work_distribution="adaptive"))]
-    fn new(
+    pub(super) fn new(
         workers: Option<usize>,
         max_source_scopes: Option<&Bound<'_, PyAny>>,
         max_input_bytes: Option<&Bound<'_, PyAny>>,
@@ -504,6 +509,8 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Program>()?;
     module.add_class::<Engine>()?;
     module.add_class::<ProcessPool>()?;
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    module.add_class::<super::instances::InstancePool>()?;
     module.add_function(pyo3::wrap_pyfunction!(super::scheme::_scheme_call, module)?)?;
     module.add_class::<Session>()?;
     module.add_class::<Snapshot>()?;

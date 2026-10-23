@@ -72,7 +72,6 @@ pub fn configure_worker(program: WorkerProgram) -> Result<()> {
 struct Activity {
     active: AtomicUsize,
     maximum: AtomicUsize,
-    host_processors: usize,
 }
 #[derive(Default)]
 struct Counters {
@@ -81,6 +80,7 @@ struct Counters {
     service_ns: AtomicU64,
     checkpoints: AtomicU64,
     shared_checkpoints: AtomicU64,
+    live: Mutex<Option<Arc<crate::process_control::Shared>>>,
 }
 /// Observed process identity and actual VM processor population.
 #[derive(Clone, Debug)]
@@ -225,22 +225,8 @@ impl ProcessOwner {
         timeout: Duration,
         cancellation: &gerbil_ascent::Cancellation,
     ) -> Result<Data> {
-        let control = Control::new(
-            &gerbil_ascent::Limits {
-                timeout,
-                max_states: usize::MAX,
-                max_facts: usize::MAX,
-            },
-            cancellation,
-        )?;
-        let Data::Map(mut fields) = request else {
-            return Err(crate::failure("object required"));
-        };
-        if fields.contains_key("executionControl") {
-            return Err(crate::failure("conflicting execution control authority"));
-        }
-        fields.insert("executionControl".into(), control.id());
-        self.call(Data::Map(fields))
+        let (_control, request) = crate::controlled_request(request, timeout, cancellation)?;
+        self.call(request)
     }
     #[must_use]
     pub fn receipt(&self) -> ProcessReceipt {
@@ -248,12 +234,19 @@ impl ProcessOwner {
     }
     #[must_use]
     pub fn statistics(&self) -> ProcessStatistics {
+        // Observation rollover is serialized; child checkpoints stay atomic.
+        let live = self
+            .counters
+            .live
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let pending = live.as_ref().map_or(0, |shared| shared.checkpoints());
         ProcessStatistics {
             calls: self.counters.calls.load(Ordering::Relaxed),
             queue_ns: self.counters.queue_ns.load(Ordering::Relaxed),
             service_ns: self.counters.service_ns.load(Ordering::Relaxed),
-            checkpoints: self.counters.checkpoints.load(Ordering::Relaxed),
-            shared_checkpoints: self.counters.shared_checkpoints.load(Ordering::Relaxed),
+            checkpoints: self.counters.checkpoints.load(Ordering::Relaxed) + pending,
+            shared_checkpoints: self.counters.shared_checkpoints.load(Ordering::Relaxed) + pending,
             maximum_overlapping_calls: self.activity.maximum.load(Ordering::Relaxed),
         }
     }
@@ -276,10 +269,7 @@ impl ProcessPool {
         if owners == 0 || owners > 64 {
             return Err(crate::failure("process VM count must be in 1..=64"));
         }
-        let activity = Arc::new(Activity {
-            host_processors: thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get),
-            ..Activity::default()
-        });
+        let activity = Arc::new(Activity::default());
         let mut population = Vec::new();
         for _ in 0..owners {
             population.push(start(program, activity.clone())?);
@@ -342,7 +332,7 @@ fn accept_worker(
                 let ready = process_wire::receive(&mut socket).map_err(io_error)?;
                 match ready {
                     Frame::Ready {
-                        protocol: 2,
+                        protocol: 3,
                         pid,
                         processors: 1,
                         domain: found,
@@ -376,20 +366,24 @@ fn accept_worker(
         }
     }
 }
-fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwner> {
-    let domain = DOMAIN
+pub(crate) fn reserve_domain() -> Result<u64> {
+    DOMAIN
         .try_update(Ordering::AcqRel, Ordering::Acquire, |v| {
             (v < u64::from(u32::MAX)).then_some(v + 1)
         })
-        .map_err(|_| crate::failure("process owner domains exhausted"))?;
+        .map_err(|_| crate::failure("process owner domains exhausted"))
+}
+fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwner> {
+    let domain = reserve_domain()?;
     let directory = tempfile::Builder::new()
         .prefix("ascent-owner-")
         .tempdir()
         .map_err(io_error)?;
     let socket_path = directory.path().join("owner.sock");
-    let checkpoints =
-        crate::process_checkpoint::Checkpoints::create(&socket_path.with_extension("control"))
-            .map_err(io_error)?;
+    let admission = Arc::new(
+        crate::process_control::Shared::create(&socket_path.with_extension("budget"))
+            .map_err(io_error)?,
+    );
     let listener = UnixListener::bind(&socket_path).map_err(io_error)?;
     listener.set_nonblocking(true).map_err(io_error)?;
     let mut child = Command::new(&program.executable)
@@ -429,7 +423,7 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
                 &work_counters,
                 &work_activity,
                 &quiesced,
-                &checkpoints,
+                &admission,
             );
             trace_retirement(child_pid, "request-transport-closed");
             await_child(&child_owner, child_pid, graceful);
@@ -461,44 +455,20 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
         })),
     })
 }
-// BEGIN GENERATED CHECKPOINT SPIN LINK
+// BEGIN GENERATED CHECKPOINT PUBLICATION LINK
 fn receive_native_reply(
     socket: &mut Connection,
     control: Option<&Control>,
     counters: &Counters,
     activity: &Activity,
     entered: &mut bool,
-    checkpoints: &crate::process_checkpoint::Checkpoints,
 ) -> Result<Result<Data>> {
     loop {
         match socket.receive().map_err(io_error)? {
-            Frame::Entered { shared_checkpoints } if !*entered => {
+            Frame::Entered if !*entered => {
                 *entered = true;
                 let active = activity.active.fetch_add(1, Ordering::AcqRel) + 1;
                 activity.maximum.fetch_max(active, Ordering::AcqRel);
-                if shared_checkpoints {
-                    checkpoints
-                        .serve(
-                            control.map_or(0, Control::numeric_id),
-                            |id, work| {
-                                counters.checkpoints.fetch_add(1, Ordering::Relaxed);
-                                counters.shared_checkpoints.fetch_add(1, Ordering::Relaxed);
-                                if control.map(Control::numeric_id) == Some(id) {
-                                    control.map_or(5, |value| value.checkpoint(work))
-                                } else {
-                                    5
-                                }
-                            },
-                            || socket.peer_closed(),
-                            || {
-                                crate::process_checkpoint::parent_spin_budget(
-                                    activity.host_processors,
-                                    activity.active.load(Ordering::Acquire),
-                                )
-                            },
-                        )
-                        .map_err(io_error)?;
-                }
             }
             Frame::Checkpoint { id, work, facts: _ } if *entered => {
                 let expected = control.map(Control::numeric_id);
@@ -507,7 +477,11 @@ fn receive_native_reply(
                 } else {
                     5
                 };
-                counters.checkpoints.fetch_add(1, Ordering::Relaxed);
+                // Local resource callbacks, including this publication, are
+                // counted once in the shared slot after the ABI reply.
+                if work != -1 {
+                    counters.checkpoints.fetch_add(1, Ordering::Relaxed);
+                }
                 socket.send(&Frame::Decision(code)).map_err(io_error)?;
             }
             Frame::Reply { value, elapsed_ns } if *entered => {
@@ -519,14 +493,14 @@ fn receive_native_reply(
         }
     }
 }
-// END GENERATED CHECKPOINT SPIN LINK
+// END GENERATED CHECKPOINT PUBLICATION LINK
 fn run(
     socket: UnixStream,
     incoming: mpsc::Receiver<Call>,
     counters: &Counters,
     activity: &Activity,
     quiesced: &mpsc::Sender<bool>,
-    checkpoints: &crate::process_checkpoint::Checkpoints,
+    admission: &Arc<crate::process_control::Shared>,
 ) -> bool {
     let mut socket = Connection::new(socket);
     let mut graceful = true;
@@ -555,8 +529,26 @@ fn run(
                 })
                 .collect(),
         );
+        let lease = match call
+            .control
+            .as_ref()
+            .map(|control| control.lease(admission.clone()))
+            .transpose()
+        {
+            Ok(lease) => lease,
+            Err(error) => {
+                let _ = call.reply.send(Err(error));
+                continue;
+            }
+        };
+        if lease.is_some() {
+            *counters
+                .live
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(admission.clone());
+        }
         let mut entered = false;
-        let result = (|| {
+        let mut result = (|| {
             socket
                 .send(&Frame::Request(call.request))
                 .map_err(io_error)?;
@@ -566,9 +558,26 @@ fn run(
                 counters,
                 activity,
                 &mut entered,
-                checkpoints,
             )
         })();
+        if let Some(lease) = lease {
+            let mut live = counters
+                .live
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            let count = admission.checkpoints();
+            counters.checkpoints.fetch_add(count, Ordering::Relaxed);
+            counters
+                .shared_checkpoints
+                .fetch_add(count, Ordering::Relaxed);
+            *live = None;
+            drop(live);
+            if result.is_ok()
+                && let Err(error) = lease.finish()
+            {
+                result = Err(error);
+            }
+        }
         if entered {
             activity.active.fetch_sub(1, Ordering::AcqRel);
         }
@@ -601,7 +610,7 @@ fn release_abandoned(socket: &mut Connection, request: &Data, value: &Data) {
     }
 }
 
-fn abandoned_request(request: &Data, value: &Data) -> Option<Data> {
+pub(crate) fn abandoned_request(request: &Data, value: &Data) -> Option<Data> {
     let operation = request
         .get("operation")
         .and_then(|v| v.text().ok())

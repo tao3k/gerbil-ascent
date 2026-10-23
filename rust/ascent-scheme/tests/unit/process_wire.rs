@@ -68,12 +68,7 @@ fn partial_or_extended_binary_packet_is_never_a_complete_reply() {
 fn control_packets_keep_the_generated_codec_and_buffer_boundaries() {
     use bincode::Options;
     for frame in [
-        Frame::Entered {
-            shared_checkpoints: false,
-        },
-        Frame::Entered {
-            shared_checkpoints: true,
-        },
+        Frame::Entered,
         Frame::Checkpoint {
             id: i64::MAX,
             work: -3,

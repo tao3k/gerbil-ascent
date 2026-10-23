@@ -7,12 +7,15 @@ pub(crate) enum Pool {
 }
 impl Pool {
     pub(crate) fn start(mode: &str, owners: usize, worker: &str) -> Self {
+        #[cfg(all(feature = "instances", target_os = "macos"))]
         if mode == "instances" {
-            #[cfg(all(feature = "instances", target_os = "macos"))]
             return Self::Instances(ascent_scheme::InstancePool::new(owners).unwrap());
-            #[cfg(not(all(feature = "instances", target_os = "macos")))]
-            panic!("instances requires the qualified macOS instance image feature");
         }
+        #[cfg(not(all(feature = "instances", target_os = "macos")))]
+        assert_ne!(
+            mode, "instances",
+            "instances requires the qualified macOS instance image feature"
+        );
         Self::Process(
             ProcessPool::with_program(owners, &WorkerProgram::new(worker, vec![])).unwrap(),
         )

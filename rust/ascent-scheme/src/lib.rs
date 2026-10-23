@@ -1,7 +1,9 @@
 //! Thin ASCENT application binding over gerbil-scheme-rust.
 mod application;
 mod control;
-pub(crate) use control::{Control, ascent_hybrid_checkpoint, controlled_request};
+pub(crate) use control::controlled_request;
+#[cfg(all(feature = "instances", target_os = "macos"))]
+pub(crate) use control::{Control, ascent_hybrid_checkpoint};
 mod control_state;
 mod dag;
 mod diagnostics;

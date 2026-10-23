@@ -86,7 +86,8 @@
         (let (execute (lambda () (vector #t (ascent-engine-call request))))
           (if control (controlled-call control execute) (execute)))))))
 (begin-foreign
-  (c-declare "typedef int (*ascent_check_type)(int64_t, int64_t, int64_t);
+  (c-declare "#include <stdint.h>
+typedef int (*ascent_check_type)(int64_t, int64_t, int64_t);
 static ascent_check_type ascent_check_fn = 0;
 void ascent_hybrid_set_checkpoint(ascent_check_type fn) { ascent_check_fn = fn; }")
   (namespace ("gerbil-ascent/interface/hybrid#" checkpoint bind-checkpoint))

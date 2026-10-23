@@ -79,3 +79,93 @@ Exact candidate tests, remote CI, and isolated matched performance results must
 be recorded before claiming end-to-end improvement. Remaining obligations
 include physical cumulative allocation, complete mutable-cache and SCC source
 refinement, Actor/Rayon message conversion, and the Scheme/C ABI source boundary.
+
+
+* Aggregate projection and checkpoint handoff investigation
+The retained e43b30bb three-CPU matrix attempted all 24 original rows. Small
+and closure workloads had complete matched answers. The large single-VM row
+exhausted its original 240-second row limit, so the complete matrix remained
+inadmissible. Its separate diagnostic also timed out. Source replacement
+accounted for 219.659 seconds wall, 126.553 seconds CPU, 1.092 seconds GC wall,
+and 8,723,016 involuntary context switches across 104 calls. This is evidence
+of expensive controller handoff; it is not evidence of a GC-dominated replace.
+
+The twelve-VM mean/provenance diagnostic on that same runner failed for all
+twelve clients under the unchanged one-second proof controls. For example,
+source projection took 3,790.683 milliseconds with 3,751.374 milliseconds GC
+wall, 291.635 milliseconds GC CPU and 0.303 milliseconds owner queue time.
+This identifies projection allocation and descheduled GC as a separate path.
+It does not establish the exact cause of every historical construction timeout.
+The archive publishers share a start barrier; this does not prove that every
+projection overlaps archive I/O.
+
+** Current guarded changes
+Factory-owned scalar Aggregate values use a nine-field ObjectContract view
+only while their owned shape, owned Term children and original public protocol
+identities remain current. Every invocation reads the current fields; no
+successful validation or fingerprint is cached. Unknown getters, changed
+protocols, tuple output, failed views and foreign children use the original
+ordered public classification. Source projection still constructs and checks
+the complete Program before encoding it. Eight new native DSL cases compare
+mutations, callbacks and exceptions with ordinary public admission.
+
+The parent controller can spin for at most 1,024 polls when its local pool has
+one active owner and the host reports at least three processors. Otherwise it
+keeps the original 32 polls. The child keeps 32. This local advisory count is
+not a global CPU reservation. Every signed work checkpoint, generation check,
+controller decision, peer-death check and sleep registration remains required.
+This is a candidate handoff optimization until the original isolated matrix
+completes; the bounded policy theorem is not a measured speedup.
+
+An additional Rule-view extension increased scoped allocation by approximately
+3.7 percent relative to the Aggregate-only candidate and was withdrawn before
+acceptance. The original Rule behavior is retained.
+
+** Allocation evidence and source correspondence
+The diagnostic tools/ci/projection-allocation.ss executes 256 real production
+source-projection calls against the same mean constructor and checks the
+supported status and rows. The frozen SDK reports scoped cumulative Scheme
+allocation through exec-stats, with raw bytes-allocated snapshots on both sides.
+Negative reports, negative or decreasing raw counters, reports above the raw
+delta and raw values outside exact binary64 integer representation are rejected.
+The precision bound is a counter representation bound, not a heap limit.
+
+On the local twelve-logical-CPU host, the structured probe reported
+5,028,463,576 bytes and eight collections for the preserved baseline versus
+1,729,018,360 bytes and three collections for the Aggregate-only candidate.
+This normal-return, nonnested, balanced-stack scope is diagnostic allocation
+evidence. It is not wall-time admission, whole-process physical allocation,
+or an independent proof of the frozen SDK allocator. Earlier time-macro probes
+had different probe accounting and are retained as separate measurements.
+
+CompilerCost.lean binds the exact Aggregate classifier, public constructor,
+parent policy, actual receive-native-reply call site and allocation probe to
+Lean-rendered source checks. Its theorems establish the scalar view's field
+predicate implication, guarded fallback policy, bounded waiting policy and
+signed counter admission. AggregateAdmission and CheckpointSpin add reachable
+mutation counterexamples while retaining all preexisting obligations.
+These results rely on the existing POO metadata reader and SDK counter premises;
+they do not prove the complete MOP, C ABI, allocator, compiler, mutable cache,
+SCC implementation or Actor/Rayon message conversion equivalent to Lean.
+
+** Retained borrowed-matcher comparison
+The earlier matched be6e3d7e versus 2bfb6407 control completed all eight ABBA
+arms with identical complete answers. At twelve Rayon threads, sustained
+throughput improved 20.4446 percent and sustained P95 upper bounds decreased
+26.9731 percent. Candidate maximum latencies were 242.167 and 422.458
+milliseconds versus 563.778 and 535.052 milliseconds in that cohort. This
+supports retaining the borrowed matcher. It does not establish an absolute
+323-millisecond tail bound. One-thread maximum latency was mixed, including a
+503.365-millisecond candidate request dominated by replacement. Those tails
+remain open rather than being replaced by the throughput result.
+
+** Acceptance boundary
+The candidate passed all 74 Rust/Scheme process semantic tests with twelve
+concurrent tests and zero retries, plus strict Rust/PyO3 Clippy. Its local
+high-load reproducer completed 384 proofs with twelve resident single-thread
+VMs and the original one-second controls. This is not the three-CPU acceptance
+runner. The complete local source suite subsequently passed all 172 modules in 225
+seconds with twelve VM workers. Complete Lean/Quint checking passed, including
+65 models, 80 positive configurations, 479 negative controls and 90 exact
+source comparisons. Exact-head remote CI and a fresh original 24-row matrix
+remain required before declaring the three-CPU timeout or full matrix repaired.

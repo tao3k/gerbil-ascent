@@ -72,6 +72,7 @@ pub fn configure_worker(program: WorkerProgram) -> Result<()> {
 struct Activity {
     active: AtomicUsize,
     maximum: AtomicUsize,
+    host_processors: usize,
 }
 #[derive(Default)]
 struct Counters {
@@ -275,7 +276,10 @@ impl ProcessPool {
         if owners == 0 || owners > 64 {
             return Err(crate::failure("process VM count must be in 1..=64"));
         }
-        let activity = Arc::new(Activity::default());
+        let activity = Arc::new(Activity {
+            host_processors: thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get),
+            ..Activity::default()
+        });
         let mut population = Vec::new();
         for _ in 0..owners {
             population.push(start(program, activity.clone())?);
@@ -457,6 +461,7 @@ fn start(program: &WorkerProgram, activity: Arc<Activity>) -> Result<ProcessOwne
         })),
     })
 }
+// BEGIN GENERATED CHECKPOINT SPIN LINK
 fn receive_native_reply(
     socket: &mut Connection,
     control: Option<&Control>,
@@ -485,6 +490,12 @@ fn receive_native_reply(
                                 }
                             },
                             || socket.peer_closed(),
+                            || {
+                                crate::process_checkpoint::parent_spin_budget(
+                                    activity.host_processors,
+                                    activity.active.load(Ordering::Acquire),
+                                )
+                            },
                         )
                         .map_err(io_error)?;
                 }
@@ -508,6 +519,7 @@ fn receive_native_reply(
         }
     }
 }
+// END GENERATED CHECKPOINT SPIN LINK
 fn run(
     socket: UnixStream,
     incoming: mpsc::Receiver<Call>,

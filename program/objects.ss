@@ -14,6 +14,7 @@
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
                  gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
                  gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
+                 gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
                  gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
@@ -61,6 +62,7 @@
       ((eq? contract GerbilAscentTermContract) (gerbil-ascent-check-owned-term-value value))
       ((eq? contract GerbilAscentAtomContract) (gerbil-ascent-check-owned-atom-value value))
       ((eq? contract GerbilAscentRuleContract) (gerbil-ascent-check-owned-rule-value value))
+      ((eq? contract GerbilAscentAggregateContract) (gerbil-ascent-check-owned-aggregate-value value))
       (else (check contract value)))))
 ;; END GENERATED OWNED DECLARATION CHECK
 
@@ -444,6 +446,7 @@
                 (.plan (lambda (atom-plan bound)
                          (negation-clause-plan self atom-plan bound))))))
 
+;; BEGIN GENERATED AGGREGATE CONSTRUCTOR
 (def (gerbil-ascent-aggregate output-variable relation-name atom-terms
                               value-variables aggregate-procedure
                               (matcher #f) (operator-descriptor #f))
@@ -453,13 +456,10 @@
                    (procedure? matcher)))
     (error "invalid ASCENT aggregate output" output-variable matcher))
   (declaration-check GerbilAscentAggregateContract
-            (.o (:: self Aggregate.) ascent-clause-kind: 'aggregate
-                variable: output-variable relation: relation-name
-                terms: atom-terms variables: value-variables
-                aggregate: aggregate-procedure output-pattern: matcher
-                checked-operator: operator-descriptor
-                (.plan (lambda (atom-plan bound)
-                         (aggregate-clause-plan self atom-plan bound))))))
+    (gerbil-ascent-make-aggregate-value Aggregate. output-variable relation-name atom-terms
+      value-variables aggregate-procedure matcher operator-descriptor aggregate-clause-plan)))
+
+;; END GENERATED AGGREGATE CONSTRUCTOR
 
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (declaration-check GerbilAscentRuleContract

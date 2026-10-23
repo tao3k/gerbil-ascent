@@ -434,6 +434,11 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-value-shape", "program/types.ss"),
                 ("ExecutionPolicy.lean", "preparation-metadata-guard", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-relation-value", "program/types.ss"),
+                ("ExecutionPolicy.lean", "owned-aggregate-value", "program/types.ss"),
+                ("ExecutionPolicy.lean", "aggregate-constructor", "program/objects.ss"),
+                ("ExecutionPolicy.lean", "checkpoint-spin-policy", "rust/ascent-scheme/src/process_checkpoint.rs"),
+                ("ExecutionPolicy.lean", "checkpoint-spin-link", "rust/ascent-scheme/src/service.rs"),
+                ("ExecutionPolicy.lean", "projection-allocation-probe", "tools/ci/projection-allocation.ss"),
                 ("ExecutionPolicy.lean", "owned-declaration-values", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-declaration-check", "program/objects.ss"),
                 ("ExecutionPolicy.lean", "capture-row-transport", "program/operator-analysis.ss"),
@@ -564,12 +569,20 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate lookup source region')
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"owned-declaration-values", "owned-declaration-check"}:
+                elif language in {"owned-declaration-values", "owned-declaration-check", "owned-aggregate-value", "aggregate-constructor"}:
                     marker = language.upper().replace("-", " ")
                     begin, end = (f';; BEGIN GENERATED {marker}\n', f';; END GENERATED {marker}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate owned declaration region')
                     expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"checkpoint-spin-policy", "checkpoint-spin-link"}:
+                    marker = language.upper().replace("-", " ")
+                    begin, end = f'// BEGIN GENERATED {marker}\n', f'// END GENERATED {marker}\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate checkpoint waiting source region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "projection-allocation-probe":
+                    pass  # The complete diagnostic is source-bound, not its printed byte report.
                 elif language == "owned-relation-value":
                     begin, end = (';; BEGIN GENERATED OWNED RELATION VALUE\n',
                                   ';; END GENERATED OWNED RELATION VALUE\n')

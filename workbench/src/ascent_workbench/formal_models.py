@@ -689,3 +689,13 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
 MODEL_ORDER += ("BindingTraversal",)
 CONFIGURATIONS["BindingTraversal"] = {'constants': 'Mutation = "none"', 'invariants': 'Equivalent FailClosed OwnedCopies StopsAtFailure'}
 FAULTS["BindingTraversal"] = (('erase-prior', 'Equivalent', 12), ('ignore-conflict', 'Equivalent', 12), ('skip-last', 'Equivalent', 12), ('publish-failure', 'FailClosed', 12), ('copy-per-term', 'OwnedCopies', 12), ('continue-rejected', 'StopsAtFailure', 12))
+
+MODEL_ORDER += ("AggregateAdmission", "CheckpointSpin")
+CONFIGURATIONS["AggregateAdmission"] = {'constants': 'Mutation = "none"', 'invariants': 'AdmissionExact CallbackExact PublicProbeCost AllocationScope'}
+FAULTS["AggregateAdmission"] = (('forge-shape', 'CallbackExact', 12), ('ignore-children', 'CallbackExact', 12), ('ignore-revision', 'CallbackExact', 12), ('ignore-protocol', 'CallbackExact', 12), ('skip-fields', 'AdmissionExact', 12), ('reuse-prior', 'AdmissionExact', 12), ('reject-tuple', 'AdmissionExact', 12), ('keep-public-probes', 'PublicProbeCost', 12), ('promote-foreign-allocation', 'AllocationScope', 12), ('promote-net-stack', 'AllocationScope', 12), ('promote-negative-allocation', 'AllocationScope', 12))
+CONFIGURATIONS["CheckpointSpin"] = {'constants': 'Mutation = "none"', 'invariants': 'CpuPressure OwnerPressure Bounded'}
+FAULTS["CheckpointSpin"] = (('ignore-cpu-pressure', 'CpuPressure', 12), ('ignore-owner-pressure', 'OwnerPressure', 12), ('unbounded-spin', 'Bounded', 12))
+
+FAULTS["AggregateAdmission"] += (('ignore-negative-raw', 'AllocationScope', 12), ('exceed-raw-bound', 'AllocationScope', 12))
+
+FAULTS["AggregateAdmission"] += (('ignore-counter-precision', 'AllocationScope', 12),)

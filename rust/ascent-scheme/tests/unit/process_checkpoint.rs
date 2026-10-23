@@ -2,37 +2,40 @@
 use super::Checkpoints;
 #[test]
 fn mapped_checkpoints_preserve_every_signed_transition_and_response() {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("control");
-    let parent = Checkpoints::create(&path).unwrap();
-    let child = Checkpoints::open(&path).unwrap();
-    std::fs::remove_file(path).unwrap();
-    child.begin(19);
-    let responder = std::thread::spawn(move || {
-        let mut sequence = Vec::new();
-        parent
-            .serve(
-                19,
-                |id, work| {
-                    sequence.push((id, work));
-                    i32::try_from(work).unwrap()
-                },
-                || Ok(false),
-            )
-            .unwrap();
-        sequence
-    });
-    for work in [-2, 0, -3, 1, 0, -1, 3, -2, 4, -3] {
+    for spins in [32, 1024] {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("control");
+        let parent = Checkpoints::create(&path).unwrap();
+        let child = Checkpoints::open(&path).unwrap();
+        std::fs::remove_file(path).unwrap();
+        child.begin(19);
+        let responder = std::thread::spawn(move || {
+            let mut sequence = Vec::new();
+            parent
+                .serve(
+                    19,
+                    |id, work| {
+                        sequence.push((id, work));
+                        i32::try_from(work).unwrap()
+                    },
+                    || Ok(false),
+                    || spins,
+                )
+                .unwrap();
+            sequence
+        });
+        for work in [-2, 0, -3, 1, 0, -1, 3, -2, 4, -3] {
+            assert_eq!(
+                child.request(19, work, || Ok(false)).unwrap(),
+                i32::try_from(work).unwrap()
+            );
+        }
+        child.complete();
         assert_eq!(
-            child.request(19, work, || Ok(false)).unwrap(),
-            i32::try_from(work).unwrap()
+            responder.join().unwrap(),
+            [-2, 0, -3, 1, 0, -1, 3, -2, 4, -3].map(|work| (19, work))
         );
     }
-    child.complete();
-    assert_eq!(
-        responder.join().unwrap(),
-        [-2, 0, -3, 1, 0, -1, 3, -2, 4, -3].map(|work| (19, work))
-    );
 }
 #[test]
 fn mapped_checkpoints_fail_closed_when_the_peer_disappears() {
@@ -90,6 +93,7 @@ fn previous_completion_cannot_finish_the_next_request_generation() {
                     0
                 },
                 || Ok(false),
+                || 32,
             )
             .unwrap();
         finished.send(()).unwrap();
@@ -138,6 +142,7 @@ fn registered_notifications_preserve_contended_signed_generations() {
                             i32::try_from(work).unwrap()
                         },
                         || Ok(false),
+                        || if generation % 2 == 0 { 32 } else { 1024 },
                     )
                     .unwrap();
                 assert_eq!(seen, [-2, 0, -3, 1, -1, 5]);
@@ -157,4 +162,36 @@ fn registered_notifications_preserve_contended_signed_generations() {
             retired.wait();
         }
     });
+}
+
+#[test]
+fn solo_wait_policy_keeps_original_budget_under_owner_or_cpu_pressure() {
+    for (cpus, active, expected) in [
+        (1, 1, 32),
+        (2, 1, 32),
+        (3, 0, 32),
+        (3, 1, 1024),
+        (3, 2, 32),
+        (3, 12, 32),
+        (12, 1, 1024),
+        (12, 12, 32),
+    ] {
+        assert_eq!(super::parent_spin_budget(cpus, active), expected);
+    }
+}
+
+#[test]
+fn solo_parent_wait_fails_closed_without_issuing_a_decision() {
+    let directory = tempfile::tempdir().unwrap();
+    let parent = Checkpoints::create(&directory.path().join("closed-parent")).unwrap();
+    assert!(
+        parent
+            .serve(
+                1,
+                |_, _| panic!("no request was published"),
+                || Ok(true),
+                || 1024,
+            )
+            .is_err()
+    );
 }

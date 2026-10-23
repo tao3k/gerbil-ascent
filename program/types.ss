@@ -21,6 +21,7 @@
         gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
         gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
         gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
+        gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
         gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
         gerbil-ascent-relation-with-rows
         gerbil-ascent-make-session-value
@@ -384,18 +385,69 @@
                       output-pattern: +optional-procedure+
                       .plan: +plan+))
 
+;;; The factory owns the selected fields, not an admission receipt. A scalar
+;;; aggregate with owned terms can use pure field checks only while all six
+;;; public classifier protocols retain their original identities. Other clauses
+;;; and every changed/failed view retain the original ordered public union.
+;; BEGIN GENERATED OWNED AGGREGATE VALUE
+(def +aggregate-slots+
+  '(ascent-clause-kind variable relation terms variables aggregate checked-operator output-pattern .plan))
+(def aggregate-value-current?
+  (canonical-value-check-current? GerbilAscentAggregateContract +aggregate-slots+))
+(def aggregate-predecessors-current?
+  (let (checks
+    (map (lambda (entry) (canonical-value-check-current? (car entry) (cdr entry)))
+      (list (cons GerbilAscentAtomContract '(ascent-clause-kind relation terms .plan))
+            (cons GerbilAscentGuardContract '(ascent-clause-kind variables predicate checked-operator .plan))
+            (cons GerbilAscentGeneratorContract '(ascent-clause-kind variable variables generate .plan))
+            (cons GerbilAscentBindingContract '(ascent-clause-kind variable variables checked-operator compute .plan))
+            (cons GerbilAscentNegationContract '(ascent-clause-kind relation terms .plan)))))
+    (lambda () (andmap (lambda (current?) (current?)) checks))))
+(def +aggregate-value+
+  (.cc ObjectContract. identity: 'ascent/aggregate-value
+       required-prototype: (.ref GerbilAscentAggregateContract 'proto)
+       extra-fields: 'delegate constraints: (list Any)
+       responsibilities:
+       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'aggregate <>))
+           variable: (.cc Type. .element?: symbol?)
+           relation: (.cc Type. .element?: symbol?)
+           terms: (.cc Type. .element?: terms-value?)
+           variables: (.cc Type. .element?: (lambda (v) (and (list? v) (andmap symbol? v))))
+           aggregate: (.cc Type. .element?: procedure?)
+           checked-operator: (.cc Type. .element?: (lambda (v) (or (not v) (vector? v))))
+           output-pattern: (.cc Type. .element?: not)
+           .plan: (.cc Type. .element?: procedure?))))
+(def (owned-aggregate-fields? value)
+  (and (declared-value-shape? 'aggregate value) (term-value-current?)
+       (symbol? (.ref value 'variable)) (not (.ref value 'output-pattern))
+       (let (terms (.ref value 'terms))
+         (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms)))))
+(def (gerbil-ascent-make-aggregate-value prototype output-value relation-name atom-terms input-variables aggregate-procedure matcher operator-descriptor lower)
+  (remember-value-shape! 'aggregate
+    (.o (:: self prototype) ascent-clause-kind: 'aggregate variable: output-value
+        relation: relation-name terms: atom-terms variables: input-variables aggregate: aggregate-procedure
+        output-pattern: matcher checked-operator: operator-descriptor
+        (.plan (lambda (plan bound) (lower self plan bound))))))
+(def (gerbil-ascent-check-owned-aggregate-value value)
+  (if (and (owned-aggregate-fields? value) (aggregate-value-current?)
+           (element? +aggregate-value+ value)) value
+      (validate GerbilAscentAggregateContract value)))
+(def (public-clause-value? clause)
+  (or (atom-value? clause)
+      (element? GerbilAscentGuardContract clause)
+      (element? GerbilAscentGeneratorContract clause)
+      (element? GerbilAscentBindingContract clause)
+      (element? GerbilAscentNegationContract clause)
+      (element? GerbilAscentAggregateContract clause)))
+(def (clause-value? clause)
+  (or (and (owned-aggregate-fields? clause) (aggregate-predecessors-current?)
+           (aggregate-value-current?) (element? +aggregate-value+ clause))
+      (public-clause-value? clause)))
+;; END GENERATED OWNED AGGREGATE VALUE
+
 (def +clauses+
   (slot-contract 'ascent/clauses
-                 (lambda (value)
-                   (and (list? value)
-                        (andmap (lambda (clause)
-                                  (or (atom-value? clause)
-                                      (element? GerbilAscentGuardContract clause)
-                                      (element? GerbilAscentGeneratorContract clause)
-                                      (element? GerbilAscentBindingContract clause)
-                                      (element? GerbilAscentNegationContract clause)
-                                      (element? GerbilAscentAggregateContract clause)))
-                                value)))))
+                 (lambda (value) (and (list? value) (andmap clause-value? value)))))
 (def +heads+
   (slot-contract 'ascent/heads
                  (lambda (value)

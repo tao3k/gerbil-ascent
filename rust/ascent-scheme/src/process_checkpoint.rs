@@ -128,7 +128,7 @@ impl Checkpoints {
                 slot.phase.store(IDLE, Ordering::Release);
                 return Ok(code);
             }
-            waiting.poll(&mut closed, slot, phase, CHILD)?;
+            waiting.poll(&mut closed, slot, phase, CHILD, 32)?;
         }
     }
     pub(crate) fn serve(
@@ -136,6 +136,7 @@ impl Checkpoints {
         generation: i64,
         mut decide: impl FnMut(i64, i64) -> i32,
         mut closed: impl FnMut() -> io::Result<bool>,
+        mut spin_budget: impl FnMut() -> u32,
     ) -> io::Result<()> {
         let slot = self.slot();
         let mut waiting = Wait::default();
@@ -143,7 +144,7 @@ impl Checkpoints {
             if slot.generation.load(Ordering::Acquire) != generation {
                 let phase = slot.phase.load(Ordering::Acquire);
                 if slot.generation.load(Ordering::Acquire) != generation {
-                    waiting.poll(&mut closed, slot, phase, PARENT)?;
+                    waiting.poll(&mut closed, slot, phase, PARENT, spin_budget())?;
                 }
                 continue;
             }
@@ -161,7 +162,7 @@ impl Checkpoints {
                     }
                 }
                 COMPLETE => return Ok(()),
-                phase => waiting.poll(&mut closed, slot, phase, PARENT)?,
+                phase => waiting.poll(&mut closed, slot, phase, PARENT, spin_budget())?,
             }
         }
     }
@@ -175,6 +176,19 @@ impl Drop for Checkpoints {
         }
     }
 }
+// A solo VM and its controller can exchange directly on a three-CPU host.
+// Additional active owners retain the original sleeping policy. This only
+// bounds waiting work; every signed request still reaches the same controller.
+// BEGIN GENERATED CHECKPOINT SPIN POLICY
+pub(crate) fn parent_spin_budget(processors: usize, active: usize) -> u32 {
+    if processors >= 3 && active == 1 {
+        1024
+    } else {
+        32
+    }
+}
+// END GENERATED CHECKPOINT SPIN POLICY
+
 #[derive(Default)]
 struct Wait(u32);
 impl Wait {
@@ -184,11 +198,12 @@ impl Wait {
         slot: &Slot,
         observed: u32,
         waiter: u32,
+        spin_budget: u32,
     ) -> io::Result<()> {
         self.0 = self.0.wrapping_add(1);
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
-            if self.0 >= 32 {
+            if self.0 >= spin_budget {
                 if closed()? {
                     return Err(io::Error::new(
                         io::ErrorKind::BrokenPipe,
@@ -201,7 +216,7 @@ impl Wait {
         }
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         {
-            let _ = (slot, observed, waiter);
+            let _ = (slot, observed, waiter, spin_budget);
             if self.0.is_multiple_of(1024) && closed()? {
                 return Err(io::Error::new(
                     io::ErrorKind::BrokenPipe,

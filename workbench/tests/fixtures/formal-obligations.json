@@ -2817,5 +2817,106 @@
         12
       ]
     ]
+  },
+  "AggregateAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "AdmissionExact CallbackExact PublicProbeCost AllocationScope"
+    },
+    "faults": [
+      [
+        "forge-shape",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-children",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-revision",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-protocol",
+        "CallbackExact",
+        12
+      ],
+      [
+        "skip-fields",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "reuse-prior",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "reject-tuple",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "keep-public-probes",
+        "PublicProbeCost",
+        12
+      ],
+      [
+        "promote-foreign-allocation",
+        "AllocationScope",
+        12
+      ],
+      [
+        "promote-net-stack",
+        "AllocationScope",
+        12
+      ],
+      [
+        "promote-negative-allocation",
+        "AllocationScope",
+        12
+      ],
+      [
+        "ignore-negative-raw",
+        "AllocationScope",
+        12
+      ],
+      [
+        "exceed-raw-bound",
+        "AllocationScope",
+        12
+      ],
+      [
+        "ignore-counter-precision",
+        "AllocationScope",
+        12
+      ]
+    ]
+  },
+  "CheckpointSpin": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CpuPressure OwnerPressure Bounded"
+    },
+    "faults": [
+      [
+        "ignore-cpu-pressure",
+        "CpuPressure",
+        12
+      ],
+      [
+        "ignore-owner-pressure",
+        "OwnerPressure",
+        12
+      ],
+      [
+        "unbounded-spin",
+        "Bounded",
+        12
+      ]
+    ]
   }
 }

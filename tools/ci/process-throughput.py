@@ -72,12 +72,16 @@ def longest_request(traces, soaks, first_task=0):
     return values
 
 
-def run_case(args, case, configuration, work_distribution):
+def run_case(args, case, configuration, work_distribution, diagnostic=False):
     """Run one original fixed-work row with exactly the shared admission rules."""
     name, tasks, groups, width = case
     mode, owners, threads = configuration
     key = f"{name}-{mode}-vm{owners}-threads{threads}"
     command = [str(args.benchmark.resolve()), str(args.worker.resolve()), mode, str(owners), str(threads), str(tasks), str(groups), str(width), "5", "30"]
+    environment = dict(os.environ)
+    if diagnostic:
+        environment["ASCENT_PROCESS_TRACE"] = "1"
+    traced = "ASCENT_PROCESS_TRACE" in environment
     audit, errors, stop = [], [], threading.Event()
     def sample():
         while not stop.is_set():
@@ -91,7 +95,7 @@ def run_case(args, case, configuration, work_distribution):
     observer = threading.Thread(target=sample)
     observer.start()
     started = time.monotonic()
-    process = subprocess.Popen(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    process = subprocess.Popen(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True, env=environment)
     try:
         stdout, stderr = process.communicate(timeout=240)
         status = process.returncode
@@ -148,7 +152,7 @@ def run_case(args, case, configuration, work_distribution):
     except (ValueError, TypeError, KeyError) as error:
         phases, longest = {}, None
         errors.append(str(error))
-    valid = (status == 0 and soak_valid and checkpoint_valid and len(samples) == 5
+    valid = (not traced and status == 0 and soak_valid and checkpoint_valid and len(samples) == 5
              and len(ready) == 1 and ready[0].get("work_distribution") == work_distribution
              and {value["sample"] for value in samples} == {str(i) for i in range(5)}
              and all(value["mode"] == mode and value["vms"] == str(owners)
@@ -166,7 +170,7 @@ def run_case(args, case, configuration, work_distribution):
            "checkpoint_transport": transport,
            "request_phases": phases, "command": command, "status": status,
            "process_wall_seconds": time.monotonic()-started, "samples": samples, "soak": soaks, "slowest": slowest, "longest_request": longest, "owners": identities,
-           "foreign_compilers": audit, "audit_errors": errors, "valid": valid}
+           "foreign_compilers": audit, "audit_errors": errors, "diagnostic_only": traced, "valid": valid}
     if valid:
         row["median_throughput_per_second"] = statistics.median(float(value["throughput_per_s"]) for value in samples)
         row["median_p50_request_ms"] = statistics.median(int(value["p50_ns"])/1e6 for value in samples)
@@ -174,6 +178,30 @@ def run_case(args, case, configuration, work_distribution):
         row["maximum_overlapping_vm_calls"] = max(int(value["max_overlapping_vm_calls"]) for value in samples)
     print(key, status, "VALID" if valid else "REJECTED", flush=True)
     return row
+
+
+def diagnose_failed_vm_cases(args, rows, work_distribution):
+    """One instrumented reproduction after ALL original measurements; never admit it."""
+    failed = [row for row in rows if row["mode"] == "vm" and not row["valid"]
+              and row["status"] != 0 and not row.get("diagnostic_only", False)]
+    if not failed:
+        return
+    root = args.output / "diagnostics"
+    root.mkdir()
+    receipt = {"schema": "ascent.failed-case-diagnostics.v1", "admitted": False, "runs": []}
+    for original in failed:
+        output = root / original["key"]
+        output.mkdir()
+        scoped = argparse.Namespace(output=output, benchmark=args.benchmark, worker=args.worker)
+        try:
+            observation = run_case(scoped,
+                (original["workload"], original["tasks"], original["groups"], original["width"]),
+                (original["mode"], original["vms"], original["rust_threads"]), work_distribution,
+                diagnostic=True)
+        except Exception as error:
+            observation = {"key": original["key"], "diagnostic_error": str(error)}
+        receipt["runs"].append({"original_status": original["status"], "observation": observation})
+        (root / "result.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 
 def main():
@@ -224,6 +252,7 @@ def main():
     receipt["complete"] = all(row["valid"] and row["matched_complete_answers"] for row in receipt["runs"])
     (args.output/"result.json").write_text(json.dumps(receipt, indent=2)+"\n")
     if not receipt["complete"]:
+        diagnose_failed_vm_cases(args, receipt["runs"], receipt["work_distribution"])
         raise SystemExit("incomplete or contaminated production throughput matrix; failures retained")
 
 

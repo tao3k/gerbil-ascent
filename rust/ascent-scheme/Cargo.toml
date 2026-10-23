@@ -56,3 +56,8 @@ required-features = ["rayon"]
 [[test]]
 name = "row_materialization"
 path = "tests/integration/row_materialization.rs"
+
+[[bench]]
+name = "provenance_load"
+harness = false
+required-features = ["rayon"]

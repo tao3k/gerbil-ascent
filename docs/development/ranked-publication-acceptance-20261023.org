@@ -207,3 +207,45 @@ retries or skips, strict Clippy and the complete unchanged guarded Lean/Quint
 inventory. The latter does not prove SmallVec's implementation or Rust compiler
 refinement. A matched three-CPU performance comparison is still required; no
 throughput or tail-latency improvement is claimed for this candidate yet.
+
+* Rejection of the initializer-only candidate
+
+The matched three-CPU ABBA experiment 39879073086 compared 5777852b with
+41b8a1db using all eight original arms, five fixed samples and thirty-second
+soaks. All answers and executable identities matched. Twelve-thread sustained
+throughput improved only 1.67%; candidate maximum latencies were 781.331 and
+493.609 ms versus reference 417.119 and 303.737 ms. One-thread fixed-work P95
+regressed 21.87%. The initializer-only change is therefore withdrawn; its
+historical successful semantic/CI receipts are not performance acceptance.
+
+The 41b8a1db and 5777852b original matrices each attempted all 24 rows with
+23 structurally valid rows. Neither complete matrix is admitted. The large
+single-VM row failed in both: 41b8a1db returned a request timeout; 5777852b made
+progress through three samples before the unchanged 240-second case watchdog.
+Each of those samples took about 56--59 seconds. This is not evidence of a
+native deadlock. In the first 5777852b sample, 24 requests made 144 native calls,
+accumulating 628.961 seconds of queue time and 56.966 seconds of native service
+with 2,217,595 checkpoints. Request budgets and publication checks remain intact.
+
+The diagnostic baseline's twelve-thread bindings prerequisite passed all 72
+cases in 101.563 seconds. Its empty-input mean proof took 413.030 ms; the final
+projection took 356.961 ms, including 285.017 ms of GC wall and 64.597 ms of GC
+CPU. These measurements locate a real cost but do not establish the cause of
+the earlier 343c8c7c one-second failure. That cause remains open.
+
+The shared diagnostic baseline adds request IDs and rejected queue-admission
+observations without changing accepted-call counters or controller decisions.
+After all original matrix rows finish, a failed VM case gets at most one
+instrumented reproduction using its original work and limits. Such runs are
+explicitly inadmissible, saved separately and cannot promote an original
+failure. Complete structural evidence with tracing enabled is rejected too.
+
+The mean diagnostic exercises the original aggregate constructor across twelve
+resident single-thread VM processes and twelve Rust workers, with sixteen
+nonempty/empty replacement rounds per VM. Rust checks each result, closed-absent
+proof, independent verification and invalidation of each previous proof. All
+384 proofs retain their original one-second deadline. Archive publication runs
+concurrently with an explicit overlap barrier. A local twelve-CPU tool-validation
+run completed all 384 checks; this is neither three-CPU reproduction nor a fix.
+The diagnostic runs after the original matrix, saves binary hashes and complete
+traces, and never admits its timings as performance.

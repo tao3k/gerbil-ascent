@@ -10,12 +10,14 @@ pub(crate) fn enabled() -> bool {
 pub(crate) struct Trace {
     enabled: bool,
     owner: u64,
+    control: i64,
 }
 impl Trace {
-    pub(crate) fn new(owner: u64) -> Self {
+    pub(crate) fn new(owner: u64, control: i64) -> Self {
         Self {
             enabled: enabled(),
             owner,
+            control,
         }
     }
     pub(crate) fn measure<T>(
@@ -27,9 +29,10 @@ impl Trace {
         let result = operation();
         if let Some(started) = started {
             crate::diagnostics::emit(format!(
-                "ASCENT-PROOF-PHASE pid={} owner={} phase={} elapsed_us={} success={}",
+                "ASCENT-PROOF-PHASE pid={} owner={} control={} phase={} elapsed_us={} success={}",
                 std::process::id(),
                 self.owner,
+                self.control,
                 phase,
                 started.elapsed().as_micros(),
                 result.is_ok()
@@ -57,6 +60,7 @@ pub(crate) struct Request<'a> {
     before: Option<([f64; 4], [u64; 4])>,
     started: Instant,
     operation: String,
+    control: usize,
 }
 impl<'a> Request<'a> {
     pub(crate) fn start(
@@ -67,6 +71,7 @@ impl<'a> Request<'a> {
             owner,
             before: usage(owner),
             started: Instant::now(),
+            control: request_control(request.get("executionControl")),
             operation: request
                 .get("operation")
                 .and_then(|v| v.text().ok())
@@ -79,8 +84,9 @@ impl Drop for Request<'_> {
     fn drop(&mut self) {
         if let Some(((before_gc, before_os), (gc, os))) = self.before.zip(usage(self.owner)) {
             crate::diagnostics::emit(format!(
-                "ASCENT-VM-PHASE pid={} operation={} elapsed_us={} cpu_us={} gc_count={} gc_cpu_us={} gc_wall_us={} voluntary_switches={} involuntary_switches={} heap_capacity={} rss_high_water={}",
+                "ASCENT-VM-PHASE pid={} control={} operation={} elapsed_us={} cpu_us={} gc_count={} gc_cpu_us={} gc_wall_us={} voluntary_switches={} involuntary_switches={} heap_capacity={} rss_high_water={}",
                 std::process::id(),
+                self.control,
                 self.operation,
                 self.started.elapsed().as_micros(),
                 os[0].saturating_sub(before_os[0]) / 1000,
@@ -107,4 +113,26 @@ impl Drop for Request<'_> {
 pub(crate) fn emit(mut line: String) {
     line.push('\n');
     let _ = std::io::stderr().write_all(line.as_bytes());
+}
+
+/// Generated authority identity only; no business arguments are logged.
+pub(crate) fn request_control(value: Option<&gerbil_ascent::Data>) -> usize {
+    value.and_then(|value| value.index().ok()).unwrap_or(0)
+}
+
+/// Include rejected queue admissions without changing the public accepted-call counters.
+pub(crate) fn queued(request: &gerbil_ascent::Data, control: i64, queued: Instant, admitted: bool) {
+    if enabled() {
+        emit(format!(
+            "ASCENT-QUEUE-PHASE pid={} control={} operation={} waited_us={} admitted={}",
+            std::process::id(),
+            control,
+            request
+                .get("operation")
+                .and_then(|value| value.text().ok())
+                .unwrap_or("-"),
+            queued.elapsed().as_micros(),
+            admitted
+        ));
+    }
 }

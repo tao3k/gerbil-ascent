@@ -410,7 +410,6 @@ impl RuleSession {
         limits: &gerbil_ascent::ProvenanceLimits,
         cancellation: &Cancellation,
     ) -> Result<SchemeProvenance> {
-        let trace = crate::diagnostics::Trace::new(self.0.handle);
         let control = crate::control::Control::new(
             &Limits {
                 timeout: limits.timeout,
@@ -419,6 +418,7 @@ impl RuleSession {
             },
             cancellation,
         )?;
+        let trace = crate::diagnostics::Trace::new(self.0.handle, control.numeric_id());
         let _gate = trace.measure("gate", || self.acquire(&control))?;
         let generation = trace.measure("scope", || {
             self.admit_proof_scope(handle, query, limits, cancellation, &control)

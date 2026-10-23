@@ -67,3 +67,63 @@ class SameRequestCostEvidence(unittest.TestCase):
 
     def test_historical_absence_is_not_reconstructed_as_phase_evidence(self):
         self.assertIsNone(CONTROL.longest_request([], [{"max_ns": "100"}]))
+
+
+class DiagnosticAdmission(unittest.TestCase):
+    def complete_evidence(self):
+        common = dict(mode='vm', vms='1', rust_threads='1', clients='12')
+        def line(tag, **values):
+            return tag + ' ' + ' '.join(f'{key}={value}' for key, value in values.items()) + '\n'
+        stderr = line('PROCESS-OWNER', pid=123, processors=1, domain=1)
+        stderr += line('PROCESS-READY', **common, checkpoint_transport='buffered-socket', work_distribution='adaptive')
+        for sample in range(5):
+            stderr += line('PROCESS-SAMPLE', **common, sample=sample, tasks=12, throughput_per_s=1,
+                           p50_ns=10, p95_ns=10, max_overlapping_vm_calls=1,
+                           native_calls=24, checkpoints=1, shared_checkpoints=0, answer_sha='a'*64)
+        stderr += line('PROCESS-SOAK', **common, requested_ns=30_000_000_000, wall_ns=30_000_000_001,
+                       completed_requests=12, checked_requests=12, minimum_client_requests=1,
+                       histogram_resolution_ns=100_000, histogram_buckets=65_536,
+                       p50_lower_ns=0, p50_upper_ns=100_000, p95_lower_ns=0, p95_upper_ns=100_000,
+                       max_ns=100, checkpoints=1, shared_checkpoints=0, slowest_schema='same-request-v1')
+        stderr += line('PROCESS-SLOWEST', **common, task=72, total_ns=100,
+                       replace_ns=60, run_export_ns=25, validation_ns=15)
+        stdout = HEADER + ''.join(request(sample, sample*12+task) for sample in range(5) for task in range(12))
+        return stdout, stderr
+
+    def test_trace_cannot_be_admitted_even_with_complete_structural_evidence(self):
+        import argparse
+        import tempfile
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        for diagnostic in [False, True]:
+            with self.subTest(diagnostic=diagnostic), tempfile.TemporaryDirectory() as directory:
+                args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
+                process = SimpleNamespace(returncode=0, communicate=lambda **_: self.complete_evidence())
+                with patch.dict(CONTROL.os.environ, {}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), \
+                        patch.object(CONTROL.subprocess, 'Popen', return_value=process) as launch:
+                    row = CONTROL.run_case(args, ('small', 12, 4, 8), ('vm', 1, 1), 'adaptive', diagnostic=diagnostic)
+                self.assertEqual(row['valid'], not diagnostic)
+                self.assertEqual(row['diagnostic_only'], diagnostic)
+                self.assertEqual('ASCENT_PROCESS_TRACE' in launch.call_args.kwargs['env'], diagnostic)
+
+    def test_successful_diagnostic_does_not_promote_or_repeat_original_failure(self):
+        import argparse
+        import copy
+        import json
+        import tempfile
+        from unittest.mock import patch
+        original = dict(key='failed-vm', workload='parallel-closure', mode='vm', vms=1,
+                        rust_threads=1, tasks=24, groups=256, width=16, valid=False, status=101)
+        rows = [original, {**original, 'mode': 'rayon'}, {**original, 'status': 0},
+                {**original, 'diagnostic_only': True}]
+        before = copy.deepcopy(rows)
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
+            with patch.object(CONTROL, 'run_case', return_value={'valid': True, 'status': 0}) as reproduce:
+                CONTROL.diagnose_failed_vm_cases(args, rows, 'adaptive')
+            self.assertEqual(reproduce.call_count, 1)
+            self.assertTrue(reproduce.call_args.kwargs['diagnostic'])
+            receipt = json.loads((Path(directory) / 'diagnostics/result.json').read_text())
+            self.assertFalse(receipt['admitted'])
+            self.assertEqual(receipt['runs'][0]['original_status'], 101)
+        self.assertEqual(rows, before)

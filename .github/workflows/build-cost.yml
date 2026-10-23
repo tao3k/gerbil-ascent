@@ -113,10 +113,12 @@ jobs:
           if [[ -n "$CANDIDATE" ]]; then
             test "$(git rev-parse --verify --end-of-options "$CANDIDATE^{commit}")" = "$(git rev-parse HEAD)"
           fi
-          git diff --exit-code "$reference" HEAD -- rust/Cargo.toml rust/Cargo.lock '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg rust/ascent-scheme
+          # The build-only Rust kernel producer belongs to the compared implementation.
+          git diff --exit-code "$reference" HEAD -- rust/Cargo.toml rust/Cargo.lock '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg rust/ascent-scheme ':(exclude)program/rust-execution.ss'
           git worktree add --detach "$RUNNER_TEMP/process-reference" "$reference"
           cargo build --release --locked --manifest-path "$RUNNER_TEMP/process-reference/rust/Cargo.toml" -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-reference-build.jsonl"
       - name: Build production process benchmark with the released SDK
+        id: production
         if: ${{ inputs.process_throughput }}
         env:
           CARGO_BUILD_JOBS: "3"
@@ -127,8 +129,9 @@ jobs:
         run: |
           xcrun --find ld-classic
           printf 'RUSTFLAGS=%s\nMACOSX_DEPLOYMENT_TARGET=%s\n' "$RUSTFLAGS" "$MACOSX_DEPLOYMENT_TARGET" > "$RUNNER_TEMP/process-build-recipe.txt"
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker --bench process_throughput --bench provenance_load --test archive_build --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
       - name: Qualify complete macOS process semantics before measurement
+        id: bindings
         if: ${{ inputs.process_throughput }}
         env:
           CARGO_BUILD_JOBS: "3"
@@ -159,6 +162,11 @@ jobs:
             benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-build.jsonl")"
             python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --output "$RUNNER_TEMP/process-throughput"
           fi
+      - name: Diagnose resident mean provenance after all original measurements
+        if: ${{ !cancelled() && inputs.process_throughput && inputs.baseline == '' && steps.production.outcome == 'success' && steps.bindings.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: python3 tools/ci/provenance-load.py --build "$RUNNER_TEMP/process-build.jsonl" --output "$RUNNER_TEMP/provenance-load" --expected-cpus 3
       - name: Preserve production throughput and every negative observation
         if: ${{ always() && inputs.process_throughput }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -167,6 +175,7 @@ jobs:
           path: |
             ${{ runner.temp }}/process-throughput
             ${{ runner.temp }}/process-control
+            ${{ runner.temp }}/provenance-load
             ${{ runner.temp }}/process-reference-build.jsonl
             ${{ runner.temp }}/process-build.jsonl
             ${{ runner.temp }}/process-build-recipe.txt

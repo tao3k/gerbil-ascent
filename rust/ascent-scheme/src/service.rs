@@ -520,6 +520,12 @@ fn run(
     let mut graceful = true;
     for call in incoming {
         let admitted = call.control.as_ref().map_or(Ok(()), Control::check);
+        crate::diagnostics::queued(
+            &call.request,
+            call.control.as_ref().map_or(0, Control::numeric_id),
+            call.queued,
+            admitted.is_ok(),
+        );
         if let Err(error) = admitted {
             let _ = call.reply.send(Err(error));
             continue;

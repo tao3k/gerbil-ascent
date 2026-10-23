@@ -212,6 +212,8 @@ impl Engine {
         let owner = self.process_owner()?;
         let traced = crate::diagnostics::enabled();
         let before = traced.then(|| (std::time::Instant::now(), owner.statistics()));
+        let control =
+            traced.then(|| crate::diagnostics::request_control(request.get("executionControl")));
         let action = traced.then(|| {
             request
                 .get("action")
@@ -223,9 +225,10 @@ impl Engine {
         if let Some((started, before)) = before {
             let after = owner.statistics();
             crate::diagnostics::emit(format!(
-                "ASCENT-RPC-PHASE pid={} worker={} operation={} action={} elapsed_us={} owner_queue_delta_us={} owner_service_delta_us={} owner_checkpoint_delta={} success={}",
+                "ASCENT-RPC-PHASE pid={} worker={} control={} operation={} action={} elapsed_us={} owner_queue_delta_us={} owner_service_delta_us={} owner_checkpoint_delta={} success={}",
                 std::process::id(),
                 owner.receipt().pid,
+                control.unwrap_or(0),
                 operation,
                 action.unwrap(),
                 started.elapsed().as_micros(),

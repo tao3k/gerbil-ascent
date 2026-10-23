@@ -12,7 +12,7 @@ impl MatchState {
     #[inline]
     pub(crate) fn new(prior: &[Option<Cell>]) -> Self {
         Self {
-            values: SmallVec::from_slice(prior),
+            values: prior.iter().copied().collect(),
             rejected: false,
         }
     }

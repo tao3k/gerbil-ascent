@@ -187,3 +187,23 @@ This establishes an actual projection/GC stall; it does not identify the root
 cause of the remote mean failure or qualify a three-CPU fix. The previous
 instrumentation prototype's ASP failure is retained separately. No timeout,
 proof validation, cancellation or publication admission was relaxed.
+
+* Bulk binding-copy candidate
+
+An exact 41b8a1db production benchmark CPU-stack sample identified generated
+binding as a leading evaluation hotspot (2,241 collapsed leaf observations).
+The sampled run is diagnostic only: the sampler and other host activity exclude
+its throughput and latency from performance acceptance.
+
+MatchState now copies the admitted Copy-valued slot slice through
+SmallVec::from_slice rather than collecting individual iterator items. This
+preserves slot order, inline/spilled ownership, generated matching, work charging
+and publication checks. An independent plain-vector oracle checks literals,
+wildcards, repeated variables and pre-bound conflicts at widths 1, 3, 4, 5 and 16.
+
+Local candidate acceptance passed all 93 Rayon workspace tests, all 74 serial
+Rust tests, all 72 release Scheme binding tests at twelve test threads without
+retries or skips, strict Clippy and the complete unchanged guarded Lean/Quint
+inventory. The latter does not prove SmallVec's implementation or Rust compiler
+refinement. A matched three-CPU performance comparison is still required; no
+throughput or tail-latency improvement is claimed for this candidate yet.

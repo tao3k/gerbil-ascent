@@ -12,7 +12,7 @@ impl MatchState {
     #[inline]
     pub(crate) fn new(prior: &[Option<Cell>]) -> Self {
         Self {
-            values: prior.iter().copied().collect(),
+            values: SmallVec::from_slice(prior),
             rejected: false,
         }
     }
@@ -43,3 +43,7 @@ impl MatchState {
         (!self.rejected).then_some(self.values)
     }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/matching.rs"]
+mod tests;

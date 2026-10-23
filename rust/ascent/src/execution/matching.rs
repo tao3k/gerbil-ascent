@@ -1,24 +1,30 @@
 //! Owned binding slots used by the Scheme-generated matching algorithm.
-use super::Cell;
+use super::{Cell, Pattern};
 use smallvec::SmallVec;
 
 pub(crate) type Bindings = SmallVec<[Option<Cell>; 4]>;
 
+/// One stack-local slot owner; generated steps borrow it without moving it.
+// BEGIN GENERATED BORROWED MATCH
 pub(crate) struct MatchState {
     values: Bindings,
-    rejected: bool,
 }
 impl MatchState {
     #[inline]
-    pub(crate) fn new(prior: &[Option<Cell>]) -> Self {
-        Self {
+    pub(crate) fn matching(
+        terms: &[Pattern],
+        row: &[Cell],
+        prior: &[Option<Cell>],
+        step: fn(&mut Self, &Pattern, Cell) -> bool,
+    ) -> Option<Bindings> {
+        let mut state = Self {
             values: prior.iter().copied().collect(),
-            rejected: false,
-        }
-    }
-    #[inline]
-    pub(crate) fn is_rejected(&self) -> bool {
-        self.rejected
+        };
+        terms
+            .iter()
+            .zip(row)
+            .all(|(term, value)| step(&mut state, term, *value))
+            .then_some(state.values)
     }
     #[inline]
     pub(crate) fn contains(&self, slot: usize) -> bool {
@@ -29,20 +35,13 @@ impl MatchState {
         self.values[slot].expect("generated bound-slot branch")
     }
     #[inline]
-    pub(crate) fn set(mut self, slot: usize, value: Cell) -> Self {
+    pub(crate) fn set(&mut self, slot: usize, value: Cell) -> bool {
         self.values[slot] = Some(value);
-        self
-    }
-    #[inline]
-    pub(crate) fn reject(mut self) -> Self {
-        self.rejected = true;
-        self
-    }
-    #[inline]
-    pub(crate) fn finish(self) -> Option<Bindings> {
-        (!self.rejected).then_some(self.values)
+        true
     }
 }
+
+// END GENERATED BORROWED MATCH
 
 #[cfg(test)]
 #[path = "../../tests/unit/matching.rs"]

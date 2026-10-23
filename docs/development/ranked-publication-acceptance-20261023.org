@@ -249,3 +249,28 @@ concurrently with an explicit overlap barrier. A local twelve-CPU tool-validatio
 run completed all 384 checks; this is neither three-CPU reproduction nor a fix.
 The diagnostic runs after the original matrix, saves binary hashes and complete
 traces, and never admits its timings as performance.
+
+* Borrowed binding traversal candidate
+
+The next candidate retains the original initializer and changes the build-only
+Scheme-generated Rust matcher to borrow one owned slot state through each term.
+A conflict short-circuits pure matching and drops the private partial slots.
+Row work accounting, cancellation polling, source admission and publication are
+unchanged. The plain-vector oracle covers 1,440 matching combinations plus empty
+inputs, including inline and spilled widths, literals and pre-bound conflicts.
+
+Guarded Lean proves rejection absorption and equivalence of borrowed traversal
+to the old absorbing fold. Exact source-region obligations bind both the Rust
+host and Scheme IR producer. The additional Quint model checks slot results and
+state-move costs with six fault controls. All 63 models, 78 positive and 462
+negative obligations passed locally, as did 93 Rayon workspace tests, 72 Scheme
+binding tests at twelve test threads and strict Rust/PyO3 Clippy. These proofs do
+not close Rust compiler, SmallVec implementation or full mutable-runtime source
+refinement. A move-count model is not cumulative allocation measurement.
+
+The matched comparison uses 2bfb6407 as the shared baseline: native bridge,
+controller, Scheme runtime, benchmark inputs and diagnostics are identical. The
+only Scheme-input exception is the build-only Rust kernel IR producer, which is
+not part of the VM frontend library. All other Scheme and bridge inputs remain
+strictly equal. Remote performance and exact-head CI are required before this
+candidate can claim a latency or throughput improvement.

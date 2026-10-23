@@ -627,6 +627,8 @@ end Ascent.ArchivePolicy
 def renderedSource (name : String) : IO String := do
   match name with
   | "row-view-scheme" => pure Ascent.LookupCost.rowViewSchemeSource
+  | "borrowed-match-rust" => pure Ascent.LookupCost.borrowedMatchRustSource
+  | "borrowed-match-scheme" => pure Ascent.LookupCost.borrowedMatchSchemeSource
   | "ranked-row-rust" => pure Ascent.LookupCost.rankedRowRustSource
   | "archive-rust" => pure Ascent.ArchivePolicy.rustSource
   | "archive-cache" => pure Ascent.ArchivePolicy.ciSource

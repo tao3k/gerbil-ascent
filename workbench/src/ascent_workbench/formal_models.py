@@ -684,3 +684,8 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
                   ('eager-getter', 'NoEarlyGetter', 12), ('cache-validation', 'FreshAdmission', 12),
                   ('skip-getter', 'GetterOrder', 12), ('stamp-valid', 'NoShapeAdmission', 12)),
  'RankedPublication': (('raw-code-order','OrderEmbedding',12), ('reverse-rank','OrderEmbedding',12), ('drop-prefix','OrderEmbedding',12), ('wrong-decode','DecodeExact',12), ('missing-order','OrderedPublication',12), ('ignore-cancel','NoCanceledPublication',12), ('ignore-failure','NoFailedPublication',12))}
+
+# Preserve every existing obligation; add the matcher traversal owner.
+MODEL_ORDER += ("BindingTraversal",)
+CONFIGURATIONS["BindingTraversal"] = {'constants': 'Mutation = "none"', 'invariants': 'Equivalent FailClosed OwnedCopies StopsAtFailure'}
+FAULTS["BindingTraversal"] = (('erase-prior', 'Equivalent', 12), ('ignore-conflict', 'Equivalent', 12), ('skip-last', 'Equivalent', 12), ('publish-failure', 'FailClosed', 12), ('copy-per-term', 'OwnedCopies', 12), ('continue-rejected', 'StopsAtFailure', 12))

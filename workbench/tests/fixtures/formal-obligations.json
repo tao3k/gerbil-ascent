@@ -2779,5 +2779,43 @@
         12
       ]
     ]
+  },
+  "BindingTraversal": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Equivalent FailClosed OwnedCopies StopsAtFailure"
+    },
+    "faults": [
+      [
+        "erase-prior",
+        "Equivalent",
+        12
+      ],
+      [
+        "ignore-conflict",
+        "Equivalent",
+        12
+      ],
+      [
+        "skip-last",
+        "Equivalent",
+        12
+      ],
+      [
+        "publish-failure",
+        "FailClosed",
+        12
+      ],
+      [
+        "copy-per-term",
+        "OwnedCopies",
+        12
+      ],
+      [
+        "continue-rejected",
+        "StopsAtFailure",
+        12
+      ]
+    ]
   }
 }

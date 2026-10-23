@@ -384,6 +384,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "snapshot-quint", "packages/proofs/quint/ClosedDslLowering.qnt"),
                 ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
                 ("ExecutionPolicy.lean", "row-view-scheme", "program/types.ss"),
+                ("ExecutionPolicy.lean", "borrowed-match-rust", "rust/ascent/src/execution/matching.rs"),
+                ("ExecutionPolicy.lean", "borrowed-match-scheme", "program/rust-execution.ss"),
                 ("ExecutionPolicy.lean", "ranked-row-rust", "rust/ascent/src/execution/ordering.rs"),
                 ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
@@ -500,6 +502,12 @@ def main() -> int:
                     begin, end = '        // BEGIN GENERATED PROOF AUTHORITY READ\n', '        // END GENERATED PROOF AUTHORITY READ\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate proof authority read source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"borrowed-match-rust", "borrowed-match-scheme"}:
+                    prefix = "//" if language.endswith("rust") else ";;"
+                    begin, end = f"{prefix} BEGIN GENERATED BORROWED MATCH\n", f"{prefix} END GENERATED BORROWED MATCH\n"
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate borrowed matcher source region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language == "ranked-row-rust":
                     begin, end = '// BEGIN GENERATED RANKED ROW ORDER\n', '// END GENERATED RANKED ROW ORDER\n'

@@ -214,6 +214,38 @@ theorem metadata_read_suffices_without_fingerprint : proofAuthorityRead false = 
 def proofAuthorityRustSource : String :=
   "        let status = if self.fingerprint.is_some() {\n            self.owner.current_projection(control)?\n        } else {\n            self.owner.current_status(control)?\n        };\n"
 
+
+-- The old owned fold carries an absorbing rejected state through later terms.
+-- The borrowed traversal stops at the first rejection. Dropped partial writes
+-- are unobservable. This algebra does not verify Rust's iterator/SmallVec code.
+def borrowedBind (step : σ → α → Option σ) : List α → σ → Option σ
+  | [], state => some state
+  | item :: rest, state => (step state item).bind (borrowedBind step rest)
+
+theorem rejected_binding_absorbs (step : σ → α → Option σ) (items : List α) :
+    items.foldl (fun state item => state.bind (fun value => step value item)) none = none := by
+  induction items with
+  | nil => rfl
+  | cons item rest ih => simpa only [List.foldl, Option.bind_none] using ih
+
+theorem borrowed_binding_matches_owned_fold (step : σ → α → Option σ)
+    (items : List α) (state : σ) :
+    items.foldl (fun current item => current.bind (fun value => step value item)) (some state) =
+      borrowedBind step items state := by
+  induction items generalizing state with
+  | nil => rfl
+  | cons item rest ih =>
+    simp only [List.foldl, Option.bind_some, borrowedBind]
+    cases next : step state item with
+    | none => simpa only [next, Option.bind_none] using rejected_binding_absorbs step rest
+    | some value => simpa only [next, Option.bind_some] using ih value
+
+-- Exact current host/generator text is checked by the existing guarded renderer.
+-- Rust borrowing, the compiler and standard iterators remain explicit premises.
+def borrowedMatchRustSource : String := "pub(crate) struct MatchState {\n    values: Bindings,\n}\nimpl MatchState {\n    #[inline]\n    pub(crate) fn matching(\n        terms: &[Pattern],\n        row: &[Cell],\n        prior: &[Option<Cell>],\n        step: fn(&mut Self, &Pattern, Cell) -> bool,\n    ) -> Option<Bindings> {\n        let mut state = Self {\n            values: prior.iter().copied().collect(),\n        };\n        terms\n            .iter()\n            .zip(row)\n            .all(|(term, value)| step(&mut state, term, *value))\n            .then_some(state.values)\n    }\n    #[inline]\n    pub(crate) fn contains(&self, slot: usize) -> bool {\n        self.values[slot].is_some()\n    }\n    #[inline]\n    pub(crate) fn value(&self, slot: usize) -> Cell {\n        self.values[slot].expect(\"generated bound-slot branch\")\n    }\n    #[inline]\n    pub(crate) fn set(&mut self, slot: usize, value: Cell) -> bool {\n        self.values[slot] = Some(value);\n        true\n    }\n}\n\n"
+
+def borrowedMatchSchemeSource : String := "(def (match-function function-name body)\n  (function function-name\n    '((\"state\" . \"&mut crate::execution::MatchState\") (\"term\" . \"&crate::execution::Pattern\") (\"value\" . \"crate::execution::Cell\"))\n    \"bool\" body))\n(def (matching-ir)\n  (let* ((state (name \"state\")) (term (name \"term\")) (value (name \"value\"))\n         (slot (method term \"variable_index\")))\n    (list\n      (match-function \"bind_variable\"\n        (conditional (method state \"contains\" slot)\n          (same (method state \"value\" slot) value)\n          (method state \"set\" slot (method value \"owned\"))))\n      (match-function \"bind_checked\"\n        (conditional (method term \"is_literal\")\n          (same (method term \"literal_value\") value)\n          (call \"bind_variable\" state term value)))\n      (match-function \"bind_term\"\n        (node \"binary\" (cons \"operator\" \"or\")\n          (cons \"left\" (method term \"is_wildcard\"))\n          (cons \"right\" (call \"bind_checked\" state term value)))))))\n(def (binding-ir)\n  (function \"bind\"\n    '((\"terms\" . \"&[crate::execution::Pattern]\") (\"row\" . \"&[crate::execution::Cell]\")\n      (\"prior\" . \"&[Option<crate::execution::Cell>]\"))\n    \"Option<crate::execution::Bindings>\"\n    (call \"crate::execution::MatchState::matching\"\n      (name \"terms\") (name \"row\") (name \"prior\") (name \"bind_term\"))))\n"
+
 end Ascent.LookupCost
 #print axioms Ascent.LookupCost.admission_deduplication
 #print axioms Ascent.LookupCost.canonical_columns_in_range
@@ -241,3 +273,6 @@ end Ascent.LookupCost
 #print axioms Ascent.LookupCost.fresh_admission_matches_root
 
 #print axioms Ascent.LookupCost.ranked_row_order
+
+#print axioms Ascent.LookupCost.rejected_binding_absorbs
+#print axioms Ascent.LookupCost.borrowed_binding_matches_owned_fold

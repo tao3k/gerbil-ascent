@@ -1,0 +1,700 @@
+-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import Std
+
+/-! Compiler settings and scoped cost admission. Native GCC/Gambit code generation,
+JSON/S-expression readers and allocator implementation remain explicit premises.
+The source renderings below bind the deployed guards, not a proof of all SDK code. -/
+namespace Ascent.CompilerCost
+
+-- Native weak-table lookup and object revisions are external premises. This
+-- predicate binds the actual source admission guard, not the whole allocator.
+def declaredShapeCurrent (expected : String) (entry : Option (String × Nat)) (revision : Nat) : Bool :=
+  match entry with
+  | none => false
+  | some (kind, recorded) => expected == kind && revision == recorded
+
+theorem unissued_shape_falls_back (kind : String) (revision : Nat) :
+    declaredShapeCurrent kind none revision = false := rfl
+
+theorem edited_shape_falls_back (kind : String) (recorded current : Nat) (changed : current ≠ recorded) :
+    declaredShapeCurrent kind (some (kind, recorded)) current = false := by
+  simp [declaredShapeCurrent, changed]
+
+theorem wrong_shape_falls_back (expected actual : String) (revision : Nat) (different : expected ≠ actual) :
+    declaredShapeCurrent expected (some (actual, revision)) revision = false := by
+  simp [declaredShapeCurrent, different]
+
+def declarationShapeSchemeSource : String :=
+  "(def (declared-value-shape? kind value)\n" ++
+  "  (let (entry (hash-get declared-value-shapes value))\n" ++
+  "    (and entry (eq? kind (car entry)) (= (object-revision value) (cdr entry)))))\n"
+
+-- Cache misses cannot authorize a value-only check. The actual guarded
+-- source uses upstream cached reads; .ref/cached itself remains an SDK premise.
+def metadataGuard (revisions fields mapping classifiers : Bool) : Bool :=
+  revisions && fields && mapping && classifiers
+
+theorem missing_metadata_mapping_falls_back (revisions fields classifiers : Bool) :
+    metadataGuard revisions fields false classifiers = false := by
+  simp [metadataGuard]
+
+theorem changed_metadata_dispatch_falls_back (revisions fields mapping : Bool) :
+    metadataGuard revisions fields mapping false = false := by
+  simp [metadataGuard]
+
+-- Only callback-free owned values with unchanged admission dispatch may avoid
+-- receipt construction. SDK membership/callback equivalence is a separate premise.
+def ownedValidation (metadata protocol callbackFree checked : Bool) : Bool :=
+  metadata && protocol && callbackFree && checked
+
+theorem custom_callbacks_require_full_validation (metadata protocol checked : Bool) :
+    ownedValidation metadata protocol false checked = false := by simp [ownedValidation]
+
+theorem changed_validation_protocol_falls_back (metadata callbackFree checked : Bool) :
+    ownedValidation metadata false callbackFree checked = false := by simp [ownedValidation]
+
+-- Every private check consumes current field values; a prior result supplies
+-- no premise about a later mutable candidate.
+def liveMembership (_prior current : Bool) : Bool := current
+
+theorem prior_acceptance_cannot_admit_changed_value (prior : Bool) :
+    liveMembership prior false = false := rfl
+
+def ownedRelationSchemeSource : String :=
+  "(def (gerbil-ascent-make-relation-value prototype relation-name column-count source-rows\n                                        predicates-value domain-value index-value storage-value)\n  (remember-value-shape! 'relation\n    (.o (:: @ prototype) name: relation-name arity: column-count rows: source-rows\n        field-predicates: predicates-value checked-domain: domain-value storage-kind: 'relation\n        index-provider: index-value storage-provider: storage-value)))\n\n(def +relation-value+\n  (.cc ObjectContract. identity: 'ascent/relation-value\n       required-prototype: (.ref GerbilAscentRelationContract 'proto)\n       extra-fields: 'delegate constraints: (list Any)\n       responsibilities:\n       (.o name: (.cc Type. .element?: symbol?)\n           arity: (.cc Type. .element?: (lambda (value) (and (exact-integer? value) (<= 0 value))))\n           rows: (.cc Type. .element?: list?)\n           field-predicates: (.cc Type. .element?: (lambda (value) (and (list? value) (andmap procedure? value))))\n           storage-kind: (.cc Type. .element?: (cut clause-kind? 'relation <>))\n           index-provider: (.cc Type. .element?: gerbil-ascent-canonical-hash-index-provider?)\n           storage-provider: (.cc Type. .element?: gerbil-ascent-canonical-set-storage-provider?))))\n(def +relation-slots+ '(name arity rows field-predicates storage-kind index-provider storage-provider))\n(def relation-metadata-current? (canonical-metadata-current? GerbilAscentRelationContract +relation-slots+))\n(def relation-protocol-current? (canonical-validation-current? GerbilAscentRelationContract +relation-slots+))\n;; These providers have no caller getter/callback on the selected path. Arbitrary\n;; providers must enter complete admission once, preserving all callback order.\n(def (owned-canonical-relation? value)\n  (and (declared-value-shape? 'relation value)\n       (gerbil-ascent-canonical-hash-index-provider? (.ref value 'index-provider))\n       (gerbil-ascent-canonical-set-storage-provider? (.ref value 'storage-provider))\n       (relation-metadata-current?)))\n(def (relation-value? value)\n  (if (and (owned-canonical-relation? value) (relation-protocol-current?))\n      (element? +relation-value+ value) (element? GerbilAscentRelationContract value)))\n(def (gerbil-ascent-check-owned-relation-value value)\n  (if (and (owned-canonical-relation? value) (relation-protocol-current?)\n           (element? +relation-value+ value)) value\n      (validate GerbilAscentRelationContract value)))\n\n"
+
+-- The ordinary checker may select a compatible owned value view; an override
+-- always keeps caller dispatch, including private inert construction extents.
+def useOwnedValueCheck (ordinary supported : Bool) : Bool := ordinary && supported
+
+-- A compatible view proves success only; failure must retain the original
+-- public path, including alternative clause descriptors and normalization.
+def checkedValueView {Value : Type} (accepted : Bool) (value : Value) (full : Unit → Value) : Value :=
+  if accepted then value else full ()
+
+theorem failed_view_delegates {Value : Type} (value : Value) (full : Unit → Value) :
+    checkedValueView false value full = full () := rfl
+
+theorem constructor_override_keeps_dispatch (supported : Bool) :
+    useOwnedValueCheck false supported = false := by simp [useOwnedValueCheck]
+
+def ownedDeclarationValuesSchemeSource : String :=
+  "(def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))\n(def (canonical-term-value? value)\n  (if (term-value-current?) (element? +term-value+ value)\n      (element? GerbilAscentTermContract value)))\n;;; Check fresh factory values without retaining any successful admission.\n;; : (-> Term Term)\n(def (gerbil-ascent-check-owned-term-value value)\n  (if (and (declared-value-shape? 'term value) (term-value-current?)\n           (element? +term-value+ value)) value\n      (validate GerbilAscentTermContract value)))\n(def (term-value? value)\n  (if (declared-value-shape? 'term value)\n    (canonical-term-value? value)\n    (element? GerbilAscentTermContract value)))\n(def (terms-value? value)\n  (and (list? value) (andmap term-value? value)))\n(def +terms+ (slot-contract 'ascent/terms terms-value?))\n\n;;; Atom plans bind one relation name to ordered terms and one open planning\n;;; slot; the evaluator consumes the lowered plan without row-loop dispatch.\n(define-type (GerbilAscentAtomContract @ YuanxuObjectContract.)\n  identity: 'ascent/atom\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)\n                      relation: +symbol+ terms: +terms+ .plan: +plan+))\n\n;; Rule membership also consumes only the Atom's value classification.\n;; The public Atom descriptor retains its original contextual responsibilities.\n(def +atom-value+\n  (.cc ObjectContract. identity: 'ascent/atom-value\n       required-prototype: (.ref GerbilAscentAtomContract 'proto)\n       extra-fields: 'delegate constraints: (list Any)\n       responsibilities:\n       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'atom <>))\n           relation: (.cc Type. .element?: symbol?)\n           terms: (.cc Type. .element?: terms-value?)\n           .plan: (.cc Type. .element?: procedure?))))\n\n(def canonical-atom-value?\n  (canonical-value-member GerbilAscentAtomContract +atom-value+\n                          '(ascent-clause-kind relation terms .plan)))\n\n(def atom-value-check-current?\n  (canonical-value-check-current? GerbilAscentAtomContract\n                                  '(ascent-clause-kind relation terms .plan)))\n(def (owned-atom-fields? value)\n  (and (declared-value-shape? 'atom value) (term-value-current?)\n       (let (terms (.ref value 'terms))\n         (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms)))))\n(def (atom-value? value)\n  (if (owned-atom-fields? value) (canonical-atom-value? value)\n      (element? GerbilAscentAtomContract value)))\n;;; Unknown children or changed protocol dispatch use complete public admission.\n;; : (-> Atom Atom)\n(def (gerbil-ascent-check-owned-atom-value value)\n  (if (and (owned-atom-fields? value) (atom-value-check-current?)\n           (element? +atom-value+ value)) value\n      (validate GerbilAscentAtomContract value)))\n\n\n(def +variables+\n  (slot-contract 'ascent/variables\n                 (lambda (value)\n                   (and (list? value) (andmap symbol? value)))))\n(def +generator-output+\n  (slot-contract\n   'ascent/generator-output\n   (lambda (value)\n     (or (symbol? value)\n         (and (pair? value)\n              (list? value)\n              (let loop ((remaining value) (seen []))\n                (or (null? remaining)\n                    (and (symbol? (car remaining))\n                         (not (memq (car remaining) seen))\n                         (loop (cdr remaining)\n                               (cons (car remaining) seen))))))))))\n(def +procedure+ (slot-contract 'ascent/procedure procedure?))\n(def +optional-procedure+\n  (slot-contract 'ascent/optional-procedure\n                 (lambda (value) (or (not value) (procedure? value)))))\n(def +checked-operator+\n  (slot-contract 'ascent/checked-operator\n                 (lambda (value) (or (not value) (vector? value)))))\n\n;;; Guards can inspect only previously bound variables, which the planner\n;;; checks before the predicate reaches execution.\n(define-type (GerbilAscentGuardContract @ YuanxuObjectContract.)\n  identity: 'ascent/guard\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'guard)\n                      variables: +variables+ predicate: +procedure+\n                      checked-operator: +checked-operator+\n                      .plan: +plan+))\n\n;;; Generators may publish one variable or a tuple; the output descriptor\n;;; rejects duplicate names before rows enter the evaluator.\n(define-type (GerbilAscentGeneratorContract @ YuanxuObjectContract.)\n  identity: 'ascent/generator\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind:\n                      (clause-kind-contract 'generator)\n                      variable: +generator-output+ variables: +variables+\n                      generate: +procedure+ .plan: +plan+))\n\n;;; Bindings compute one value from established inputs and introduce exactly\n;;; one new variable to subsequent clauses.\n(define-type (GerbilAscentBindingContract @ YuanxuObjectContract.)\n  identity: 'ascent/binding\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind:\n                      (clause-kind-contract 'binding)\n                      variable: +symbol+ variables: +variables+\n                      checked-operator: +checked-operator+\n                      compute: +procedure+ .plan: +plan+))\n\n;;; Negation is a read of a relation with no new binding; stratification\n;;; ensures the referenced rows are stable before the check executes.\n(define-type (GerbilAscentNegationContract @ YuanxuObjectContract.)\n  identity: 'ascent/negation\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind:\n                      (clause-kind-contract 'negation)\n                      relation: +symbol+ terms: +terms+ .plan: +plan+))\n\n;;; Aggregates consume a relation group and publish one result or a pattern\n;;; tuple after the stratum's contributing rows have stabilized.\n(define-type (GerbilAscentAggregateContract @ YuanxuObjectContract.)\n  identity: 'ascent/aggregate\n  proto: (.o)\n  responsibilities: (.o ascent-clause-kind:\n                      (clause-kind-contract 'aggregate)\n                      variable: +generator-output+ relation: +symbol+\n                      terms: +terms+ variables: +variables+\n                      aggregate: +procedure+\n                      checked-operator: +checked-operator+\n                      output-pattern: +optional-procedure+\n                      .plan: +plan+))\n\n;;; The factory owns the selected fields, not an admission receipt. A scalar\n;;; aggregate with owned terms can use pure field checks only while all six\n;;; public classifier protocols retain their original identities. Other clauses\n;;; and every changed/failed view retain the original ordered public union.\n;; BEGIN GENERATED OWNED AGGREGATE VALUE\n(def +aggregate-slots+\n  '(ascent-clause-kind variable relation terms variables aggregate checked-operator output-pattern .plan))\n(def aggregate-value-current?\n  (canonical-value-check-current? GerbilAscentAggregateContract +aggregate-slots+))\n(def aggregate-predecessors-current?\n  (let (checks\n    (map (lambda (entry) (canonical-value-check-current? (car entry) (cdr entry)))\n      (list (cons GerbilAscentAtomContract '(ascent-clause-kind relation terms .plan))\n            (cons GerbilAscentGuardContract '(ascent-clause-kind variables predicate checked-operator .plan))\n            (cons GerbilAscentGeneratorContract '(ascent-clause-kind variable variables generate .plan))\n            (cons GerbilAscentBindingContract '(ascent-clause-kind variable variables checked-operator compute .plan))\n            (cons GerbilAscentNegationContract '(ascent-clause-kind relation terms .plan)))))\n    (lambda () (andmap (lambda (current?) (current?)) checks))))\n(def +aggregate-value+\n  (.cc ObjectContract. identity: 'ascent/aggregate-value\n       required-prototype: (.ref GerbilAscentAggregateContract 'proto)\n       extra-fields: 'delegate constraints: (list Any)\n       responsibilities:\n       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'aggregate <>))\n           variable: (.cc Type. .element?: symbol?)\n           relation: (.cc Type. .element?: symbol?)\n           terms: (.cc Type. .element?: terms-value?)\n           variables: (.cc Type. .element?: (lambda (v) (and (list? v) (andmap symbol? v))))\n           aggregate: (.cc Type. .element?: procedure?)\n           checked-operator: (.cc Type. .element?: (lambda (v) (or (not v) (vector? v))))\n           output-pattern: (.cc Type. .element?: not)\n           .plan: (.cc Type. .element?: procedure?))))\n(def (owned-aggregate-fields? value)\n  (and (declared-value-shape? 'aggregate value) (term-value-current?)\n       (symbol? (.ref value 'variable)) (not (.ref value 'output-pattern))\n       (let (terms (.ref value 'terms))\n         (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms)))))\n(def (gerbil-ascent-make-aggregate-value prototype output-value relation-name atom-terms input-variables aggregate-procedure matcher operator-descriptor lower)\n  (remember-value-shape! 'aggregate\n    (.o (:: self prototype) ascent-clause-kind: 'aggregate variable: output-value\n        relation: relation-name terms: atom-terms variables: input-variables aggregate: aggregate-procedure\n        output-pattern: matcher checked-operator: operator-descriptor\n        (.plan (lambda (plan bound) (lower self plan bound))))))\n(def (gerbil-ascent-check-owned-aggregate-value value)\n  (if (and (owned-aggregate-fields? value) (aggregate-value-current?)\n           (element? +aggregate-value+ value)) value\n      (validate GerbilAscentAggregateContract value)))\n(def (public-clause-value? clause)\n  (or (atom-value? clause)\n      (element? GerbilAscentGuardContract clause)\n      (element? GerbilAscentGeneratorContract clause)\n      (element? GerbilAscentBindingContract clause)\n      (element? GerbilAscentNegationContract clause)\n      (element? GerbilAscentAggregateContract clause)))\n(def (clause-value? clause)\n  (or (and (owned-aggregate-fields? clause) (aggregate-predecessors-current?)\n           (aggregate-value-current?) (element? +aggregate-value+ clause))\n      (public-clause-value? clause)))\n;; END GENERATED OWNED AGGREGATE VALUE\n\n(def +clauses+\n  (slot-contract 'ascent/clauses\n                 (lambda (value) (and (list? value) (andmap clause-value? value)))))\n(def +heads+\n  (slot-contract 'ascent/heads\n                 (lambda (value)\n                   (and (pair? value)\n                        (list? value)\n                        (andmap (lambda (head)\n                                  (atom-value? head))\n                                value)))))\n\n;;; A rule has at least one head and an ordered body. Shared body bindings\n;;; make a multi-head rule one logical derivation event.\n(define-type (GerbilAscentRuleContract @ YuanxuObjectContract.)\n  identity: 'ascent/rule\n  proto: (.o)\n  responsibilities: (.o heads: +heads+ body: +clauses+))\n\n;;; Positive factory-owned Atom trees select a callback-free compatible view.\n;;; Opaque clauses and changed admission protocols always keep public dispatch.\n(def +rule-value+\n  (.cc ObjectContract. identity: 'ascent/rule-value\n       required-prototype: (.ref GerbilAscentRuleContract 'proto)\n       extra-fields: 'delegate constraints: (list Any)\n       responsibilities:\n       (.o heads: (.cc Type. .element?: (lambda (heads)\n             (and (pair? heads) (list? heads) (andmap atom-value? heads))))\n           body: (.cc Type. .element?: (lambda (body)\n             (and (list? body) (andmap atom-value? body)))))))\n(def rule-value-current?\n  (canonical-value-check-current? GerbilAscentRuleContract '(heads body)))\n(def (owned-rule-fields? value)\n  (and (declared-value-shape? 'rule value) (atom-value-check-current?)\n       (term-value-current?)\n       (let ((heads (.ref value 'heads)) (body (.ref value 'body)))\n         (and (list? heads) (list? body)\n              (andmap owned-atom-fields? heads) (andmap owned-atom-fields? body)))))\n;; : (-> Prototype [Atom] [Clause] Rule)\n(def (gerbil-ascent-make-rule-value prototype head-values body-values)\n  (remember-value-shape! 'rule\n    (.o (:: @ prototype) heads: head-values body: body-values)))\n(def (rule-value? value)\n  ;; A failed Atom may still enter another public clause descriptor. Preserve\n  ;; those classifier/admission callbacks rather than treating view failure as rejection.\n  (if (and (rule-value-current?) (owned-rule-fields? value)\n           (element? +rule-value+ value)) #t\n      (element? GerbilAscentRuleContract value)))\n;; : (-> Rule Rule)\n(def (gerbil-ascent-check-owned-rule-value value)\n  (if (and (rule-value-current?) (owned-rule-fields? value)\n           (element? +rule-value+ value)) value\n      (validate GerbilAscentRuleContract value)))\n\n\n(def +relations+\n  (slot-contract 'ascent/relations\n                 (lambda (value)\n                   (and (list? value)\n                        (andmap (lambda (relation)\n                                  (or (relation-value? relation)\n                                      (element? GerbilAscentLatticeContract relation)))\n                                value)))))\n(def +rules+\n  (slot-contract 'ascent/rules\n                 (lambda (value)\n                   (and (list? value)\n                        (andmap rule-value? value)))))\n\n"
+
+def ownedDeclarationCheckSchemeSource : String :=
+  "(def (declaration-check contract value)\n  (let (check (current-declaration-check))\n    (cond\n      ((not (eq? check validate)) (check contract value))\n      ((eq? contract GerbilAscentTermContract) (gerbil-ascent-check-owned-term-value value))\n      ((eq? contract GerbilAscentAtomContract) (gerbil-ascent-check-owned-atom-value value))\n      ((eq? contract GerbilAscentRuleContract) (gerbil-ascent-check-owned-rule-value value))\n      ((eq? contract GerbilAscentAggregateContract) (gerbil-ascent-check-owned-aggregate-value value))\n      (else (check contract value)))))\n"
+
+def metadataGuardSchemeSource : String :=
+  "(def (canonical-metadata-current? contract slots)\n  (let* ((fields (.ref contract 'responsibilities))\n         (descriptors (cons contract (map (cut .ref fields <>) slots)))\n         (sources (cons fields descriptors))\n         (revisions (map object-revision sources))\n         (classifiers (map (cut .ref <> '.classify) descriptors)))\n    (lambda ()\n      (and (andmap (lambda (source revision) (= (object-revision source) revision)) sources revisions)\n           (eq? fields (.ref/cached contract 'responsibilities))\n           (andmap (lambda (slot descriptor) (eq? (.ref/cached fields slot) descriptor)) slots (cdr descriptors))\n           (andmap (lambda (descriptor classifier) (eq? (.ref/cached descriptor '.classify) classifier))\n                   descriptors classifiers)))))\n(def (canonical-value-member contract view slots)\n  (let (current? (canonical-value-check-current? contract slots))\n    (lambda (value)\n      (if (current?) (element? view value) (element? contract value)))))\n(def (canonical-validation-current? contract slots)\n  (let* ((fields (.ref contract 'responsibilities))\n         (descriptors (delete-duplicates/hash (map (cut .ref fields <>) slots) table: (make-hash-table-eq)))\n         (missing (gensym 'missing-validation-protocol))\n         (entries\n          (apply append\n            (map (lambda (entry)\n                   (map (lambda (slot) (vector (car entry) slot (.ref (car entry) slot))) (cdr entry)))\n                 (cons (cons contract '(.element? .validate .admit .obligations value-contract))\n                       (map (lambda (field) (cons field '(.element? .admit .obligations value-contract))) descriptors))))))\n    (lambda ()\n      (andmap (lambda (entry)\n                (eq? (vector-ref entry 2)\n                     (.ref/cached (vector-ref entry 0) (vector-ref entry 1) (lambda () missing)))) entries))))\n;;; Capture metadata/method identities for a callback-free compatible value view.\n;;; The caller proves view compatibility; this predicate never admits a value.\n;; : (-> Contract [Symbol] (-> Boolean))\n(def (canonical-value-check-current? contract slots)\n  (let ((metadata? (canonical-metadata-current? contract slots))\n        (protocol? (canonical-validation-current? contract slots)))\n    (lambda () (and (metadata?) (protocol?)))))\n"
+
+
+def hostLimit : Nat := 512
+-- Exact predicate in the pinned gambit.h: downgrade iff limit > 0 && labels > limit.
+def singleHost (labels limit : Nat) : Bool := limit == 0 || labels ≤ limit
+
+theorem small_unit_unchanged (labels : Nat) (small : labels ≤ hostLimit) :
+    singleHost labels hostLimit = singleHost labels 0 := by
+  have bound : labels ≤ 512 := small
+  simp [singleHost, hostLimit, bound]
+
+theorem oversized_unit_split (labels : Nat) (large : hostLimit < labels) :
+    singleHost labels hostLimit = false := by
+  have bound : ¬ labels ≤ 512 := Nat.not_le.mpr large
+  simp [singleHost, hostLimit, bound]
+
+structure Profile where
+  sdk : String
+  root : String
+  options : List String
+  deriving DecidableEq
+
+def profileCurrent (expected observed : Profile) : Bool := expected == observed
+
+theorem changed_options_invalidate (sdk root : String) (a b : List String) (changed : a ≠ b) :
+    profileCurrent ⟨sdk, root, a⟩ ⟨sdk, root, b⟩ = false := by simp [profileCurrent, changed]
+
+theorem changed_root_invalidate (sdk a b : String) (options : List String) (changed : a ≠ b) :
+    profileCurrent ⟨sdk, a, options⟩ ⟨sdk, b, options⟩ = false := by simp [profileCurrent, changed]
+
+def staleModules (current : Bool) (production requested cached : List String) : List String :=
+  if current then [] else (requested ++ cached).filter (fun m => !production.contains m)
+
+theorem unchanged_options_no_clean (production requested cached : List String) :
+    staleModules true production requested cached = [] := rfl
+
+theorem production_never_cleaned (current : Bool) (production requested cached : List String)
+    (m : String) (member : m ∈ production) :
+    m ∉ staleModules current production requested cached := by
+  cases current <;> simp [staleModules, member]
+
+theorem stale_cached_unrequested_cleaned (production requested cached : List String)
+    (m : String) (cachedMember : m ∈ cached) (notProduction : m ∉ production) :
+    m ∈ staleModules false production requested cached := by
+  simp [staleModules, cachedMember, notProduction]
+
+-- An observed native counter is cumulative GGC allocation, never VM occupancy/RSS.
+inductive AllocationScope where
+  | gccGgc | schemeVm | resident
+  deriving DecidableEq
+
+def ggcValue (scope : AllocationScope) (totals : List Int) : Option Nat :=
+  if scope == .gccGgc then
+    match totals with
+    | [n] => if 0 ≤ n then some n.toNat else none
+    | _ => none
+  else none
+
+theorem gcc_exact_total (n : Nat) : ggcValue .gccGgc [Int.ofNat n] = some n := by simp [ggcValue]
+theorem missing_total_rejected : ggcValue .gccGgc [] = none := rfl
+theorem nested_passes_not_added (a b : Int) : ggcValue .gccGgc [a,b] = none := rfl
+theorem vm_counter_not_promoted (totals : List Int) : ggcValue .schemeVm totals = none := rfl
+
+def ggcComplete (expected reported failed changed errors : Nat) : Bool :=
+  0 < expected && expected == reported && failed == 0 && changed == 0 && errors == 0
+
+theorem changed_input_not_attributed (n reported failed errors : Nat) :
+    ggcComplete n reported failed 1 errors = false := by simp [ggcComplete]
+theorem partial_jobs_not_total (expected reported : Nat) (different : expected ≠ reported) :
+    ggcComplete expected reported 0 0 0 = false := by simp [ggcComplete, different]
+
+-- Normalized paths and decoded input roles are premises, not filesystem proofs.
+def sourceAttributed (expected : String) (targets arguments : List String) : Bool :=
+  targets == [expected] && arguments.contains expected
+
+theorem attributed_source_is_unique (expected : String) (targets arguments : List String)
+    (accepted : sourceAttributed expected targets arguments = true) :
+    targets = [expected] ∧ expected ∈ arguments := by
+  simpa [sourceAttributed] using accepted
+
+def compilerInput (isC direct : Bool) : Bool := isC && direct
+
+theorem metadata_only_is_not_compile (isC : Bool) : compilerInput isC false = false := by
+  cases isC <;> rfl
+
+-- Even eliminating an entire loading phase cannot eliminate independent compile work.
+def preparationWall (loading compilation other : Nat) : Nat := loading + compilation + other
+
+theorem compile_work_remains (loading compilation other : Nat) :
+    preparationWall loading compilation other - loading = compilation + other := by
+  simp [preparationWall]; omega
+
+-- The containing process and normalized path matching are observed premises.
+def uniqueParentInput (sameParent : Bool) (matchedInputs : Nat) : Bool :=
+  sameParent && matchedInputs == 1
+
+theorem unrelated_parent_rejected (matchedInputs : Nat) : uniqueParentInput false matchedInputs = false := by
+  simp [uniqueParentInput]
+
+theorem ambiguous_parent_input_rejected (same : Bool) (n : Nat) (notUnique : n ≠ 1) :
+    uniqueParentInput same n = false := by simp [uniqueParentInput, notUnique]
+
+
+-- Static C may be copied/renamed: bind observed content and producer order.
+def producerEligible (success current ordered sameContent unique : Bool) : Bool :=
+  success && current && ordered && sameContent && unique
+
+theorem producer_admission_requires_every_link (a b c d e : Bool)
+    (accepted : producerEligible a b c d e = true) :
+    a = true ∧ b = true ∧ c = true ∧ d = true ∧ e = true := by
+  simpa [producerEligible, Bool.and_eq_true, and_assoc] using accepted
+
+def supportAdmitted (sameSources sameResources : Bool) : Bool := sameSources && sameResources
+
+theorem changed_reference_resources_rejected (sources : Bool) :
+    supportAdmitted sources false = false := by simp [supportAdmitted]
+
+theorem changed_reference_sources_rejected (resources : Bool) :
+    supportAdmitted false resources = false := by simp [supportAdmitted]
+
+-- The pinned SDK counter includes live stack contribution. Unwinding can
+-- decrease it without changing heap-event allocation or collecting garbage.
+def netStackCounter (heap stack : Nat) : Nat := heap + stack
+
+theorem stack_release_can_decrease_counter (heap stack released : Nat) (positive : 0 < released) :
+    netStackCounter heap stack < netStackCounter heap (stack + released) := by
+  simp only [netStackCounter]
+  omega
+
+def compilerSchemeSource : String :=
+  ";; Existing SDK header policy; this limits C function size, not VM concurrency.\n" ++
+  "(def gerbil-ascent-compiler-options '(\"-cc-options\" \"-D___SINGLE_HOST_LIMIT=512\"))\n"
+
+-- Each path is rooted at one GCC invocation. Nested rows remain inclusive;
+-- choosing one TOTAL never adds pass intervals or converts wall time to CPU.
+def totalPasses (rows : List (List String × Nat)) : List (List String × Nat) :=
+  rows.filter (fun row => row.1 == ["TOTAL"])
+
+theorem nested_pass_excluded (name : String) (cost : Nat) (rows : List (List String × Nat)) :
+    totalPasses ((["phase parsing", name], cost) :: rows) = totalPasses rows := by
+  simp [totalPasses]
+
+theorem total_pass_retained (cost : Nat) (rows : List (List String × Nat)) :
+    totalPasses ((["TOTAL"], cost) :: rows) = (["TOTAL"], cost) :: totalPasses rows := by
+  simp [totalPasses]
+
+-- A prepared library precedes source fallback. The actual SDK resolver and
+-- filesystem remain premises, exercised by native context-path integration.
+def runtimeSearch (library source : String) : List String := [library, source]
+
+theorem prepared_library_first (library source : String) :
+    (runtimeSearch library source).head? = some library := rfl
+
+theorem suite_source_retained (library source : String) :
+    source ∈ runtimeSearch library source := by simp [runtimeSearch]
+
+def sourceRuntimePythonSource : String :=
+  "def source_semantic_environment(root, env):\n" ++
+  "    runtime = dict(env, GERBIL_PATH=str(root / '.gerbil'),\n" ++
+  "                   GERBIL_LOADPATH=str(root / '.gerbil/lib'),\n" ++
+  "                   GERBIL_BUILD_CORES='12', ASCENT_GXTEST_TIMEOUT='600s')\n" ++
+  "    runtime.pop('ASCENT_TEST_LIBRARY', None)\n" ++
+  "    return runtime\n"
+
+def passTotalPythonSource : String :=
+  "def gcc_total_passes(rows):\n" ++
+  "    return [row for row in rows if row['path'] == ['TOTAL']]\n"
+
+def ggcPythonSource : String :=
+  "    if len(totals) != 1 or type(totals[0]) is not int or totals[0] < 0:\n" ++
+  "        raise ValueError('invalid GCC cumulative GGC total')\n"
+
+def optionsSchemeSource : String :=
+  "(def (artifact-compiler-options-current? file options)\n" ++
+  "  (with-catch false\n" ++
+  "    (lambda ()\n" ++
+  "      (call-with-input-file file\n" ++
+  "        (lambda (port)\n" ++
+  "          (let (record (read port))\n" ++
+  "            (and (eof-object? (read port))\n" ++
+  "                 (equal? record (list \"ascent-compiler-options/v1\" (gerbil-home)\n" ++
+  "                              (path-normalize (current-directory)) options)))))))))\n" ++
+  "(def (artifact-record-compiler-options! file options)\n" ++
+  "  (call-with-output-file [path: file truncate: #t]\n" ++
+  "    (lambda (out)\n" ++
+  "      (write (list \"ascent-compiler-options/v1\" (gerbil-home)\n" ++
+  "                              (path-normalize (current-directory)) options) out)\n" ++
+  "      (newline out))))\n"
+
+def staleSchemeSource : String :=
+  "(def (preparation-stale-compiler-modules current? production requested cached)\n" ++
+  "  (if current? []\n" ++
+  "    (filter (lambda (module) (not (member module production)))\n" ++
+  "            (append requested cached))))\n"
+
+def originPythonSource : String :=
+  "    if actual != [expected] or expected not in arguments:\n" ++
+  "        raise ValueError('GCC input attribution differs')\n"
+
+def inputsPythonSource : String :=
+  "def gcc_c_inputs(inputs, compiler_input_paths):\n" ++
+  "    return [row for row in inputs if row['path'] in compiler_input_paths and Path(row['path']).suffix == '.c']\n"
+
+def coveragePythonSource : String :=
+  "def gcc_ggc_complete(expected, reported, failed, changed, errors):\n" ++
+  "    return 0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0\n"
+
+def controlBuildCommand : List String := ["gerbil", "build"]
+
+theorem experiment_build_uses_production_entry :
+    controlBuildCommand = ["gerbil", "build"] := rfl
+
+theorem policy_is_not_production_build :
+    controlBuildCommand ≠ ["just", "check-policy"] := by decide
+
+def quintSource : String :=
+  "// Generated from CompilerCost.lean; formal CI checks exact source.\n" ++
+  "module CompilerPolicy {\n" ++
+  "  pure def production_build(command: List[str]): bool =\n    command == [" ++ String.intercalate ", " (controlBuildCommand.map (fun value => "\"" ++ value ++ "\"")) ++ "]\n" ++
+  "  pure def producer_eligible(success: bool, current: bool, ordered: bool, same_content: bool, unique: bool): bool =\n" ++
+  "    success and current and ordered and same_content and unique\n" ++
+  "  pure def support_admitted(sources: bool, resources: bool): bool = sources and resources\n" ++
+  "  pure def compiler_input(is_c: bool, direct: bool): bool = is_c and direct\n" ++
+  "  pure def unique_parent_input(same: bool, matches: int): bool = same and matches == 1\n" ++
+  "  pure def source_attributed(expected: int, targets: List[int], arguments: Set[int]): bool =\n" ++
+  "    targets == [expected] and arguments.contains(expected)\n" ++
+  "  pure def single_host(labels: int, limit: int): bool = limit == 0 or labels <= limit\n" ++
+  "  pure def ggc_complete(expected: int, reported: int, failed: int, changed: int, errors: int): bool =\n" ++
+  "    0 < expected and expected == reported and failed == 0 and changed == 0 and errors == 0\n" ++
+  "  pure def stale_modules(current: bool, production: Set[int], requested: Set[int], cached: Set[int]): Set[int] =\n" ++
+  "    if (current) Set() else requested.union(cached).exclude(production)\n" ++
+  "}\n"
+
+def parentPythonSource : String :=
+  "# Paths are normalized by file_input; SDK code generation remains a premise.\ndef generated_scheme_input(helper, parent):\n    if helper.get('parent_gsc_observer') != str(parent.get('pid')):\n        return None\n    sources = gcc_c_inputs(helper['inputs'], helper.get('compiler_input_paths', []))\n    if len(sources) != 1:\n        return None\n    expected = str(Path(sources[0]['path']).with_suffix('.scm'))\n    matches = [item for item in parent['inputs'] if item['path'] == expected]\n    return matches[0] if len(matches) == 1 else None\n"
+
+-- Cache identity includes SDK, compiler configuration and source inputs, while
+-- the current observation controller still executes and admits those inputs.
+def observedCacheIdentity (profile : Profile) (_controller : String) : Profile := profile
+
+theorem observation_change_preserves_compiler_identity (profile : Profile) (a b : String) :
+    observedCacheIdentity profile a = observedCacheIdentity profile b := rfl
+
+-- Compatibility restores compiled resources; exact source/resource admission
+-- still runs after restoring the current checkout. Runtime dispatch and the
+-- observation controller do not change the compiler recipe.
+def preparationCompatibilityInputs : List String :=
+  ["build.ss", "build-modules.ss", "gerbil.pkg", "dev/gerbil.pkg", "bindings",
+   "t/harness/build.ss", "t/harness/artifact-admission.ss", "t/harness/library-spec.ss"]
+
+theorem development_dependency_is_compiler_input :
+    "dev/gerbil.pkg" ∈ preparationCompatibilityInputs := by decide
+
+theorem production_dependency_is_compiler_input :
+    "gerbil.pkg" ∈ preparationCompatibilityInputs := by decide
+
+theorem runtime_dispatch_not_compiler_recipe :
+    "t/harness/test.ss" ∉ preparationCompatibilityInputs := by decide
+
+theorem observation_workflow_not_compiler_recipe :
+    ".github/workflows/build-cost.yml" ∉ preparationCompatibilityInputs := by decide
+
+theorem cli_wrapper_not_compiler_recipe :
+    "justfile" ∉ preparationCompatibilityInputs := by decide
+
+def cacheInputsYamlSource : String :=
+  "          compiler_inputs=\"$(git ls-files -s -- " ++ String.intercalate " " preparationCompatibilityInputs ++ " | sha256sum | cut -d ' ' -f 1)\"\n          printf 'compiler_inputs=%s\\n' \"$compiler_inputs\" >> \"$GITHUB_OUTPUT\"\n          source_inputs=\"$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/build-cost.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)\"\n          printf 'source_inputs=%s\\n' \"$source_inputs\" >> \"$GITHUB_OUTPUT\"\n          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/build-cost.yml') }}' >> \"$GITHUB_OUTPUT\"\n"
+
+def producerPythonSource : String :=
+  "def producer_eligible(success, current, ordered, same_content, unique):\n    return success and current and ordered and same_content and unique\n"
+
+-- Under the existing exclusive lane lock, skipping only the encoding of an
+-- equal complete record preserves publication. Digest construction is eager.
+def publishedCache (previous next : List String) : List String :=
+  if previous == next then previous else next
+
+theorem identical_cache_encoding_reuse (previous next : List String) :
+    publishedCache previous next = next := by
+  simp only [publishedCache]
+  split <;> simp_all
+
+def supportAdmissionSchemeSource : String :=
+  "(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)\n" ++
+  "  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n" ++
+  "               recorded-sources)\n" ++
+  "       (equal? resources recorded-resources)))\n" ++
+  "(def (artifact-record-support-cache! file sources library options selection modules (previous #f))\n" ++
+  "  ;; The caller owns lane.lock. Recompute every resource digest after make;\n" ++
+  "  ;; reuse only the encoding of an identical complete record, never its hashes.\n" ++
+  "  (let ((next (list (artifact-support-profile options)\n" ++
+  "                    (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))\n" ++
+  "                    (artifact-support-resources library) selection modules))\n" ++
+  "        (pending (string-append file \".pending\")))\n" ++
+  "    (if (and (equal? previous next) (file-exists? file))\n" ++
+  "      (displayln \"BUILD-TEST-LIBRARY support-cache-write=0\")\n" ++
+  "      (begin\n" ++
+  "        (call-with-output-file [path: pending truncate: #t]\n" ++
+  "          (lambda (port) (write next port) (newline port)))\n" ++
+  "        (rename-file pending file #t)\n" ++
+  "        (displayln \"BUILD-TEST-LIBRARY support-cache-write=1\")))))\n"
+
+
+-- Restoring artifacts from another program is never execution authority.
+-- Git restoration and hashing remain external premises; both guards run first.
+def restoredProgramAdmitted (sameBytes cleanHead : Bool) : Bool := sameBytes && cleanHead
+
+theorem stale_cache_cannot_admit_program (clean : Bool) :
+    restoredProgramAdmitted false clean = false := by simp [restoredProgramAdmitted]
+
+theorem dirty_checkout_cannot_admit_program (same : Bool) :
+    restoredProgramAdmitted same false = false := by simp [restoredProgramAdmitted]
+
+def restoreInputsYamlSource : String :=
+  "          git diff --name-only HEAD -- '*.ss' bindings/c\n          git reset --hard HEAD\n          git clean -f -- '*.ss' bindings/c\n"
+
+def cacheAdmissionYamlSource : String :=
+  "          test \"$EXPECTED_SOURCE_BYTES\" = \"$RESTORED_SOURCE_BYTES\"\n          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'\n"
+
+
+def cOutputTarget (isC flat : Bool) : Bool := isC && !flat
+
+theorem other_codegen_target_not_c_output (flat : Bool) : cOutputTarget false flat = false := by
+  cases flat <;> rfl
+
+def nativeNodeCost (cost : Nat) (_inputEdges : List String) : Nat := cost
+
+theorem link_edges_do_not_multiply_allocation (cost : Nat) (a b : List String) :
+    nativeNodeCost cost a = nativeNodeCost cost b := rfl
+
+def outputTargetPythonSource : String :=
+  "def c_output_target(arguments):\n    return ('-target' not in arguments or arguments[arguments.index('-target') + 1] == 'C') and '-flat' not in arguments\n"
+
+def jobAllocationPythonSource : String :=
+  "def compiler_allocation_total(jobs):\n    return sum(job['gcc_ggc_bytes'] for job in jobs)\n"
+
+
+def auditOrder (workOnly same : Bool) : List Bool :=
+  if workOnly && same then [true] else [false, true, true, false]
+
+theorem latency_controls_stay_abba (same : Bool) :
+    auditOrder false same = [false, true, true, false] := by simp [auditOrder]
+
+theorem distinct_program_controls_stay_abba (work : Bool) :
+    auditOrder work false = [false, true, true, false] := by simp [auditOrder]
+
+def auditOrderPythonSource : String :=
+  "def control_order(work_only, baseline, candidate):\n    return ['candidate'] if work_only and baseline == candidate else ['baseline', 'candidate', 'candidate', 'baseline']\n\ndef control_build_command():\n    return [" ++ String.intercalate ", " (controlBuildCommand.map (fun value => "'" ++ value ++ "'")) ++ "]\n"
+
+
+def projectionReuse (current sameRoots complete : Bool) : Bool := current && sameRoots && complete
+
+theorem changed_roots_do_not_skip_expansion (current complete : Bool) :
+    projectionReuse current false complete = false := by simp [projectionReuse]
+
+theorem incomplete_projection_not_reused (current same : Bool) :
+    projectionReuse current same false = false := by simp [projectionReuse]
+
+-- Hash membership agrees with the former list scan for arbitrary module lists,
+-- including duplicate strings. Native hash equality remains a host premise.
+def projectionIndex (modules : List String) : Std.HashSet String := .ofList modules
+
+theorem projection_membership_exact (modules : List String) (module : String) :
+    (projectionIndex modules).contains module = modules.contains module := by
+  simp [projectionIndex, Std.HashSet.contains_ofList]
+
+theorem projection_completeness_exact (modules required : List String) :
+    required.all (fun m => (projectionIndex modules).contains m) =
+      required.all (fun m => modules.contains m) := by
+  simp only [projection_membership_exact]
+
+-- Source operations, not allocator bytes or a collision/latency theorem.
+def projectionIndexEntries (modules : List String) : Nat := modules.length
+def projectionProbeRequests (required : List String) : Nat := required.length
+
+def projectionCacheSchemeSource : String :=
+  "(def (artifact-support-projection record selection required)\n" ++
+  "  (and record (equal? selection (cadddr record))\n" ++
+  "       (let* ((modules (car (cddddr record)))\n" ++
+  "              (present (list->hash-table (map (lambda (module) (cons module #t)) modules))))\n" ++
+  "         (and (andmap (lambda (module) (hash-key? present module)) required)\n" ++
+  "              modules))))\n"
+
+
+def orderedPublication (samePath disjoint unique : Bool) : Bool := samePath && disjoint && unique
+
+theorem copied_candidates_do_not_gain_time_authority (disjoint unique : Bool) :
+    orderedPublication false disjoint unique = false := by simp [orderedPublication]
+
+theorem overlapping_writers_not_selected (same unique : Bool) :
+    orderedPublication same false unique = false := by simp [orderedPublication]
+
+def outputPublicationPythonSource : String :=
+  "def ordered_publication_eligible(same_path, disjoint, unique_latest):\n    return same_path and disjoint and unique_latest\n"
+
+
+def sourceCostCoverage (expected attributed : Nat) : Bool := expected == attributed
+
+theorem missing_source_cost_not_complete (expected attributed : Nat) (different : expected ≠ attributed) :
+    sourceCostCoverage expected attributed = false := by simp [sourceCostCoverage, different]
+
+def sourceCoveragePythonSource : String :=
+  "def source_cost_coverage(expected, attributed):\n    return expected == attributed\n"
+
+
+def modulesCurrent (sources modules : List String) : Bool :=
+  modules.all (fun name => sources.contains (name ++ ".ss"))
+
+theorem foreign_singleton_module_rejected (sources : List String) (name : String)
+    (unknown : name ++ ".ss" ∉ sources) : modulesCurrent sources [name] = false := by
+  simp [modulesCurrent, unknown]
+
+def modulesCurrentSchemeSource : String :=
+  "(def (artifact-support-modules-current? sources modules)\n  (and (list? modules)\n       (andmap (lambda (module)\n                 (and (string? module) (hash-key? sources (string-append module \".ss\")))) modules)))\n"
+
+-- Missing observation is not evidence of an empty SDK option list.
+def ccOptionsObserved (options : Option String) : Bool := options.isSome
+
+theorem missing_options_not_default : ccOptionsObserved none = false := rfl
+
+theorem observed_empty_options_are_known : ccOptionsObserved (some "") = true := rfl
+
+def ccObservedPythonSource : String :=
+  "def cc_options_observed(options):\n    return isinstance(options, str)\n"
+
+
+-- Fieldwise compatibility is for the frozen scalar Aggregate grammar. The MOP,
+-- cached metadata reader and native allocator remain external premises.
+structure AggregateFields where
+  tag : Prop
+  relation : Prop
+  terms : Prop
+  variables : Prop
+  procedure : Prop
+  descriptor : Prop
+  plan : Prop
+  symbolOutput : Prop
+  tupleOutput : Prop
+  matcherAbsent : Prop
+  matcherProcedure : Prop
+
+def publicAggregate (f : AggregateFields) : Prop :=
+  f.tag ∧ (f.symbolOutput ∨ f.tupleOutput) ∧ f.relation ∧ f.terms ∧ f.variables ∧
+  f.procedure ∧ f.descriptor ∧ (f.matcherAbsent ∨ f.matcherProcedure) ∧ f.plan
+
+def scalarAggregateView (f : AggregateFields) : Prop :=
+  f.tag ∧ f.symbolOutput ∧ f.relation ∧ f.terms ∧ f.variables ∧
+  f.procedure ∧ f.descriptor ∧ f.matcherAbsent ∧ f.plan
+
+theorem scalar_aggregate_view_is_public (f : AggregateFields) (h : scalarAggregateView f) :
+    publicAggregate f := by
+  rcases h with ⟨tag, output, relation, terms, variables, procedure, descriptor, matcher, plan⟩
+  exact ⟨tag, Or.inl output, relation, terms, variables, procedure, descriptor, Or.inl matcher, plan⟩
+
+-- Unknown/changing protocols carry arbitrary observations and must delegate.
+-- This establishes guarded selection, not Scheme MOP implementation equivalence.
+theorem guarded_aggregate_union (guard prior : Prop) (f : AggregateFields) :
+    ((guard ∧ scalarAggregateView f) ∨ (prior ∨ publicAggregate f)) ↔
+      (prior ∨ publicAggregate f) := by
+  constructor
+  · intro h
+    rcases h with h | h
+    · exact Or.inr (scalar_aggregate_view_is_public f h.2)
+    · exact h
+  · exact Or.inr
+
+-- Waiting policy never grants a controller decision. Its CPU population is an
+-- advisory sample; no global scheduling or absolute wall-time bound is asserted.
+def parentSpinBudget (processors active : Nat) : Nat :=
+  if processors ≥ 3 ∧ active = 1 then 1024 else 32
+
+theorem parent_spin_is_bounded (processors active : Nat) :
+    32 ≤ parentSpinBudget processors active ∧ parentSpinBudget processors active ≤ 1024 := by
+  unfold parentSpinBudget
+  split <;> decide
+
+theorem owner_pressure_keeps_original_wait (processors active : Nat) (h : active ≠ 1) :
+    parentSpinBudget processors active = 32 := by
+  simp [parentSpinBudget, h]
+
+-- SDK statistics are a scoped measurement premise. Signed reports, incomplete
+-- calls and nested/foreign scopes cannot be promoted to allocation evidence.
+def scopedAllocation (sourceBound completed sameStack nonoverlapping : Bool)
+    (bytes rawStart rawEnd : Int) : Option Nat :=
+  if sourceBound && completed && sameStack && nonoverlapping && decide (bytes ≥ 0) &&
+      decide (rawStart ≥ 0) && decide (rawEnd ≥ rawStart) &&
+      decide (rawEnd < 2^53) && decide (bytes ≤ rawEnd - rawStart)
+  then some bytes.toNat else none
+
+theorem negative_allocation_is_rejected (a b c d : Bool) (n x y : Int) (h : n < 0) :
+    scopedAllocation a b c d n x y = none := by
+  simp [scopedAllocation, show ¬ n ≥ 0 from Int.not_le.mpr h]
+
+theorem foreign_projection_cost_is_rejected (a b c : Bool) (n x y : Int) :
+    scopedAllocation false a b c n x y = none := by simp [scopedAllocation]
+
+theorem decreasing_raw_allocation_is_rejected (a b c d : Bool) (n x y : Int) (h : y < x) :
+    scopedAllocation a b c d n x y = none := by
+  simp [scopedAllocation, show ¬ y ≥ x from Int.not_le.mpr h]
+
+theorem excessive_scoped_allocation_is_rejected (a b c d : Bool) (n x y : Int)
+    (h : y - x < n) : scopedAllocation a b c d n x y = none := by
+  simp [scopedAllocation, show ¬ n ≤ y - x from Int.not_le.mpr h]
+
+theorem imprecise_counter_is_rejected (a b c d : Bool) (n x y : Int) (h : 2^53 ≤ y) :
+    scopedAllocation a b c d n x y = none := by
+  change (9007199254740992 : Int) ≤ y at h
+  simp [scopedAllocation]
+  omega
+
+-- Removing the separate monotonicity check is not an unsound mutation:
+-- nonnegative reported work bounded by the raw delta already implies it.
+theorem nonnegative_bounded_report_is_monotonic (bytes start finish : Int)
+    (nonnegative : 0 ≤ bytes) (bounded : bytes ≤ finish - start) : start ≤ finish := by
+  omega
+
+def ownedAggregateSchemeSource : String :=
+  "(def +aggregate-slots+\n  '(ascent-clause-kind variable relation terms variables aggregate checked-operator output-pattern .plan))\n(def aggregate-value-current?\n  (canonical-value-check-current? GerbilAscentAggregateContract +aggregate-slots+))\n(def aggregate-predecessors-current?\n  (let (checks\n    (map (lambda (entry) (canonical-value-check-current? (car entry) (cdr entry)))\n      (list (cons GerbilAscentAtomContract '(ascent-clause-kind relation terms .plan))\n            (cons GerbilAscentGuardContract '(ascent-clause-kind variables predicate checked-operator .plan))\n            (cons GerbilAscentGeneratorContract '(ascent-clause-kind variable variables generate .plan))\n            (cons GerbilAscentBindingContract '(ascent-clause-kind variable variables checked-operator compute .plan))\n            (cons GerbilAscentNegationContract '(ascent-clause-kind relation terms .plan)))))\n    (lambda () (andmap (lambda (current?) (current?)) checks))))\n(def +aggregate-value+\n  (.cc ObjectContract. identity: 'ascent/aggregate-value\n       required-prototype: (.ref GerbilAscentAggregateContract 'proto)\n       extra-fields: 'delegate constraints: (list Any)\n       responsibilities:\n       (.o ascent-clause-kind: (.cc Type. .element?: (cut clause-kind? 'aggregate <>))\n           variable: (.cc Type. .element?: symbol?)\n           relation: (.cc Type. .element?: symbol?)\n           terms: (.cc Type. .element?: terms-value?)\n           variables: (.cc Type. .element?: (lambda (v) (and (list? v) (andmap symbol? v))))\n           aggregate: (.cc Type. .element?: procedure?)\n           checked-operator: (.cc Type. .element?: (lambda (v) (or (not v) (vector? v))))\n           output-pattern: (.cc Type. .element?: not)\n           .plan: (.cc Type. .element?: procedure?))))\n(def (owned-aggregate-fields? value)\n  (and (declared-value-shape? 'aggregate value) (term-value-current?)\n       (symbol? (.ref value 'variable)) (not (.ref value 'output-pattern))\n       (let (terms (.ref value 'terms))\n         (and (list? terms) (andmap (cut declared-value-shape? 'term <>) terms)))))\n(def (gerbil-ascent-make-aggregate-value prototype output-value relation-name atom-terms input-variables aggregate-procedure matcher operator-descriptor lower)\n  (remember-value-shape! 'aggregate\n    (.o (:: self prototype) ascent-clause-kind: 'aggregate variable: output-value\n        relation: relation-name terms: atom-terms variables: input-variables aggregate: aggregate-procedure\n        output-pattern: matcher checked-operator: operator-descriptor\n        (.plan (lambda (plan bound) (lower self plan bound))))))\n(def (gerbil-ascent-check-owned-aggregate-value value)\n  (if (and (owned-aggregate-fields? value) (aggregate-value-current?)\n           (element? +aggregate-value+ value)) value\n      (validate GerbilAscentAggregateContract value)))\n(def (public-clause-value? clause)\n  (or (atom-value? clause)\n      (element? GerbilAscentGuardContract clause)\n      (element? GerbilAscentGeneratorContract clause)\n      (element? GerbilAscentBindingContract clause)\n      (element? GerbilAscentNegationContract clause)\n      (element? GerbilAscentAggregateContract clause)))\n(def (clause-value? clause)\n  (or (and (owned-aggregate-fields? clause) (aggregate-predecessors-current?)\n           (aggregate-value-current?) (element? +aggregate-value+ clause))\n      (public-clause-value? clause)))\n"
+
+def aggregateConstructorSchemeSource : String :=
+  "(def (gerbil-ascent-aggregate output-variable relation-name atom-terms\n                              value-variables aggregate-procedure\n                              (matcher #f) (operator-descriptor #f))\n  (unless (or (and (symbol? output-variable) (not matcher))\n              (and (pair? output-variable) (list? output-variable)\n                   (andmap symbol? output-variable)\n                   (procedure? matcher)))\n    (error \"invalid ASCENT aggregate output\" output-variable matcher))\n  (declaration-check GerbilAscentAggregateContract\n    (gerbil-ascent-make-aggregate-value Aggregate. output-variable relation-name atom-terms\n      value-variables aggregate-procedure matcher operator-descriptor aggregate-clause-plan)))\n\n"
+
+def checkpointSpinRustSource : String :=
+  "pub(crate) fn parent_spin_budget(processors: usize, active: usize) -> u32 {\n    if processors >= 3 && active == 1 {\n        1024\n    } else {\n        32\n    }\n}\n"
+
+def checkpointPublicationLinkRustSource : String :=
+  "fn receive_native_reply(\n    socket: &mut Connection,\n    control: Option<&Control>,\n    counters: &Counters,\n    activity: &Activity,\n    entered: &mut bool,\n) -> Result<Result<Data>> {\n    loop {\n        match socket.receive().map_err(io_error)? {\n            Frame::Entered if !*entered => {\n                *entered = true;\n                let active = activity.active.fetch_add(1, Ordering::AcqRel) + 1;\n                activity.maximum.fetch_max(active, Ordering::AcqRel);\n            }\n            Frame::Checkpoint { id, work, facts: _ } if *entered => {\n                let expected = control.map(Control::numeric_id);\n                let code = if expected == Some(id) {\n                    control.map_or(5, |value| value.checkpoint(work))\n                } else {\n                    5\n                };\n                // Local resource callbacks, including this publication, are\n                // counted once in the shared slot after the ABI reply.\n                if work != -1 {\n                    counters.checkpoints.fetch_add(1, Ordering::Relaxed);\n                }\n                socket.send(&Frame::Decision(code)).map_err(io_error)?;\n            }\n            Frame::Reply { value, elapsed_ns } if *entered => {\n                counters.calls.fetch_add(1, Ordering::Relaxed);\n                counters.service_ns.fetch_add(elapsed_ns, Ordering::Relaxed);\n                return Ok(value);\n            }\n            _ => return Err(crate::failure(\"process owner protocol mismatch\")),\n        }\n    }\n}\n"
+
+def projectionAllocationSchemeSource : String :=
+  ";;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n;;; Scoped Scheme allocation diagnosis only; not a performance admission rule.\n(import (only-in :gerbil-ascent/interface/engine-api ascent-engine-call)\n        (only-in :std/misc/ports read-file-string))\n(def owner\n  (hash-ref (ascent-engine-call\n    (hash (\"operation\" \"module-source-open\") (\"trusted\" #t)\n          (\"source\" (read-file-string \"t/qualification/evidence-api-module.ss\")))) \"owner\"))\n(def handle\n  (hash-ref (ascent-engine-call\n    (hash (\"operation\" \"owner-program\") (\"owner\" owner)\n          (\"constructor\" \"make-aggregate\") (\"arguments\" '((1 2 4)))\n          (\"factLimits\" (hash)))) \"handle\"))\n(def (project)\n  (let (value (ascent-engine-call (hash (\"operation\" \"source-projection\") (\"handle\" handle))))\n    (unless (equal? (hash-ref value \"status\") \"supported\") (error \"projection unsupported\"))\n    (let (relations (hash-ref (hash-ref value \"program\") \"relations\"))\n      (unless (and (= (length relations) 2)\n                   (equal? (hash-ref (car relations) \"rows\") '((1) (2) (4))))\n        (error \"projection rows changed\")))))\n(project)\n(displayln \"PROJECTION-ALLOCATION iterations=256 diagnostic_only=true\")\n(def allocation (make-f64vector 2))\n(##get-bytes-allocated! allocation 0)\n(def stats (##exec-stats\n  (lambda () (let loop ((left 256)) (unless (= left 0) (project) (loop (- left 1)))))))\n(##get-bytes-allocated! allocation 1)\n(def (stat key) (cdr (assq key stats)))\n(def reported (stat 'bytes-allocated))\n(def raw-start (inexact->exact (f64vector-ref allocation 0)))\n(def raw-end (inexact->exact (f64vector-ref allocation 1)))\n(unless (and (exact-integer? reported) (<= 0 reported)\n             (<= 0 raw-start raw-end) (< raw-end (expt 2 53))\n             (<= reported (- raw-end raw-start)))\n  (error \"invalid scoped allocation counter\" reported raw-start raw-end))\n;;; Normal-return, nonnested Scheme scope. The raw snapshots expose SDK counter\n;;; anomalies; they are not an independently proven allocator implementation.\n(write (list 'projection-work-v1 256 (stat 'bytes-allocated) (stat 'nb-gcs)\n             (stat 'user-time) (stat 'sys-time) (stat 'gc-real-time)\n             raw-start raw-end))\n(newline)\n"
+
+end Ascent.CompilerCost
+#print axioms Ascent.CompilerCost.small_unit_unchanged
+#print axioms Ascent.CompilerCost.oversized_unit_split
+#print axioms Ascent.CompilerCost.changed_options_invalidate
+#print axioms Ascent.CompilerCost.unchanged_options_no_clean
+#print axioms Ascent.CompilerCost.production_never_cleaned
+#print axioms Ascent.CompilerCost.stale_cached_unrequested_cleaned
+#print axioms Ascent.CompilerCost.gcc_exact_total
+#print axioms Ascent.CompilerCost.missing_total_rejected
+#print axioms Ascent.CompilerCost.nested_passes_not_added
+#print axioms Ascent.CompilerCost.vm_counter_not_promoted
+#print axioms Ascent.CompilerCost.changed_input_not_attributed
+#print axioms Ascent.CompilerCost.partial_jobs_not_total
+#print axioms Ascent.CompilerCost.compile_work_remains
+
+#print axioms Ascent.CompilerCost.changed_root_invalidate
+
+#print axioms Ascent.CompilerCost.attributed_source_is_unique
+#print axioms Ascent.CompilerCost.metadata_only_is_not_compile
+
+#print axioms Ascent.CompilerCost.unrelated_parent_rejected
+#print axioms Ascent.CompilerCost.ambiguous_parent_input_rejected
+
+#print axioms Ascent.CompilerCost.observation_change_preserves_compiler_identity
+
+#print axioms Ascent.CompilerCost.producer_admission_requires_every_link
+#print axioms Ascent.CompilerCost.changed_reference_sources_rejected
+#print axioms Ascent.CompilerCost.changed_reference_resources_rejected
+
+#print axioms Ascent.CompilerCost.stack_release_can_decrease_counter
+
+#print axioms Ascent.CompilerCost.stale_cache_cannot_admit_program
+#print axioms Ascent.CompilerCost.dirty_checkout_cannot_admit_program
+
+#print axioms Ascent.CompilerCost.other_codegen_target_not_c_output
+#print axioms Ascent.CompilerCost.link_edges_do_not_multiply_allocation
+
+#print axioms Ascent.CompilerCost.latency_controls_stay_abba
+#print axioms Ascent.CompilerCost.distinct_program_controls_stay_abba
+
+#print axioms Ascent.CompilerCost.changed_roots_do_not_skip_expansion
+#print axioms Ascent.CompilerCost.incomplete_projection_not_reused
+
+#print axioms Ascent.CompilerCost.copied_candidates_do_not_gain_time_authority
+#print axioms Ascent.CompilerCost.overlapping_writers_not_selected
+
+#print axioms Ascent.CompilerCost.missing_source_cost_not_complete
+
+#print axioms Ascent.CompilerCost.foreign_singleton_module_rejected
+
+#print axioms Ascent.CompilerCost.missing_options_not_default
+#print axioms Ascent.CompilerCost.observed_empty_options_are_known
+
+#print axioms Ascent.CompilerCost.projection_membership_exact
+#print axioms Ascent.CompilerCost.projection_completeness_exact
+
+#print axioms Ascent.CompilerCost.identical_cache_encoding_reuse
+
+#print axioms Ascent.CompilerCost.runtime_dispatch_not_compiler_recipe
+#print axioms Ascent.CompilerCost.observation_workflow_not_compiler_recipe
+#print axioms Ascent.CompilerCost.cli_wrapper_not_compiler_recipe
+
+#print axioms Ascent.CompilerCost.nested_pass_excluded
+#print axioms Ascent.CompilerCost.total_pass_retained
+
+#print axioms Ascent.CompilerCost.prepared_library_first
+#print axioms Ascent.CompilerCost.suite_source_retained
+
+#print axioms Ascent.CompilerCost.scalar_aggregate_view_is_public
+#print axioms Ascent.CompilerCost.guarded_aggregate_union
+#print axioms Ascent.CompilerCost.parent_spin_is_bounded
+#print axioms Ascent.CompilerCost.owner_pressure_keeps_original_wait
+#print axioms Ascent.CompilerCost.negative_allocation_is_rejected
+#print axioms Ascent.CompilerCost.foreign_projection_cost_is_rejected
+
+#print axioms Ascent.CompilerCost.decreasing_raw_allocation_is_rejected
+#print axioms Ascent.CompilerCost.excessive_scoped_allocation_is_rejected
+
+#print axioms Ascent.CompilerCost.imprecise_counter_is_rejected
+
+#print axioms Ascent.CompilerCost.nonnegative_bounded_report_is_monotonic

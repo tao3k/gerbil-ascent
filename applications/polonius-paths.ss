@@ -1,0 +1,56 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+;;; Compact implementations of the two Polonius initialization exit relations.
+;;; Ancestor elaboration is shared by assignment and move seeds. General Program
+;;; borrow/liveness rules remain in polonius.ss; this is not a second evaluator.
+(import :gerbil-ascent/core/finite-flow)
+(export gerbil-ascent-polonius-path-flows)
+;; : (forall (a) (-> (List a) (List a)))
+;; Linear source traversal avoids quadratic domain admission on full CFG inputs.
+(def (unique-values values)
+  (let ((seen (make-hash-table)) (ordered []))
+    (for-each (lambda (value)
+      (unless (hash-get seen value)
+        (hash-put! seen value #t) (set! ordered (cons value ordered)))) values)
+    (reverse ordered)))
+;; : (-> RawPoloniusFacts Natural Procedure (Values FrozenView FrozenView))
+;; The caller supplies actual source relations. Domain size follows source facts,
+;; never a generation constant. Field equality must stay stable while views live.
+(def (gerbil-ascent-polonius-path-flows inputs budget (canceled? (lambda () #f)))
+  (def (source name)
+    (unless (list? inputs) (error "Polonius path sources must be a proper list"))
+    (let (entries (filter (lambda (entry) (and (pair? entry) (eq? (car entry) name))) inputs))
+      (unless (= (length entries) 1) (error "missing or duplicate Polonius path source" name))
+      (let (rows (cdar entries))
+        (unless (and (list? rows) (andmap (lambda (row)
+          (and (pair? row) (pair? (cdr row)) (null? (cddr row)))) rows))
+          (error "invalid Polonius path source row" name)) rows)))
+  (let* ((child (source 'child_path)) (cfg (source 'cfg_edge))
+         (assign (source 'path_assigned_at_base)) (moved (source 'path_moved_at_base))
+         (access (source 'path_accessed_at_base)) (variables (source 'path_is_var))
+         (paths (unique-values (append (apply append child)
+                     (map car (append assign moved access variables)))))
+         (points (unique-values (append (apply append cfg)
+                      (map cadr (append assign moved access)))))
+         (children (make-hash-table)) (captured (make-hash-table)))
+    (for-each (lambda (row) (hash-put! children (cadr row)
+      (cons (car row) (or (hash-get children (cadr row)) [])))) child)
+    (def (descendants path)
+      (or (hash-get captured path)
+          (let ((seen (make-hash-table)) (result []))
+            (let visit ((pending (list path)))
+              (unless (null? pending)
+                (when (canceled?) (error "Polonius path elaboration canceled"))
+                (let (current (car pending))
+                  (if (hash-get seen current) (visit (cdr pending))
+                    (begin (hash-put! seen current #t) (set! result (cons current result))
+                      (visit (append (or (hash-get children current) []) (cdr pending))))))))
+            (hash-put! captured path result) result)))
+    (def (expand seeds)
+      (apply append (map (lambda (row)
+        (map (lambda (path) (list path (cadr row))) (descendants (car row)))) seeds)))
+    (let ((assigned (expand assign)) (moves (expand moved)))
+      (values
+        (gerbil-ascent-finite-flow paths points assigned cfg moves budget canceled?)
+        (gerbil-ascent-finite-flow paths points moves cfg assigned budget canceled?)))))

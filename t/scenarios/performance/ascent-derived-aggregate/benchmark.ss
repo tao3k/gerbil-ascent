@@ -6,7 +6,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure a stratified count after a three-edge recursive path closure.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-derived-aggregate/benchmark.ss")

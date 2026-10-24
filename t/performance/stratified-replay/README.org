@@ -1,0 +1,127 @@
+#+title: Complete stratified expression replay
+
+* Production unit and source study
+
+This unit covers independent finite closure replay, founded proof production and
+external proof checking. =candidate/reduction-plan.ss= prepares a constrained
+row predicate and aggregate operand reader; reduction-local variables do not
+escape their group. =candidate/stratified-plan.ss= prepares ordered clause and
+checked head operations for each separate invocation. These are private final
+records over admitted syntax, with no row, proof verdict or persistent cache.
+
+The installed Gerbil =1cfb032= compiler =optimize-call.ss:45-63= resolves operation
+applicability before specialization; =std/struct/lru.ss:19-26= uses private final
+state records. =runtime/table.ss:440-464= implements =hash-update!= with one hash
+and probe and a synchronous updater. Our exact row-set checker uses that native
+operation with one private callback while retaining charged row order.
+
+Outer bindings, repeated local variables, constants and wildcards remain checked.
+Aggregate values can come from an outer binding or a group-local column. The
+producer and checker prepare separate plans, independently replay the original
+source, and retain all finite/proof budget charges, strict strata, complete group
+checks, duplicate rejection, source occurrence labels and predecessor admission.
+No SDK patch, toolchain rebuild or cross-invocation result reuse is involved.
+
+* Frozen complete baseline
+
+Baseline commit: =97e41652d7787ee8063a2388e593e893be8d2449=.
+Four frozen modules retain the complete old finite replay, finite plan, producer
+and checker. Only module import paths differ: old consumers select old finite
+replay and proof checking; relative finite-plan helper imports become absolute.
+After reversing these import relocations, every file equals its baseline blob
+byte for byte. Shared unchanged source/authentication and grounding helpers are
+identical in both legs. Separate old/new certificate representations are produced
+outside the clocks and their complete closure rows must be equal.
+
+Direct arithmetic expects the sum 1..128, or 1..2 for cold/small controls.
+Every measured result must equal that truth and its matched result. Complete
+production compares the entire ordered proof, not just its status or row count.
+
+* Fixed gates and native execution
+
+=build.ss= creates =benchmark.ss= through the ASP Scheme fixture API and uses
+native =std/make= with the machine CPU count and the standard package library.
+The root build registers only production modules; tests remain in =t/=.
+
+Each scenario has 20 alternating CPU pairs with natural GC, 20 ASP admission
+samples of the optimized complete consumer, and five alternating VM cumulative
+allocation pairs. Negative allocation deltas are rejected. One 90-second watchdog
+bounds all six scenarios; each ASP p95 admission must be at most 999ms.
+
+Targets =wide= and =produce= require CPU <=90% of baseline and at least 16/20
+wins. Controls require CPU <=110% +20us. All scenarios require allocation
+<=110% +8192 bytes. These gates were fixed before sampling and never widened.
+=wide= checks a 32-column, 128-row sum proof including independent finite replay;
+=produce= produces and independently verifies the complete proof. =cold= includes
+all invocation-local production plans on two rows; =forged= changes the final
+rule row on a 128-row, two-column proof. =small= checks two rows and =source=
+checks a direct source query. These are focused complete proof consumers, not
+whole solver or application throughput measurements.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" just build
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN)" \
+  GERBIL_PATH="$PWD/.gerbil" \
+  gxi t/performance/stratified-replay/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/stratified-replay/runner all \
+  .cache/ascent/stratified-replay/
+#+end_src
+
+On macOS, apply the existing =justfile= compiler environment boundary when
+invoking the family builder. Logs and individual samples stay in ignored
+=.cache/ascent/stratified-replay/=. Native tests require no ERROR/FAIL, every
+CASE/MODULE/HARNESS marker, final =OK= and exit zero; GxTest exit zero alone
+cannot admit a failed assertion.
+
+* Rejected stages
+
+The first syntax classification had an incorrect match branch and failed
+semantic tests; it was repaired before admission. The binding-hash variant
+reduced allocation but failed wide CPU (3036 ->3218us). Constrained row readers
+without optimizing finite replay also failed (2993 ->3040us). Expanding the
+complete unit to independent finite replay passed targets but initially failed
+cold allocation. Small syntax tables and fused checked head rendering address
+that preparation overhead. A package-build series failed wide CPU and remains
+rejected; one native hash update replaces the previous double lookup/set.
+
+All negative logs and receipts remain in the ignored cache; none is presented
+as a qualified speedup. Preliminary passing targets from a batch that failed a
+control are excluded from the final qualification below.
+
+* Qualified result
+
+The final native package build passes. The admitted complete gxi batch exits
+zero with all six SCENARIO-OK markers and final OK; hashes of the six production
+owners, four references, fixture, runner, contract and production SSI modules
+match before and after timing. No competing compiler/benchmark was observed
+at the prior admission window check. Raw log: =complete-ab.log= in the cache.
+
+| Complete consumer | Old CPU us | New CPU us | Wins /20 | Old bytes | New bytes |
+|-------------------+------------+------------+----------+-----------+-----------|
+| wide verification |       2915 |       2442 |       20 |   2913464 |   1054808 |
+| proof production  |       5449 |       4323 |       20 |   5682136 |   2348232 |
+| cold production   |         73 |         79 |        2 |    154432 |    177888 |
+| forged rejection  |        474 |        464 |       17 |    322008 |    325864 |
+| small verification|         37 |         39 |        3 |     61920 |     73584 |
+| source query      |         23 |         23 |       13 |     44000 |     43984 |
+
+Targets improve CPU 16.2%/20.7% and allocation 63.8%/58.7%. Cold adds
+6us/23456 bytes and small adds 2us/11664 bytes, within the preset controls;
+these controls are not speedups. Source is effectively unchanged. This report
+makes no application throughput, arbitrary candidate or hardware-wide claim.
+
+The five native Suites pass 51 Cases, every CASE/MODULE/HARNESS marker and final
+OK, with no ERROR/FAIL and exit zero. Additional tests compare every small
+finite, producer and checker budget boundary to the frozen baseline, complete
+ordered proofs, duplicate/missing/forward reduction evidence, local repeats,
+outer operands, false bindings, constants, wildcards, mutation and strict ground
+symbol grammar. ASP Policy passes all six production owners with zero findings.
+
+The final proof checker first establishes exact membership in an independently
+verified scalar/arity closure, then checks the stricter proof symbol grammar.
+It cannot omit that symbol check: a variable-looking source scalar or wildcard
+is legal closure data but not a ground proof row. A later pre-reuse package
+series improved wide CPU only 9.4% and failed the unchanged 10% target; its
+receipt is retained as =rejected-final-94pct-wide.ss=.

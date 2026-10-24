@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Positive Evaluation: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Constructed frontier coverage (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF audit]] found that the earlier SCC TLA model generated delta from the
+independent expected closure itself, leaving frontier implementation faults
+unobservable. The model now constructs delta from old root reach and activation
+diagonals, then checks it against independent input closure. Raw emission,
+missing diagonals and old-row emission each violate the publication assertion.
+Lean derives this frontier shape and finite root/member plan completeness;
+there is no assumed exact-candidate encoding in =root_plan_exact=. This advances
+Section 3.3's delta obligation without claiming native parent-map extraction,
+complete BYODS application replication or a new cost benefit.
+

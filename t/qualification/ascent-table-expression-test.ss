@@ -6,6 +6,8 @@
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
+        (only-in :gerbil-ascent/core/binary-relation
+                 gerbil-ascent-relation-closure-bounded)
         (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
@@ -13,6 +15,26 @@
 
 (def ascent-table-expression-test
   (test-suite "ASCENT table expression over native persistent tries"
+    (test-case "core and demanded closures preserve independent budget failures"
+      (for-each
+       (lambda (pair-radix)
+         (let* ((first (+ pair-radix 2))
+                (last (+ (* pair-radix 2) 3))
+                (reachable (+ pair-radix 3))
+                (pairs (.call UIntTrieSet .<-list (list first last)))
+                (expression
+                 (.mix gerbil-ascent-table-expression-prototype
+                       (.o (source-pairs pairs) (radix pair-radix))))
+                (expected (list first reachable last)))
+           (check-exception
+            (gerbil-ascent-relation-closure-bounded pairs pair-radix 2) true)
+           (check-equal? (.ref expression 'closure-pairs) expected)
+           (check-exception ((.ref expression 'closure-bounded) 2) true)
+           (let (closure (gerbil-ascent-relation-closure-bounded pairs pair-radix 3))
+             (check-equal? (.ref closure 'pairs) expected)
+             (check-equal? ((.ref closure 'contains?) reachable) #t))
+           (check-equal? (.ref expression 'closure-pairs) expected)))
+       '(8 513)))
     (test-case "indexed composition deduplicates the diamond's two-hop path"
       ;; Radix 8: 1->2=10, 2->3=19, 1->4=12, 4->3=35.
       (let* ((source

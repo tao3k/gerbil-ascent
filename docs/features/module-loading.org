@@ -1,0 +1,138 @@
+#+title: Module Loading, Initialization Reuse and Development Shell
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Delivered implementation
+
+The local implementation keeps Gerbil's loader, expander and =std/make= as
+their respective owners. It adds no alternative compiler or module registry.
+
+- =interface/develop.ss= supplies the =ascent-develop= executable through the
+  existing production build specification. Its production runtime dependencies
+  are linked together. =just develop= starts the upstream REPL with ASCENT
+  syntax and engine exports available. The compiler's SDK metadata path is
+  retained explicitly because a linked executable's Gambit directory can
+  differ from the interpreter's installation prefix.
+- =python/src/ascent_engine/artifact.py= retains process-local successful
+  hashes. Every construction still checks device, inode, size, modification
+  time and change time. Changed files are hashed again; same-length changes
+  with restored modification time are rejected. Missing admitted receipts and
+  changed artifact versions cannot silently replace a running engine. Hash
+  results are not persisted across processes.
+- =Engine= initializes the runtime and configures syntax once. Individual
+  caller limits remain independent. Fork, OS-thread and terminal shutdown
+  checks remain enforced. Both explicit-library ABI mode and compiled API mode
+  are locally qualified. API mode also verifies the extension and bundled
+  library against their receipt hashes.
+- =interface/dsl-source.ss= retains a parent containing syntax imports and
+  creates a fresh child context for every source request. It does not retain
+  mutable Programs or user definitions in that parent. Integration tests cover
+  different input states, a rejected expansion and reuse of the earlier session.
+- Build invalidation identifies changed direct module inputs by content,
+  removes only their owned dynamic generations and asks =std/make= to clean
+  their declared outputs. Upstream make then rebuilds dependent modules.
+  Missing or damaged receipts, SDK/root changes, inventory changes and changed
+  build assets retain the conservative package clean. The development source
+  is a separate build input; it is excluded from C ABI linked-source claims
+  and syntax resources.
+
+* Measured local results
+
+All measurements are local macOS observations on 2026-10-13. They do not
+establish remote CI, Linux performance or portable-wheel qualification.
+[[file:../../.cache/ascent/archived-runs/docs/features/module-loading-qualification.json][The qualification receipt]] contains source hashes, SDK identity, raw
+samples, log hashes and the tested engine library identity. Concurrent unrelated
+checkout edits are not qualified by this receipt.
+
+| Measurement | Ordinary/full | Linked/reused | Observed change |
+|-------------+---------------+---------------+-----------------|
+| Fresh-process engine describe, median of three | 4.097 s | 1.820 s | 55.58% less elapsed time |
+| Resource validation, median of three | 229.204 ms | 29.283 ms | 87.22% less elapsed time |
+
+Startup order was ordinary/linked, linked/ordinary, ordinary/linked. All six
+processes returned the same complete engine description. Processes were fresh;
+OS file caches were not cleared. Runs used the same non-sandbox execution
+environment and a fixed 40-second deadline. Host load and individual samples
+are recorded. These small samples are not a statistical generalization.
+
+The explicit-library CFFI constructor took 242.887 ms initially and a median
+33.146 ms on three subsequent constructions. This is constructor timing within
+one Python process, not total Python process startup or an old/new engine
+comparison. The final artifact contains 2,212 syntax resources. The validation
+comparison measures full hashing against process-local hash reuse on the same
+artifact; it does not measure inference throughput. No isolated DSL expansion
+speedup is claimed from the context-reuse implementation.
+
+The independent incremental fixture restored the edited producer's original
+modification time. Only producer and consumer recompiled; independent metadata
+was unchanged. A new process verified the consumer returned the updated value.
+The subsequent make took 0.461 s and compiled nothing. This fixture establishes
+the content-invalidation/dependency contract, not whole-project build speedup.
+
+The actual project's subsequent development-entry edit compiled only
+=interface/develop= and its executable. It did not recompile or relink the
+C ABI engine. The project empty-build observation is recorded separately in
+the JSON receipt; zero compilation does not imply zero driver or inventory cost.
+The subsequent [[file:build-driver.org][driver and manifest optimization]] records the closed local
+regression and performance comparison for that remaining cost.
+
+* Validation and corrected failures
+
+- 20 Python artifact-validation and packaging tests passed.
+- Two actual CFFI module-loading tests passed, including independent limits,
+  no repeated runtime entry, terminal shutdown, source-state isolation and
+  recovery after failed expansion.
+- Three development-shell tests passed: top-level import/definition and a
+  real engine call, source reload changing the exported answer from 1 to 2,
+  and nonzero exit on an invalid expression.
+- The Scheme artifact suite declared 14 Cases and completed with =MODULE-OK=,
+  =HARNESS-OK= and final =OK=.
+- A fresh compiled CFFI API process verified describe, initialization reuse,
+  independent caller limits and terminal shutdown using GNU GCC 13.4.0.
+
+Early probes timed out while dynamically loading the project. A native sample
+located most sampled main-thread stacks in =dyld/dlopen/fcntl= mapping work.
+Outside the sandbox, one narrow module loaded in 7.453 s and its repeat took
+approximately 5 microseconds. These are diagnostic observations on earlier
+artifacts, not a paired startup benchmark or proof that every timeout shares
+that cause. Upstream successful-module caching already works. The linked shell
+reduces the need for separate runtime-module loads; it does not patch macOS.
+
+The first shell revisions exposed SDK/path and phase-ownership mistakes. They
+were corrected before qualification: runtime metadata uses the compiler's SDK,
+the shell uses =:gerbil/runtime/gambit=, top-level evaluation permits import and
+definition forms, and private development phases are excluded from the C ABI
+resource inventory. The installed SDK exports =reload!=; using the older
+documentation's =reload= name fails. Negative development logs remain under
+=.cache/ascent/module-loading/= and are not counted as successful tests.
+
+* Development usage and boundaries
+
+#+begin_src sh
+just build
+just develop
+#+end_src
+
+Inside the shell, use the installed upstream forms:
+
+#+begin_src scheme
+(import "scenario.ss")
+(reload! "scenario.ss")
+(enter! "scenario.ss")
+#+end_src
+
+Trusted local batch evaluation is also available through
+=.gerbil/bin/ascent-develop --eval 'Scheme forms'=. It supports multiple
+top-level forms and returns a failure status on an error.
+
+Linked production modules are runtime builtins: changing their implementation
+requires rebuilding and restarting the shell. Scenario source modules can be
+reloaded in the existing process. Existing procedures, sessions or evidence
+must not be advertised as automatically updated by a source reload.
+
+The [[https://gerbil.scheme.org/guide/shell.html][official shell documentation]] explains interactive contexts and reloads;
+names must be checked against the installed SDK. The
+[[https://gerbil.scheme.org/reference/dev/build][official build documentation]] describes executable build specifications and
+full-program optimization. This change uses ordinary =exe:= declarations;
+it does not introduce full-program optimization or promise a general runtime
+hot-swap mechanism.

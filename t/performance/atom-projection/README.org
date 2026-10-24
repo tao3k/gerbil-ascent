@@ -1,0 +1,165 @@
+#+TITLE: Ordered atom key lowering qualification
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Gerbil source lessons and production boundary
+
+The installed Gerbil =1cfb032= compiler's =optimize.ss:163-187= collects mutation
+and type facts before transforming calls. =optimize-spec.ss:406-440= recognizes
+object references only with matching receiver identity. In
+=optimize-call.ss:450-470=, constructor lowering records field offsets and
+initializers, then directly builds writes in the admitted order. These patterns
+separate shape facts, lexical scope and ordered expression construction.
+
+ASCENT's positive-rule compiler previously recalculated the entire atom width
+for every selected column, giving O(width * selected-columns) admission work.
+It then selected two separate lists of original and lowered terms and mapped
+those lists into keys. The candidate computes width once within column
+admission and fuses projection with key-action lowering. It emits only the key
+list, preserving term/action identity and repeated column order. The width
+fact remains local to validation and is not stored in a plan or frame.
+
+Empty and single-column selections remain direct. Increasing columns advance
+both source and lowered cursors; arbitrary, repeated and reverse selections
+use local positional vectors. The previous dedicated full-reverse branch and
+two intermediate selected spines are removed. There is no projection factory,
+retained vector cache, runtime configuration knob or new public representation.
+
+Columns are fully admitted before slot lowering. Every original term is lowered
+before any key action is prepared. Key lowering follows the original column
+order and preserves the prior bound scope, expression-payload guard and general
+fallback. No user callback executes during compilation; runtime index key
+construction and row matching retain their existing owners and effect order.
+Malformed columns still return unsupported =#f=. The body action and output
+representations remain unchanged.
+
+* Matched whole-rule native comparison
+
+=reference.ss= is the complete =core/positive-plan.ss= at
+=1b45acc06fae340fe7c1b95a1d5b2c7ea1449e15=, with only its three relative imports
+qualified to existing core modules. No reference algorithm is reduced. Both
+complete modules are linked into one native executable. The runner requires
+matching resolved library paths and native =.o1= modules before measurement.
+
+The fixture is generated through public ASP =make-benchmark-fixture=;
+=benchmark-run/result= must admit all 50 samples. Each sample alternates old/new
+order, collects GC before each leg, and measures 16 fresh complete rule
+compilations using Gambit process CPU and allocation counters. A fresh two-atom
+rule binds the full source tuple, selects keys from a second atom and emits the
+full ordered tuple. Slot assignment, key admission, matcher/output compilation
+and action segments are all inside timing. Input construction and execution
+are outside timing. Both returned plans execute against independent source
+rows containing =#f=; each second-atom lookup verifies actual ordered key values
+and the final row must equal the independent input tuple.
+
+Gates were fixed before sampling: five wide scenarios require <=80% CPU, >=35
+CPU wins and <=2 KiB extra allocation. Controls require <=105% CPU plus 20 us
+and <=1 KiB extra allocation. The public ASP duration gate is also checked.
+No gate or timeout was relaxed after failed experiments.
+
+| Scenario | Width / columns | CPU us old / new | Bytes old / new | Wins / 50 | Gate |
+|----------+-----------------+------------------+-----------------+-----------+------|
+| dense | 1024 / 1024 | 1279.69 / 249.63 | 652886.5 / 554994.5 | 50 | pass |
+| reverse | 1024 / 1024 | 1258.38 / 240.63 | 652886.5 / 559698 | 50 | pass |
+| repeat | 1024 / 2048 | 2301.25 / 262.69 | 806488 / 609880 | 50 | pass |
+| permuted | 1024 / 1024 | 1264 / 241.56 | 653916.5 / 559698 | 50 | pass |
+| sparse | 1024 / 512 | 720.44 / 230.25 | 579282.5 / 534092 | 50 | pass |
+| small | 4 / 4 | 1.3125 / 1.3125 | 6672 / 6288 | 30 | pass |
+| scalar | 64 / 1 | 8.3125 / 8.375 | 43360 / 43264 | 14 | pass |
+| empty | 256 / 0 | 43.875 / 44.0625 | 139623.5 / 139507.5 | 23 | pass |
+
+These qualify approximately 68-89% CPU and 8-24% allocation reduction for
+whole-rule compilation on the selected wide shapes. They do not establish
+engine startup, complete solve latency, scheduler throughput or runtime query
+speed improvements. Small/scalar/empty controls are regression qualification,
+not speedup claims.
+
+* Retained negative experiments
+
+A prepared projection factory, separate ordered selector, paired value
+projection, and shared-width projection experiments all failed the original
+sparse allocation budget: approximately 579282.5 -> 587330-587426 bytes, despite
+CPU gains. Narrowing the width fact alone did not resolve that result. This is
+an observed allocation regression; no unproved closure/compiler explanation is
+presented as its cause. The final fused mapper removes materialized projection
+spines and passes the same gates. Failed raw receipts and candidate sources
+remain under ignored =.cache/ascent/atom-projection/=.
+
+The historical isolated SDK objects were incompatible with the upgraded
+installed Gerbil. Qualification uses the current canonical =.gerbil/lib= and
+its existing dependencies. The repository's existing Homebrew OpenSSL linker
+path is required after a formula path change. No compiler or SDK source rebuild
+was performed, and no dependency was uninstalled.
+
+* Reproduction
+
+Use the installed project Gerbil and dependencies, from the repository root.
+On macOS, apply the existing justfile Gerbil toolchain environment (including
+its current OpenSSL =LIBRARY_PATH=). The command below uses the standard package
+prefix, not the retired isolated SDK objects.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD" \
+  gxi -:max-heap=1G,debug=q t/performance/atom-projection/build.ss \
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/atom-projection/benchmark"
+result=0
+for scenario in dense reverse repeat permuted sparse small scalar empty; do
+  .cache/ascent/atom-projection/benchmark -:max-heap=1G,debug=q "$scenario" \
+    "$PWD/.gerbil/lib" ".cache/ascent/atom-projection/$scenario.sexp" || result=1
+done
+exit "$result"
+#+end_src
+
+All measurements, failed build logs, executable objects and scratch scripts
+stay under ignored =.cache/=. The production build entry has no benchmark duties.
+
+* Native consumer and policy qualification
+
+Six complete existing Suites pass 107 Cases: positive plans, expression plans,
+index entries, positive components, actor Sessions and native integration.
+Every native module has =MODULE-OK=; the common std/test harness has
+=HARNESS-OK= and final =OK=, and the process exits zero. The original Case
+budget/contract assertions remain in force. The native log also passes the
+repository's =tools/assert-test-cases.awk= verdict checks.
+
+Two new Cases exercise malformed column positions (including improper lists,
+noninteger and huge out-of-range values) before callback execution, and repeated
+expression columns with =#f= literals, action identity and payload-name changes.
+Existing wide-plan Cases cover widths through 1024, dense/reverse/repeated
+selection, provider key/output parity and backtracking. This is focused consumer
+qualification, not a complete repository Suite run.
+
+A direct compiled Gxi/GxTest launch produced no Case progress and was terminated
+with exit 143; it is not accepted evidence. The static =qualify.ss= entry imports
+the same six Suite objects and uses upstream =std/test/base= TestHarness,
+TestModule, TestConfig, test-run! and test-result-ok?, exactly the execution
+primitives used by GxTest. It preserves module/Suite/Case results and nonzero
+failure propagation. Native linking compiles the complete imported closure;
+there is no alternative assertion language or Python test driver.
+
+To reproduce consumer qualification, first prepare the canonical compiled
+Suite library using the existing =just prepare-test-library= entry. Then build
+and run the static consumer entry with the same existing toolchain environment:
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" \
+  gxi -:max-heap=3G,debug=q t/performance/atom-projection/build.ss \
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/atom-projection/qualify" qualification
+GERBIL_PATH="$PWD/.gerbil" ASCENT_TEST_LIBRARY="$PWD/.gerbil/lib" \
+  GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" \
+  timeout 120s .cache/ascent/atom-projection/qualify -:max-heap=2G,debug=q
+#+end_src
+
+The full BuildSpec selection contains 85 source modules. A native ASP policy
+entry checks that exact list and exits zero with =POLICY-NATIVE-OK=, zero errors
+and 27 warnings. The initial interpreted policy run printed the same zero-error
+finding count but reached its unchanged 60-second boundary (exit 124); it is
+not counted as a completed pass. Native policy records remain ignored.
+One visible warning flags =map-projected-terms=' combined match/named-let
+shape; other existing owner/documentation warnings remain. This is successful
+error-severity admission, not a claim that every style warning has been removed.
+
+Concurrent =a94e515= and =0d48282= absence-certificate/source-arity changes were
+preserved during this work. They do not change the frozen positive-plan source
+or measured atom lowering. The tests and policy above run on the integrated
+working tree. Remote submitted-head CI is a separate final gate.

@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Bounded unit natural derivation counts: acceptance
+#+DATE: 2026-10-09
+
+* Owner and semantic contract
+
+[[file:../../../candidate/annotations.ss][candidate/annotations.ss]] adds numeric interpretation to the existing
+complete positive grounded graph. Its private =positive-counts= result records
+status, reason, detached query rows/counts and numeric work. Source and program
+closure replay remains owned by =candidate/provenance-graph.ss=.
+
+Distinct alternatives add; ordered body occurrences multiply; zero counts seed
+synchronous rounds. Each round starts a fresh accumulator. Only an unchanged
+complete round publishes. Exceeding count/work limits or an incomplete graph
+returns no numeric rows. This keeps relational membership completion separate
+from annotation completion. No infinity verdict, polynomial, weighted callback,
+negative rule or aggregate annotation is implemented.
+
+* Executable checks
+
+=just test-file t/qualification/ascent-annotations-test.ss 2G= passes five Cases:
+16 multiplicity pairs, duplicate rule alternatives, seeded and unseeded recursion,
+exact work/cap/edge refusal and output ownership. The test uses real inert
+candidate inspection and native solving before complete graph generation.
+
+=just check-lean-proofs= passes 140 build jobs, including six new laws with
+concrete Cartesian-product, duplicate and recursive controls. =just _check-quint
+DerivationCounts= explores 167 distinct states and rejects all three required
+fault variants with exit 12. Lean proves combinatorial laws under graph premises;
+Quint checks finite publication protocols. Neither is native source extraction.
+
+Whole-directory local source tests have separate retained failures recorded in
+[[file:../qualification/compiler.org][qualification/compiler.org]]. They are not replaced by this focused receipt.
+The final revision's CI owns whole-roster, source, performance and Rust gates.

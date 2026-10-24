@@ -7,7 +7,7 @@
  (target_total . 950us)
  (regression_budget . 1050us)
  (expected_over_input_budget . 1000us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure index construction and demanded two-hop relation composition together over 512 source pairs.")
  (maxRssMb . 256)
  (memoryMetric . resident-set-size)

@@ -9,34 +9,707 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  RUST_TEST_THREADS: "12"
 jobs:
-  native-and-oracle:
+  repository-hygiene:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Admit source paths and check output isolation
+        env:
+          PYTHONPATH: workbench/src
+        run: |
+          python3 -m ascent_workbench.repository_policy
+          python3 -m unittest discover -s workbench/tests -p test_repository_policy.py -v
+          python3 -m unittest discover -s workbench/tests -p 'test_preparation*.py' -v
+          python3 -m unittest discover -s workbench/tests -p test_source_semantic_ci.py -v
+  scheme:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [semantics, performance]
     timeout-minutes: 120
     env:
       GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+      GERBIL_RELEASE_ARCHIVE_CACHE: ${{ github.workspace }}/.ci/archives
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq ripgrep libssl-dev openssl pkg-config zlib1g-dev gdb
+      - name: Install the verified Just CLI used by complete performance qualification
+        uses: taiki-e/install-action@a4d3f3f761dcd95cce1b72cb61cb6d1963438177 # v2
+        with:
+          tool: just@1.56.0
+          fallback: none
+      - name: Record the selected Just CLI
+        run: just --version
+      - name: Restore immutable release archive
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .ci/archives
+          key: gerbil-archive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/ci/install-gerbil-v19-release.sh') }}
       - name: Install immutable Gerbil v0.19 release
         run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+      - name: Record machine and compiler capacity
+        id: capacity
+        run: |
+          cores="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}"
+          printf 'GERBIL_BUILD_CORES=%s\n' "$cores" >> "$GITHUB_ENV"
+          printf 'CI-CAPACITY online=%s selected=%s\n' "$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" "$cores"
+          gerbil env gxi -e '(displayln "CI-GERBIL-CPU " (##cpu-count))'
+          fingerprint="$(sha256sum "$(command -v gcc)" "$GERBIL_PREFIX/bin/gxi" "$GERBIL_PREFIX/bin/gsc" | sha256sum | cut -d ' ' -f 1)"
+          printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+          # Restore matching source timestamps with compiled products; Git
+          # verifies bytes and std/make retains every dependency check.
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          {
+            echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
+            git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
+            echo 'ASCENT_CACHE_SOURCE_PATHS'
+          } >> "$GITHUB_OUTPUT"
+      - name: Restore declared dependency build
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Remove restored application outputs
+        run: |
+          # Dependency caches never authorize reuse of this checkout's library.
+          rm -rf .gerbil/lib/gerbil-ascent
+          rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
       - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Restore content-bound compiled artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.capacity.outputs.cache_sources }}
+            .cache/ascent/compiled-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
+      - name: Admit restored compiler inputs
+        env:
+          EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
+        run: |
+          test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
       - name: Build Scheme package
-        run: gerbil build
-      - name: Install Just
-        run: cargo install just --version 1.56.0 --locked
-      - name: Qualify Scheme rules
-        run: gerbil env just test
+        run: |
+          just check-production-build
+          just check-policy
+      - name: Qualify compiled performance contracts and benchmarks
+        if: ${{ matrix.lane == 'performance' }}
+        run: |
+          set -o pipefail
+          just prepare-test-library 2>&1 | tee /tmp/ascent-compiled-qualification.out
+          status=0
+          for target in test-performance-contracts performance-index-sharing performance performance-uf-membership performance-uf-query performance-uf-plan performance-uf-initialization performance-uf-compact-query performance-uf-selector-init performance-uf-owner-plans; do
+            if ! just --no-deps "$target" 2>&1 | tee -a /tmp/ascent-compiled-qualification.out; then
+              status=1
+            fi
+          done
+          grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-compiled-qualification.out || status=1
+          if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-compiled-qualification.out; then
+            echo 'Production modules were compiled again after the package build.' >&2
+            status=1
+          fi
+          exit "$status"
+      - name: Preserve the performance transcript already emitted to the CI log
+        if: ${{ always() && matrix.lane == 'performance' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: performance-transcript-${{ github.sha }}-${{ github.run_attempt }}
+          path: /tmp/ascent-compiled-qualification.out
+          retention-days: 30
+      - name: Prepare complete source-semantic dependencies
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just prepare-semantic-library
+      - name: Qualify complete standard Gerbil source tests
+        if: ${{ matrix.lane == 'semantics' }}
+        id: full_scheme
+        run: |
+          mkdir -p .cache/ascent/runtime-crashes
+          sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/runtime-crashes/core.%e.%p"
+          ulimit -c unlimited
+          just prepare-semantic-library
+          # Retain the acceptance deadline independently of live-output supervision.
+          GERBIL_BUILD_CORES=12 ASCENT_GXTEST_TIMEOUT=180s GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s just test-file t/qualification 2G
+      - name: Qualify independent Scheme source consumers
+        if: ${{ matrix.lane == 'semantics' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          PYTHONPATH: workbench/src
+        run: python3 -m unittest discover -s workbench/source_tests -v
+      - name: Extract compiled crash backtraces
+        if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
+        run: bash tools/ci/capture-runtime-crashes.sh .cache/ascent/runtime-crashes
+      - name: Preserve compiled cores and complete test batch logs
+        if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runtime-crashes-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            .cache/ascent/runtime-crashes
+            .cache/ascent/test-modules
+          include-hidden-files: true
+          retention-days: 30
+      - name: Qualify runtime source view loading
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just check-source-views
+      - name: Build compiled DSL closure entry
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just build-dsl-closure
+      - name: Qualify compiled DSL closure
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just check-dsl-closure
+      - name: Measure compiled retained replacement against fresh evaluation
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just check-retained-benefit
+      - name: Qualify actual compiled compiler source closure
+        if: ${{ matrix.lane == 'semantics' }}
+        run: just check-model-source-closure
+  rust-pyo3:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    outputs:
+      python_ready: ${{ steps.python_interface.outcome == 'success' && steps.python_cache.outcome == 'success' }}
+    timeout-minutes: 120
+    env:
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+      GERBIL_RELEASE_ARCHIVE_CACHE: ${{ github.workspace }}/.ci/archives
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev python3-venv patchelf libsqlite3-dev
+          just --version
+          node --version
+          npm --version
+      - name: Restore immutable release archive
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .ci/archives
+          key: gerbil-archive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Install immutable Gerbil v0.19 release
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+      - name: Record machine and compiler capacity
+        id: capacity
+        run: |
+          cores="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}"
+          printf 'GERBIL_BUILD_CORES=%s\n' "$cores" >> "$GITHUB_ENV"
+          printf 'CI-CAPACITY online=%s selected=%s\n' "$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" "$cores"
+          gerbil env gxi -e '(displayln "CI-GERBIL-CPU " (##cpu-count))'
+          fingerprint="$(sha256sum "$(command -v gcc)" "$GERBIL_PREFIX/bin/gxi" "$GERBIL_PREFIX/bin/gsc" | sha256sum | cut -d ' ' -f 1)"
+          printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+          # Restore matching source timestamps with compiled products; Git
+          # verifies bytes and std/make retains every dependency check.
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          {
+            echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
+            git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
+            echo 'ASCENT_CACHE_SOURCE_PATHS'
+          } >> "$GITHUB_OUTPUT"
+      - name: Restore declared dependency build
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Remove restored application outputs
+        run: |
+          # Dependency caches never authorize reuse of this checkout's library.
+          rm -rf .gerbil/lib/gerbil-ascent
+          rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
+      - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Restore content-bound compiled artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.capacity.outputs.cache_sources }}
+            .cache/ascent/compiled-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
+      - name: Admit restored compiler inputs
+        env:
+          EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
+        run: |
+          test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+      - name: Build Scheme package
+        run: just build
+      - name: Record Rust and Python compiler identity
+        id: rust
+        run: |
+          { rustc -Vv; python3 --version; } > "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
+          cat "$RUNNER_TEMP/ascent-rust-python-toolchain.txt"
+          printf 'compiler=%s\n' "$(sha256sum "$RUNNER_TEMP/ascent-rust-python-toolchain.txt" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: Restore Rust dependency downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ascent-cargo-downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ascent-cargo-downloads-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore source-bound Rust and Python products
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          # Cargo may skip its publisher on a cache hit. Restore the matching
+          # source inventory and ownership marker with the embedded manifest.
+          path: |
+            rust/target
+            python/src/ascent/_sources
+            python/src/ascent/.gerbil-resources.json
+          # BEGIN GENERATED PREPARATION CARGO-CACHE
+          key: ascent-cargo-products-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.rust.outputs.compiler }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('rust/**/*.rs', 'rust/**/Cargo.toml', 'rust/Cargo.lock', '.cargo/**', 'python/pyproject.toml', 'python/src/ascent/**', '**/*.ss', 'bindings/**', 'gerbil.pkg', 'justfile', '.github/workflows/ci.yml', '!manifest.ss', '!rust/**/target/**', '!.gerbil/**', '!.ci/**', '!.cache/**', '!python/src/ascent/_sources/**', '!python/src/ascent/.gerbil-resources.json') }}
+          # END GENERATED PREPARATION CARGO-CACHE
+      # BEGIN GENERATED ARCHIVE CACHE
+      - name: Restore compiler-owned archive work across Cargo configurations
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: rust/target/ascent-program-v1
+          # No source-different fallback; the upstream builder still checks every object fingerprint.
+          key: ascent-program-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', 'rust/Cargo.toml', 'rust/Cargo.lock', 'rust/ascent-scheme/build.rs', 'rust/ascent-build/**', 'bindings/**', 'gerbil.pkg', '.github/workflows/ci.yml', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', '!rust/target/**', '!python/src/ascent/_sources/**') }}
+      # END GENERATED ARCHIVE CACHE
+      - name: Prepare shared Python build environment and protocol tools
+        id: build_prerequisites
+        run: |
+          just prepare-quint
+          echo "$PWD/.cache/ascent/tools/quint/node_modules/.bin" >> "$GITHUB_PATH"
+          python3 -m venv .cache/ascent/python-runtime
+          .cache/ascent/python-runtime/bin/pip install 'maturin>=1.9,<2'
+          printf 'PYO3_PYTHON=%s/.cache/ascent/python-runtime/bin/python\n' "$PWD" >> "$GITHUB_ENV"
+      - name: Qualify Rust workspace semantics
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: gerbil env cargo test --no-fail-fast --locked --manifest-path rust/Cargo.toml --workspace --exclude ascent-scheme --no-default-features --features gerbil-ascent/default,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon
+      - name: Enforce strict workspace Clippy
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets --no-default-features --features gerbil-ascent/default,gerbil-ascent/artifacts,ascent-python/rust-runtime,ascent-python/rayon -- -D warnings
+      - name: Check Scheme backend and Rayon benchmark interfaces
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: gerbil env cargo clippy --locked --manifest-path rust/Cargo.toml -p ascent-python -p ascent-scheme --all-targets --no-default-features --features ascent-python/scheme-runtime,ascent-python/rayon,ascent-scheme/rayon -- -D warnings
+      - name: Install pinned process-isolated Rust test runner
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        run: |
+          archive="$RUNNER_TEMP/cargo-nextest.tar.gz"
+          curl --fail --location --retry 3 --output "$archive" https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.140/cargo-nextest-0.9.140-x86_64-unknown-linux-gnu.tar.gz
+          printf '4ee9aaa0d0171a985a5d0eb735b87355894c1c455972e9674fb9fdbd1387c9a3  %s\n' "$archive" | sha256sum --check
+          mkdir -p .cache/ascent/tools/nextest
+          tar -xzf "$archive" -C .cache/ascent/tools/nextest
+          echo "$PWD/.cache/ascent/tools/nextest" >> "$GITHUB_PATH"
+      - name: Qualify complete Scheme binding semantics and archive controls
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          set -o pipefail
+          gerbil env cargo nextest run --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/scheme-binding-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/scheme-binding-tests.log"
+      - name: Verify the production AOT entry does not load ASP
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
+        run: gerbil env gerbil interactive dev/production-build-test.ss aot
+      - name: Preserve actual archive work and generated compiler inputs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: archive-work-${{ github.sha }}
+          path: |
+            rust/target/debug/build/ascent-scheme-*/out/archive-work.json
+            rust/target/debug/build/ascent-scheme-*/out/archive-events.jsonl
+            rust/target/debug/build/ascent-scheme-*/out/archive-stress-result.json
+            rust/target/ascent-program-v1/inputs
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Build and install the PyO3 wheel
+        id: python_wheel
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --features rust-runtime,rayon,extension-module,gerbil-ascent/default --auditwheel repair --out ../.cache/ascent/wheels)
+          .cache/ascent/python-runtime/bin/pip install --no-deps .cache/ascent/wheels/*.whl
+      - name: Qualify original Python and Scheme interface semantics
+        id: python_interface
+        if: ${{ !cancelled() && steps.python_wheel.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          PYTHONPATH: workbench/src
+          ASCENT_ENGINE_WIRE: ${{ github.workspace }}/.cache/ascent/movie-wire.json
+        run: |
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi -:max-heap=2G,debug=q t/qualification/ascent-movie-cast-test.ss wire "$ASCENT_ENGINE_WIRE"
+          .cache/ascent/python-runtime/bin/python -m ascent_workbench.interface_tests
+      - name: Retain the interface-checked wheel for downstream tests
+        if: ${{ !cancelled() && steps.python_interface.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ascent-python-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: .cache/ascent/wheels/*.whl
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve the exact wheel and its runtime syntax closure
+        id: python_cache
+        if: ${{ !cancelled() && steps.python_interface.outcome == 'success' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .cache/ascent/wheels
+            .gerbil/lib
+            .ci/gerbil-release/v19
+          key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+      - name: Build installed PyO3 Scheme process profile
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --no-default-features --features scheme-runtime,rayon,extension-module --auditwheel repair --out ../.cache/ascent/scheme-wheels)
+          python3 -m venv .cache/ascent/python-scheme-runtime
+          .cache/ascent/python-scheme-runtime/bin/pip install --no-deps .cache/ascent/scheme-wheels/*.whl
+      - name: Qualify twelve resident VMs through installed PyO3
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+          ASCENT_SCHEME_WORKER: ${{ github.workspace }}/rust/target/debug/ascent-scheme-worker
+        run: |
+          set -o pipefail
+          test -x "$ASCENT_SCHEME_WORKER"
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 240s .cache/ascent/python-scheme-runtime/bin/python python/qualification/process_pool.py 2>&1 | tee "$RUNNER_TEMP/scheme-python-process-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)' "$RUNNER_TEMP/scheme-python-process-tests.log"
+      - name: Qualify the default installed PyO3 worker entry
+        if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
+        env:
+          GERBIL_PATH: ${{ github.workspace }}/.gerbil
+        run: |
+          set -o pipefail
+          GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" env -u ASCENT_SCHEME_WORKER timeout 240s .cache/ascent/python-scheme-runtime/bin/python python/qualification/process_pool.py 2>&1 | tee "$RUNNER_TEMP/scheme-python-default-process-tests.log"
+          ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)' "$RUNNER_TEMP/scheme-python-default-process-tests.log"
+  oracle:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [byods, other, byods-scale]
+    env:
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+      GERBIL_RELEASE_ARCHIVE_CACHE: ${{ github.workspace }}/.ci/archives
+      ORACLE_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev
+          just --version
+      - name: Restore immutable release archive
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .ci/archives
+          key: gerbil-archive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Install immutable Gerbil v0.19 release
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+      - name: Record machine and compiler capacity
+        id: capacity
+        run: |
+          cores="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}"
+          printf 'GERBIL_BUILD_CORES=%s\n' "$cores" >> "$GITHUB_ENV"
+          printf 'CI-CAPACITY online=%s selected=%s\n' "$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)" "$cores"
+          gerbil env gxi -e '(displayln "CI-GERBIL-CPU " (##cpu-count))'
+          fingerprint="$(sha256sum "$(command -v gcc)" "$GERBIL_PREFIX/bin/gxi" "$GERBIL_PREFIX/bin/gsc" | sha256sum | cut -d ' ' -f 1)"
+          printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+          # Restore matching source timestamps with compiled products; Git
+          # verifies bytes and std/make retains every dependency check.
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          source_inputs="$(git ls-files -s -- '*.ss' bindings/c gerbil.pkg dev/gerbil.pkg justfile .github/workflows/ci.yml ':(exclude)manifest.ss' | sha256sum | cut -d ' ' -f 1)"
+          printf 'source_inputs=%s\n' "$source_inputs" >> "$GITHUB_OUTPUT"
+          echo 'source_bytes=${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}' >> "$GITHUB_OUTPUT"
+          {
+            echo 'cache_sources<<ASCENT_CACHE_SOURCE_PATHS'
+            git ls-files -- '*.ss' bindings/c ':(exclude)manifest.ss'
+            echo 'ASCENT_CACHE_SOURCE_PATHS'
+          } >> "$GITHUB_OUTPUT"
+      - name: Restore declared dependency build
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Remove restored application outputs
+        run: |
+          # Dependency caches never authorize reuse of this checkout's library.
+          rm -rf .gerbil/lib/gerbil-ascent
+          rm -f .gerbil/lib/static/gerbil-ascent__*
+          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
+      - name: Install declared Gerbil dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+      - name: Verify declared Gerbil interfaces
+        run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Restore content-bound compiled artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.capacity.outputs.cache_sources }}
+            .cache/ascent/compiled-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+            .gerbil/bin/libascent*
+            .gerbil/bin/ascent-develop*
+          key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
+      - name: Admit restored compiler inputs
+        env:
+          EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
+          RESTORED_SOURCE_BYTES: ${{ hashFiles('**/*.ss', 'bindings/c/**', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', 'dev/gerbil.pkg', '.github/workflows/ci.yml') }}
+        run: |
+          test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+      - name: Build Scheme package
+        run: just build
+      - name: Qualify runtime source view loading
+        run: just check-source-views
       - name: Enforce Rust warnings and ASP policy
+        if: matrix.shard == 'other'
         run: |
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
+      - name: Build compiled retained, arity and BYODS differential entry
+        run: just build-dsl-closure
       - name: Compare with Rust Ascent
-        run: gerbil env just oracle
+        run: |
+          report_failure() {
+            run_status=$?
+            set +e
+            if [ "$run_status" -ne 0 ]; then
+              for file in .cache/ascent/oracle-panics-*.out; do
+                [ -f "$file" ] || continue
+                printf 'ORACLE-PANIC-RECEIPT %s\n' "$file"
+                head -c 8192 "$file"
+              done
+            fi
+            exit "$run_status"
+          }
+          trap report_failure EXIT
+          # Keep Cargo on shell-owned blocking stdio; Gerbil selects only the prefix.
+          export GERBIL_PATH="$(gerbil env gxi -e '(display (getenv "GERBIL_PATH"))' </dev/null 2> >(cat >&2))"
+          case "$ORACLE_SHARD" in
+            byods)
+              cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods:: --nocapture
+              ;;
+            other)
+              cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture
+              ;;
+            byods-scale)
+              # Compile first; the runtime deadline applies to the actual scale test.
+              cargo test --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity --no-run --message-format=json > "$RUNNER_TEMP/ascent-scale-build.jsonl"
+              executable="$(jq -Rr 'fromjson? | select(.reason == "compiler-artifact" and .target.name == "scheme_parity" and .executable != null) | .executable' "$RUNNER_TEMP/ascent-scale-build.jsonl")"
+              test -x "$executable"
+              timeout 180s "$executable" --exact byods::trrel_uf_full_rust_scale_oracle --ignored --nocapture
+              ;;
+            *) exit 2 ;;
+          esac
+      - name: Qualify complete pinned Steensgaard partition
+        if: matrix.shard == 'byods-scale'
+        run: |
+          manifest=t/fixtures/paper-inputs/openjdk-source.json
+          dataset=.cache/ascent/paper-data/steensgaard
+          mkdir -p "$dataset"
+          repository="$(jq -r .repository "$manifest")"
+          revision="$(jq -r .revision "$manifest")"
+          directory="$(jq -r .source_directory "$manifest")"
+          while read -r relation; do
+            curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
+          done < <(jq -r '.files[].relation' "$manifest")
+          PYTHONPATH=workbench/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
+          cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
+          cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
+          timeout 180s .cache/ascent/compiled-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
+          rust/ascent-oracle/target/release/examples/steensgaard_data_truth "$dataset" .cache/ascent/steensgaard-rust-partition.tsv .cache/ascent/steensgaard-partition.tsv
+      - name: Verify pinned complete Polonius input identity
+        if: matrix.shard == 'byods-scale'
+        run: |
+          manifest=t/fixtures/paper-inputs/polonius-clap-source.json
+          dataset=.cache/ascent/paper-data/polonius-clap
+          mkdir -p "$dataset"
+          repository="$(jq -r .repository "$manifest")"
+          revision="$(jq -r .revision "$manifest")"
+          directory="$(jq -r '.source_directory | split("/") | map(@uri) | join("/")' "$manifest")"
+          while read -r relation; do
+            curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
+          done < <(jq -r '.files[].relation' "$manifest")
+          PYTHONPATH=workbench/src python3 -m ascent_workbench.paper_source "$dataset" "$manifest"
+      - name: Check independent Polonius reference controls
+        if: matrix.shard == 'byods-scale'
+        run: cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
+      - name: Verify complete Polonius reference observations
+        if: matrix.shard == 'byods-scale'
+        run: |
+          cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
+          timeout 900s rust/ascent-oracle/target/release/examples/polonius_data_truth .cache/ascent/paper-data/polonius-clap .cache/ascent/polonius-reference-complete datafrog-opt
+          jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' t/fixtures/paper-inputs/polonius-reference.json > .cache/ascent/polonius-output.sha256
+          sha256sum --check .cache/ascent/polonius-output.sha256
+  formal:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Lean and protocol verification tools
+        run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?runner Java 21 is required}"
+          "$JAVA_HOME/bin/java" -version
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+          node --version
+          npm --version
+          sudo apt-get update
+          sudo apt-get install -y elan just python3-cffi python3-venv
+          elan toolchain install leanprover/lean4:v4.34.0
+      - name: Check Lean contracts, Quint protocols and counterexamples
+        env:
+          ASCENT_FORMAL_GENERATION_CUTOFF: '4'
+        run: |
+          just check-formal
+  formal-conformance:
+    needs: repository-hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Lean and protocol verification tools
+        run: |
+          export JAVA_HOME="${JAVA_HOME_21_X64:?runner Java 21 is required}"
+          "$JAVA_HOME/bin/java" -version
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+          node --version
+          npm --version
+          sudo apt-get update
+          sudo apt-get install -y elan just python3-cffi python3-venv
+          elan toolchain install leanprover/lean4:v4.34.0
+      - name: Check imported Lean proofs under the locked process Guard
+        run: just check-lean-proofs prepare-quint
+      - name: Compare Quint and Lean outputs with the Scheme conformance corpus
+        run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance check-movie-cast-conformance
+  python-consumers:
+    needs: rust-pyo3
+    if: ${{ !cancelled() && needs.rust-pyo3.outputs.python_ready == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install independent Python consumer prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-cffi python3-venv
+      - name: Restore the producer wheel and matching runtime resources
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            .cache/ascent/wheels
+            .gerbil/lib
+            .ci/gerbil-release/v19
+          key: ascent-pyo3-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Install the exact producer wheel for independent Python consumers
+        run: |
+          python3 -m venv .cache/ascent/python-projects
+          .cache/ascent/python-projects/bin/pip install --no-deps .cache/ascent/wheels/*.whl
+          .cache/ascent/python-projects/bin/pip install --no-deps ./workbench
+          source .ci/gerbil-release/v19/activate
+          printf 'GERBIL_HOME=%s\nGERBIL_PATH=%s/.gerbil\n' "$GERBIL_HOME" "$PWD" >> "$GITHUB_ENV"
+      - name: Qualify Python byte IO and process supervision
+        env:
+          PYTHONPATH: workbench/src
+        run: |
+          .cache/ascent/python-projects/bin/python -m unittest discover -s python/tests -v
+          .cache/ascent/python-projects/bin/python -m unittest discover -s workbench/tests -v
+      - name: Verify independent Python project installation
+        run: |
+          .cache/ascent/python-projects/bin/python -c 'from importlib.metadata import distribution; from ascent import Engine; from ascent_workbench import formal; from pathlib import Path; library = distribution("gerbil-ascent"); consumer = distribution("ascent-workbench"); assert not any(str(p).startswith("ascent_workbench/") for p in library.files); assert not any(str(p).startswith("ascent/") for p in consumer.files); assert any(r.startswith("gerbil-ascent") for r in consumer.requires); assert not any("ascent-workbench" in r for r in library.requires or []); assert formal.ROOT == Path.cwd()'
+          .cache/ascent/python-projects/bin/ascent-workbench --help
+  runtime-and-oracle:
+    if: ${{ always() }}
+    needs: [scheme, rust-pyo3, oracle, formal, formal-conformance, python-consumers]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all independent qualification jobs
+        env:
+          SCHEME_RESULT: ${{ needs.scheme.result }}
+          RUST_PYO3_RESULT: ${{ needs.rust-pyo3.result }}
+          ORACLE_RESULT: ${{ needs.oracle.result }}
+          FORMAL_RESULT: ${{ needs.formal.result }}
+          FORMAL_CONFORMANCE_RESULT: ${{ needs.formal-conformance.result }}
+          PYTHON_CONSUMERS_RESULT: ${{ needs.python-consumers.result }}
+        run: |
+          test "$SCHEME_RESULT" = success
+          test "$RUST_PYO3_RESULT" = success
+          test "$ORACLE_RESULT" = success
+          test "$FORMAL_RESULT" = success
+          test "$FORMAL_CONFORMANCE_RESULT" = success
+          test "$PYTHON_CONSUMERS_RESULT" = success

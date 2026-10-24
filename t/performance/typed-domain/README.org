@@ -1,0 +1,129 @@
+#+title: Finite domain analysis in typed expression compilation
+
+* Gerbil source lessons
+
+Gerbil 2591dcd =compiler/optimize.ss:164+= collects mutation and top-level
+type facts before expression transformation. =compiler/optimize-call.ss:89-131=
+admits beta substitution through arity/immutability checks and retains other
+operands in ordered bindings. =optimize-call.ss:633-659= uses known lambda
+shape and lexical scope to select direct dispatch; a case-lambda chooses an
+admitted arity branch. These are examples of static analysis narrowing repeated
+expression work while preserving its observable evaluation contract.
+
+=compiler/optimize-base.ss:590-605= materializes type metadata when it is to
+be rewritten and sorted. The materialization has a consumer. Similarly,
+our typed compiler needs the final aggregate domain, not a newly normalized
+aggregate after every visited type.
+
+The significant ordering detail comes from Gerbil =std/list/list.ss:24-30=:
+=delete-duplicates/hash= defaults to traversing the reversed list and keeping
+last occurrences. Replacing repeated normalization with a first-occurrence
+set collector would change our published domain order. Flattening all admitted
+chunks once and keeping Gerbil's existing final normalization preserves it.
+
+* Production path
+
+=program/higher-order.ss= separates three operations:
+
+- Domain equality checks length and ordered equality first. Permuted domains
+  use a private structural membership index for that comparison only. Public
+  type descriptors expose mutable domain lists, so no index persists across
+  calls. The original length-and-support behavior is retained for mutated
+  duplicate domains, including its directional behavior.
+- Finite mapping validation inspects bounded input/output segments directly
+  from owned combined rows, avoiding temporary prefix rows and outer lists.
+  All input-domain errors still precede every output-domain error. Ordinary
+  source rows already have admitted arities.
+- The typed compiler collects references to frozen type domains once per
+  admitted type identity. After the complete graph check, it flattens those
+  chunks in original visitation order and normalizes once. Scoped term checks,
+  lexical environments, each charged type lookup and lowering visit remain.
+
+Same-domain checks now validate canonical supports directly rather than
+constructing two temporary nullary type objects. Source lowering consumes
+the rows already frozen and checked by graph admission; the positive operator
+constructor still copies its owned row data.
+
+The operator compiler accepts an optional final-relation constructor, used
+only during emission after complete graph analysis. Typed lowering supplies
+its finite-domain constructor directly. This replaces an intermediate ordinary
+Program plus a second pass rebuilding every relation and Program. Four-argument
+standalone calls and fragment compilation retain their default constructor,
+relation order, rule order and source handles. The callback is not retained
+in emitted rules or the returned Program.
+
+No descriptor identity is used as a substitute for lexical scope admission.
+The compiler still rechecks external mutable descriptors on every invocation.
+Existing constructor calls and the native positive IR retain their semantics. No environment
+variables, runtime domain caches or SDK build changes are introduced.
+
+* Native matched qualification
+
+Run =just performance-typed-domain=. The installed SDK compiles the current
+modules and the complete frozen =reference.ss= and =operator-reference.ss= at
+=b3f04cf765d94fa34f8f809f3163d084b319da13=. Only imports are qualified/redirected\nto the frozen operator comparator; exact original text is checked after reversing\nthose import rewrites. Shared descriptor/analysis dependencies are unchanged. Public ASP
+=make-benchmark-fixture= creates the contract and =benchmark-run/result= owns
+50 alternating pairs. Configuration is passed as scenario/library/receipt
+arguments. All generated objects, executables, logs and raw receipts are in
+ignored =.cache/ascent/typed-domain/=. Integration stays in =t/= and =justfile=.
+
+Each timed leg is a fresh =relational-typed-compile=, including the complete
+descriptor/type snapshot, source revalidation, budget accounting, scoped
+admission, beta/operator lowering and construction of the finite-domain
+program. Typed descriptor construction is outside timing. Each pair compares
+all compiled relation arities, ordered source rows and ordered checked domains,
+then independently admits and runs both programs, checking exactly the two
+expected singleton rows. Admission/solve postchecks are outside inner timing.
+This is compiler CPU/allocation evidence, not solve or end-to-end latency.
+
+The ordered/permuted scenarios each have 256 domain atoms and eight
+join/project stages with distinct source names. Every source has two late
+domain rows. Joins use equal keys and project back to the first column, so
+independent truth remains those two rows. Permuted types reverse alternating
+domains to exercise set-based type equality. Main gates were fixed before
+sampling: CPU <=80% baseline, >=35/50 CPU wins, and at most 64 KiB extra
+allocation. Small uses two atoms and one stage, CPU <=105% plus 20 us,
+with at most 2 KiB extra allocation. Neither gate is weakened after sampling.
+
+The new suite exhausts 24x24 four-scalar domain permutations, including false,
+characters and exact integers, and compares nested arrow equality. It preserves
+mutated duplicate behavior and mapping error priority. A two-mapping graph
+checks explicit latest-occurrence domain order and native rows, with a directly
+counted nine-visit expansion boundary. The existing higher-order suite covers
+nested lexical capture, escaped parameters, forged/cyclic/mutated descriptors,
+finite function heights, source multiplicity and replacement, mapping ownership
+and budget bounds.
+
+* Retained negative experiments
+
+Domain equality, chunk collection and segment validation alone yielded
+58206 -> 50406 us, allocation 71109312 -> 70419536 bytes, 39/50 CPU wins.
+It failed the unchanged 20% CPU gate. Raw receipt/log: =ordered-analysis-only.sexp=
+and =analysis-only.log=.
+
+Direct support comparison and reuse of frozen source rows yielded
+45535 -> 39756 us, allocation 71109392 -> 69752304 bytes, 45/50 wins.
+It again failed the same CPU gate. Raw receipt/log: =ordered-direct-domains.sexp=
+and =direct-domains.log=. Neither partial change is promoted as a completed win.
+
+* Local results
+
+All three original gates pass 50 native pairs with 50/50 CPU wins each:
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------|
+| ordered  | 48761      | 28528      | 71109216  | 47364416  |
+| permuted | 45805      | 27646      | 71109216  | 47407552  |
+| small    | 6337       | 3864       | 10296736  | 6565008   |
+
+Complete typed compilation improves CPU about 41%/40%/39% and cumulative
+allocation about 33%/33%/36%. Every pair checks ordered compiled domains and
+executes both admitted native programs against independent two-row truth.
+The main saving is emitting only the final relation representation, rather
+than repeated canonicalization alone. No solve-latency or actor-throughput
+claim is made from these compiler measurements.
+
+The three native suites pass all 64 Cases (33 higher-order, 26 operator,
+5 focused domain/backend Cases), with process exit zero and explicit
+=MODULE-OK=, =HARNESS-OK= and =OK= for each module. The selected two
+production modules have zero source policy findings and zero errors.

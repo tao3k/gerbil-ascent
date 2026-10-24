@@ -1,0 +1,58 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil/runtime/gambit :std/iter
+        :gerbil-ascent/program/objects :gerbil-ascent/program/session
+        :gerbil-ascent/program/actor-session
+        (only-in :clan/poo/object .ref))
+(export main program edges truth row<?)
+(def (clock) (current-jiffy))
+(def (ns a b) (inexact->exact (round (* 1000000000 (/ (- b a) (jiffies-per-second))))))
+(def (name prefix i) (string->symbol (string-append prefix (number->string i))))
+(def (edges groups width)
+  (apply append (map (lambda (g) (map (lambda (i) (list (+ (* g width) i) (+ (* g width) i 1)))
+                                     (iota (- width 1)))) (iota groups))))
+(def (truth groups width)
+  (apply append (map (lambda (g)
+    (apply append (map (lambda (i) (map (lambda (j) (list (+ (* g width) i) (+ (* g width) j)))
+                                       (iota (- width i 1) (+ i 1)))) (iota width)))) (iota groups))))
+(def (row<? a b) (or (< (car a) (car b)) (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
+(def (program components)
+  (let ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y)) (z (gerbil-ascent-variable 'z)))
+    (gerbil-ascent-program
+      (apply append (map (lambda (i) (list (gerbil-ascent-relation (name "edge" i) 2 [])
+                                          (gerbil-ascent-relation (name "reach" i) 2 []))) (iota components)))
+      (apply append (map (lambda (i)
+        (let ((edge (name "edge" i)) (reach (name "reach" i)))
+          (list (gerbil-ascent-rule (list (gerbil-ascent-atom reach (list x y)))
+                                  (list (gerbil-ascent-atom edge (list x y))))
+                (gerbil-ascent-rule (list (gerbil-ascent-atom reach (list x z)))
+                                  (list (gerbil-ascent-atom reach (list x y))
+                                        (gerbil-ascent-atom edge (list y z))))))) (iota components)))
+      1000000 1000000 10000000 (map (cut name "edge" <>) (iota components)))))
+(def (main components groups width workers samples)
+  (let* ((k (string->number components)) (g (string->number groups)) (w (string->number width))
+         (jobs (string->number workers)) (n (string->number samples))
+         (input (edges g w)) (expected (truth g w)))
+    (displayln "# vm-processors=" (##current-vm-processor-count))
+    (for (sample (in-range -1 n))
+      (let* ((before (##process-statistics)) (t0 (clock)) (p (program k))
+             (session (if (zero? jobs) (gerbil-ascent-open-session p)
+                         (gerbil-ascent-open-actor-session p workers: jobs))) (t1 (clock)))
+        (try
+          (for-each (lambda (i) (gerbil-ascent-session-replace-source! session (name "edge" i) input)) (iota k))
+          (let* ((t2 (clock)) (result (if (zero? jobs) (gerbil-ascent-session-run-timeout session 30000000000)
+                             (gerbil-ascent-session-run session))) (t3 (clock))
+                 (output (map (lambda (i) (list-sort row<? ((.ref result 'rows-of) (name "reach" i)))) (iota k)))
+                 (t4 (clock)) (after (##process-statistics)))
+            (unless (.ref result 'finished) (error "Scheme runtime incomplete"))
+            (unless (andmap (cut equal? <> expected) output) (error "Scheme runtime exact output mismatch"))
+            (unless (< sample 0)
+              (displayln k "\t" g "\t" w "\t" (if (zero? jobs) "scheme-session" "scheme-actor") "\t" (max 1 jobs)
+                         "\t" sample "\t" (ns t0 t1) "\t" (ns t1 t2) "\t" (ns t2 t3) "\t" (ns t3 t4)
+                         "\t" (ns t0 t4) "\t" (* k (length expected)) "\t"
+                         (- (+ (f64vector-ref after 0) (f64vector-ref after 1))
+                            (+ (f64vector-ref before 0) (f64vector-ref before 1))) "\t"
+                         (- (f64vector-ref after 2) (f64vector-ref before 2)) "\t"
+                         (- (f64vector-ref after 7) (f64vector-ref before 7))))
+            (force-output))
+          (finally (unless (zero? jobs) (gerbil-ascent-session-close! session))))))))

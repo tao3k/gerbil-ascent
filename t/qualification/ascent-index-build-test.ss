@@ -1,0 +1,164 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :clan/poo/object .o)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        :gerbil-ascent/table/access
+        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!
+                 gerbil-ascent-index-key gerbil-ascent-index-batch!)
+        :gerbil-ascent/t/performance/index-build/fixture)
+(export ascent-index-build-test)
+(def ascent-index-build-test
+  (test-suite "Owned physical index construction"
+    (test-case "batch syntax evaluates owners once and keys before publishing each row"
+      (let ((index (make-hash-table)) (owners 0) (batches 0) (keys 0)
+            (source '((#f first) (#f second) (other third))) (row 'outside))
+        (check-equal? (eq? index
+          (gerbil-ascent-index-batch! (begin (set! owners (+ owners 1)) index)
+            (begin (set! batches (+ batches 1)) source) row
+            (begin (set! keys (+ keys 1)) (car row)))) #t)
+        (check-equal? (list owners batches keys row) '(1 1 3 outside))
+        (let ((held (hash-get index #f)) (incoming '(#f fourth)))
+          (gerbil-ascent-index-batch! index (list incoming) row (car row))
+          (check-equal? held '((#f second) (#f first)))
+          (check-equal? (eq? (car (hash-get index #f)) incoming) #t)
+          (check-equal? (eq? (cdr (hash-get index #f)) held) #t))
+        (check-equal? (eq? (gerbil-ascent-index-batch! index [] row (error "empty key evaluated")) index) #t)))
+    (test-case "public cursor projection agrees with independent columns and preserves field identities"
+      (let* ((fields (map (lambda (n) (vector n)) (iota 96)))
+             (columns-family (list [] '(0) '(95) '(0 1 2 3) '(1 31 63 95)
+                                   '(0 8 32 64 95) (iota 96) '(95 0 95) '(2 2) '(0 0 1))))
+        (for-each
+         (lambda (columns)
+           (let ((expected (map (lambda (column) (list-ref fields column)) columns))
+                 (actual (gerbil-ascent-index-key fields columns)))
+             (check-equal? actual expected)
+             (for-each (lambda (a b) (check-equal? (eq? a b) #t)) actual expected)))
+         columns-family)
+        ;; Gaps must be regenerated after both ordered and unordered changes.
+        (let (columns (list 0 8 95))
+          (for-each (lambda (column)
+                      (set-car! (cdr columns) column)
+                      (check-equal? (gerbil-ascent-index-key fields columns)
+                        (map (lambda (c) (list-ref fields c)) columns))) '(31 0 63 8)))
+        (check-equal? (gerbil-ascent-index-key '(#f #t #f) '(0 1 2)) '(#f #t #f))))
+    (test-case "custom callbacks cannot overwrite declared or held column and key headers"
+      (let* ((columns (list 0)) (held (map values columns)) (key (list 1))
+             (source '((1 value)))
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                         (.build-index (lambda (_rows header) (set-car! header 99) 'opaque))
+                         (.extend-index! (lambda (index _rows header) (set-car! header 88) index))
+                         (.lookup-index (lambda (_index header) (set-car! header 'mutated) source)))))
+        (let (index (gerbil-ascent-physical-index-build provider source columns))
+          (gerbil-ascent-physical-index-extend! provider index source columns)
+          (check-equal? (gerbil-ascent-physical-index-rows provider index key) source)
+          (check-equal? columns '(0))
+          (check-equal? held '(0))
+          (check-equal? key '(1)))))
+    (test-case "every logical index agrees through exhaustive retained batch histories"
+      ;; Reference projection is direct list-ref, independent of stepped-key.
+      ;; Distinct row objects with equal fields exercise value hashing.
+      (let* ((universe (apply append
+                         (map (lambda (a) (apply append
+                           (map (lambda (b) (map (lambda (c) (list a b c)) '(#f #t))) '(#f #t)))) '(#f #t))))
+             (columns-family '(() (0) (1) (2) (0 1) (1 2) (0 2) (0 1 2) (2 0) (0 0) (2 1 2)))
+             (project (lambda (row columns) (map (lambda (c) (list-ref row c)) columns))))
+        (for-each (lambda (mask)
+          (let* ((source (filter values
+                          (map (lambda (row bit)
+                            (and (not (zero? (bitwise-and mask (arithmetic-shift 1 bit)))) row))
+                               universe (iota 8))))
+                 (first (list (list #f #t #f) (list #t #f #t) (list #f #t #f)))
+                 (last (list (list #t #t #t) (list #f #f #f)))
+                 (history (list first [] last)))
+            (for-each (lambda (columns)
+              (let* ((index (gerbil-ascent-physical-index-build gerbil-ascent-hash-index-provider source columns))
+                     (key (project (list #f #t #f) columns))
+                     (held (gerbil-ascent-physical-index-rows gerbil-ascent-hash-index-provider index key))
+                     (held-copy (map values held)) (cut source)
+                     (queries (map (lambda (row) (project row columns))
+                                  (cons '(missing missing missing) universe))))
+                (for-each (lambda (batch)
+                  (gerbil-ascent-physical-index-extend! gerbil-ascent-hash-index-provider index batch columns)
+                  (set! cut (append (reverse batch) cut))
+                  (check-equal? held held-copy)
+                  (for-each (lambda (query)
+                    (let* ((actual (gerbil-ascent-physical-index-rows gerbil-ascent-hash-index-provider index query))
+                           (expected (filter (lambda (row) (equal? (project row columns) query)) cut)))
+                      (check-equal? actual expected)
+                      (for-each (lambda (a b) (check-equal? (eq? a b) #t)) actual expected))) queries)) history))) columns-family))
+          (when (zero? (modulo (+ mask 1) 32))
+            (displayln "INDEX-HISTORIES-CHECKED " (+ mask 1) "/256") (force-output))) (iota 256))))
+    (test-case "all ordered repeated and arbitrary columns preserve finite row order"
+      (for-each
+       (lambda (size)
+         (let* ((source (take '((#f (a)) (0 (b)) (#f (a)) (0 (a))) size))
+                (batch '((#f (a)) (1 (c)))))
+           (for-each
+            (lambda (columns)
+              (let* ((index (gerbil-ascent-index-build source columns))
+                     (keys (map (lambda (row) (index-build-key row columns)) (append source batch)))
+                     (oracle (lambda (rows key) (filter (lambda (row) (equal? (index-build-key row columns) key)) rows))))
+                (for-each (lambda (key) (check-equal? (or (hash-get index key) []) (oracle source key))) keys)
+                (gerbil-ascent-index-extend! index batch columns)
+                (for-each (lambda (key) (check-equal? (or (hash-get index key) []) (oracle (append (reverse batch) source) key))) keys)))
+            '(() (0) (1) (0 1) (1 0) (0 0) (1 1))))) (iota 5)))
+    (test-case "scalar and composite builds share row identities but own bucket headers"
+      (for-each
+       (lambda (columns)
+         (let* ((row (list #f 'value)) (source (list row row))
+                (key (index-build-key row columns))
+                (index (gerbil-ascent-physical-index-build gerbil-ascent-hash-index-provider source columns))
+                (bucket (gerbil-ascent-physical-index-rows gerbil-ascent-hash-index-provider index key)))
+           (check-equal? (eq? (car bucket) row) #t)
+           (check-equal? (eq? (cadr bucket) row) #t)
+           (check-equal? (eq? bucket source) #f)
+           (gerbil-ascent-physical-index-extend! gerbil-ascent-hash-index-provider index (list row) columns)
+           (check-equal? (length bucket) 2)
+           (set-car! bucket '(changed))
+           (check-equal? source (list row row)))) '((0) (0 1))))
+    (test-case "wide batch projections retain boundaries order and fresh column selection"
+      (let* ((rows (map (lambda (n) (map (lambda (column) (list n column)) (iota 64))) (iota 4)))
+             (batch (list (car rows) (cadr rows))))
+        (for-each
+         (lambda (columns)
+           (let* ((index (gerbil-ascent-index-build rows columns))
+                  (key-of (lambda (row) (index-build-key row columns))))
+             (gerbil-ascent-index-extend! index batch columns)
+             (for-each
+              (lambda (row)
+                (let (key (key-of row))
+                  (check-equal? (hash-ref index key)
+                    (filter (lambda (candidate) (equal? key (key-of candidate)))
+                            (append (reverse batch) rows))))) rows)))
+         '(() (0) (63) (0 8 56 63) (0 1 2 3) (63 0 63) (2 2)))
+        (let* ((columns (list 0 8)) (index (gerbil-ascent-index-build rows columns)))
+          (set-car! (cdr columns) 56)
+          (gerbil-ascent-index-extend! index batch columns)
+          (check-equal? (hash-ref index (index-build-key (car rows) columns)) (list (car rows))))))
+    (test-case "custom provider receives isolated row column and key spines while borrowing row values"
+      (let* ((events []) (field (vector 'borrowed))
+             (source (list (list 1 field) (list 2 field)))
+             (batch (list (list 3 field))) (columns (list 0)) (key (list 1))
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                         (.build-index (lambda (rows cols) (set! events (cons (list 'build (eq? rows source) (equal? rows source) (eq? (car rows) (car source)) (eq? (cadar rows) field) (eq? cols columns) (equal? cols columns)) events)) 'opaque))
+                         (.extend-index! (lambda (index rows cols) (set! events (cons (list 'extend index (eq? rows batch) (equal? rows batch) (eq? (car rows) (car batch)) (eq? (cadar rows) field) (eq? cols columns) (equal? cols columns)) events)) index))
+                         (.lookup-index (lambda (index selected) (set! events (cons (list 'lookup index (eq? selected key) (equal? selected key)) events)) source)))))
+        (let (index (gerbil-ascent-physical-index-build provider source columns))
+          (gerbil-ascent-physical-index-extend! provider index batch columns)
+          (check-equal? (gerbil-ascent-physical-index-rows provider index key) source)
+          (check-equal? (reverse events) '((build #f #t #f #t #f #t) (extend opaque #f #t #f #t #f #t) (lookup opaque #f #t))))))
+    (test-case "dense unique empty and small native lifecycles match frozen baseline"
+      (for-each
+       (lambda (size)
+         (for-each (lambda (columns)
+                     (let* ((source (index-build-source size)) (batch (index-build-source 8 size))
+                            (keys (map (lambda (row) (index-build-key row columns)) (append source batch))))
+                       (check-equal? (index-build-lifecycle #f source batch columns keys)
+                                     (index-build-lifecycle #t source batch columns keys))))
+                   '((0) (1) (0 2) (1 3)))) '(0 1 4 64)))
+    (test-case "complete compiled self joins match frozen evaluator and independent rows"
+      (let (program (index-build-program))
+        (check-equal? (index-build-solve #f program) (map list (iota 1024)))
+        (check-equal? (index-build-solve #f program) (index-build-solve #t program))))))

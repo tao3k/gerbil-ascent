@@ -1,0 +1,16 @@
+{"version": "1.2.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"url": "https://github.com/tao3k/lean-poo.git",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "6aae50a9867c12191abb2180fdf031b3a8f55060",
+   "name": "LeanPoo",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "6aae50a9867c12191abb2180fdf031b3a8f55060",
+   "inherited": false,
+   "configFile": "lakefile.toml"}],
+ "name": "«gerbil-ascent-proof»",
+ "lakeDir": ".lake",
+ "fixedToolchain": false}

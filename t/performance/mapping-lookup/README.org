@@ -1,0 +1,94 @@
+#+TITLE: Ordered finite mapping publication
+
+* Source-backed production flow
+
+Gerbil =src/std/list/list.ss:group-same= builds local membership buckets while
+recording the first appearance of keys and retaining each bucket's input order.
+The finite insertion interpreter applies that ownership pattern to frozen
+mapping descriptors: group each table entry by its complete input prefix, then
+publish ordered output tails. List traversal, rather than hash iteration,
+determines emitted row order. Only the private bucket spine is reversed.
+
+The invocation owns its descriptor-identity lookup registry. Base evaluation,
+changing inputs and recursive derivatives use the same mapping query helper.
+The independent semantic interpreter is unchanged. Tables and their output rows
+are not mutated. No environment option, persistent cache or SDK build is added.
+
+* Matched admission
+
+Baseline =cbd7eadf3a162889d4a79f29eb2b801299dc2d4f:program/operator-change.ss=,
+original blob =feb33ae876432fea621b00af1d7c33204b7e6b60=; the normalized import
+reference has blob =4fbf6f9847d94866c041518193de103b7dfa5212=. Both compile with
+identical flags into the native runner. Each call times the complete insertion
+interpreter: owned input copying, admission, base/delta evaluation, lookup
+publication and all returned sets. Descriptor construction is outside timing.
+50 paired samples alternate A/B order. Synchronous allocated bytes and process
+user+system CPU are recorded. Exact old/new output order and the independent
+semantic interpreter are checked outside timing through the native ASP API.
+
+Targets =unique fanout miss fix= require 20% CPU reduction and 35/50 wins.
+Controls =single small identity empty= allow 10% + 20us CPU. Every scenario
+allows 10% + 4096 bytes allocation. The singleton control uses the same 1024-row
+mapping table as a large target; it detects eager indexing costs. Gates are
+declared before the first run and will not be loosened to admit a regression.
+Raw samples, logs and executables stay under ignored =.cache/ascent/mapping-lookup=.
+
+* Scope
+
+Results measure the finite insertion interpreter, not native rule-plan solves
+or actor session latency. Probe counters for joins and fixed-point body visits
+must retain their exact baseline values.
+
+* Run
+
+Build =t/performance/mapping-lookup/build.ss= with library =.gerbil/lib=,
+output under =.cache/ascent/mapping-lookup= and lane =runner= or =qualify=.
+The native runner takes scenario and receipt path. Unit tests remain in
+=t/qualification=; the root build entry is unchanged.
+
+* Retained negative experiment
+
+Unconditional lookup publication passed the four large targets, but the single
+query control failed: CPU =29 -> 211us=, allocation =54576 -> 222800 bytes=,
+zero CPU wins. The raw receipt and log remain as
+=single-unconditional-index-failed.ss/log= in the cache. No gate was relaxed.
+
+The final demand rule scans a singleton directly until a lookup exists. A
+multi-row batch publishes the lookup; subsequent singleton frontiers reuse it.
+Empty rows do not allocate the registry or visit the table. This follows the
+query shape, rather than an environment knob or a machine-dependent threshold.
+
+* Final native receipts
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| unique   |      39812 |        861 |  51170400 |   1017216 |       50 |
+| fanout   |      40978 |       1109 |  51514464 |   1320320 |       50 |
+| miss     |      85448 |        816 | 101302656 |    918080 |       50 |
+| fix      |       7772 |       2788 |   8299152 |   2472192 |       50 |
+| single   |         29 |         27 |     54576 |     53472 |       48 |
+| small    |          4 |          4 |      7472 |      7456 |       19 |
+| identity |         21 |         21 |     36928 |     36960 |       15 |
+| empty    |          2 |          2 |      4880 |      2736 |       28 |
+
+All declared gates passed. Microsecond controls establish bounded regression,
+not a performance win. The identity control allocates 32 additional bytes.
+
+* Semantic qualification
+
+The native qualifier runs existing operator, retained session, higher-order and
+normalized-set Suites together with seven new mapping Cases. The small mapping
+Case enumerates every before/added subset over three keys (64 comparisons),
+with interleaved entries, duplicate output values, fanout and missing keys.
+Additional Cases check complete multi-column scalar keys, zero-arity input and
+output, distinct descriptor identity, multi-frontier recursion, table/caller
+nonmutation across invocations, and fanout overflow failure. Every comparison
+checks exact baseline row order, the independent reference interpreter and
+both join-probe and fixed-body measurement counters.
+
+The production module was directly source-loaded and executed with indexed
+multi-row mapping assertions, separately from the native executable.
+
+Final qualification: 5 Suites, 86 Cases, final =OK= and exit 0. The Case assertion
+checker passed. Native policy scan: 30 findings, zero errors. Build-time source
+snapshot admission passed for both runner and qualifier.

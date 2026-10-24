@@ -1,0 +1,100 @@
+#+title: SCC workspace ownership and lazy physical caches
+
+* Production boundary learned from Gerbil
+
+Installed Gerbil =2591dcd= =compiler/optimize-base.ss:334-340= constructs a
+class method table only when needed. =compiler/optimize-top.ss:1269-1281=
+returns existing expressions when there is nothing to wrap. The transferable
+rule is to allocate mutable state at its actual use and reuse owned headers;
+these compiler patterns do not supply ASCENT's relational semantics.
+
+Three existing production owners now apply that rule across one SCC round:
+
+- =program/index.ss=: all/delta physical cache vectors are independently lazy.
+  Unindexed scans and relations below the 32-row threshold allocate neither.
+  Extension before the first physical lookup is inert; the first build still
+  reads the published rows and version. Custom provider callbacks, column/atom
+  sharing, failed-build retries and returned extension values are unchanged.
+- =program/component-worker.ss=: one candidate vector belongs to the assignment,
+  rather than to each recursive iteration. Publishing delta transfers persistent
+  batch spines, then clears only candidate slots belonging to this SCC. Delta
+  spines and captured source roots are never mutated. Frames and indexes remain
+  private to the assignment.
+- =program/positive-components.ss=: coordinator membership belongs only to
+  rule-owning SCC members. Source-only relations retain persistent roots without
+  another hash table. Output tables are seeded with existing rows, preserving
+  duplicate suppression and unique-row charging. Completion releases its opaque
+  snapshot reference after owner merges and before marking dependencies done.
+
+This changes neither worker capacity, green-thread scheduling, credit limits,
+cancellation policy nor dependency order. Production =build.ss= is unchanged.
+No SDK source build, Python benchmark or environment-variable control is added.
+
+* Matched native qualification
+
+=just performance-component-workspace= builds one static executable linking
+both sets of owners and the same native measurement/fixture code. Three frozen
+owners are from =0f2fb517fa4b67b4f252880ab6e7c829defb16af=. The index is exact;
+worker/coordinator changes only redirect imports to frozen owners and shared
+current component-plan/actor-round modules. Normalized source equality is checked.
+Both sides use identical admitted Analysis/Schema, inputs, jobs=2 and independent
+expected rows. Native module resolution and source stability during compilation
+are checked. Declaration construction occurs outside the measured round.
+
+Four fixtures: 128 independent scan SCCs; a 12-edge recursive chain with 1024
+unrelated empty relations; a real 64-row keyed join; and one one-row SCC.
+The interval includes coordinator preparation, worker closure, owner merges,
+worker joins and sorting all result relations. CPU is warmed user+system time
+with natural GC inside, using 50 alternating pairs. Small CPU calls repeat 20
+rounds. Allocation uses one cold round in each fresh native child, 50 alternating
+pairs, reading current allocated-byte field 7 and subtracting endpoint statistics
+cost field 9 as Gambit's =time= does. Child exit and independent truth are checked.
+Compilation and forced GC are outside measurement.
+
+Fixed before samples: scan/recursive require >=10% less allocation. Every
+scenario bounds CPU overhead by 5% + 20 us; indexed/small permit <=2 KiB extra
+allocation. No threshold was relaxed.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Scan SCCs | 982 | 917 | 4235512 | 3445080 | 45/50 |
+| Recursive with unrelated relations | 304 | 142 | 1895888 | 810448 | 50/50 |
+| Keyed join control | 64 | 51 | 123520 | 110000 | 45/50 |
+| Small control | 4.10 | 3.85 | 40544 | 39536 | 32/50 |
+
+All four gates pass on two independent launches (800 paired samples). Repeated
+CPU medians are scan 978 ->918 us, recursive 301 ->140 us, indexed 66 ->52 us
+and small 4.15 ->3.90 us. Allocation medians are identical across both launches;
+CPU wins are respectively 41/50, 50/50, 46/50 and 32/50. Raw pairs retain all
+samples, including the small control's nonwinning calls.
+
+The first candidate omitted coordinator membership scoping. Recursive allocation
+fell only 6.1% (1895888 ->1779616 bytes), failing the original 10% gate despite
+CPU 305 ->294 us. That failure remains in ignored cache. Completing state
+ownership raises recursive allocation savings to 57.3%; scan saves 18.7%.
+These are synthetic complete SCC-round receipts on one VM processor, not
+multicore, RSS, general solver or deployed wall-time claims. CPU and cold
+allocation describe different execution states. Logs and raw pairs stay under
+ignored =.cache/ascent/component-workspace/=.
+
+* Semantic controls
+
+Existing native Suites qualify threshold crossing, all/delta version isolation,
+custom build/extend/lookup trace parity, failure retries, retained snapshots,
+recursive/cyclic closure, projected multi-head rules, cancellation and Session
+publication. Added Cases observe first indexed lookup after an unindexed update,
+and output membership seeded with existing rows while source-only duplicate
+roots remain unchanged across 1/2/4 worker capacities.
+
+Six native modules pass 44 Cases with explicit module/harness/final OK and
+command exit 0; module execution takes 1-3 seconds. Selected production policy
+reports zero findings/errors. These local controls are separate from exact-head
+remote CI. The installed SDK and existing test process capacities are unchanged.
+
+Before push, normal rebase retains remote proof/test commits through =24a4517=.
+They change neither qualified production bodies nor frozen benchmark owners;
+production, benchmark and owned-test hashes still match. The two changed native
+modules (positive-plan and BYODS invariants) pass a further 31 Cases, with final
+OK and command exit 0, taking 5s/2s. This integrated control is separate from
+the six-module/44-Case receipt above. Previous =0f2fb51= remote CI completed all
+five jobs successfully; that result does not qualify this new commit's CI.

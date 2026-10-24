@@ -1,0 +1,182 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: rule planning reading: Ascent rules and the Scheme language boundary
+#+STATUS: research note; not an implementation or parity receipt
+#+DATE: 2026-09-30
+#+FILETAGS: :research:ascent:scheme-dsl:
+
+* Bibliography and evidence map
+:PROPERTIES:
+:CUSTOM_ID: rule-planning
+:SOURCE_PDF: https://thomas.gilray.org/pdf/seamless-deductive.pdf
+:ACCESSED: 2026-09-30
+:END:
+
+The linked author PDF is the durable source; page numbers below count PDF
+pages from one.  This note records claims and locators so another reading
+does not require a new search.
+
+#+NAME: ascent-evidence
+| Locator | Author's result | Boundary for this design |
+|---------+-----------------+--------------------------|
+| §2.1, PDF pp. 2–3 | Rules derive a least fixed point | Keep arrow and atoms |
+| Fig. 1, PDF p. 3 | Body grammar has atoms and host forms | Grammar is Rust embedding, not Scheme authority |
+| §3, PDF pp. 4–6 | =for= connects to Rust iterators | Preserve zero-to-many behavior, not spelling |
+| §4, PDF pp. 6–8 | Compiler desugars and plans joins | Expose bindings and dependencies to planner |
+| §3.1, PDF pp. 5–6 | Lattice state is a partial map from keys to joined values | Keep lattice join distinct from set insertion | A relation view does not supply a lattice order |
+| §4, PDF pp. 6–7 | Dependency SCCs guide delta/total rule variants | Preserve positive-atom dependency visibility | Opaque relation reads defeat this analysis |
+| §4, PDF p. 7 | Clause order is significant where grounding requires it | Specify view input/output modes | Do not assume arbitrary body reordering |
+
+* Source and question
+
+Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski,
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]], CC 2022.
+Read Sections 2–4, especially Figure 1 (grammar), the CESK* example, the
+lattice discussion, and the compiler pipeline.  The paper says a formal
+specification of all Ascent semantics remains future work (Section 1).
+
+Question: which properties of Ascent's rules are relational semantics, and
+which spellings follow from embedding the language in Rust?
+
+* What the paper establishes
+
+1. Datalog rules describe the least fixed point of an immediate-consequence
+   operator.  The small transitive-closure example needs two arrows and
+   relation atoms; the engine owns the iteration (Section 2.1 and 3).
+2. Figure 1 admits relation atoms, host expressions, patterns, guards,
+   binding, generators, negation, aggregation, and disjunction.  The grammar
+   is an implementation interface, not evidence that these are independent
+   logical primitives.
+3. The authors explicitly choose Rust =for= loop syntax for generators to
+   expose Rust iterators, including iterable values stored in relations
+   (Section 3).  This supports the *capability* of bound-dependent zero-to-many
+   generation; it does not prescribe Scheme =for= syntax.
+4. The CESK* example uses Rust functions for allocation and tick, Rust ADTs
+   for stored values, and Rust ownership to prevent accidental mutation of
+   relation arguments (Section 3).  The latter protection cannot be assumed
+   for arbitrary mutable Scheme values or captured closures.
+5. Compiler stages include desugaring surface forms, selecting indexes from
+   join columns, and semi-naive evaluation (Section 4).  A Scheme surface
+   redesign should preserve the planner's access to binding and dependency
+   information rather than hiding all work in opaque procedures.
+6. Lattice relations change the order/merge structure of fixed-point state;
+   user-defined aggregation is another distinct relational operation
+   (Sections 3.1–3.2).  A uniform Scheme function view must not erase these
+   semantic boundaries.
+
+* Reflection for gerbil-ascent
+
+The arrow and normal relation atom are worth keeping because they expose
+derivation, join keys, and recursive dependency.  A value projection in a
+head can call an ordinary lexical Scheme function.  A bound-dependent
+generator can be presented as a declared relation with an input/output mode,
+provided the planner can still see its inputs and emitted columns.  Scheme
+modules, =ascent-fragment=, and POO declarations can own reuse and
+composition rather than copying Rust's local macro tokens.
+
+The existing [[file:../../scheme-syntax.org][Scheme syntax]] currently copies
+Rust-shaped =if=, =let=, =for=, and =if-let= body forms.  Each maps to an
+existing POO guard, binding, or generator plan.  This is evidence that a
+surface migration can be attempted without replacing fixed-point evaluation;
+it is not evidence that one new syntax will preserve all cases automatically.
+
+* Deeper result: retain the analyzable rule boundary
+:PROPERTIES:
+:CUSTOM_ID: ascent-rule-boundary
+:END:
+
+Ascent's compiler parses and desugars, chooses indexes from columns used
+in joins, computes dependency SCCs, and generates delta/total rule
+variants (§4, PDF pp. 6–7).  Its generated loops may reorder clauses
+only where they do not introduce ungrounded variables.  Therefore the
+proposed =relation-view= cannot be an opaque call with no declared
+inputs or outputs.  The useful Scheme analogue is a planned atom whose
+bound input columns and newly bound output columns are available *before*
+evaluation.  This is our design inference, not a feature claimed by the
+paper for Gerbil.
+
+The current =program/objects.ss= already performs a left-to-right
+binding check for computed clauses.  =program/funs.ss= selects delta
+positions from positive relation atoms and builds strict strata for
+negation, aggregation, and lattice-to-relation projection.
+=program/summary.ss= exposes rule dependency SCCs.  A future view must
+either participate in these analyses or be restricted to a stable,
+pointwise operation that does not read changing relations.  Merely
+lowering a new surface form to a generator is insufficient if that
+lowering hides a recursive dependency or disables a useful join index.
+
+#+NAME: ascent-view-planning-gate
+| Case | Required visible information | Failure if hidden |
+|------+------------------------------+-------------------|
+| View after =edge(x,y)= | =x= bound input, =z= new output | Unbound input or accidental capture |
+| Later =path(z,w)= atom | =z= usable as indexed join key | Full scan or wrong binding |
+| View reads a changing relation | Dependency edge to that relation | Stale delta or wrong stratum |
+| Source replacement | Inputs and cached view output tied to snapshot | Reuse of withdrawn result |
+
+Ascent's lattice is a partial map from ordinary key columns to a value
+joined at each key (§3.1, PDF p. 5).  Its finite-height abstraction of
+numbers is another answer to the unbounded-growth problem identified
+in the [[file:functional-fixed-points.org::#datafun-termination][Datafun note]] (§3.1,
+PDF p. 6).  This does not mean an arbitrary Scheme =join= procedure
+has the required order laws or finite height.  The current POO lattice
+declaration checks that a join is a procedure, while semantic laws
+remain a qualification obligation.
+
+* Decision and falsifier
+
+Retain the rule arrow, named relations, explicit negation and
+aggregation, and planner-visible binding modes.  Consider replacing
+Rust-shaped body computation forms only after an integrated fixture
+shows equal complete rows, admission errors, dependency strata, and
+selected joins for both the old and proposed Scheme surfaces.  Include
+a lattice refinement feeding an ordinary relation and a later negated
+stratum.  A view that gives correct small rows but hides an index or
+dependency does not pass this gate.
+
+* What does not transfer
+
+- Rust borrow checking supplies immutability constraints on relation values.
+  A Scheme view contract needs a separate snapshot/stability story.
+- Published Ascent speed comparisons concern its Rust compiler and workloads.
+  They say nothing quantitative about Gerbil allocations, Provider choices,
+  or the current 1000-sample SS budgets.
+- The paper's grammar and Rust 0.8.0's actual macro behavior are different
+  evidence levels.  The pinned oracle, not the paper alone, decides a parity
+  claim for a selected case.
+- The paper does not furnish a full formal safety specification for every
+  extended clause.  Scheme admission errors must be specified and tested.
+
+* Design experiments
+
+1. Express the same bound-dependent zero/one/many generation through a
+   proposed relation view, the current Scheme forms, pinned Rust 0.8.0, and
+   an independent finite model.  Include empty and duplicate iterables.
+2. Derive a later atom's index columns from the new view's declared output
+   mode; compare complete rows and the selected plan against the current
+   path.  An opaque Scheme call must not silently disable the intended join.
+3. Admit and reject a mutable captured value explicitly.  Verify that
+   retained sessions and source replacement do not reuse stale view output.
+4. Keep lattice joins, negation, and aggregation separate in the dependency
+   graph; check a recursive lattice feeding a later stratum.
+
+* Discussion prompts
+
+- Is one input/output-mode view sufficient for all selected Rust generator
+  behavior, or do some cases require relation-valued inputs and explicit
+  dependencies?
+- Should a scalar computed value that feeds another body atom be named by a
+  relation view, while head-only computations remain term expressions?
+- Which diagnostics must occur at expansion, declaration admission, and run
+  time respectively?
+
+* Cross-reference
+
+[[file:../../scheme-relational-dsl-design.org][Scheme relational DSL proposal]];
+[[file:../../rust-parity.org][bounded Rust parity matrix]].
+
+* Current implementation reconciliation (2026-10-04)
+
+The generic dependency, positive-plan and rule-semantics owners have moved to =core/dependency-graph.ss=, =core/positive-plan.ss= and =core/rule-semantics.ss=. Earlier references to =program/funs.ss= describe the historical layout.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

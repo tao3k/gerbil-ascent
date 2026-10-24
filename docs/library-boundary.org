@@ -1,0 +1,38 @@
+#+title: Logical programming Library boundary
+
+* Ownership
+ASCENT owns checked rule declarations, query admission, fixed-point execution,
+retained source sessions, incremental updates and generic derivation provenance.
+A source generation binds a result to rule-engine inputs. A provenance graph
+records a derivation under those inputs. Neither authenticates an external fact,
+chooses an agent action, or certifies whole-task correctness.
+
+POO Flow owns application Evidence, Clue submission and observation policy,
+Trajectory history, external verification, model conversations, usage accounting,
+model studies and their application-specific formal obligations. The implementation
+and tests move to its existing evidence-assessment, ai-agentic-context,
+temporal-causality and Python runtime/testing packages.
+
+* Direct migration
+The generic declaration API is =define-program= / =RuleProgram= / =RuleSession=;
+Python consumers call =Engine.rules=. The former application modules and old
+=evidence= declaration entrypoints are removed. No compatibility layer delegates
+old ASCENT application imports to POO Flow.
+
+POO consumers import =poo_flow_runtime.reasoning=. Its application owner delegates
+all rule execution to ASCENT; it does not copy the fixed-point evaluator. Rule
+session/result/provenance lifecycle models remain here despite historical names
+containing the word Evidence. Model budgets and application applicability belong
+to the consumer.
+
+* Qualification
+Run =just test= for Scheme, the existing Rust crate checks and installed Python
+consumer tests for bindings, and =just check-lean-proofs= / =just check-formal=
+for the producer obligations. Application models and their negative controls are
+qualified in POO Flow. Frozen formal-obligation inventories retain the original
+configurations and fault mappings across the split.
+
+Historical model runs keep their original source identities and failures. Moving
+them never qualifies a new build or establishes a reduction in repeated thinking.
+New application studies must bind both installed native artifacts and match the
+resolved ASCENT producer source inputs before using a frozen protocol.

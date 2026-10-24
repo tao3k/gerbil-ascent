@@ -1,0 +1,376 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test :std/encoding/json "../harness/artifact-admission"
+        (only-in :gerbil/compiler execute-pending-compile-jobs!)
+        (only-in :gerbil/runtime/loader load-path set-load-path! __find-library-module)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
+        (only-in "../harness/library-spec.ss" preparation-retained-source? preparation-projection-roots)
+        (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
+                 asp-gerbil-scheme-native-import-closure
+                 asp-gerbil-scheme-prepared-native-import-closure
+                 call-with-asp-gerbil-scheme-prepared-source-graph)
+        (only-in :gerbil-ascent/bindings/artifact observe-compiler-outputs reuse-compiler-outputs! source-snapshot record-compiled-resources! clean-compiled-resources! compiled-resource-error? artifact-changed-modules artifact-invalidated-modules artifact-development-program artifact-file-sha256 artifact-directory-reader)
+        (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
+(export scheme-artifact-test)
+(cond-expand
+  (darwin
+   (import (only-in :gerbil/compiler/base add-compile-output-job! add-compile-dependent-job!))))
+(def (put path text)
+  (call-with-output-file [path: path truncate: #t] (lambda (out) (display text out))))
+(def (remove-fixture! path)
+  (if (eq? (file-type path) 'directory)
+    (begin
+      (for-each (lambda (name) (remove-fixture! (path-expand name path))) (directory-files [path: path ignore-hidden: 'dot-and-dot-dot]))
+      (delete-directory path))
+    (delete-file path)))
+(def (with-artifact-fixture thunk)
+  (let* ((old (current-directory))
+         (root (path-expand (string-append ".cache/ascent/tmp/artifact-" (number->string (current-jiffy))) old))
+         (token (getenv "ASCENT_DSL_BUILD_TOKEN" #f))
+         (started (getenv "ASCENT_DSL_BUILD_STARTED" #f)))
+    (artifact-directory! root)
+    (try
+     (current-directory root)
+     (artifact-directory! (path-expand ".cache/ascent/compiled-library"))
+     (for-each (lambda (name) (put name "fixture bytes\n"))
+               '("fixture.ss" "justfile"))
+     (put ".cache/ascent/compiled-library/dsl-closure" "fixture executable bytes")
+     (setenv "ASCENT_DSL_BUILD_TOKEN" "test-owner")
+     (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (- (time->seconds (current-time)) 181)))
+     (thunk)
+     (finally
+      (current-directory old)
+      (if token (setenv "ASCENT_DSL_BUILD_TOKEN" token) (setenv "ASCENT_DSL_BUILD_TOKEN"))
+      (if started (setenv "ASCENT_DSL_BUILD_STARTED" started) (setenv "ASCENT_DSL_BUILD_STARTED"))
+      (remove-fixture! root)))))
+(def (stage) (artifact-main "freeze") (artifact-main "bind"))
+(def (rejected? thunk)
+  (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
+(def scheme-artifact-test
+  (test-suite "Scheme native artifact publication"
+    (test-case "source qualification retains every dependency and loads Suites as source"
+      (check (preparation-projection-roots '("program/a" "program/b")
+                '("program/a" "fixture" "program/b") '("suite") '("scenario.ss") #t)
+             => '("fixture" "suite" "scenario.ss"))
+      ;; Explicit consumers remain roots even when they are production modules.
+      (check (preparation-projection-roots '("program/a") '("program/a")
+                '("program/a") '("program/a.ss") #t)
+             => '("program/a" "program/a.ss"))
+      (check (preparation-projection-roots '("program/a") '("program/a" "fixture")
+                '("suite") [] #f) => '("program/a" "fixture" "suite"))
+      (for-each (lambda (source)
+          (check (preparation-retained-source? source #f []) => #t)
+          (check (preparation-retained-source? source #t []) => (not (string-suffix? "-test.ss" source)))
+          (check (preparation-retained-source? source #f (list source)) => #f)
+          (check (preparation-retained-source? source #t (list source)) => #f))
+          '("t/qualification/example-test.ss" "t/qualification/example-fixture.ss"
+            "t/performance/example/reference.ss" "program/evaluate.ss")))
+    (test-case "requested import closure omits unrelated compilation without dropping dependencies"
+      (with-artifact-fixture (lambda ()
+        (put "gerbil.pkg" "(package: ascent-preparation-probe)\n")
+        (put "leaf.ss" "prelude: :gerbil/core\n(export value)\n(def value 1)\n")
+        (put "entry.ss" "prelude: :gerbil/core\n(import \"./leaf.ss\")\n(export value)\n")
+        ;; Expanding an unrelated catalog entry would fail this control.
+        (put "unrequested.ss" "(\n")
+        (let (closure (asp-gerbil-scheme-native-import-closure (current-directory) '("entry")))
+          (check (list-sort string<? closure) => '("entry.ss" "leaf.ss"))
+          ;; A missing/stale admission must still revisit a corrupt producer.
+          (check (rejected? (lambda ()
+                    (asp-gerbil-scheme-native-import-closure (current-directory)
+                      (preparation-projection-roots '("unrequested") '("unrequested" "entry") [] [] #f))))
+                 => #t)
+          (call-with-asp-gerbil-scheme-prepared-source-graph
+           (lambda ()
+             (check (list-sort string<?
+                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) '("entry")))
+                    => '("entry.ss" "leaf.ss"))
+             ;; Resident projection must not expand an unprepared source.
+             (check (rejected? (lambda ()
+                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) '("unrequested"))))
+                    => #t)))))))
+    (test-case "preparation reads module data without evaluating the build entry"
+      (let (declared
+            (call-with-input-file "build-modules.ss"
+              (lambda (port)
+                (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options))
+                (check (read port) => '(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512")))
+                (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
+                (let (form (read port))
+                  (check (read port) =>
+                    '(def gerbil-ascent-build-input-modules
+                       (append gerbil-ascent-library-modules
+                         '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop"))))
+                  (check (eof-object? (read port)) => #t)
+                  (match form
+                    (['def 'gerbil-ascent-library-modules ['quote modules]] modules)
+                    (_ (error "build module inventory must be quoted data" form)))))))
+        (check (and (list? declared) (andmap string? declared)) => #t)
+        (check declared => gerbil-ascent-library-modules))
+      (check gerbil-ascent-build-input-modules =>
+        (append gerbil-ascent-library-modules
+          '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
+      (let (imports
+            (call-with-input-file "t/harness/build.ss"
+              (lambda (port) (read-line port) (read port))))
+        (check (and (member '(only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
+                            (cdr imports)) #t) => #t)
+        (check (and (member '(only-in "../../build.ss" gerbil-ascent-library-modules)
+                            (cdr imports)) #t) => #f)))
+    (test-case "module inventory content participates in build source admission"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! "bindings/c")
+        (for-each (lambda (name) (put name "original fixture bytes"))
+          '("build.ss" "build-modules.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
+            "bindings/artifact.ss" "bindings/build-entry.ss"))
+        (let (before (source-snapshot (current-directory) []))
+          (check (and (assoc "build-modules.ss" before) #t) => #t)
+          (put "build-modules.ss" "modified fixture bytes")
+          (let (after (source-snapshot (current-directory) []))
+            (check (equal? before after) => #f)
+            (check (artifact-changed-modules (list->hash-table before) after []) => #f))))))
+    (test-case "only SDK-produced outputs cross a drained executor boundary"
+      (cond-expand
+        (darwin
+         (with-artifact-fixture (lambda ()
+           (artifact-directory! "lib/gerbil-ascent")
+           (artifact-directory! "lib/static")
+           (let* ((dynamic (path-expand "lib/gerbil-ascent/generated.c"))
+                  (static (path-expand "lib/static/generated.o"))
+                  (observe (observe-compiler-outputs))
+                  (consumed? #f))
+             (put "lib/static/unregistered.o" "not a compiler output")
+             (add-compile-output-job! dynamic (lambda () (put dynamic "generated C")))
+             (add-compile-output-job! static (lambda () (put static "generated object")))
+             (execute-pending-compile-jobs!)
+             (let (outputs (observe (path-expand "lib")))
+               (check (list-sort string<? (map car outputs)) => [dynamic static])
+               (reuse-compiler-outputs! outputs)
+               (add-compile-dependent-job! [dynamic static] (lambda () (set! consumed? #t)))
+               (execute-pending-compile-jobs!)
+               (check consumed? => #t))))))
+        (else
+         (with-artifact-fixture (lambda ()
+           (put "unregistered.c" "not a compiler output")
+           (check ((observe-compiler-outputs) (current-directory)) => []))))))
+    (test-case "changed or missing output blocks dependent linking"
+      (cond-expand
+        (darwin
+         (for-each (lambda (mutate!)
+           (with-artifact-fixture (lambda ()
+             (let* ((output (path-expand "generated.c"))
+                    (observe (observe-compiler-outputs))
+                    (consumed? #f))
+               (add-compile-output-job! output (lambda () (put output "first")))
+               (execute-pending-compile-jobs!)
+               (let (outputs (observe (current-directory)))
+                 (mutate! output)
+                 (reuse-compiler-outputs! outputs)
+                 (add-compile-dependent-job! [output] (lambda () (set! consumed? #t)))
+                 (check (rejected? execute-pending-compile-jobs!) => #t)
+                 (check consumed? => #f))))))
+           [(lambda (path) (put path "other")) delete-file]))
+        (else
+         (check (rejected? (lambda () (reuse-compiler-outputs!
+                   [(cons "unregistered.c" "untrusted digest")]))) => #t)
+         (check (reuse-compiler-outputs! []) => (void)))))
+    (test-case "restored modules need the matching producer payload and receipt"
+      (with-artifact-fixture (lambda ()
+        (let ((prefix (getenv "GERBIL_PATH" #f))
+              (receipt (make-hash-table)))
+          (try
+           (setenv "GERBIL_PATH" (current-directory))
+           (artifact-directory! (path-expand "bin"))
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "producer fixture bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (hash-put! receipt "sdk" (gerbil-home))
+           (hash-put! receipt "sourceRoot" (current-directory))
+           (hash-put! receipt "librarySha256" (artifact-file-sha256 "bin/libascent"))
+           (hash-put! receipt "sourceInputs" (make-hash-table))
+           (call-with-output-file [path: "bin/libascent.json" truncate: #t]
+             (lambda (out) (write-json out receipt)))
+           (check (artifact-invalidated-modules (current-directory) [] []) => [])
+           (delete-file "bin/libascent")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "different producer bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (put "bin/libascent" "producer fixture bytes")
+           (check (artifact-invalidated-modules (current-directory) [] []) => [])
+           (delete-file "bin/libascent.json")
+           (check (artifact-invalidated-modules (current-directory) [] []) => #f)
+           (finally
+            (if prefix (setenv "GERBIL_PATH" prefix) (setenv "GERBIL_PATH"))))))))
+    (test-case "linked source driver rejects stale source SDK missing image and changed bytes"
+      (with-artifact-fixture (lambda ()
+        (let ((prefix (getenv "GERBIL_PATH" #f))
+              (receipt (make-hash-table)))
+          (try
+           (setenv "GERBIL_PATH" (current-directory))
+           (for-each artifact-directory! '("bin" "bindings/c"))
+           (for-each (lambda (file) (put file "source input"))
+             '("build.ss" "build-modules.ss" "bindings/c/runtime.c" "bindings/c/ascent.h"
+               "bindings/artifact.ss" "bindings/build-entry.ss"))
+           (put "bin/libascent" "producer bytes")
+           (put "bin/ascent-develop" "linked image")
+           (hash-put! receipt "sdk" (gerbil-home))
+           (hash-put! receipt "sourceRoot" (current-directory))
+           (hash-put! receipt "librarySha256" (artifact-file-sha256 "bin/libascent"))
+           (hash-put! receipt "sourceInputs" (list->hash-table (source-snapshot (current-directory) [])))
+           (def (save!)
+             (call-with-output-file [path: "bin/libascent.json" truncate: #t]
+               (lambda (out) (write-json out receipt))))
+           (save!)
+           (check (artifact-development-program (current-directory) []) => #f)
+           (hash-put! receipt "developmentSha256" (artifact-file-sha256 "bin/ascent-develop"))
+           (save!)
+           (check (artifact-development-program (current-directory) []) => (path-expand "bin/ascent-develop"))
+           (put "build.ss" "changed source")
+           (check (artifact-development-program (current-directory) []) => #f)
+           (put "build.ss" "source input")
+           (put "bin/ascent-develop" "changed image")
+           (check (artifact-development-program (current-directory) []) => #f)
+           (put "bin/ascent-develop" "linked image")
+           (hash-put! receipt "sdk" "other-sdk") (save!)
+           (check (artifact-development-program (current-directory) []) => #f)
+           (hash-put! receipt "sdk" (gerbil-home)) (save!)
+           (delete-file "bin/ascent-develop")
+           (check (artifact-development-program (current-directory) []) => #f)
+           (finally
+            (if prefix (setenv "GERBIL_PATH" prefix) (setenv "GERBIL_PATH"))))))))
+    (test-case "unadmitted roots do not eagerly read missing source inputs"
+      (with-artifact-fixture (lambda ()
+        (check (artifact-invalidated-modules (current-directory) '("absent")) => #f))))
+    (test-case "inventory directory reuse expires with each inventory"
+      (let* ((calls 0) (entries [])
+             (read-directory (lambda (_) (set! calls (+ calls 1)) entries))
+             (first (artifact-directory-reader read-directory)))
+        (check (first "same") => [])
+        (set! entries '("new.o1"))
+        (check (first "same") => [])
+        (check calls => 1)
+        (check (first "other") => '("new.o1"))
+        (check calls => 2)
+        (check ((artifact-directory-reader read-directory) "same") => '("new.o1"))
+        (check calls => 3)))
+    (test-case "content changes invalidate only direct module inputs"
+      (let ((inputs (hash ("a.ss" "old-a") ("b.ss" "same-b") ("build.ss" "recipe")))
+            (modules '("a" "b")))
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "new-a") ("b.ss" . "same-b") ("build.ss" . "recipe")) modules) => '("a"))
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("build.ss" . "recipe")) modules) => [])
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("build.ss" . "changed")) modules) => #f)
+        (check (artifact-changed-modules inputs
+                  '(("a.ss" . "old-a") ("b.ss" . "same-b") ("c.ss" . "new")) modules) => #f)))
+    (test-case "source invalidation removes only owned generations and generated phases"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! (path-expand "package/sub"))
+        (for-each (lambda (name) (put (string-append "package/sub/" name) name))
+          '("owned.o1" "owned.o143" "owned~0.o2" "owned~1.o3"
+            "owned.scm" "owned~1.scm" "owned.ssxi.ss" "owned-other.ssxi.ss"
+            "owned.ssi" "owned-other.o1" "owned~other.o1" "owned.oops" "owned.o0"))
+        (clean-compiled-resources! (path-expand "package") '("sub/owned"))
+        (for-each (lambda (name) (check (file-exists? (string-append "package/sub/" name)) => #f))
+          '("owned.o1" "owned.o143" "owned~0.o2" "owned~1.o3" "owned.scm" "owned~1.scm" "owned.ssxi.ss"))
+        (for-each (lambda (name) (check (file-exists? (string-append "package/sub/" name)) => #t))
+          '("owned.ssi" "owned-other.o1" "owned~other.o1" "owned.oops" "owned.o0" "owned-other.ssxi.ss")))))
+    (test-case "compiled inventory preserves the upstream contiguous generation and filename"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (for-each (lambda (name) (put name name)) '("phase.scm" "phase.o1" "phase.o2" "phase.o4"))
+           (record-compiled-resources! resources origins "phase" (artifact-digest "phase.scm"))
+           (check (hash-length resources) => 2)
+           (check (hash-keys origins) => '("phase.o2"))
+           (for-each (lambda (name)
+             (let (asset (hash-ref resources name))
+               (check (hash-ref asset "path") => (path-expand name))
+               (check (hash-ref asset "sha256") => (artifact-digest name)))) '("phase.o1" "phase.o2"))
+           (check (hash-ref (hash-ref origins "phase.o2") "fallbackSha256") => (artifact-digest "phase.scm"))
+           (finally (set-load-path! previous)))))))
+    (test-case "an orphan higher generation is not substituted for missing o1"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (put "phase.scm" "source") (put "phase.o2" "orphan")
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "phase" (artifact-digest "phase.scm")) #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (hash-length origins) => 0)
+           (check (__find-library-module "phase") => (path-expand "phase.scm"))
+           (finally (set-load-path! previous)))))))
+    (test-case "a missing required compiled module is rejected before publication"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (set-load-path! (list (current-directory)))
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "absent" "source-sha") #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (hash-length origins) => 0)
+           (finally (set-load-path! previous)))))))
+    (test-case "source in an earlier load root precedes compiled code in a later root"
+      (with-artifact-fixture (lambda ()
+        (let ((previous (load-path)) (resources (make-hash-table)) (origins (make-hash-table)))
+          (try
+           (artifact-directory! (path-expand "first")) (artifact-directory! (path-expand "second"))
+           (put "first/phase.scm" "earlier source") (put "second/phase.o1" "later compiled")
+           (set-load-path! (map path-expand '("first" "second")))
+           (check (with-catch compiled-resource-error?
+                    (lambda () (record-compiled-resources! resources origins "phase" (artifact-digest "first/phase.scm")) #f)) => #t)
+           (check (hash-length resources) => 0)
+           (check (__find-library-module "phase") => (path-expand "first/phase.scm"))
+           (finally (set-load-path! previous)))))))
+    (test-case "streamed hashes preserve empty binary and buffer-boundary bytes"
+      (with-artifact-fixture (lambda ()
+        (for-each (lambda (size)
+          (let (bytes (make-u8vector size))
+            (for-each (lambda (i) (u8vector-set! bytes i (modulo i 256))) (iota size))
+            (call-with-output-file [path: "bytes" truncate: #t]
+              (lambda (port) (write-subu8vector bytes 0 size port)))
+            (check (artifact-digest "bytes") => (hex-encode (sha256 bytes)))
+            (check (artifact-file-sha256 "bytes") => (hex-encode (sha256 bytes)))))
+          '(0 8191 8192 8193 16385 32767 32768 32769 65537)))))
+    (test-case "completed build beyond 180 seconds is accepted"
+      (with-artifact-fixture (lambda ()
+        (stage) (artifact-main "finalize") (artifact-main "check")
+        (let (receipt (artifact-read-json ".cache/ascent/compiled-library/dsl-closure.json"))
+          (check (>= (hash-ref receipt "buildElapsedSeconds") 181) => #t)))))
+    (test-case "staged failed compiler cannot be accepted"
+      (with-artifact-fixture (lambda () (stage) (check (rejected? (lambda () (artifact-main "check"))) => #t))))
+    (test-case "other run cannot publish"
+      (with-artifact-fixture (lambda ()
+        (stage) (setenv "ASCENT_DSL_BUILD_TOKEN" "other-owner")
+        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
+    (test-case "changed source cannot stage or publish"
+      (with-artifact-fixture (lambda ()
+        (stage) (put "fixture.ss" "changed source")
+        (check (rejected? (lambda () (artifact-main "bind"))) => #t)
+        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
+    (test-case "source membership includes hidden directories and rejects additions and deletions"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! (path-expand ".source"))
+        (put ".source/hidden.ss" "hidden source")
+        (check (hash-get (artifact-sources) ".source/hidden.ss") => (artifact-digest ".source/hidden.ss"))
+        (stage)
+        (put "added.ss" "new source")
+        (check (rejected? (lambda () (artifact-main "bind"))) => #t)
+        (delete-file "added.ss")
+        (stage)
+        (delete-file ".source/hidden.ss")
+        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
+    (test-case "changed binary cannot publish or be used"
+      (with-artifact-fixture (lambda ()
+        (stage) (put ".cache/ascent/compiled-library/dsl-closure" "changed binary")
+        (check (rejected? (lambda () (artifact-main "finalize"))) => #t)
+        (stage) (artifact-main "finalize")
+        (put ".cache/ascent/compiled-library/dsl-closure" "changed again")
+        (check (rejected? (lambda () (artifact-main "check"))) => #t))))
+    (test-case "future build identity cannot freeze"
+      (with-artifact-fixture (lambda ()
+        (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (+ (time->seconds (current-time)) 1000)))
+        (check (rejected? (lambda () (artifact-main "freeze"))) => #t))))))

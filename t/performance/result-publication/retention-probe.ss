@@ -1,0 +1,28 @@
+(import :gerbil/runtime/gambit
+        (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/program/interface gerbil-ascent-relation gerbil-ascent-program
+                 gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider))
+(def indexes (make-hash-table-eq weak-keys: #t))
+(def provider
+  (.o (:: @ gerbil-ascent-hash-index-provider)
+      (.build-index (lambda (rows columns)
+                      (let (index ((.ref gerbil-ascent-hash-index-provider '.build-index) rows columns))
+                        (hash-put! indexes index #t)
+                        index)))))
+(def x (gerbil-ascent-variable 'x))
+(def y (gerbil-ascent-variable 'y))
+(def p (gerbil-ascent-program
+        (list (gerbil-ascent-relation 'left 1 (map list (iota 40)))
+              (gerbil-ascent-relation 'right 2 (map (lambda (n) (list n n)) (iota 40)) provider)
+              (gerbil-ascent-relation 'out 2 []))
+        (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list x y)))
+                                  (list (gerbil-ascent-atom 'left (list x))
+                                        (gerbil-ascent-atom 'right (list x y))))) 128 128 256))
+(def result (gerbil-ascent-evaluate-program p))
+(displayln "before-gc-indexes=" (hash-length indexes))
+(##gc)
+(displayln "after-gc-indexes=" (hash-length indexes)
+           " retained-rows=" (length ((.ref result 'rows-of) 'out)))
+(displayln "OK")

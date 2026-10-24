@@ -1,0 +1,62 @@
+#+title: Structural coordinate matcher publication
+
+* Frozen contract and source study
+
+Baseline =bb375cbc5bb73d2451c56a20e52f5a28436ad4e5=.
+Original =core/positive-plan.ss= blob =8cb08576f1af38f2d08da8ea55e5ea52d1e8d602=;
+frozen reference blob =a5c8b493a9f2895e96d24f22c02a243ec962b60f=.
+Only relative imports of ordered-call, relation-view, expression-plan and
+rule-bindings are normalized to package paths.
+
+Installed Gerbil =1cfb032= =core/match.ss:638-672= supplies once-bound structural
+dispatch; =compiler/compile.ss:319-341= supplies a syntax-owned construction
+protocol. Both coordinate matcher constructors directly capture slot IDs from
+complete term patterns. Private =parts-matcher= syntax owns parameters, shape
+guard and the generic fallback. Canonical selection proofs remain separate.
+No public API or root build declaration changes.
+
+* Native complete-compilation A/B
+
+The ASP Scheme benchmark API executes 50 alternating baseline/candidate pairs
+of full =gerbil-ascent-compile-positive-plan= calls and consumes each resulting
+frame extent, action count and output count. Both checksums must equal the
+independent input expectation. Input preparation lies outside measurement;
+all plan construction and its allocation are included. GC occurs before each
+measurement; process user/system CPU and allocated bytes are measured. No build
+or qualification overlaps the timing lanes.
+
+Before execution, fresh and selected layouts each require >=10% CPU improvement
+and >=40 faster pairs. Controls allow 110% CPU + 20 microseconds. Allocation
+allows 110% + 4096 bytes. Gates were not relaxed after measurement.
+
+| Scenario | Atoms | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-------+------------+------------+-----------+-----------+--------------|
+| fresh three coordinates | 256 | 93 | 66 | 288608 | 214880 | 46 |
+| selected bound prefix | 256 | 105 | 72 | 308952 | 235224 | 50 |
+| mixed literal/wildcard control | 128 | 41 | 22 | 115648 | 78784 | 48 |
+| small two coordinates | 1 | 2 | 2 | 4624 | 4432 | 29 |
+| empty | 0 | 2 | 2 | 3456 | 3456 | 12 |
+
+Fresh compilation improves CPU about 29.0% and allocation about 25.5%; selected
+compilation improves CPU about 31.4% and allocation about 23.9%. All controls
+pass. The mixed case is retained as a control result, not a predeclared target.
+These are local complete positive-plan compilation measurements, not public
+solve or traversal speedups. Logs, receipts and binaries remain under ignored
+=.cache/ascent/parts-layout=.
+
+* Semantic consumers
+
+Qualification reuses existing callback, positive-plan and traversal suites.
+They cover exact selected and oversupplying providers, projected duplicate
+heads, false values, repeated variables, dirty frames, callback ordering,
+first failures, checkpoints and detached emissions, alongside independent
+finite graph results. No implementation-mirroring unit tests are introduced.
+
+Final local qualification: three Suites, 42 completed Cases, final =OK= and
+exit zero, including all 512 directed three-node reachability controls. The
+source-loaded exact-selected coordinate pipeline also passed. Native policy
+completed with 31 existing advisories and zero errors. Two build attempts were
+rejected by the source-snapshot guard during concurrent session/withdrawal
+edits; their logs are retained. The third build passed admission before the
+native suites ran. These receipts establish local qualification, not remote
+CI completion.

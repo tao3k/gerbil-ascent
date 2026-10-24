@@ -1,0 +1,94 @@
+#+title: Native physical index batch construction protocol
+
+* Gerbil source-backed expression layer
+
+Gerbil =1cfb032= =runtime/table.ss:439-465= expresses =__table-update!= with
+=defrules=: hash/probe happens once, and the update callback is invoked directly
+before storing its result. =runtime/hash.ss:580= supplies checked =HashTable=
+dispatch. ASCENT canonical buckets use this synchronous native protocol.
+
+=table/funs.ss= owns =gerbil-ascent-index-batch!= as a hygienic =defrule=. The
+caller binds its row identifier and key expression; the template owns one row
+slot and one prepend callback for the whole batch. It evaluates the index once
+and evaluates each key before publishing the row. =table/access.ss= uses that
+protocol for scalar keys, replacing separate =hash-get= and =hash-put!= calls.
+The general index owner uses it for stepped and arbitrary-column projections,
+removing duplicated batch loops without adding a per-row projection callback.
+
+Every append creates a fresh bucket spine. Build reverses only newly constructed
+bucket spines into source order; retained buckets and row identities remain
+unchanged. Scalar keys remain scalars, composite keys retain their ordered list
+representation, and custom POO providers keep their checked callback dispatch
+and detached argument headers. No runtime environment option is added.
+
+* Complete paired workflow
+
+Baseline =3b8a2c61c3d45f1b3187c6c5b1bbb812dec720ab=. =reference-funs.ss= is exact;
+=reference-access.ss= only redirects its frozen funs and current Provider imports.
+Public ASP =make-benchmark-fixture= generated the fixture before measurement.
+Each of seven shapes runs 50 alternating pairs with collection before timing.
+Input rows, keys and independent expected buckets are prepared outside timing.
+The measured interval builds the complete physical index, captures selected
+buckets, appends a batch and queries them again. Every pair checks ordered
+source/extended buckets, retained old buckets and stored row identity. Keys
+include false, dense repeated values, unique vectors, repeated and unordered
+columns. Structured scalar values contain 32 fields; source has 4096 rows.
+
+Fixed gates: structured dense/unique require CPU <=90% baseline and >=35 wins.
+Primitive, composite, arbitrary, small and empty controls permit <=105% plus
+20us. Allocation is <=105% plus 4096 bytes; ASP pair p95 is <=999ms. Allocation
+uses a fixed buffer with =##get-bytes-allocated!=, not retained heap. Timed
+processes run alone. The interval does not include analysis or whole solving.
+
+* Native entry points
+
+Use the existing installed Gerbil library and OpenSSL link environment:
+
+#+begin_src scheme
+;; gxi t/performance/index-batch/build.ss LIBRARY BINARY runner
+;; gxi t/performance/index-batch/build.ss LIBRARY QUALIFIER qualify
+;; BINARY structured-dense RECEIPT
+;; BINARY structured-unique RECEIPT
+;; BINARY primitive RECEIPT
+;; BINARY composite RECEIPT
+;; BINARY arbitrary RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+Qualifier Suites cover physical index build, index lifecycle and BYODS index.
+Final =OK=, successful Cases and exit zero are required. New syntax checks cover
+single evaluation of owner/batch, key evaluation count, caller row-binding
+hygiene, false keys, stored row identity, unchanged held spines and empty batches.
+Logs, binaries and raw receipts stay in ignored =.cache/ascent/index-batch/=.
+
+* Isolated native results
+
+Gerbil =1cfb032= / Gambit =ea114fc=; all seven fixed gates pass. Median CPU is
+in microseconds; bytes are allocation-counter differences in the interval.
+
+| Workflow | Old CPU | New CPU | Old bytes | New bytes | CPU wins |
+|----------+---------+---------+-----------+-----------+----------|
+| Structured dense scalar | 4855 | 2500 | 214480 | 214640 | 50 |
+| Structured unique scalar | 10736 | 7183 | 730864 | 731024 | 49 |
+| Primitive scalar | 411 | 271 | 214480 | 214640 | 50 |
+| Composite ordered columns | 495 | 492 | 620336 | 620336 | 31 |
+| Arbitrary repeated columns | 537 | 544 | 822896 | 822896 | 23 |
+| Small scalar | 1 | 2 | 1280 | 1440 | 20 |
+| Empty scalar | 1 | 1 | 1088 | 1248 | 16 |
+
+Structured scalar CPU falls approximately 49% / 33%; primitive scalar falls
+approximately 34%. Composite controls retain equal allocation. Arbitrary column
+CPU is about 1.3% higher and passes its fixed control budget. Scalar calls add
+160 counter bytes for two batch callback/slot owners. One-microsecond controls
+do not establish speed improvements. These are index lifecycle results, not
+whole solver, retained memory or deployed multicore performance claims.
+
+Native qualification passes 3 Suites / 26 Cases, including 256 exhaustive
+retained batch histories, composite/ordered/arbitrary projections, complete
+self joins, cache lifecycle, failure retries, custom coverage witnesses,
+argument isolation and append/replacement. Per-Case success, final =OK= and
+exit zero are checked with =tools/assert-test-cases.awk=. Production policy
+checks the 86-source roster: 0 errors, 30 warnings. Both frozen owners match
+baseline Git source hashes after the documented import normalization.

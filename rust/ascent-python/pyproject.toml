@@ -1,0 +1,16 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "gerbil-ascent"
+version = "0.1.0"
+description = "ASCENT relational reasoning through Rust and Rayon"
+requires-python = ">=3.10"
+
+[tool.maturin]
+module-name = "ascent._core"
+python-source = "../../python/src"
+features = ["extension-module"]
+python-packages = ["ascent"]
+include = ["ascent/__init__.py"]

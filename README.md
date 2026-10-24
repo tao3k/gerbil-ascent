@@ -3,92 +3,46 @@
 
 # gerbil-ascent
 
-Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Core.
-`gerbil.pkg` declares Core as its sole direct package dependency;
-Core supplies the shared POO contracts used by the Scheme modules. The separate
-SS benchmark qualification uses ASP from the development test environment.
-Each top-level directory is a Gerbil module namespace:
+gerbil-ascent is a logical programming Library for checked rule declarations,
+queries, fixed-point evaluation, incremental source maintenance and derivation
+provenance. Scheme owns the native language and POO declarations; the Rust and
+Python bindings expose the same bounded relational contracts.
 
-| Namespace | Current responsibility |
-| --- | --- |
-| `:gerbil-ascent/program/*` | Typed POO rule declarations and stratified evaluation |
-| `:gerbil-ascent/core/*` | Indexed binary evaluation path |
-| `:gerbil-ascent/table/*` | Binary relation indexes and projections |
-| `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
-| `:gerbil-ascent/interface/*` | Inert request projection |
+Python consumers use `Engine.dsl`, `Engine.rules`, retained rule sessions and
+owned results. Trusted Scheme execution is explicit. Source identity and a
+recorded derivation do not authenticate external facts or authorize effects.
 
-`program/` exposes POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
-and Standard Library iterable `generator` clauses with scalar or tuple outputs. A slot Generic lowers each clause to a
-private execution plan; count, sum, min, max, mean, and custom aggregate
-procedures run over matched tuples. Lattice declarations join the last column
-for equal prefix keys and propagate improvements through the same fixed point.
-Generic relation clauses plan bound columns and use a cached table index when
-the relation has at least 32 rows. `table/interface.ss` exposes a POO index
-Provider; a custom provider can replace the physical index without changing
-the rule program.
-The BYODS storage Provider creates private state for each relation evaluation.
-The `eqrel` implementation maintains component membership and emits new
-cross-component facts when an edge joins two components.
-The `trrel` and `trrel_uf` implementations index known predecessors and
-successors per relation run, preserving explicit self facts and grouped keys.
-Guards, bindings, and generators declare their input variables explicitly, and rule
-bodies check bindings in source order. The evaluator reads validated clause
-slots once per run before iterating relation rows.
+Application Evidence, Clue, Trajectory, model conversations, budget accounting
+and model studies are owned by [POO Flow](https://github.com/tao3k/poo-flow).
+Those APIs have been removed here. Consumers migrate directly to
+`poo_flow_runtime.reasoning`; no compatibility facade is provided.
 
-`gerbil-ascent-open-session` retains relation rows, indexes, BYODS state, and
-semi-naive deltas across calls to `gerbil-ascent-session-run`. After the first
-run, `gerbil-ascent-session-append-source!` accepts source rows for programs
-whose rule bodies contain only positive relation atoms. Each run returns a
-stable POO result snapshot; an unchanged run returns its previous result.
-Negation, aggregation, lattice updates, and source deletion still require a
-fresh program evaluation. The one-shot `gerbil-ascent-evaluate-program` uses
-the same evaluator.
+The engine retains generic founded support, nonmembership, source-generation
+invalidation and proof replay. These describe rule execution, independently of
+an application's interpretation of a result as evidence.
 
-`t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
-test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
-tracks the unfinished Rust 0.8.0 feature surface. Complete Scheme parity is
-the gate before new Agent-specific extensions. POO Flow consumes this package
-as a pinned submodule. MRR owns the semantic adapter and admission of its
-own evidence.
+See [the migration boundary](docs/library-boundary.org), the
+[native Library contract](docs/library-acceptance.org) and the
+[Rust parity matrix](docs/rust-parity.org). Abstract Lean/Quint models and native
+acceptance remain separate obligations.
 
-The [related-work matrix](docs/related-work-matrix.org) maps the Ascent papers
-and adjacent research on incremental updates, monotonicity, equality,
-constraints, and provenance to concrete parity and Agent research questions.
-
-Scheme qualification extends Core's Observability Case profile with
-ASCENT-specific memory and duration budgets; it does not own a test runner.
+## Run
 
 ```sh
 gerbil deps --install
-gerbil build
+just build
 just test
-just oracle
 ```
 
-The Rust oracle is a qualification dependency, not part of the Scheme runtime.
+`just oracle` runs the Rust comparison; `just performance` runs the
+benchmark suite. See `just --list` for focused checks.
 
-## Credits and copyright
+## Research
 
-This project builds on the research ideas and published semantics of Ascent:
-
-- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski,
-  [“Seamless Deductive Inference via Macros”](https://doi.org/10.1145/3497776.3517779),
-  *CC 2022*.
-- Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher Micinski,
-  [“Bring Your Own Data Structures to Datalog”](https://doi.org/10.1145/3622840),
-  *Proceedings of the ACM on Programming Languages, OOPSLA2 2023*.
-
-The differential oracle depends on the upstream
-[Ascent Rust project](https://github.com/s-arash/ascent) and
-`ascent-byods-rels` 0.8.0. Copyright in that project belongs to its
-individual contributors; its [source license is MIT](https://github.com/s-arash/ascent/blob/master/LICENSE).
-The papers retain their authors' and publishers' rights. Citations here
-acknowledge their research; the papers are not redistributed in this repository.
-The other cited papers and their authors are listed in the
-[related-work bibliography](docs/related-work-matrix.org).
-
-The Scheme implementation and repository-authored qualification code are
-copyright © 2026 tao3k team and Contributors and are licensed under
-`Apache-2.0 AND LGPL-2.1-or-later`, as stated in [LICENSE](LICENSE) and
-the source file SPDX headers. That project license does not change the
-upstream project's license or the papers' rights.
+The engine studies logical programming, BYODS relation implementations, retained
+sessions, delta maintenance and derivation provenance. See the
+[Scheme DSL readings](docs/research/scheme-dsl/index.org),
+[logical programming and provenance](docs/research/logical-programming/index.org),
+[related-work matrix](docs/related-work-matrix.org) and
+[feature assurance](docs/features/index.org). Model efficacy and application
+Evidence research are maintained downstream in POO Flow.

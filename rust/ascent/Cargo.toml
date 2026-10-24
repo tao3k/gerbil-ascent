@@ -1,0 +1,48 @@
+[package]
+name = "gerbil-ascent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rayon = { workspace = true, optional = true }
+smallvec.workspace = true
+num-rational.workspace = true
+num-bigint.workspace = true
+num-traits.workspace = true
+sha2.workspace = true
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+tempfile = { version = "=3.27.0", optional = true }
+
+[features]
+default = ["rayon"]
+process-runtime = ["dep:serde", "num-bigint/serde"]
+rayon = ["dep:rayon"]
+artifacts = ["dep:serde_json", "dep:tempfile"]
+
+[dev-dependencies]
+ascent.workspace = true
+asp-rust.workspace = true
+
+[build-dependencies]
+gerbil-scheme-rust-ir.workspace = true
+gerbil-scheme-aot-build.workspace = true
+
+[[bench]]
+name = "execution"
+harness = false
+required-features = ["rayon"]
+
+[[test]]
+name = "integration_test"
+path = "tests/integration_test.rs"
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "runtime_comparison"
+harness = false
+required-features = ["rayon"]

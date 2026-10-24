@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Source Lifecycle: compiler
+
+The [[file:grounded-withdrawal.org][grounded withdrawal Session owner]] now connects staged positive deletion
+to generation checks and complete graph admission. Stable occurrence identities
+now let this positive owner maintain grounded subcuts without repeated native
+fixed-point solving.
+General deletion, signed traces and native proof refinement remain open.
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Source-root identity materialization refinement
+
+The next proof slice connects the actual source-root decision in
+=relational-typed-compile= to the existing lexical lowering model.
+=RowRepresentation.identityColumns= enumerates checked indices; the
+=identity_columns_are_iota= theorem proves their numeric list equals
+=List.range arity=, the mathematical interpretation of Scheme's =iota=.
+=identity_projection_preserves_tuple= proves that reading those columns in
+order reconstructs the complete proper row, including the zero-column row.
+The membership, encoding and admission theorems for =materializeIdentity=
+then establish that deriving a set output preserves source membership and
+the typed row predicate. They do not equate occurrence counts or budgets.
+
+=Lowering.materializeSourceRoot= follows the source-only branch in
+=program/higher-order.ss=: a source root gets an identity projection;
+computed roots stay intact. Its meaning-preservation theorem composes with
+=closed_relation_lowering= in =closed_materialized_relation_lowering=.
+This covers a closed expression whose lowered value is a source, including
+lexical application results, under the existing expression interpretation.
+
+These eight new theorems close that mathematical compilation step. They do
+not mechanize Gerbil =list-ref=, =iota=, equality/hash tables, Scheme descriptor
+decoding, or emitted native rule execution. Native qualification exercises
+those boundaries independently. No Scheme sources change in this slice;
+the prior six-module receipt remains historical evidence, while the new
+receipt records only the independently rerun higher-order module and the
+current formal checks. Full per-term domain preservation and mapping-table
+mutation contracts remain open. Quint lifecycle models are unchanged because
+this refinement adds no state transition.

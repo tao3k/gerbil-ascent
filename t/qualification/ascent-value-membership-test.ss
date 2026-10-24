@@ -4,7 +4,7 @@
 (import :std/test
         (only-in :clan/poo/object .o .cc .ref .putslot! object-instance $constant-slot-spec $thunk-slot-spec)
         (only-in :clan/poo/mop element? validate)
-        (only-in :yuanxu/types yuanxu-contract-admit yuanxu-validation-evidence-accepted?
+        (only-in :yuanxu/object-types/contracts yuanxu-contract-admit yuanxu-validation-evidence-accepted?
                  yuanxu-classification-evidence)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider GerbilAscentIndexProviderContract)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)

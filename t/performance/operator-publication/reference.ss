@@ -7,7 +7,7 @@
 ;;; separate owners; only this invocation emits private relation handles.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
         (only-in :gerbil-ascent/program/operator-lowering lower-operator-graph)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule

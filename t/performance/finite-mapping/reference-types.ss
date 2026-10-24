@@ -6,7 +6,7 @@
 ;;; remain ordinary Scheme values; constructors check their declared arity.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type element?)
-        (only-in :yuanxu/types
+        (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider

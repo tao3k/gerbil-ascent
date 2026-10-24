@@ -6,7 +6,7 @@
 ;;; intentional. Shared current native Session isolates support-plan costs.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type validate .defgeneric)
-        (only-in :yuanxu/types YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation

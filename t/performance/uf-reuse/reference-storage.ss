@@ -10,7 +10,7 @@
         (only-in :gerbil/runtime/gambit fx-)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :yuanxu/types
+        (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state

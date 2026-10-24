@@ -6,7 +6,7 @@
 ;;; lookup. Rules remain independent of the provider's private index value.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :yuanxu/types
+        (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in "funs.ss" gerbil-ascent-index-build

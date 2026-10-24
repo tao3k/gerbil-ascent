@@ -8,7 +8,7 @@
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
         (only-in :clan/poo/mop define-type element? validate Type. Any)
         (only-in :clan/poo/object-contract ObjectContract.)
-        (only-in :yuanxu/types
+        (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider

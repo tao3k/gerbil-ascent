@@ -1,5 +1,5 @@
 //! One process with independent, single-thread VM owners supplied by the upstream bridge.
-use super::{lifecycle, values};
+use super::{InstancePackage, lifecycle, values};
 use crate::{Control, ProcessReceipt, ProcessStatistics};
 use gerbil_ascent::{Cancellation, Data, Error, Limits, Result};
 use gerbil_scheme::instances::{InstanceDispatcher, InstanceError, NativeSession};
@@ -63,6 +63,23 @@ impl InstancePool {
             return Err(crate::failure("instance VM count must be in 1..=64"));
         }
         let (runtime, source_library) = lifecycle::start(owners, root.as_ref())?;
+        Self::from_runtime(owners, runtime, source_library)
+    }
+    /// Start independent VMs from caller-owned resources, with fresh verification.
+    /// # Errors
+    /// Rejects invalid counts, changed snapshot bytes and incomplete VM startup.
+    pub fn from_snapshot(owners: usize, package: &InstancePackage) -> Result<Self> {
+        if owners == 0 || owners > 64 {
+            return Err(crate::failure("instance VM count must be in 1..=64"));
+        }
+        let (runtime, source_library) = lifecycle::start_snapshot(owners, package)?;
+        Self::from_runtime(owners, runtime, source_library)
+    }
+    fn from_runtime(
+        owners: usize,
+        runtime: gerbil_scheme::instances::InstancePool,
+        source_library: std::path::PathBuf,
+    ) -> Result<Self> {
         let dispatcher = runtime.dispatcher();
         let pool = Arc::new(Pool {
             runtime: Mutex::new(runtime),

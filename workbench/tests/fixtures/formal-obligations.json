@@ -2922,7 +2922,7 @@
   "OwnerAdmission": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "CallerOnly LeaseFence BudgetExact"
+      "invariants": "CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost"
     },
     "faults": [
       [
@@ -2948,6 +2948,26 @@
       [
         "ignore-budget",
         "BudgetExact",
+        12
+      ],
+      [
+        "skip-snapshot-reverify",
+        "SnapshotCurrent",
+        12
+      ],
+      [
+        "drop-resource-with-host",
+        "ResourceLifetime",
+        12
+      ],
+      [
+        "fork-drops-parent",
+        "ForkLifetime",
+        12
+      ],
+      [
+        "repeat-package-copy",
+        "CapturedCopyCost",
         12
       ]
     ]

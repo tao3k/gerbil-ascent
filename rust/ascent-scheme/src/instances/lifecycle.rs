@@ -1,5 +1,5 @@
 //! Initialize the canonical upstream image; all bindings execute on its owner.
-use super::bridge_error;
+use super::{InstancePackage, bridge_error};
 use gerbil_ascent::Result;
 use gerbil_scheme::instances::{
     InstanceConfig, InstanceDispatcher, InstanceError, IsolatedProgram,
@@ -13,23 +13,21 @@ pub(super) fn start(
     owners: usize,
     root: &Path,
 ) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {
-    let manifest = gerbil_scheme_python::PackageManifest::from_json(include_bytes!(concat!(
-        env!("OUT_DIR"),
-        "/instance_inventory.json"
-    )))
-    .map_err(|e| crate::failure(&e.to_string()))?;
-    let package = manifest
-        .verify(root)
-        .map_err(|e| crate::failure(&e.to_string()))?;
-    let resources = Arc::new(
-        tempfile::Builder::new()
-            .prefix(&format!("ascent-resources-{}-", std::process::id()))
-            .tempdir()
-            .map_err(|e| crate::failure(&e.to_string()))?,
-    );
-    let package = package
-        .copy_to(resources.path())
-        .map_err(|e| crate::failure(&e.to_string()))?;
+    let (snapshot, package) = InstancePackage::capture(root)?;
+    start_verified(owners, &package, snapshot.resources()?)
+}
+pub(super) fn start_snapshot(
+    owners: usize,
+    snapshot: &InstancePackage,
+) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {
+    // The snapshot retains bytes, not a previous verification decision.
+    start_verified(owners, &snapshot.verify()?, snapshot.resources()?)
+}
+fn start_verified(
+    owners: usize,
+    package: &gerbil_scheme_python::VerifiedPackage,
+    resources: &Arc<tempfile::TempDir>,
+) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {
     // SAFETY: the build-owned image contains this exact Scheme archive and upstream adapter.
     let program = unsafe {
         IsolatedProgram::from_image(
@@ -46,7 +44,7 @@ pub(super) fn start(
             queue_capacity: 64,
             maximum_request_bytes: 64 * 1024 * 1024,
             maximum_reply_bytes: 64 * 1024 * 1024,
-            startup_timeout: Duration::from_secs(60),
+            startup_timeout: Duration::from_mins(1),
         },
     )
     .map_err(bridge_error)?;
@@ -56,7 +54,7 @@ pub(super) fn start(
         ));
     }
     runtime
-        .retain_owner_resource(&resources)
+        .retain_owner_resource(resources)
         .map_err(bridge_error)?;
     Ok((runtime, package.root().join("_owners/lib")))
 }
@@ -79,6 +77,6 @@ pub(super) fn bind(dispatcher: &InstanceDispatcher, index: usize, library: &Path
             Ok(())
         })
         .map_err(bridge_error)?;
-    bound.wait(Duration::from_secs(60)).map_err(bridge_error)?;
+    bound.wait(Duration::from_mins(1)).map_err(bridge_error)?;
     Ok(())
 }

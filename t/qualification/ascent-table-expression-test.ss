@@ -4,8 +4,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
+        (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
+                 ascent-table-expression-baseline ascent-table-expression-point-reference)
         (only-in :gerbil-ascent/core/binary-relation
                  gerbil-ascent-relation-closure-bounded)
         (only-in :gerbil-ascent/table/expression
@@ -13,8 +16,33 @@
 
 (export ascent-table-expression-test)
 
+;; Independent quadratic list oracle; no persistent-trie insertion or merge.
+(def (naive-two-hop edges radix)
+  (def rows (append edges []))
+  (for-each (lambda (left)
+    (for-each (lambda (right)
+      (when (= (modulo left radix) (quotient right radix))
+        (set! rows (cons (+ (* (quotient left radix) radix) (modulo right radix)) rows)))) edges)) edges)
+  (list-sort < (delete-duplicates/hash rows)))
+
 (def ascent-table-expression-test
   (test-suite "ASCENT table expression over native persistent tries"
+    (test-case "bulk-admitted persistent control matches point updates and independent joins"
+      (for-each
+        (lambda (input)
+          (let* ((radix (car input)) (edges (cdr input))
+                 (pairs (.call UIntTrieSet .<-list edges))
+                 (point (ascent-table-expression-point-reference pairs radix))
+                 (bulk (ascent-table-expression-baseline pairs radix))
+                 (naive (naive-two-hop edges radix)))
+            (check-equal? bulk point)
+            (check-equal? bulk naive)))
+        (list '(8) '(8 10 19 12 35 10) '(8 10 17)
+          (cons 256 (let loop ((node 0) (edges []))
+            (if (= node 256) edges
+              (loop (+ node 1)
+                (cons (+ (* node 256) (modulo (+ node 1) 256))
+                  (cons (+ (* node 256) (modulo (+ node 2) 256)) edges)))))))))
     (test-case "core and demanded closures preserve independent budget failures"
       (for-each
        (lambda (pair-radix)

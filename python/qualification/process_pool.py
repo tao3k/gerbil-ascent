@@ -45,8 +45,8 @@ def qualify_rayon_modes():
     print("RAYON-PYTHON-OK threads=12 modes=3 limits=preserved snapshots=preserved", flush=True)
 
 
-def qualify(pool_type=ProcessPool, shared_process=False):
-    pool = pool_type(12)
+def qualify(pool_type=ProcessPool, shared_process=False, package=None):
+    pool = pool_type(12) if package is None else pool_type(12, package=package)
     identities = pool.identities()
     assert len(identities) == 12
     assert len({row['domain'] for row in identities}) == 12
@@ -104,10 +104,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     qualify_rayon_modes()
     if args.instances:
-        from ascent import InstancePool
+        from ascent import InstancePackage, InstancePool
         pids = qualify(InstancePool, shared_process=True)
         assert set(pids) == {os.getpid()}
         print('INSTANCE-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 joined=12')
+        package = InstancePackage()
+        captured_pids = qualify(InstancePool, shared_process=True, package=package)
+        assert set(captured_pids) == {os.getpid()}
+        print('INSTANCE-PACKAGE-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 joined=12')
     else:
         pids = qualify()
         gc.collect()

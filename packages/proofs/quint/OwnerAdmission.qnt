@@ -40,4 +40,25 @@ module OwnerAdmission {
   val CallerOnly = not(q.badPublication)
   val LeaseFence = not(q.badNotification)
   val BudgetExact = q.work >= 0 and q.work <= 2
+  // Finite policy controls are independent of the unbounded Lean cost identities.
+  pure val SnapshotCurrentPolicy = Set(false,true).forall(sameProcess => Set(false,true).forall(current => {
+    val admitted = sameProcess and (current or Mutation == "skip-snapshot-reverify")
+    admitted == (sameProcess and current)
+  }))
+  pure val ResourceLifetimePolicy = Set(false,true).forall(host => Set(false,true).forall(native => {
+    val removed = not(native) and (not(host) or Mutation == "drop-resource-with-host")
+    removed == (not(host) and not(native))
+  }))
+  pure val ForkLifetimePolicy = Set(false,true).forall(host => Set(false,true).forall(native => {
+    val removed = Mutation == "fork-drops-parent" and not(host) and not(native)
+    not(removed)
+  }))
+  pure val CapturedCopyCostPolicy = Set(1,2,3,12,20).forall(pools => Set(1,2,7).forall(files => {
+    val copies = if (Mutation == "repeat-package-copy") pools * files else files
+    copies == files
+  }))
+  val SnapshotCurrent = q.generation == 0 or SnapshotCurrentPolicy
+  val ResourceLifetime = q.generation == 0 or ResourceLifetimePolicy
+  val ForkLifetime = q.generation == 0 or ForkLifetimePolicy
+  val CapturedCopyCost = q.generation == 0 or CapturedCopyCostPolicy
 }

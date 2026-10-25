@@ -23,4 +23,4 @@ mod concurrency;
 
 #[path = "../support/instance_factory.rs"]
 mod factory;
-use factory::engine;
+use factory::{engine, engines};

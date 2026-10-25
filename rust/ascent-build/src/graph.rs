@@ -37,6 +37,7 @@ pub fn prepare(
         root.join("build-modules.ss"),
         workspace.join("build.ss"),
         workspace.join("scheme/program-build.ss"),
+        workspace.join("scheme/program-metadata.ss"),
     ] {
         observer.observe_source_input(&source);
     }
@@ -53,8 +54,16 @@ pub fn prepare(
     // This consumer needs compiled library carriers and its AOT entry, not
     // the package's CLI/shared-library executable targets. std/make validates
     // the complete declared library inventory below on every configuration.
+    // Keep one graph across macOS feature/profile combinations so enabling
+    // instances does not invalidate an otherwise reusable archive. Linux keeps
+    // the ordinary graph; its process owners use the SDK's existing carriers.
+    let library_imports = if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        " '(:gerbil/compiler/base :gerbil-ascent/rules/interface :gerbil-ascent/rules/module)"
+    } else {
+        ""
+    };
     let expression = format!(
-        "(import :std/make {:?} {:?}) (make (map (lambda (module) (cons gxc: (cons module gerbil-ascent-compiler-options))) (append gerbil-ascent-library-modules [\"interface/hybrid\"])) srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?})",
+        "(import :std/make {:?} {:?}) (make (map (lambda (module) (cons gxc: (cons module gerbil-ascent-compiler-options))) (append gerbil-ascent-library-modules [\"interface/hybrid\"])) srcdir: {:?} libdir: {:?} build-deps: {:?} optimize: #t) (gerbil-rs-stage-program {:?} {:?}{})",
         root.join("build-modules.ss")
             .to_str()
             .ok_or("non-UTF8 inventory path")?,
@@ -72,7 +81,8 @@ pub fn prepare(
         root.join("interface/hybrid.ss")
             .to_str()
             .ok_or("non-UTF8 root")?,
-        shared.graph.to_str().ok_or("non-UTF8 graph path")?
+        shared.graph.to_str().ok_or("non-UTF8 graph path")?,
+        library_imports
     );
     process(
         observer,

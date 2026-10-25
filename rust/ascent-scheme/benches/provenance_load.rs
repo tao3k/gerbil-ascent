@@ -113,7 +113,7 @@ fn exercise(session: &RuleSession) -> Result<()> {
 fn archive_ready(child: &mut Child) -> bool {
     let marker = Path::new(env!("OUT_DIR")).join(format!("archive-stress-{}/start", child.id()));
     let started = Instant::now();
-    while started.elapsed() < Duration::from_secs(180) {
+    while started.elapsed() < Duration::from_mins(3) {
         if marker.exists() {
             return matches!(child.try_wait(), Ok(None));
         }

@@ -15,11 +15,12 @@ fn sorted(mut rows: Vec<Row>) -> Vec<Row> {
 }
 #[test]
 fn original_constructors_match_owned_rayon_with_duplicates_complex_values_and_checked_proofs() {
+    let create = crate::engines();
     let limits = SourceSession::default_limits();
     let cancellation = Cancellation::default();
     for workers in [1, 2, 4, 8, 12] {
         for source in sources() {
-            let engine = crate::engine(workers).unwrap();
+            let engine = create(workers).unwrap();
             let module = engine.load_definitions(&source).unwrap();
             let value = module.call("make", &[], None).unwrap();
             let native = value.open_session(FactLimits::default()).unwrap();

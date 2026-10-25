@@ -5,7 +5,7 @@
 * Scope and identities
 
 The SDK stays at Gerbil =1cfb032= / Gambit =ea114fc=. The bridge is pinned
-at gerbil-scheme-rust =6fb831e4528ab21d15c27f5e6723e35be2b90929= in existing
+at gerbil-scheme-rust =c4b95dfaa116bd67b110d94826535fd27f227b85= in existing
 PR 18. The preceding timer repair =9015091= completed exact-head CI, including both platform
 bindings, both Bazel bindings, the macOS lifecycle checks and Quint:
 https://github.com/tao3k/gerbil-scheme-rust/actions/runs/39923812650.
@@ -168,3 +168,143 @@ finite model checking is not relabeled as complete source refinement.
   mean/provenance on both paths, all 33 production rows, original performance
   gates and exact ASCENT-head CI. No throughput admission or route selection
   is claimed until these observations are complete.
+
+* Macro carrier and captured-package acceptance update
+
+The current bridge revision is =c4b95dfaa116bd67b110d94826535fd27f227b85=
+on existing PR 18. All six supported jobs passed exact-head CI:
+https://github.com/tao3k/gerbil-scheme-rust/actions/runs/39959195860.
+The SDK-unsupported SMP lane remains explicitly skipped. The preceding
+=5728451= run failed its generated-SCM input receipt; the original
+=just bridge-regenerate= command refreshed the tracked artifacts, followed
+by a successful full workspace run in check-only mode. The failure is retained.
+
+Library macro carriers are prelinked with deferred activation. The original
+eager archive dependency prefix is unchanged. The SDK owns module loading,
+import context, exactly-once initialization and cached load errors. Empty
+re-export modules retain the original loader. Native controls cover the
+initialization order and an explicit empty module load before a real DSL macro.
+No runtime DSL compiler or Scheme evaluator was added.
+
+Samples from the two repeated-engine semantic cases showed
+=VerifiedPackage.copy_to= filesystem work in =InstancePool::from_package=.
+The public =InstancePackage= captures package files once. Each subsequent
+=InstancePool::from_snapshot= performs a fresh complete manifest verification
+and creates independent VM state. Python exposes the same Rust owner through
+PyO3. No global cache, cached validation authority or extra Rayon executor is
+introduced. Default =InstancePool::from_package= retains its original path.
+
+The host snapshot and actual native owner leases jointly retain the files.
+Controls remove the original package before starting pools, reject a changed
+captured image, retire one pool while another remains live, release the host
+snapshot before the final native join, and verify final directory removal.
+An inherited snapshot cannot start a VM or delete its parent's files after
+fork. The Python control drops its package object and one pool before using
+the second pool through real DSL/call methods. Rust owns the assertions.
+
+The deterministic aggregate and projection tests still start respectively
+18 and 20 fresh VMs with all original worker configurations, inputs, limits
+and proof checks. Only captured resource files are reused. A diagnostic
+old-Core-prefix full run completed 135 of 136 tests; its sole failure was an
+ASP-disallowed glob import in the new Python test, now replaced with explicit
+imports. This receipt does not qualify the final dependency cohort.
+
+The Lean model proves fresh-check refusal, caller/native lease retention,
+fork ownership and an unbounded file-copy identity: for one plus N pools
+and F files, uncaptured copies equal F + N*F; captured copies equal F.
+A separate identity retains one full F-file verification per new pool in
+addition to the three capture traversals. These are traversal counts, not
+measured allocation bytes or a wall-time theorem. Quint retains the original
+publication/budget controls and adds four rejecting snapshot mutations.
+Complete source-render bindings detect drift in capture and startup code;
+they do not establish Rust/C/SDK/OS source refinement.
+
+Final current-Core local semantics, installed-wheel qualification, exact-head
+ASCENT CI, all 33 production rows and both mean/provenance diagnostics remain
+required. No production throughput gain or preferred owner route is admitted
+from the diagnostic test times above.
+
+The current complete formal inventory passed after the new negative controls
+were corrected to state invariants. The first attempt's static-FALSE TLC
+diagnostic was rejected rather than accepted as a counterexample. All four
+new mutations now produce actual invariant counterexamples with exit 12;
+the five existing owner mutations, the positive model and the rest of the
+Lean/Quint/source-binding inventory pass unchanged. The complete 129-test
+workbench suite also passed after registering only the additional obligations
+in the frozen inventory. No earlier obligation was removed.
+
+* Reintegrated current dependency cohort (2026-10-25)
+
+The candidate is based on PR 1 revision =9573529a= (including =d52206eb=). All earlier caller-owned
+package, PyO3, semantic-control and model changes were reapplied together to
+that head. The primary checkout's unrelated document and proof outputs were
+left unchanged. The SDK remains Gerbil =1cfb032= / Gambit =ea114fc= at the
+previous immutable release. GSR remains the qualified PR 18 revision =c4b95df=.
+Yuanxu now follows the existing PR 19 revision
+=4922c27b21225ada69ae19606d6cc7584315ff39=, selecting
+POO =29c58aa9c5be103ba843767e3d22ef8802b79342=.
+
+The initially tested Yuanxu =51dbc960= production sources were identical to
+=c90d929=; that revision changes only a build-adapter control. The subsequent
+=4922c27b= includes native lexical role/optional-Config binding corrections. Updating the REV alone is therefore
+not a root-cause fix for the previous timeout. The native package entry has
+a 180-second outer wall budget. Both retained remote failures report raw
+child status 31744, corresponding to exit 124. This precedes ASCENT semantic
+execution. A first local isolated =gerbil deps --install= completed under that
+unchanged entry and three build workers. It submitted 779 distinct native
+compilation jobs: 238 POO and 540 Yuanxu, plus one other carrier. Neither full
+paths nor normalized library paths repeated. The upstream Linux two-worker
+failure remains separate evidence; the local pass does not close it.
+
+The table-expression timeout has a separate measured cause. Original 512-pair
+point-admitted baseline calls consumed about seven CPU seconds each. A native
+phase probe located almost all time in composition; index construction, union
+and final list production were much smaller. The current POO public =.cons=
+admits the complete input and output set. Repeated publication of an increasing
+private join result therefore incurs repeated full-set recognition.
+
+The control now collects that private join stream and uses the official public
+=UIntTrieSet .<-list= constructor once, retaining complete final admission.
+It still builds and joins the persistent SimpleTrie index and publishes the
+same canonical set. The preceding point implementation remains a semantic
+witness in the test-only module. A Case compares point, bulk and an independent
+quadratic list join over empty, duplicate/diamond, cyclic and complete 512-pair
+inputs. All existing Cases in that source file remain. Diagnostic bulk calls
+used about 0.078 CPU seconds; this is not a 1000-sample performance receipt.
+
+The original 1000 samples, 2000us candidate ceiling, relative-improvement
+check, memory contract and 180-second performance invocation are unchanged.
+The control's description explicitly records the public-API adaptation.
+The faster control makes the relative comparison stricter, not easier.
+
+The current dependency cohort completed all 225 Rust kernel, process-owner,
+instance-owner and PyO3 tests with twelve parallel test processes, zero retries
+and zero skips (260.812 seconds). Full source semantics passed all 173 modules
+with twelve single-thread VMs and the unchanged 600-second/2G limits (144
+seconds). The complete formal inventory and all 129 workbench tests passed.
+Subsequent strict-Clippy corrections retain the same timeout durations and
+replace only redundant ownership/result wrapping and an explicit FFI pointer;
+final code must still qualify in exact-head CI.
+
+Every new pool still verifies captured bytes and initializes independent state.
+The private test factory captures a package result eagerly and reports the
+original typed failure on engine creation. It never reuses Scheme state or a
+previous validation result. Installed-wheel qualification additionally invokes
+the public PyO3 package constructor and the same twelve-owner call/apply load,
+while retaining the original default constructor qualification.
+
+Strict workspace/all-target Clippy passed without lint exceptions. The installed
+PyO3 wheel passed twelve-owner process, instance and explicit-package call/apply
+qualification. A final focused OwnerAdmission Lean check passed with the original
+Lean POO Guard after refreshing the exact lifecycle source binding.
+
+The current PR 1 =9573529a= GitHub receipts show both dependency preparation and
+Linux Scheme semantics passing. Its performance failure still identifies the
+original 1000-sample table-expression baseline timeout. The current Yuanxu
+=4922c27b= build/bootstrap passed on both supported platforms, while its separate
+runtime/scale tests include failures. These results neither establish complete
+upstream correctness nor qualify the unpushed ASCENT candidate.
+
+The original performance gates, complete 33-row production matrix, both 384-proof
+mean/provenance loads and final exact ASCENT-head CI remain required. No production speedup or preferred
+VM route is admitted from local constructor timing or a green formal model.

@@ -50,7 +50,7 @@ pub use api::{
 #[cfg(all(feature = "instances", target_os = "macos"))]
 mod instances;
 #[cfg(all(feature = "instances", target_os = "macos"))]
-pub use instances::{InstanceOwner, InstancePool};
+pub use instances::{InstanceOwner, InstancePackage, InstancePool};
 
 mod identity;
 pub use identity::build_identity;

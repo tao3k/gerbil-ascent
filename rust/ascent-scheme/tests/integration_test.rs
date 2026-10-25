@@ -22,4 +22,4 @@ mod concurrency;
 
 #[path = "support/process_factory.rs"]
 mod factory;
-use factory::engine;
+use factory::{engine, engines};

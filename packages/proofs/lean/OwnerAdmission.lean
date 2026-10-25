@@ -74,6 +74,42 @@ theorem reuse_removes_only_construction (construction validation wire : Nat) :
       projectionCost true construction validation wire + construction := by
   simp [projectionCost]; omega
 
+-- These costs count resource files visited/copied, not elapsed time or bytes
+-- allocated by the SDK, compiler, filesystem, SHA implementation or VM itself.
+-- A captured package never authorizes a subsequent VM without current checks.
+def snapshotAdmission (sameProcess currentBytes : Bool) : Bool :=
+  sameProcess && currentBytes
+
+theorem changed_snapshot_refuses (sameProcess : Bool) :
+    snapshotAdmission sameProcess false = false := by simp [snapshotAdmission]
+
+theorem inherited_snapshot_refuses (currentBytes : Bool) :
+    snapshotAdmission false currentBytes = false := by simp [snapshotAdmission]
+
+def releaseResources (sameProcess hostLease nativeLease : Bool) : Bool :=
+  sameProcess && !hostLease && !nativeLease
+
+theorem host_lease_retains_files (sameProcess nativeLease : Bool) :
+    releaseResources sameProcess true nativeLease = false := by simp [releaseResources]
+
+theorem native_lease_retains_files (sameProcess hostLease : Bool) :
+    releaseResources sameProcess hostLease true = false := by simp [releaseResources]
+
+theorem inherited_lease_cannot_delete (hostLease nativeLease : Bool) :
+    releaseResources false hostLease nativeLease = false := by simp [releaseResources]
+
+-- One capture plus additional independent pools, each with a fresh full check.
+def uncapturedCopies (additional files : Nat) : Nat := (additional + 1) * files
+def capturedCopies (files : Nat) : Nat := files
+def capturedChecks (additional files : Nat) : Nat := 3 * files + (additional + 1) * files
+
+theorem file_copy_savings (additional files : Nat) :
+    uncapturedCopies additional files = capturedCopies files + additional * files := by
+  simp [uncapturedCopies, capturedCopies, Nat.add_mul, Nat.add_comm]
+
+theorem every_pool_retains_full_check (additional files : Nat) :
+    capturedChecks additional files = 3 * files + uncapturedCopies additional files := by rfl
+
 -- Exact source bindings below detect drift; they are not a proof of the Rust,
 -- Scheme, MOP, atomic memory model or host compiler semantics.
 def controlRustSource : String :=
@@ -81,6 +117,12 @@ def controlRustSource : String :=
 
 def projectionSchemeSource : String :=
   ";;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later\n;;; Reuse only private projection object graphs, never a validation result or wire value.\n(import (only-in :clan/poo/object .ref)\n        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)\n        (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows\n                 gerbil-ascent-projection-tree-current? gerbil-ascent-check-projection-program))\n(export ascent-projection-program)\n(defstruct projection-cache (generation relations rules handles limits program) final: #t)\n(def (same-references? left right)\n  (cond ((null? left) (null? right))\n        ((null? right) #f)\n        (else (and (eq? (car left) (car right))\n                   (same-references? (cdr left) (cdr right))))))\n(def (fresh-program original sources)\n  (gerbil-ascent-program\n    (map (lambda (relation)\n      (let (source (assq (.ref relation 'name) sources))\n        (if source (gerbil-ascent-relation-with-rows relation (cdr source)) relation)))\n      (.ref original 'relations))\n    (.ref original 'rules) (.ref original 'max-input-facts)\n    (.ref original 'max-derived-facts) (.ref original 'max-output-facts)\n    (.ref original 'source-handles)))\n(def (ascent-projection-program original sources generation previous)\n  (if (not (gerbil-ascent-projection-tree-current? original))\n    (values (fresh-program original sources) #f)\n    (let ((relations (.ref original 'relations)) (rules (.ref original 'rules))\n          (handles (.ref original 'source-handles))\n          (limits (list (.ref original 'max-input-facts) (.ref original 'max-derived-facts)\n                        (.ref original 'max-output-facts))))\n      (if (and previous (= generation (projection-cache-generation previous))\n               (same-references? relations (projection-cache-relations previous))\n               (eq? rules (projection-cache-rules previous))\n               (equal? handles (projection-cache-handles previous))\n               (equal? limits (projection-cache-limits previous)))\n        (values (gerbil-ascent-check-projection-program (projection-cache-program previous)) previous)\n        (let (program (fresh-program original sources))\n          (values program (make-projection-cache generation (map identity relations) rules\n                            (map identity handles) limits program)))))))\n"
+
+def packageRustSource : String :=
+  "//! Caller-owned immutable input bytes; every new VM admission still reverifies.\nuse gerbil_ascent::Result;\nuse gerbil_scheme_python::{PackageManifest, VerifiedPackage};\nuse std::{path::Path, sync::Arc};\n\n/// Captured library resources shared by independent VM pools, never Scheme state.\n/// The caller and actual native owners jointly retain the private resource lease.\n#[derive(Clone)]\npub struct InstancePackage {\n    resources: Option<Arc<tempfile::TempDir>>,\n    parent: u32,\n    manifest: Arc<PackageManifest>,\n}\nimpl InstancePackage {\n    /// Capture the library-built package without compiling user code.\n    /// # Errors\n    /// Rejects changed, missing or aliased resources before capturing any VM.\n    pub fn bundled() -> Result<Self> {\n        Self::open(env!(\"ASCENT_INSTANCE_PACKAGE\"))\n    }\n    /// Capture an installed package matching this library's compiled manifest.\n    /// # Errors\n    /// Rejects invalid resources and any source change during the verified copy.\n    pub fn open(root: impl AsRef<Path>) -> Result<Self> {\n        Self::capture(root.as_ref()).map(|(package, _)| package)\n    }\n    pub(super) fn capture(root: &Path) -> Result<(Self, VerifiedPackage)> {\n        let manifest = Arc::new(\n            PackageManifest::from_json(include_bytes!(concat!(\n                env!(\"OUT_DIR\"),\n                \"/instance_inventory.json\"\n            )))\n            .map_err(|e| crate::failure(&e.to_string()))?,\n        );\n        let package = manifest\n            .verify(root)\n            .map_err(|e| crate::failure(&e.to_string()))?;\n        let resources = Arc::new(\n            tempfile::Builder::new()\n                .prefix(&format!(\"ascent-resources-{}-\", std::process::id()))\n                .tempdir()\n                .map_err(|e| crate::failure(&e.to_string()))?,\n        );\n        let verified = package\n            .copy_to(resources.path())\n            .map_err(|e| crate::failure(&e.to_string()))?;\n        Ok((\n            Self {\n                resources: Some(resources),\n                parent: std::process::id(),\n                manifest,\n            },\n            verified,\n        ))\n    }\n    pub(super) fn resources(&self) -> Result<&Arc<tempfile::TempDir>> {\n        if self.parent != std::process::id() {\n            return Err(crate::failure(\n                \"forked package resources require exec before initialization\",\n            ));\n        }\n        self.resources.as_ref().ok_or(gerbil_ascent::Error::Closed)\n    }\n    pub(super) fn verify(&self) -> Result<VerifiedPackage> {\n        self.manifest\n            .verify(self.resources()?.path())\n            .map_err(|e| crate::failure(&e.to_string()))\n    }\n}\n\nimpl Drop for InstancePackage {\n    fn drop(&mut self) {\n        // A child inherited a process-local lease, not ownership of the parent's\n        // files. Never remove those files while the parent may still use them.\n        if self.parent == std::process::id() {\n            return;\n        }\n        if let Some(resources) = self.resources.take() {\n            std::mem::forget(resources);\n        }\n    }\n}\n\n#[cfg(test)]\n#[path = \"../../tests/unit/instance_package.rs\"]\nmod tests;\n"
+
+def packageLifecycleRustSource : String :=
+  "//! Initialize the canonical upstream image; all bindings execute on its owner.\nuse super::{InstancePackage, bridge_error};\nuse gerbil_ascent::Result;\nuse gerbil_scheme::instances::{\n    InstanceConfig, InstanceDispatcher, InstanceError, IsolatedProgram,\n};\nuse std::{\n    path::{Path, PathBuf},\n    sync::Arc,\n    time::Duration,\n};\npub(super) fn start(\n    owners: usize,\n    root: &Path,\n) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {\n    let (snapshot, package) = InstancePackage::capture(root)?;\n    start_verified(owners, &package, snapshot.resources()?)\n}\npub(super) fn start_snapshot(\n    owners: usize,\n    snapshot: &InstancePackage,\n) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {\n    // The snapshot retains bytes, not a previous verification decision.\n    start_verified(owners, &snapshot.verify()?, snapshot.resources()?)\n}\nfn start_verified(\n    owners: usize,\n    package: &gerbil_scheme_python::VerifiedPackage,\n    resources: &Arc<tempfile::TempDir>,\n) -> Result<(gerbil_scheme::instances::InstancePool, PathBuf)> {\n    // SAFETY: the build-owned image contains this exact Scheme archive and upstream adapter.\n    let program = unsafe {\n        IsolatedProgram::from_image(\n            package.root().join(\"_owners/ascent-instance.dylib\"),\n            c\"ascent_hybrid_call\",\n        )\n        .map_err(bridge_error)?\n        .with_exports(&[c\"ascent_hybrid_bind\", c\"ascent_hybrid_table\"])\n    };\n    let mut runtime = gerbil_scheme::instances::InstancePool::start(\n        &program,\n        InstanceConfig {\n            owners,\n            queue_capacity: 64,\n            maximum_request_bytes: 64 * 1024 * 1024,\n            maximum_reply_bytes: 64 * 1024 * 1024,\n            startup_timeout: Duration::from_mins(1),\n        },\n    )\n    .map_err(bridge_error)?;\n    if runtime.owners().iter().any(|r| r.processors != 1) {\n        return Err(crate::failure(\n            \"each instance VM must have exactly one processor\",\n        ));\n    }\n    runtime\n        .retain_owner_resource(resources)\n        .map_err(bridge_error)?;\n    Ok((runtime, package.root().join(\"_owners/lib\")))\n}\npub(super) fn bind(dispatcher: &InstanceDispatcher, index: usize, library: &Path) -> Result<()> {\n    let library = library\n        .to_str()\n        .ok_or_else(|| crate::failure(\"non-UTF8 instance resource path\"))?\n        .to_owned();\n    let bound = dispatcher\n        .submit_native_on(index, move |vm| {\n            let address = crate::ascent_hybrid_checkpoint as *const () as usize;\n            let (_, bytes) = num_bigint::BigInt::from(address).to_bytes_le();\n            let address = vm.big_integer(\n                &gerbil_scheme::BinaryInteger::new(false, bytes)\n                    .map_err(|_| InstanceError::InvalidConfig(\"callback address\"))?,\n            )?;\n            let library = vm.string(&library)?;\n            let input = vm.vector(&[&address, &library])?;\n            drop(vm.call_export(c\"ascent_hybrid_bind\", &input)?);\n            Ok(())\n        })\n        .map_err(bridge_error)?;\n    bound.wait(Duration::from_mins(1)).map_err(bridge_error)?;\n    Ok(())\n}\n"
 
 end Ascent.OwnerAdmission
 #print axioms Ascent.OwnerAdmission.local_cannot_publish
@@ -90,3 +132,11 @@ end Ascent.OwnerAdmission
 #print axioms Ascent.OwnerAdmission.retired_notification_cannot_cancel_new_lease
 #print axioms Ascent.OwnerAdmission.validation_and_wire_cost_retained
 #print axioms Ascent.OwnerAdmission.reuse_removes_only_construction
+
+#print axioms Ascent.OwnerAdmission.changed_snapshot_refuses
+#print axioms Ascent.OwnerAdmission.inherited_snapshot_refuses
+#print axioms Ascent.OwnerAdmission.host_lease_retains_files
+#print axioms Ascent.OwnerAdmission.native_lease_retains_files
+#print axioms Ascent.OwnerAdmission.inherited_lease_cannot_delete
+#print axioms Ascent.OwnerAdmission.file_copy_savings
+#print axioms Ascent.OwnerAdmission.every_pool_retains_full_check

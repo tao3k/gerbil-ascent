@@ -176,6 +176,7 @@ fn numeric_aggregate_constructors_and_replacement_preserve_exact_rationals_and_r
 }
 #[test]
 fn inexact_folds_are_deterministic_across_hash_orders_and_rayon_workers() {
+    let create = Engine::factory();
     let workers: &[usize] = if cfg!(feature = "rayon") {
         &[1, 4, 12]
     } else {
@@ -184,7 +185,7 @@ fn inexact_folds_are_deterministic_across_hash_orders_and_rayon_workers() {
     for &threads in workers {
         for operator in ["sum", "mean"] {
             for _ in 0..3 {
-                let engine = Engine::new(threads).unwrap();
+                let engine = create(threads).unwrap();
                 let module = engine.load_definitions(&source(operator)).unwrap();
                 let value = module
                     .call(

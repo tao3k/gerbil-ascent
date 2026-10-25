@@ -2,27 +2,58 @@
 use super::bindings::{Engine, identities};
 use gerbil_ascent::Data;
 use pyo3::{
-    Bound, Py, PyAny, PyResult, Python, exceptions::PyValueError, pyclass, pymethods,
+    Bound, Py, PyAny, PyRef, PyResult, Python, exceptions::PyValueError, pyclass, pymethods,
     types::PyAnyMethods,
 };
 use std::time::Duration;
+fn installed_package(py: Python<'_>) -> PyResult<std::path::PathBuf> {
+    let file = py
+        .import("ascent")?
+        .getattr("__file__")?
+        .extract::<std::path::PathBuf>()?;
+    file.parent()
+        .map(std::path::Path::to_owned)
+        .ok_or_else(|| PyValueError::new_err("installed package parent required"))
+}
+/// Captured bytes only; each pool performs a fresh verification and VM startup.
+#[pyclass(name = "InstancePackage", frozen)]
+pub(super) struct InstancePackage(ascent_scheme::InstancePackage);
+#[pymethods]
+impl InstancePackage {
+    #[new]
+    #[pyo3(signature=(*, root=None))]
+    fn new(py: Python<'_>, root: Option<std::path::PathBuf>) -> PyResult<Self> {
+        let root = match root {
+            Some(root) => root,
+            None => installed_package(py)?,
+        };
+        py.detach(|| ascent_scheme::InstancePackage::open(root))
+            .map(Self)
+            .map_err(super::types::source_error)
+    }
+}
 #[pyclass(name = "InstancePool", frozen)]
 pub(super) struct InstancePool(ascent_scheme::InstancePool);
 #[pymethods]
 impl InstancePool {
     #[new]
-    #[pyo3(signature=(owners=12))]
-    fn new(py: Python<'_>, owners: usize) -> PyResult<Self> {
-        let file = py
-            .import("ascent")?
-            .getattr("__file__")?
-            .extract::<std::path::PathBuf>()?;
-        let root = file
-            .parent()
-            .ok_or_else(|| PyValueError::new_err("installed package parent required"))?;
-        py.detach(|| ascent_scheme::InstancePool::from_package(owners, root))
-            .map(Self)
-            .map_err(super::types::source_error)
+    #[pyo3(signature=(owners=12, *, package=None))]
+    fn new(
+        py: Python<'_>,
+        owners: usize,
+        package: Option<PyRef<'_, InstancePackage>>,
+    ) -> PyResult<Self> {
+        if let Some(package) = package {
+            let snapshot = package.0.clone();
+            py.detach(|| ascent_scheme::InstancePool::from_snapshot(owners, &snapshot))
+                .map(Self)
+                .map_err(super::types::source_error)
+        } else {
+            let root = installed_package(py)?;
+            py.detach(|| ascent_scheme::InstancePool::from_package(owners, root))
+                .map(Self)
+                .map_err(super::types::source_error)
+        }
     }
     #[pyo3(signature=(index, workers=1, *, max_source_scopes=None, max_input_bytes=None, backend=None, work_distribution="adaptive"))]
     fn engine(
@@ -83,3 +114,7 @@ impl InstancePool {
         )
     }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/instance_package.rs"]
+mod tests;

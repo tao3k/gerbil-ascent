@@ -511,6 +511,8 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<ProcessPool>()?;
     #[cfg(all(feature = "instances", target_os = "macos"))]
     module.add_class::<super::instances::InstancePool>()?;
+    #[cfg(all(feature = "instances", target_os = "macos"))]
+    module.add_class::<super::instances::InstancePackage>()?;
     module.add_function(pyo3::wrap_pyfunction!(super::scheme::_scheme_call, module)?)?;
     module.add_class::<Session>()?;
     module.add_class::<Snapshot>()?;

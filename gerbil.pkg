@@ -4,4 +4,4 @@
 (package:
  gerbil-ascent
  depend:
- ("github.com/tao3k/gebril-yuanxu@afc447d9804ebb232d549f1934d55239a80c3868"))
+ ("github.com/tao3k/gebril-yuanxu@0353d86ac017442506e89617e86e6ef778a3111e"))

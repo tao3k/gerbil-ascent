@@ -32,8 +32,7 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         out
     };
     let description = call(request("describe", vec![])).unwrap();
-    assert_eq!(description.field("abi").unwrap(), &Data::from(1usize));
-    assert_eq!(description.field("sourceScopes").unwrap(), &Data::from(0usize));
+    check_fresh_description(&description);
     assert!(call(request("unknown", vec![])).is_err());
     let module = call(request("dsl-open", vec![
             ("source", Data::from("(def answer (lambda () 1)) (def (replace n) (set! answer (lambda () n))) (def (reader) (lambda () (answer))) (def (numbers x) (let-values (((a b) (values x 1/3))) (vector a b)))")),
@@ -103,6 +102,14 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
         .is_err()
     );
     assert!(call(request("describe", vec![])).is_ok());
+}
+
+fn check_fresh_description(description: &Data) {
+    assert_eq!(description.field("abi").unwrap(), &Data::from(1usize));
+    assert_eq!(
+        description.field("sourceScopes").unwrap(),
+        &Data::from(0usize)
+    );
 }
 
 fn check_integer_edges(runtime: &Runtime) {

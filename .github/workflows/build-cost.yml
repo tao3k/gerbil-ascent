@@ -23,6 +23,10 @@ on:
         description: Measure resident production VM processes and Rayon on the same fixed work
         type: boolean
         default: false
+      prepared_run:
+        description: Reuse this head's first-attempt macOS preparation artifact for the production matrix
+        required: false
+        default: ""
       work_distribution:
         description: Rust-owned request fanout for the on-demand production matrix
         type: choice
@@ -49,6 +53,7 @@ on:
         default: false
 permissions:
   contents: read
+  actions: read
 jobs:
   build-cost:
     if: ${{ github.event_name == 'workflow_dispatch' && (inputs.baseline != '' || inputs.process_throughput) }}
@@ -72,7 +77,37 @@ jobs:
         env:
           GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
         run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Verify qualified preparation origin
+        if: ${{ inputs.process_throughput && inputs.prepared_run != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREPARED_RUN: ${{ inputs.prepared_run }}
+        run: |
+          case "$PREPARED_RUN" in ''|*[!0-9]*) exit 1 ;; esac
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREPARED_RUN" > "$RUNNER_TEMP/prepared-run.json"
+          test "$(jq -r .head_sha "$RUNNER_TEMP/prepared-run.json")" = "$GITHUB_SHA"
+          test "$(jq -r .run_attempt "$RUNNER_TEMP/prepared-run.json")" = 1
+          test "$(jq -r .path "$RUNNER_TEMP/prepared-run.json")" = .github/workflows/build-cost.yml
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREPARED_RUN/jobs" --jq '.jobs[] | select(.name == "macos-preparation") | .conclusion')" = success
+      - name: Download qualified same-head compilation
+        if: ${{ inputs.process_throughput && inputs.prepared_run != '' }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: macos-prepared-${{ github.sha }}-1
+          run-id: ${{ inputs.prepared_run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/process-prepared
+      - name: Verify prepared source and SDK before reuse
+        if: ${{ inputs.process_throughput && inputs.prepared_run != '' }}
+        run: |
+          test "$(cat "$RUNNER_TEMP/process-prepared/head")" = "$(git rev-parse HEAD)"
+          fingerprint="$(sha256sum "$GERBIL_HOME/bin/gxi" "$GERBIL_HOME/bin/gsc" "$GERBIL_HOME/include/gambit.h" "$(command -v gcc-16)" "$(gcc-16 -print-prog-name=cc1)" "$(xcrun --find ld)" "$GERBIL_PREFIX/gerbil-build-receipt.json" | sha256sum | cut -d ' ' -f 1)"
+          test "$(cat "$RUNNER_TEMP/process-prepared/toolchain")" = "$fingerprint"
+          tar -xf "$RUNNER_TEMP/process-prepared/prepared.tar"
+          git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          gerbil env gerbil interactive -e '(begin (import :gerbil-ascent/program/interface) (displayln "process-dependencies-ready"))'
       - name: Prepare one declared dependency seed
+        if: ${{ !inputs.process_throughput || inputs.prepared_run == '' }}
         run: |
           echo "GERBIL_BUILD_CORES=$(sysctl -n hw.logicalcpu)" >> "$GITHUB_ENV"
           export GERBIL_BUILD_CORES="$(sysctl -n hw.logicalcpu)"

@@ -4,9 +4,13 @@
 
 * Scope and identities
 
-The SDK stays at Gerbil =1cfb032= / Gambit =ea114fc=. The bridge is pinned
-at gerbil-scheme-rust =c4b95dfaa116bd67b110d94826535fd27f227b85= in existing
-PR 18. The preceding timer repair =9015091= completed exact-head CI, including both platform
+The SDK stays at Gerbil =1cfb032= / Gambit =ea114fc=. The latest local cohort
+uses GSR =653bacc2ce521a6df4a09b16c139813712e38636= and Core =0353d86a=.
+Dated sections below preserve earlier results and their distinct dependency
+identities; outstanding current-cohort gates are recorded in the final section.
+
+The initial bridge was pinned at gerbil-scheme-rust
+=c4b95dfaa116bd67b110d94826535fd27f227b85= in existing PR 18. The preceding timer repair =9015091= completed exact-head CI, including both platform
 bindings, both Bazel bindings, the macOS lifecycle checks and Quint:
 https://github.com/tao3k/gerbil-scheme-rust/actions/runs/39923812650.
 The unsupported SMP job remains explicitly skipped.
@@ -387,3 +391,146 @@ The candidate includes that existing commit without changing upstream source.
 Qualification against that new dependency cohort is required separately;
 older =4922c27b= results are not presented as proof of the =afc447d9= cohort.
 The SDK and GSR =c4b95df= remain unchanged.
+
+* Current-cohort controls and owner namespace diagnosis (2026-10-25)
+
+Revision =cdceb8f9= passed complete Linux source semantics, formal, conformance,
+all three oracle jobs and Python consumer checks in run =40172880830=. Both
+macOS preparation and source semantics passed in run =40172880796=. The Rust
+job rejected a 101-line test against the original 100-line Clippy limit;
+extracting the fresh-description assertions into a helper fixes that lint
+without disabling it. Strict local workspace/all-target Clippy then passed.
+
+The Linux performance group still exceeded its original 180-second budget.
+The persistent reference completed all 1000 samples in 123.549 seconds and
+the candidate used 3.453 seconds. The unchanged full-size global-point witness
+also passed, taking 13 seconds before the group expired. These failed receipts
+remain failures. They do not admit the complete performance suite.
+
+The revised reference builds both complete persistent public SimpleTrie indexes
+with public =List(UInt)= adjacency values, merges complete public enumerations
+and admits the final complete UIntTrieSet. The original set-valued point
+references remain unchanged. Public input, index-child and final-result
+admission still execute; only redundant private intermediate sets are removed.
+The full 512-edge point/reference/independent-list comparison remains, together
+with the original 1000-sample fixture, timing, relative and memory contracts.
+All 173 source modules passed with twelve single-thread VMs (95 seconds).
+An eight-call diagnostic used 0.361585 CPU seconds versus 0.545696 seconds for
+the preceding checked-lookup reference. Other compiler processes were active:
+this is localization evidence, not an isolated performance acceptance result.
+
+Against Core =afc447d9=, the complete 225-test native run passed 223 and failed
+two fresh-owner allocations with =Loader(File exists)=. The upstream allocator
+combined a reusable process ID and a process-local counter; an existing private
+directory therefore deterministically reproduced the error without executing a
+VM. Authorized GSR PR 18 revision =b58c3886= uses atomic =mkdtemp= allocation,
+retains private mode 0700 and never removes a pre-existing directory. Its five
+resource tests, fifty instance lifecycle tests and strict feature Clippy passed
+locally. Twelve threads allocated 192 distinct private directories and the
+pre-existing sentinel remained intact. These tests do not establish complete
+ASCENT route or performance acceptance.
+
+The first upstream Quint job exceeded its unchanged fifteen-minute total budget
+after compiling for 2m42s and serially checking the immutable model. Its previous
+base had passed the same model in 715.51 test seconds, with little total-budget
+margin. The directory patch changes neither the model nor its checker. A
+separately authorized test-only scheduling repair retains the complete multiset
+of sixty CLI invocations, including duplicates, seeds, sample counts, step
+bounds and expected rejecting mutations, using three independent workers.
+Inventory equivalence is not a formal-model pass. The unchanged real Quint
+gate subsequently passed locally in 188.73 test seconds (298.30 seconds including
+compilation), with strict harness Clippy passing. Scheduling revision =653bacc2=
+was pushed to the same PR 18; its new exact-head upstream CI remains required.
+The original directory-only revision passed all five supported native CI jobs;
+its Quint timeout remains recorded rather than relabeled.
+
+Production run =40172878273= stopped during fresh Core dependency construction:
+418 of 540 reported compile tasks preceded the original 180-second deadline.
+It executed neither native qualification nor the 33-row matrix or either
+384-proof provenance load. No throughput, P95, maximum latency or resource
+comparison is admitted. The production experiment can explicitly reuse a
+first-attempt macOS preparation artifact only from the identical source head,
+successful preparation job and exact SDK/compiler fingerprint. The native
+semantic prerequisites and all production measurements remain mandatory.
+This reuse does not close the fresh Core cold-build budget failure.
+
+Whole-host/source/allocator refinement and a proved implementation of true
+cumulative allocation remain open. Literal source bindings, cost identities,
+finite model exploration and functional tests do not close those obligations.
+
+The GSR =653bacc2= Quint CI subsequently passed on its first run, with 238.01
+test seconds and 6m13s for the entire job (=40179966497=). The original
+fifteen-minute deadline was unchanged. Remaining new-head native checks were
+still running or queued at this receipt; their predecessor passes are not
+reported as new-head passes.
+
+ASCENT against GSR =653bacc2= and Core =afc447d9= then passed all 225 native
+Rust/kernel/process/instance/PyO3 tests: twelve parallel tests, zero retries,
+zero skips, 315.943 seconds. Both previously rejected fresh-owner allocations
+passed without removing historical directories. External local load remained,
+so this duration is a functional receipt, not a three-core performance result.
+The rebuilt installed wheel also passed twelve-owner process, instance and
+explicit-package call/apply qualification, with complete reaping/joining and
+all three twelve-thread Rayon distribution modes. Exact ASCENT-head CI remains
+a separate gate.
+
+* Alignment with the advanced PR head (2026-10-25)
+
+PR 1 advanced from =cdceb8f9= to =6b1ec87d= while the preceding tests ran.
+The two existing commits add a global 180-second build shebang and select Core
+=0353d86ac017442506e89617e86e6ef778a3111e=. All pending patches were saved
+and the existing branch was fast-forwarded normally. Core's production Scheme
+sources are byte-identical to =afc447d9=: the upstream difference contains tests,
+documentation and development checker changes. This establishes the scope of
+the change, not an exact-new-cohort functional or performance acceptance pass.
+
+Native package checkout and tag both reached =0353d86a=. The SDK's versioned
+update command then reported its known literal package-name error; the failed
+receipt remains. Native dependency installation completed in the new state,
+with POO still =29c58aa9=, and the explicit Core build passed. Neither reported
+a production compile job. No SDK or upstream implementation patch was needed.
+
+The newly imposed build shebang killed ASCENT compilation with status 124
+(31744 encoded) after 641 reported compile jobs. Current-head GitHub run
+=40179338081= independently shows the same build-stage timeout in all three
+oracle jobs. Their semantic execution had not started. The user authorized
+restoring only the original =#!/usr/bin/env gxi= entry. Build progress
+supervision, CI job budgets, Linux 180-second and macOS 600-second semantic
+limits, three-core configuration, twelve single-thread VMs, Rust's twelve
+threads and every performance gate remain unchanged.
+
+After that entry correction, the local full build completed in 177.76 seconds,
+reporting 647 compile jobs and 123 admitted outputs at the second link. The
+preceding interrupted build had produced partial outputs, so this duration is
+not accepted as a matched cold-build speedup or as evidence of three-core
+hardware isolation. No implementation optimization is inferred from it.
+
+Complete source semantics then passed all 173 modules with twelve single-thread
+VMs, natural exit zero and the unchanged 600-second semantic limit (321 seconds).
+The local =just test= invocation also gave preparation twelve build workers;
+that preparation receipt is excluded from three-core cost acceptance. It
+reported source-context loading 65.097194 seconds, dependency projection
+72.578359 seconds and make 173.019342 seconds over 396 modules. This local
+configuration does not qualify the required isolated three-core preparation.
+Final CI keeps its separate three-core preparation and twelve-VM execution.
+The unresolved loading and preparation costs require matched measurements;
+neither the successful functional run nor a green CI closes those costs.
+
+Full native and installed-wheel checks against the newly selected source
+identity remain required. The preceding Core =afc447d9= receipts retain their
+original identity rather than being relabeled.
+
+Against Core =0353d86a= and GSR =653bacc2=, the complete native qualification
+subsequently passed 225/225 in 425.338 seconds with twelve parallel tests,
+zero retries and zero skips. Strict workspace/all-target Clippy passed in
+1m38s. The installed wheel passed the process, independent-instance and
+explicit-package paths, each with twelve single-thread VMs, 120 calls, 120
+closure applications and complete retirement. All three twelve-thread Rayon
+distribution modes preserved the original limits and completed snapshots.
+These local results do not establish isolated three-core throughput.
+
+GSR =653bacc2= also completed all six supported exact-head CI jobs successfully
+in https://github.com/tao3k/gerbil-scheme-rust/actions/runs/40179966497 .
+The unsupported multiple-threaded-VM SMP job remains explicitly skipped.
+ASCENT's new-head full CI, isolated 33-row matrix and both complete mean/provenance
+loads remain required before admitting a production performance result.

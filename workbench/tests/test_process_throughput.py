@@ -106,6 +106,34 @@ class DiagnosticAdmission(unittest.TestCase):
                 self.assertEqual(row['diagnostic_only'], diagnostic)
                 self.assertEqual('ASCENT_PROCESS_TRACE' in launch.call_args.kwargs['env'], diagnostic)
 
+    def test_zombie_group_cleanup_preserves_timeout_and_every_observation(self):
+        import argparse
+        import subprocess
+        import tempfile
+        from unittest.mock import Mock, patch
+        from types import SimpleNamespace
+        from ascent_workbench.supervision import signal_group
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
+            process = SimpleNamespace(pid=123, returncode=-15, communicate=Mock(side_effect=[
+                subprocess.TimeoutExpired('benchmark', 240),
+                subprocess.TimeoutExpired('benchmark', 2), self.complete_evidence()]))
+            with patch.dict(CONTROL.os.environ, {}, clear=True), patch('sys.platform', 'darwin'), \
+                    patch.object(CONTROL, 'compilers', return_value=[]), \
+                    patch.object(CONTROL, 'process_snapshot', return_value=[]), \
+                    patch.object(CONTROL, 'thread_population', return_value={}), \
+                    patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
+                    patch.object(CONTROL.subprocess, 'Popen', return_value=process), \
+                    patch.object(CONTROL, 'signal_group', wraps=signal_group), \
+                    patch('os.killpg', side_effect=[None, PermissionError(1, 'zombie only')]), \
+                    patch('ascent_workbench.supervision.subprocess.run', return_value=subprocess.CompletedProcess([], 0, stdout='123 Z\n')):
+                row = CONTROL.run_case(args, ('small', 12, 4, 8), ('vm', 1, 1), 'adaptive')
+            self.assertEqual(row['status'], 'timeout')
+            self.assertFalse(row['valid'])
+            self.assertEqual(len(row['samples']), 5)
+            self.assertTrue((Path(directory) / (row['key'] + '.stderr')).exists())
+            self.assertEqual([call.kwargs['timeout'] for call in process.communicate.call_args_list], [240, 2, 5])
+
     def test_successful_diagnostic_does_not_promote_or_repeat_original_failure(self):
         import argparse
         import copy

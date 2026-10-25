@@ -10,8 +10,12 @@ import re
 import statistics
 import signal
 import subprocess
+import sys
 import threading
 import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "workbench/src"))
+from ascent_workbench.supervision import signal_group
 
 COMPILERS = {"cargo", "rustc", "gxi", "gsc", "cc1", "cc1plus", "clang", "clang++", "gcc", "gcc-16", "lean", "lake"}
 
@@ -200,11 +204,11 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         status = process.returncode
     except subprocess.TimeoutExpired:
         status = "timeout"
-        os.killpg(process.pid, signal.SIGTERM)
+        signal_group(process.pid, signal.SIGTERM)
         try:
             stdout, stderr = process.communicate(timeout=2)
         except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGKILL)
+            signal_group(process.pid, signal.SIGKILL)
             stdout, stderr = process.communicate(timeout=5)
     finally:
         stop.set()

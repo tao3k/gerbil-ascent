@@ -534,3 +534,94 @@ in https://github.com/tao3k/gerbil-scheme-rust/actions/runs/40179966497 .
 The unsupported multiple-threaded-VM SMP job remains explicitly skipped.
 ASCENT's new-head full CI, isolated 33-row matrix and both complete mean/provenance
 loads remain required before admitting a production performance result.
+
+* Production experiment at a3d77ad5: incomplete and failed
+
+The exact-head main CI run [[https://github.com/tao3k/gerbil-ascent/actions/runs/40184960066][40184960066]] passed. The independent macOS source run
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/40184960056][40184960056]] passed all 173 source tests in 360 seconds with twelve
+single-processor VMs. Neither result admits the production experiment.
+
+Production run [[https://github.com/tao3k/gerbil-ascent/actions/runs/40185820697][40185820697]] failed. Its artifact preserves 27 of the intended
+33 rows. The twelve-instance parallel-closure case exceeded the original
+240-second case limit. During cleanup, Darwin returned EPERM for a process
+group, and the unguarded killpg exception aborted the matrix before its
+completion receipt. The remaining five Rayon rows were not executed.
+There is no complete-matrix or overall performance acceptance claim.
+
+All recorded rows passed their individual checks. QPS and P95 below are
+medians of five fixed-work samples; maximum latency comes from the separate
+30-second sustained load. RSS is a sampled sum including shared pages, not
+PSS. Speedup uses the same mode with one VM or one Rayon thread.
+
+| Workload | Mode | VMs | Rust threads | QPS | P95 ms | Soak max ms | Own-one speedup | RSS sum MiB |
+|-
+| small | vm | 1 | 12 | 125.71 | 104.727 | 172.492 | 1.000 | 156.1 |
+| small | vm | 3 | 12 | 313.04 | 55.136 | 115.844 | 2.490 | 358.9 |
+| small | vm | 12 | 12 | 325.47 | 96.309 | 217.406 | 2.589 | 812.8 |
+| small | instances | 1 | 12 | 147.75 | 166.634 | 192.056 | 1.000 | 849.8 |
+| small | instances | 3 | 12 | 387.08 | 41.742 | 371.418 | 2.620 | 2340.3 |
+| small | instances | 12 | 12 | 60.19 | 358.779 | 13515.499 | 0.407 | 3715.1 |
+| small | rayon | 1 | 1 | 8690.64 | 1.875 | 15.293 | 1.000 | 93.8 |
+| small | rayon | 1 | 3 | 14882.53 | 1.151 | 70.410 | 1.712 | 72.8 |
+| small | rayon | 1 | 6 | 6032.70 | 9.187 | 236.565 | 0.694 | 79.1 |
+| small | rayon | 1 | 8 | 18366.82 | 0.996 | 125.405 | 2.113 | 72.1 |
+| small | rayon | 1 | 12 | 15062.56 | 1.238 | 137.011 | 1.733 | 73.9 |
+| closure | vm | 1 | 12 | 56.47 | 250.328 | 971.732 | 1.000 | 130.8 |
+| closure | vm | 3 | 12 | 128.70 | 115.703 | 265.305 | 2.279 | 264.5 |
+| closure | vm | 12 | 12 | 122.21 | 148.273 | 313.976 | 2.164 | 722.3 |
+| closure | instances | 1 | 12 | 51.55 | 329.180 | 394.863 | 1.000 | 818.0 |
+| closure | instances | 3 | 12 | 94.73 | 276.235 | 388.183 | 1.838 | 2329.3 |
+| closure | instances | 12 | 12 | 41.79 | 440.374 | 16052.248 | 0.811 | 3763.7 |
+| closure | rayon | 1 | 1 | 1112.62 | 14.875 | 22.348 | 1.000 | 191.1 |
+| closure | rayon | 1 | 3 | 3140.19 | 4.750 | 70.516 | 2.822 | 75.0 |
+| closure | rayon | 1 | 6 | 3812.28 | 5.054 | 81.590 | 3.426 | 76.0 |
+| closure | rayon | 1 | 8 | 3258.63 | 5.882 | 100.714 | 2.929 | 76.4 |
+| closure | rayon | 1 | 12 | 4135.92 | 4.731 | 94.445 | 3.717 | 80.4 |
+| parallel-closure | vm | 1 | 12 | 3.39 | 3612.865 | 3745.803 | 1.000 | 510.9 |
+| parallel-closure | vm | 3 | 12 | 6.99 | 1738.260 | 2036.127 | 2.064 | 682.0 |
+| parallel-closure | vm | 12 | 12 | 8.59 | 1464.560 | 2034.619 | 2.538 | 1537.7 |
+| parallel-closure | instances | 1 | 12 | 2.42 | 5203.277 | 4728.014 | 1.000 | 1248.4 |
+| parallel-closure | instances | 3 | 12 | 6.14 | 1973.588 | 3424.013 | 2.537 | 2766.5 |
+
+The twelve-instance small workload reaches a 13.515-second maximum; the
+closure workload reaches 16.052 seconds. Their recorded slowest-request
+phases place most of that time inside run/export. These observations do not
+yet distinguish Scheme evaluation, conversion, GC, or OS memory pressure.
+The twelve-process path does not exhibit the same multi-second small/closure
+tail in this cohort. Three host CPUs also prevent interpreting twelve VMs
+as twelve available physical cores.
+
+Both mean/provenance loads failed their unchanged one-second proof deadline.
+Their diagnostic receipts have semantic_checks_complete=false and
+performance_admitted=false. They are not throughput measurements or passed
+provenance acceptance. Fresh source authority checks remain mandatory.
+
+The cleanup correction reuses the existing process-group supervisor. Darwin
+EPERM is tolerated only after an independently observed absent or zombie-only
+group; live members, malformed observations and unreadable snapshots fail
+closed. The 240-second timeout remains a failed case. The new regression
+test preserves partial samples and stderr after TERM/KILL cleanup.
+
+Remaining gaps include the six missing matrix rows, both full proof loads,
+the instance tail/footprint regression, first preparation costs, true cumulative
+allocation evidence, and complete checker/decoder/cache/SCC/host source
+refinement. Model proofs and passing CI do not close these gaps.
+
+The first local trace preflight used twelve single-processor VMs with a
+smaller 1-by-4 graph and one 256-request sample, rather than the production
+4-by-8 graph and five 240-request samples. Other compiler processes were
+present. It is diagnostic only and supplies no matched performance gain.
+The longest captured decode took 1,535,950 microseconds, with a native GC
+wall-counter delta of 1,533,892.87 microseconds. Root counts were two before
+and after the phase; that does not measure temporary peak roots or allocation.
+All twelve owners joined with zero retained roots. This confirms a possible
+decode/GC stall in this local path, without establishing the cause of the
+production 13-to-16-second tails or admitting a fix. GC CPU counters must not
+be summed across concurrent owners as independent process CPU measurements.
+
+Opt-in instance tracing now separates encode, evaluate and decode, using the
+existing upstream NativeSession diagnostics on the fixed owner. Missing
+counters are reported as unavailable. The disabled branch uses the original
+conversion/call sequence and performs no diagnostic ABI reads. These counters
+do not supply true cumulative allocation, and traced measurements remain
+ineligible for production throughput acceptance.

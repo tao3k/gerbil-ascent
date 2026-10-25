@@ -97,8 +97,57 @@ pub(super) fn decode(vm: &NativeSession<'_>, value: &NativeRoot<'_>, depth: usiz
         _ => Err(crate::failure("unsupported native application result")),
     }
 }
+// These owner-local counters are diagnostic only. They do not report cumulative
+// allocation and are never enabled for admitted throughput measurements.
+fn observe<T>(
+    vm: &NativeSession<'_>,
+    operation: &str,
+    phase: &str,
+    action: impl FnOnce() -> Result<T>,
+) -> Result<T> {
+    let before = vm.diagnostics();
+    let started = std::time::Instant::now();
+    let result = action();
+    let elapsed = started.elapsed().as_micros();
+    if let Some((before, after)) = before.zip(vm.diagnostics()) {
+        crate::diagnostics::emit(format!(
+            "ASCENT-INSTANCE-PHASE pid={} owner={} operation={operation} phase={phase} elapsed_us={elapsed} success={} gc_user_us={} gc_system_us={} gc_real_us={} owner_cpu_us={} roots_before={} roots_after={} gc_count={}",
+            std::process::id(),
+            vm.owner_index(),
+            result.is_ok(),
+            (after[0] - before[0]) * 1e6,
+            (after[1] - before[1]) * 1e6,
+            (after[2] - before[2]) * 1e6,
+            (after[3] - before[3]) * 1e6,
+            before[4],
+            after[4],
+            after[5] - before[5],
+        ));
+    } else {
+        crate::diagnostics::emit(format!(
+            "ASCENT-INSTANCE-PHASE pid={} owner={} operation={operation} phase={phase} elapsed_us={elapsed} success={} usage=unavailable",
+            std::process::id(),
+            vm.owner_index(),
+            result.is_ok(),
+        ));
+    }
+    result
+}
 pub(super) fn call(vm: &NativeSession<'_>, request: &Data) -> Result<Data> {
-    let request = encode(vm, request)?;
-    let response = vm.call(&request).map_err(bridge_error)?;
-    crate::application::decode_response(decode(vm, &response, 0)?)
+    if !crate::diagnostics::enabled() {
+        let request = encode(vm, request)?;
+        let response = vm.call(&request).map_err(bridge_error)?;
+        return crate::application::decode_response(decode(vm, &response, 0)?);
+    }
+    let operation = request
+        .get("operation")
+        .and_then(|v| v.text().ok())
+        .unwrap_or("-");
+    let request = observe(vm, operation, "encode", || encode(vm, request))?;
+    let response = observe(vm, operation, "evaluate", || {
+        vm.call(&request).map_err(bridge_error)
+    })?;
+    observe(vm, operation, "decode", || {
+        crate::application::decode_response(decode(vm, &response, 0)?)
+    })
 }

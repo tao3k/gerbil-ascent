@@ -33,6 +33,7 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
     };
     let description = call(request("describe", vec![])).unwrap();
     assert_eq!(description.field("abi").unwrap(), &Data::from(1usize));
+    assert_eq!(description.field("sourceScopes").unwrap(), &Data::from(0usize));
     assert!(call(request("unknown", vec![])).is_err());
     let module = call(request("dsl-open", vec![
             ("source", Data::from("(def answer (lambda () 1)) (def (replace n) (set! answer (lambda () n))) (def (reader) (lambda () (answer))) (def (numbers x) (let-values (((a b) (values x 1/3))) (vector a b)))")),

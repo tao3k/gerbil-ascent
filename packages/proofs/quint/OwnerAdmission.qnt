@@ -4,19 +4,25 @@ module OwnerAdmission {
   const Mutation: str
   type State = {generation: int, canceled: bool, mirrored: bool, expired: bool,
                 requested: bool, accepted: bool, badPublication: bool,
-                oldNotification: int, badNotification: bool, work: int, refused: bool}
+                oldNotification: int, badNotification: bool, work: int, refused: bool, metadataReady: bool, ownerReady: bool, metadataScopeDelta: int}
   var q: State
   action init = q' = {generation: 1, canceled: false, mirrored: false, expired: false,
     requested: false, accepted: false, badPublication: false,
-    oldNotification: 0, badNotification: false, work: 0, refused: false}
+    oldNotification: 0, badNotification: false, work: 0, refused: false, metadataReady: false, ownerReady: false, metadataScopeDelta: 0}
+  action InitializeMetadata = all {not(q.metadataReady),
+    q' = {...q, metadataReady: true,
+      metadataScopeDelta: if (Mutation == "metadata-spends-scope") 1 else q.metadataScopeDelta}}
+  action Ready = all {not(q.ownerReady),
+    q.metadataReady or Mutation == "ready-before-metadata",
+    q' = {...q, ownerReady: true}}
   action Cancel = all {not(q.canceled), q' = {...q, canceled: true}}
   action Expire = all {not(q.expired), q' = {...q, expired: true}}
   action Deliver = all {q.canceled, not(q.mirrored), q' = {...q, mirrored: true}}
-  action Charge = all {not(q.accepted), not(q.canceled), not(q.expired), not(q.requested),
+  action Charge = all {q.ownerReady, not(q.accepted), not(q.canceled), not(q.expired), not(q.requested),
     q.work < 3,
     q' = {...q, work: if (q.work < 2 or Mutation == "ignore-budget") q.work + 1 else q.work,
       refused: q.work == 2}}
-  action Request = all {not(q.requested), not(q.accepted),
+  action Request = all {q.ownerReady, not(q.requested), not(q.accepted),
     q' = {...q, requested: true,
       accepted: Mutation == "child-publishes",
       badPublication: Mutation == "child-publishes"}}
@@ -35,8 +41,10 @@ module OwnerAdmission {
     val targets = q.oldNotification == q.generation or Mutation == "unfenced-notice"
     q' = {...q, oldNotification: 0, mirrored: if (targets) true else q.mirrored,
       badNotification: targets}}
-  action step = any {Cancel, Expire, Deliver, Charge, Request, Publish, Retire, LateNotification,
+  action step = any {InitializeMetadata, Ready, Cancel, Expire, Deliver, Charge, Request, Publish, Retire, LateNotification,
     q' = q}
+  val OwnerReady = not(q.ownerReady) or q.metadataReady
+  val LibraryScopes = q.metadataScopeDelta == 0
   val CallerOnly = not(q.badPublication)
   val LeaseFence = not(q.badNotification)
   val BudgetExact = q.work >= 0 and q.work <= 2

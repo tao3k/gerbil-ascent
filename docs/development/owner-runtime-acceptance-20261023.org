@@ -308,3 +308,82 @@ upstream correctness nor qualify the unpushed ASCENT candidate.
 The original performance gates, complete 33-row production matrix, both 384-proof
 mean/provenance loads and final exact ASCENT-head CI remain required. No production speedup or preferred
 VM route is admitted from local constructor timing or a green formal model.
+
+* Exact-head failures and owner readiness (2026-10-25)
+
+Combined revision =2efc6611= was pushed to the existing PR 1 after integrating
+all pending caller-owned-package changes on =9573529a=. Its main CI completed
+Rust/PyO3, formal, conformance and all three oracle jobs successfully. Both
+macOS preparation and the complete macOS source-semantic job passed. Linux
+source semantics and performance failed their unchanged 180-second deadlines.
+The retained source receipt completed 88 of 89 batches; the remaining exhaustive
+candidate-flow Case reached graph 481 of 512. The added full-size global-point
+control occupied about 53 seconds in the concurrent source suite.
+
+The first isolated three-core production run =40168274712= passed 133 of 136
+native process/instance tests and failed three 30-second =dsl-open= requests.
+Consequently it did not execute the 33 production rows or either mean/provenance
+load. No throughput, P95, maximum latency or resource comparison is admitted
+from that run. The complete failed log and artifact remain available.
+
+One actual failed request reports 32.185 seconds wall, 3.568 seconds process
+CPU, 19 collections, 1.079 seconds GC CPU and 10.197 seconds GC wall. A separate
+linked-image phase probe measured fixed rule-interface import at approximately
+1.14 CPU seconds and 294 MB of VM-reported allocation; evaluating its small
+user module used approximately 0.41 ms CPU. These diagnostic counters are not
+a physical-memory measurement or a proved cumulative-allocation implementation.
+Changing import evaluation to =core-expand= alone did not remove this cost.
+That experiment was not adopted.
+
+Instance binding previously installed the verified source path and callback,
+then published the owner while its fixed source ABI remained uninitialized.
+Binding now initializes the original cached library context before returning.
+It uses the existing upstream owner task and its unchanged per-binding
+60-second wait. It executes no caller declarations, creates no source scope
+and preserves the existing 30-second request, cancellation and work controls.
+The native unit checks that sourceScopes is zero after binding. Initialization
+still allocates and consumes CPU: moving it to readiness does not establish a
+cold-start improvement. The end-to-end cold cost remains initialization plus
+execution and must be measured, including the increased startup share.
+
+Lean records that cost identity and unchanged scope accounting. Quint adds
+actual initialization/ready transitions and rejects both premature readiness
+and metadata consuming a caller scope. Complete Scheme source bindings cover
+=interface/hybrid.ss= and =interface/rule-module.ss=. These are drift checks and
+model properties, not whole-interpreter, C ABI, allocator or OS refinement.
+The complete formal inventory and all 129 workbench tests passed after adding
+these two obligations; earlier obligations and rejecting mutations remain.
+
+The persistent table control now groups private scalar adjacency rows and
+publishes the complete index with the official public SimpleTrie constructor.
+Join composition and set publication retain full public admission. Its separate
+point reference inserts every joined pair into a source-local set and publishes
+the complete union. Full 512-edge point/bulk/independent quadratic-list checks
+remain in source semantics. The original global-point implementation remains
+unchanged and is checked on the entire 512-edge workload in the required
+performance Case, after both 1000-sample measurements but before timing
+rejection, inside the same 180-second performance deadline. Smaller global-point
+checks also remain in source semantics. No fixture rows, candidate timing
+thresholds, relative-improvement checks or memory contracts were reduced.
+
+Local revised source semantics completed all 173 modules with twelve independent
+single-thread VMs. A subsequent local timing run retained two failures while
+other native compiler work was present; it is not an isolated performance
+receipt. Exact-head isolated Linux gates and the complete production matrix
+remain required. A local Cargo attempt also correctly rejected a missing SCM
+while a simultaneously started native build rewrote the same prefix. That
+invocation error is retained and subsequent native-prefix mutation and Cargo
+reads are sequenced; no upstream workaround or SDK change was introduced.
+
+The readiness repair subsequently passed all 225 local Rust/kernel/process/
+instance/PyO3 tests using pinned nextest 0.9.145, twelve parallel tests, zero
+retries and zero skips (262.766 seconds). The three previously failing test
+names passed. Rebuilt source semantics passed all 173 modules with twelve
+single-thread VMs (109 seconds). These receipts used Core =4922c27b=.
+
+During qualification, the existing PR advanced to =a1feea38= and pinned Yuanxu
+=afc447d9804ebb232d549f1934d55239a80c3868=, sharing guarded native role contexts.
+The candidate includes that existing commit without changing upstream source.
+Qualification against that new dependency cohort is required separately;
+older =4922c27b= results are not presented as proof of the =afc447d9= cohort.
+The SDK and GSR =c4b95df= remain unchanged.

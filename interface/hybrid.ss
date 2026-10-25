@@ -1,6 +1,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; ASCENT business exports. GC, roots and conversions belong to the upstream bridge.
 (import (only-in "engine-api.ss" ascent-engine-call)
+        (only-in "rule-module.ss" ascent-prepare-source-context!)
         :gerbil-scheme-rust/scheme/runtime
         (only-in :gerbil/runtime/loader set-load-path! load-module)
         (only-in :gerbil/runtime/init __scheme-source)
@@ -101,7 +102,10 @@ void ascent_hybrid_set_checkpoint(ascent_check_type fn) { ascent_check_fn = fn; 
                      (string? (vector-ref input 1)))
           (error "invalid fixed-owner initialization"))
         (gerbil-ascent/interface/hybrid#install-instance-source-loader! (vector-ref input 1))
-        (gerbil-ascent/interface/hybrid#bind-checkpoint (vector-ref input 0)))))
+        (gerbil-ascent/interface/hybrid#bind-checkpoint (vector-ref input 0))
+        ;; The upstream owner initialization task retains its original 60-second
+        ;; bound. Do not publish a bound owner before its fixed source ABI is ready.
+        (gerbil-ascent/interface/rule-module#ascent-prepare-source-context!))))
   (c-define (table request) (int64) int64 "ascent_hybrid_table" "extern"
     (gerbil-scheme-rust/scheme/runtime#gerbil-rs-rooted-call request
       (lambda (entries)

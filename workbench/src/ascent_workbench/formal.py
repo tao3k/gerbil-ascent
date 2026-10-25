@@ -440,6 +440,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "checkpoint-publication-link", "rust/ascent-scheme/src/service.rs"),
                 ("ExecutionPolicy.lean", "instance-package-resource", "rust/ascent-scheme/src/instances/package.rs"),
                 ("ExecutionPolicy.lean", "instance-package-lifecycle", "rust/ascent-scheme/src/instances/lifecycle.rs"),
+                ("ExecutionPolicy.lean", "owner-hybrid-scheme", "interface/hybrid.ss"),
+                ("ExecutionPolicy.lean", "owner-source-scheme", "interface/rule-module.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
                 ("ExecutionPolicy.lean", "projection-object-reuse", "interface/projection-cache.ss"),
                 ("ExecutionPolicy.lean", "projection-allocation-probe", "tools/ci/projection-allocation.ss"),
@@ -585,7 +587,7 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate checkpoint waiting source region')
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"projection-allocation-probe", "owner-control-rust", "projection-object-reuse", "instance-package-resource", "instance-package-lifecycle"}:
+                elif language in {"projection-allocation-probe", "owner-control-rust", "projection-object-reuse", "instance-package-resource", "instance-package-lifecycle", "owner-hybrid-scheme", "owner-source-scheme"}:
                     pass  # The complete diagnostic is source-bound, not its printed byte report.
                 elif language == "owned-relation-value":
                     begin, end = (';; BEGIN GENERATED OWNED RELATION VALUE\n',

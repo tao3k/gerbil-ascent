@@ -8,7 +8,8 @@
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
-                 ascent-table-expression-baseline ascent-table-expression-point-reference)
+                 ascent-table-expression-baseline ascent-table-expression-point-reference
+                 ascent-table-expression-global-point-reference)
         (only-in :gerbil-ascent/core/binary-relation
                  gerbil-ascent-relation-closure-bounded)
         (only-in :gerbil-ascent/table/expression
@@ -36,7 +37,12 @@
                  (bulk (ascent-table-expression-baseline pairs radix))
                  (naive (naive-two-hop edges radix)))
             (check-equal? bulk point)
-            (check-equal? bulk naive)))
+            (check-equal? bulk naive)
+            ;; Keep the unpartitioned operation-order witness on bounded graphs;
+            ;; the complete 512-edge workload still checks point, bulk and the
+            ;; independent quadratic oracle without truncating any input rows.
+            (when (<= (length edges) 16)
+              (check-equal? (ascent-table-expression-global-point-reference pairs radix) naive))))
         (list '(8) '(8 10 19 12 35 10) '(8 10 17)
           (cons 256 (let loop ((node 0) (edges []))
             (if (= node 256) edges

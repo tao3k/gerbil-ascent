@@ -16,7 +16,8 @@
         (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype)
         (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
-                 ascent-table-expression-baseline))
+                 ascent-table-expression-baseline
+                 ascent-table-expression-global-point-reference))
 
 (def fixture
   (call-with-input-file
@@ -66,6 +67,13 @@
     (unless (= (length candidate-value) 1024)
       (error "ASCENT relation projection produced the wrong pair count"
              (length candidate-value)))
+    ;; Retain the complete unpartitioned point witness on all 512 edges. Its
+    ;; checks execute once after both original 1000-sample measurements and
+    ;; inside the same unchanged performance deadline; never omit/truncate it.
+    (unless (equal? baseline-value
+                    (ascent-table-expression-global-point-reference pairs radix))
+      (error "global point witness differs on the complete 512-edge fixture"))
+    (displayln "[ascent-table-expression] GLOBAL-POINT-WITNESS-OK input-pairs=512 output-pairs=1024")
     (unless (benchmark-receipt-pass? candidate-receipt)
       (error "ASCENT relation projection exceeded the benchmark budget"
              candidate-receipt))

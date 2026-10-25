@@ -701,7 +701,9 @@ FAULTS["AggregateAdmission"] += (('ignore-negative-raw', 'AllocationScope', 12),
 FAULTS["AggregateAdmission"] += (('ignore-counter-precision', 'AllocationScope', 12),)
 
 MODEL_ORDER += ("OwnerAdmission",)
-CONFIGURATIONS["OwnerAdmission"] = {'constants': 'Mutation = "none"', 'invariants': 'CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost'}
+CONFIGURATIONS["OwnerAdmission"] = {'constants': 'Mutation = "none"', 'invariants': 'CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost OwnerReady LibraryScopes'}
 FAULTS["OwnerAdmission"] = (('child-publishes', 'CallerOnly', 12), ('mirror-authority', 'CallerOnly', 12), ('ignore-deadline', 'CallerOnly', 12), ('unfenced-notice', 'LeaseFence', 12), ('ignore-budget', 'BudgetExact', 12))
 
 FAULTS["OwnerAdmission"] += (("skip-snapshot-reverify", "SnapshotCurrent", 12), ("drop-resource-with-host", "ResourceLifetime", 12), ("fork-drops-parent", "ForkLifetime", 12), ("repeat-package-copy", "CapturedCopyCost", 12))
+
+FAULTS["OwnerAdmission"] += (("ready-before-metadata", "OwnerReady", 12), ("metadata-spends-scope", "LibraryScopes", 12))

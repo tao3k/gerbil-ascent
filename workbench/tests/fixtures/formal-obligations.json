@@ -2922,7 +2922,7 @@
   "OwnerAdmission": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost"
+      "invariants": "CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost OwnerReady LibraryScopes"
     },
     "faults": [
       [
@@ -2968,6 +2968,16 @@
       [
         "repeat-package-copy",
         "CapturedCopyCost",
+        12
+      ],
+      [
+        "ready-before-metadata",
+        "OwnerReady",
+        12
+      ],
+      [
+        "metadata-spends-scope",
+        "LibraryScopes",
         12
       ]
     ]

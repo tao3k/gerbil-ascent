@@ -12,7 +12,7 @@
         (only-in :clan/poo/object .ref))
 (export ascent-load-rule-module ascent-load-evidence-source ascent-load-module-source ascent-load-evidence-components ascent-rule-module
         rule-module? rule-module-program rule-module-explain rule-module-bindings
-        ascent-rule-module-descriptors ascent-source-scope-count)
+        ascent-rule-module-descriptors ascent-source-scope-count ascent-prepare-source-context!)
 
 (def (ascent-rule-module-descriptors program (bindings []))
   (def (kind predicate)
@@ -86,6 +86,11 @@
   ;; Each declaration has a fresh module namespace and private gensym aliases.
   ;; Reuse the import context; it does not own the user's lexical definitions.
   source-core-context)
+(def (ascent-prepare-source-context!)
+  ;; Fixed library metadata belongs to owner readiness, not the first caller's
+  ;; declaration. This creates no user scope and retains no caller definitions.
+  (make-source-context)
+  (void))
 (def (ascent-source-scope-count) source-module-loads)
 ;; Expansion can retain global bindings. Optional caller ceilings cover all
 ;; runtime admissions, including failed expansions; closing does not reclaim them.

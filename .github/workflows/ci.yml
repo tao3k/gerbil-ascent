@@ -150,6 +150,9 @@ jobs:
       - name: Prepare complete source-semantic dependencies
         if: ${{ matrix.lane == 'semantics' }}
         run: just prepare-semantic-library
+      - name: Qualify native Yuanxu Library queries and evidence reuse
+        if: ${{ matrix.lane == 'semantics' }}
+        run: ASCENT_GXTEST_TIMEOUT=180s timeout 180s just test-file t/library-module-test.ss 2G
       - name: Qualify complete standard Gerbil source tests
         if: ${{ matrix.lane == 'semantics' }}
         id: full_scheme

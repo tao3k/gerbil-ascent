@@ -89,27 +89,18 @@
              (check (rejected? (lambda ()
                       (asp-gerbil-scheme-prepared-native-import-closure (current-directory) '("unrequested"))))
                     => #t)))))))
-    (test-case "preparation reads module data without evaluating the build entry"
-      (let (declared
-            (call-with-input-file "build-modules.ss"
-              (lambda (port)
-                (check (read port) => '(export gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options))
-                (check (read port) => '(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512")))
-                (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
-                (let (form (read port))
-                  (check (read port) =>
-                    '(def gerbil-ascent-build-input-modules
-                       (append gerbil-ascent-library-modules
-                         '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop"))))
-                  (check (eof-object? (read port)) => #t)
-                  (match form
-                    (['def 'gerbil-ascent-library-modules ['quote modules]] modules)
-                    (_ (error "build module inventory must be quoted data" form)))))))
-        (check (and (list? declared) (andmap string? declared)) => #t)
-        (check declared => gerbil-ascent-library-modules))
-      (check gerbil-ascent-build-input-modules =>
-        (append gerbil-ascent-library-modules
-          '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
+    (test-case "preparation reads the native projection without evaluating the build entry"
+      (let ((modules (gerbil-ascent-library-modules))
+            (inputs (gerbil-ascent-build-input-modules)))
+        (check (and (list? modules) (andmap string? modules)) => #t)
+        (check (and (member "program/interface" modules) #t) => #t)
+        (check (and (member "candidate/finite-evidence" modules) #t) => #t)
+        (check (and (member "program/rust-execution" modules) #t) => #f)
+        (for-each (lambda (name) (check (and (member name inputs) #t) => #t))
+          (append modules '("modules/relations/build" "modules/inference/build"
+                            "modules/evidence/build" "interface/c-api"
+                            "interface/runtime" "interface/entry" "interface/develop")))
+        (check gerbil-ascent-compiler-options => '("-cc-options" "-D___SINGLE_HOST_LIMIT=512")))
       (let (imports
             (call-with-input-file "t/harness/build.ss"
               (lambda (port) (read-line port) (read port))))

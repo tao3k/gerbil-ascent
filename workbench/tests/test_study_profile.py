@@ -17,7 +17,8 @@ class StudyProfileTests(unittest.TestCase):
         project = Path.cwd().resolve()
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder).resolve()
-            (root / 'gerbil.pkg').write_text('(package: gerbil-ascent)\n')
+            # The compiler-profile probe must not replace ASCENT's real kernel identity.
+            (root / 'gerbil.pkg').write_text('(package: ascent-profile-probe)\n')
             (root / 'justfile').write_text('# isolated build fixture\n')
             (root / '.cache/ascent/compiled-library').mkdir(parents=True)
             for path in ['build-modules.ss', 't/performance/run.ss']:
@@ -37,7 +38,7 @@ class StudyProfileTests(unittest.TestCase):
             env = dict(os.environ, GERBIL_PATH=os.environ.get('GERBIL_PATH', str(project / '.gerbil')),
                        GERBIL_LOADPATH=str(project) + (':' + os.environ['GERBIL_LOADPATH'] if os.environ.get('GERBIL_LOADPATH') else ''))
             def invoke(expression):
-                result = subprocess.run(['gxi', '-:max-heap=1G,debug=q', '-e', expression],
+                result = subprocess.run(['gxi', '-:max-heap=2G,debug=q', '-e', expression],
                                         cwd=root, env=env, capture_output=True, text=True, timeout=60)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
@@ -48,8 +49,8 @@ class StudyProfileTests(unittest.TestCase):
  libdir: {json.dumps(str(library))} optimize: #t parallelize: 3)
 ''')
             query = f'''(add-load-path! {json.dumps(str(library))})
-(import (prefix-in :gerbil-ascent/core/relation-view a-)
-        (prefix-in :gerbil-ascent/t/performance/profile-reference b-))
+(import (prefix-in :ascent-profile-probe/core/relation-view a-)
+        (prefix-in :ascent-profile-probe/t/performance/profile-reference b-))
 (write (list (a-limit) (b-limit))) (newline)'''
             self.assertEqual(invoke(query).strip(), '(512 0)')
             def resources(module):

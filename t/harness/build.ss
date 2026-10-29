@@ -79,10 +79,10 @@
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
          (production-interfaces-admitted? #f)
-         (production-before (map production-output-time gerbil-ascent-library-modules))
+         (production-before (map production-output-time (gerbil-ascent-library-modules)))
          (modules
           (delete-duplicates/hash
-            (append gerbil-ascent-library-modules
+            (append (gerbil-ascent-library-modules)
               (preparation-support-roots source-suites? test-library-base
                 (preparation-selected-dependencies tests test-library-dependencies)
                 (cached-support-modules))) from-end?: #t)))
@@ -95,8 +95,8 @@
     ;; are compiled here. Preparation time is reported separately in CI.
     (let* ((phase (current-jiffy))
            (production-current?
-             (null? (artifact-invalidated-modules (current-directory) gerbil-ascent-build-input-modules)))
-           (roots (preparation-projection-roots gerbil-ascent-library-modules
+             (null? (artifact-invalidated-modules (current-directory) (gerbil-ascent-build-input-modules))))
+           (roots (preparation-projection-roots (gerbil-ascent-library-modules)
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
       (when production-current?
@@ -131,7 +131,7 @@
           ;; interfaces. Source consumers/support roots and explicit reload keep
           ;; Gerbil's source path. Actual compiler imports always bypass the hook.
           (call-with-preparation-production-interfaces
-            production-current? library (append gerbil-ascent-library-modules admitted-support)
+            production-current? library (append (gerbil-ascent-library-modules) admitted-support)
             (lambda ()
               (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
           (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
@@ -142,7 +142,7 @@
                   ;; Interface contexts are registered by .ssi, not source path.
                   ;; The existing build API projects those native contexts too.
                   (call-with-preparation-production-interfaces
-                    production-current? library (append gerbil-ascent-library-modules admitted-support)
+                    production-current? library (append (gerbil-ascent-library-modules) admitted-support)
                     (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))
                   (call-with-asp-gerbil-scheme-prepared-source-graph
                    (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))))
@@ -184,7 +184,7 @@
         ;; unrequested old Suites; make still owns all actual compilation.
         (unless (artifact-compiler-options-current? options-file gerbil-ascent-compiler-options)
           (let (stale (delete-duplicates/hash
-                       (preparation-stale-compiler-modules #f gerbil-ascent-library-modules
+                       (preparation-stale-compiler-modules #f (gerbil-ascent-library-modules)
                                                            all (cached-support-modules #t))))
             (make-clean stale srcdir: (current-directory) libdir: library)
             (clean-compiled-resources! (path-expand "gerbil-ascent" library) stale)))
@@ -192,7 +192,7 @@
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
         ;; Gerbil's driver binds current-compile-context for actual builds.
         (call-with-preparation-production-interfaces
-          production-interfaces-admitted? library (append gerbil-ascent-library-modules admitted-support)
+          production-interfaces-admitted? library (append (gerbil-ascent-library-modules) admitted-support)
           (lambda ()
             (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
                   build-deps: (path-expand "build-deps" test-cache)
@@ -210,7 +210,7 @@
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before
-                                      (map production-output-time gerbil-ascent-library-modules)))))
+                                      (map production-output-time (gerbil-ascent-library-modules))))))
       (displayln "BUILD-TEST-LIBRARY-OK wall-seconds="
                  (exact->inexact (/ (- (current-jiffy) started) (jiffies-per-second))))
       (force-output))))

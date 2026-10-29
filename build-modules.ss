@@ -8,141 +8,32 @@
 (def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
 ;; END GENERATED PREPARATION COMPILER
 
-(def gerbil-ascent-library-modules
-  '("core/ordered-pair-set"
-    "core/binary-relation"
-    "core/relation-view"
-    "core/finite-flow"
-    "table/expression"
-    "table/funs"
-    "table/eqrel"
-    "table/trrel"
-    "table/trrel-uf"
-    "table/index-sharing"
-    "table/provider"
-    "table/access"
-    "table/storage"
-    "table/interface"
-    "program/types"
-    "program/objects"
-    "program/aggregators"
-    "program/syntax"
-    "program/planning"
-    "core/ordered-call"
-    "core/expression-plan"
-    "core/execution-policy"
-    "core/descriptor-stream"
-    "core/actor-envelope"
-    "core/index-publication"
-    "core/positive-certificate"
-    "core/positive-plan"
-    "program/index"
-    "program/scheme-checked"
-    "program/scheme-snapshot"
-    "program/scheme-query"
-    "program/scheme-admit"
-    "program/scheme-session"
-    "program/scheme-admission"
-    "program/scheme-language"
-    "program/operator-descriptor"
-    "program/operator-analysis"
-    "program/operator-measurement"
-    "program/operator-reference"
-    "program/operator-lowering"
-    "program/operator"
-    "program/finite-arithmetic"
-    "program/higher-order"
-    "program/operator-change"
-    "program/operator-session"
-    "core/scc-state"
-    "core/dependency-graph"
-    "core/rule-bindings"
-    "core/rule-semantics"
-    "program/analysis"
-    "program/summary"
-    "program/admission"
-    "program/view-replay"
-    "program/view-state"
-    "program/lattice-frontier"
-    "program/initialization"
-    "program/source-snapshot"
-    "program/source-state"
-    "program/result"
-    "program/source-log"
-    "program/activation"
-    "program/update-selection"
-    "program/reuse"
-    "program/actor-round"
-    "program/component-plan"
-    "program/component-worker"
-    "program/positive-components"
-    "program/execution-publication"
-    "program/round-workspace"
-    "program/execution-control"
-    "program/engine-state"
-    "program/evaluate"
-    "program/session"
-    "program/source-cut"
-    "program/actor-session"
-    "program/interface"
-    "applications/steensgaard"
-    "applications/polonius"
-    "applications/polonius-paths"
-    "applications/finite-flow-program"
-    "applications/taint-paths"
-    "applications/scoped-witness"
-    "applications/scoped-reachability-mask"
-    "applications/scoped-composition"
-    "applications/movie-cast-query"
-    "core/binary-program"
-    "candidate/closure"
-    "candidate/datum"
-    "candidate/types"
-    "candidate/certificate-limits"
-    "candidate/program-identity"
-    "candidate/program"
-    "candidate/funs"
-    "candidate/grounding-plan"
-    "candidate/proof-frame"
-    "candidate/reduction-plan"
-    "candidate/finite-plan"
-    "candidate/provenance"
-    "candidate/provenance-graph"
-    "candidate/support-dependencies"
-    "candidate/support-cut"
-    "candidate/support-height"
-    "candidate/provenance-maintenance"
-    "candidate/annotations"
-   "candidate/stratified-provenance"
-    "candidate/nonmembership"
-    "candidate/finite-evidence"
-    "candidate/closure-index"
-    "candidate/stratified-plan"
-    "candidate/stratified-proof"
-    "candidate/stratified-producer"
-    "candidate/checked-program"
-    "candidate/feedback"
-    "candidate/withholding"
-    "candidate/withdrawal-session"
-    "temporal/graph"
-    "temporal/value"
-    "temporal/projection"
-    "temporal/lens"
-    "interface/request"
-    "interface/rule-source"
-    "rules/declaration"
-    "interface/closed-source"
-    "interface/closed-evidence"
-    "interface/dsl-source"
-    "interface/rule-module"
-    "interface/value-graph"
-    "rules/interface"
-    "rules/module"
-    "t/qualification/evidence-api-module"
-    "interface/projection-cache"
-    "interface/engine-api"))
+(import (for-syntax (only-in :std/source this-source-file)
+                            (only-in :yuanxu/module-system/building/source-package
+                                     register-module-build-source!)))
+(begin-syntax
+  (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
+(import (only-in :clan/poo/object .get)
+        (only-in :std/source this-source-file) "./init.ss")
+(export gerbil-ascent-library-spec)
 
-;; Canonical production source admission includes the source-only ABI entries.
-(def gerbil-ascent-build-input-modules
-  (append gerbil-ascent-library-modules
-    '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop")))
+;; Core owns source discovery and the selected epoch. No second module inventory.
+(def (gerbil-ascent-library-spec)
+  ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
+(def (gerbil-ascent-library-modules)
+  (map (lambda (target) (if (string? target) target (cadr target)))
+       (gerbil-ascent-library-spec)))
+;; ABI inputs are package outputs, not alternative capability declarations.
+(def (gerbil-ascent-build-input-modules)
+  (let* ((modules (gerbil-ascent-library-modules))
+         (root (path-directory (this-source-file)))
+         ;; Build roles are source-only declarations, not compiler targets.
+         (builds (filter-map
+                   (lambda (module)
+                     (and (string-prefix? "modules/" module)
+                          (equal? (path-strip-directory module) "interface")
+                          (let (name (string-append (path-directory module) "build"))
+                            (and (file-exists? (path-expand (string-append name ".ss") root)) name))))
+                   modules)))
+    (append modules builds
+      '("interface/c-api" "interface/runtime" "interface/entry" "interface/develop"))))

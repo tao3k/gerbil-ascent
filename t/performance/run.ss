@@ -19,7 +19,7 @@
 ;; BEGIN GENERATED LOOKUP STUDY-PROFILE
 (def (study-build-spec module)
   (normalize-spec
-    (if (member module gerbil-ascent-library-modules) module
+    (if (member module (gerbil-ascent-library-modules)) module
       [gxc: module [extra-inputs: [(path-expand "build-modules.ss") (path-expand "t/performance/run.ss")]]])
     gerbil-ascent-compiler-options))
 

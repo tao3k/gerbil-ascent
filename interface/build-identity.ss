@@ -42,7 +42,7 @@
                 (displayln "cargo:rerun-if-changed=" path)
                 (unless (equal? directory (path-expand "./" root))
                   (displayln "cargo:rerun-if-changed=" directory))))
-            gerbil-ascent-build-input-modules)
+            (gerbil-ascent-build-input-modules))
   ;; Cargo watches source inputs only, never our generated .oN/archive outputs.
   (for-each (lambda (directory)
               (let (path (path-expand directory root))

@@ -145,7 +145,7 @@
 
 (def (main mode heap . paths)
   (let* ((files (module-files paths))
-         (program (artifact-development-program (current-directory) gerbil-ascent-build-input-modules))
+         (program (artifact-development-program (current-directory) (gerbil-ascent-build-input-modules)))
          (log-root (string-append ".cache/ascent/test-modules/" (uuid->string (random-uuid)))))
   (unless (member mode '("batched" "isolated")) (error "invalid compiled testing mode" mode))
   (unless (pair? files) (error "no discovered test modules" paths))

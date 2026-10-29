@@ -11,4 +11,4 @@
 (def (main . _)
   (current-directory (path-expand ".." (path-directory (this-source-file))))
   (asp-gerbil-scheme-run-selected-policy
-    (map (cut path-default-extension <> ".ss") gerbil-ascent-build-input-modules)))
+    (map (cut path-default-extension <> ".ss") (gerbil-ascent-build-input-modules))))

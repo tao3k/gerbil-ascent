@@ -2,7 +2,6 @@
 import os
 import importlib.util
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 import unittest
@@ -64,7 +63,12 @@ class RayonControlScope(unittest.TestCase):
                 self.assertIn(path, result.stdout)
 
     def test_build_only_producer_is_outside_the_vm_module_inventory(self):
-        source = (ROOT / 'build-modules.ss').read_text()
-        modules = re.search(r"\(def gerbil-ascent-library-modules\s+'\((.*?)\)\)", source, re.S)
-        self.assertIsNotNone(modules)
-        self.assertNotIn('program/rust-execution', re.findall(r'"([^"]+)"', modules.group(1)))
+        result = subprocess.run(
+            ['gxi', '-:max-heap=2G', '-e',
+             '(import "./build-modules.ss") '
+             '(for-each displayln (gerbil-ascent-library-modules))'],
+            cwd=ROOT, capture_output=True, text=True, timeout=180, check=True)
+        modules = result.stdout.splitlines()
+        self.assertIn('program/interface', modules)
+        self.assertIn('candidate/finite-evidence', modules)
+        self.assertNotIn('program/rust-execution', modules)

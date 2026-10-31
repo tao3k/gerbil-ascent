@@ -906,3 +906,200 @@ POO's concrete model/shrink/replay and refusal contracts come from its existing
 [[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/property-kernel.md][property-kernel guide]] and implementation, not a new ASCENT test framework.
 Prior indexing, prefix-firing, provenance and view-maintenance references remain
 in place. None of these bounded tests establishes a general latency improvement.
+
+* Native POO contracts, extension and C4 boundaries
+
+The next increment uses POO in the Library itself, beyond generated tests.
+Native index representation and borrowed storage access were authorized by
+private receiver identity, but supported source edits could still change those
+receivers. The index interface prototype, shared hash-method prototype, both
+trusted index receivers, storage interface prototype and four built-in storage
+receivers are now sealed through =seal-object!=. Their complete native
+precedence lists are checked for rejected supported edits. Low-level writes to
+private runtime representations are not part of this guarantee.
+
+The two index receivers now inherit the same sealed method source through POO;
+they no longer repeat method declarations. Descendants remain custom providers,
+not trusted representations. Public build, extend and lookup generics use POO's
+=:~= argument contracts to reject malformed row lists, column lists and keys
+before extension callbacks execute. Opaque external index state remains owned
+by its provider. Complete candidate shape, membership, occurrence and coverage
+admission remains in the existing evaluator; a method contract is not a proof
+that an arbitrary provider is a correct index.
+
+The public capability sources are POO's pinned
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/parameters.md][generic formal-parameter contracts]],
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/inheritance-hooks.md][inheritance and source-edit protocol]], and
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/object.ss][native object implementation]]. These are dependency API contracts, not a new
+algorithmic claim attributed to Dusa.
+
+Native checks exercise a C4 diamond with ordered left/right/common-base method
+composition, a single common-base invocation, conflicting parent precedence
+rejection before callback effects, and contract refusal of a non-procedure
+lookup. The same diamond also runs through a real engine-local index: an
+invented candidate is rejected, its cached version is revoked, and the next
+valid lookup rebuilds. These are extension contracts, not permission to mutate
+an arbitrary custom provider during an active engine epoch.
+
+The executable dependency cohort remains Yuanxu =85a969c= and POO =30733c3=.
+The observed newer POO branch head =d58ac8a= adds typed generated-testing work;
+the generic property kernel, contracts, source sealing and C4 used here are
+already available in the pinned cohort. No direct POO dependency or unqualified
+dependency promotion is added.
+
+* State-dependent revision coverage and preserved replay
+
+The historical four-step generator, seed =20261031=, 64 cases, dependent mask
+domain and portable counterexample codec remain unchanged. A second use of
+the same POO model protocol generates eight-step state-dependent traces with
+seed =20261101=, 128 cases and 64 charged shrink proposals. Source-only,
+delta-only, no-op and withdrawal commands preserve =delta subset source= by
+construction; there is no rejection sampling or ignored content counted as a
+successful check. Independent ordered filtering still supplies every expected
+probe result, and source/delta versions advance independently.
+
+The first completed run accepted all 128 traces with zero discards. Coverage
+counts are per trace and overlap: no-op 128, source-only 110, delta-only 38,
+withdrawal 96, A/B/A 42, reactivated key 28, equal-size revision 18 and
+different-lane buckets 59. A passing run has no newly discovered counterexample;
+it is not evidence that shrinking was needed. The previous actual native
+version-check mutation, reduced two-command witness and portable POO replay
+remain intact. Any new failure exports the eight-step codec and shrink ledger
+through the same POO writer, which reconfirms failure before export.
+
+* Frozen same-budget empty-bucket performance protocol
+
+=just performance-empty-bucket= extends the existing native index-entry study;
+it introduces no evaluator, provider policy framework or runner. Both arms use
+the same current implementation, differing only in =empty-bucket-reuse?=.
+Each timed call constructs and solves the same chain, equal-size replacement
+and restored chain, with a fresh engine and physical indexes per cut. The
+limits remain =1000/10000/12000=. This is fresh-index runtime measurement with
+warm installed dependencies, not a clean cold package-build claim.
+
+There are four shared warmup pairs and 50 alternating A/B--B/A pairs, four
+calls per arm per sample, three cuts per call. A/A and B/B control scenarios
+use exactly the same sample/call budgets. Independent finite-domain closure
+checks every sampled result outside the clock. The timed work includes DSL
+construction, admission, all solver and index maintenance, result construction,
+allocation and naturally occurring GC after shared warmup. CPU, wall time and
+allocated bytes retain all raw samples. Metered runs are separate from timing.
+
+The benefit gate is frozen before measurement: at least 15 percent lower median
+CPU and wall time, at least 35 of 50 wins for each clock, and at most 256 extra
+allocated bytes per complete three-cut call. Existing control tolerances are
+unchanged. Rejected gates still write their samples and still undergo the final
+source-identity check; remaining scenarios continue to preserve all outcomes.
+Passing an individual scenario cannot enable the policy automatically.
+
+Cost snapshots now separately charge version comparisons and each of the two
+certificate field stores, in addition to cell checks, key comparisons, hits,
+certificate updates, entry capacity, physical probes, build/extension input
+rows and old-membership construction. Two extra fields per enabled physical
+entry are explicit. Heterogeneous operations are not summed into an invented
+unit-cost speedup.
+
+* Native compiler-input ownership findings
+
+The isolated production prefix initially lacked the declared ASP development
+dependency. Standard =just prepare-dev= first failed on missing Homebrew
+OpenSSL =pkg-config= metadata, then completed with that metadata exposed. It
+installed the declared ASP =31c7dde= while retaining POO =30733c3=.
+
+The full performance preparation then exposed two distinct ownership failures:
+raw source expansion of a module DSL role rejected its unbound =.def=, and
+raw source-path registry lookup could not identify a lowered role's native
+context. These failures were not filtered out or accepted as empty results.
+The existing test and performance build entries now use the production
+=call-with-init-build-spec= handoff. Native closure discovery uses ASP's public
+import projection inside that owner extent, where Yuanxu verifies each role's
+source currentness and compiler identity before and after acquisition. Native
+make remains the compiler and scheduler; no alternate module manifest or
+source-path alias registry is introduced. Compiler-input ownership and its
+return guard remain active during preparation and study compilation.
+
+The earlier five-second preparation watchdog rejection remains a separate
+failure. A bounded catalog diagnostic subsequently completed with 148 native
+targets; that observation does not retroactively qualify the failed run.
+
+* Completed measurements: admission rejected, default unchanged
+
+The complete-counter run is =c9fdd628-a874-4548-8c8c-124c3b8c46fa= under
+=.cache/ascent/empty-bucket-reuse/=. All three scenarios completed 50 pairs,
+wrote raw samples and were rejected by their fixed gates. The controller
+completed its source check and returned nonzero for the rejected scenarios;
+there is deliberately no =STUDY-OK= or performance acceptance. An independent
+SHA-256 comparison of all 1,180 manifest entries found zero mismatches after
+the run. The observed values below are per complete three-cut call.
+
+| Scenario | CPU A/B, microseconds | Wall A/B, microseconds | Allocated bytes A/B | CPU/wall wins for B | Gate |
+|----------+----------------------+------------------------+---------------------+---------------------+------|
+| A/A, disabled/disabled | 7414.25 / 7550.50 | 7462.50 / 7854.50 | 28689308 / 29740954 | 21/20 of 50 | Rejected control |
+| B/B, enabled/enabled | 7923.50 / 9509.50 | 8511.50 / 15621.50 | 30299286 / 29766076 | 20/21 of 50 | Rejected control |
+| A/B, disabled/enabled | 8895.00 / 9572.50 | 15124.75 / 18459.00 | 29818030 / 29754812 | 21/20 of 50 | Rejected benefit |
+
+The A/A and B/B controls are unstable against the unchanged CPU/allocation
+tolerances. Therefore the enabled/disabled timing difference is not admitted
+as a causal estimate of policy overhead or speedup. It also misses the benefit
+gate on its own observations. No retry selects a faster timing result. The
+policy remains opt-in and default-off.
+
+The deterministic maintenance accounting is independently useful despite the
+rejected timing controls:
+
+| Cut, enabled | Candidate visits | Complete witnesses | Probes off/on | Cell tests | Version comparisons | Key comparisons | Certificate updates | Field stores | Extra cells |
+|--------------+------------------+--------------------+---------------+------------+---------------------+-----------------+---------------------+--------------+-------------|
+| Chain | 48 | 8 | 37 / 31 | 37 | 33 | 29 | 19 | 38 | 2 |
+| Replacement | 25 | 4 | 18 / 11 | 18 | 15 | 13 | 8 | 16 | 2 |
+| Restored chain | 48 | 8 | 37 / 31 | 37 | 33 | 29 | 19 | 38 | 2 |
+
+Across the complete call, 19 fewer physical probes require 92 cell tests,
+81 version comparisons, 71 key comparisons, 46 certificate updates and 92 field
+stores in six added cells. Build input rows remain 25, extension input rows
+seven and old-membership input rows seven in both modes. Candidate visits
+remain 121, complete witnesses 20 and admitted rows 18. Unknown repeated-prefix
+metrics in the timing study's unrecorded collector remain =#f=, never zero.
+The separately recorded native attribution corpus still checks those metrics.
+
+* Final local qualification and retained non-passing attempts
+
+| Entry | Result | Log under =.data/ascent-poo-native-20261031/= |
+|-------+--------+-------------------------------------------|
+| Compiled provider contracts, C4 and packet revocation | 7 cases, natural exit 0 | ascent-poo-native-ascent-provider-packet-test-20261031.log |
+| Compiled native kernel, both PBT corpora and historical replay | 12 cases; 128 + 64 accepted traces, zero discards; natural exit 0 | ascent-poo-native-ascent-rule-cost-kernel-test-20261031.log |
+| Compiled frozen DSL/oracle, revision and provenance boundaries | 10 cases, natural exit 0 | ascent-poo-native-ascent-rule-cost-test-20261031.log |
+| Existing nested value/contract admission | 36 cases, natural exit 0 | ascent-poo-regression-ascent-value-membership-test-20261031.log |
+| Existing provider views and source journals | 16 cases, natural exit 0, including 512 graph checks | ascent-poo-regression-ascent-provider-views-test-20261031.log |
+| Existing Scheme relational contracts | 31 cases, natural exit 0 | ascent-poo-regression-scheme-relational-test-20261031.log |
+| Lean CachePublication | Guard natural returncode 0 | ascent-poo-cache-lean-20261031.log |
+| Lean PreparationWork | Guard natural returncode 0; generated import literal exactly matches | ascent-poo-preparation-lean-20261031.log |
+| Quint CachePublication | Nine positive/expected-counterexample obligations, natural exit 0 | ascent-poo-cache-quint-20261031.log |
+| Frozen runtime comparison | Three rejected scenarios, all raw samples retained | ascent-poo-empty-benchmark-final-20261031.log |
+
+The 29 compiled cases and 83 existing source-entry cases are focused local
+qualification, not whole-Library, clean cold checkout or remote CI acceptance.
+PreparationWork's import renderer now names the same init-owned specification
+as the native harness. Its small work model does not prove zero initialization
+cost or the runtime correctness of the SDK compiler.
+
+All =ascent-poo-*-20261031.log= attempts and every study directory have been
+copied to =.data/ascent-poo-native-20261031/=. This includes the first invalid
+POO mutation-test fixture (a raw procedure supplied instead of a slot spec),
+the missing development dependency, missing OpenSSL metadata, source reader
+parenthesis errors, watchdog rejection, raw DSL expansion refusal, raw-path
+context refusal, and production-owner diagnostic's missing OpenSSL metadata.
+The one-collector-for-three-solves refusal is retained; the collector contract
+was preserved and each cut now owns its own collector. The following attempt
+omitted two snapshot fields despite charging them internally; it is explicitly
+excluded from complete-cost admission, with its existing control/negative
+timing samples retained in =eaaf48a7-eeea-4e99-8f3e-b36b62ac301a=. The complete
+run adds the missing enumeration without changing tasks, sample budgets or
+gates. An incorrect qualification filename is also retained as a command error;
+the correct existing relational suite was then run and passed.
+
+Replay the current comparison with the normal installed production/development
+dependencies, Homebrew OpenSSL =pkg-config= metadata exposed if needed, and
+=just performance-empty-bucket=. A nonzero exit is expected when the recorded
+performance gate fails; raw receipts are written before refusal. None of the
+failed or unreviewed attempts is counted as zero repetition, free maintenance,
+unused-budget savings or a passed experiment.

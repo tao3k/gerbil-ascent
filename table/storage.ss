@@ -8,7 +8,7 @@
 ;;; the evaluator preflights returned batches before committing its own rows.
 (import (only-in :gerbil-ascent/core/relation-view gerbil-ascent-row-count)
         (only-in :gerbil/runtime/gambit fx-)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .ref seal-object!)
         (only-in :clan/poo/mop .defgeneric define-type validate)
         (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
@@ -51,7 +51,7 @@
 (define-type (GerbilAscentStorageProviderContract
               @ YuanxuObjectContract.)
   identity: 'ascent/storage-provider
-  proto: (.o)
+  proto: (seal-object! (.o))
   responsibilities: (.o .make-state: +make-state+
                       .extend-rows: +extend+))
 
@@ -169,6 +169,10 @@
 (def +native-storage-providers+
   (list +canonical-set-storage-provider+ gerbil-ascent-eqrel-storage-provider
         gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
+
+;;; These exact identities authorize borrowed engine rows and native state.
+;;; Seal all built-in sources; a caller can still derive a custom receiver.
+(for-each seal-object! +native-storage-providers+)
 
 ;;; Stateful engine storage remains tentative until the evaluator commits the complete
 ;;; source batch or rule round. Private mutations cannot be rolled back in

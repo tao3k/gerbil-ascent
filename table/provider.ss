@@ -4,7 +4,7 @@
 
 ;;; One receiver axis: a relation index Provider owns physical build and
 ;;; lookup. Rules remain independent of the provider's private index value.
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref seal-object!)
         (only-in :clan/poo/mop .defgeneric define-type validate)
         (only-in :yuanxu/object-types/contracts
                  YuanxuObjectContract.
@@ -30,7 +30,7 @@
 (define-type (GerbilAscentIndexProviderContract
               @ YuanxuObjectContract.)
   identity: 'ascent/index-provider
-  proto: (.o)
+  proto: (seal-object! (.o))
   responsibilities: (.o .build-index: +procedure+
                       .extend-index!: +procedure+
                       .lookup-index: +procedure+))
@@ -41,10 +41,12 @@
 ;;; Physical engine dispatch gives custom receivers fresh column/key list
 ;;; headers and row spines. Field values preserve identity and remain shared.
 ;;; Validated custom lookup packets are detached before rule callbacks run.
-(.defgeneric (gerbil-ascent-index-provider-build provider rows columns)
+(def (index-columns? columns)
+  (and (list? columns) (andmap (lambda (n) (and (exact-integer? n) (>= n 0))) columns)))
+(.defgeneric (gerbil-ascent-index-provider-build provider (rows :~ list?) (columns :~ index-columns?))
   slot: .build-index)
 ;;; Extend receives only newly admitted rows, preserving index cache reuse.
-(.defgeneric (gerbil-ascent-index-provider-extend! provider index rows columns)
+(.defgeneric (gerbil-ascent-index-provider-extend! provider index (rows :~ list?) (columns :~ index-columns?))
   slot: .extend-index!)
 ;;; Lookup is allowed to return a superset of matching rows because an index
 ;;; covers only selected columns. The evaluator checks every term before a
@@ -60,18 +62,23 @@
 ;;; Initial source rows may repeat; enumeration cannot exceed any row's
 ;;; admitted occurrence count, including overselected rows. The engine checks
 ;;; key coverage and excess duplicate enumeration per all/delta version.
-(.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
+(.defgeneric (gerbil-ascent-index-provider-lookup provider index (key :~ list?))
   slot: .lookup-index)
 
 ;;; The default hash provider preserves row buckets in relation order and
 ;;; remains replaceable at declaration time without changing rule syntax.
+;;; Identity grants native dispatch, so every source of the trusted receiver
+;;; must be immutable. Descendants remain extensible custom providers, admitted
+;;; through the same contract and checked packet boundary.
+(def +hash-index-methods+
+  (seal-object!
+   (.o (.build-index gerbil-ascent-index-build)
+       (.extend-index! gerbil-ascent-index-extend!)
+       (.lookup-index (lambda (index key) (or (hash-get index key) []))))))
 (def +canonical-hash-index-provider+
-  (validate GerbilAscentIndexProviderContract
-            (.o (:: @ IndexProvider.)
-                (.build-index gerbil-ascent-index-build)
-                (.extend-index! gerbil-ascent-index-extend!)
-                (.lookup-index
-                 (lambda (index key) (or (hash-get index key) []))))))
+  (seal-object!
+   (validate GerbilAscentIndexProviderContract
+             (.o inherit: (list IndexProvider. +hash-index-methods+)))))
 
 (def gerbil-ascent-hash-index-provider +canonical-hash-index-provider+)
 
@@ -79,12 +86,9 @@
 ;;; keeps its measured representation; an engine using this receiver derives
 ;;; compatible logical requirements and owns its curried roots and adapters.
 (def +curried-index-provider+
-  (validate GerbilAscentIndexProviderContract
-            (.o (:: @ IndexProvider.)
-                (.build-index gerbil-ascent-index-build)
-                (.extend-index! gerbil-ascent-index-extend!)
-                (.lookup-index
-                 (lambda (index key) (or (hash-get index key) []))))))
+  (seal-object!
+   (validate GerbilAscentIndexProviderContract
+             (.o inherit: (list IndexProvider. +hash-index-methods+)))))
 (def gerbil-ascent-curried-index-provider +curried-index-provider+)
 
 ;; gerbil-ascent-curried-index-provider?

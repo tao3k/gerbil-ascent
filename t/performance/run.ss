@@ -5,7 +5,8 @@
         (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         (only-in :std/make make)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-compiler-options)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-compiler-options)
+        (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :std/misc/process run-process)
         (only-in :std/string/uuid random-uuid uuid->string)
         :std/encoding/json
@@ -28,6 +29,12 @@
 ;; Gerbil owns scheduling, dependencies and object/link completion. A study
 ;; supplies data, never a second compiler or a benchmark-specific build script.
 (def (build-study! study library binary)
+  (call-with-init-build-spec gerbil-ascent-library-spec
+    (lambda (_native _arguments (prefix #f) (_libdir #f) (_bindir #f))
+      (when prefix (error "unexpected foreign performance package" prefix))
+      (build-study/native! study library binary))
+    '("compile") library))
+(def (build-study/native! study library binary)
   (let (sources (artifact-sources))
     (add-load-path! library)
     (initialize-native-build-core-capacity!)
@@ -88,7 +95,9 @@
                 (raise failure)))
             (lambda ()
               (run-process (append '("timeout" "90s") command) stdout-redirection: #f))))) scenarios)
+      ;; A failed admission gate still needs the same source-identity check.
+      ;; Keep the failure and its samples; never skip provenance on rejection.
+      (unless (artifact-matching-sources? sources (artifact-sources))
+        (error "performance sources changed during measurement" name))
       (unless (null? failures) (raise (car failures))))
-    (unless (artifact-matching-sources? sources (artifact-sources))
-      (error "performance sources changed during measurement" name))
     (displayln "STUDY-OK " name " receipts=" receipts)))

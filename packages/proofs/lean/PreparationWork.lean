@@ -8,10 +8,10 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
--- Importing build.ss evaluates its PackageSpec declaration even when the
--- consumer only requests its module list. The separate data module has no
--- such declaration. Source controls read that module with Gerbil's reader
--- and accept only quoted inventory data and its canonical four-entry append.
+-- The production entry owns package/ABI declaration work. The separate module
+-- catalog projects init's native specification without executing that entry.
+-- This classification does not assert zero init, source-admission or lowering
+-- work; those runtime operations remain outside this small work model.
 inductive InventorySource where
   | moduleData
   | buildEntry
@@ -22,7 +22,7 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)\n"
+  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧

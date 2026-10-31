@@ -13,13 +13,12 @@
         "library-spec.ss"
         (only-in "../../bindings/artifact.ss" artifact-invalidated-modules clean-compiled-resources!)
         (only-in :std/string/path path-default-extension)
+        (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-native-import-closure
-                 asp-gerbil-scheme-prepared-native-import-closure
-                 call-with-asp-gerbil-scheme-prepared-source-graph)
+                 asp-gerbil-scheme-native-import-closure)
         (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
-        (only-in "../../build-modules.ss" gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
+        (only-in "../../build-modules.ss" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
@@ -67,6 +66,16 @@
 
 
 (def (prepare-test-library! (tests []) (source-suites? #f) (source-consumers []))
+  ;; Module DSL fragments are native compiler inputs owned by init, not
+  ;; standalone source modules. Keep their lowering and source-current guards
+  ;; active during discovery and make, exactly as the production entry does.
+  (call-with-init-build-spec gerbil-ascent-library-spec
+    (lambda (_native _arguments (prefix #f) (_libdir #f) (_bindir #f))
+      (when prefix (error "unexpected foreign test-library package" prefix))
+      (prepare-test-library/native! tests source-suites? source-consumers))
+    '("compile") package-library))
+
+(def (prepare-test-library/native! tests source-suites? source-consumers)
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
@@ -138,14 +147,14 @@
                      (build-elapsed loading)))
         (let* ((projection-started (current-jiffy))
                (closure
-                (if (pair? admitted-support)
-                  ;; Interface contexts are registered by .ssi, not source path.
-                  ;; The existing build API projects those native contexts too.
-                  (call-with-preparation-production-interfaces
-                    production-current? library (append (gerbil-ascent-library-modules) admitted-support)
-                    (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))
-                  (call-with-asp-gerbil-scheme-prepared-source-graph
-                   (lambda () (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots))))))
+                ;; Init owns generated compiler contexts as well as physical
+                ;; source modules. A raw source-path registry lookup cannot
+                ;; identify a lowered DSL role. Project through native import
+                ;; under the active owner, which checks source currentness and
+                ;; compiler identity before and after each role acquisition.
+                (call-with-preparation-production-interfaces
+                  production-current? library (append (gerbil-ascent-library-modules) admitted-support)
+                  (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))))
           (set! modules
             (delete-duplicates/hash
               (append modules

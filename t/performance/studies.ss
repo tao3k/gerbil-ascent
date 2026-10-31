@@ -134,6 +134,10 @@
       '("program/index" "program/evaluate" "t/performance/index-entry/reference" "t/performance/index-entry/reference-evaluate" "t/performance/index-entry/fixture" "t/performance/index-entry-benchmark")
       "t/performance/index-entry-benchmark.ss" '("all" "delta" "advance" "scalar" "cold" "solve-wide" "solve-small")
       #f '(scenario library receipt) #f ".sexp")
+    (make-study 'empty-bucket-reuse
+      '("program/index" "program/evaluate" "t/performance/index-entry/reference" "t/performance/index-entry/reference-evaluate" "t/performance/index-entry/fixture" "t/qualification/ascent-rule-cost-test" "t/qualification/ascent-rule-cost-kernel-test" "t/qualification/ascent-provider-packet-test" "t/performance/index-entry-benchmark")
+      "t/performance/index-entry-benchmark.ss" '("empty-aa" "empty-bb" "empty-reuse")
+      #f '(scenario library receipt) #t ".sexp")
     (make-study 'rule-bindings
       '("core/rule-bindings" "core/positive-plan" "program/evaluate" "t/performance/rule-bindings/reference" "t/performance/rule-bindings/reference-positive" "t/performance/rule-bindings/reference-evaluate" "t/performance/rule-bindings/fixture" "t/performance/rule-bindings-benchmark")
       "t/performance/rule-bindings-benchmark.ss" '("call-two" "call-six" "bind-wide" "guards" "patterns" "small")

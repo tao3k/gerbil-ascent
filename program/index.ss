@@ -240,15 +240,18 @@
           (begin
             (positive-plan-cost-index! 'empty-test)
             (if (and (empty-bucket-entry-empty-version entry)
-                     (= (empty-bucket-entry-empty-version entry) version)
+                     (begin (positive-plan-cost-index! 'empty-version)
+                            (= (empty-bucket-entry-empty-version entry) version))
                      (begin (positive-plan-cost-index! 'empty-key)
                             (equal? (empty-bucket-entry-empty-key entry) value)))
               (begin (positive-plan-cost-index! 'empty-hit) [])
               (let (rows (probe))
                 (when (null? rows)
                   (positive-plan-cost-index! 'empty-write)
+                  (positive-plan-cost-index! 'empty-store)
                   (empty-bucket-entry-empty-key-set! entry value)
                   ;; Publish only after a complete canonical empty return.
+                  (positive-plan-cost-index! 'empty-store)
                   (empty-bucket-entry-empty-version-set! entry version))
                 rows)))))
       ;; Only admitted pure Set rules use this lane. The first fresh occurrence

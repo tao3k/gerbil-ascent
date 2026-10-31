@@ -250,6 +250,10 @@ performance-index-sharing: prepare-test-library
 performance-index-entry: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss index-entry "{{ package_library }}"
 
+# Same native evaluator and frozen recursive cuts, with A/A and B/B controls.
+performance-empty-bucket: prepare-test-library
+    {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss empty-bucket-reuse "{{ package_library }}"
+
 # Paired compiled general callbacks, ordered pattern bindings and complete solves.
 performance-rule-bindings: prepare-test-library
     {{ test_library_environment }} {{ gxi_command }} {{ gerbil_test_runtime_options }} t/performance/run.ss rule-bindings "{{ package_library }}"

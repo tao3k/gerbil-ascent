@@ -48,11 +48,45 @@
       (let ((source (vector-ref command 0)) (delta (vector-ref command 1)))
         (append (map (lambda (next) (vector next (bitwise-and next delta))) (generator.integer-shrinks source))
                 (map (lambda (next) (vector source (bitwise-and source next))) (generator.integer-shrinks delta))))) 4))
-(def cut-domain
+(def (make-cut-domain steps)
   (property.make-specification
-   (lambda (commands) (and (list? commands) (<= (length commands) 4) (andmap cut-command? commands)))
+   (lambda (commands) (and (list? commands) (<= (length commands) steps) (andmap cut-command? commands)))
    (lambda (commands) (+ (length commands)
                          (foldl (lambda (command total) (+ total (vector-ref command 0) (vector-ref command 1))) 0 commands)))))
+(def cut-domain (make-cut-domain 4))
+;;; Keep the historical independent four-step corpus above unchanged. These
+;;; state-dependent commands exercise invalidation without discarded inputs.
+(def revision-generator
+  (model.trace-generator cut-model
+    (lambda (state random _size)
+      (let* ((source (vector-ref state 0)) (delta (vector-ref state 1))
+             (bit (arithmetic-shift 1 (random 4))) (choice (random 5)))
+        (values #t
+          (case choice
+            ((0) (vector source delta))
+            ((1) (vector source (bitwise-and source (bitwise-xor delta bit))))
+            ((2) (vector (bitwise-ior delta (bitwise-xor source bit)) delta))
+            ((3) (vector 0 0))
+            (else (let (next (random 16)) (vector next (bitwise-and next (random 16)))))))))
+    (lambda (command)
+      (let ((source (vector-ref command 0)) (delta (vector-ref command 1)))
+        (append (map (lambda (next) (vector next (bitwise-and next delta))) (generator.integer-shrinks source))
+                (map (lambda (next) (vector source (bitwise-and source next))) (generator.integer-shrinks delta))))) 8))
+(def revision-domain (make-cut-domain 8))
+(def revision-codec
+  (replay.make-codec '(ascent-empty-bucket (nodes 0 1) (masks 16) (steps 8) (scope version key)) values values))
+(def (revision-labels commands)
+  (let ((previous (vector 0 0)) (before #f) (labels (cut-labels commands)))
+    (for-each
+      (lambda (command)
+        (def (label! name) (unless (memq name labels) (set! labels (cons name labels))))
+        (when (equal? command previous) (label! 'no-op))
+        (when (and (not (= (vector-ref command 0) (vector-ref previous 0)))
+                   (= (vector-ref command 1) (vector-ref previous 1))) (label! 'source-only-revision))
+        (when (and (> (vector-ref previous 0) 0) (= (vector-ref command 0) 0)) (label! 'withdrawal))
+        (when (and before (equal? command before) (not (equal? command previous))) (label! 'aba))
+        (set! before previous) (set! previous command)) commands)
+    labels))
 (def (cut-property commands)
   (model.trace-report-matched?
    (model.check-trace cut-model commands
@@ -116,6 +150,22 @@
             (and (ormap (lambda (command) (= (vector-ref command 1) 0)) commands) 'empty-delta)))))
 (def ascent-rule-cost-kernel-test
   (test-suite "Native positive-plan cost charge points"
+    (test-case "POO state-dependent revision PBT retains shrink and portable replay"
+      (let (report (property.check-property revision-generator cut-property revision-domain
+                     seed: 20261101 cases: 128 size: 8 shrink-budget: 64
+                     policy: (property.make-policy name: 'ascent-empty-bucket-revisions
+                               labels: revision-labels
+                               required: '((no-op . 1) (source-only-revision . 1) (delta-only-revision . 1)
+                                           (withdrawal . 1) (aba . 1) (reactivated-key . 1)
+                                           (equal-size-revision . 1) (different-lane-buckets . 1)))))
+        (displayln "POO-REVISION-PBT " (property.report-diagnostics report))
+        (when (eq? (property.report-status report) 'failed)
+          (displayln "POO-REVISION-COUNTEREXAMPLE-BEGIN")
+          (replay.write-counterexample report revision-codec (current-output-port))
+          (displayln "POO-REVISION-COUNTEREXAMPLE-END"))
+        (require-passed report)
+        (check-equal? (property.report-accepted report) 128)
+        (check-equal? (property.report-discarded report) 0)))
     (test-case "POO model PBT checks source delta versions and lane isolation"
       (let (report (property.check-property cut-generator cut-property cut-domain
                      seed: 20261031 cases: 64 size: 4 shrink-budget: 64

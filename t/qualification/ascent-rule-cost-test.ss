@@ -9,7 +9,7 @@
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle
                  finite-domain-closure))
-(export ascent-rule-cost-test)
+(export ascent-rule-cost-test recursive-declaration recursive-rules)
 
 ;;; Both lanes use the existing language and the same native evaluator. The
 ;;; reuse lane names the complete
@@ -214,7 +214,12 @@
              (check-equal? (count-of cost 'physical-index-probes)
                            (if (equal? edges first) (if reuse? 31 37) (if reuse? 11 18)))
              (check-equal? (count-of cost 'empty-cell-hits)
-                           (if reuse? (if (equal? edges first) 6 7) 0)))) '(#f #t))
+                           (if reuse? (if (equal? edges first) 6 7) 0))
+             (check-equal? (count-of cost 'empty-field-stores)
+                           (* 2 (count-of cost 'empty-cell-writes)))
+             (check-equal? (<= (count-of cost 'empty-key-comparisons)
+                               (count-of cost 'empty-version-comparisons)
+                               (count-of cost 'empty-cell-tests)) #t))) '(#f #t))
            (relational-program-replace-source! session 'edge edges)
            ;; Retained measurement remains unsupported; check its answers here
            ;; and report costs only for the separately checked fresh solve.

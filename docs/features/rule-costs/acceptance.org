@@ -557,3 +557,171 @@ are separate intermediate receipts, not substituted for the restored run.
 These are local installed-dependency checks, not clean cold-build or full
 package qualification. Concurrent build/migration changes remain uncommitted
 by this patch.
+
+* Locating the remaining 47 visits
+
+Starting from =78a57014=, the optional native collector now records detached
+visit data: =(stratum, round, source-rule-index)=, pivot, atom depth, Boolean
+match result, repeat attribution and full supporting value rows. Recording is
+off by default. Readers receive copies, not engine frames or mutable source
+aliases. Without prefix recording, repeat labels are explicitly =unrecorded=,
+not false claims of zero repeats. Traversal interruption still records only
+visited candidates, and the original completion/admission authority is unchanged.
+
+The chain's 47 same-plan repeated candidates have the following source owners;
+rule indices and atom depths are zero based:
+
+| Rule / atom | Successful repeated matches | Rejected repeated matches |
+|-------------+-----------------------------+---------------------------|
+| Rule 1, first =path= atom | 8 | 0 |
+| Rule 2, first =edge= atom | 15 | 0 |
+| Rule 2, second =path= atom | 5 | 19 |
+| Total | 28 | 19 |
+
+The 19 rejected visits are in rule 2's third pivot (ordinal 2), at atom depth 1:
+seven in round 3 and twelve in round 4. These inspect an old =path= relation
+whose first column is already bound by =edge=. Small relations bypassed the
+existing physical index, so the matcher repeatedly rejected other keys.
+
+The native trace is also checked against actual completed extensions in the
+same rule/round/pivot, using all premise values rather than the projected head:
+
+| Classification of the original 47 | Visits | Interpretation |
+|-----------------------------------+--------+----------------|
+| Repeated prefix with a new complete extension | 2 | Participates in a new first-fresh witness |
+| Successful repeated prefix with no complete extension in that traversal | 26 | Observed dead end at this cut; not a reusable future failure |
+| Repeated candidate rejected by its bound key | 19 | Can be excluded by exact current-cut index selection |
+
+The first two classes must not be merged into an unsupported claim that all 28
+are necessary. The concrete =answer= prefix supported by =edge(0,1)= has no
+completion in round 1 and does complete in round 2. This is asserted from the
+trace. Memoizing the earlier absence without suffix-version invalidation would
+lose =answer(0,3)=. The 26 dead-end visits are therefore retained in this patch;
+no persistent successful-prefix or negative-result cache is introduced.
+
+* Minimal reuse through the existing index owner
+
+The evaluator enables the existing exact bound-key index below its usual
+32-row scan threshold only for its already admitted fresh serial pure scalar
+Set route. =row-indexes-plan-rules!= communicates this mode to the same physical
+index owner. No new cache, syntax, relation, evaluator or Python interface is
+introduced. All/delta entries still use the existing source version, canonical
+build/extend functions and failure-publication macros. Empty relation snapshots
+return directly without allocating an empty physical index. Callbacks, custom
+providers, lattices, retained sessions, parallel and canceled routes retain the
+previous engine eligibility boundary and small-scan policy.
+
+The two new laws in =IndexedPositiveTraversal.lean= are independent of relation
+size. =exact_key_filter_any_size= proves equality of ordered continuation output
+lists, including multiplicity. =matching_support_retained= proves that a full
+matching support value tuple remains selected. Their premises require admitted
+row shape, known columns and a frame representing the current environment.
+The existing =compiled_key_refines= law excludes stale fresh slots from key
+reads. The new theorems use only the existing =propext= and =Quot.sound= axioms;
+no =sorry=, new axiom, native decision oracle or budget increase is used.
+
+This is stronger than Set-head equality, but it is still not an isomorphism of
+provenance graphs or a proof about source occurrence IDs. The physical-index
+native fixture retains =((0 20) (0 10) (0 20))= in that order, including the equal
+tuple occurrences. The original two different derivation supports for one
+projected answer remain in the oracle corpus. Wildcard-erased identities, raw
+graph node IDs and all recursive proof trees require their own correspondence.
+
+The underlying indexes are new for each fresh solve and may extend within the
+solve. This is not a claim of retained-Session performance. The native fixture
+also probes one owner repeatedly, replaces its rows with different rows of
+equal cardinality, observes an empty selected bucket, and restores its rows.
+Version advancement forces correct rebuilds, and the held older result remains
+unchanged. Source replacement/restoration in the DSL Session is independently
+checked against finite grounding as before.
+
+* Matcher savings and index costs
+
+The task declarations, graph inputs, fact limits, completion oracle and
+complete-support expectations remain unchanged. Three old matcher-cost
+assertions were replaced by exact new receipts (131 to 48 for the recursive
+chain, 44 to 14 for the nonrecursive baseline, 76 to 44 for dense projection).
+The old expectations failed in the first optimized run and remain recorded;
+they were cost references, not independent semantic acceptance rules.
+
+| Source cut | Matcher candidates before / after | Same-plan repeated candidates before / after | Partial matches after | Complete witnesses | Admitted rows |
+|------------+-----------------------------------+----------------------------------------------+-----------------------+--------------------+---------------|
+| Chain | 131 / 48 | 47 / 28 | 48 | 8 | 7 |
+| Equal-size replacement | 63 / 25 | 21 / 13 | 25 | 4 | 4 |
+| Restored chain | 131 / 48 | 47 / 28 | 48 | 8 | 7 |
+
+All optimized same-plan repeats are successful matches: the chain's remaining
+28 still split into two productive extensions and 26 observed dead ends. No
+same-plan complete witness repeats. Partial matches, complete supports, head
+proposals and admitted rows are unchanged by this index optimization. The
+original baseline/Factoring/projection representations retain equal exports
+against their respective independent finite oracles.
+
+Index work is not matcher work and is now recorded separately, including when
+repeat recording is disabled:
+
+| Fresh source cut | Index build input rows | Index extend input rows | Physical probes | Old-membership input rows |
+|------------------+-----------------------+-------------------------+-----------------+---------------------------|
+| Chain | 9 | 3 | 37 | 3 |
+| Equal-size replacement | 7 | 1 | 18 | 1 |
+| Restored chain | 9 | 3 | 37 | 3 |
+
+The scan control has no physical builds/extensions/probes for these small
+relations and still offers three old-membership input rows on the chain.
+Input-row counters charge rows offered to each build/extension/membership
+construction; a failed construction does not certify that every input was
+processed. Probe counts include misses. Key extraction, allocation bytes,
+hash/equality costs, old-lane filtering and observer trace overhead are not
+collapsed into a scalar runtime estimate. These completed workloads show less
+matching at the cost of index maintenance, not a universal latency speedup.
+
+* Exact-small validation receipts and retained failures
+
+All logs below are under =/private/tmp/=. The existing installed dependency
+chain is used with =GERBIL_LOADPATH= unset; this is not a new clean cold build.
+
+- =ascent-revisit-location-before-20261031.log=: original 47 visits located by
+  rule, round, pivot and atom before enabling exact-small indexes.
+- =ascent-revisit-index-attempt1-20261031.log=: preserved failures against the
+  old cost references after matching improved; result/oracle checks passed.
+- =ascent-revisit-scan-control-20261031.log=: deliberate restoration of scan
+  mode reproduces the 2/26/19 classification and fails the new cost assertions.
+- =ascent-exact-small-stale-version-mutation-20261031.log=: deliberately
+  ignoring the physical version check returns =((0 10))= after the equal-size
+  replacement, instead of =((0 20))=. The native kernel rejects it. The original
+  version check was restored before final acceptance.
+
+Final successful native receipts, all with final suite/module/harness/OK and
+natural exit 0, total 82 cases:
+
+| Suite | Cases | Log |
+|-------+-------+-----|
+| Native cost/index kernel | 9 | ascent-exact-small-final-kernel-occurrences-20261031.log |
+| Frozen DSL/oracle/recursive/revision corpus | 9 | ascent-exact-small-final-recursive-20261031.log |
+| Positive-plan reference regression | 33 | ascent-exact-small-final-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-exact-small-final-contracts-20261031.log |
+
+The final kernel includes detached trace access, unknown repeat labels, repeated
+bucket reuse, equal-size revision, empty bucket invalidation, occurrence/order
+preservation, interruption and the original native charge-point controls.
+
+The existing formal entrypoints also exit naturally with status 0:
+
+| Entry | Log | Scope |
+|-------+-----+-------|
+| =just check-lean-file IndexedPositiveTraversal.lean= | ascent-exact-small-lean-attempt1-20261031.log | New arbitrary-size key filtering and matching-support laws |
+| =just check-lean-file CachePublication.lean= | ascent-exact-small-publication-lean-20261031.log | Existing exact version/error publication laws |
+| =just _check-quint ProviderFrontier= | ascent-exact-small-quint-20261031.log | 15 positive/expected-counterexample controls, including stale/missing small buckets and full support selection |
+| =just _check-quint CachePublication= | ascent-exact-small-publication-quint-20261031.log | Six original positive/expected-counterexample controls |
+
+Both Quint groups compiled with =cache=0= and ended with =ALL-QUINT-CHECK-OK=.
+No timeout, heap, model domain, worker count or validator was relaxed. Model
+laws and native conformance remain separate from complete source extraction or
+whole-Library proof. No remote CI was awaited.
+
+README References now includes the primary PDF for McAllester's indexing
+transformation as well as the existing prefix-firing, Ascent, query-equivalence,
+provenance and source-maintenance papers. The borrowed idea is exact selection
+on variables bound by a prefix. No upstream implementation was copied or
+translated, and no asymptotic theorem from the papers is asserted for this
+bounded implementation experiment.

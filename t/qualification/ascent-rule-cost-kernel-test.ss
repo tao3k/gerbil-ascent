@@ -1,6 +1,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :gerbil-ascent/core/positive-plan
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
+                 row-indexes-plan-rules! row-indexes-rows)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle finite-domain-closure))
 (export ascent-rule-cost-kernel-test)
 (def (read-count cost name) (cdr (assq name (positive-plan-cost-snapshot cost))))
@@ -80,6 +83,59 @@
         (check-equal? (read-count cost 'cross-plan-candidate-revisits) #f)
         (check-equal? (read-count cost 'same-plan-complete-revisits) #f)
         (check-equal? (read-count cost 'candidate-rows) 8)))
+    (test-case "visit attribution is optional detached and preserves unknown repeats"
+      (check-equal? (positive-plan-cost-visits (make-positive-plan-cost)) #f)
+      (for-each
+       (lambda (record-prefixes?)
+         (let (cost (make-positive-plan-cost record-prefixes? #t))
+           (call-with-positive-plan-cost cost
+             (lambda () (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs
+                          (lambda args #f) #f #f #f '(0 1 7))))
+           (let (visits (positive-plan-cost-visits cost))
+             (check-equal? (length visits) 8)
+             (check-equal? (length (filter (lambda (visit) (list-ref visit 3)) visits)) 5)
+             (unless record-prefixes?
+               (check-equal? (andmap (lambda (visit) (eq? (list-ref visit 4) 'unrecorded)) visits) #t)
+               (check-equal? (read-count cost 'same-plan-candidate-revisits) #f)
+               (check-equal? (read-count cost 'index-build-input-rows) 0))
+             (set-car! (caar visits) 'changed-by-reader)
+             (check-equal? (caar (positive-plan-cost-visits cost)) '(0 1 7))))) '(#f #t)))
+    (test-case "small exact bucket reuse invalidates on equal-size replacement and empty selection"
+      (let* ((atom (vector 0 '((literal . 0) (variable . y)) '(0) [] '((literal . 0))))
+             (body (list (vector 'atom atom))) (heads (list (vector 1 '((variable . y)))))
+             (plan (gerbil-ascent-compile-positive-plan heads body))
+             (action (car (vector-ref plan 1)))
+             (all (vector '((0 10) (1 11)))) (delta (vector []))
+             (sizes (vector 2)) (versions (vector 0))
+             (indexes (gerbil-ascent-make-row-indexes all delta sizes (vector 0) versions (vector 0)
+                        (vector gerbil-ascent-hash-index-provider)))
+             (cost (make-positive-plan-cost #f)) (frame (make-vector 1 #f)))
+        (row-indexes-plan-rules! indexes (list (vector heads body '(0) 0 (vector 0) plan)) #t)
+        (def (probe)
+          ((row-indexes-rows indexes) atom frame #f (vector-ref action 2)))
+        (call-with-positive-plan-cost cost
+          (lambda ()
+            (let (old (probe))
+              (check-equal? old '((0 10)))
+              (check-equal? (probe) old)
+              (check-equal? (read-count cost 'index-build-input-rows) 2)
+              (vector-set! all 0 '((0 20) (1 21)))
+              (vector-set! versions 0 1)
+              (check-equal? (probe) '((0 20)))
+              (check-equal? old '((0 10)))
+              (vector-set! all 0 '((1 21))) (vector-set! sizes 0 1) (vector-set! versions 0 2)
+              (check-equal? (probe) [])
+              (vector-set! all 0 '((0 10) (1 11))) (vector-set! sizes 0 2) (vector-set! versions 0 3)
+              (check-equal? (probe) '((0 10)))
+              (check-equal? (read-count cost 'index-build-input-rows) 7)
+              (check-equal? (read-count cost 'physical-index-probes) 5)
+              ;; The physical index is selection, not deduplication: retain
+              ;; both equal rows and their order within the matching bucket.
+              (vector-set! all 0 '((0 20) (0 10) (0 20) (1 11)))
+              (vector-set! sizes 0 4) (vector-set! versions 0 4)
+              (check-equal? (probe) '((0 20) (0 10) (0 20)))
+              (check-equal? (read-count cost 'index-build-input-rows) 11)
+              (check-equal? (read-count cost 'physical-index-probes) 6))))))
     (test-case "first-fresh partition removes duplicate pivots but keeps distinct supports"
       (let* ((plan (gerbil-ascent-compile-positive-plan
                     (list (vector 1 '((variable . x) (variable . y))))

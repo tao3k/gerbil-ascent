@@ -12,6 +12,7 @@ module ProviderFrontier {
   pure def Supports(left: Set[(int,int)], middle: Set[(int,int)], right: Set[(int,int)]): Set[(int,int,int,int)] =
     tuples(Nodes,Nodes,Nodes,Nodes).filter(t => left.contains((t._1,t._2)) and middle.contains((t._2,t._3)) and right.contains((t._3,t._4)))
   pure def Endpoints(supports: Set[(int,int,int,int)]): Set[(int,int)] = supports.map(t => (t._1,t._4))
+  pure def Probe(rows: Set[(int,int)], key: int): Set[(int,int)] = rows.filter(p => p._1 == key)
   // Floyd-Warshall folds all admitted intermediate nodes, without a runtime cap.
   pure def Close(edges: Set[(int,int)]): Set[(int,int)] = Nodes.fold(edges,(rows,b) =>
     rows.union(Pairs.filter(p => rows.contains((p._1,b)) and rows.contains((b,p._2)))))
@@ -44,6 +45,19 @@ module ProviderFrontier {
   // The suffix observes endpoints only. A hidden-column observer is a separate
   // contract; the mutation deliberately applies the rewrite outside that domain.
   val ProjectionExact = Endpoints(Supports(q.total,q.total,q.total)) == BodyOf(q.total)
+  // Exact bound-key selection may replace a scan at any size, but a bucket
+  // must belong to the current row cut, including a previously empty bucket.
+  val SmallProbeExact = Nodes.forall(key => {
+    val current = if (q.phase == "pending") q.pending else q.total
+    val cached = if (Mutation == "stale-small-probe") q.total else current
+    val selected = if (Mutation == "omit-small-probe" and cached.size() < 32) Set() else Probe(cached,key)
+    selected == Probe(current,key)
+  })
+  val ProbeSupportExact = Nodes.forall(key => {
+    val selected = Probe(q.total,key)
+    Supports(q.inputs,selected,q.total) ==
+      Supports(q.inputs,q.total,q.total).filter(t => t._2 == key)
+  })
   val ProjectionLiveBoundary = {
     val full = Supports(q.total,q.total,q.total)
     val observed = Endpoints(full.filter(t => t._2 == 1))

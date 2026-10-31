@@ -126,7 +126,8 @@ CONFIGURATIONS = {'CheckpointTransport': {'constants': 'Mutation = "none"', 'inv
                       'constants': 'Fault = "none"\nSeeded = FALSE',
                       'invariants': 'ExactFrontier FrontierComplete DeliveredExact '
                                     'ConsumerSnapshot ProjectionExact ProjectionLiveBoundary '
-                                    'ProjectionSupportBoundary EmptyOldPrefixSafe'},
+                                    'ProjectionSupportBoundary EmptyOldPrefixSafe '
+                                    'SmallProbeExact ProbeSupportExact'},
  'ProviderReplay': {'constants': 'Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"',
                     'invariants': 'PublishedExact JournalExact OrderExact HeldExact RefusalAtomic'},
  'ProviderRouting': {'constants': 'Mutation = "none"', 'invariants': 'CompleteExact'},
@@ -315,7 +316,9 @@ FAULTS = {'DeltaClosure': (('drop', 'Complete', 12),
                       ('omit', 'DeliveredExact', 12),
                       ('forget-live', 'ProjectionLiveBoundary', 12),
                       ('collapse-support', 'ProjectionSupportBoundary', 12),
-                      ('prune-unselected-old', 'EmptyOldPrefixSafe', 12)),
+                      ('prune-unselected-old', 'EmptyOldPrefixSafe', 12),
+                      ('stale-small-probe', 'SmallProbeExact', 12),
+                      ('omit-small-probe', 'SmallProbeExact', 12)),
  'ProviderReplay': (('scope', 'PublishedExact', 12),
                     ('early', 'JournalExact', 12),
                     ('drop', 'JournalExact', 12),

@@ -108,8 +108,8 @@
          (check-equal? (length rows) (length want))
          (check-equal? (andmap (lambda (row) (and (member row want) #t)) rows) #t)))
      '(edge path answer))))
-(def (run-recursive edges domain)
-  (let* ((program (recursive-declaration edges)) (cost (make-positive-plan-cost))
+(def (run-recursive edges domain (trace? #f))
+  (let* ((program (recursive-declaration edges)) (cost (make-positive-plan-cost #t trace?))
          (actual (call-with-positive-plan-cost cost
                    (lambda () (gerbil-ascent-evaluate-program program))))
          (plain (gerbil-ascent-evaluate-program program)))
@@ -120,6 +120,46 @@
     ;; Revisited prefixes may feed new suffixes in later rounds, but the same
     ;; complete supporting tuple must not be rescheduled by another pivot.
     (check-equal? (count-of (positive-plan-cost-snapshot cost) 'same-plan-complete-revisits) 0)
+    (when trace?
+      (let ((groups (make-hash-table)) (visits (positive-plan-cost-visits cost))
+            (productive 0) (dead 0) (rejected 0))
+        (def (complete? visit)
+          (and (list-ref visit 3)
+               (= (list-ref visit 2)
+                  (- (length (cdr (list-ref recursive-rules (caddr (car visit))))) 1))))
+        (def (has-extension? visit)
+          (ormap (lambda (other)
+                   (and (equal? (take visit 2) (take other 2)) (complete? other)
+                        (equal? (list-ref visit 5)
+                                (take (list-ref other 5) (length (list-ref visit 5)))))) visits))
+        (for-each
+         (lambda (visit)
+           (when (eq? (list-ref visit 4) 'same-plan)
+             (let (key (take visit 4))
+               (hash-put! groups key (+ 1 (or (hash-get groups key) 0))))
+             (if (not (list-ref visit 3)) (set! rejected (+ rejected 1))
+               (if (has-extension? visit)
+                 (set! productive (+ productive 1)) (set! dead (+ dead 1)))))) visits)
+        (check-equal? (+ productive dead rejected)
+                      (count-of (positive-plan-cost-snapshot cost) 'same-plan-candidate-revisits))
+        (displayln "REVISIT-SUMMARY source=" edges " productive=" productive
+                   " no-complete-extension=" dead " rejected=" rejected)
+        (check-equal? rejected 0)
+        (let (chain? (equal? edges '((0 1) (1 2) (2 3))))
+          (check-equal? productive (if chain? 2 0))
+          (check-equal? dead (if chain? 26 13))
+          (when chain?
+            ;; The same answer prefix has no completion in round 1 but does
+            ;; in round 2. A cached prefix failure cannot survive suffix delta.
+            (let (edge-prefix (filter (lambda (visit)
+                                       (and (= (caddr (car visit)) 2)
+                                            (= (list-ref visit 2) 0)
+                                            (equal? (list-ref visit 5) '((0 1))))) visits))
+              (check-equal? (ormap (lambda (visit) (and (= (cadr (car visit)) 1)
+                                                       (not (has-extension? visit)))) edge-prefix) #t)
+              (check-equal? (ormap (lambda (visit) (and (= (cadr (car visit)) 2)
+                                                       (has-extension? visit))) edge-prefix) #t))))
+        (hash-for-each (lambda (key count) (displayln "REVISIT location/pivot/depth/matched=" key " count=" count)) groups)))
     (positive-plan-cost-snapshot cost)))
 (def ascent-rule-cost-test
   (test-suite "Native DSL plan costs and explicit prefix reuse"
@@ -147,9 +187,9 @@
         (check-equal? (relational-program-query old 'answer) '((0 3)))
         (for-each
          (lambda (edges)
-           (let (cost (run-recursive edges '(0 1 2 3)))
+           (let (cost (run-recursive edges '(0 1 2 3) #t))
              (displayln "RULE-COST recursive edges=" edges " receipt=" cost)
-             (check-equal? (count-of cost 'candidate-rows) (if (equal? edges first) 131 63))
+             (check-equal? (count-of cost 'candidate-rows) (if (equal? edges first) 48 25))
              (check-equal? (count-of cost 'complete-witnesses) (if (equal? edges first) 8 4))
              (check-equal? (count-of cost 'admitted-rows) (if (equal? edges first) 7 4)))
            (relational-program-replace-source! session 'edge edges)
@@ -172,9 +212,9 @@
              (before (run chain '(0 1 2 3) #f))
              (after (run chain '(0 1 2 3) #t)))
         (displayln "RULE-COST chain baseline=" before " factored=" after)
-        ;; One full initial traversal costs 3+9+6+4 candidates per rule.
-        ;; Later empty delta pivots must not rebuild either bound prefix.
-        (check-equal? (count-of before 'candidate-rows) 44)
+        ;; Exact bound-key selection visits 3+2+1+1 rows per rule; index
+        ;; construction/extension and probes are charged separately.
+        (check-equal? (count-of before 'candidate-rows) 14)
         (check-equal? (count-of before 'partial-matches) 14)
         (check-equal? (< (count-of after 'candidate-rows)
                          (count-of before 'candidate-rows)) #t)
@@ -213,7 +253,7 @@
            (check-equal? (<= (count-of projected 'complete-witnesses)
                              (count-of retained 'complete-witnesses)) #t)
            (when (= (length domain) 2)
-             (check-equal? (count-of projected 'candidate-rows) 76)
+             (check-equal? (count-of projected 'candidate-rows) 44)
              (check-equal? (count-of projected 'complete-witnesses) 24)
              (check-equal? (count-of projected 'admitted-rows) 12))))
        (list (list '((0 1) (1 2) (2 3)) '(0 1 2 3))

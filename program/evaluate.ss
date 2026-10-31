@@ -273,7 +273,8 @@
               (when (current-positive-plan-cost)
                 (unless scalar-set-plans?
                   (error "native plan cost requires canonical pure Set rules"))))
-             (_index-layout (row-indexes-plan-rules! indexes rule-plans))
+             (_index-layout (row-indexes-plan-rules! indexes rule-plans
+                              (and checked-scalar-fields? scalar-set-plans?)))
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
@@ -801,7 +802,8 @@
                    (defrule (visit! pivot)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame pivot rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access)
+                        positive-plan frame pivot rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access
+                        (and (current-positive-plan-cost) (list stratum round (vector-ref rule 3))))
                        (visit-body body pivot 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))

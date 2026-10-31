@@ -16,18 +16,26 @@
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
         gerbil-ascent-index-value gerbil-ascent-emit-heads!
-        make-positive-plan-cost positive-plan-cost-snapshot
+        make-positive-plan-cost positive-plan-cost-snapshot positive-plan-cost-visits
         call-with-positive-plan-cost current-positive-plan-cost
-        positive-plan-cost-admit! positive-plan-cost-begin!)
+        positive-plan-cost-admit! positive-plan-cost-begin! positive-plan-cost-index!)
 
 ;;; Diagnostic ownership is one fresh serial solve over canonical pure Set
 ;;; rules. Never share this mutable collector between engines or revisions.
 ;;; Prefix observations count repeated successful visits, not avoidable work:
 ;;; a new suffix can legitimately revisit an unchanged prefix.
-(defstruct native-plan-cost (counts prefixes started?) final: #t)
-(def (make-positive-plan-cost (record-prefixes? #t))
-  (make-native-plan-cost (make-vector 14 0)
-                        (and record-prefixes? (make-hash-table)) #f))
+(defstruct native-plan-cost (counts prefixes started? visits) final: #t)
+(def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
+  (make-native-plan-cost (make-vector 18 0)
+                        (and record-prefixes? (make-hash-table)) #f (and record-visits? [])))
+;;; Diagnostic values are detached on read; no callback observes a live frame.
+(def (positive-plan-cost-visits cost)
+  (unless (native-plan-cost? cost) (error "invalid native visit snapshot"))
+  (def (copy value)
+    (cond ((pair? value) (cons (copy (car value)) (copy (cdr value))))
+          ((vector? value) (list->vector (map copy (vector->list value))))
+          (else value)))
+  (alet (visits (native-plan-cost-visits cost)) (map copy (reverse visits))))
 (def (positive-plan-cost-begin! cost)
   (when cost
     (when (native-plan-cost-started? cost)
@@ -43,21 +51,31 @@
     (let (counts (native-plan-cost-counts cost))
       (vector-set! counts index (+ amount (vector-ref counts index))))))
 (def (positive-plan-cost-admit! cost) (cost-add! cost 4))
+(def (positive-plan-cost-index! kind (rows []))
+  (alet (cost (current-positive-plan-cost))
+    (case kind
+      ((build) (cost-add! cost 14 (length rows)))
+      ((extend) (cost-add! cost 15 (length rows)))
+      ((probe) (cost-add! cost 16))
+      ((membership) (cost-add! cost 17 (length rows)))
+      (else (error "invalid native index cost event" kind)))))
 (def (positive-plan-cost-snapshot cost)
   (unless (native-plan-cost? cost) (error "invalid native cost snapshot"))
   (map (lambda (name index)
-         (cons name (if (and (>= index 5) (not (native-plan-cost-prefixes cost)))
+         (cons name (if (and (<= 5 index 13) (not (native-plan-cost-prefixes cost)))
                       #f (vector-ref (native-plan-cost-counts cost) index))))
        '(candidate-rows partial-matches complete-witnesses head-proposals
          admitted-rows repeated-prefixes repeated-candidate-visits
          same-plan-prefix-revisits cross-plan-prefix-revisits
          same-plan-candidate-revisits cross-plan-candidate-revisits
-         repeated-complete-witnesses same-plan-complete-revisits cross-plan-complete-revisits)
-       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13)))
+         repeated-complete-witnesses same-plan-complete-revisits cross-plan-complete-revisits
+         index-build-input-rows index-extend-input-rows physical-index-probes old-membership-input-rows)
+       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))
-           (owners (hash-get seen key)))
+           (owners (hash-get seen key))
+           (repeat (and owners (if (hash-get owners owner) 'same-plan 'cross-plan))))
       ;; Partition repeats by compiled plan identity, not by projected head.
       ;; A first visit from a different plan is a sharing candidate, not proof
       ;; that its suffix or its head/provenance work may be skipped.
@@ -68,7 +86,8 @@
       (unless owners
         (set! owners (make-hash-table-eq))
         (hash-put! seen key owners))
-      (hash-put! owners owner #t))))
+      (hash-put! owners owner #t)
+      repeat)))
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -414,7 +433,7 @@
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f))
+(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f) (scope #f))
   ;; The compiled extent covers every read/write, including failed candidates.
   ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
   (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
@@ -433,7 +452,7 @@
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                           frame (if has-pivot? delta-at 0) has-pivot?
                           0 rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost [] [] (and cost plan))))
+                          cost [] [] (and cost plan) scope)))
 
 (def (emit-complete-heads! heads frame emit-row! cost signature witness owner)
   (when cost (cost-prefix! cost 'complete 11 signature witness owner))
@@ -444,13 +463,13 @@
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner scope)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth next-signature next-witness)
     (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
                           rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost next-signature next-witness owner))
+                          cost next-signature next-witness owner scope))
   (defrule (accept matched? row action)
     (let ((matched matched?) (next-signature signature) (next-witness witness))
       (cost-add! cost 0)
@@ -461,7 +480,12 @@
           (cons (list (vector-ref (vector-ref action 0) 0)
                       (vector-ref action 1)) signature))
         (set! next-witness (cons row witness))
-        (cost-prefix! cost 'candidate 6 next-signature next-witness owner)
+        (let (repeat (cost-prefix! cost 'candidate 6 next-signature next-witness owner))
+          (when (native-plan-cost-visits cost)
+            (native-plan-cost-visits-set! cost
+              (cons (list scope (if has-pivot? pivot -1) depth (and matched #t)
+                          (if (native-plan-cost-prefixes cost) repeat 'unrecorded)
+                          (reverse next-witness)) (native-plan-cost-visits cost)))))
         (when matched
           (cost-add! cost 1)
           (cost-prefix! cost 'partial 5 next-signature next-witness owner)))

@@ -13,7 +13,7 @@
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
-                 gerbil-ascent-index-key/terms gerbil-ascent-index-value)
+                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index!)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
@@ -139,14 +139,14 @@
 ;;     ;; => registers engine-owned logical lookup requirements
 ;;     ```
 ;;   %
-(def (row-indexes-plan-rules! indexes rules)
+(def (row-indexes-plan-rules! indexes rules (small-exact? #f))
   ((row-indexes-plan! indexes)
    (lambda (accept!)
      (for-each (lambda (rule)
                  (for-each (lambda (clause)
                              (when (memq (vector-ref clause 0) '(atom negation aggregate))
                                (accept! (vector-ref clause 1))))
-                           (vector-ref rule 1))) rules))))
+                           (vector-ref rule 1))) rules)) small-exact?))
 
 ;; row-indexes-plan-actions!
 ;; : (forall (i a) (-> (RowIndexes i) [(CompiledAction a)] Void))
@@ -193,7 +193,7 @@
    (lambda (atom environment use-delta? slot-terms)
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
-   (lambda (visit!)
+   (lambda (visit! (small-exact? #f))
      (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
@@ -218,15 +218,16 @@
     empty-row-indexes))
 
 (def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
-  ;; Scans and small relations own no physical cache vectors. Allocate each
-  ;; lane only when its first indexed lookup crosses the size threshold.
+  ;; Allocate a physical lane only on demand. The ordinary route retains its
+  ;; scan threshold; qualified pure plans may reuse exact bound-key indexes
+  ;; below that threshold, through the same versioned entries.
   (let ((all-indexes #f) (delta-indexes #f)
         (all-atoms #f) (delta-atoms #f)
         (layouts (make-vector (vector-length all) #f)) (planned-atoms #f)
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
-        (delta-members #f))
+        (delta-members #f) (exact-small? #f))
       ;; Only admitted pure Set rules use this lane. The first fresh occurrence
       ;; owns a witness: prefix reads exclude delta, suffix reads remain total.
       ;; Cache exact membership by the owner's delta version, never by row count.
@@ -249,6 +250,7 @@
                    (let (members
                          (if (and prior (= (car prior) version)) (cdr prior)
                            (let (table (make-hash-table))
+                             (positive-plan-cost-index! 'membership fresh)
                              (for-each (lambda (row)
                                          (when checkpoint! (checkpoint!))
                                          (hash-put! table row #t)) fresh)
@@ -277,10 +279,11 @@
                          (gerbil-ascent-view-rows captured)
                          (reverse (gerbil-ascent-view-rows captured))))
               (vector-set! cache index (cons captured rows)) rows))))
-      (def (plan! visit!)
+      (def (plan! visit! (small-exact? #f))
         (when (or all-indexes delta-indexes) (error "cannot replan a live physical index"))
-        ;; Small snapshots need no physical plan. An explicit curried receiver
-        ;; triggers planning only when an actual lookup first needs an index.
+        (when small-exact? (set! exact-small? #t))
+        ;; Exact canonical indexes need no sharing-layout traversal. An
+        ;; explicit curried receiver collects requirements for its first lookup.
         ;; Complete a fresh owned spine before replacing earlier requirements.
         ;; Providers that do not share chains need no metadata traversal.
         (let (fresh (and sharing? (collect-sharing-atoms visit! index-providers)))
@@ -327,9 +330,9 @@
                 (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
                 (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
           (if (or (null? columns)
-                  (< (vector-ref (if use-delta? delta-size all-size)
-                                 index)
-                     32))
+                  (zero? (vector-ref (if use-delta? delta-size all-size) index))
+                  (and (not exact-small?)
+                       (< (vector-ref (if use-delta? delta-size all-size) index) 32)))
             rows
             (begin
               (ensure-layouts!)
@@ -375,7 +378,9 @@
                     (if (and (physical-index-entry-version entry)
                              (= (physical-index-entry-version entry) version))
                       (physical-index-entry-lookup entry)
-                      (gerbil-ascent-index-rebuild! entry version
+                      (begin
+                       (positive-plan-cost-index! 'build rows)
+                       (gerbil-ascent-index-rebuild! entry version
                         (and (not permutation)
                              (not (gerbil-ascent-canonical-hash-index-provider? provider))
                              (build-provider-row-witness rows columns))
@@ -386,9 +391,10 @@
                         ;; both only after the provider has returned successfully.
                         physical-index-entry-lookup-set!
                         physical-index-entry-witness-set!
-                        physical-index-entry-version-set!))))
+                        physical-index-entry-version-set!)))))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
+              (positive-plan-cost-index! 'probe)
               (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
                        (null? (cdr columns)))
                 (gerbil-ascent-physical-index-single-rows
@@ -429,6 +435,7 @@
                    ;; A provider may mutate its lookup before raising. Revoke
                    ;; the old version before dispatch so failure forces rebuild
                    ;; from still-committed rows on the next read.
+                   (positive-plan-cost-index! 'extend rows)
                    (gerbil-ascent-index-extend! entry (+ version 1)
                      (if (physical-index-entry-shared? entry)
                          (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)

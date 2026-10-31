@@ -157,6 +157,46 @@ theorem filter_binding (terms : List (Term Value)) (rows : List (List Value))
           have kept := complete row List.mem_cons_self output found
           simp [kept, found, tail]
 
+/-- Exact key filtering is valid at every cardinality, including below the
+old scan threshold. Continuation output order and multiplicity are preserved;
+the continuation can annotate a derivation rather than merely return a Set. -/
+theorem exact_key_filter_any_size (terms : List (Term Value))
+    (rows : List (List Value)) (columns names : List Nat)
+    (env : Env Value) (frame : Frame Value) (emit : Env Value → List Output)
+    (shape : ∀ row ∈ rows, terms.length = row.length)
+    (known : KnownColumns terms columns env) (rep : Represents names env frame) :
+    (rows.filter fun row => decide
+      (projectedKey columns row = compiledKey terms columns names frame)).flatMap
+      (fun row => match AtomicBinding.bind terms row env with
+        | none => [] | some output => emit output) =
+    rows.flatMap (fun row => match AtomicBinding.bind terms row env with
+      | none => [] | some output => emit output) := by
+  apply filter_binding
+  intro row member output success
+  simp only [decide_eq_true_eq]
+  rw [compiled_key_refines terms columns names env frame rep known]
+  exact bind_columns terms columns row env output (shape row member) known success
+
+/-- Filtering does not remove the full value tuple of a matching support,
+even when its head projection forgets a column. Source occurrence IDs and
+provenance graph structure remain separate representation obligations. -/
+theorem matching_support_retained (terms : List (Term Value))
+    (rows : List (List Value)) (columns names : List Nat)
+    (env output : Env Value) (frame : Frame Value) (row : List Value)
+    (member : row ∈ rows) (shape : terms.length = row.length)
+    (known : KnownColumns terms columns env) (rep : Represents names env frame)
+    (success : AtomicBinding.bind terms row env = some output) :
+    row ∈ rows.filter (fun row => decide
+      (projectedKey columns row = compiledKey terms columns names frame)) := by
+  apply List.mem_filter.mpr
+  refine ⟨member, ?_⟩
+  simp only [decide_eq_true_eq]
+  rw [compiled_key_refines terms columns names env frame rep known]
+  exact bind_columns terms columns row env output shape known success
+
+#print axioms exact_key_filter_any_size
+#print axioms matching_support_retained
+
 structure Atom (Value : Type) where
   terms : List (Term Value)
   columns : List Nat
